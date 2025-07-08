@@ -71,80 +71,103 @@ class HexGridAnalyzer:
         return edges
     
     def _find_map_boundaries(self, edges: np.ndarray) -> Optional[Dict]:
-        """Find map boundaries using 4-directional projections to get outer boundary only"""
+        """Find map boundaries using 4-directional edge images and OR combination"""
         height, width = edges.shape
         
-        # Get 4-directional boundary projections
+        # Get 4-directional boundary edge images
         projections = self._get_4_directional_projections(edges)
         
         if self.debug_mode:
             self._save_projection_debug_4dir(projections, height, width)
         
-        # Find boundaries from projections
+        # Combine all 4 edge images using OR operation to get outer boundary
+        combined_boundary = np.zeros((height, width), dtype=np.uint8)
+        for direction, edge_img in projections.items():
+            combined_boundary = cv2.bitwise_or(combined_boundary, edge_img)
+        
+        if self.debug_mode:
+            cv2.imwrite(str(self.debug_dir / "combined_boundary.png"), combined_boundary)
+        
+        # Find boundaries from the combined edge image
         boundaries = {}
         
-        # Top boundary: first non-zero in view_from_top
-        top_profile = projections['view_from_top']
-        boundaries['top'] = np.argmax(top_profile > 0) if np.any(top_profile > 0) else 0
+        # Find the actual extent of the combined boundary
+        coords = np.where(combined_boundary > 0)
+        if len(coords[0]) == 0:
+            print("No boundary pixels found")
+            return None
         
-        # Bottom boundary: last non-zero in view_from_bottom (reversed)
-        bottom_profile = projections['view_from_bottom']
-        boundaries['bottom'] = height - 1 - np.argmax(bottom_profile[::-1] > 0) if np.any(bottom_profile > 0) else height - 1
-        
-        # Left boundary: first non-zero in view_from_left
-        left_profile = projections['view_from_left']
-        boundaries['left'] = np.argmax(left_profile > 0) if np.any(left_profile > 0) else 0
-        
-        # Right boundary: last non-zero in view_from_right (reversed)
-        right_profile = projections['view_from_right']
-        boundaries['right'] = width - 1 - np.argmax(right_profile[::-1] > 0) if np.any(right_profile > 0) else width - 1
+        boundaries['top'] = np.min(coords[0])
+        boundaries['bottom'] = np.max(coords[0])
+        boundaries['left'] = np.min(coords[1])
+        boundaries['right'] = np.max(coords[1])
         
         boundaries['height'] = boundaries['bottom'] - boundaries['top']
         boundaries['width'] = boundaries['right'] - boundaries['left']
         
-        # Analyze hex tile size from longest continuous lines
+        # Analyze hex tile size from the boundary edge images
         hex_info = self._analyze_hex_dimensions(projections)
         boundaries.update(hex_info)
         
         if self.debug_mode:
             self._save_boundary_debug(edges, boundaries)
+            print(f"Pattern spacings by direction: {hex_info.get('pattern_spacings', {})}")
             print(f"Detected hex tile side length: {hex_info.get('hex_side_length', 'unknown')}")
         
         return boundaries
     
     def _get_4_directional_projections(self, edges: np.ndarray) -> Dict[str, np.ndarray]:
-        """Get boundary projections from 4 directions"""
+        """Get boundary edge images from 4 directions"""
         height, width = edges.shape
         
         projections = {}
+        edge_thickness = 2  # Thickness of edge lines for better visibility
         
-        # View from top: for each column, find the first edge pixel from top
-        view_from_top = np.zeros(width)
+        # Create 4 separate edge images (same size as original)
+        view_from_top = np.zeros((height, width), dtype=np.uint8)
+        view_from_bottom = np.zeros((height, width), dtype=np.uint8)
+        view_from_left = np.zeros((height, width), dtype=np.uint8)
+        view_from_right = np.zeros((height, width), dtype=np.uint8)
+        
+        # View from top: for each column, mark the first edge pixel from top
         for col in range(width):
             column_data = edges[:, col]
-            first_edge = np.argmax(column_data > 0) if np.any(column_data > 0) else 0
-            view_from_top[col] = height - first_edge if first_edge > 0 else 0
+            if np.any(column_data > 0):
+                first_edge = np.argmax(column_data > 0)
+                # Mark the edge pixel with some thickness
+                for t in range(edge_thickness):
+                    if first_edge + t < height:
+                        view_from_top[first_edge + t, col] = 255
         
-        # View from bottom: for each column, find the first edge pixel from bottom
-        view_from_bottom = np.zeros(width)
+        # View from bottom: for each column, mark the first edge pixel from bottom
         for col in range(width):
             column_data = edges[:, col]
-            last_edge = height - 1 - np.argmax(column_data[::-1] > 0) if np.any(column_data > 0) else height - 1
-            view_from_bottom[col] = last_edge if last_edge < height - 1 else 0
+            if np.any(column_data > 0):
+                last_edge = height - 1 - np.argmax(column_data[::-1] > 0)
+                # Mark the edge pixel with some thickness
+                for t in range(edge_thickness):
+                    if last_edge - t >= 0:
+                        view_from_bottom[last_edge - t, col] = 255
         
-        # View from left: for each row, find the first edge pixel from left
-        view_from_left = np.zeros(height)
+        # View from left: for each row, mark the first edge pixel from left
         for row in range(height):
             row_data = edges[row, :]
-            first_edge = np.argmax(row_data > 0) if np.any(row_data > 0) else 0
-            view_from_left[row] = width - first_edge if first_edge > 0 else 0
+            if np.any(row_data > 0):
+                first_edge = np.argmax(row_data > 0)
+                # Mark the edge pixel with some thickness
+                for t in range(edge_thickness):
+                    if first_edge + t < width:
+                        view_from_left[row, first_edge + t] = 255
         
-        # View from right: for each row, find the first edge pixel from right
-        view_from_right = np.zeros(height)
+        # View from right: for each row, mark the first edge pixel from right
         for row in range(height):
             row_data = edges[row, :]
-            last_edge = width - 1 - np.argmax(row_data[::-1] > 0) if np.any(row_data > 0) else width - 1
-            view_from_right[row] = last_edge if last_edge < width - 1 else 0
+            if np.any(row_data > 0):
+                last_edge = width - 1 - np.argmax(row_data[::-1] > 0)
+                # Mark the edge pixel with some thickness
+                for t in range(edge_thickness):
+                    if last_edge - t >= 0:
+                        view_from_right[row, last_edge - t] = 255
         
         projections['view_from_top'] = view_from_top
         projections['view_from_bottom'] = view_from_bottom
@@ -154,14 +177,21 @@ class HexGridAnalyzer:
         return projections
     
     def _analyze_hex_dimensions(self, projections: Dict[str, np.ndarray]) -> Dict:
-        """Analyze hex dimensions from pattern spacing in projections"""
+        """Analyze hex dimensions from pattern spacing in edge images"""
         hex_info = {}
         
-        # Analyze pattern spacing in each projection to find hex tile size
+        # Convert 2D edge images to 1D profiles for pattern analysis
         pattern_spacings = {}
         
-        for direction, projection in projections.items():
-            spacing = self._find_pattern_spacing(projection)
+        for direction, edge_img in projections.items():
+            if direction in ['view_from_top', 'view_from_bottom']:
+                # For top/bottom views, sum along vertical axis to get horizontal profile
+                profile = np.sum(edge_img, axis=0)
+            else:  # left/right views
+                # For left/right views, sum along horizontal axis to get vertical profile
+                profile = np.sum(edge_img, axis=1)
+            
+            spacing = self._find_pattern_spacing(profile)
             pattern_spacings[direction] = spacing
         
         # Use horizontal projections to determine hex spacing
@@ -192,17 +222,35 @@ class HexGridAnalyzer:
         if len(projection) < 10:
             return 0
         
+        # Skip if projection is all zeros
+        if np.max(projection) == 0:
+            return 0
+        
         # Look for peaks and valleys in the projection to find pattern spacing
         from scipy.signal import find_peaks
         
-        # Smooth the projection slightly
+        # For sparse edge data, don't smooth too much - preserve the edge positions
         from scipy.ndimage import gaussian_filter1d
-        smoothed = gaussian_filter1d(projection.astype(float), sigma=2)
+        smoothed = gaussian_filter1d(projection.astype(float), sigma=1)
         
-        # Find peaks (high points in projection)
-        peaks, _ = find_peaks(smoothed, height=np.max(smoothed) * 0.3, distance=20)
+        # Lower the threshold and distance for sparse edge data
+        max_val = np.max(smoothed)
+        if max_val == 0:
+            return 0
+            
+        # Find peaks with lower threshold for sparse data
+        peaks, _ = find_peaks(smoothed, height=max_val * 0.1, distance=10)
         
         if len(peaks) < 2:
+            # Try finding any non-zero positions as potential peaks
+            nonzero_positions = np.where(projection > 0)[0]
+            if len(nonzero_positions) >= 2:
+                # Use the spacing between non-zero regions
+                spacings = np.diff(nonzero_positions)
+                # Filter out very small spacings (likely same feature)
+                valid_spacings = spacings[spacings > 5]
+                if len(valid_spacings) > 0:
+                    return int(np.median(valid_spacings))
             return 0
         
         # Calculate spacing between peaks
@@ -256,12 +304,12 @@ class HexGridAnalyzer:
         avg_vertical_spacing = np.mean([boundaries['pattern_spacings'].get('view_from_left', hex_side_length), 
                                        boundaries['pattern_spacings'].get('view_from_right', hex_side_length)])
         
-        # Use the detected spacings directly
-        spacing_x = avg_horizontal_spacing
-        spacing_y = avg_vertical_spacing
+        # Use the detected spacings directly, with fallback if detection failed
+        spacing_x = avg_horizontal_spacing if avg_horizontal_spacing > 0 else hex_side_length * 1.5
+        spacing_y = avg_vertical_spacing if avg_vertical_spacing > 0 else hex_side_length * 1.3
         
-        cols = int(map_width / spacing_x) + 1
-        rows = int(map_height / spacing_y) + 1
+        cols = int(map_width / spacing_x) + 1 if spacing_x > 0 else 7
+        rows = int(map_height / spacing_y) + 1 if spacing_y > 0 else 7
         
         # Adjust if the grid is too large compared to expected tiles
         total_positions = rows * cols
@@ -358,81 +406,34 @@ class HexGridAnalyzer:
         cv2.imwrite(str(self.debug_dir / "map_boundaries.png"), debug_img)
     
     def _save_projection_debug_4dir(self, projections: Dict[str, np.ndarray], height: int, width: int):
-        """Save debug visualization of 4-directional projections"""
-        fig_height = 800
-        fig_width = 800
+        """Save debug visualization of 4-directional edge images"""
+        # Save each individual edge image for clear visualization
+        for direction, edge_img in projections.items():
+            filename = f"edge_{direction}.png"
+            cv2.imwrite(str(self.debug_dir / filename), edge_img)
         
-        # Create a combined visualization
-        combined_img = np.zeros((fig_height, fig_width, 3), dtype=np.uint8)
+        # Create a combined RGB visualization where each direction gets a color channel
+        combined_img = np.zeros((height, width, 3), dtype=np.uint8)
         
-        # Normalize and draw each projection
-        for i, (direction, projection) in enumerate(projections.items()):
-            if len(projection) == 0:
-                continue
-                
-            max_val = np.max(projection) if np.max(projection) > 0 else 1
-            normalized = (projection / max_val * 255).astype(np.uint8)
-            
-            # Position each projection in quarters
-            if direction == 'view_from_top':
-                # Top quarter
-                y_start, y_end = 0, fig_height // 4
-                x_start, x_end = 0, fig_width
-                if len(normalized) > 0:
-                    line_img = np.zeros((y_end - y_start, x_end - x_start), dtype=np.uint8)
-                    x_coords = np.linspace(0, x_end - x_start - 1, len(normalized), dtype=int)
-                    for j, val in enumerate(normalized):
-                        if j < len(x_coords):
-                            line_height = int((val / 255) * (y_end - y_start))
-                            line_img[-line_height:, x_coords[j]] = 255
-                    combined_img[y_start:y_end, x_start:x_end, 1] = line_img  # Green
-            
-            elif direction == 'view_from_bottom':
-                # Second quarter
-                y_start, y_end = fig_height // 4, fig_height // 2
-                x_start, x_end = 0, fig_width
-                if len(normalized) > 0:
-                    line_img = np.zeros((y_end - y_start, x_end - x_start), dtype=np.uint8)
-                    x_coords = np.linspace(0, x_end - x_start - 1, len(normalized), dtype=int)
-                    for j, val in enumerate(normalized):
-                        if j < len(x_coords):
-                            line_height = int((val / 255) * (y_end - y_start))
-                            line_img[:line_height, x_coords[j]] = 255
-                    combined_img[y_start:y_end, x_start:x_end, 0] = line_img  # Blue
-            
-            elif direction == 'view_from_left':
-                # Third quarter
-                y_start, y_end = fig_height // 2, 3 * fig_height // 4
-                x_start, x_end = 0, fig_width
-                if len(normalized) > 0:
-                    line_img = np.zeros((y_end - y_start, x_end - x_start), dtype=np.uint8)
-                    y_coords = np.linspace(0, y_end - y_start - 1, len(normalized), dtype=int)
-                    for j, val in enumerate(normalized):
-                        if j < len(y_coords):
-                            line_width = int((val / 255) * (x_end - x_start))
-                            line_img[y_coords[j], :line_width] = 255
-                    combined_img[y_start:y_end, x_start:x_end, 2] = line_img  # Red
-            
-            elif direction == 'view_from_right':
-                # Fourth quarter
-                y_start, y_end = 3 * fig_height // 4, fig_height
-                x_start, x_end = 0, fig_width
-                if len(normalized) > 0:
-                    line_img = np.zeros((y_end - y_start, x_end - x_start), dtype=np.uint8)
-                    y_coords = np.linspace(0, y_end - y_start - 1, len(normalized), dtype=int)
-                    for j, val in enumerate(normalized):
-                        if j < len(y_coords):
-                            line_width = int((val / 255) * (x_end - x_start))
-                            line_img[y_coords[j], -line_width:] = 255
-                    combined_img[y_start:y_end, x_start:x_end, 1] = line_img  # Green
+        # Assign colors to each direction for the combined view
+        if 'view_from_top' in projections:
+            combined_img[:, :, 1] = projections['view_from_top']  # Green channel
+        if 'view_from_bottom' in projections:
+            combined_img[:, :, 0] = projections['view_from_bottom']  # Blue channel  
+        if 'view_from_left' in projections:
+            combined_img[:, :, 2] = projections['view_from_left']  # Red channel
+        if 'view_from_right' in projections:
+            # Combine with green channel (will appear cyan where overlapping)
+            combined_img[:, :, 1] = cv2.bitwise_or(combined_img[:, :, 1], projections['view_from_right'])
         
-        # Add labels
-        cv2.putText(combined_img, "View from Top (Green)", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        cv2.putText(combined_img, "View from Bottom (Blue)", (10, fig_height // 4 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        cv2.putText(combined_img, "View from Left (Red)", (10, fig_height // 2 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        cv2.putText(combined_img, "View from Right (Green)", (10, 3 * fig_height // 4 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.imwrite(str(self.debug_dir / "4dir_edges_combined.png"), combined_img)
         
-        cv2.imwrite(str(self.debug_dir / "4dir_projections.png"), combined_img)
+        # Also create a simple grayscale combined view (OR of all edges)
+        combined_gray = np.zeros((height, width), dtype=np.uint8)
+        for direction, edge_img in projections.items():
+            combined_gray = cv2.bitwise_or(combined_gray, edge_img)
+        
+        cv2.imwrite(str(self.debug_dir / "4dir_edges_gray.png"), combined_gray)
     
     def _save_projection_debug(self, projection: np.ndarray, direction: str, height: int, width: int, transpose: bool = False):
         """Save debug visualization of projection"""
