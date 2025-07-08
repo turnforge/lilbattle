@@ -107,11 +107,11 @@ class HexSplitter:
         height, width = shape[:2]
         mask = np.zeros((height, width), dtype=np.uint8)
         
-        # Create actual hexagon vertices
-        # Regular hexagon has 6 vertices at 60-degree intervals
+        # Create actual hexagon vertices for flat-top hexagon (WeeWar style)
+        # Start at top-right and go clockwise, offset by 30 degrees for flat-top
         hex_points = []
         for i in range(6):
-            angle = i * np.pi / 3  # 60 degrees in radians
+            angle = (i * np.pi / 3) + (np.pi / 6)  # Add 30 degrees offset for flat-top
             x = center_x + radius * np.cos(angle)
             y = center_y + radius * np.sin(angle)
             hex_points.append([int(x), int(y)])
