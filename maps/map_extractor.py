@@ -43,6 +43,20 @@ class HexCell:
     confidence: float = 0.0
 
 
+@dataclass
+class GridParams:
+    """Parameters defining the hex grid structure"""
+    hex_width: int          # Width of hex tile in pixels
+    hex_height: int         # Height of hex tile in pixels  
+    rows: int              # Number of rows
+    cols: int              # Number of columns
+    row_offset: float      # X offset for odd rows (0 or hex_width/2)
+    start_x: int           # X coordinate of first hex center
+    start_y: int           # Y coordinate of first hex center
+    spacing_x: float       # Horizontal spacing between centers
+    spacing_y: float       # Vertical spacing between centers
+
+
 class MapExtractor:
     """Main class for extracting map data from preview images"""
     
@@ -111,27 +125,260 @@ class MapExtractor:
             debug_dir.mkdir(exist_ok=True)
             cv2.imwrite(str(debug_dir / "01_original.png"), image)
         
-        # Try multiple detection methods
-        hex_centers = []
+        # Step 1: Analyze hex grid structure from edges
+        grid_params = self._analyze_hex_grid_structure(image, debug_mode)
         
-        # Method 1: Enhanced edge detection
-        hex_centers = self._detect_hex_edges(image, debug_mode)
+        if grid_params is None:
+            print("Could not determine hex grid structure")
+            return []
         
-        # Method 2: Template matching if edge detection fails
-        if len(hex_centers) < 10:
-            print("Edge detection failed, trying template matching...")
-            hex_centers = self._detect_hex_template_improved(image, debug_mode)
+        print(f"Grid parameters: {grid_params}")
         
-        # Method 3: Grid-based detection if others fail
-        if len(hex_centers) < 10:
-            print("Template matching failed, trying grid-based detection...")
-            hex_centers = self._detect_hex_grid_pattern(image, debug_mode)
+        # Step 2: Generate hex centers based on determined structure
+        hex_cells = self._generate_hex_cells_from_structure(image, grid_params, debug_mode)
         
         if debug_mode:
-            self._save_debug_centers(image, hex_centers, debug_dir / "final_centers.png")
+            self._save_debug_hex_cells(image, hex_cells, debug_dir / "structured_cells.png")
         
-        # Convert centers to grid structure
-        return self._organize_hex_centers(hex_centers)
+        return hex_cells
+    
+    def _analyze_hex_grid_structure(self, image: np.ndarray, debug_mode: bool = False) -> Optional[GridParams]:
+        """Analyze hex grid structure from edge detection"""
+        debug_dir = Path("debug_images") if debug_mode else None
+        
+        # Get edge image
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        enhanced = clahe.apply(gray)
+        edges = cv2.Canny(enhanced, 30, 90)
+        
+        if debug_mode:
+            cv2.imwrite(str(debug_dir / "structure_edges.png"), edges)
+        
+        # Analyze horizontal patterns (row detection)
+        row_info = self._analyze_horizontal_patterns(edges, debug_mode)
+        if not row_info:
+            return None
+        
+        # Analyze vertical patterns (column detection)
+        col_info = self._analyze_vertical_patterns(edges, debug_mode)
+        if not col_info:
+            return None
+        
+        # Determine hex dimensions and grid parameters
+        return self._calculate_grid_params(image, row_info, col_info, debug_mode)
+    
+    def _analyze_horizontal_patterns(self, edges: np.ndarray, debug_mode: bool = False) -> Optional[dict]:
+        """Analyze horizontal patterns to find row structure"""
+        height, width = edges.shape
+        
+        # Project edges horizontally to find row positions
+        horizontal_projection = np.sum(edges, axis=1)
+        
+        if debug_mode:
+            debug_dir = Path("debug_images")
+            # Create visualization of horizontal projection
+            proj_img = np.zeros((height, width), dtype=np.uint8)
+            for y, value in enumerate(horizontal_projection):
+                line_width = int((value / np.max(horizontal_projection)) * width)
+                proj_img[y, :line_width] = 255
+            cv2.imwrite(str(debug_dir / "horizontal_projection.png"), proj_img)
+        
+        # Find peaks in horizontal projection (row centers)
+        from scipy.signal import find_peaks
+        peaks, _ = find_peaks(horizontal_projection, 
+                             height=np.max(horizontal_projection) * 0.3, 
+                             distance=10)
+        
+        if len(peaks) < 3:  # Need at least 3 rows to determine pattern
+            return None
+        
+        # Calculate row spacing
+        row_spacings = np.diff(peaks)
+        median_row_spacing = np.median(row_spacings)
+        
+        return {
+            'row_centers': peaks,
+            'row_spacing': median_row_spacing,
+            'num_rows': len(peaks)
+        }
+    
+    def _analyze_vertical_patterns(self, edges: np.ndarray, debug_mode: bool = False) -> Optional[dict]:
+        """Analyze vertical patterns to find column structure"""
+        height, width = edges.shape
+        
+        # Project edges vertically to find column positions
+        vertical_projection = np.sum(edges, axis=0)
+        
+        if debug_mode:
+            debug_dir = Path("debug_images")
+            # Create visualization of vertical projection
+            proj_img = np.zeros((height, width), dtype=np.uint8)
+            for x, value in enumerate(vertical_projection):
+                line_height = int((value / np.max(vertical_projection)) * height)
+                proj_img[-line_height:, x] = 255
+            cv2.imwrite(str(debug_dir / "vertical_projection.png"), proj_img)
+        
+        # Find peaks in vertical projection
+        from scipy.signal import find_peaks
+        peaks, _ = find_peaks(vertical_projection, 
+                             height=np.max(vertical_projection) * 0.2, 
+                             distance=15)
+        
+        if len(peaks) < 3:  # Need at least 3 columns
+            return None
+        
+        # Analyze column pattern to detect hex offset
+        col_spacings = np.diff(peaks)
+        median_col_spacing = np.median(col_spacings)
+        
+        # Detect if there are two alternating patterns (indicating hex offset)
+        offset_pattern = self._detect_hex_offset_pattern(peaks)
+        
+        return {
+            'col_centers': peaks,
+            'col_spacing': median_col_spacing,
+            'num_cols': len(peaks),
+            'offset_pattern': offset_pattern
+        }
+    
+    def _detect_hex_offset_pattern(self, col_peaks: np.ndarray) -> dict:
+        """Detect hex offset pattern in column positions"""
+        if len(col_peaks) < 4:
+            return {'has_offset': False, 'offset_amount': 0}
+        
+        # Group columns by their relative positions
+        # In hex grids, columns alternate between two x-positions
+        col_positions = []
+        for i in range(len(col_peaks) - 1):
+            spacing = col_peaks[i + 1] - col_peaks[i]
+            col_positions.append(spacing)
+        
+        # Look for alternating pattern in spacings
+        if len(col_positions) >= 3:
+            # Check if odd and even spacings are different
+            even_spacings = [col_positions[i] for i in range(0, len(col_positions), 2)]
+            odd_spacings = [col_positions[i] for i in range(1, len(col_positions), 2)]
+            
+            if len(even_spacings) > 0 and len(odd_spacings) > 0:
+                even_median = np.median(even_spacings)
+                odd_median = np.median(odd_spacings)
+                
+                # If there's a significant difference, we have hex offset
+                if abs(even_median - odd_median) > 5:  # pixels
+                    return {
+                        'has_offset': True,
+                        'offset_amount': abs(even_median - odd_median) / 2
+                    }
+        
+        return {'has_offset': False, 'offset_amount': 0}
+    
+    def _calculate_grid_params(self, image: np.ndarray, row_info: dict, col_info: dict, debug_mode: bool = False) -> GridParams:
+        """Calculate final grid parameters from row and column analysis"""
+        
+        # Basic dimensions
+        hex_height = int(row_info['row_spacing'])
+        hex_width = int(col_info['col_spacing'] * 1.5)  # Hex width is ~1.5x column spacing
+        
+        # Grid size
+        rows = row_info['num_rows']
+        cols = col_info['num_cols']
+        
+        # Calculate actual hex spacing
+        spacing_y = row_info['row_spacing']
+        spacing_x = col_info['col_spacing']
+        
+        # Starting positions
+        start_y = int(row_info['row_centers'][0]) if len(row_info['row_centers']) > 0 else hex_height // 2
+        start_x = int(col_info['col_centers'][0]) if len(col_info['col_centers']) > 0 else hex_width // 2
+        
+        # Row offset for hex pattern
+        row_offset = col_info['offset_pattern']['offset_amount'] if col_info['offset_pattern']['has_offset'] else 0
+        
+        params = GridParams(
+            hex_width=hex_width,
+            hex_height=hex_height,
+            rows=rows,
+            cols=cols,
+            row_offset=row_offset,
+            start_x=start_x,
+            start_y=start_y,
+            spacing_x=spacing_x,
+            spacing_y=spacing_y
+        )
+        
+        if debug_mode:
+            print(f"Calculated grid params: {params}")
+        
+        return params
+    
+    def _generate_hex_cells_from_structure(self, image: np.ndarray, params: GridParams, debug_mode: bool = False) -> List[HexCell]:
+        """Generate hex cells based on analyzed grid structure"""
+        hex_cells = []
+        
+        for row in range(params.rows):
+            for col in range(params.cols):
+                # Calculate hex center position using hex grid geometry
+                x = params.start_x + col * params.spacing_x
+                
+                # Apply row offset for hex pattern
+                if row % 2 == 1:  # Odd rows are offset
+                    x += params.row_offset
+                
+                y = params.start_y + row * params.spacing_y
+                
+                # Check if position is within image bounds
+                if 0 <= x < image.shape[1] and 0 <= y < image.shape[0]:
+                    # Extract and classify this hex region
+                    tile_id, confidence = self._classify_hex_at_position(image, int(x), int(y), params)
+                    
+                    hex_cell = HexCell(
+                        row=row,
+                        col=col,
+                        center_x=x,
+                        center_y=y,
+                        tile_id=tile_id,
+                        confidence=confidence
+                    )
+                    hex_cells.append(hex_cell)
+        
+        return hex_cells
+    
+    def _classify_hex_at_position(self, image: np.ndarray, center_x: int, center_y: int, params: GridParams) -> Tuple[int, float]:
+        """Classify hex tile at specific position"""
+        # Extract hex region around center
+        half_width = params.hex_width // 2
+        half_height = params.hex_height // 2
+        
+        x1 = max(0, center_x - half_width)
+        y1 = max(0, center_y - half_height)
+        x2 = min(image.shape[1], center_x + half_width)
+        y2 = min(image.shape[0], center_y + half_height)
+        
+        if x2 <= x1 or y2 <= y1:
+            return 0, 0.0
+        
+        hex_region = image[y1:y2, x1:x2]
+        
+        if hex_region.size == 0:
+            return 0, 0.0
+        
+        # Use existing classification method
+        return self._classify_hex_region(hex_region)
+    
+    def _save_debug_hex_cells(self, image: np.ndarray, hex_cells: List[HexCell], path: Path):
+        """Save debug image with hex cells marked"""
+        debug_img = image.copy()
+        for cell in hex_cells:
+            # Draw center point
+            cv2.circle(debug_img, (int(cell.center_x), int(cell.center_y)), 3, (0, 255, 0), -1)
+            # Draw hex boundary
+            cv2.circle(debug_img, (int(cell.center_x), int(cell.center_y)), 15, (255, 0, 0), 2)
+            # Draw row/col text
+            cv2.putText(debug_img, f"{cell.row},{cell.col}", 
+                       (int(cell.center_x)-10, int(cell.center_y)-20), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
+        cv2.imwrite(str(path), debug_img)
     
     def _detect_hex_edges(self, image: np.ndarray, debug_mode: bool = False) -> List[Tuple[int, int]]:
         """Enhanced edge detection for hexagons"""
