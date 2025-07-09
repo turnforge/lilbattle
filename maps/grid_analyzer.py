@@ -186,8 +186,12 @@ class HexGridAnalyzer:
         """Analyze hex grid using geometric constraints from boundary measurements"""
         hex_info = {}
         
+        # Detect vertical lines to find true column boundaries
+        vertical_lines = self._detect_vertical_lines(combined_boundary)
+        hex_info.update(vertical_lines)
+        
         # Measure actual span distances from the boundary
-        span_measurements = self._measure_boundary_spans(combined_boundary)
+        span_measurements = self._measure_boundary_spans(combined_boundary, vertical_lines)
         hex_info.update(span_measurements)
         
         # Use geometric constraint solver to find best grid parameters
@@ -197,14 +201,63 @@ class HexGridAnalyzer:
             boundaries['height'],
             projections,
             span_measurements,
-            combined_boundary
+            combined_boundary,
+            vertical_lines
         )
         hex_info.update(grid_solution)
         
         return hex_info
     
-    def _measure_boundary_spans(self, boundary_img: np.ndarray) -> Dict:
-        """Measure actual spans from boundary image to understand what distance we're measuring"""
+    def _detect_vertical_lines(self, combined_boundary: np.ndarray) -> Dict:
+        """Detect purely vertical lines using Hough Line Transform"""
+        if combined_boundary.size == 0:
+            return {'vertical_line_positions': [], 'leftmost_vertical': None, 'rightmost_vertical': None}
+        
+        # Apply Hough Line Transform to detect lines
+        lines = cv2.HoughLinesP(combined_boundary, 1, np.pi/180, threshold=50, minLineLength=30, maxLineGap=10)
+        
+        vertical_x_positions = []
+        
+        if lines is not None:
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                
+                # Calculate angle of the line
+                if x2 - x1 != 0:
+                    angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi
+                else:
+                    angle = 90  # Perfectly vertical
+                
+                # Filter for vertical lines (±5 degrees from vertical)
+                if abs(angle - 90) <= 5 or abs(angle + 90) <= 5:
+                    # Use average X position of the line
+                    avg_x = (x1 + x2) / 2
+                    vertical_x_positions.append(avg_x)
+        
+        # Remove duplicates and sort
+        vertical_x_positions = sorted(list(set([int(x) for x in vertical_x_positions])))
+        
+        # Clean up nearby positions (merge lines that are very close)
+        cleaned_positions = []
+        for pos in vertical_x_positions:
+            if not cleaned_positions or abs(pos - cleaned_positions[-1]) > 10:
+                cleaned_positions.append(pos)
+        
+        result = {
+            'vertical_line_positions': cleaned_positions,
+            'leftmost_vertical': cleaned_positions[0] if cleaned_positions else None,
+            'rightmost_vertical': cleaned_positions[-1] if cleaned_positions else None,
+            'num_vertical_lines': len(cleaned_positions)
+        }
+        
+        if self.debug_mode:
+            self._save_vertical_lines_debug(combined_boundary, cleaned_positions)
+            print(f"Detected {len(cleaned_positions)} vertical lines at positions: {cleaned_positions}")
+        
+        return result
+    
+    def _measure_boundary_spans(self, boundary_img: np.ndarray, vertical_lines: Dict = None) -> Dict:
+        """Measure actual spans from boundary image, optionally using detected vertical lines"""
         height, width = boundary_img.shape
         measurements = {}
         
@@ -213,13 +266,31 @@ class HexGridAnalyzer:
         if len(boundary_coords[0]) == 0:
             return {'max_horizontal_span': 0, 'max_vertical_span': 0}
         
-        # Measure horizontal spans across different rows
-        horizontal_spans = []
-        for row in range(height):
-            row_pixels = np.where(boundary_img[row, :] > 0)[0]
-            if len(row_pixels) >= 2:
-                span = np.max(row_pixels) - np.min(row_pixels)
-                horizontal_spans.append(span)
+        # If we have vertical line information, use it for more accurate measurements
+        if vertical_lines and vertical_lines.get('leftmost_vertical') is not None and vertical_lines.get('rightmost_vertical') is not None:
+            # Use true vertical line boundaries
+            leftmost = vertical_lines['leftmost_vertical']
+            rightmost = vertical_lines['rightmost_vertical']
+            max_horizontal_span = rightmost - leftmost
+            
+            if self.debug_mode:
+                print(f"Using vertical line boundaries: {leftmost} to {rightmost} = {max_horizontal_span}px span")
+            
+            measurements['max_horizontal_span'] = max_horizontal_span
+            measurements['leftmost_boundary'] = leftmost
+            measurements['rightmost_boundary'] = rightmost
+            measurements['boundary_source'] = 'vertical_lines'
+        else:
+            # Fallback to original row-by-row measurement
+            horizontal_spans = []
+            for row in range(height):
+                row_pixels = np.where(boundary_img[row, :] > 0)[0]
+                if len(row_pixels) >= 2:
+                    span = np.max(row_pixels) - np.min(row_pixels)
+                    horizontal_spans.append(span)
+            
+            measurements['max_horizontal_span'] = max(horizontal_spans) if horizontal_spans else 0
+            measurements['boundary_source'] = 'pixel_spans'
         
         # Measure vertical spans across different columns  
         vertical_spans = []
@@ -229,21 +300,97 @@ class HexGridAnalyzer:
                 span = np.max(col_pixels) - np.min(col_pixels)
                 vertical_spans.append(span)
         
-        measurements['max_horizontal_span'] = max(horizontal_spans) if horizontal_spans else 0
         measurements['max_vertical_span'] = max(vertical_spans) if vertical_spans else 0
-        measurements['avg_horizontal_span'] = np.mean(horizontal_spans) if horizontal_spans else 0
         measurements['avg_vertical_span'] = np.mean(vertical_spans) if vertical_spans else 0
-        measurements['all_horizontal_spans'] = horizontal_spans[:10]  # Sample for debugging
         measurements['all_vertical_spans'] = vertical_spans[:10]     # Sample for debugging
         
         return measurements
     
-    def _solve_hex_constraints(self, measured_span: int, total_width: int, total_height: int, projections: Dict[str, np.ndarray], span_measurements: Dict, combined_boundary: np.ndarray) -> Dict:
-        """Solve geometric constraints to find hex grid parameters"""
+    def _solve_hex_constraints(self, measured_span: int, total_width: int, total_height: int, projections: Dict[str, np.ndarray], span_measurements: Dict, combined_boundary: np.ndarray, vertical_lines: Dict) -> Dict:
+        """Solve geometric constraints using detected vertical lines"""
+        # Use detected vertical lines to calculate grid parameters directly
+        vertical_positions = vertical_lines.get('vertical_line_positions', [])
+        leftmost_vertical = vertical_lines.get('leftmost_vertical')
+        rightmost_vertical = vertical_lines.get('rightmost_vertical')
+        
+        if len(vertical_positions) >= 2 and leftmost_vertical is not None and rightmost_vertical is not None:
+            # Calculate hex_width from spacing between consecutive vertical lines
+            spacings = []
+            for i in range(1, len(vertical_positions)):
+                spacing = vertical_positions[i] - vertical_positions[i-1]
+                spacings.append(spacing)
+            
+            # Use average spacing as hex_width
+            hex_width = int(np.mean(spacings)) if spacings else 60
+            
+            # Calculate columns from number of vertical lines
+            cols = len(vertical_positions)
+            
+            # Calculate actual span from leftmost to rightmost vertical lines
+            actual_span = rightmost_vertical - leftmost_vertical
+            
+            # Center spacing is same as hex_width for hexagonal grids
+            center_spacing = hex_width
+            
+            if self.debug_mode:
+                print(f"Direct calculation from vertical lines:")
+                print(f"  Detected vertical lines: {len(vertical_positions)}")
+                print(f"  Leftmost: {leftmost_vertical}, Rightmost: {rightmost_vertical}")
+                print(f"  Spacings: {spacings}")
+                print(f"  Calculated hex_width: {hex_width}")
+                print(f"  Calculated cols: {cols}")
+                print(f"  Actual span: {actual_span}")
+            
+            best_solution = {
+                'cols': cols,
+                'hex_width': hex_width,
+                'center_spacing': center_spacing,
+                'expected_span': actual_span,
+                'expected_total_width': actual_span,
+                'span_error': 0,  # No error since we're using actual measurements
+                'width_error': 0,
+                'total_error': 0,
+                'vertical_line_spacings': spacings,
+                'leftmost_boundary': leftmost_vertical,
+                'rightmost_boundary': rightmost_vertical
+            }
+        else:
+            # Fallback to original brute-force method if vertical line detection fails
+            if self.debug_mode:
+                print(f"Vertical line detection failed, falling back to brute-force method")
+                print(f"  Detected lines: {len(vertical_positions)}")
+            
+            best_solution = self._brute_force_constraint_solving(measured_span, total_width, total_height)
+        
+        # Calculate rows by counting actual vertical segments from boundary data
+        if best_solution:
+            hex_height = int(best_solution['hex_width'] * HEIGHT_FACTOR)  # Square tiles
+            
+            # Count vertical segments directly from the boundary measurements
+            rows = self._count_vertical_segments(combined_boundary, total_height)
+            
+            # Calculate vertical spacing based on detected row count
+            if rows > 1:
+                vertical_spacing = (total_height - hex_height) / (rows - 1)
+            else:
+                vertical_spacing = hex_height * 0.75  # Fallback
+            
+            if self.debug_mode:
+                print(f"Detected {rows} vertical segments")
+                print(f"Calculated vertical spacing: {vertical_spacing:.1f} pixels")
+            
+            best_solution['rows'] = rows
+            best_solution['hex_height'] = hex_height
+            best_solution['hex_side_length'] = best_solution['hex_width']  # For compatibility
+            best_solution['vertical_spacing'] = vertical_spacing
+        
+        return best_solution or {'hex_side_length': 60, 'cols': DEFAULT_NUM_STARTING_COLS, 'rows': DEFAULT_NUM_STARTING_ROWS}
+    
+    def _brute_force_constraint_solving(self, measured_span: int, total_width: int, total_height: int) -> Dict:
+        """Fallback brute-force constraint solving method"""
         best_solution = None
         best_error = float('inf')
         
-        set_trace(context=21)
         # Try different numbers of columns and hex sizes
         for cols in range(5, 100):  # Reasonable range for WeeWar maps
             for hex_width in range(30, 100):  # Reasonable hex size range
@@ -268,8 +415,7 @@ class HexGridAnalyzer:
                 
                 # Combined error metric
                 total_error = span_error + width_error
-                print("Cols, HexWidth, Total Error: ", cols, hex_width, total_error)
-
+                
                 if total_error < best_error:
                     best_error = total_error
                     best_solution = {
@@ -282,28 +428,6 @@ class HexGridAnalyzer:
                         'width_error': width_error,
                         'total_error': total_error
                     }
-        
-        # Calculate rows by counting actual vertical segments from boundary data
-        if best_solution:
-            hex_height = int(best_solution['hex_width'] * HEIGHT_FACTOR)  # Square tiles
-            
-            # Count vertical segments directly from the boundary measurements
-            rows = self._count_vertical_segments(combined_boundary, total_height)
-            
-            # Calculate vertical spacing based on detected row count
-            if rows > 1:
-                vertical_spacing = (total_height - hex_height) / (rows - 1)
-            else:
-                vertical_spacing = hex_height * 0.75  # Fallback
-            
-            if self.debug_mode:
-                print(f"Detected {rows} vertical segments")
-                print(f"Calculated vertical spacing: {vertical_spacing:.1f} pixels")
-            
-            best_solution['rows'] = rows
-            best_solution['hex_height'] = hex_height
-            best_solution['hex_side_length'] = best_solution['hex_width']  # For compatibility
-            best_solution['vertical_spacing'] = vertical_spacing
         
         return best_solution or {'hex_side_length': 60, 'cols': DEFAULT_NUM_STARTING_COLS, 'rows': DEFAULT_NUM_STARTING_ROWS}
     
@@ -679,6 +803,53 @@ class HexGridAnalyzer:
             combined_gray = cv2.bitwise_or(combined_gray, edge_img)
         
         cv2.imwrite(str(self.debug_dir / "4dir_edges_gray.png"), combined_gray)
+    
+    def _save_vertical_lines_debug(self, combined_boundary: np.ndarray, vertical_positions: List[int]):
+        """Save debug visualization of detected vertical lines"""
+        if not self.debug_mode or not vertical_positions:
+            return
+        
+        # Create RGB image for better visualization
+        height, width = combined_boundary.shape
+        debug_img = cv2.cvtColor(combined_boundary, cv2.COLOR_GRAY2BGR)
+        
+        # Draw detected vertical lines
+        for i, x_pos in enumerate(vertical_positions):
+            # Use different colors for leftmost (red), rightmost (blue), and middle (green)
+            if i == 0:  # Leftmost
+                color = (0, 0, 255)  # Red
+                thickness = 3
+            elif i == len(vertical_positions) - 1:  # Rightmost
+                color = (255, 0, 0)  # Blue
+                thickness = 3
+            else:  # Middle lines
+                color = (0, 255, 0)  # Green
+                thickness = 2
+            
+            # Draw vertical line
+            cv2.line(debug_img, (x_pos, 0), (x_pos, height), color, thickness)
+            
+            # Add text label with X-coordinate
+            cv2.putText(debug_img, f"{x_pos}", (x_pos - 20, 30 + i * 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        
+        # Add summary text
+        if len(vertical_positions) >= 2:
+            span = vertical_positions[-1] - vertical_positions[0]
+            spacings = [vertical_positions[i] - vertical_positions[i-1] for i in range(1, len(vertical_positions))]
+            avg_spacing = int(np.mean(spacings)) if spacings else 0
+            
+            summary_text = [
+                f"Lines: {len(vertical_positions)}",
+                f"Span: {span}px",
+                f"Avg spacing: {avg_spacing}px"
+            ]
+            
+            for i, text in enumerate(summary_text):
+                cv2.putText(debug_img, text, (10, height - 60 + i * 20), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+        
+        # Save debug image
+        cv2.imwrite(str(self.debug_dir / "vertical_lines_detected.png"), debug_img)
     
     def _save_projection_debug(self, projection: np.ndarray, direction: str, height: int, width: int, transpose: bool = False):
         """Save debug visualization of projection"""
