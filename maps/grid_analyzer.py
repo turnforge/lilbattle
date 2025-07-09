@@ -13,6 +13,7 @@ from typing import Optional, Dict, List
 from pathlib import Path
 from dataclasses import dataclass
 
+MIN_LINE_LENGTH = 10 # Only keep lines with minimum length when detecting vertical lines
 MAX_ROWS = 20
 DEFAULT_NUM_STARTING_COLS = 7
 DEFAULT_NUM_STARTING_ROWS = 7
@@ -44,7 +45,7 @@ class HexGridAnalyzer:
         if self.debug_mode:
             self.debug_dir.mkdir(exist_ok=True)
     
-    def analyze_grid_structure(self, image: np.ndarray, expected_tiles: int = 34) -> Optional[GridParams]:
+    def analyze_grid_structure(self, image: np.ndarray, expected_tiles: int) -> Optional[GridParams]:
         """Analyze hex grid structure from map boundary"""
         # Get edge image
         edges = self._get_edge_image(image)
@@ -127,7 +128,7 @@ class HexGridAnalyzer:
         height, width = edges.shape
         
         projections = {}
-        edge_thickness = 5  # Thicker edges to handle jaggedness and improve segment detection
+        edge_thickness = 3  # Thicker edges to handle jaggedness and improve segment detection
         
         # Create a mask for vertical edges using gradient analysis
         vertical_edge_mask = self._create_vertical_edge_mask(edges)
@@ -269,6 +270,17 @@ class HexGridAnalyzer:
             line_segments.get('matched_pairs', [])
         )
         hex_info['line_segment_spans'] = spans
+        
+        # Use advanced constraint solver with matched pairs
+        if line_segments.get('matched_pairs'):
+            constraint_solution = self._solve_constraints_from_matched_pairs(
+                matched_pairs=line_segments.get('matched_pairs', []),
+                left_lines=line_segments.get('left_lines', []),
+                right_lines=line_segments.get('right_lines', []),
+                image_width=combined_boundary.shape[1],  # Image width from boundary shape
+                error_margin=5
+            )
+            hex_info['constraint_solution'] = constraint_solution
         
         # Measure actual span distances from the boundary
         span_measurements = self._measure_boundary_spans(combined_boundary, vertical_lines)
@@ -444,7 +456,7 @@ class HexGridAnalyzer:
                         gap_count = 0
                     else:
                         # X position changed significantly - finish current line and start new one
-                        if current_line['length'] >= 10:  # Only keep lines with minimum length
+                        if current_line['length'] >= MIN_LINE_LENGTH:  
                             lines.append(current_line.copy())
                         
                         current_line = {
@@ -465,13 +477,13 @@ class HexGridAnalyzer:
                         current_line['length'] = current_line['end_y'] - current_line['start_y'] + 1
                     else:
                         # Gap too large - finish current line
-                        if current_line['length'] >= 10:  # Only keep lines with minimum length
+                        if current_line['length'] >= MIN_LINE_LENGTH:  # Only keep lines with minimum length
                             lines.append(current_line.copy())
                         current_line = None
                         gap_count = 0
         
         # Don't forget the last line if it exists
-        if current_line is not None and current_line['length'] >= 10:
+        if current_line is not None and current_line['length'] >= MIN_LINE_LENGTH:
             lines.append(current_line)
         
         return lines
@@ -727,6 +739,92 @@ class HexGridAnalyzer:
                 print(f"  Span {i+1}: {span['span']}px (L{span['left_line_idx']}-R{span['right_line_idx']}, Y:{span['start_y']}-{span['end_y']}, overlap:{span['overlap_length']}px)")
         
         return spans
+    
+    def _solve_constraints_from_matched_pairs(self, matched_pairs: List[tuple], left_lines: List[Dict], 
+                                            right_lines: List[Dict], image_width: int, 
+                                            error_margin: int = 3) -> Dict:
+        """Advanced constraint solver using matched pairs of line segments
+        
+        Args:
+            matched_pairs: List of (left_idx, right_idx) tuples
+            left_lines: List of left line segment dictionaries
+            right_lines: List of right line segment dictionaries  
+            image_width: Total width of the image
+            error_margin: Pixel error margin for coordinate measurements
+            
+        Returns:
+            Dictionary with candidate column counts and supporting evidence
+        """
+        from collections import defaultdict
+        
+        cols_matched = defaultdict(set)  # which matched spans support which ncols
+        needs_extra_half_tile_with_ncols = {}
+        
+        if self.debug_mode:
+            print(f"Testing constraint solver with image_width={image_width}, error_margin={error_margin}")
+        
+        for numcols in range(5, 100):  # Test various column counts
+            col_matched = False
+            for left_idx, right_idx in matched_pairs:
+                left_line = left_lines[left_idx]
+                right_line = right_lines[right_idx]
+                left_startx = left_line['start_x'] - error_margin
+                left_endx = left_line['start_x'] + error_margin
+                right_startx = right_line['start_x'] - error_margin
+                right_endx = right_line['start_x'] + error_margin
+                
+                # Test with error margins
+                for lx in range(left_startx, left_endx + 1):
+                    if col_matched: break
+                    for rx in range(right_startx, right_endx + 1):
+                        matched, needs_half_col, hex_width = constraint_matched_for_pair(numcols, lx, rx, image_width)
+                        if matched:
+                            cols_matched[numcols].add((left_idx, right_idx, hex_width))
+                            needs_extra_half_tile_with_ncols[numcols] = needs_half_col
+                            col_matched = True
+                            break
+        
+        # set_trace(context=21)
+        # Process results to find best candidates
+        column_candidates = []
+        
+        for numcols in sorted(cols_matched.keys()):
+            supporting_pairs = []
+            hex_widths = []
+            for (leftidx, rightidx, hex_width) in cols_matched[numcols]:
+                supporting_pairs.append((leftidx, rightidx))
+                hex_widths.append(hex_width)
+            
+            # Calculate statistics for this column count
+            avg_hex_width = sum(hex_widths) / len(hex_widths) if hex_widths else 0
+            has_half_tile = needs_extra_half_tile_with_ncols.get(numcols, False)
+            
+            candidate = {
+                'cols': numcols,
+                'supporting_pairs': list(supporting_pairs),
+                'num_supporting_pairs': len(supporting_pairs),
+                'hex_width_samples': hex_widths,
+                'avg_hex_width': avg_hex_width,
+                'has_half_tile': has_half_tile,
+                'confidence': len(supporting_pairs)  # More supporting pairs = higher confidence
+            }
+            
+            column_candidates.append(candidate)
+        
+        # Sort by confidence (number of supporting pairs) and then by column count
+        column_candidates.sort(key=lambda x: (x['confidence'], -x['cols']), reverse=True)
+        
+        if self.debug_mode:
+            print(f"Found {len(column_candidates)} column candidates")
+            for i, candidate in enumerate(column_candidates[:5]):  # Show top 5
+                print(f"  Candidate {i+1}: {candidate['cols']} cols, {candidate['num_supporting_pairs']} supporting pairs, "
+                      f"avg hex_width={candidate['avg_hex_width']:.1f}, half_tile={candidate['has_half_tile']}")
+        
+        return {
+            'column_candidates': column_candidates,
+            'top_candidate': column_candidates[0] if column_candidates else None,
+            'total_candidates': len(column_candidates)
+        }
     
     def _detect_vertical_lines_hough(self, combined_boundary: np.ndarray, projections: Dict = None) -> Dict:
         """Detect vertical lines using Hough Line Transform (original method)"""
@@ -1363,13 +1461,13 @@ class HexGridAnalyzer:
             # Use different colors for leftmost (red), rightmost (blue), and middle (green)
             if i == 0:  # Leftmost
                 color = (0, 0, 255)  # Red
-                thickness = 3
+                thickness = 2
             elif i == len(vertical_positions) - 1:  # Rightmost
                 color = (255, 0, 0)  # Blue
-                thickness = 3
+                thickness = 2
             else:  # Middle lines
                 color = (0, 255, 0)  # Green
-                thickness = 2
+                thickness = 1
             
             # Draw vertical line
             cv2.line(debug_img, (x_pos, 0), (x_pos, height), color, thickness)
@@ -1411,6 +1509,41 @@ class HexGridAnalyzer:
         
         cv2.imwrite(str(self.debug_dir / f"{direction}_projection.png"), proj_img)
 
+
+def constraint_matched_for_pair(cols, lx, rx, image_width, min_width=40, max_width=80):
+    span_width = rx - lx
+    
+    # Check if span is divisible by column count
+    if span_width <= 0:
+        return False, False, 0
+
+    # Check if image width can be filled with full hexes
+    hex_width = -1
+    midhw = image_width // cols
+
+    def close_enough(value, another, delta = 0.01):
+        return abs(value - another) <= delta
+
+    err = 3
+    for hw in range (midhw - err, midhw + err + 1):
+        if hw < min_width or hw > max_width: continue
+        ncols_in_span = span_width / hw
+        ncols_in_image = image_width / hw
+        ncols_in_image2 = (2 * image_width) / hw
+
+        # if cols == 14: print(locals()) set_trace(context=14)
+
+        if not close_enough(ncols_in_span, int(ncols_in_span + 0.5)):
+            continue
+        if close_enough(ncols_in_image, int(ncols_in_image + 0.5)):
+            # we have a candidate
+            return True, True, hw
+        if close_enough(2 * ncols_in_image, int(ncols_in_image2 + 0.5)):
+            # we have a candidate with half a tile
+            hex_width = hw
+            return True, False, hw
+
+    return False, False, -1
 
 def main():
     """Analyze hex grid structure from command line or test with default image"""
