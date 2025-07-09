@@ -278,9 +278,7 @@ done
 ## Known Limitations
 
 1. **Single map tested** - System validated on one WeeWar map, needs testing on more
-2. **Fixed tile size assumption** - Assumes 64x64 pixel tiles, may need adaptation  
-3. **Flat-top hex orientation** - Designed for WeeWar's specific hex layout
-4. **Manual override dependency** - Complex maps may require manual parameter adjustment
+2. **Manual override dependency** - Complex maps may require manual parameter adjustment
 
 ## Future Improvements
 

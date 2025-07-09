@@ -5,6 +5,7 @@ Grid Analyzer
 Analyzes hex grid structure from edge-detected images.
 """
 
+from ipdb import set_trace
 import cv2
 import numpy as np
 import math
@@ -242,9 +243,10 @@ class HexGridAnalyzer:
         best_solution = None
         best_error = float('inf')
         
+        set_trace(context=21)
         # Try different numbers of columns and hex sizes
-        for cols in range(5, 13):  # Reasonable range for WeeWar maps
-            for hex_width in range(40, 85):  # Reasonable hex size range
+        for cols in range(5, 100):  # Reasonable range for WeeWar maps
+            for hex_width in range(30, 100):  # Reasonable hex size range
                 
                 # For hexagonal grids, horizontal center spacing is hex_width
                 center_spacing = hex_width # hex_width *is* the center spacing
@@ -266,7 +268,8 @@ class HexGridAnalyzer:
                 
                 # Combined error metric
                 total_error = span_error + width_error
-                
+                print("Cols, HexWidth, Total Error: ", cols, hex_width, total_error)
+
                 if total_error < best_error:
                     best_error = total_error
                     best_solution = {
