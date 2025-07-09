@@ -262,8 +262,12 @@ class HexGridAnalyzer:
         line_segments = self._extract_vertical_line_segments(projections)
         hex_info.update(line_segments)
         
-        # Calculate spans from line segments
-        spans = self._calculate_spans_from_line_segments(line_segments.get('left_lines', []), line_segments.get('right_lines', []))
+        # Calculate spans from matched pairs
+        spans = self._calculate_spans_from_matched_pairs(
+            line_segments.get('left_lines', []), 
+            line_segments.get('right_lines', []), 
+            line_segments.get('matched_pairs', [])
+        )
         hex_info['line_segment_spans'] = spans
         
         # Measure actual span distances from the boundary
@@ -382,14 +386,19 @@ class HexGridAnalyzer:
         # Extract right vertical lines  
         right_lines = self._extract_lines_from_side(right_vertical, 'right', x_tolerance, gap_tolerance)
         
+        # Find unique matching pairs
+        matched_pairs = self._find_matching_left_right_segments(left_lines, right_lines)
+        
         if self.debug_mode:
             print(f"Extracted {len(left_lines)} left vertical line segments")
             print(f"Extracted {len(right_lines)} right vertical line segments")
             self._save_line_segments_debug(left_vertical, right_vertical, left_lines, right_lines)
+            self._save_matched_pairs_debug(left_vertical, right_vertical, left_lines, right_lines, matched_pairs)
         
         return {
             'left_lines': left_lines,
-            'right_lines': right_lines
+            'right_lines': right_lines,
+            'matched_pairs': matched_pairs
         }
     
     def _extract_lines_from_side(self, projection: np.ndarray, side: str, x_tolerance: int, gap_tolerance: int) -> List[Dict]:
@@ -544,6 +553,180 @@ class HexGridAnalyzer:
                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
         
         cv2.imwrite(str(self.debug_dir / "vertical_line_segments.png"), debug_img)
+    
+    def _find_matching_left_right_segments(self, left_lines: List[Dict], right_lines: List[Dict]) -> List[tuple]:
+        """Find unique 1:1 matching between left and right line segments
+        
+        Returns:
+            List of tuples (left_index, right_index) representing matched pairs
+        """
+        # First, find all potential matches (overlapping segments)
+        potential_matches = []
+        
+        for left_idx, left_line in enumerate(left_lines):
+            for right_idx, right_line in enumerate(right_lines):
+                # Check if there's vertical overlap
+                overlap_start = max(left_line['start_y'], right_line['start_y'])
+                overlap_end = min(left_line['end_y'], right_line['end_y'])
+                
+                if overlap_start <= overlap_end:
+                    overlap_length = overlap_end - overlap_start + 1
+                    
+                    # Only consider significant overlaps
+                    if overlap_length >= 20:  # Minimum overlap length
+                        potential_matches.append({
+                            'left_idx': left_idx,
+                            'right_idx': right_idx,
+                            'overlap_length': overlap_length,
+                            'left_length': left_line['length'],
+                            'right_length': right_line['length']
+                        })
+        
+        # Sort by overlap length (descending) to prioritize better matches
+        potential_matches.sort(key=lambda x: x['overlap_length'], reverse=True)
+        
+        # Perform greedy matching - assign best matches first
+        used_left = set()
+        used_right = set()
+        matched_pairs = []
+        
+        for match in potential_matches:
+            left_idx = match['left_idx']
+            right_idx = match['right_idx']
+            
+            # If both segments are still available, match them
+            if left_idx not in used_left and right_idx not in used_right:
+                matched_pairs.append((left_idx, right_idx))
+                used_left.add(left_idx)
+                used_right.add(right_idx)
+                
+                if self.debug_mode:
+                    print(f"Matched L{left_idx} with R{right_idx} (overlap: {match['overlap_length']}px)")
+        
+        if self.debug_mode:
+            print(f"Found {len(matched_pairs)} unique left-right segment pairs")
+            print(f"Unmatched left segments: {set(range(len(left_lines))) - used_left}")
+            print(f"Unmatched right segments: {set(range(len(right_lines))) - used_right}")
+        
+        return matched_pairs
+    
+    def _save_matched_pairs_debug(self, left_vertical: np.ndarray, right_vertical: np.ndarray, 
+                                 left_lines: List[Dict], right_lines: List[Dict], 
+                                 matched_pairs: List[tuple]):
+        """Save debug visualization showing only the matched left-right pairs"""
+        if not self.debug_mode:
+            return
+        
+        height, width = left_vertical.shape
+        
+        # Create RGB debug image
+        debug_img = np.zeros((height, width, 3), dtype=np.uint8)
+        
+        # Show original projections in grayscale (dimmed)
+        debug_img[:, :, 0] = left_vertical // 3  # Dimmed red channel for left
+        debug_img[:, :, 2] = right_vertical // 3  # Dimmed blue channel for right
+        
+        # Draw only the matched pairs with connecting lines
+        colors = [
+            (0, 255, 0),    # Green
+            (255, 255, 0),  # Yellow  
+            (255, 0, 255),  # Magenta
+            (0, 255, 255),  # Cyan
+            (255, 128, 0),  # Orange
+            (128, 255, 0),  # Lime
+            (255, 0, 128),  # Pink
+            (0, 128, 255),  # Sky blue
+            (128, 0, 255),  # Violet
+            (255, 255, 128), # Light yellow
+        ]
+        
+        for i, (left_idx, right_idx) in enumerate(matched_pairs):
+            left_line = left_lines[left_idx]
+            right_line = right_lines[right_idx]
+            
+            # Use cycling colors for different pairs
+            color = colors[i % len(colors)]
+            
+            # Draw left line segment
+            cv2.line(debug_img, 
+                    (left_line['start_x'], left_line['start_y']), 
+                    (left_line['start_x'], left_line['end_y']), 
+                    color, 3)
+            
+            # Draw right line segment
+            cv2.line(debug_img, 
+                    (right_line['start_x'], right_line['start_y']), 
+                    (right_line['start_x'], right_line['end_y']), 
+                    color, 3)
+            
+            # Draw connecting line between the midpoints
+            left_mid_y = (left_line['start_y'] + left_line['end_y']) // 2
+            right_mid_y = (right_line['start_y'] + right_line['end_y']) // 2
+            cv2.line(debug_img, 
+                    (left_line['start_x'], left_mid_y), 
+                    (right_line['start_x'], right_mid_y), 
+                    color, 1)
+            
+            # Add labels
+            cv2.putText(debug_img, f"L{left_idx}", 
+                       (left_line['start_x'] + 5, left_line['start_y'] + 15), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+            cv2.putText(debug_img, f"R{right_idx}", 
+                       (right_line['start_x'] - 25, right_line['start_y'] + 15), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+            
+            # Add span measurement
+            span = right_line['start_x'] - left_line['start_x']
+            mid_x = (left_line['start_x'] + right_line['start_x']) // 2
+            cv2.putText(debug_img, f"{span}px", 
+                       (mid_x - 20, left_mid_y - 10), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+        
+        cv2.imwrite(str(self.debug_dir / "matched_pairs_only.png"), debug_img)
+    
+    def _calculate_spans_from_matched_pairs(self, left_lines: List[Dict], right_lines: List[Dict], 
+                                          matched_pairs: List[tuple]) -> List[Dict]:
+        """Calculate spans from unique matched left-right pairs
+        
+        Returns:
+            List of span dictionaries with keys: left_x, right_x, span, start_y, end_y, overlap_length
+        """
+        spans = []
+        
+        for left_idx, right_idx in matched_pairs:
+            left_line = left_lines[left_idx]
+            right_line = right_lines[right_idx]
+            
+            # Calculate overlap
+            overlap_start = max(left_line['start_y'], right_line['start_y'])
+            overlap_end = min(left_line['end_y'], right_line['end_y'])
+            overlap_length = overlap_end - overlap_start + 1
+            
+            # Calculate span
+            span = right_line['start_x'] - left_line['start_x']
+            
+            spans.append({
+                'left_x': left_line['start_x'],
+                'right_x': right_line['start_x'],
+                'span': span,
+                'start_y': overlap_start,
+                'end_y': overlap_end,
+                'overlap_length': overlap_length,
+                'left_line_idx': left_idx,
+                'right_line_idx': right_idx,
+                'left_line': left_line,
+                'right_line': right_line
+            })
+        
+        # Sort spans by overlap length (longest first) to prioritize the most significant spans
+        spans.sort(key=lambda x: x['overlap_length'], reverse=True)
+        
+        if self.debug_mode:
+            print(f"Calculated {len(spans)} spans from matched pairs")
+            for i, span in enumerate(spans):
+                print(f"  Span {i+1}: {span['span']}px (L{span['left_line_idx']}-R{span['right_line_idx']}, Y:{span['start_y']}-{span['end_y']}, overlap:{span['overlap_length']}px)")
+        
+        return spans
     
     def _detect_vertical_lines_hough(self, combined_boundary: np.ndarray, projections: Dict = None) -> Dict:
         """Detect vertical lines using Hough Line Transform (original method)"""
