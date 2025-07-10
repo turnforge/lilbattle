@@ -227,6 +227,9 @@ class HexGridAnalyzer:
         projections['view_from_right'] = view_from_right
         projections['view_from_left_vertical'] = view_from_left_vertical
         projections['view_from_right_vertical'] = view_from_right_vertical
+        # ENHANCEMENT: Include complete vertical edge mask for comprehensive line detection
+        # This morphologically-detected mask contains ALL vertical lines in the image,
+        # not just the left/right boundaries. Critical for detecting internal hex grid lines.
         projections['vertical_edge_mask'] = vertical_edge_mask
         
         return projections
@@ -271,10 +274,24 @@ class HexGridAnalyzer:
         row_groups = self._get_matching_segments_in_rows(all_segments)
         
         if self.debug_mode and row_groups:
-            # Use the same vertical edge mask that was used for segment extraction
+            # CRITICAL DEBUG FIX: Ensure debug visualization matches actual data used
+            #
+            # PROBLEM: Debug images were showing different data than what the algorithm actually used.
+            # The debug visualization was combining view_from_left_vertical + view_from_right_vertical
+            # (boundary-only projections) while the actual segment extraction used the complete 
+            # vertical_edge_mask (all vertical lines). This caused confusion where terminal output
+            # showed 6 segments per row but debug images showed 20+ segments.
+            #
+            # USER FEEDBACK: "Your terminal says 6 segments but debug image shows Row0: 20 segs"
+            #
+            # ROOT CAUSE: Inconsistent data sources between algorithm and visualization
+            # - Algorithm: Uses projections['vertical_edge_mask'] (all vertical lines)
+            # - Debug viz: Used boundary projections only (limited vertical lines)
+            #
+            # SOLUTION: Use the exact same data source for both algorithm and visualization
             unified_vertical = projections.get('vertical_edge_mask')
             if unified_vertical is None:
-                # Fallback to old method if vertical_edge_mask not available
+                # Fallback to old boundary method only if vertical_edge_mask unavailable
                 height, width = projections['view_from_left_vertical'].shape
                 unified_vertical = np.zeros((height, width), dtype=np.uint8)
                 unified_vertical = cv2.bitwise_or(unified_vertical, projections['view_from_left_vertical'])
@@ -644,7 +661,24 @@ class HexGridAnalyzer:
         return matched_pairs
     
     def _extract_all_vertical_segments(self, projections: Dict, x_tolerance: int = 3, gap_tolerance: int = 5) -> List[Dict]:
-        """Extract all vertical line segments from vertical edge mask containing ALL vertical lines
+        """Extract all vertical line segments from the complete vertical edge mask.
+        
+        PROBLEM SOLVED: The original implementation only used left/right boundary projections,
+        which captured only the outermost vertical lines. For hex grid analysis, we need ALL
+        internal vertical lines to properly count columns. The user pointed out that we were
+        missing most vertical lines because we only looked at boundaries.
+        
+        SOLUTION EVOLUTION:
+        1. Originally: Used view_from_left_vertical + view_from_right_vertical (boundary-only)
+        2. User feedback: "I only see 2 segments per line but vertical_edge_mask has many lines"
+        3. Fixed: Use the complete vertical_edge_mask that contains ALL vertical lines
+        4. Enhancement: Group nearby pixel segments into logical thick vertical lines
+        
+        HOW IT WORKS:
+        - Uses morphologically-detected vertical_edge_mask (all vertical structures)
+        - Extracts segments column by column to capture every vertical line
+        - Groups consecutive X positions (within 5px) that belong to same thick line
+        - Returns logical segments with center X, thickness, and component count
         
         Args:
             projections: Dictionary containing vertical projections and vertical_edge_mask
@@ -652,7 +686,7 @@ class HexGridAnalyzer:
             gap_tolerance: Number of consecutive missing pixels to tolerate as gaps
             
         Returns:
-            List of all vertical line segment dictionaries
+            List of logical vertical line segment dictionaries with thickness info
         """
         if not projections or 'vertical_edge_mask' not in projections:
             print("Warning: vertical_edge_mask not found, falling back to left/right boundary projections")
@@ -695,8 +729,22 @@ class HexGridAnalyzer:
                 if not merged:
                     filtered_segments.append(segment)
         
-        # Now group segments that are part of the same thick vertical line
-        # Group segments with X positions within a small tolerance (5 pixels)
+        # CRITICAL FIX: Group pixel-level segments into logical thick vertical lines
+        # 
+        # PROBLEM IDENTIFIED: The column-by-column extraction treats each pixel column as a 
+        # separate segment. A 5-pixel-wide vertical line becomes 5 separate segments, causing
+        # massive over-counting. User feedback: "Row0 shows 72 segments but I only see 6 thick lines"
+        #
+        # ROOT CAUSE: Hex grid images have anti-aliased edges creating thick vertical lines
+        # (typically 3-5 pixels wide). Each pixel column was counted as a separate vertical line.
+        # Example: segments at X=[92,93,94] are actually ONE thick line, not three separate lines.
+        #
+        # SOLUTION: Group nearby segments that are clearly part of the same physical vertical line:
+        # - Within 5 pixels horizontally (accounts for line thickness)  
+        # - With significant vertical overlap (>10px, ensures they're the same line)
+        # - Merge into single logical segment with center X position
+        #
+        # ALGORITHM:
         logical_segments = []
         used_segments = set()
         
@@ -704,36 +752,40 @@ class HexGridAnalyzer:
             if i in used_segments:
                 continue
                 
-            # Find all segments that belong to the same thick line
+            # Start a new logical line group with this segment
             line_group = [segment]
             used_segments.add(i)
             
+            # Find all other segments that belong to the same thick vertical line
             for j, other_segment in enumerate(filtered_segments):
                 if j in used_segments or j == i:
                     continue
                     
-                # Check if segments are part of the same thick line (close X positions and overlapping Y)
+                # Two conditions for segments to be part of the same thick line:
+                # 1. Close X positions (within 5px) - accounts for line thickness
+                # 2. Significant Y overlap (>10px) - ensures vertical alignment  
                 x_diff = abs(segment['start_x'] - other_segment['start_x'])
                 y_overlap = max(0, min(segment['end_y'], other_segment['end_y']) - 
                               max(segment['start_y'], other_segment['start_y']) + 1)
                 
-                if x_diff <= 5 and y_overlap > 10:  # Within 5px horizontally and overlap vertically
+                if x_diff <= 5 and y_overlap > 10:
                     line_group.append(other_segment)
                     used_segments.add(j)
             
-            # Create a single logical segment representing this thick line
+            # Create a single logical segment representing the entire thick line
+            # Use center X position to represent the line's location
             min_x = min(seg['start_x'] for seg in line_group)
             max_x = max(seg['start_x'] for seg in line_group)
             min_y = min(seg['start_y'] for seg in line_group) 
             max_y = max(seg['end_y'] for seg in line_group)
             
             logical_segment = {
-                'start_x': (min_x + max_x) // 2,  # Center X of the thick line
-                'start_y': min_y,
-                'end_y': max_y,
-                'length': max_y - min_y + 1,
-                'thickness': max_x - min_x + 1,
-                'component_count': len(line_group)  # How many thin segments make up this thick line
+                'start_x': (min_x + max_x) // 2,    # Center X of the thick line
+                'start_y': min_y,                   # Topmost Y position
+                'end_y': max_y,                     # Bottommost Y position  
+                'length': max_y - min_y + 1,       # Total vertical length
+                'thickness': max_x - min_x + 1,    # Horizontal thickness in pixels
+                'component_count': len(line_group) # Number of thin segments merged
             }
             logical_segments.append(logical_segment)
         
@@ -790,14 +842,41 @@ class HexGridAnalyzer:
         return segments
     
     def _get_matching_segments_in_rows(self, all_segments: List[Dict], min_overlap: int = 20) -> List[Dict]:
-        """Group vertical line segments that align horizontally in the same row
+        """Group vertical line segments that align horizontally into logical hex grid rows.
+        
+        PURPOSE: In hex grids, vertical lines that appear at the same Y level form the boundaries
+        between hex tiles in that row. By grouping segments with overlapping Y ranges, we can:
+        1. Count how many vertical lines exist per row (validates column detection)
+        2. Analyze consistency across rows (robust grids have similar patterns)  
+        3. Use internal line counts as constraints for improved grid detection
+        
+        ALGORITHM EVOLUTION:
+        - Original: Only used left/right boundary pairs for column detection
+        - User insight: "If I know how many internal lines there are, I can use it as a constraint"
+        - Solution: Group all vertical segments by Y-overlap to count internal lines per row
+        
+        HOW IT WORKS:
+        1. Sort segments by Y position for efficient processing
+        2. For each unused segment, start a new row group
+        3. Find all other segments with significant Y overlap (same horizontal level)
+        4. Group them together and sort by X position (left to right)
+        5. Calculate span and segment count for each row
+        6. Return row groups sorted by reliability (most segments first)
+        
+        EXAMPLE: If we detect 6 logical vertical lines in most rows, this validates
+        a 7-column hex grid (6 internal separators + 1 for the 7th column).
         
         Args:
-            all_segments: List of all vertical line segment dictionaries
-            min_overlap: Minimum overlap length to consider segments as being in same row
+            all_segments: List of logical vertical line segment dictionaries
+            min_overlap: Minimum Y overlap in pixels to consider segments as same row (default: 20px)
             
         Returns:
-            List of row dictionaries, each containing all vertical segments in that row
+            List of row group dictionaries with keys:
+            - segments: List of vertical segments in this row
+            - segment_count: Number of vertical lines in this row  
+            - x_positions: X coordinates of each vertical line (left to right)
+            - span: Horizontal distance from leftmost to rightmost line
+            - y_start, y_end: Vertical range of this row group
         """
         # Sort segments by Y position to process row by row
         sorted_segments = sorted(all_segments, key=lambda x: x['start_y'])
