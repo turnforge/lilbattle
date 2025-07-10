@@ -227,6 +227,7 @@ class HexGridAnalyzer:
         projections['view_from_right'] = view_from_right
         projections['view_from_left_vertical'] = view_from_left_vertical
         projections['view_from_right_vertical'] = view_from_right_vertical
+        projections['vertical_edge_mask'] = vertical_edge_mask
         
         return projections
     
@@ -262,6 +263,23 @@ class HexGridAnalyzer:
         # Extract vertical line segments for better span analysis
         line_segments = self._extract_vertical_line_segments(projections)
         hex_info.update(line_segments)
+        
+        # Extract all vertical segments from unified projection
+        all_segments = self._extract_all_vertical_segments(projections)
+        
+        # Group segments into rows
+        row_groups = self._get_matching_segments_in_rows(all_segments)
+        
+        if self.debug_mode and row_groups:
+            # Create unified vertical for debug visualization
+            height, width = projections['view_from_left_vertical'].shape
+            unified_vertical = np.zeros((height, width), dtype=np.uint8)
+            unified_vertical = cv2.bitwise_or(unified_vertical, projections['view_from_left_vertical'])
+            unified_vertical = cv2.bitwise_or(unified_vertical, projections['view_from_right_vertical'])
+            self._save_row_groups_debug(unified_vertical, row_groups)
+        
+        hex_info['all_segments'] = all_segments
+        hex_info['row_groups'] = row_groups
         
         # Calculate spans from matched pairs
         spans = self._calculate_spans_from_matched_pairs(
@@ -621,6 +639,333 @@ class HexGridAnalyzer:
             print(f"Unmatched right segments: {set(range(len(right_lines))) - used_right}")
         
         return matched_pairs
+    
+    def _extract_all_vertical_segments(self, projections: Dict, x_tolerance: int = 3, gap_tolerance: int = 5) -> List[Dict]:
+        """Extract all vertical line segments from vertical edge mask containing ALL vertical lines
+        
+        Args:
+            projections: Dictionary containing vertical projections and vertical_edge_mask
+            x_tolerance: Pixel tolerance for considering X positions as "same line"
+            gap_tolerance: Number of consecutive missing pixels to tolerate as gaps
+            
+        Returns:
+            List of all vertical line segment dictionaries
+        """
+        if not projections or 'vertical_edge_mask' not in projections:
+            print("Warning: vertical_edge_mask not found, falling back to left/right boundary projections")
+            if 'view_from_left_vertical' not in projections or 'view_from_right_vertical' not in projections:
+                return []
+            # Fallback to old method
+            height, width = projections['view_from_left_vertical'].shape
+            unified_vertical = np.zeros((height, width), dtype=np.uint8)
+            unified_vertical = cv2.bitwise_or(unified_vertical, projections['view_from_left_vertical'])
+            unified_vertical = cv2.bitwise_or(unified_vertical, projections['view_from_right_vertical'])
+        else:
+            # Use the full vertical edge mask that contains ALL vertical lines, not just boundaries
+            unified_vertical = projections['vertical_edge_mask']
+            height, width = unified_vertical.shape
+        
+        # Extract all vertical segments from the unified projection
+        all_segments = []
+        
+        for col in range(width):
+            # Get vertical segments in this column
+            column_segments = self._extract_vertical_segments_from_column(unified_vertical[:, col], col, gap_tolerance)
+            all_segments.extend(column_segments)
+        
+        # Filter segments by minimum length and merge nearby segments
+        filtered_segments = []
+        for segment in all_segments:
+            if segment['length'] >= MIN_LINE_LENGTH:
+                # Check if this segment should be merged with an existing one
+                merged = False
+                for existing in filtered_segments:
+                    # If segments are at similar X positions and close in Y, merge them
+                    if (abs(segment['start_x'] - existing['start_x']) <= x_tolerance and
+                        abs(segment['start_y'] - existing['end_y']) <= gap_tolerance):
+                        # Merge segments
+                        existing['end_y'] = max(existing['end_y'], segment['end_y'])
+                        existing['length'] = existing['end_y'] - existing['start_y'] + 1
+                        merged = True
+                        break
+                
+                if not merged:
+                    filtered_segments.append(segment)
+        
+        # Now group segments that are part of the same thick vertical line
+        # Group segments with X positions within a small tolerance (5 pixels)
+        logical_segments = []
+        used_segments = set()
+        
+        for i, segment in enumerate(filtered_segments):
+            if i in used_segments:
+                continue
+                
+            # Find all segments that belong to the same thick line
+            line_group = [segment]
+            used_segments.add(i)
+            
+            for j, other_segment in enumerate(filtered_segments):
+                if j in used_segments or j == i:
+                    continue
+                    
+                # Check if segments are part of the same thick line (close X positions and overlapping Y)
+                x_diff = abs(segment['start_x'] - other_segment['start_x'])
+                y_overlap = max(0, min(segment['end_y'], other_segment['end_y']) - 
+                              max(segment['start_y'], other_segment['start_y']) + 1)
+                
+                if x_diff <= 5 and y_overlap > 10:  # Within 5px horizontally and overlap vertically
+                    line_group.append(other_segment)
+                    used_segments.add(j)
+            
+            # Create a single logical segment representing this thick line
+            min_x = min(seg['start_x'] for seg in line_group)
+            max_x = max(seg['start_x'] for seg in line_group)
+            min_y = min(seg['start_y'] for seg in line_group) 
+            max_y = max(seg['end_y'] for seg in line_group)
+            
+            logical_segment = {
+                'start_x': (min_x + max_x) // 2,  # Center X of the thick line
+                'start_y': min_y,
+                'end_y': max_y,
+                'length': max_y - min_y + 1,
+                'thickness': max_x - min_x + 1,
+                'component_count': len(line_group)  # How many thin segments make up this thick line
+            }
+            logical_segments.append(logical_segment)
+        
+        filtered_segments = logical_segments
+        
+        if self.debug_mode:
+            print(f"Extracted {len(filtered_segments)} vertical segments from unified projection")
+            self._save_all_vertical_segments_debug(unified_vertical, filtered_segments)
+        
+        return filtered_segments
+    
+    def _extract_vertical_segments_from_column(self, column_data: np.ndarray, col_x: int, gap_tolerance: int) -> List[Dict]:
+        """Extract vertical line segments from a single column"""
+        segments = []
+        current_segment = None
+        gap_count = 0
+        
+        for y, pixel_value in enumerate(column_data):
+            if pixel_value > 0:
+                if current_segment is None:
+                    # Start new segment
+                    current_segment = {
+                        'start_x': col_x,
+                        'start_y': y,
+                        'end_y': y,
+                        'length': 1
+                    }
+                    gap_count = 0
+                else:
+                    # Continue current segment
+                    current_segment['end_y'] = y
+                    current_segment['length'] = current_segment['end_y'] - current_segment['start_y'] + 1
+                    gap_count = 0
+            else:
+                # No pixel found
+                if current_segment is not None:
+                    gap_count += 1
+                    
+                    if gap_count <= gap_tolerance:
+                        # Tolerate small gaps - continue current segment
+                        current_segment['end_y'] = y
+                        current_segment['length'] = current_segment['end_y'] - current_segment['start_y'] + 1
+                    else:
+                        # Gap too large - finish current segment
+                        if current_segment['length'] >= MIN_LINE_LENGTH:
+                            segments.append(current_segment.copy())
+                        current_segment = None
+                        gap_count = 0
+        
+        # Don't forget the last segment if it exists
+        if current_segment is not None and current_segment['length'] >= MIN_LINE_LENGTH:
+            segments.append(current_segment)
+        
+        return segments
+    
+    def _get_matching_segments_in_rows(self, all_segments: List[Dict], min_overlap: int = 20) -> List[Dict]:
+        """Group vertical line segments that align horizontally in the same row
+        
+        Args:
+            all_segments: List of all vertical line segment dictionaries
+            min_overlap: Minimum overlap length to consider segments as being in same row
+            
+        Returns:
+            List of row dictionaries, each containing all vertical segments in that row
+        """
+        # Sort segments by Y position to process row by row
+        sorted_segments = sorted(all_segments, key=lambda x: x['start_y'])
+        
+        # Group segments that have overlapping Y ranges
+        row_groups = []
+        used_segments = set()
+        
+        for i, base_segment in enumerate(sorted_segments):
+            if i in used_segments:
+                continue
+                
+            # Start a new row group with this segment
+            row_segments = [base_segment]
+            used_segments.add(i)
+            
+            # Find all other segments that overlap with this Y range
+            base_start_y = base_segment['start_y']
+            base_end_y = base_segment['end_y']
+            
+            for j, other_segment in enumerate(sorted_segments):
+                if j in used_segments or j == i:
+                    continue
+                
+                # Check for Y overlap
+                overlap_start = max(base_start_y, other_segment['start_y'])
+                overlap_end = min(base_end_y, other_segment['end_y'])
+                
+                if overlap_start <= overlap_end:
+                    overlap_length = overlap_end - overlap_start + 1
+                    
+                    if overlap_length >= min_overlap:
+                        row_segments.append(other_segment)
+                        used_segments.add(j)
+                        
+                        # Expand the Y range to include this segment
+                        base_start_y = min(base_start_y, other_segment['start_y'])
+                        base_end_y = max(base_end_y, other_segment['end_y'])
+            
+            # Sort segments in this row by X position (left to right)
+            row_segments.sort(key=lambda x: x['start_x'])
+            
+            # Only keep rows with multiple segments (at least 3 for meaningful analysis)
+            if len(row_segments) >= 3:
+                row_groups.append({
+                    'y_start': base_start_y,
+                    'y_end': base_end_y,
+                    'y_range': base_end_y - base_start_y + 1,
+                    'segments': row_segments,
+                    'segment_count': len(row_segments),
+                    'leftmost_x': row_segments[0]['start_x'],
+                    'rightmost_x': row_segments[-1]['start_x'],
+                    'span': row_segments[-1]['start_x'] - row_segments[0]['start_x'],
+                    'x_positions': [s['start_x'] for s in row_segments]
+                })
+        
+        # Sort row groups by segment count (most segments first) and then by Y range
+        row_groups.sort(key=lambda x: (x['segment_count'], x['y_range']), reverse=True)
+        
+        if self.debug_mode:
+            print(f"Found {len(row_groups)} row groups with 3+ segments")
+            for i, row in enumerate(row_groups[:5]):  # Show top 5
+                print(f"  Row {i+1}: {row['segment_count']} segments, Y:{row['y_start']}-{row['y_end']}, "
+                      f"span:{row['span']}px")
+                print(f"    X-positions: {row['x_positions']}")
+        
+        return row_groups
+    
+    def _save_all_vertical_segments_debug(self, unified_vertical: np.ndarray, all_segments: List[Dict]):
+        """Save debug visualization of all extracted vertical segments"""
+        if not self.debug_mode:
+            return
+        
+        height, width = unified_vertical.shape
+        
+        # Create RGB debug image
+        debug_img = np.zeros((height, width, 3), dtype=np.uint8)
+        
+        # Show original unified projection in grayscale
+        debug_img[:, :, 0] = unified_vertical // 2  # Dimmed red channel
+        debug_img[:, :, 1] = unified_vertical // 2  # Dimmed green channel
+        debug_img[:, :, 2] = unified_vertical // 2  # Dimmed blue channel
+        
+        # Draw all vertical segments with different colors
+        colors = [
+            (0, 255, 0),    # Green
+            (255, 255, 0),  # Yellow  
+            (255, 0, 255),  # Magenta
+            (0, 255, 255),  # Cyan
+            (255, 128, 0),  # Orange
+            (128, 255, 0),  # Lime
+            (255, 0, 128),  # Pink
+            (0, 128, 255),  # Sky blue
+            (128, 0, 255),  # Violet
+            (255, 255, 128), # Light yellow
+        ]
+        
+        for i, segment in enumerate(all_segments):
+            color = colors[i % len(colors)]
+            
+            # Draw vertical line segment
+            cv2.line(debug_img, 
+                    (segment['start_x'], segment['start_y']), 
+                    (segment['start_x'], segment['end_y']), 
+                    color, 2)
+            
+            # Add segment index label
+            cv2.putText(debug_img, f"S{i}", 
+                       (segment['start_x'] + 3, segment['start_y'] + 15), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+        
+        cv2.imwrite(str(self.debug_dir / "all_vertical_segments.png"), debug_img)
+    
+    def _save_row_groups_debug(self, unified_vertical: np.ndarray, row_groups: List[Dict]):
+        """Save debug visualization showing row groups with all segments"""
+        if not self.debug_mode:
+            return
+        
+        height, width = unified_vertical.shape
+        
+        # Create RGB debug image
+        debug_img = np.zeros((height, width, 3), dtype=np.uint8)
+        
+        # Show original unified projection in very dim grayscale
+        debug_img[:, :, 0] = unified_vertical // 4
+        debug_img[:, :, 1] = unified_vertical // 4 
+        debug_img[:, :, 2] = unified_vertical // 4
+        
+        # Use different colors for each row group
+        row_colors = [
+            (0, 255, 0),    # Green
+            (255, 255, 0),  # Yellow  
+            (255, 0, 255),  # Magenta
+            (0, 255, 255),  # Cyan
+            (255, 128, 0),  # Orange
+            (128, 255, 0),  # Lime
+            (255, 0, 128),  # Pink
+            (0, 128, 255),  # Sky blue
+            (128, 0, 255),  # Violet
+            (255, 255, 128), # Light yellow
+        ]
+        
+        for row_idx, row in enumerate(row_groups):
+            color = row_colors[row_idx % len(row_colors)]
+            
+            # Draw all segments in this row with the same color
+            for seg_idx, segment in enumerate(row['segments']):
+                # Draw vertical line segment
+                cv2.line(debug_img, 
+                        (segment['start_x'], segment['start_y']), 
+                        (segment['start_x'], segment['end_y']), 
+                        color, 3)
+                
+                # Add segment index within row
+                cv2.putText(debug_img, f"R{row_idx}S{seg_idx}", 
+                           (segment['start_x'] + 3, segment['start_y'] + 15), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+            
+            # Draw connecting line between leftmost and rightmost
+            mid_y = (row['y_start'] + row['y_end']) // 2
+            cv2.line(debug_img, 
+                    (row['leftmost_x'], mid_y), 
+                    (row['rightmost_x'], mid_y), 
+                    color, 1)
+            
+            # Add row summary
+            cv2.putText(debug_img, f"Row{row_idx}: {row['segment_count']} segs, {row['span']}px", 
+                       (10, 20 + row_idx * 20), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        
+        cv2.imwrite(str(self.debug_dir / "row_groups_all_segments.png"), debug_img)
     
     def _save_matched_pairs_debug(self, left_vertical: np.ndarray, right_vertical: np.ndarray, 
                                  left_lines: List[Dict], right_lines: List[Dict], 
