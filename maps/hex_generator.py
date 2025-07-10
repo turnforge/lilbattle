@@ -2,7 +2,30 @@
 """
 Hex Generator
 
-Generates systematic hex cell positions based on grid parameters.
+Generates systematic hex cell positions based on grid parameters with support
+for both standard and inverted hex row offset patterns.
+
+PURPOSE:
+Takes GridParams (from grid_analyzer or manual calculation) and generates
+the precise center coordinates for each hex cell in the grid. Handles the
+characteristic "jagged" hex pattern where alternating rows are offset.
+
+FEATURES:
+- Standard hex pattern: Odd rows (1,3,5...) offset by hex_width/2
+- Inverted hex pattern: Even rows (0,2,4...) offset by hex_width/2  
+- Bounds checking: Only generates cells within image boundaries
+- Debug visualization: Optional overlay showing hex positions
+- Systematic naming: Each cell has (row, col) coordinates
+
+HEX GRID GEOMETRY:
+In a standard hex grid:
+- Even rows (0,2,4...): Start at base X position
+- Odd rows (1,3,5...): Offset by row_offset (typically hex_width/2)
+- This creates the characteristic "jagged" hex tiling pattern
+
+USAGE:
+generator = HexCellGenerator(debug_mode=True)
+hex_cells = generator.generate_hex_cells(image, params, invert_offset=False)
 """
 
 import cv2
@@ -25,7 +48,19 @@ class HexCell:
 
 
 class HexCellGenerator:
-    """Generates hex cells based on grid structure"""
+    """Generates hex cell positions with configurable row offset patterns.
+    
+    This class converts GridParams into actual hex cell coordinates, handling
+    the geometric calculations for proper hex grid layout. Supports both
+    standard and inverted offset patterns for different hex grid orientations.
+    
+    KEY RESPONSIBILITIES:
+    - Calculate precise hex center coordinates from grid parameters
+    - Apply correct row offset pattern (standard or inverted)
+    - Filter cells to ensure they fall within image boundaries  
+    - Generate systematic (row, col) identifiers for each cell
+    - Provide debug visualization of generated hex positions
+    """
     
     def __init__(self, debug_mode: bool = False):
         self.debug_mode = debug_mode
@@ -35,7 +70,39 @@ class HexCellGenerator:
             self.debug_dir.mkdir(exist_ok=True)
     
     def generate_hex_cells(self, image: np.ndarray, params: GridParams, invert_offset: bool = False) -> List[HexCell]:
-        """Generate hex cells based on analyzed grid structure"""
+        """Generate hex cell positions with configurable row offset pattern.
+        
+        ALGORITHM:
+        1. Iterate through each (row, col) position in the grid
+        2. Calculate base X position: start_x + col * spacing_x  
+        3. Apply row offset based on pattern:
+           - Standard: Add row_offset to X for odd rows (1,3,5...)
+           - Inverted: Add row_offset to X for even rows (0,2,4...)
+        4. Calculate Y position: start_y + row * spacing_y
+        5. Check if position is within image bounds
+        6. Create HexCell object with calculated coordinates
+        
+        Args:
+            image: Input image to check bounds against
+            params: GridParams defining hex grid structure  
+            invert_offset: If True, even rows are offset instead of odd rows
+            
+        Returns:
+            List of HexCell objects with center coordinates
+            
+        ROW OFFSET PATTERNS:
+        Standard (invert_offset=False):
+        - Row 0: X = start_x + col * spacing_x
+        - Row 1: X = start_x + col * spacing_x + row_offset  
+        - Row 2: X = start_x + col * spacing_x
+        - Row 3: X = start_x + col * spacing_x + row_offset
+        
+        Inverted (invert_offset=True):
+        - Row 0: X = start_x + col * spacing_x + row_offset
+        - Row 1: X = start_x + col * spacing_x
+        - Row 2: X = start_x + col * spacing_x + row_offset  
+        - Row 3: X = start_x + col * spacing_x
+        """
         hex_cells = []
         
         print(f"Generating {params.rows} x {params.cols} = {params.rows * params.cols} hex cells")
@@ -45,14 +112,21 @@ class HexCellGenerator:
                 # Calculate hex center position using hex grid geometry
                 x = params.start_x + col * params.spacing_x
                 
-                # Apply row offset for hex pattern
-                # Standard: odd rows (1,3,5...) are offset
-                # Inverted: even rows (0,2,4...) are offset  
+                # CRITICAL: Apply row offset for hex pattern
+                # This creates the characteristic "jagged" hex grid layout
+                # 
+                # WHY NEEDED: Hex grids have alternating row offsets to create efficient tiling
+                # Standard WeeWar pattern: Even rows aligned, odd rows offset by hex_width/2
+                # Some maps may use inverted pattern: Odd rows aligned, even rows offset
+                #
+                # IMPLEMENTATION:
                 if invert_offset:
-                    if row % 2 == 0:  # Even rows are offset when inverted
+                    # INVERTED PATTERN: Even rows (0,2,4...) are offset
+                    if row % 2 == 0:  
                         x += params.row_offset
                 else:
-                    if row % 2 == 1:  # Odd rows are offset (standard pattern)
+                    # STANDARD PATTERN: Odd rows (1,3,5...) are offset  
+                    if row % 2 == 1:  
                         x += params.row_offset
                 
                 y = params.start_y + row * params.spacing_y

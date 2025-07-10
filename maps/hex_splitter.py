@@ -4,6 +4,39 @@ Hex Splitter
 
 Extracts individual hex tiles from WeeWar map images as separate PNG files
 with transparent backgrounds to prevent neighbor tile bleeding.
+
+FEATURES:
+- Automatic mode: Uses grid_analyzer to detect hex grid structure
+- Manual mode: Calculates grid parameters from user-provided dimensions  
+- Row offset control: Handles both standard and inverted hex grid patterns
+- Hexagonal masking: Creates clean tiles with transparent backgrounds
+
+USAGE MODES:
+
+1. AUTOMATIC MODE (uses grid analyzer):
+   python hex_splitter.py --image map.png
+   
+2. MANUAL MODE (independent operation):
+   python hex_splitter.py --image map.png --rows 7 --cols 7 --vert-spacing 53.5
+   
+3. ROW OFFSET CONTROL:
+   --invert-offset    # Even rows offset instead of odd rows
+
+ROW OFFSET PATTERNS:
+- Standard (default): Row 0,2,4... at base X, Row 1,3,5... offset by hex_width/2
+- Inverted: Row 0,2,4... offset by hex_width/2, Row 1,3,5... at base X
+
+MANUAL MODE BENEFITS:
+- Works when automatic detection fails
+- No dependency on grid_analyzer accuracy
+- Complete user control over grid parameters
+- Faster execution (skips analysis step)
+
+OUTPUT:
+Creates individual hex tile files (0_0.png, 1_2.png, etc.) with:
+- Proper hexagonal boundaries (flat-top orientation)
+- Transparent backgrounds outside hex shape
+- Consistent naming: {row}_{col}.png
 """
 
 import cv2
@@ -17,7 +50,19 @@ from hex_generator import HexCellGenerator, HexCell
 
 
 class HexSplitter:
-    """Splits hex grid images into individual tile images"""
+    """Splits hex grid images into individual tile images with hexagonal masking.
+    
+    This class handles the extraction of individual hex tiles from a complete hex grid
+    image. It supports both automatic detection (via grid_analyzer) and manual mode
+    (user-provided parameters) with configurable row offset patterns.
+    
+    KEY FEATURES:
+    - Hexagonal masking with transparent backgrounds
+    - Flat-top hex orientation (WeeWar standard)
+    - Configurable row offset patterns (standard/inverted)
+    - Bounds checking to ensure tiles are within image
+    - Debug mode for detailed extraction logging
+    """
     
     def __init__(self, output_dir: str = "hex_tiles", debug_mode: bool = False):
         self.output_dir = Path(output_dir)
@@ -30,7 +75,27 @@ class HexSplitter:
             print(f"Output directory: {self.output_dir}")
     
     def split_hex_tiles(self, image: np.ndarray, params: GridParams, invert_offset: bool = False) -> List[str]:
-        """Split the image into individual hex tiles"""
+        """Split the image into individual hex tiles with proper hex positioning.
+        
+        PROCESS:
+        1. Generate hex cell positions using HexCellGenerator
+        2. For each hex cell, extract a tile region with margin
+        3. Create hexagonal mask for clean tile boundaries  
+        4. Apply mask to create transparent background
+        5. Save as individual PNG files with row_col naming
+        
+        Args:
+            image: Input hex grid image to split
+            params: GridParams defining hex grid structure
+            invert_offset: If True, even rows are offset instead of odd rows
+            
+        Returns:
+            List of file paths for extracted hex tiles
+            
+        ROW OFFSET BEHAVIOR:
+        - invert_offset=False: Rows 0,2,4... at base X, rows 1,3,5... offset
+        - invert_offset=True: Rows 0,2,4... offset, rows 1,3,5... at base X
+        """
         
         # First generate hex cell positions
         generator = HexCellGenerator(debug_mode=False)
@@ -92,7 +157,7 @@ class HexSplitter:
         tile_with_alpha = self._apply_hex_mask(tile_region, mask)
         
         # Save the tile
-        filename = f"{cell.row}_{cell.col}.png"
+        filename = f"{cell.row:02d}_{cell.col:02d}.png"
         output_path = self.output_dir / filename
         
         cv2.imwrite(str(output_path), tile_with_alpha)
@@ -169,27 +234,32 @@ def main():
     if args.rows is not None and args.cols is not None:
         print("Running in manual mode - calculating GridParams from provided parameters")
         
-        # Calculate GridParams manually without running grid analyzer
+        # MANUAL MODE: Calculate GridParams directly from user input without grid analyzer
+        # This provides a fallback when automatic detection fails or for precise control
         image_height, image_width = image.shape[:2]
         
-        # Calculate hex dimensions
-        # Assume hex_width spans the full image width divided by columns
+        # STEP 1: Calculate hex_width from image width and column count
+        # Assumption: hex centers are evenly distributed across image width
+        # For 7 columns in 448px image: hex_width = 448 / 7 = 64px
         hex_width = int(image_width / args.cols)
         
-        # Use provided vertical spacing or calculate from rows and image height
+        # STEP 2: Determine vertical spacing and hex_height
         if args.vert_spacing is not None:
+            # User provided vertical spacing - use directly
             spacing_y = args.vert_spacing
-            hex_height = int(spacing_y / 0.75)  # Reverse of typical hex_height * 0.75 calculation
+            # Reverse-calculate hex_height from spacing (typical: spacing = hex_height * 0.75)
+            hex_height = int(spacing_y / 0.75)
         else:
-            # Calculate from image height and rows
+            # Auto-calculate from image height and row count
+            # Distribute image height evenly across rows
             spacing_y = image_height / args.rows if args.rows > 1 else image_height
             hex_height = int(spacing_y / 0.75)
         
-        # Calculate other parameters
-        spacing_x = hex_width  # Center-to-center horizontal spacing
-        row_offset = hex_width / 2  # Standard hex offset
-        start_x = hex_width / 2    # Start at center of first hex
-        start_y = hex_height / 2   # Start at center of first hex
+        # STEP 3: Calculate grid positioning parameters
+        spacing_x = hex_width          # Horizontal center-to-center distance
+        row_offset = hex_width / 2     # Offset for alternating rows (standard hex pattern)
+        start_x = hex_width / 2        # Start at center of first hex (not edge)
+        start_y = hex_height / 2       # Start at center of first hex (not edge)
         
         params = GridParams(
             hex_width=hex_width,
