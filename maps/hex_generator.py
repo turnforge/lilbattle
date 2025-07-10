@@ -34,7 +34,7 @@ class HexCellGenerator:
         if self.debug_mode:
             self.debug_dir.mkdir(exist_ok=True)
     
-    def generate_hex_cells(self, image: np.ndarray, params: GridParams) -> List[HexCell]:
+    def generate_hex_cells(self, image: np.ndarray, params: GridParams, invert_offset: bool = False) -> List[HexCell]:
         """Generate hex cells based on analyzed grid structure"""
         hex_cells = []
         
@@ -46,8 +46,14 @@ class HexCellGenerator:
                 x = params.start_x + col * params.spacing_x
                 
                 # Apply row offset for hex pattern
-                if row % 2 == 1:  # Odd rows are offset
-                    x += params.row_offset
+                # Standard: odd rows (1,3,5...) are offset
+                # Inverted: even rows (0,2,4...) are offset  
+                if invert_offset:
+                    if row % 2 == 0:  # Even rows are offset when inverted
+                        x += params.row_offset
+                else:
+                    if row % 2 == 1:  # Odd rows are offset (standard pattern)
+                        x += params.row_offset
                 
                 y = params.start_y + row * params.spacing_y
                 

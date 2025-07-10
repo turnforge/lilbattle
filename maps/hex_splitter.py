@@ -29,12 +29,12 @@ class HexSplitter:
         if self.debug_mode:
             print(f"Output directory: {self.output_dir}")
     
-    def split_hex_tiles(self, image: np.ndarray, params: GridParams) -> List[str]:
+    def split_hex_tiles(self, image: np.ndarray, params: GridParams, invert_offset: bool = False) -> List[str]:
         """Split the image into individual hex tiles"""
         
         # First generate hex cell positions
         generator = HexCellGenerator(debug_mode=False)
-        hex_cells = generator.generate_hex_cells(image, params)
+        hex_cells = generator.generate_hex_cells(image, params, invert_offset=invert_offset)
         
         if self.debug_mode:
             print(f"Splitting {len(hex_cells)} hex cells")
@@ -150,6 +150,7 @@ def main():
     parser.add_argument('--rows', type=int, help='Override number of rows (overrides detection)')
     parser.add_argument('--cols', type=int, help='Override number of columns (overrides detection)')
     parser.add_argument('--vert-spacing', type=float, help='Override vertical spacing in pixels (overrides detection)')
+    parser.add_argument('--invert-offset', action='store_true', help='Invert hex row offset pattern (even rows offset instead of odd rows)')
     parser.add_argument('--expected-tiles', type=int, default=34, help='Expected number of tiles in the map')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode with verbose output')
     
@@ -164,34 +165,83 @@ def main():
     
     print(f"Splitting hex tiles from: {args.image}")
     
-    # Analyze grid structure
-    analyzer = HexGridAnalyzer(debug_mode=args.debug)
-    params = analyzer.analyze_grid_structure(image, expected_tiles=args.expected_tiles)
-    
-    if not params:
-        print("Failed to analyze grid structure")
-        return
-    
-    # Apply command-line overrides if provided
-    if args.rows is not None:
-        print(f"Overriding rows: {params.rows} -> {args.rows}")
-        params.rows = args.rows
-    
-    if args.cols is not None:
-        print(f"Overriding cols: {params.cols} -> {args.cols}")
-        params.cols = args.cols
-    
-    if args.vert_spacing is not None:
-        print(f"Overriding vertical spacing: {params.spacing_y:.1f} -> {args.vert_spacing}")
-        params.spacing_y = args.vert_spacing
+    # Check if we can run in manual mode (both rows and cols provided)
+    if args.rows is not None and args.cols is not None:
+        print("Running in manual mode - calculating GridParams from provided parameters")
+        
+        # Calculate GridParams manually without running grid analyzer
+        image_height, image_width = image.shape[:2]
+        
+        # Calculate hex dimensions
+        # Assume hex_width spans the full image width divided by columns
+        hex_width = int(image_width / args.cols)
+        
+        # Use provided vertical spacing or calculate from rows and image height
+        if args.vert_spacing is not None:
+            spacing_y = args.vert_spacing
+            hex_height = int(spacing_y / 0.75)  # Reverse of typical hex_height * 0.75 calculation
+        else:
+            # Calculate from image height and rows
+            spacing_y = image_height / args.rows if args.rows > 1 else image_height
+            hex_height = int(spacing_y / 0.75)
+        
+        # Calculate other parameters
+        spacing_x = hex_width  # Center-to-center horizontal spacing
+        row_offset = hex_width / 2  # Standard hex offset
+        start_x = hex_width / 2    # Start at center of first hex
+        start_y = hex_height / 2   # Start at center of first hex
+        
+        params = GridParams(
+            hex_width=hex_width,
+            hex_height=hex_height,
+            rows=args.rows,
+            cols=args.cols,
+            row_offset=row_offset,
+            start_x=int(start_x),
+            start_y=int(start_y),
+            spacing_x=spacing_x,
+            spacing_y=spacing_y
+        )
+        
+        print(f"Calculated manual GridParams:")
+        print(f"  Hex dimensions: {hex_width}x{hex_height}")
+        print(f"  Spacing: {spacing_x:.1f}x{spacing_y:.1f}")
+        print(f"  Row offset: {row_offset:.1f}")
+        print(f"  Start position: ({start_x:.1f}, {start_y:.1f})")
+        
+    else:
+        print("Running in automatic mode - using grid analyzer")
+        
+        # Analyze grid structure automatically
+        analyzer = HexGridAnalyzer(debug_mode=args.debug)
+        params = analyzer.analyze_grid_structure(image, expected_tiles=args.expected_tiles)
+        
+        if not params:
+            print("Failed to analyze grid structure")
+            print("Try running in manual mode with --rows and --cols parameters")
+            return
+        
+        # Apply command-line overrides if provided
+        if args.rows is not None:
+            print(f"Overriding rows: {params.rows} -> {args.rows}")
+            params.rows = args.rows
+        
+        if args.cols is not None:
+            print(f"Overriding cols: {params.cols} -> {args.cols}")
+            params.cols = args.cols
+        
+        if args.vert_spacing is not None:
+            print(f"Overriding vertical spacing: {params.spacing_y:.1f} -> {args.vert_spacing}")
+            params.spacing_y = args.vert_spacing
     
     print(f"Using grid parameters:")
     print(f"  Grid size: {params.rows} rows x {params.cols} cols = {params.rows * params.cols} total")
     print(f"  Spacing: {params.spacing_x:.1f}x{params.spacing_y:.1f}")
+    print(f"  Row offset pattern: {'Inverted (even rows offset)' if args.invert_offset else 'Standard (odd rows offset)'}")
     
     # Split into individual tiles
     splitter = HexSplitter(output_dir=args.output_dir, debug_mode=args.debug)
-    extracted_files = splitter.split_hex_tiles(image, params)
+    extracted_files = splitter.split_hex_tiles(image, params, invert_offset=args.invert_offset)
     
     print(f"\nSuccessfully extracted {len(extracted_files)} hex tiles")
     print(f"Output directory: {args.output_dir}")
