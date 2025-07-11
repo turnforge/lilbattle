@@ -10,7 +10,7 @@ import (
 )
 
 // Global variable to control test file cleanup (shared with core_test.go)
-var cleanupBufferTestFiles = true
+var cleanupBufferTestFiles = false
 
 // Helper function to create organized test output directory for buffer tests
 func createBufferTestOutputDir(testName string) string {

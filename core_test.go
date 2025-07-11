@@ -10,7 +10,7 @@ import (
 )
 
 // Global variable to control test file cleanup
-var cleanupTestFiles = true
+var cleanupTestFiles = false
 
 // Helper function to create organized test output directory
 func createTestOutputDir(testName string) string {
