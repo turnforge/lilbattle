@@ -45,6 +45,11 @@ func NewWeeWarCLI(game *Game) *WeeWarCLI {
 	}
 }
 
+// GetGame returns the current game instance
+func (cli *WeeWarCLI) GetGame() *Game {
+	return cli.game
+}
+
 // =============================================================================
 // Command Processing
 // =============================================================================

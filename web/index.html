@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeeWar WASM Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: #007acc;
+            color: #007acc;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #005c99;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .canvas-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #ffc107;
+            color: #856404;
+        }
+        
+        .status.ready {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 WeeWar WASM Demo</h1>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('cli')">Game CLI</button>
+            <button class="tab" onclick="showTab('editor')">Map Editor</button>
+        </div>
+        
+        <!-- Game CLI Tab -->
+        <div id="cli-tab" class="tab-content active">
+            <h2>WeeWar Game CLI</h2>
+            <div class="status" id="cli-status">Loading...</div>
+            
+            <div class="controls">
+                <button onclick="createNewGame()">Create New Game (2 players)</button>
+                <button onclick="createNewGame(4)">Create New Game (4 players)</button>
+                <button onclick="executeCommand('status')">Show Status</button>
+                <button onclick="executeCommand('map')">Show Map</button>
+                <button onclick="executeCommand('units')">Show Units</button>
+                <button onclick="renderGame()">Render Game</button>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <h3>Command Input</h3>
+                    <input type="text" id="cli-command" placeholder="Enter command (e.g., 'move A1 B2')" style="width: 100%; margin-bottom: 10px;">
+                    <button onclick="executeCustomCommand()" style="width: 100%;">Execute Command</button>
+                </div>
+                
+                <div>
+                    <h3>Game State</h3>
+                    <div id="game-state">No game loaded</div>
+                </div>
+            </div>
+            
+            <h3>Output</h3>
+            <div class="output" id="cli-output">WeeWar CLI WASM ready to load...</div>
+            
+            <div class="canvas-container" id="cli-canvas" style="display: none;">
+                <h3>Game Render</h3>
+                <img id="game-image" alt="Game render will appear here">
+            </div>
+        </div>
+        
+        <!-- Map Editor Tab -->
+        <div id="editor-tab" class="tab-content">
+            <h2>WeeWar Map Editor</h2>
+            <div class="status" id="editor-status">Loading...</div>
+            
+            <div class="controls">
+                <button onclick="createNewMap()">New Map (8x12)</button>
+                <button onclick="createNewMap(5, 5)">New Map (5x5)</button>
+                <button onclick="setBrushTerrain(1)">🌱 Grass</button>
+                <button onclick="setBrushTerrain(2)">🏜️ Desert</button>
+                <button onclick="setBrushTerrain(3)">🌊 Water</button>
+                <button onclick="setBrushTerrain(4)">⛰️ Mountain</button>
+                <button onclick="setBrushTerrain(5)">🗿 Rock</button>
+                <button onclick="editorUndo()">↶ Undo</button>
+                <button onclick="editorRedo()">↷ Redo</button>
+                <button onclick="validateMap()">✓ Validate</button>
+                <button onclick="renderEditor()">🎨 Render</button>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <h3>Brush Settings</h3>
+                    <label>Brush Size: <select id="brush-size" onchange="setBrushSize(this.value)">
+                        <option value="0">Single (1 hex)</option>
+                        <option value="1">Small (7 hexes)</option>
+                        <option value="2">Medium (19 hexes)</option>
+                        <option value="3">Large (37 hexes)</option>
+                    </select></label>
+                    
+                    <h3>Paint Tools</h3>
+                    <input type="number" id="paint-row" placeholder="Row" min="0" style="width: 80px;">
+                    <input type="number" id="paint-col" placeholder="Col" min="0" style="width: 80px;">
+                    <button onclick="paintTerrain()">Paint</button>
+                    <button onclick="floodFill()">Flood Fill</button>
+                    <button onclick="removeTerrain()">Remove</button>
+                </div>
+                
+                <div>
+                    <h3>Map Info</h3>
+                    <div id="map-info">No map loaded</div>
+                </div>
+            </div>
+            
+            <h3>Output</h3>
+            <div class="output" id="editor-output">Map Editor WASM ready to load...</div>
+            
+            <div class="canvas-container" id="editor-canvas" style="display: none;">
+                <h3>Map Preview</h3>
+                <img id="map-image" alt="Map preview will appear here">
+            </div>
+        </div>
+    </div>
+    
+    <script src="../wasm/wasm_exec.js"></script>
+    <script>
+        // Global state
+        let cliReady = false;
+        let editorReady = false;
+        
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Utility functions
+        function log(message, elementId = 'cli-output') {
+            const output = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function updateStatus(status, elementId) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = status;
+            statusEl.className = 'status ready';
+        }
+        
+        // CLI Functions
+        function createNewGame(players = 2) {
+            if (!cliReady) {
+                log('CLI not ready yet');
+                return;
+            }
+            
+            try {
+                const result = weewarCreateGame(players);
+                log(`Create Game: ${result.message}`);
+                if (result.success) {
+                    updateGameState();
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`);
+            }
+        }
+        
+        function executeCommand(command) {
+            if (!cliReady) {
+                log('CLI not ready yet');
+                return;
+            }
+            
+            try {
+                const result = weewarExecuteCommand(command);
+                log(`Command "${command}": ${result.message}`);
+            } catch (e) {
+                log(`Error: ${e.message}`);
+            }
+        }
+        
+        function executeCustomCommand() {
+            const command = document.getElementById('cli-command').value.trim();
+            if (!command) return;
+            
+            executeCommand(command);
+            document.getElementById('cli-command').value = '';
+        }
+        
+        function updateGameState() {
+            if (!cliReady) return;
+            
+            try {
+                const result = weewarGetGameState();
+                if (result.success) {
+                    const state = result.data;
+                    document.getElementById('game-state').innerHTML = `
+                        <strong>Turn:</strong> ${state.turnNumber}<br>
+                        <strong>Current Player:</strong> ${state.currentPlayer}<br>
+                        <strong>Status:</strong> ${state.status}<br>
+                        <strong>Map Size:</strong> ${state.mapSize.rows}x${state.mapSize.cols}<br>
+                        <strong>Players:</strong> ${state.playerCount}
+                    `;
+                }
+            } catch (e) {
+                log(`Error getting game state: ${e.message}`);
+            }
+        }
+        
+        function renderGame() {
+            if (!cliReady) {
+                log('CLI not ready yet');
+                return;
+            }
+            
+            try {
+                const result = weewarRenderGame(800, 600);
+                if (result.success) {
+                    const img = document.getElementById('game-image');
+                    img.src = result.data.dataURL;
+                    document.getElementById('cli-canvas').style.display = 'block';
+                    log('Game rendered successfully');
+                } else {
+                    log(`Render failed: ${result.error}`);
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`);
+            }
+        }
+        
+        // Editor Functions
+        function createNewMap(rows = 8, cols = 12) {
+            if (!editorReady) {
+                log('Editor not ready yet', 'editor-output');
+                return;
+            }
+            
+            try {
+                const result = editorNewMap(rows, cols);
+                log(`New Map: ${result.message}`, 'editor-output');
+                if (result.success) {
+                    updateMapInfo();
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function setBrushTerrain(terrainType) {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorSetBrushTerrain(terrainType);
+                log(`Brush: ${result.message}`, 'editor-output');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function setBrushSize(size) {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorSetBrushSize(parseInt(size));
+                log(`Brush Size: ${result.message}`, 'editor-output');
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function paintTerrain() {
+            const row = parseInt(document.getElementById('paint-row').value);
+            const col = parseInt(document.getElementById('paint-col').value);
+            
+            if (isNaN(row) || isNaN(col)) {
+                log('Please enter valid row and col numbers', 'editor-output');
+                return;
+            }
+            
+            try {
+                const result = editorPaintTerrain(row, col);
+                log(`Paint: ${result.message}`, 'editor-output');
+                updateMapInfo();
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function floodFill() {
+            const row = parseInt(document.getElementById('paint-row').value);
+            const col = parseInt(document.getElementById('paint-col').value);
+            
+            if (isNaN(row) || isNaN(col)) {
+                log('Please enter valid row and col numbers', 'editor-output');
+                return;
+            }
+            
+            try {
+                const result = editorFloodFill(row, col);
+                log(`Flood Fill: ${result.message}`, 'editor-output');
+                updateMapInfo();
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function removeTerrain() {
+            const row = parseInt(document.getElementById('paint-row').value);
+            const col = parseInt(document.getElementById('paint-col').value);
+            
+            if (isNaN(row) || isNaN(col)) {
+                log('Please enter valid row and col numbers', 'editor-output');
+                return;
+            }
+            
+            try {
+                const result = editorRemoveTerrain(row, col);
+                log(`Remove: ${result.message}`, 'editor-output');
+                updateMapInfo();
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function editorUndo() {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorUndo();
+                log(`Undo: ${result.message}`, 'editor-output');
+                updateMapInfo();
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function editorRedo() {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorRedo();
+                log(`Redo: ${result.message}`, 'editor-output');
+                updateMapInfo();
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function validateMap() {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorValidateMap();
+                log(`Validation: ${result.message}`, 'editor-output');
+                if (result.data.issues && result.data.issues.length > 0) {
+                    result.data.issues.forEach(issue => {
+                        log(`  - ${issue}`, 'editor-output');
+                    });
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function updateMapInfo() {
+            if (!editorReady) return;
+            
+            try {
+                const result = editorGetMapInfo();
+                if (result.success) {
+                    const info = result.data;
+                    document.getElementById('map-info').innerHTML = `
+                        <strong>Size:</strong> ${info.height}x${info.width}<br>
+                        <strong>Total Tiles:</strong> ${info.totalTiles}<br>
+                        <strong>Modified:</strong> ${info.modified ? 'Yes' : 'No'}<br>
+                        <strong>Terrain Counts:</strong><br>
+                        ${Object.entries(info.terrainCounts).map(([type, count]) => 
+                            `  Type ${type}: ${count}`
+                        ).join('<br>')}
+                    `;
+                }
+            } catch (e) {
+                log(`Error getting map info: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        function renderEditor() {
+            if (!editorReady) {
+                log('Editor not ready yet', 'editor-output');
+                return;
+            }
+            
+            try {
+                const result = editorRenderMap(600, 400);
+                if (result.success) {
+                    const img = document.getElementById('map-image');
+                    img.src = result.data.dataURL;
+                    document.getElementById('editor-canvas').style.display = 'block';
+                    log('Map rendered successfully', 'editor-output');
+                } else {
+                    log(`Render failed: ${result.error}`, 'editor-output');
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'editor-output');
+            }
+        }
+        
+        // Command input handling
+        document.getElementById('cli-command').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeCustomCommand();
+            }
+        });
+        
+        // Initialize WASM modules
+        async function initWASM() {
+            const go = new Go();
+            
+            try {
+                // Load CLI WASM
+                log('Loading CLI WASM...');
+                const cliModule = await WebAssembly.instantiateStreaming(fetch('../wasm/weewar-cli.wasm'), go.importObject);
+                go.run(cliModule.instance);
+                cliReady = true;
+                updateStatus('CLI Ready', 'cli-status');
+                log('CLI WASM loaded successfully');
+                
+                // Load Editor WASM
+                log('Loading Editor WASM...', 'editor-output');
+                const editorGo = new Go();
+                const editorModule = await WebAssembly.instantiateStreaming(fetch('../wasm/editor.wasm'), editorGo.importObject);
+                editorGo.run(editorModule.instance);
+                
+                // Initialize editor
+                editorCreate();
+                editorReady = true;
+                updateStatus('Editor Ready', 'editor-status');
+                log('Editor WASM loaded successfully', 'editor-output');
+                
+            } catch (error) {
+                log(`Failed to load WASM: ${error}`);
+                log(`Failed to load WASM: ${error}`, 'editor-output');
+                document.getElementById('cli-status').textContent = 'Load Failed';
+                document.getElementById('cli-status').className = 'status error';
+                document.getElementById('editor-status').textContent = 'Load Failed';
+                document.getElementById('editor-status').className = 'status error';
+            }
+        }
+        
+        // Start loading when page loads
+        window.addEventListener('load', initWASM);
+    </script>
+</body>
+</html>

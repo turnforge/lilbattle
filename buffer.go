@@ -1,6 +1,8 @@
 package weewar
 
 import (
+	"bytes"
+	"encoding/base64"
 	"image"
 	"image/color"
 	"image/draw"
@@ -151,6 +153,19 @@ func (b *Buffer) Save(path string) error {
 	defer file.Close()
 
 	return png.Encode(file, b.img)
+}
+
+// ToDataURL converts the buffer to a base64 data URL for web use
+func (b *Buffer) ToDataURL() (string, error) {
+	var buf bytes.Buffer
+	
+	err := png.Encode(&buf, b.img)
+	if err != nil {
+		return "", err
+	}
+	
+	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
+	return "data:image/png;base64," + encoded, nil
 }
 
 // FillPath fills a given path with the given color (with alpha channel compositing)
