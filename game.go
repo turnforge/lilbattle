@@ -57,14 +57,22 @@ type Unit struct {
 	PlayerID int
 }
 
+// NeighborDirection represents the 6 directions in a hex grid
+type NeighborDirection int
+
+const (
+	LEFT NeighborDirection = iota
+	TOP_LEFT
+	TOP_RIGHT
+	RIGHT
+	BOTTOM_RIGHT
+	BOTTOM_LEFT
+)
+
 // Tile represents a single hex tile on the map
 type Tile struct {
 	Row int `json:"row"`
 	Col int `json:"col"`
-
-	// Hex neighbors - clockwise from LEFT
-	// [0] = LEFT, [1] = TOP_LEFT, [2] = TOP_RIGHT, [3] = RIGHT, [4] = BOTTOM_RIGHT, [5] = BOTTOM_LEFT
-	Neighbours [6]*Tile `json:"-"` // Exclude from JSON to avoid circular references
 
 	TileType int `json:"tileType"` // Reference to TerrainData by ID
 
@@ -160,6 +168,13 @@ func (m *Map) GetHexNeighborCoords(row, col int) [6][2]int {
 	return neighbors
 }
 
+// GetNeighbor returns the neighboring tile in the specified direction
+func (m *Map) GetNeighbor(row, col int, direction NeighborDirection) *Tile {
+	coords := m.GetHexNeighborCoords(row, col)
+	neighborRow, neighborCol := coords[direction][0], coords[direction][1]
+	return m.TileAt(neighborRow, neighborCol)
+}
+
 // XYForTile converts tile row/col coordinates to pixel x,y coordinates for rendering
 func (m *Map) XYForTile(row, col int, tileWidth, tileHeight, yIncrement float64) (x, y float64) {
 	// Calculate base x position with margin to ensure tiles are fully within bounds
@@ -214,22 +229,6 @@ func (m *Map) getMapBounds(tileWidth, tileHeight, yIncrement float64) (minX, min
 	return minX, minY, maxX, maxY
 }
 
-// ConnectHexNeighbors automatically connects all tiles in the map as hex neighbors
-func (m *Map) ConnectHexNeighbors() {
-	for row := range m.Tiles {
-		for col := range m.Tiles[row] {
-			tile := m.Tiles[row][col]
-			if tile != nil {
-				neighborCoords := m.GetHexNeighborCoords(row, col)
-
-				for i, coord := range neighborCoords {
-					neighborTile := m.TileAt(coord[0], coord[1])
-					tile.Neighbours[i] = neighborTile
-				}
-			}
-		}
-	}
-}
 
 // DeleteTile removes the tile at the specified position
 func (m *Map) DeleteTile(row, col int) {
@@ -364,10 +363,7 @@ func LoadGame(saveData []byte) (*Game, error) {
 	game.eventManager = NewEventManager()
 	game.assetManager = NewAssetManager("data")
 
-	// Restore hex neighbor connections (lost during JSON serialization)
-	if game.Map != nil {
-		game.Map.ConnectHexNeighbors()
-	}
+	// Note: Neighbor connections are no longer stored, calculated on-demand
 
 	// Validate loaded game state
 	if err := game.validateGameState(); err != nil {
@@ -1395,8 +1391,7 @@ func createTestMap(mapName string) (*Map, error) {
 		}
 	}
 
-	// Connect hex neighbors
-	gameMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand via GetNeighbor()
 
 	return gameMap, nil
 }

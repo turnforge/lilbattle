@@ -172,8 +172,7 @@ func createNewGame(playerCount int) (*weewar.Game, error) {
 		}
 	}
 	
-	// Connect hex neighbors
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 	
 	// Create game
 	seed := time.Now().UnixNano()

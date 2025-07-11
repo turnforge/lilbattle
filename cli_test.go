@@ -24,7 +24,7 @@ func TestCLIBasicOperations(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	// Create game
 	game, err := NewGame(2, testMap, 12345)
@@ -78,7 +78,7 @@ func TestCLICommands(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -133,7 +133,7 @@ func TestCLIGameOperations(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -174,7 +174,7 @@ func TestCLISaveLoad(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -224,7 +224,7 @@ func TestCLIRender(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -273,7 +273,7 @@ func TestCLIBatchProcessing(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -369,7 +369,7 @@ func TestCLIDisplayModes(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -422,7 +422,7 @@ func TestCLIREPLCommands(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -490,7 +490,7 @@ func TestCLIGameStateIntegration(t *testing.T) {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	game, err := NewGame(2, testMap, 12345)
 	if err != nil {
@@ -531,14 +531,14 @@ func TestCLIGameStateIntegration(t *testing.T) {
 		t.Error("Expected to be able to end turn")
 	}
 
-	// Test MoveUnit (via CLI)
-	response := cli.ExecuteCommand("move B2 B3")
+	// Test MoveUnit (via CLI) - Use unit ID A1 instead of chess notation B2 to avoid conflict
+	response := cli.ExecuteCommand("move A1 B3")
 	if !response.Success {
 		t.Errorf("Move command failed: %s", response.Error)
 	}
 
-	// Verify unit moved
-	unit := cli.game.GetUnitAt(1, 2) // B3
+	// Verify unit moved - A1 unit should now be at B3 (1,2) 
+	unit := cli.game.GetUnitAt(2, 1) // B3 = row 2, col 1 (0-based)
 	if unit == nil {
 		t.Error("Unit not found at expected position after move")
 	}

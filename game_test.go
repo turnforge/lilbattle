@@ -27,7 +27,7 @@ func createTestMapForTest() *Map {
 		}
 	}
 
-	gameMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 	return gameMap
 }
 
@@ -321,8 +321,7 @@ func TestSparseMapRendering(t *testing.T) {
 		}
 	}
 	
-	// Connect hex neighbors
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 	
 	// Create a game with this sparse map
 	game, err := NewGame(2, testMap, 12345)

@@ -585,7 +585,7 @@ func (cli *WeeWarCLI) handleNew(cmd *CLICommand) *CLIResponse {
 			testMap.AddTile(tile)
 		}
 	}
-	testMap.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 	
 	// Create new game
 	newGame, err := NewGame(playerCount, testMap, time.Now().UnixNano())

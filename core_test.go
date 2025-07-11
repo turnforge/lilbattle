@@ -102,8 +102,7 @@ func TestGameRenderToBuffer(t *testing.T) {
 		m.AddTile(tile)
 	}
 
-	// Connect neighbors
-	m.ConnectHexNeighbors()
+	// Note: Neighbor connections calculated on-demand
 
 	// Create a game
 	game, _ := NewGame(2, m, 12345)
