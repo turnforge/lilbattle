@@ -8,22 +8,30 @@ import (
 	"strings"
 )
 
+type TerrainData struct {
+	ID           int                `json:"id"`
+	Name         string             `json:"name"`
+	MovementCost map[string]float64 `json:"movementCost"`
+	DefenseBonus int                `json:"defenseBonus"`
+	Properties   []string           `json:"properties"`
+}
+
 type MapData struct {
-	ID          int                `json:"id"`
-	Name        string             `json:"name"`
-	ImageURL    string             `json:"imageURL"`
-	Creator     string             `json:"creator"`
-	Players     int                `json:"players"`
-	Size        string             `json:"size"`
-	TileCount   int                `json:"tileCount"`
-	GamesPlayed int                `json:"gamesPlayed"`
-	Coins       CoinSettings       `json:"coins"`
-	Tiles       map[string]int     `json:"tiles"`
-	InitialUnits map[string]int    `json:"initialUnits"`
-	CreatedOn   string             `json:"createdOn,omitempty"`
-	LastUpdated string             `json:"lastUpdated,omitempty"`
-	Favorited   int                `json:"favorited,omitempty"`
-	WinStats    map[string]float64 `json:"winStats,omitempty"`
+	ID           int                `json:"id"`
+	Name         string             `json:"name"`
+	ImageURL     string             `json:"imageURL"`
+	Creator      string             `json:"creator"`
+	Players      int                `json:"players"`
+	Size         string             `json:"size"`
+	TileCount    int                `json:"tileCount"`
+	GamesPlayed  int                `json:"gamesPlayed"`
+	Coins        CoinSettings       `json:"coins"`
+	Tiles        map[string]int     `json:"tiles"`
+	InitialUnits map[string]int     `json:"initialUnits"`
+	CreatedOn    string             `json:"createdOn,omitempty"`
+	LastUpdated  string             `json:"lastUpdated,omitempty"`
+	Favorited    int                `json:"favorited,omitempty"`
+	WinStats     map[string]float64 `json:"winStats,omitempty"`
 }
 
 type CoinSettings struct {
@@ -33,7 +41,7 @@ type CoinSettings struct {
 }
 
 type WeeWarMapsData struct {
-	Maps []MapData `json:"maps"`
+	Maps     []MapData `json:"maps"`
 	Metadata struct {
 		Version     string `json:"version"`
 		ExtractedAt string `json:"extractedAt"`
@@ -92,15 +100,15 @@ func (wms *WeeWarMapSystem) CreateGameConfigFromMap(mapData *MapData) (*WeeWarCo
 	// Calculate board dimensions from tile count
 	// We need to ensure the board size can accommodate all tiles
 	boardSize := int(math.Ceil(math.Sqrt(float64(mapData.TileCount))))
-	
+
 	// Ensure minimum board size
 	if boardSize < 3 {
 		boardSize = 3
 	}
-	
+
 	// Create players
 	players := make([]WeeWarPlayer, mapData.Players)
-	for i := 0; i < mapData.Players; i++ {
+	for i := range mapData.Players {
 		players[i] = WeeWarPlayer{
 			ID:   fmt.Sprintf("player_%d", i+1),
 			Name: fmt.Sprintf("Player %d", i+1),
@@ -165,35 +173,35 @@ func generateTerrainMap(tiles map[string]int, width, height int) [][]string {
 
 func distributeUnitsToPlayer(initialUnits map[string]int, playerIndex, totalPlayers int) []string {
 	var playerUnits []string
-	
+
 	// Distribute units evenly among players
 	for unitType, totalCount := range initialUnits {
 		// Calculate how many units this player should get
 		baseCount := totalCount / totalPlayers
 		remainder := totalCount % totalPlayers
-		
+
 		playerCount := baseCount
 		if playerIndex < remainder {
 			playerCount++
 		}
-		
+
 		// Add the units to this player's list
 		for i := 0; i < playerCount; i++ {
 			playerUnits = append(playerUnits, unitType)
 		}
 	}
-	
+
 	return playerUnits
 }
 
 func (wms *WeeWarMapSystem) GetMapStatistics() map[string]interface{} {
 	stats := map[string]interface{}{
-		"totalMaps":          len(wms.mapsData.Maps),
-		"mapsByPlayerCount":  make(map[int]int),
-		"mapsBySize":         make(map[string]int),
-		"mostPlayedMap":      nil,
-		"mostPlayedGames":    0,
-		"totalGamesPlayed":   0,
+		"totalMaps":         len(wms.mapsData.Maps),
+		"mapsByPlayerCount": make(map[int]int),
+		"mapsBySize":        make(map[string]int),
+		"mostPlayedMap":     nil,
+		"mostPlayedGames":   0,
+		"totalGamesPlayed":  0,
 	}
 
 	playerCounts := make(map[int]int)
@@ -205,17 +213,17 @@ func (wms *WeeWarMapSystem) GetMapStatistics() map[string]interface{} {
 	for _, mapData := range wms.mapsData.Maps {
 		// Count by player count
 		playerCounts[mapData.Players]++
-		
+
 		// Count by size
 		size := extractSizeCategory(mapData.Size)
 		sizes[size]++
-		
+
 		// Track most played map
 		if mapData.GamesPlayed > mostPlayedGames {
 			mostPlayedGames = mapData.GamesPlayed
 			mostPlayedMap = &mapData
 		}
-		
+
 		totalGames += mapData.GamesPlayed
 	}
 
@@ -245,10 +253,10 @@ func extractSizeCategory(sizeStr string) string {
 
 func loadWeeWarMaps() (WeeWarMapsData, error) {
 	var mapsData WeeWarMapsData
-	
-	content, err := ioutil.ReadFile("games/weewar/weewar-maps.json")
+
+	content, err := ioutil.ReadFile("data/weewar-maps.json")
 	if err != nil {
-		return mapsData, fmt.Errorf("failed to read weewar-maps.json: %w", err)
+		return mapsData, fmt.Errorf("failed to read data/weewar-maps.json: %w", err)
 	}
 
 	if err := json.Unmarshal(content, &mapsData); err != nil {

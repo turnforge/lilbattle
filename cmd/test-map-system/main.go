@@ -22,9 +22,9 @@ func main() {
 	fmt.Printf("Map Statistics:\n")
 	fmt.Printf("  Total Maps: %d\n", stats["totalMaps"])
 	fmt.Printf("  Total Games Played: %d\n", stats["totalGamesPlayed"])
-	
-	if mostPlayed, ok := stats["mostPlayedMap"].(map[string]interface{}); ok {
-		fmt.Printf("  Most Played Map: %s (%d games)\n", 
+
+	if mostPlayed, ok := stats["mostPlayedMap"].(map[string]any); ok {
+		fmt.Printf("  Most Played Map: %s (%d games)\n",
 			mostPlayed["name"], mostPlayed["gamesPlayed"])
 	}
 
@@ -41,13 +41,13 @@ func main() {
 	fmt.Printf("  Creator: %s\n", mapData.Creator)
 	fmt.Printf("  Games Played: %d\n", mapData.GamesPlayed)
 	fmt.Printf("  Tiles: %d total\n", mapData.TileCount)
-	
+
 	// Show tile breakdown
 	fmt.Printf("  Tile breakdown:\n")
 	for tileType, count := range mapData.Tiles {
 		fmt.Printf("    %s: %d\n", tileType, count)
 	}
-	
+
 	// Show initial units
 	fmt.Printf("  Initial units:\n")
 	for unitType, count := range mapData.InitialUnits {
@@ -64,7 +64,7 @@ func main() {
 	fmt.Printf("Game Config:\n")
 	fmt.Printf("  Board Size: %dx%d\n", config.BoardWidth, config.BoardHeight)
 	fmt.Printf("  Players: %d\n", len(config.Players))
-	
+
 	// Show starting units per player
 	for playerID, units := range config.StartingUnits {
 		fmt.Printf("  %s units: %v\n", playerID, units)

@@ -17,38 +17,6 @@ type WeeWarCombatSystem struct {
 	rng          *rand.Rand
 }
 
-type UnitData struct {
-	ID              int                           `json:"id"`
-	Name            string                        `json:"name"`
-	TerrainMovement map[string]float64            `json:"terrainMovement"`
-	AttackMatrix    map[string]DamageDistribution `json:"attackMatrix"`
-	BaseStats       UnitStats                     `json:"baseStats"`
-}
-
-type DamageDistribution struct {
-	MinDamage     int               `json:"minDamage"`
-	MaxDamage     int               `json:"maxDamage"`
-	Probabilities map[string]float64 `json:"probabilities"`
-}
-
-type UnitStats struct {
-	Cost        int     `json:"cost"`
-	Health      int     `json:"health"`
-	Movement    int     `json:"movement"`
-	Attack      int     `json:"attack"`
-	Defense     int     `json:"defense"`
-	SightRange  int     `json:"sightRange"`
-	CanCapture  bool    `json:"canCapture"`
-}
-
-type TerrainData struct {
-	ID           int                `json:"id"`
-	Name         string             `json:"name"`
-	MovementCost map[string]float64 `json:"movementCost"`
-	DefenseBonus int                `json:"defenseBonus"`
-	Properties   []string           `json:"properties"`
-}
-
 type WeeWarData struct {
 	Units    []UnitData    `json:"units"`
 	Terrains []TerrainData `json:"terrains"`
@@ -142,7 +110,7 @@ func (wcs *WeeWarCombatSystem) ResolveCombat(attackerEntity, defenderEntity *tur
 
 	// Calculate damage based on WeeWar damage matrix
 	damage := wcs.calculateDamage(attackerType, defenderType, attackerHealth)
-	
+
 	// Apply terrain defense bonus
 	defenseBonus := wcs.getTerrainDefenseBonus(board, defenderPos)
 	finalDamage := wcs.applyDefenseBonus(damage, defenseBonus)
@@ -186,11 +154,11 @@ func (wcs *WeeWarCombatSystem) calculateDamage(attackerType, defenderType string
 
 	// Sample from probability distribution
 	damage := wcs.sampleDamageDistribution(distribution)
-	
+
 	// Apply health scaling (damaged units do less damage)
 	healthRatio := float64(attackerHealth) / 100.0
 	scaledDamage := int(float64(damage) * healthRatio)
-	
+
 	if scaledDamage < 1 {
 		scaledDamage = 1
 	}
@@ -205,7 +173,7 @@ func (wcs *WeeWarCombatSystem) sampleDamageDistribution(dist DamageDistribution)
 
 	// Generate random number
 	roll := wcs.rng.Float64()
-	
+
 	// Sample from probability distribution
 	cumulative := 0.0
 	for damageStr, prob := range dist.Probabilities {
@@ -217,7 +185,7 @@ func (wcs *WeeWarCombatSystem) sampleDamageDistribution(dist DamageDistribution)
 			return damage
 		}
 	}
-	
+
 	// Fallback to max damage
 	return dist.MaxDamage
 }
@@ -338,8 +306,8 @@ func (wcs *WeeWarCombatSystem) applyDamage(entity *turnengine.Entity, damage int
 
 func loadWeeWarData() (WeeWarData, error) {
 	var data WeeWarData
-	
-	content, err := ioutil.ReadFile("games/weewar/weewar-data.json")
+
+	content, err := ioutil.ReadFile("data/weewar-data.json")
 	if err != nil {
 		return data, fmt.Errorf("failed to read weewar-data.json: %w", err)
 	}
