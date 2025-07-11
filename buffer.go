@@ -13,6 +13,13 @@ import (
 	xdraw "golang.org/x/image/draw"
 )
 
+// DPI conversion constants
+const (
+	// PixelsPerMM represents the conversion factor from pixels to millimeters at 96 DPI
+	// 96 DPI ÷ 25.4 mm/inch = 3.78 pixels/mm
+	PixelsPerMM = 3.78
+)
+
 // Buffer represents a drawable canvas with compositing capabilities
 type Buffer struct {
 	img    *image.RGBA
@@ -37,6 +44,48 @@ type StrokeProperties struct {
 	LineJoin    string // "miter", "round", "bevel"
 	DashPattern []float64
 	DashOffset  float64
+}
+
+// Coordinate Conversion Helpers
+// =============================
+// Buffer coordinates: (0,0) top-left, pixels
+// Canvas coordinates: (0,0) bottom-left, millimeters
+
+// bufferToCanvasX converts buffer X coordinate (pixels) to canvas X coordinate (mm)
+func (b *Buffer) bufferToCanvasX(x float64) float64 {
+	return x / PixelsPerMM
+}
+
+// bufferToCanvasY converts buffer Y coordinate (pixels) to canvas Y coordinate (mm)
+// Note: Also flips Y-axis (buffer top-left to canvas bottom-left)
+func (b *Buffer) bufferToCanvasY(y float64) float64 {
+	return (float64(b.height) - y) / PixelsPerMM
+}
+
+// bufferToCanvasXY converts buffer coordinates (pixels) to canvas coordinates (mm)
+func (b *Buffer) bufferToCanvasXY(x, y float64) (float64, float64) {
+	return b.bufferToCanvasX(x), b.bufferToCanvasY(y)
+}
+
+// canvasToBufferX converts canvas X coordinate (mm) to buffer X coordinate (pixels)
+func (b *Buffer) canvasToBufferX(x float64) float64 {
+	return x * PixelsPerMM
+}
+
+// canvasToBufferY converts canvas Y coordinate (mm) to buffer Y coordinate (pixels)
+// Note: Also flips Y-axis (canvas bottom-left to buffer top-left)
+func (b *Buffer) canvasToBufferY(y float64) float64 {
+	return float64(b.height) - (y * PixelsPerMM)
+}
+
+// canvasToBufferXY converts canvas coordinates (mm) to buffer coordinates (pixels)
+func (b *Buffer) canvasToBufferXY(x, y float64) (float64, float64) {
+	return b.canvasToBufferX(x), b.canvasToBufferY(y)
+}
+
+// getCanvasSize returns canvas dimensions in millimeters
+func (b *Buffer) getCanvasSize() (width, height float64) {
+	return float64(b.width) / PixelsPerMM, float64(b.height) / PixelsPerMM
 }
 
 // NewBuffer creates a new buffer with the specified dimensions
@@ -110,18 +159,21 @@ func (b *Buffer) FillPath(points []Point, fillColor Color) {
 		return // Need at least 2 points to create a path
 	}
 
-	// Create canvas with buffer dimensions (in mm, so scale down)
-	c := canvas.New(float64(b.width)/3.78, float64(b.height)/3.78) // ~96 DPI conversion
+	// Create canvas with buffer dimensions in mm
+	canvasWidth, canvasHeight := b.getCanvasSize()
+	c := canvas.New(canvasWidth, canvasHeight)
 	ctx := canvas.NewContext(c)
 
 	// Set fill color
 	rgba := color.RGBA{R: fillColor.R, G: fillColor.G, B: fillColor.B, A: fillColor.A}
 	ctx.SetFillColor(rgba)
 
-	// Build path (scale coordinates to mm)
-	ctx.MoveTo(points[0].X/3.78, points[0].Y/3.78)
+	// Build path using coordinate conversion helpers
+	canvasX, canvasY := b.bufferToCanvasXY(points[0].X, points[0].Y)
+	ctx.MoveTo(canvasX, canvasY)
 	for i := 1; i < len(points); i++ {
-		ctx.LineTo(points[i].X/3.78, points[i].Y/3.78)
+		canvasX, canvasY := b.bufferToCanvasXY(points[i].X, points[i].Y)
+		ctx.LineTo(canvasX, canvasY)
 	}
 	ctx.Close()
 
@@ -130,7 +182,7 @@ func (b *Buffer) FillPath(points []Point, fillColor Color) {
 
 	// Render canvas to a temporary file and then load it
 	tempFile := "/tmp/temp_fill.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(3.78))
+	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
 	if err != nil {
 		return // Skip if rendering fails
 	}
@@ -158,16 +210,17 @@ func (b *Buffer) StrokePath(points []Point, strokeColor Color, strokeProperties 
 		return // Need at least 2 points to create a path
 	}
 
-	// Create canvas with buffer dimensions (in mm, so scale down)
-	c := canvas.New(float64(b.width)/3.78, float64(b.height)/3.78) // ~96 DPI conversion
+	// Create canvas with buffer dimensions in mm
+	canvasWidth, canvasHeight := b.getCanvasSize()
+	c := canvas.New(canvasWidth, canvasHeight)
 	ctx := canvas.NewContext(c)
 
 	// Set stroke color
 	rgba := color.RGBA{R: strokeColor.R, G: strokeColor.G, B: strokeColor.B, A: strokeColor.A}
 	ctx.SetStrokeColor(rgba)
 
-	// Set stroke width (scale to mm)
-	ctx.SetStrokeWidth(strokeProperties.Width / 3.78)
+	// Set stroke width (convert pixels to mm)
+	ctx.SetStrokeWidth(strokeProperties.Width / PixelsPerMM)
 
 	// Set line cap
 	switch strokeProperties.LineCap {
@@ -189,19 +242,21 @@ func (b *Buffer) StrokePath(points []Point, strokeColor Color, strokeProperties 
 		ctx.SetStrokeJoiner(canvas.MiterJoiner{})
 	}
 
-	// Set dash pattern if specified (scale to mm)
+	// Set dash pattern if specified (convert pixels to mm)
 	if len(strokeProperties.DashPattern) > 0 {
 		scaledDashes := make([]float64, len(strokeProperties.DashPattern))
 		for i, dash := range strokeProperties.DashPattern {
-			scaledDashes[i] = dash / 3.78
+			scaledDashes[i] = dash / PixelsPerMM
 		}
-		ctx.SetDashes(strokeProperties.DashOffset/3.78, scaledDashes...)
+		ctx.SetDashes(strokeProperties.DashOffset/PixelsPerMM, scaledDashes...)
 	}
 
-	// Build path (scale coordinates to mm)
-	ctx.MoveTo(points[0].X/3.78, points[0].Y/3.78)
+	// Build path using coordinate conversion helpers
+	canvasX, canvasY := b.bufferToCanvasXY(points[0].X, points[0].Y)
+	ctx.MoveTo(canvasX, canvasY)
 	for i := 1; i < len(points); i++ {
-		ctx.LineTo(points[i].X/3.78, points[i].Y/3.78)
+		canvasX, canvasY := b.bufferToCanvasXY(points[i].X, points[i].Y)
+		ctx.LineTo(canvasX, canvasY)
 	}
 
 	// Stroke the path
@@ -209,7 +264,7 @@ func (b *Buffer) StrokePath(points []Point, strokeColor Color, strokeProperties 
 
 	// Render canvas to a temporary file and then load it
 	tempFile := "/tmp/temp_stroke.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(3.78))
+	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
 	if err != nil {
 		return // Skip if rendering fails
 	}
@@ -242,8 +297,9 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 		return
 	}
 
-	// Create canvas with buffer dimensions (in mm, so scale down)
-	c := canvas.New(float64(b.width)/3.78, float64(b.height)/3.78) // ~96 DPI conversion
+	// Create canvas with buffer dimensions in mm
+	canvasWidth, canvasHeight := b.getCanvasSize()
+	c := canvas.New(canvasWidth, canvasHeight)
 	ctx := canvas.NewContext(c)
 
 	// Load font family
@@ -263,42 +319,37 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 	// Set text color and create face
 	rgba := color.RGBA{R: textColor.R, G: textColor.G, B: textColor.B, A: textColor.A}
 
-	// 3.78 = 96 DPI ÷ 25.4 mm/inch
-	face := fontFamily.Face(fontSize/3.78, rgba, fontWeight, canvas.FontNormal) // Scale font size to mm
+	// Convert font size from pixels to mm
+	face := fontFamily.Face(fontSize/PixelsPerMM, rgba, fontWeight, canvas.FontNormal)
 
 	// Calculate text metrics for background
 	textLine := canvas.NewTextLine(face, text, canvas.Left)
 	textWidth := textLine.Bounds().W()
 	textHeight := textLine.Bounds().H()
 
+	// Convert buffer coordinates to canvas coordinates (once)
+	canvasX, canvasY := b.bufferToCanvasXY(x, y)
+
 	// Draw background rectangle if specified
 	if backgroundColor.A > 0 {
-		canvasHeight := float64(b.height) / 3.78
-		canvasX := x / 3.78
-		canvasY := canvasHeight - (y / 3.78) // Flip Y coordinate
-
-		// Add padding around text
-		padding := 2.0
+		// Add padding around text (in mm)
+		padding := 2.0 / PixelsPerMM // Convert 2 pixels to mm
 		bgX := canvasX - padding
-		// bgY := (canvasY - padding) //  - (textHeight * 2)
-		bgY := canvasY + 1
+		bgY := canvasY - textHeight - padding
 		bgWidth := textWidth + (padding * 2)
-		bgHeight := (textHeight + (padding * 2)) / 2
+		bgHeight := textHeight + (padding * 2)
 
 		ctx.SetFillColor(color.RGBA{R: backgroundColor.R, G: backgroundColor.G, B: backgroundColor.B, A: backgroundColor.A})
 		ctx.DrawPath(bgX, bgY, canvas.Rectangle(bgWidth, bgHeight))
 		ctx.Fill()
 	}
 
-	// Draw the text (coordinates already calculated above)
-	canvasHeight := float64(b.height) / 3.78
-	canvasX := x / 3.78
-	canvasY := canvasHeight - (y / 3.78) // Flip Y coordinate
+	// Draw the text using converted coordinates
 	ctx.DrawText(canvasX, canvasY, textLine)
 
 	// Render canvas to a temporary file and then load it
 	tempFile := "/tmp/temp_text.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(3.78))
+	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
 	if err != nil {
 		return // Skip if rendering fails
 	}
