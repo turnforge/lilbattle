@@ -112,32 +112,56 @@ weewar[T1:P0]> actions
 ## Position System
 
 ### Chess Notation
-WeeWar CLI uses chess-style notation for positions:
+WeeWar CLI uses chess-style notation for positions on a hex grid:
 
 ```
-   A B C D E F G H I J K L
-1  . . . . . . . . . . . .
-2  . 0 0 . . . . . . . . .
-3  . . . . . . . . . . . .
-4  . . . . . . . . . . . .
-5  . . . . . . . . . . . .
-6  . . . . . . . . . . . .
-7  . . . . . . . . . 1 1 .
-8  . . . . . . . . . . . .
+         A     B     C     D     E     F     G     H     I     J     K     L
+ 1    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    --    --    --
+
+ 2      🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
+        --    P0    P0    --    --    --    --    --    --    --    --    --
+
+ 3    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    --    --    --
+
+ 7    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    P1    P1    --
+
+ 8      🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
+        --    --    --    --    --    --    --    --    --    --    --    --
 ```
 
 ### Position Examples
 - `A1` = Top-left corner
-- `B2` = Second column, second row
+- `B2` = Second column, second row  
 - `L8` = Bottom-right corner
 
 ### Moving Units
 ```bash
 # Move unit from B2 to B3
 weewar[T1:P0]> move B2 B3
+✓ Unit moved from B2 to B3
 
 # Attack enemy unit at C4 with unit at B3
 weewar[T1:P0]> attack B3 C4
+✓ Attack from B3 to C4: 25 damage dealt
+
+# Check updated map to see new positions
+weewar[T1:P0]> map
+=== Game Map ===
+         A     B     C     D     E     F
+ 1    🌱    🌱    🌱    🌱    🌱    🌱
+      --    --    --    --    --    --
+
+ 2      🌱    🌱    🌱    🌱    🌱    🌱
+        --    --    P1    --    --    --
+
+ 3    🌱    🌱    🌱    🌱    🌱    🌱
+      --    P0    --    --    --    --
+
+ 4      🌱    🌱    🌱    🌱    🌱    🌱
+        --    --    --    --    --    --
 ```
 
 ## Gameplay Tutorial
@@ -186,22 +210,54 @@ weewar[T1:P0]> end
 ```
 
 ### Understanding the Map
+The map now uses rich emoji symbols for terrain types with hex grid layout. Each tile spans 2 lines:
+
 ```bash
 weewar[T1:P0]> map
 === Game Map ===
 Size: 8x12
-   A B C D E F G H I J K L 
- 1 ~ . . . ~ . . . ~ . . . 
- 2 . 0 0 ~ . . . ~ . . . ~ 
- 3 . . ~ . . . ~ . . . ~ . 
- 4 . ~ . . . ~ . . . ~ . . 
- 5 ~ . . . ~ . . . ~ . . . 
- 6 . . . ~ . . . ~ . . . ~ 
- 7 . . ~ . . . ~ . . 1 1 . 
- 8 . ~ . . . ~ . . . ~ . . 
-Legend: . = Grass, ~ = Desert, ≈ = Water, ▲ = Mountain, ■ = Rock
-Numbers = Units (player ID)
+         A     B     C     D     E     F     G     H     I     J     K     L
+ 1    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    --    --    --
+
+ 2      🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️
+        --    P0    P0    --    --    --    --    --    --    --    --    --
+
+ 3    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱
+      --    --    --    --    --    --    --    --    --    --    --    --
+
+ 4      🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱
+        --    --    --    --    --    --    --    --    --    --    --    --
+
+ 5    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    --    --    --
+
+ 6      🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️
+        --    --    --    --    --    --    --    --    --    --    --    --
+
+ 7    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🌱    🌱
+      --    --    --    --    --    --    --    --    --    P1    P1    --
+
+ 8      🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱
+        --    --    --    --    --    --    --    --    --    --    --    --
+
+Terrain Key:
+🌱=Grass  🏜️=Desert  🌊=Water  ⛰️=Mountains  🗿=Rock  🏥=Hospital
+🌾=Swamp  🌲=Forest  🌋=Lava  💧=Shallow  🚀=Missile  🌉=Bridge
+⛏️=Mines  🏙️=City  🛣️=Road  🗼=Tower  ❄️=Snow  🏰=Land Base
+🏛️=Naval Base  ✈️=Airport  ❓=Unknown
+
+Units: P0, P1, etc. (Player number), -- = No unit
+Hex Layout: Offset rows based on EvenRowsOffset flag
 ```
+
+**Key Features:**
+- **2-Line Format**: Each tile has terrain emoji on top line, unit info on bottom line
+- **Emoji Terrain**: Each terrain type has a distinctive emoji for easy recognition
+- **Hex Grid**: Notice how alternate rows are offset to show the hexagonal structure
+- **Clear Unit Display**: Units appear as "P0", "P1", etc. on separate line from terrain
+- **Better Spacing**: More space around each tile for improved readability
+- **Rich Variety**: Supports up to 99 different terrain types with clear visual distinction
 
 ### Combat Example
 ```bash

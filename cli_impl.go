@@ -673,7 +673,63 @@ func (cli *WeeWarCLI) PrintGameState() {
 	}
 }
 
-// PrintMap outputs map representation to console
+// getTileEmoji returns emoji representation for tile types
+func (cli *WeeWarCLI) getTileEmoji(tileType int) string {
+	switch tileType {
+	case 1:
+		return "🌱" // Grass
+	case 2:
+		return "🏜️" // Desert
+	case 3:
+		return "🌊" // Water (Regular)
+	case 4:
+		return "⛰️" // Mountains
+	case 5:
+		return "🗿" // Rock
+	case 6:
+		return "🏥" // Hospital
+	case 7:
+		return "🌾" // Swamp
+	case 8:
+		return "🌲" // Forest
+	case 9:
+		return "🌋" // Lava
+	case 10:
+		return "💧" // Water (Shallow)
+	case 11:
+		return "🌊" // Water (Deep)
+	case 12:
+		return "🚀" // Missile Silo
+	case 13:
+		return "🌉" // Bridge (Regular)
+	case 14:
+		return "🌉" // Bridge (Shallow)
+	case 15:
+		return "🌉" // Bridge (Deep)
+	case 16:
+		return "⛏️" // Mines
+	case 17:
+		return "🏙️" // City
+	case 18:
+		return "🛣️" // Road
+	case 19:
+		return "🗿" // Water (Rocky)
+	case 20:
+		return "🗼" // Guard Tower
+	case 21:
+		return "❄️" // Snow
+	case 22:
+		return "🏰" // Land Base
+	case 23:
+		return "🏛️" // Naval Base
+	case 24:
+		return "✈️" // Airport Base
+	default:
+		return "❓" // Unknown
+	}
+}
+
+// PrintMap outputs map representation to console with hex grid layout using emojis
 func (cli *WeeWarCLI) PrintMap() {
 	if cli.game == nil {
 		fmt.Println("No game currently loaded")
@@ -684,49 +740,70 @@ func (cli *WeeWarCLI) PrintMap() {
 	rows, cols := cli.game.GetMapSize()
 	fmt.Printf("Size: %dx%d\n", rows, cols)
 	
-	// Print column headers
-	fmt.Print("   ")
+	// Print column headers with hex offset consideration
+	fmt.Print("       ") // Extra space for hex offset and row numbers
 	for col := 0; col < cols; col++ {
-		fmt.Printf("%c ", 'A'+col)
+		fmt.Printf("  %c   ", 'A'+col)
 	}
 	fmt.Println()
 	
-	// Print map rows
+	// Print map rows with hex offset (2 lines per row)
 	for row := 0; row < rows; row++ {
+		// Apply hex offset based on EvenRowsOffset flag
+		isEvenRow := (row % 2) == 0
+		needsOffset := (cli.game.Map.EvenRowsOffset && isEvenRow) || (!cli.game.Map.EvenRowsOffset && !isEvenRow)
+		
+		// First line: terrain emojis
 		fmt.Printf("%2d ", row+1)
+		if needsOffset {
+			fmt.Print("   ") // Offset by 3 spaces for hex layout
+		}
+		
 		for col := 0; col < cols; col++ {
 			tile := cli.game.GetTileAt(row, col)
 			if tile == nil {
-				fmt.Print("  ")
+				fmt.Print("      ") // 6 spaces for empty tiles
 				continue
 			}
 			
+			// Show terrain emoji centered
+			emoji := cli.getTileEmoji(tile.TileType)
+			fmt.Printf("  %s  ", emoji)
+		}
+		fmt.Println()
+		
+		// Second line: unit information
+		fmt.Print("   ") // Space for row number
+		if needsOffset {
+			fmt.Print("   ") // Offset by 3 spaces for hex layout
+		}
+		
+		for col := 0; col < cols; col++ {
+			tile := cli.game.GetTileAt(row, col)
+			if tile == nil {
+				fmt.Print("      ") // 6 spaces for empty tiles
+				continue
+			}
+			
+			// Show unit info centered
 			if tile.Unit != nil {
-				// Show unit with player color
-				fmt.Printf("%d ", tile.Unit.PlayerID)
+				fmt.Printf(" P%d  ", tile.Unit.PlayerID)
 			} else {
-				// Show terrain
-				switch tile.TileType {
-				case 1:
-					fmt.Print(". ") // Grass
-				case 2:
-					fmt.Print("~ ") // Desert
-				case 3:
-					fmt.Print("≈ ") // Water
-				case 4:
-					fmt.Print("▲ ") // Mountain
-				case 5:
-					fmt.Print("■ ") // Rock
-				default:
-					fmt.Print("? ") // Unknown
-				}
+				fmt.Print("  --  ")
 			}
 		}
 		fmt.Println()
+		fmt.Println() // Extra line between rows for clarity
 	}
 	
-	fmt.Println("Legend: . = Grass, ~ = Desert, ≈ = Water, ▲ = Mountain, ■ = Rock")
-	fmt.Println("Numbers = Units (player ID)")
+	fmt.Println("Terrain Key:")
+	fmt.Println("🌱=Grass  🏜️=Desert  🌊=Water  ⛰️=Mountains  🗿=Rock  🏥=Hospital")
+	fmt.Println("🌾=Swamp  🌲=Forest  🌋=Lava  💧=Shallow  🚀=Missile  🌉=Bridge")
+	fmt.Println("⛏️=Mines  🏙️=City  🛣️=Road  🗼=Tower  ❄️=Snow  🏰=Land Base")
+	fmt.Println("🏛️=Naval Base  ✈️=Airport  ❓=Unknown")
+	fmt.Println()
+	fmt.Println("Units: P0, P1, etc. (Player number), -- = No unit")
+	fmt.Println("Hex Layout: Offset rows based on EvenRowsOffset flag")
 }
 
 // PrintUnits outputs unit list to console
