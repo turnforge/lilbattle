@@ -35,7 +35,7 @@ func TestNewMap(t *testing.T) {
 	if m.NumCols != 15 {
 		t.Errorf("Expected NumCols to be 15, got %d", m.NumCols)
 	}
-	if !m.EvenRowsOffset {
+	if !m.EvenRowsOffset() {
 		t.Errorf("Expected EvenRowsOffset to be true")
 	}
 	if m.Tiles == nil {

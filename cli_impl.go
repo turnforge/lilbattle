@@ -1031,7 +1031,7 @@ func (cli *WeeWarCLI) PrintMap() {
 	for row := 0; row < rows; row++ {
 		// Apply hex offset based on EvenRowsOffset flag
 		isEvenRow := (row % 2) == 0
-		needsOffset := (cli.game.Map.EvenRowsOffset && isEvenRow) || (!cli.game.Map.EvenRowsOffset && !isEvenRow)
+		needsOffset := (cli.game.Map.EvenRowsOffset() && isEvenRow) || (!cli.game.Map.EvenRowsOffset() && !isEvenRow)
 		
 		// First line: terrain emojis
 		fmt.Printf("%2d ", row+1)

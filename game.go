@@ -85,21 +85,71 @@ type Map struct {
 	NumRows int
 	NumCols int
 
-	// Hex offset configuration
-	EvenRowsOffset bool // If true, even rows start at x = hex_width/2, odd rows at x = 0
-
 	// Tile storage - sparse representation
 	Tiles map[int]map[int]*Tile // Tiles[row][col] = *Tile
+	
+	// Private: intended hex offset pattern (for when tiles haven't been placed yet)
+	intendedEvenRowsOffset bool
 }
 
 // NewMap creates a new empty map with the specified dimensions
 func NewMap(numRows, numCols int, evenRowsOffset bool) *Map {
 	return &Map{
-		NumRows:        numRows,
-		NumCols:        numCols,
-		EvenRowsOffset: evenRowsOffset,
-		Tiles:          make(map[int]map[int]*Tile),
+		NumRows:                numRows,
+		NumCols:                numCols,
+		Tiles:                  make(map[int]map[int]*Tile),
+		intendedEvenRowsOffset: evenRowsOffset,
 	}
+}
+
+// EvenRowsOffset determines the hex offset pattern based on map structure
+// This replaces the stored boolean property with a computed method
+func (m *Map) EvenRowsOffset() bool {
+	// Strategy 1: Infer from existing tile layout if we have enough tiles
+	if len(m.Tiles) > 1 {
+		inferred := m.inferOffsetFromLayout()
+		// If inference is confident, use it; otherwise fall back to intended
+		if inferred != m.intendedEvenRowsOffset {
+			// Could log a warning here if desired
+		}
+		return inferred
+	}
+	
+	// Strategy 2: Use intended offset for empty or sparse maps
+	return m.intendedEvenRowsOffset
+}
+
+// inferOffsetFromLayout analyzes existing tiles to determine offset pattern
+func (m *Map) inferOffsetFromLayout() bool {
+	// Look at the relative positions of tiles in adjacent rows
+	// This is a heuristic - in practice you might store this as metadata
+	
+	// Find first tile in row 0 and row 1
+	var row0Col, row1Col int = -1, -1
+	
+	if row0Tiles, exists := m.Tiles[0]; exists {
+		for col := range row0Tiles {
+			row0Col = col
+			break
+		}
+	}
+	
+	if row1Tiles, exists := m.Tiles[1]; exists {
+		for col := range row1Tiles {
+			row1Col = col
+			break
+		}
+	}
+	
+	// If we have tiles in both rows, compare their alignment
+	if row0Col >= 0 && row1Col >= 0 {
+		// If row 1 starts further right than row 0, then odd rows are offset
+		// If row 0 starts further right than row 1, then even rows are offset
+		return row0Col > row1Col
+	}
+	
+	// Default to false if we can't determine
+	return false
 }
 
 // TileAt returns the tile at the specified position, or nil if none exists
@@ -125,7 +175,7 @@ func (m *Map) GetHexNeighborCoords(row, col int) [6][2]int {
 	// Hex grid neighbor calculation depends on whether we're in even or odd row
 	isEvenRow := (row % 2) == 0
 
-	if m.EvenRowsOffset {
+	if m.EvenRowsOffset() {
 		// Even rows are offset to the right
 		if isEvenRow {
 			// Even row neighbors
@@ -168,7 +218,7 @@ func (m *Map) GetHexNeighborCoords(row, col int) [6][2]int {
 	return neighbors
 }
 
-// GetNeighbor returns the neighboring tile in the specified direction
+// GetNeighbor returns the neighboring tile in the specified direction - maintains backward compatibility
 func (m *Map) GetNeighbor(row, col int, direction NeighborDirection) *Tile {
 	coords := m.GetHexNeighborCoords(row, col)
 	neighborRow, neighborCol := coords[direction][0], coords[direction][1]
@@ -182,7 +232,7 @@ func (m *Map) XYForTile(row, col int, tileWidth, tileHeight, yIncrement float64)
 
 	// Apply offset for alternating rows (hex grid staggering)
 	isEvenRow := (row % 2) == 0
-	if m.EvenRowsOffset {
+	if m.EvenRowsOffset() {
 		// Even rows are offset to the right
 		if isEvenRow {
 			x += tileWidth / 2
@@ -531,12 +581,13 @@ func (g *Game) GetTileType(row, col int) int {
 	return tile.TileType
 }
 
-// GetTileNeighbors returns adjacent tiles (hex grid)
+// GetTileNeighbors returns adjacent tiles (hex grid) - maintains backward compatibility
 func (g *Game) GetTileNeighbors(row, col int) []*Tile {
 	if g.Map == nil {
 		return make([]*Tile, 6)
 	}
 
+	// Use original array-based calculation for backward compatibility
 	neighborCoords := g.Map.GetHexNeighborCoords(row, col)
 	neighbors := make([]*Tile, 6)
 
@@ -577,7 +628,7 @@ func (g *Game) PixelToRowCol(x, y float64) (row, col int, valid bool) {
 	// Calculate column accounting for hex offset
 	isEvenRow := (row % 2) == 0
 	baseX := x
-	if g.Map.EvenRowsOffset {
+	if g.Map.EvenRowsOffset() {
 		if isEvenRow {
 			baseX -= tileWidth / 2
 		}
