@@ -17,7 +17,7 @@ import (
 const (
 	// PixelsPerMM represents the conversion factor from pixels to millimeters at 96 DPI
 	// 96 DPI ÷ 25.4 mm/inch = 3.78 pixels/mm
-	PixelsPerMM = 3.78
+	PixelsPerMM = 3.7795
 )
 
 // Buffer represents a drawable canvas with compositing capabilities
@@ -322,10 +322,8 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 	// Convert font size from pixels to mm
 	face := fontFamily.Face(fontSize/PixelsPerMM, rgba, fontWeight, canvas.FontNormal)
 
-	// Calculate text metrics for background
+	// Create text line for rendering
 	textLine := canvas.NewTextLine(face, text, canvas.Left)
-	textWidth := textLine.Bounds().W()
-	textHeight := textLine.Bounds().H()
 
 	// Convert buffer coordinates to canvas coordinates (once)
 	canvasX, canvasY := b.bufferToCanvasXY(x, y)
@@ -334,8 +332,17 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 	if backgroundColor.A > 0 {
 		// Add padding around text (in mm)
 		padding := 2.0 / PixelsPerMM // Convert 2 pixels to mm
+
+		// Get text bounds to position background properly
+		bounds := textLine.Bounds()
+
+		// Position background to properly contain text
+		// Canvas DrawText positions text at baseline, estimate descender space
+		textWidth := bounds.W()
+		textHeight := bounds.H()
+		
 		bgX := canvasX - padding
-		bgY := canvasY - textHeight - padding
+		bgY := canvasY - (textHeight * 0.2) - padding  // Account for descenders below baseline
 		bgWidth := textWidth + (padding * 2)
 		bgHeight := textHeight + (padding * 2)
 
