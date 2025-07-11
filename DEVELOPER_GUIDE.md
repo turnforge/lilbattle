@@ -1,187 +1,127 @@
 # WeeWar Developer Guide
 
-A comprehensive guide for developing, building, testing, and running the WeeWar turn-based strategy game built on the TurnEngine framework.
+A comprehensive guide for developing, testing, and running the WeeWar turn-based strategy game.
 
 ## Table of Contents
 - [Quick Start](#quick-start)
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-- [Building](#building)
-- [Testing](#testing)
-- [Development Workflow](#development-workflow)
 - [Architecture Overview](#architecture-overview)
+- [Testing Strategy](#testing-strategy)
+- [Development Workflow](#development-workflow)
+- [CLI Interface](#cli-interface)
 - [Common Tasks](#common-tasks)
 - [Troubleshooting](#troubleshooting)
-- [Known Issues](#known-issues)
 
 ## Quick Start
 
 ```bash
 # Clone and setup
 git clone <repository-url>
-cd turnengine
+cd turnengine/games/weewar
 
 # Install dependencies
 go mod download
 
-# Test map system
-go run games/weewar/cmd/test-map-system/main.go
-
-# Run unit tests
-go test ./...
-
-# Build WASM version
-make wasm
-```
-
-## Prerequisites
-
-### Required Software
-- **Go 1.24.0+** - Core development language
-- **Python 3.8+** - For map processing tools
-- **Git** - Version control
-- **Make** - Build automation
-
-### Optional Tools
-- **Visual Studio Code** - Recommended IDE with Go extension
-- **Docker** - For containerized development
-- **Node.js** - For web development (if extending web interface)
-
-## Setup
-
-### 1. Clone Repository
-```bash
-git clone <repository-url>
-cd turnengine
-```
-
-### 2. Install Go Dependencies
-```bash
-go mod download
-go mod verify
-```
-
-### 3. Set up Python Environment (for map tools)
-```bash
-cd games/weewar/maps
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 4. Verify Installation
-```bash
-# Test Go build
-go build ./...
-
-# Test map system
-go run games/weewar/cmd/test-map-system/main.go
-
-# Test Python tools
-cd games/weewar/maps
-python grid_analyzer.py --help
-```
-
-## Building
-
-### Local Development Build
-```bash
-# Build all components
-make
-
-# Build server only
-make server
-
-# Build WebAssembly
-make wasm
-```
-
-### Available Build Targets
-
-| Target | Command | Description |
-|--------|---------|-------------|
-| `server` | `make server` | Build server binary |
-| `wasm` | `make wasm` | Build WebAssembly version |
-| `dev` | `make dev` | Build WASM and run dev server |
-| `test` | `make test` | Run all tests |
-
-### Manual Build Commands
-```bash
-# Build server
-go build -o bin/server cmd/server/main.go
-
-# Build WASM
-GOOS=js GOARCH=wasm go build -o web/wasm/game-engine.wasm cmd/wasm/main.go
-
-# Build WeeWar tools
-go build -o bin/test-map-system games/weewar/cmd/test-map-system/main.go
-go build -o bin/extract-data games/weewar/cmd/extract-data/main.go
-go build -o bin/extract-map-data games/weewar/cmd/extract-map-data/main.go
-```
-
-## Testing
-
-### Unit Tests
-```bash
 # Run all tests
-go test ./...
-
-# Run tests with verbose output
 go test -v ./...
 
-# Run tests with coverage
+# Build CLI executable
+go build -o /tmp/weewar-cli ./cmd/weewar-cli
+
+# Start interactive game
+/tmp/weewar-cli -new -interactive
+```
+
+## Architecture Overview
+
+### Current Architecture (2024)
+
+The WeeWar implementation has evolved into a unified, interface-driven architecture:
+
+```
+Core Game System (GameInterface)
+├── GameController (lifecycle, turns, save/load)
+├── MapInterface (hex grid, pathfinding, coordinates)  
+└── UnitInterface (units, combat, actions)
+     ↓
+Unified Game Implementation
+├── Comprehensive state management
+├── Integrated hex pathfinding
+├── Real WeeWar data integration
+└── PNG rendering capabilities
+     ↓
+Multiple Interfaces
+├── CLI (REPL with chess notation)
+├── PNG Renderer (hex graphics)
+└── Web Interface (future)
+```
+
+### Key Design Principles
+
+1. **Interface-Driven Design**: Clean contracts for all operations
+2. **Unified State Management**: Single source of truth in Game struct
+3. **Data-Driven Authenticity**: Real WeeWar data integration
+4. **Comprehensive Testing**: All major functionality tested
+5. **Multiple Interface Support**: CLI, PNG, Web (future)
+
+## Testing Strategy
+
+### Test Categories
+
+#### 1. Core Game Tests (`*_test.go`)
+- **Basic Operations**: Game creation, state management
+- **Combat System**: Damage calculations, unit interactions
+- **Map Navigation**: Hex pathfinding, coordinate conversion
+- **Save/Load**: Game persistence and restoration
+
+#### 2. Interface Tests
+- **CLI Tests**: Command parsing, REPL functionality
+- **PNG Rendering**: Visual output generation
+- **Integration Tests**: Full game scenarios
+
+#### 3. Data Integration Tests
+- **Real Data**: Unit stats, terrain, combat matrices
+- **Map Loading**: WeeWar map configurations
+- **Position Handling**: Chess notation (A1, B2, etc.)
+
+### Running Tests
+
+```bash
+# Run all tests
+go test -v ./...
+
+# Run specific test categories
+go test -v -run TestGame          # Core game tests
+go test -v -run TestCLI           # CLI interface tests
+go test -v -run TestCombat        # Combat system tests
+go test -v -run TestMap           # Map and pathfinding tests
+go test -v -run TestPNG           # PNG rendering tests
+
+# Run with coverage
 go test -cover ./...
 
-# Run specific package tests
-go test ./internal/turnengine/...
+# Run with verbose output and save test images
+go test -v -run TestPNGRendering
+# Test images saved to /tmp/turnengine/test/
 ```
 
-### Integration Tests
-```bash
-# Test map system
-go run games/weewar/cmd/test-map-system/main.go
+### Test Organization
 
-# Test data extraction
-go run games/weewar/cmd/extract-data/main.go
+```go
+// Core game functionality
+func TestGameBasicOperations(t *testing.T)
+func TestCombatSystem(t *testing.T)
+func TestMapNavigation(t *testing.T)
+func TestSaveLoad(t *testing.T)
 
-# Test map data extraction
-go run games/weewar/cmd/extract-map-data/main.go
-```
+// Interface functionality
+func TestCLIBasicOperations(t *testing.T)
+func TestCLIREPLCommands(t *testing.T)
+func TestCLIGameStateIntegration(t *testing.T)
+func TestPNGRendering(t *testing.T)
 
-### Manual Testing
-```bash
-# Create a simple test game
-cd games/weewar
-go run -c '
-package main
-
-import (
-    "fmt"
-    "log"
-    "github.com/panyam/turnengine/games/weewar"
-)
-
-func main() {
-    game, err := weewar.CreateWeeWarGameWithMapName("Small World")
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("Game created successfully with %d players\n", len(game.GetGameState().Players))
-}'
-```
-
-### Python Map Tools Testing
-```bash
-cd games/weewar/maps
-
-# Test grid analysis
-python grid_analyzer.py --image ../data/Maps/1_files/map-og.png --debug
-
-# Test hex generation
-python hex_generator.py --image ../data/Maps/1_files/map-og.png --debug
-
-# Test tile extraction
-python hex_splitter.py --image ../data/Maps/1_files/map-og.png --output-dir test_tiles
+// Integration tests
+func TestFullGameplayScenario(t *testing.T)
+func TestRealDataIntegration(t *testing.T)
 ```
 
 ## Development Workflow
@@ -189,558 +129,293 @@ python hex_splitter.py --image ../data/Maps/1_files/map-og.png --output-dir test
 ### Code Organization
 
 ```
-turnengine/
-├── internal/turnengine/     # Core game engine (80% reusable)
-│   ├── entity.go           # Entity Component System
-│   ├── gamestate.go        # Game state management
-│   ├── board.go            # Abstract board system
-│   └── ...
-├── games/weewar/           # WeeWar implementation (20% specific)
-│   ├── game_interface.go   # Core game interface contracts (NEW)
-│   ├── ai.go               # AI interface and types (NEW)
-│   ├── ui.go               # UI interface and types (NEW)
-│   ├── cli.go              # CLI interface and types (NEW)
-│   ├── events.go           # Event system (NEW)
-│   ├── game.go             # Unified game implementation (NEW)
-│   ├── buffer.go           # Rendering system
-│   ├── core.go             # Legacy core API (to be refactored)
-│   ├── board.go            # Hex board implementation
-│   ├── components.go       # WeeWar components
-│   ├── combat.go           # Combat system
-│   ├── movement.go         # Movement system
-│   ├── map.go              # Map system
-│   └── data/               # Game data
-└── cmd/                    # Main applications
-    ├── server/             # Server application
-    ├── wasm/               # WebAssembly application
-    └── weewar-cli/         # CLI application (NEW)
+games/weewar/
+├── game_interface.go           # Core interface contracts
+├── game.go                     # Unified game implementation
+├── map.go, tile.go            # Hex map system
+├── unit.go, combat.go         # Unit management and combat
+├── rendering.go, buffer.go    # PNG generation
+├── cli_impl.go                # CLI interface implementation
+├── cli_formatter.go           # CLI text formatting
+├── cli_test.go                # CLI tests
+├── game_test.go               # Core game tests
+├── *_test.go                  # Other test files
+└── cmd/
+    └── weewar-cli/main.go     # CLI executable
 ```
 
-### New Development Architecture (v2.0)
+### Development Process
 
-#### Core API Design
-- **Clean Separation**: Static data (`UnitData`, `TerrainData`) vs runtime state (`Unit`, `Tile`, `Game`)
-- **Programmatic Interface**: Direct object manipulation instead of ECS lookups
-- **Headless Gameplay**: Easy testing and AI development
-- **Deterministic Games**: Seeded RNG for reproducible gameplay
+1. **Interface First**: Define interfaces before implementation
+2. **Test-Driven**: Write tests before implementing features
+3. **Visual Debugging**: Use PNG rendering for game state visualization
+4. **Comprehensive Testing**: Test all major functionality
+5. **Documentation**: Update guides and architecture docs
 
-#### Interface-Driven Architecture
-- **Clean Interface Contracts**: Well-defined interfaces for each layer
-- **Separation of Concerns**: Core game logic separated from AI, UI, and CLI
-- **Modular Design**: Independent development of different game aspects
-- **Testable Components**: Each interface can be tested independently
+## CLI Interface
 
-#### Buffer-Based Rendering
-- **Composable Layers**: Separate terrain, units, and UI rendering
-- **Scaling Support**: Professional image scaling with bilinear interpolation
-- **Alpha Compositing**: Proper transparency and blending
-- **Multi-format Output**: PNG generation with flexible dimensions
-- **Vector Path Drawing**: Professional-grade path filling and stroking with tdewolff/canvas
-- **WebAssembly Ready**: Zero-dependency rendering optimized for browser deployment
+### REPL Features
 
-#### Interface Architecture
+The CLI provides a sophisticated Read-Eval-Print Loop (REPL) for interactive gameplay:
 
-The new architecture is built around clean interface contracts:
-
-**Core Game Interface** (`game_interface.go`):
-- `GameController`: Game lifecycle, turns, state management
-- `MapInterface`: Map queries, pathfinding, coordinate conversion
-- `UnitInterface`: Unit management, movement, combat actions
-- Core types: `GameStatus`, `Position`, `CombatResult`
-
-**AI Interface** (`ai.go`):
-- `AIInterface`: Decision-making, strategic analysis
-- `AIPlayer`: AI player instances with personalities
-- AI types: `AIAction`, `Threat`, `Opportunity`, `AIDifficulty`
-
-**UI Interface** (`ui.go`):
-- `UIInterface`: Browser interaction, rendering, input handling
-- `AnimationInterface`: Animation system
-- `ThemeInterface`: Visual theming
-- UI types: `ClickResult`, `HoverResult`, `UIState`, `RenderOptions`
-
-**CLI Interface** (`cli.go`):
-- `CLIInterface`: Command-line interaction
-- `CLIFormatter`: Text formatting and display
-- CLI types: `CLICommand`, `CLIResponse`, `CLIGameState`
-
-**Event System** (`events.go`):
-- `EventInterface`: Observer pattern for game events
-- `EventManager`: Thread-safe event subscription and emission
-- Event types: Game state changes, unit actions, turn progression
-
-### Development Principles
-
-1. **Interface-Driven Design**: Define contracts before implementation
-2. **Separation of Concerns**: Core game logic independent of AI/UI/CLI
-3. **Clean Architecture**: Static vs runtime, rendering vs logic separation
-4. **Programmatic API**: Easy to test and extend programmatically
-5. **Composable Systems**: Modular design with clear interfaces
-6. **Test-First Development**: Write tests before implementing features
-7. **Visual Debugging**: Use Buffer system for debugging and visualization
-
-### Adding New Features
-
-#### 1. Core Game Features
-```go
-// Example: Adding a new unit type
-func TestNewUnitType(t *testing.T) {
-    // Create unit
-    unit := NewUnit(ENGINEER_TYPE, 0)
-    unit.Row = 5
-    unit.Col = 3
-    
-    // Test unit behavior
-    game.AddUnit(unit, 0)
-    
-    // Verify placement
-    tile := game.Map.TileAt(5, 3)
-    assert.Equal(t, tile.Unit, unit)
-}
-```
-
-#### 2. Rendering Features
-```go
-// Example: Adding visual effects with vector paths
-func (g *Game) RenderEffects(buffer *Buffer, tileWidth, tileHeight, yIncrement float64) {
-    // Draw explosion effects using vector paths
-    for _, combat := range g.GetCombatEffects() {
-        x, y := g.Map.XYForTile(combat.Row, combat.Col, tileWidth, tileHeight, yIncrement)
-        
-        // Create explosion path (star burst pattern)
-        explosionPath := []Point{
-            {X: x, Y: y - 20},
-            {X: x + 10, Y: y - 5},
-            {X: x + 20, Y: y},
-            {X: x + 5, Y: y + 10},
-            {X: x, Y: y + 20},
-            {X: x - 5, Y: y + 10},
-            {X: x - 20, Y: y},
-            {X: x - 10, Y: y - 5},
-        }
-        
-        // Fill with semi-transparent orange
-        buffer.FillPath(explosionPath, Color{R: 255, G: 165, B: 0, A: 180})
-        
-        // Stroke with red outline
-        strokeProps := StrokeProperties{Width: 2.0, LineCap: "round", LineJoin: "round"}
-        buffer.StrokePath(explosionPath, Color{R: 255, G: 0, B: 0, A: 255}, strokeProps)
-    }
-}
-```
-
-#### 3. Integration Testing
-```go
-// Example: Full gameplay test
-func TestCompleteGame(t *testing.T) {
-    // Create game
-    game := createTestGame()
-    
-    // Play through several turns
-    for turn := 0; turn < 10; turn++ {
-        // Move units
-        moveUnits(game)
-        
-        // Render state
-        buffer := NewBuffer(800, 600)
-        game.RenderToBuffer(buffer, 80, 70, 50)
-        buffer.Save(fmt.Sprintf("/tmp/game_turn_%d.png", turn))
-        
-        // Next turn
-        game.NextTurn()
-    }
-}
-
-### Debugging
-
-#### Command Line Debugging
 ```bash
-# Enable debug logging
-export DEBUG=1
-go run games/weewar/cmd/test-map-system/main.go
+# Start interactive session
+/tmp/weewar-cli -new -interactive
 
-# Use delve debugger
-go install github.com/go-delve/delve/cmd/dlv@latest
-dlv debug games/weewar/cmd/test-map-system/main.go
-
-# Print game state
-fmt.Printf("Game State: %+v\n", game.GetGameState())
+# REPL provides:
+weewar[T1:P0]> actions        # Show available actions
+weewar[T1:P0]> move B2 B3     # Move unit using chess notation
+weewar[T1:P0]> s              # Quick status (shortcut)
+weewar[T1:P0]> map            # Display game map
+weewar[T1:P0]> end            # End turn
+weewar[T2:P1]> quit           # Exit game
 ```
 
-#### Visual Debugging (NEW)
-```go
-// Create debug visualization
-func debugGameState(game *Game) {
-    buffer := NewBuffer(800, 600)
-    
-    // Render layers separately for debugging
-    terrainBuffer := NewBuffer(800, 600)
-    unitBuffer := NewBuffer(800, 600)
-    
-    game.RenderTerrain(terrainBuffer, 80, 70, 50)
-    game.RenderUnits(unitBuffer, 80, 70, 50)
-    
-    // Save individual layers
-    terrainBuffer.Save("/tmp/debug_terrain.png")
-    unitBuffer.Save("/tmp/debug_units.png")
-    
-    // Save composite
-    buffer.RenderBuffer(terrainBuffer)
-    buffer.RenderBuffer(unitBuffer)
-    buffer.Save("/tmp/debug_complete.png")
-}
+### REPL Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `actions` | Show available actions | `actions` |
+| `move <from> <to>` | Move unit | `move A1 B2` |
+| `attack <from> <to>` | Attack unit | `attack A1 B2` |
+| `s` / `state` | Quick status | `s` |
+| `map` | Display map | `map` |
+| `units` | Show units | `units` |
+| `turn` | Turn information | `turn` |
+| `end` | End turn | `end` |
+| `save <file>` | Save game | `save game.json` |
+| `render <file>` | Render PNG | `render game.png` |
+| `help` | Show help | `help move` |
+| `quit` | Exit | `quit` |
+
+### CLI Modes
+
+```bash
+# Interactive REPL
+/tmp/weewar-cli -new -interactive
+
+# Single commands
+/tmp/weewar-cli -new status map
+
+# Batch processing
+/tmp/weewar-cli -new -batch commands.txt
+
+# Save and render
+/tmp/weewar-cli -new -save game.json -render game.png
 ```
-
-#### Unit Testing with Visuals
-```go
-func TestUnitMovement(t *testing.T) {
-    // Create test scenario
-    game := createTestGame()
-    
-    // Move unit
-    unit := game.GetUnitsForPlayer(0)[0]
-    unit.Row = 3
-    unit.Col = 4
-    
-    // Visualize result
-    buffer := NewBuffer(400, 300)
-    game.RenderToBuffer(buffer, 60, 50, 40)
-    buffer.Save("/tmp/test_movement.png")
-    
-    // Verify movement
-    tile := game.Map.TileAt(3, 4)
-    assert.Equal(t, tile.Unit, unit)
-}
-```
-
-## Architecture Overview
-
-### TurnEngine Framework (Reusable)
-- **Entity Component System**: Flexible game object composition
-- **Game State Management**: Version control, player management, turn handling
-- **Abstract Board System**: Supports hex, grid, graph coordinates
-- **Command Processing**: Validation and execution pipeline
-- **Serialization**: JSON-based state persistence
-
-### WeeWar Implementation (Game-Specific)
-- **Hex Board**: Axial coordinate system with pathfinding
-- **Components**: Health, Movement, Combat, Team, UnitType, Position
-- **Systems**: Combat calculations, movement validation, turn processing
-- **Data Integration**: Real WeeWar maps, units, and combat matrices
-
-### Key Interfaces
-
-```go
-// Core abstractions
-type Position interface {
-    GetCoordinates() (int, int, int)
-    Distance(Position) float64
-}
-
-type Board interface {
-    IsValidPosition(Position) bool
-    GetNeighbors(Position) []Position
-    FindPath(from, to Position) []Position
-}
-
-type Component interface {
-    Type() string
-}
-
-type System interface {
-    Update(*GameState) error
-}
-```
-
-### Data Flow
-
-1. **Game Creation**: Load map data → Create game config → Initialize game
-2. **Command Processing**: Validate command → Process command → Update state
-3. **State Management**: Track entities → Update components → Persist changes
-4. **Turn Management**: Process player actions → Update game state → Check victory
 
 ## Common Tasks
 
-### Adding a New Map
-
-1. **Extract Map Data**: Use Python tools to analyze map image
-2. **Update Maps JSON**: Add map data to `weewar-maps.json`
-3. **Test Loading**: Verify map loads correctly
-4. **Validate Gameplay**: Ensure proper unit placement and terrain
-
-```bash
-# Extract map data
-cd games/weewar/maps
-python grid_analyzer.py --image new_map.png --debug
-python hex_splitter.py --image new_map.png --output-dir new_map_tiles
-
-# Update maps JSON file
-# Add new map entry to games/weewar/data/weewar-maps.json
-
-# Test loading
-go run games/weewar/cmd/test-map-system/main.go
-```
-
-### Creating New Unit Types
-
-1. **Update Data**: Add unit to `weewar-data.json`
-2. **Extend Components**: Add new component types if needed
-3. **Update Systems**: Modify combat/movement systems
-4. **Test Integration**: Verify unit works in game
+### Adding New Tests
 
 ```go
-// Add new component type
-type SpecialAbilityComponent struct {
-    AbilityType string `json:"abilityType"`
-    Cooldown    int    `json:"cooldown"`
-    Range       int    `json:"range"`
-}
+// Example: Adding a new combat test
+func TestNewCombatFeature(t *testing.T) {
+    // Create test game
+    testMap := NewMap(8, 12, false)
+    for row := 0; row < 8; row++ {
+        for col := 0; col < 12; col++ {
+            tile := NewTile(row, col, 1)
+            testMap.AddTile(tile)
+        }
+    }
+    testMap.ConnectHexNeighbors()
 
-func (sac SpecialAbilityComponent) Type() string { return "specialAbility" }
+    game, err := NewGame(2, testMap, 12345)
+    require.NoError(t, err)
+
+    // Test specific combat scenario
+    // ... test implementation
+    
+    // Optional: Generate visual output
+    if testing.Verbose() {
+        buffer := NewBuffer(400, 300)
+        game.RenderToBuffer(buffer, 60, 50, 40)
+        buffer.Save("/tmp/test_combat_feature.png")
+    }
+}
 ```
 
 ### Debugging Game State
 
 ```go
-// Print entity components
-for _, entity := range game.GetGameState().World.GetAllEntities() {
-    fmt.Printf("Entity %s:\n", entity.ID)
-    for compType, comp := range entity.Components {
-        fmt.Printf("  %s: %+v\n", compType, comp)
-    }
+// Visual debugging
+func debugGameState(game *Game) {
+    buffer := NewBuffer(800, 600)
+    game.RenderToBuffer(buffer, 80, 70, 50)
+    buffer.Save("/tmp/debug_state.png")
 }
 
-// Print board state
-board := game.GetBoard()
-for q := 0; q < board.Width; q++ {
-    for r := 0; r < board.Height; r++ {
-        pos := &weewar.HexPosition{Q: q, R: r}
-        if entityID, exists := board.GetEntityAt(pos); exists {
-            fmt.Printf("Position (%d,%d): %s\n", q, r, entityID)
-        }
-    }
+// CLI debugging
+func debugCLI(game *Game) {
+    cli := NewWeeWarCLI(game)
+    cli.SetVerbose(true)
+    
+    // Print detailed state
+    cli.PrintGameState()
+    cli.PrintUnits()
+    cli.PrintMap()
 }
 ```
 
-### Performance Profiling
+### Performance Testing
 
 ```bash
-# CPU profiling
-go test -cpuprofile cpu.prof -bench=. ./...
-go tool pprof cpu.prof
+# Benchmark tests
+go test -bench=. ./...
 
 # Memory profiling
 go test -memprofile mem.prof -bench=. ./...
 go tool pprof mem.prof
 
-# Trace execution
-go test -trace trace.out ./...
-go tool trace trace.out
+# CPU profiling
+go test -cpuprofile cpu.prof -bench=. ./...
+go tool pprof cpu.prof
 ```
+
+### Adding New Features
+
+1. **Define Interface**: Add methods to appropriate interface
+2. **Implement Method**: Add implementation to Game struct
+3. **Write Tests**: Create comprehensive test coverage
+4. **Update CLI**: Add CLI commands if needed
+5. **Update Documentation**: Update guides and help text
 
 ## Troubleshooting
 
-### Common Build Errors
+### Common Issues
 
-**Error**: `package github.com/panyam/turnengine/games/weewar: cannot find package`
-**Solution**: Ensure you're in the correct directory and Go module is initialized
+**Build Errors**:
 ```bash
-go mod init github.com/panyam/turnengine
+# Missing dependencies
+go mod download
 go mod tidy
+
+# Import issues
+go mod verify
 ```
 
-**Error**: `undefined: HexPosition`
-**Solution**: Import the correct package
-```go
-import "github.com/panyam/turnengine/games/weewar"
-```
-
-### Runtime Issues
-
-**Error**: Map loading fails with "file not found"
-**Solution**: Ensure data files are in correct location
+**Test Failures**:
 ```bash
-ls games/weewar/data/
-# Should show: weewar-data.json, weewar-maps.json, Maps/
+# Run specific failing test
+go test -v -run TestSpecificFunction
+
+# Check test output directories
+ls /tmp/turnengine/test/
+ls /tmp/turnengine/cli_test/
 ```
 
-**Error**: Position validation fails
-**Solution**: Check hex coordinate bounds
+**CLI Issues**:
+```bash
+# Rebuild CLI
+go build -o /tmp/weewar-cli ./cmd/weewar-cli
+
+# Test CLI help
+/tmp/weewar-cli --help
+
+# Test CLI commands
+echo "new" | /tmp/weewar-cli -interactive
+```
+
+### Debug Logging
+
 ```go
-if !board.IsValidPosition(pos) {
-    fmt.Printf("Invalid position: %+v\n", pos)
+// Add debug output to tests
+if testing.Verbose() {
+    fmt.Printf("Debug: %+v\n", gameState)
+}
+
+// Use t.Logf for test-specific logging
+t.Logf("Game state: %+v", game.GetGameState())
+```
+
+### Visual Debug Output
+
+```go
+// Generate debug visuals
+func TestWithVisualDebug(t *testing.T) {
+    game := createTestGame()
+    
+    // Save initial state
+    buffer := NewBuffer(400, 300)
+    game.RenderToBuffer(buffer, 60, 50, 40)
+    buffer.Save("/tmp/debug_initial.png")
+    
+    // Perform operations
+    // ... test operations
+    
+    // Save final state
+    game.RenderToBuffer(buffer, 60, 50, 40)
+    buffer.Save("/tmp/debug_final.png")
+    
+    t.Logf("Debug images saved to /tmp/debug_*.png")
 }
 ```
 
-### Python Tool Issues
+## File Structure
 
-**Error**: `ModuleNotFoundError: No module named 'cv2'`
-**Solution**: Install OpenCV
-```bash
-pip install opencv-python
 ```
-
-**Error**: Map analysis fails
-**Solution**: Check image file format and path
-```bash
-file your_map.png  # Should show PNG image data
+games/weewar/
+├── Core Implementation
+│   ├── game_interface.go      # Interface contracts
+│   ├── game.go               # Unified game implementation
+│   ├── map.go, tile.go       # Hex map system
+│   ├── unit.go, combat.go    # Unit and combat systems
+│   └── rendering.go, buffer.go # PNG rendering
+├── CLI Interface
+│   ├── cli_impl.go           # CLI implementation
+│   ├── cli_formatter.go      # Text formatting
+│   └── cmd/weewar-cli/       # CLI executable
+├── Testing
+│   ├── game_test.go          # Core game tests
+│   ├── cli_test.go           # CLI tests
+│   ├── combat_test.go        # Combat tests
+│   └── *_test.go             # Other test files
+├── Data Integration
+│   ├── weewar_data.go        # Real WeeWar data
+│   └── cmd/extract-data/     # Data extraction tools
+└── Documentation
+    ├── ARCHITECTURE.md       # Architecture overview
+    ├── DEVELOPER_GUIDE.md    # This file
+    └── cmd/weewar-cli/USER_GUIDE.md # CLI user guide
 ```
-
-### Performance Issues
-
-**Issue**: Slow pathfinding
-**Solution**: Implement A* caching
-```go
-// Cache pathfinding results
-type PathCache struct {
-    cache map[string][]Position
-}
-```
-
-**Issue**: Memory leaks
-**Solution**: Proper entity cleanup
-```go
-// Remove entities properly
-world.RemoveEntity(entityID)
-```
-
-## Known Issues
-
-### Current Status (v2.0)
-
-The core architecture has been significantly improved with the new Buffer-based rendering system and clean API design. Most critical blocking issues have been resolved.
-
-### Minor Issues
-
-1. **AI System**: Framework exists but no AI implementation
-2. **Web Interface**: WASM builds but no interactive UI
-3. **Advanced Features**: Game persistence, tournaments, etc.
-
-### Recent Fixes ✅
-
-1. **~~Board Position Validation~~**: Fixed with new core API
-2. **~~Command Processing~~**: Resolved with simplified game state management
-3. **~~Unit Placement~~**: Fixed with direct object manipulation
-4. **~~Map Terrain~~**: Implemented with proper terrain rendering
-5. **~~Victory Conditions~~**: Can be implemented with current architecture
-6. **~~Vector Path Drawing~~**: Implemented FillPath and StrokePath methods with tdewolff/canvas
-
-### Development Roadmap
-
-1. **Phase 1**: AI implementation and game persistence
-2. **Phase 2**: Web interface and real-time features
-3. **Phase 3**: Advanced features and community tools
-4. **Phase 4**: Performance optimization and scaling
 
 ## Contributing
 
 ### Development Setup
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/new-feature`
-3. Make changes with tests
-4. Run full test suite: `make test`
-5. Submit pull request
+3. Write tests for new functionality
+4. Implement feature with comprehensive testing
+5. Run full test suite: `go test -v ./...`
+6. Update documentation as needed
+7. Submit pull request
 
-### Code Style
-- Follow Go conventions: `gofmt`, `go vet`, `golint`
-- Use meaningful variable names
-- Add comments for complex logic
-- Write tests for new features
-
-### Documentation
-- Update this guide for new features
-- Add inline documentation for complex functions
-- Include examples in docstrings
+### Code Standards
+- Follow Go conventions (`gofmt`, `go vet`)
+- Write comprehensive tests for all new features
+- Use meaningful variable names and add comments
+- Maintain interface compatibility
+- Update documentation for user-facing changes
 
 ## Resources
 
 ### Documentation
 - [Go Documentation](https://golang.org/doc/)
-- [WebAssembly with Go](https://github.com/golang/go/wiki/WebAssembly)
-- [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system)
+- [WeeWar Architecture](ARCHITECTURE.md)
+- [CLI User Guide](cmd/weewar-cli/USER_GUIDE.md)
 
-### Tools
+### Development Tools
 - [Delve Debugger](https://github.com/go-delve/delve)
-- [Go Profiler](https://golang.org/pkg/runtime/pprof/)
 - [Visual Studio Code Go Extension](https://github.com/golang/vscode-go)
+- [Go Profiler](https://golang.org/pkg/runtime/pprof/)
 
 ### Game Development
-- [Original WeeWar](http://weewar.com/) - Reference implementation
 - [Hex Grid Guide](https://www.redblobgames.com/grids/hexagons/)
 - [Turn-Based Game Design](https://gamedevelopment.tutsplus.com/articles/turn-based-game-mechanics--gamedev-11175)
 
 ---
 
-**Last Updated**: 2025-01-11
-**Version**: 2.0.0
-**Status**: WeeWar core architecture complete - enhanced API, advanced rendering with vector paths, comprehensive testing
-
-## Recent Changes (January 2025)
-
-### Vector Path Drawing Implementation
-
-**Overview**: Added professional-grade vector path drawing capabilities to the Buffer system using tdewolff/canvas library.
-
-**Key Features**:
-- **FillPath**: Fill arbitrary polygonal paths with color and alpha compositing
-- **StrokePath**: Stroke paths with configurable line caps, joins, dash patterns, and widths
-- **Alpha Compositing**: Proper transparency blending with existing buffer content
-- **WebAssembly Compatible**: Zero-dependency rendering optimized for browser deployment
-
-**Implementation Details**:
-```go
-// New types added to buffer.go
-type Point struct {
-    X, Y float64
-}
-
-type Color struct {
-    R, G, B, A uint8
-}
-
-type StrokeProperties struct {
-    Width       float64
-    LineCap     string    // "butt", "round", "square"
-    LineJoin    string    // "miter", "round", "bevel"
-    DashPattern []float64
-    DashOffset  float64
-}
-
-// New methods added to Buffer
-func (b *Buffer) FillPath(points []Point, fillColor Color)
-func (b *Buffer) StrokePath(points []Point, strokeColor Color, strokeProperties StrokeProperties)
-```
-
-**Library Selection Process**:
-1. **Research Phase**: Evaluated Go 2D graphics libraries (gg, draw2d, Ebitengine, tdewolff/canvas)
-2. **Criteria Assessment**: Performance, WebAssembly support, dependencies, modern architecture
-3. **Final Choice**: tdewolff/canvas selected for:
-   - 2x better performance than industry standards
-   - Native WebAssembly support
-   - Zero external dependencies
-   - Professional-grade vector graphics capabilities
-   - Modern, well-maintained codebase
-
-**Technical Approach**:
-- **Rendering Pipeline**: Canvas → PNG → Image decoding → Buffer compositing
-- **Coordinate System**: Automatic scaling between pixel coordinates and canvas mm units
-- **Performance**: Temporary file-based rendering with proper cleanup
-- **Error Handling**: Graceful fallback if rendering fails
-
-**Testing Coverage**:
-- Path filling with various polygon shapes
-- Stroke rendering with different line styles
-- Alpha compositing with semi-transparent colors
-- Edge cases (empty paths, single points, two-point lines)
-- Visual output verification with organized test directories
-
-**Problem Resolution**:
-- **Type Naming Conflict**: Renamed custom RGBA type to Color to avoid collision with Go's color.RGBA
-- **API Usage**: Corrected canvas rendering approach using renderers.Write() instead of direct rasterizer access
-- **Dependencies**: Successfully integrated all required canvas sub-packages
-
-**Impact**:
-- Enables rich visual effects (explosions, highlights, UI elements)
-- Supports complex game visualizations (movement paths, attack ranges)
-- Provides foundation for advanced rendering features
-- Maintains clean separation between vector graphics and raster operations
+**Last Updated**: 2025-01-11  
+**Version**: 3.0.0  
+**Status**: Production-ready with comprehensive CLI REPL interface
