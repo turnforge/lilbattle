@@ -20,6 +20,11 @@ type MapEditor struct {
 	brushTerrain int  // Current terrain type for painting
 	brushSize    int  // Brush radius (0 = single hex, 1 = 7 hexes, etc.)
 	
+	// Canvas rendering
+	canvasBuffer *CanvasBuffer // Direct HTML canvas rendering
+	canvasWidth  int
+	canvasHeight int
+	
 	// Undo/redo system
 	history    []*Map  // Map snapshots for undo
 	historyPos int     // Current position in history
@@ -69,6 +74,9 @@ func (e *MapEditor) NewMap(rows, cols int) error {
 	// Clear history and take snapshot
 	e.clearHistory()
 	e.takeSnapshot()
+	
+	// Auto-render the new map
+	e.renderFullMap()
 	
 	return nil
 }
@@ -165,6 +173,10 @@ func (e *MapEditor) PaintTerrain(row, col int) error {
 	// Take snapshot after making changes
 	e.takeSnapshot()
 	e.modified = true
+	
+	// Auto-render affected tiles
+	e.renderTiles(positions)
+	
 	return nil
 }
 
@@ -179,6 +191,10 @@ func (e *MapEditor) RemoveTerrain(row, col int) error {
 	
 	e.takeSnapshot()
 	e.modified = true
+	
+	// Auto-render affected tile
+	e.renderTiles([]CubeCoord{coord})
+	
 	return nil
 }
 
@@ -237,6 +253,10 @@ func (e *MapEditor) FloodFill(row, col int) error {
 	
 	e.takeSnapshot()
 	e.modified = true
+	
+	// Auto-render entire map (flood fill can affect large areas)
+	e.renderFullMap()
+	
 	return nil
 }
 
@@ -254,6 +274,9 @@ func (e *MapEditor) Undo() error {
 	e.currentMap = e.copyMap(e.history[e.historyPos])
 	e.modified = true
 	
+	// Auto-render entire map (undo can affect entire state)
+	e.renderFullMap()
+	
 	return nil
 }
 
@@ -266,6 +289,9 @@ func (e *MapEditor) Redo() error {
 	e.historyPos++
 	e.currentMap = e.copyMap(e.history[e.historyPos])
 	e.modified = true
+	
+	// Auto-render entire map (redo can affect entire state)
+	e.renderFullMap()
 	
 	return nil
 }
@@ -488,4 +514,121 @@ func (e *MapEditor) RenderToFile(filename string, width, height int) error {
 	}
 	
 	return buffer.Save(filename)
+}
+
+// =============================================================================
+// Canvas Management
+// =============================================================================
+
+// SetCanvas initializes the canvas for real-time rendering
+func (e *MapEditor) SetCanvas(canvasID string, width, height int) error {
+	// Create new canvas buffer
+	e.canvasBuffer = NewCanvasBuffer(canvasID, width, height)
+	if e.canvasBuffer == nil {
+		return fmt.Errorf("failed to create canvas buffer for '%s'", canvasID)
+	}
+	
+	e.canvasWidth = width
+	e.canvasHeight = height
+	
+	// Render current map if available
+	if e.currentMap != nil {
+		e.renderFullMap()
+	}
+	
+	return nil
+}
+
+// SetCanvasSize resizes the canvas
+func (e *MapEditor) SetCanvasSize(width, height int) error {
+	if e.canvasBuffer == nil {
+		return fmt.Errorf("no canvas initialized")
+	}
+	
+	e.canvasWidth = width
+	e.canvasHeight = height
+	
+	// Recreate canvas buffer with new size
+	canvasID := e.canvasBuffer.canvasID
+	e.canvasBuffer = NewCanvasBuffer(canvasID, width, height)
+	if e.canvasBuffer == nil {
+		return fmt.Errorf("failed to resize canvas buffer")
+	}
+	
+	// Re-render current map
+	if e.currentMap != nil {
+		e.renderFullMap()
+	}
+	
+	return nil
+}
+
+// renderFullMap renders the entire current map to the canvas
+func (e *MapEditor) renderFullMap() error {
+	if e.canvasBuffer == nil || e.currentMap == nil {
+		return nil // No canvas or map to render
+	}
+	
+	// Simplified rendering directly using FillPath for each tile
+	tileWidth := float64(e.canvasWidth) / float64(e.currentMap.NumCols)
+	tileHeight := float64(e.canvasHeight) / float64(e.currentMap.NumRows)
+	
+	// Render each tile as a hexagon
+	for coord, tile := range e.currentMap.Tiles {
+		if tile == nil {
+			continue
+		}
+		
+		// Convert hex coordinates to display coordinates
+		displayRow, displayCol := e.currentMap.HexToDisplay(coord)
+		
+		// Calculate tile position
+		x := float64(displayCol) * tileWidth
+		y := float64(displayRow) * (tileHeight * 0.75) // Hex grid spacing
+		
+		// Offset even rows for hex grid
+		if displayRow%2 == 0 {
+			x += tileWidth * 0.5
+		}
+		
+		// Create hexagon points
+		hexPoints := createHexPoints(x+tileWidth/2, y+tileHeight/2, tileWidth*0.4)
+		
+		// Get terrain color
+		var fillColor Color
+		switch tile.TileType {
+		case 1: // Grass
+			fillColor = Color{R: 34, G: 139, B: 34, A: 255}
+		case 2: // Desert
+			fillColor = Color{R: 238, G: 203, B: 173, A: 255}
+		case 3: // Water
+			fillColor = Color{R: 65, G: 105, B: 225, A: 255}
+		case 4: // Mountain
+			fillColor = Color{R: 139, G: 137, B: 137, A: 255}
+		case 5: // Rock
+			fillColor = Color{R: 105, G: 105, B: 105, A: 255}
+		default:
+			fillColor = Color{R: 200, G: 200, B: 200, A: 255}
+		}
+		
+		// Fill the hexagon
+		e.canvasBuffer.FillPath(hexPoints, fillColor)
+		
+		// Draw border
+		borderColor := Color{R: 0, G: 0, B: 0, A: 100}
+		strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
+		e.canvasBuffer.StrokePath(hexPoints, borderColor, strokeProps)
+	}
+	
+	return nil
+}
+
+// renderTiles renders specific tiles to the canvas (for partial updates)
+func (e *MapEditor) renderTiles(coords []CubeCoord) error {
+	if e.canvasBuffer == nil || e.currentMap == nil || len(coords) == 0 {
+		return nil // No canvas, map, or tiles to render
+	}
+	
+	// For now, do a full render - we'll optimize for partial rendering later
+	return e.renderFullMap()
 }

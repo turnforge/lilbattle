@@ -1370,19 +1370,46 @@ func (cli *WeeWarCLI) LoadGameFromFile(filename string) error {
 	return nil
 }
 
-// RenderToFile renders current game state to PNG file
+// RenderToFile renders current game state to PNG file using the new World-Renderer architecture
 func (cli *WeeWarCLI) RenderToFile(filename string, width, height int) error {
 	if cli.game == nil {
 		return fmt.Errorf("no game loaded")
 	}
 	
-	// Create buffer
+	// Create World from current Game state
+	world := NewWorld(cli.game.PlayerCount, cli.game.Map, int(cli.game.Seed))
+	
+	// Copy units from game to world (flatten 2D units array)
+	for playerID, playerUnits := range cli.game.Units {
+		if playerUnits != nil {
+			for _, unit := range playerUnits {
+				if unit != nil {
+					// Ensure unit has correct PlayerID
+					unit.PlayerID = playerID
+					world.AddUnit(unit)
+				}
+			}
+		}
+	}
+	
+	// Copy game state
+	world.CurrentPlayer = cli.game.CurrentPlayer
+	world.TurnNumber = cli.game.TurnCounter
+	
+	// Create ViewState with default settings
+	viewState := NewViewState()
+	
+	// Create BufferRenderer for PNG output
+	renderer := NewBufferRenderer()
+	
+	// Create Buffer for rendering
 	buffer := NewBuffer(width, height)
 	
-	// Render game
-	if err := cli.game.RenderToBuffer(buffer, 60, 52, 39); err != nil {
-		return fmt.Errorf("failed to render game: %w", err)
-	}
+	// Calculate render options based on world and canvas size
+	options := renderer.CalculateRenderOptions(width, height, world)
+	
+	// Render using new World-Renderer architecture with AssetManager support!
+	renderer.RenderWorldWithAssets(world, viewState, buffer, options, cli.game)
 	
 	// Save to file
 	return buffer.Save(filename)

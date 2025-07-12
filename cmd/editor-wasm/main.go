@@ -1,3 +1,6 @@
+//go:build js && wasm
+// +build js,wasm
+
 package main
 
 import (
@@ -39,9 +42,22 @@ func main() {
 	js.Global().Set("editorCanRedo", js.FuncOf(canRedo))
 	js.Global().Set("editorGetMapInfo", js.FuncOf(getMapInfo))
 	js.Global().Set("editorValidateMap", js.FuncOf(validateMap))
-	js.Global().Set("editorRenderMap", js.FuncOf(renderMap))
 	js.Global().Set("editorExportToGame", js.FuncOf(exportToGame))
 	js.Global().Set("editorGetTerrainTypes", js.FuncOf(getTerrainTypes))
+	
+	// Canvas initialization and management
+	js.Global().Set("editorSetCanvas", js.FuncOf(setCanvas))
+	js.Global().Set("editorSetCanvasSize", js.FuncOf(setCanvasSize))
+	
+	// New World-Renderer architecture functions
+	js.Global().Set("worldCreate", js.FuncOf(worldCreate))
+	js.Global().Set("worldCreateTestMap", js.FuncOf(worldCreateTestMap))
+	js.Global().Set("viewStateCreate", js.FuncOf(viewStateCreate))
+	js.Global().Set("canvasRendererCreate", js.FuncOf(canvasRendererCreate))
+	js.Global().Set("worldRendererRender", js.FuncOf(worldRendererRender))
+	
+	// Legacy function (for backward compatibility during transition)
+	js.Global().Set("editorRenderMap", js.FuncOf(renderMap))
 	
 	fmt.Println("WeeWar Map Editor WASM loaded")
 	<-c
@@ -414,6 +430,212 @@ func getTerrainTypes(this js.Value, args []js.Value) interface{} {
 	
 	return createEditorResponse(true, "Terrain types retrieved", "", map[string]interface{}{
 		"terrainTypes": terrainTypes,
+	})
+}
+
+// =============================================================================
+// Canvas Management Functions
+// =============================================================================
+
+// setCanvas initializes the canvas for rendering
+func setCanvas(this js.Value, args []js.Value) interface{} {
+	if globalEditor == nil {
+		return createEditorResponse(false, "", "Editor not initialized", nil)
+	}
+	
+	if len(args) < 1 {
+		return createEditorResponse(false, "", "Missing canvas ID argument", nil)
+	}
+	
+	canvasID := args[0].String()
+	
+	// Default canvas size
+	width, height := 800, 600
+	if len(args) >= 3 {
+		width = args[1].Int()
+		height = args[2].Int()
+	}
+	
+	err := globalEditor.SetCanvas(canvasID, width, height)
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to set canvas: %v", err), nil)
+	}
+	
+	return createEditorResponse(true, fmt.Sprintf("Canvas '%s' initialized (%dx%d)", canvasID, width, height), "", map[string]interface{}{
+		"canvasID": canvasID,
+		"width":    width,
+		"height":   height,
+	})
+}
+
+// setCanvasSize resizes the canvas
+func setCanvasSize(this js.Value, args []js.Value) interface{} {
+	if globalEditor == nil {
+		return createEditorResponse(false, "", "Editor not initialized", nil)
+	}
+	
+	if len(args) < 2 {
+		return createEditorResponse(false, "", "Missing width/height arguments", nil)
+	}
+	
+	width := args[0].Int()
+	height := args[1].Int()
+	
+	err := globalEditor.SetCanvasSize(width, height)
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to resize canvas: %v", err), nil)
+	}
+	
+	return createEditorResponse(true, fmt.Sprintf("Canvas resized to %dx%d", width, height), "", map[string]interface{}{
+		"width":  width,
+		"height": height,
+	})
+}
+
+// =============================================================================
+// World-Renderer Architecture Functions
+// =============================================================================
+
+// Global instances for testing the new architecture
+var globalWorld *weewar.World
+var globalViewState *weewar.ViewState
+var globalCanvasRenderer *weewar.CanvasRenderer
+
+// worldCreateTestMap creates a test map for World creation
+func worldCreateTestMap(this js.Value, args []js.Value) any {
+	if len(args) < 2 {
+		return createEditorResponse(false, "", "Missing rows/cols arguments", nil)
+	}
+	
+	rows := args[0].Int()
+	cols := args[1].Int()
+	
+	// Create test map
+	testMap := weewar.NewMap(rows, cols, false)
+	
+	// Fill with default terrain (grass) and add some variety
+	for row := 0; row < rows; row++ {
+		for col := 0; col < cols; col++ {
+			terrainType := 1 // Default to grass
+			
+			// Add some variety for testing
+			if row == 1 && col == 1 {
+				terrainType = 3 // Water
+			} else if row == 2 && col == 2 {
+				terrainType = 4 // Mountain
+			} else if row == 1 && col == 2 {
+				terrainType = 3 // Water
+			}
+			
+			tile := weewar.NewTile(row, col, terrainType)
+			testMap.AddTile(tile)
+		}
+	}
+	
+	return createEditorResponse(true, fmt.Sprintf("Test map created (%dx%d)", rows, cols), "", map[string]interface{}{
+		"map":  testMap,
+		"rows": rows,
+		"cols": cols,
+	})
+}
+
+// worldCreate creates a new World with the given parameters
+func worldCreate(this js.Value, args []js.Value) any {
+	if len(args) < 3 {
+		return createEditorResponse(false, "", "Missing playerCount/map/seed arguments", nil)
+	}
+	
+	playerCount := args[0].Int()
+	// For now, create a simple test map - in practice this would use the map from args[1]
+	testMap := weewar.NewMap(5, 8, false)
+	
+	// Fill with variety of terrains for testing
+	for row := 0; row < 5; row++ {
+		for col := 0; col < 8; col++ {
+			terrainType := 1 // Default grass
+			if row == 1 && (col == 1 || col == 2) {
+				terrainType = 3 // Water
+			} else if row == 2 && col == 3 {
+				terrainType = 4 // Mountain
+			}
+			tile := weewar.NewTile(row, col, terrainType)
+			testMap.AddTile(tile)
+		}
+	}
+	
+	seed := args[2].Int()
+	
+	// Create the world
+	world := weewar.NewWorld(playerCount, testMap, seed)
+	globalWorld = world
+	
+	return createEditorResponse(true, "World created successfully", "", map[string]interface{}{
+		"world":       world,
+		"playerCount": playerCount,
+		"seed":        seed,
+		"mapRows":     testMap.NumRows,
+		"mapCols":     testMap.NumCols,
+	})
+}
+
+// viewStateCreate creates a new ViewState
+func viewStateCreate(this js.Value, args []js.Value) any {
+	viewState := weewar.NewViewState()
+	globalViewState = viewState
+	
+	return createEditorResponse(true, "ViewState created successfully", "", map[string]interface{}{
+		"viewState":     viewState,
+		"showGrid":      viewState.ShowGrid,
+		"zoomLevel":     viewState.ZoomLevel,
+		"brushTerrain":  viewState.BrushTerrain,
+		"brushSize":     viewState.BrushSize,
+	})
+}
+
+// canvasRendererCreate creates a new CanvasRenderer
+func canvasRendererCreate(this js.Value, args []js.Value) any {
+	renderer := weewar.NewCanvasRenderer()
+	globalCanvasRenderer = renderer
+	
+	return createEditorResponse(true, "CanvasRenderer created successfully", "", map[string]interface{}{
+		"renderer": "CanvasRenderer instance created",
+	})
+}
+
+// worldRendererRender renders a World using the CanvasRenderer
+func worldRendererRender(this js.Value, args []js.Value) any {
+	if globalWorld == nil || globalViewState == nil || globalCanvasRenderer == nil {
+		return createEditorResponse(false, "", "Missing World, ViewState, or CanvasRenderer - run creation functions first", nil)
+	}
+	
+	if len(args) < 3 {
+		return createEditorResponse(false, "", "Missing canvasID/width/height arguments", nil)
+	}
+	
+	canvasID := args[0].String()
+	width := args[1].Int()
+	height := args[2].Int()
+	
+	// Create CanvasBuffer for the specified canvas
+	canvasBuffer := weewar.NewCanvasBuffer(canvasID, width, height)
+	if canvasBuffer == nil {
+		return createEditorResponse(false, "", "Failed to create CanvasBuffer - canvas element not found", nil)
+	}
+	
+	// Calculate render options based on world and canvas size
+	baseRenderer := &weewar.BaseRenderer{}
+	options := baseRenderer.CalculateRenderOptions(width, height, globalWorld)
+	
+	// Render the world using the new architecture!
+	globalCanvasRenderer.RenderWorld(globalWorld, globalViewState, canvasBuffer, options)
+	
+	return createEditorResponse(true, "World rendered with CanvasRenderer", "", map[string]interface{}{
+		"canvasID":  canvasID,
+		"width":     width,
+		"height":    height,
+		"tileWidth": options.TileWidth,
+		"tileHeight": options.TileHeight,
+		"yIncrement": options.YIncrement,
 	})
 }
 

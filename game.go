@@ -1180,31 +1180,75 @@ func (g *Game) calculateDistance(row1, col1, row2, col2 int) int {
 
 // RenderToBuffer renders the complete game state to a buffer
 func (g *Game) RenderToBuffer(buffer *Buffer, tileWidth, tileHeight, yIncrement float64) error {
-	if buffer == nil {
-		return fmt.Errorf("buffer is nil")
+	return g.RenderTo(buffer, tileWidth, tileHeight, yIncrement)
+}
+
+// RenderTo renders the complete game state to any drawable surface (Buffer or CanvasBuffer)
+func (g *Game) RenderTo(drawable Drawable, tileWidth, tileHeight, yIncrement float64) error {
+	if drawable == nil {
+		return fmt.Errorf("drawable is nil")
 	}
 
 	if g.Map == nil {
 		return fmt.Errorf("no map loaded")
 	}
 
-	// Clear buffer first
-	buffer.Clear()
+	// Clear drawable first
+	drawable.Clear()
 
-	// Render terrain layer
-	g.RenderTerrain(buffer, tileWidth, tileHeight, yIncrement)
+	// For now, if it's a CanvasBuffer, just use simplified rendering
+	// Later we can implement full Drawable interface support
+	if canvasBuffer, ok := drawable.(*CanvasBuffer); ok {
+		return g.renderSimpleCanvasMap(canvasBuffer, tileWidth, tileHeight, yIncrement)
+	}
+	
+	// For regular Buffer, use existing methods
+	if buffer, ok := drawable.(*Buffer); ok {
+		g.RenderTerrain(buffer, tileWidth, tileHeight, yIncrement)
+		g.RenderUnits(buffer, tileWidth, tileHeight, yIncrement)
+		g.RenderUI(buffer, tileWidth, tileHeight, yIncrement)
+		return nil
+	}
+	
+	return fmt.Errorf("unsupported drawable type")
+}
 
-	// Render units layer
-	g.RenderUnits(buffer, tileWidth, tileHeight, yIncrement)
+// renderSimpleCanvasMap renders a simplified version of the map directly to canvas
+func (g *Game) renderSimpleCanvasMap(canvasBuffer *CanvasBuffer, tileWidth, tileHeight, yIncrement float64) error {
+	// Use the existing FillPath method to draw hexagons for each tile
+	for _, tile := range g.Map.Tiles {
+		if tile == nil {
+			continue
+		}
 
-	// Render UI layer
-	g.RenderUI(buffer, tileWidth, tileHeight, yIncrement)
+		// Calculate tile position using the same logic as Buffer
+		x, y := g.Map.XYForTile(tile.Row, tile.Col, tileWidth, tileHeight, yIncrement)
 
+		// Create hexagon path
+		hexPath := g.createHexagonPath(x, y, tileWidth, tileHeight, yIncrement)
+		
+		// Get terrain color
+		tileColor := g.getTerrainColor(tile.TileType)
+		
+		// Fill the hexagon
+		canvasBuffer.FillPath(hexPath, tileColor)
+
+		// Add border
+		borderColor := Color{R: 100, G: 100, B: 100, A: 100}
+		strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
+		canvasBuffer.StrokePath(hexPath, borderColor, strokeProps)
+	}
+	
 	return nil
 }
 
 // RenderTerrain renders the terrain tiles to a buffer
 func (g *Game) RenderTerrain(buffer *Buffer, tileWidth, tileHeight, yIncrement float64) {
+	g.RenderTerrainTo(buffer, tileWidth, tileHeight, yIncrement)
+}
+
+// RenderTerrainTo renders the terrain tiles to any drawable surface
+func (g *Game) RenderTerrainTo(drawable Drawable, tileWidth, tileHeight, yIncrement float64) {
 	if g.Map == nil {
 		return
 	}
@@ -1219,7 +1263,7 @@ func (g *Game) RenderTerrain(buffer *Buffer, tileWidth, tileHeight, yIncrement f
 				if g.assetManager != nil && g.assetManager.HasTileAsset(tile.TileType) {
 					if tileImg, err := g.assetManager.GetTileImage(tile.TileType); err == nil {
 						// Render real tile image (XYForTile already returns centered coordinates)
-						buffer.DrawImage(x-tileWidth/2, y-tileHeight/2, tileWidth, tileHeight, tileImg)
+						drawable.DrawImage(x-tileWidth/2, y-tileHeight/2, tileWidth, tileHeight, tileImg)
 						continue
 					}
 				}
@@ -1227,12 +1271,12 @@ func (g *Game) RenderTerrain(buffer *Buffer, tileWidth, tileHeight, yIncrement f
 				// Fallback to colored hexagon if asset not available
 				hexPath := g.createHexagonPath(x, y, tileWidth, tileHeight, yIncrement)
 				tileColor := g.getTerrainColor(tile.TileType)
-				buffer.FillPath(hexPath, tileColor)
+				drawable.FillPath(hexPath, tileColor)
 
 				// Add border
 				borderColor := Color{R: 100, G: 100, B: 100, A: 100}
 				strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
-				buffer.StrokePath(hexPath, borderColor, strokeProps)
+				drawable.StrokePath(hexPath, borderColor, strokeProps)
 			}
 		}
 	}
@@ -1617,4 +1661,14 @@ func (g *Game) GetUnitID(unit *Unit) string {
 
 	// Fallback - shouldn't happen but handle gracefully
 	return fmt.Sprintf("%s?", playerLetter)
+}
+
+// GetAssetManager returns the current AssetManager instance
+func (g *Game) GetAssetManager() *AssetManager {
+	return g.assetManager
+}
+
+// SetAssetManager sets the AssetManager instance for tile and unit rendering
+func (g *Game) SetAssetManager(assetManager *AssetManager) {
+	g.assetManager = assetManager
 }
