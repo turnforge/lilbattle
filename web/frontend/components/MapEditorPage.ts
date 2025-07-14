@@ -395,6 +395,15 @@ class MapEditorPage {
                 const result = (window as any).editorNewMap(height, width); // Note: WASM expects (rows, cols)
                 if (result.success) {
                     this.logToConsole(`WASM map created: ${result.message}`);
+                    
+                    // Recreate the world with the new map dimensions
+                    const worldResult = (window as any).worldCreate(2, null, 12345);
+                    if (worldResult.success) {
+                        this.wasmWorld = worldResult.data;
+                        this.logToConsole(`World recreated for ${width}×${height} map`);
+                    } else {
+                        this.logToConsole(`World recreation failed: ${worldResult.error}`);
+                    }
                 } else {
                     this.logToConsole(`WASM map creation failed: ${result.error}`);
                 }

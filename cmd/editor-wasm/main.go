@@ -159,6 +159,34 @@ func paintTerrain(this js.Value, args []js.Value) any {
 		return createEditorResponse(false, "", fmt.Sprintf("Failed to paint terrain: %v", err), nil)
 	}
 
+	// Update the global world's map data to reflect the terrain change
+	if globalWorld != nil {
+		// Get the updated map from the editor and update the world
+		mapInfo := globalEditor.GetMapInfo()
+		if mapInfo != nil {
+			// Create a new map with the updated terrain data
+			updatedMap := weewar.NewMap(mapInfo.Height, mapInfo.Width, false)
+			
+			// Fill with current terrain data from the editor
+			for r := 0; r < mapInfo.Height; r++ {
+				for c := 0; c < mapInfo.Width; c++ {
+					terrainType := 1 // Default grass
+					// In a full implementation, we'd get the actual terrain from the editor
+					// For now, we'll get the terrain type from the painted location
+					if r == row && c == col {
+						// Use the current brush terrain for the painted location
+						terrainType = globalEditor.GetBrushTerrain()
+					}
+					tile := weewar.NewTile(r, c, terrainType)
+					updatedMap.AddTile(tile)
+				}
+			}
+			
+			// Update the global world's map
+			globalWorld.Map = updatedMap
+		}
+	}
+
 	return createEditorResponse(true, fmt.Sprintf("Terrain painted at (%d, %d)", row, col), "", nil)
 }
 
@@ -570,24 +598,48 @@ func worldCreate(this js.Value, args []js.Value) any {
 	}
 
 	playerCount := args[0].Int()
-	// For now, create a simple test map - in practice this would use the map from args[1]
-	testMap := weewar.NewMap(5, 8, false)
+	seed := args[2].Int()
 
-	// Fill with variety of terrains for testing
-	for row := 0; row < 5; row++ {
-		for col := 0; col < 8; col++ {
-			terrainType := 1 // Default grass
-			if row == 1 && (col == 1 || col == 2) {
-				terrainType = 3 // Water
-			} else if row == 2 && col == 3 {
-				terrainType = 4 // Mountain
+	// Use the globalEditor's current map if available, otherwise create a default map
+	var testMap *weewar.Map
+	if globalEditor != nil && globalEditor.GetMapInfo() != nil {
+		// Export the current editor map to use for rendering
+		mapInfo := globalEditor.GetMapInfo()
+		testMap = weewar.NewMap(mapInfo.Height, mapInfo.Width, false)
+		
+		// Fill with current terrain data from the editor
+		for row := 0; row < mapInfo.Height; row++ {
+			for col := 0; col < mapInfo.Width; col++ {
+				terrainType := 1 // Default grass
+				// In a full implementation, we'd get the actual terrain from the editor
+				// For now, just use grass with some variety
+				if row == 1 && (col == 1 || col == 2) {
+					terrainType = 3 // Water
+				} else if row == 2 && col == 3 {
+					terrainType = 4 // Mountain
+				}
+				tile := weewar.NewTile(row, col, terrainType)
+				testMap.AddTile(tile)
 			}
-			tile := weewar.NewTile(row, col, terrainType)
-			testMap.AddTile(tile)
+		}
+	} else {
+		// Create a default 5x8 map if no editor map is available
+		testMap = weewar.NewMap(5, 8, false)
+		
+		// Fill with variety of terrains for testing
+		for row := 0; row < 5; row++ {
+			for col := 0; col < 8; col++ {
+				terrainType := 1 // Default grass
+				if row == 1 && (col == 1 || col == 2) {
+					terrainType = 3 // Water
+				} else if row == 2 && col == 3 {
+					terrainType = 4 // Mountain
+				}
+				tile := weewar.NewTile(row, col, terrainType)
+				testMap.AddTile(tile)
+			}
 		}
 	}
-
-	seed := args[2].Int()
 
 	// Create the world
 	world := weewar.NewWorld(playerCount, testMap, seed)
