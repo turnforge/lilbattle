@@ -83,7 +83,7 @@ type Tile struct {
 // TileWithCoord represents a tile with its cube coordinate for JSON serialization
 type TileWithCoord struct {
 	Coord CubeCoord `json:"coord"`
-	Tile  *Tile    `json:"tile"`
+	Tile  *Tile     `json:"tile"`
 }
 
 // Map represents the game map with hex grid topology
@@ -96,7 +96,7 @@ type Map struct {
 
 	// Cube coordinate storage - primary data structure
 	Tiles map[CubeCoord]*Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
-	
+
 	// JSON-friendly representation
 	TileList []*TileWithCoord `json:"tiles"`
 }
@@ -172,7 +172,7 @@ func NewMapWithBounds(minQ, maxQ, minR, maxR int) *Map {
 func (m *Map) MarshalJSON() ([]byte, error) {
 	// Convert cube map to tile list for JSON
 	m.syncTileListFromMap()
-	
+
 	// Create a temporary struct with the same fields
 	type mapJSON Map
 	return json.Marshal((*mapJSON)(m))
@@ -185,7 +185,7 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, (*mapJSON)(m)); err != nil {
 		return err
 	}
-	
+
 	// Handle backward compatibility: if bounds are not set but we have old numRows/numCols,
 	// check if the JSON contains the old fields and convert them
 	if m.MinQ == 0 && m.MaxQ == 0 && m.MinR == 0 && m.MaxR == 0 {
@@ -204,12 +204,12 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 			}
 		}
 	}
-	
+
 	// Initialize the cube map if it's nil
 	if m.Tiles == nil {
 		m.Tiles = make(map[CubeCoord]*Tile)
 	}
-	
+
 	// Convert tile list back to cube map
 	m.syncMapFromTileList()
 	return nil
@@ -272,14 +272,14 @@ func (m *Map) GetAllTiles() map[CubeCoord]*Tile {
 // Uses a standard hex-to-array conversion (odd-row offset style)
 func (m *Map) HexToDisplay(coord CubeCoord) (row, col int) {
 	row = coord.R
-	col = coord.Q + (coord.R + (coord.R & 1)) / 2
+	col = coord.Q + (coord.R+(coord.R&1))/2
 	return row, col
 }
 
 // DisplayToHex converts display coordinates (row, col) to cube coordinates
 // Uses a standard array-to-hex conversion (odd-row offset style)
 func (m *Map) DisplayToHex(row, col int) CubeCoord {
-	q := col - (row + (row & 1)) / 2
+	q := col - (row+(row&1))/2
 	return NewCubeCoord(q, row)
 }
 
@@ -415,7 +415,6 @@ func (m *Map) getMapBounds(tileWidth, tileHeight, yIncrement float64) (minX, min
 
 	return minX, minY, maxX, maxY
 }
-
 
 // DeleteTile removes the tile at the specified position (legacy method)
 func (m *Map) DeleteTile(row, col int) {
@@ -689,9 +688,9 @@ func (g *Game) GetMapBounds() (minX, minY, maxX, maxY float64) {
 	}
 
 	// Use standard tile dimensions for bounds calculation
-	tileWidth := 60.0
-	tileHeight := 52.0
-	yIncrement := 39.0
+	tileWidth := DefaultTileWidth
+	tileHeight := DefaultTileHeight
+	yIncrement := DefaultYIncrement
 
 	return g.Map.getMapBounds(tileWidth, tileHeight, yIncrement)
 }
@@ -1275,7 +1274,7 @@ func (g *Game) RenderTo(drawable Drawable, tileWidth, tileHeight, yIncrement flo
 	if canvasBuffer, ok := drawable.(*CanvasBuffer); ok {
 		return g.renderSimpleCanvasMap(canvasBuffer, tileWidth, tileHeight, yIncrement)
 	}
-	
+
 	// For regular Buffer, use existing methods
 	if buffer, ok := drawable.(*Buffer); ok {
 		g.RenderTerrain(buffer, tileWidth, tileHeight, yIncrement)
@@ -1283,7 +1282,7 @@ func (g *Game) RenderTo(drawable Drawable, tileWidth, tileHeight, yIncrement flo
 		g.RenderUI(buffer, tileWidth, tileHeight, yIncrement)
 		return nil
 	}
-	
+
 	return fmt.Errorf("unsupported drawable type")
 }
 
@@ -1300,10 +1299,10 @@ func (g *Game) renderSimpleCanvasMap(canvasBuffer *CanvasBuffer, tileWidth, tile
 
 		// Create hexagon path
 		hexPath := g.createHexagonPath(x, y, tileWidth, tileHeight, yIncrement)
-		
+
 		// Get terrain color
 		tileColor := g.getTerrainColor(tile.TileType)
-		
+
 		// Fill the hexagon
 		canvasBuffer.FillPath(hexPath, tileColor)
 
@@ -1312,7 +1311,7 @@ func (g *Game) renderSimpleCanvasMap(canvasBuffer *CanvasBuffer, tileWidth, tile
 		strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
 		canvasBuffer.StrokePath(hexPath, borderColor, strokeProps)
 	}
-	
+
 	return nil
 }
 
@@ -1333,27 +1332,27 @@ func (g *Game) RenderTerrainTo(drawable Drawable, tileWidth, tileHeight, yIncrem
 			// Calculate tile position
 			x, y := g.Map.XYForTile(tile.Row, tile.Col, tileWidth, tileHeight, yIncrement)
 
-				// Try to load real tile asset first
-				if g.assetProvider != nil && g.assetProvider.HasTileAsset(tile.TileType) {
-					if tileImg, err := g.assetProvider.GetTileImage(tile.TileType); err == nil {
-						// Render real tile image (XYForTile already returns centered coordinates)
-						drawable.DrawImage(x-tileWidth/2, y-tileHeight/2, tileWidth, tileHeight, tileImg)
-						continue
-					}
+			// Try to load real tile asset first
+			if g.assetProvider != nil && g.assetProvider.HasTileAsset(tile.TileType) {
+				if tileImg, err := g.assetProvider.GetTileImage(tile.TileType); err == nil {
+					// Render real tile image (XYForTile already returns centered coordinates)
+					drawable.DrawImage(x-tileWidth/2, y-tileHeight/2, tileWidth, tileHeight, tileImg)
+					continue
 				}
-
-				// Fallback to colored hexagon if asset not available
-				hexPath := g.createHexagonPath(x, y, tileWidth, tileHeight, yIncrement)
-				tileColor := g.getTerrainColor(tile.TileType)
-				drawable.FillPath(hexPath, tileColor)
-
-				// Add border
-				borderColor := Color{R: 100, G: 100, B: 100, A: 100}
-				strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
-				drawable.StrokePath(hexPath, borderColor, strokeProps)
 			}
+
+			// Fallback to colored hexagon if asset not available
+			hexPath := g.createHexagonPath(x, y, tileWidth, tileHeight, yIncrement)
+			tileColor := g.getTerrainColor(tile.TileType)
+			drawable.FillPath(hexPath, tileColor)
+
+			// Add border
+			borderColor := Color{R: 100, G: 100, B: 100, A: 100}
+			strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
+			drawable.StrokePath(hexPath, borderColor, strokeProps)
 		}
 	}
+}
 
 // RenderUnitsTo renders units to any drawable surface using AssetManager
 func (g *Game) RenderUnitsTo(drawable Drawable, tileWidth, tileHeight, yIncrement float64) {
@@ -1483,13 +1482,13 @@ func (g *Game) renderHealthBarTo(drawable Drawable, x, y, tileWidth, tileHeight 
 	if currentHealth >= maxHealth {
 		return // Don't render health bar for full health
 	}
-	
+
 	// Calculate health bar dimensions
 	barWidth := tileWidth * 0.8
 	barHeight := 6.0
 	barX := x - barWidth/2
 	barY := y + tileHeight/2 - barHeight - 2
-	
+
 	// Background bar (red)
 	backgroundBar := []Point{
 		{X: barX, Y: barY},
@@ -1499,7 +1498,7 @@ func (g *Game) renderHealthBarTo(drawable Drawable, x, y, tileWidth, tileHeight 
 	}
 	redColor := Color{R: 255, G: 0, B: 0, A: 255}
 	drawable.FillPath(backgroundBar, redColor)
-	
+
 	// Health bar (green, proportional to health)
 	healthRatio := float64(currentHealth) / float64(maxHealth)
 	healthWidth := barWidth * healthRatio
@@ -1511,7 +1510,7 @@ func (g *Game) renderHealthBarTo(drawable Drawable, x, y, tileWidth, tileHeight 
 	}
 	greenColor := Color{R: 0, G: 255, B: 0, A: 255}
 	drawable.FillPath(healthBar, greenColor)
-	
+
 	// Health bar border
 	borderColor := Color{R: 0, G: 0, B: 0, A: 255}
 	strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
@@ -1592,20 +1591,20 @@ func (g *Game) renderUnitText(buffer *Buffer, unit *Unit, x, y, tileWidth, tileH
 	unitID := g.GetUnitID(unit)
 
 	// Render unit ID below the unit with bold font and dark background
-	idTextColor := Color{R: 255, G: 255, B: 255, A: 255}    // White text for visibility
-	idBackgroundColor := Color{R: 0, G: 0, B: 0, A: 180}    // Semi-transparent black background
-	idFontSize := 28.0                                       // Large font size for readability
-	idX := x - 15                                            // Slightly left of center
-	idY := y + (tileHeight * 0.4)                            // Below the unit
+	idTextColor := Color{R: 255, G: 255, B: 255, A: 255} // White text for visibility
+	idBackgroundColor := Color{R: 0, G: 0, B: 0, A: 180} // Semi-transparent black background
+	idFontSize := 28.0                                   // Large font size for readability
+	idX := x - 15                                        // Slightly left of center
+	idY := y + (tileHeight * 0.4)                        // Below the unit
 	buffer.DrawTextWithStyle(idX, idY, unitID, idFontSize, idTextColor, true, idBackgroundColor)
 
 	// Render health with bold font and dark background (upper right)
 	healthText := fmt.Sprintf("%d", unit.AvailableHealth)
-	healthTextColor := Color{R: 255, G: 255, B: 0, A: 255}     // Yellow text for better visibility
-	healthBackgroundColor := Color{R: 0, G: 0, B: 0, A: 180}   // Semi-transparent black background
-	healthFontSize := 22.0                                      // Large font for health
-	healthX := x + 15                                           // Upper right area
-	healthY := y - (tileHeight * 0.3)                           // Above center
+	healthTextColor := Color{R: 255, G: 255, B: 0, A: 255}   // Yellow text for better visibility
+	healthBackgroundColor := Color{R: 0, G: 0, B: 0, A: 180} // Semi-transparent black background
+	healthFontSize := 22.0                                   // Large font for health
+	healthX := x + 15                                        // Upper right area
+	healthY := y - (tileHeight * 0.3)                        // Above center
 	buffer.DrawTextWithStyle(healthX, healthY, healthText, healthFontSize, healthTextColor, true, healthBackgroundColor)
 }
 

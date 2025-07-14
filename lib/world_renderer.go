@@ -4,6 +4,12 @@ package weewar
 // WorldRenderer Interface - Platform-Agnostic Rendering
 // =============================================================================
 
+const (
+	DefaultTileWidth  = 60.0
+	DefaultTileHeight = 52.0
+	DefaultYIncrement = 39.0
+)
+
 // WorldRenderer provides platform-agnostic rendering of game worlds.
 // This interface abstracts away the differences between Buffer (PNG) and CanvasBuffer (HTML Canvas).
 type WorldRenderer interface {
@@ -115,28 +121,28 @@ func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, wo
 		return WorldRenderOptions{
 			CanvasWidth:  canvasWidth,
 			CanvasHeight: canvasHeight,
-			TileWidth:    60.0,
-			TileHeight:   52.0,
-			YIncrement:   39.0,
+			TileWidth:    DefaultTileWidth,
+			TileHeight:   DefaultTileHeight,
+			YIncrement:   DefaultYIncrement,
 			ShowGrid:     true,
 		}
 	}
 
 	// Use standard tile dimensions from Game class, then calculate proper scaling
-	baseTileWidth := 64.0
-	baseTileHeight := 64.0
-	baseYIncrement := 51.5
+	baseTileWidth := DefaultTileWidth
+	baseTileHeight := DefaultTileHeight
+	baseYIncrement := DefaultYIncrement
 
 	// Calculate actual map bounds using the Map's proper hex geometry
-	minX, minY, maxX, maxY := world.Map.getMapBounds(baseTileWidth, baseTileHeight, baseYIncrement)
+	// minX, minY, maxX, maxY := world.Map.getMapBounds(baseTileWidth, baseTileHeight, baseYIncrement)
 
 	// Calculate the actual dimensions needed for the map
-	mapPixelWidth := maxX - minX
-	mapPixelHeight := maxY - minY
+	// mapPixelWidth := maxX - minX
+	// mapPixelHeight := maxY - minY
 
 	// Calculate scaling factors to fit the map in the canvas
-	scaleX := float64(canvasWidth) / mapPixelWidth
-	scaleY := float64(canvasHeight) / mapPixelHeight
+	scaleX := 1.0 // float64(canvasWidth) / mapPixelWidth
+	scaleY := 1.0 // float64(canvasHeight) / mapPixelHeight
 
 	// Use the smaller scale factor to ensure the entire map fits
 	scale := scaleX

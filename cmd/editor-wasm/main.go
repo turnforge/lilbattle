@@ -78,6 +78,9 @@ func main() {
 	// Coordinate conversion functions
 	js.Global().Set("editorPixelToCoords", js.FuncOf(pixelToCoords))
 
+	// Canvas size calculation functions
+	js.Global().Set("editorCalculateCanvasSize", js.FuncOf(calculateCanvasSizeJS))
+
 	fmt.Println("WeeWar Map Editor WASM loaded")
 	<-c
 }
@@ -205,24 +208,19 @@ func paintTerrain(this js.Value, args []js.Value) any {
 }
 
 // setMapSize sets the map size and immediately renders to the bound canvas
-// calculateCanvasSize calculates the optimal canvas size for a given map size
-// Returns width and height in pixels for 1:1 tile ratio
+// calculateCanvasSize calculates the optimal canvas size using the editor's map
+// The editor should provide the map context, not the WASM layer
 func calculateCanvasSize(rows, cols int) (width, height int) {
-	const tileSize = 40     // pixels per hex tile
-	const hexSpacing = 0.75 // vertical spacing factor for hex grid
-
-	// Calculate canvas dimensions based on hex grid layout
-	width = cols*tileSize + tileSize                                    // extra space for hex offset
-	height = int(float64(rows)*float64(tileSize)*hexSpacing) + tileSize // extra space for hex height
-
-	// Ensure minimum size for usability
-	if width < 200 {
-		width = 200
-	}
-	if height < 200 {
-		height = 200
+	if globalEditor == nil {
+		// Fallback for initialization - use minimal size
+		return max(rows*40+100, 200), max(cols*60+100, 200)
 	}
 
+	// Let the editor calculate the proper canvas size for its current map
+	width, height = globalEditor.CalculateCanvasSize(rows, cols)
+
+	fmt.Printf("CalculateCanvasSize: editor calculated %dx%d for %dx%d map\n",
+		width, height, rows, cols)
 	return width, height
 }
 
@@ -1207,10 +1205,23 @@ func pixelToCoords(this js.Value, args []js.Value) any {
 	pixelX := args[0].Float()
 	pixelY := args[1].Float()
 
-	// Use the same tile dimensions as WASM rendering
-	const TILE_WIDTH = 60.0
-	const TILE_HEIGHT = 52.0
-	const Y_INCREMENT = 39.0
+	// Get tile dimensions from the library's renderer (no hardcoded values)
+	var TILE_WIDTH, TILE_HEIGHT, Y_INCREMENT float64
+	if globalWorld != nil && globalWorld.Map != nil {
+		// Use the library's renderer to get proper tile dimensions
+		renderer := &weewar.BaseRenderer{}
+		options := renderer.CalculateRenderOptions(800, 600, globalWorld)
+		TILE_WIDTH = options.TileWidth
+		TILE_HEIGHT = options.TileHeight
+		Y_INCREMENT = options.YIncrement
+	} else {
+		// Fallback to default values from library (should match CalculateRenderOptions defaults)
+		renderer := &weewar.BaseRenderer{}
+		options := renderer.CalculateRenderOptions(800, 600, nil) // nil world gives defaults
+		TILE_WIDTH = options.TileWidth
+		TILE_HEIGHT = options.TileHeight
+		Y_INCREMENT = options.YIncrement
+	}
 
 	// Get the current map if available for proper coordinate conversion
 	var evenRowsOffset bool = false // Default: odd rows offset (EvenRowsOffset() returns false)
@@ -1248,30 +1259,49 @@ func pixelToCoords(this js.Value, args []js.Value) any {
 	// Calculate cube coordinates if we have a map
 	var cubeQ, cubeR int
 	var isWithinBounds bool = false
-	
+
 	if globalWorld != nil && globalWorld.Map != nil {
 		cubeCoord := globalWorld.Map.ArrayToHex(row, col)
 		cubeQ = cubeCoord.Q
 		cubeR = cubeCoord.R
-		
+
 		// Use proper Q/R bounds validation instead of row/col bounds
 		isWithinBounds = globalWorld.Map.IsWithinBounds(cubeQ, cubeR)
 	} else {
 		// Fallback calculation for cube coordinates (assuming odd-row offset)
 		cubeR = row
-		cubeQ = col - (row + (row&1)) / 2
+		cubeQ = col - (row+(row&1))/2
 		// Cannot validate bounds without map, assume valid
 		isWithinBounds = true
 	}
 
 	return createEditorResponse(true, "Pixel to coordinates conversion successful", "", map[string]any{
-		"pixelX":        pixelX,
-		"pixelY":        pixelY,
-		"row":           row,
-		"col":           col,
-		"cubeQ":         cubeQ,
-		"cubeR":         cubeR,
-		"withinBounds":  isWithinBounds,
+		"pixelX":       pixelX,
+		"pixelY":       pixelY,
+		"row":          row,
+		"col":          col,
+		"cubeQ":        cubeQ,
+		"cubeR":        cubeR,
+		"withinBounds": isWithinBounds,
+	})
+}
+
+// calculateCanvasSizeJS exposes canvas size calculation to JavaScript
+func calculateCanvasSizeJS(this js.Value, args []js.Value) any {
+	if len(args) < 2 {
+		return createEditorResponse(false, "", "Missing rows/cols arguments", nil)
+	}
+
+	rows := args[0].Int()
+	cols := args[1].Int()
+
+	width, height := calculateCanvasSize(rows, cols)
+
+	return createEditorResponse(true, "Canvas size calculated", "", map[string]any{
+		"width":  width,
+		"height": height,
+		"rows":   rows,
+		"cols":   cols,
 	})
 }
 
