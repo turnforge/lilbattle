@@ -56,6 +56,9 @@ func main() {
 	js.Global().Set("viewStateCreate", js.FuncOf(viewStateCreate))
 	js.Global().Set("canvasRendererCreate", js.FuncOf(canvasRendererCreate))
 	js.Global().Set("worldRendererRender", js.FuncOf(worldRendererRender))
+	
+	// Map dimension functions
+	js.Global().Set("editorSetMapSize", js.FuncOf(setMapSize))
 
 	// Debug functions
 	js.Global().Set("debugAssetLoading", js.FuncOf(debugAssetLoading))
@@ -73,13 +76,35 @@ func main() {
 	<-c
 }
 
-// createEditor creates a new map editor instance
+// createEditor creates a new map editor instance with canvas binding
 func createEditor(this js.Value, args []js.Value) any {
-	globalEditor = weewar.NewMapEditor()
+	if len(args) < 1 {
+		return createEditorResponse(false, "", "Missing canvas ID argument", nil)
+	}
 
-	return createEditorResponse(true, "Map editor created", "", map[string]any{
-		"version": "1.0.0",
-		"ready":   true,
+	canvasID := args[0].String()
+	
+	// Default canvas size
+	width, height := 600, 450
+	if len(args) >= 3 {
+		width = args[1].Int()
+		height = args[2].Int()
+	}
+
+	globalEditor = weewar.NewMapEditor()
+	
+	// Bind the editor to the canvas immediately
+	err := globalEditor.SetCanvas(canvasID, width, height)
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to bind canvas: %v", err), nil)
+	}
+
+	return createEditorResponse(true, fmt.Sprintf("Map editor created and bound to canvas '%s' (%dx%d)", canvasID, width, height), "", map[string]any{
+		"version":  "1.0.0",
+		"ready":    true,
+		"canvasID": canvasID,
+		"width":    width,
+		"height":   height,
 	})
 }
 
@@ -159,35 +184,90 @@ func paintTerrain(this js.Value, args []js.Value) any {
 		return createEditorResponse(false, "", fmt.Sprintf("Failed to paint terrain: %v", err), nil)
 	}
 
-	// Update the global world's map data to reflect the terrain change
-	if globalWorld != nil {
-		// Get the updated map from the editor and update the world
-		mapInfo := globalEditor.GetMapInfo()
-		if mapInfo != nil {
-			// Create a new map with the updated terrain data
-			updatedMap := weewar.NewMap(mapInfo.Height, mapInfo.Width, false)
-			
-			// Fill with current terrain data from the editor
-			for r := 0; r < mapInfo.Height; r++ {
-				for c := 0; c < mapInfo.Width; c++ {
-					terrainType := 1 // Default grass
-					// In a full implementation, we'd get the actual terrain from the editor
-					// For now, we'll get the terrain type from the painted location
-					if r == row && c == col {
-						// Use the current brush terrain for the painted location
-						terrainType = globalEditor.GetBrushTerrain()
-					}
-					tile := weewar.NewTile(r, c, terrainType)
-					updatedMap.AddTile(tile)
-				}
-			}
-			
-			// Update the global world's map
-			globalWorld.Map = updatedMap
-		}
+	// Automatically render to the bound canvas
+	err = renderEditorToCanvas()
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to render updated terrain: %v", err), nil)
 	}
 
 	return createEditorResponse(true, fmt.Sprintf("Terrain painted at (%d, %d)", row, col), "", nil)
+}
+
+// setMapSize sets the map size and immediately renders to the bound canvas
+func setMapSize(this js.Value, args []js.Value) any {
+	if globalEditor == nil {
+		return createEditorResponse(false, "", "Editor not initialized", nil)
+	}
+
+	if len(args) < 2 {
+		return createEditorResponse(false, "", "Missing rows/cols arguments", nil)
+	}
+
+	rows := args[0].Int()
+	cols := args[1].Int()
+
+	// Create a new map with the new dimensions
+	err := globalEditor.NewMap(rows, cols)
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to set map size: %v", err), nil)
+	}
+
+	// Automatically render to the bound canvas
+	err = renderEditorToCanvas()
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to render map: %v", err), nil)
+	}
+
+	return createEditorResponse(true, fmt.Sprintf("Map size set to %dx%d", rows, cols), "", map[string]any{
+		"width":  cols,
+		"height": rows,
+	})
+}
+
+// renderEditorToCanvas renders the current editor state to the bound canvas
+func renderEditorToCanvas() error {
+	if globalEditor == nil {
+		return fmt.Errorf("editor not initialized")
+	}
+
+	// Export the current editor state to a game for rendering
+	game, err := globalEditor.ExportToGame(2)
+	if err != nil {
+		return fmt.Errorf("failed to export editor state: %v", err)
+	}
+
+	// Create/update the world with the new map
+	globalWorld = weewar.NewWorld(2, game.Map, int(game.Seed))
+	
+	// Ensure we have a view state
+	if globalViewState == nil {
+		globalViewState = weewar.NewViewState()
+	}
+	
+	// Set up the game with embedded assets
+	if globalEmbeddedAssetManager != nil {
+		game.SetAssetProvider(globalEmbeddedAssetManager)
+	}
+	
+	// Get canvas dimensions from the editor (it should know its bound canvas)
+	canvasWidth, canvasHeight := 600, 450  // TODO: Get actual canvas dimensions from editor
+	
+	// Render using BufferRenderer
+	bufferRenderer := weewar.NewBufferRenderer()
+	buffer := weewar.NewBuffer(canvasWidth, canvasHeight)
+	
+	baseRenderer := &weewar.BaseRenderer{}
+	options := baseRenderer.CalculateRenderOptions(canvasWidth, canvasHeight, globalWorld)
+	
+	bufferRenderer.RenderWorldWithAssets(globalWorld, globalViewState, buffer, options, game)
+	
+	// Push the buffer directly to the bound canvas
+	err = blitBufferToCanvas(buffer, "map-canvas")  // TODO: Get actual canvas ID from editor
+	if err != nil {
+		return fmt.Errorf("failed to push buffer to canvas: %v", err)
+	}
+	
+	return nil
 }
 
 // removeTerrain removes terrain at specified coordinates

@@ -258,12 +258,13 @@ class MapEditorPage {
                 }
             }
             
-            // Initialize WASM editor
+            // Initialize WASM editor with canvas binding
             this.logToConsole('Initializing WASM editor...');
-            const editorResult = (window as any).editorCreate();
+            const editorResult = (window as any).editorCreate('map-canvas', 600, 450);
             if (!editorResult.success) {
                 throw new Error(editorResult.error);
             }
+            this.logToConsole(`Editor bound to canvas: ${editorResult.data.canvasID}`);
             
             // Create World-Renderer components
             this.logToConsole('Creating World-Renderer components...');
@@ -389,21 +390,24 @@ class MapEditorPage {
     public createNewMap(width: number, height: number): void {
         this.logToConsole(`Creating new ${width}×${height} map...`);
         
-        // Create new map using WASM
+        // Create new map using WASM - it will automatically render to canvas
         if (this.wasmInitialized) {
             try {
-                const result = (window as any).editorNewMap(height, width); // Note: WASM expects (rows, cols)
+                const result = (window as any).editorSetMapSize(height, width); // Note: WASM expects (rows, cols)
                 if (result.success) {
-                    this.logToConsole(`WASM map created: ${result.message}`);
+                    this.logToConsole(`${result.message}`);
                     
-                    // Recreate the world with the new map dimensions
-                    const worldResult = (window as any).worldCreate(2, null, 12345);
-                    if (worldResult.success) {
-                        this.wasmWorld = worldResult.data;
-                        this.logToConsole(`World recreated for ${width}×${height} map`);
-                    } else {
-                        this.logToConsole(`World recreation failed: ${worldResult.error}`);
-                    }
+                    // Update local map data to stay in sync
+                    this.mapData = {
+                        name: `New ${width}×${height} Map`,
+                        width,
+                        height,
+                        tiles: {},
+                        map_units: []
+                    };
+                    
+                    this.updateEditorStatus('Ready');
+                    this.logToConsole('New map created and rendered');
                 } else {
                     this.logToConsole(`WASM map creation failed: ${result.error}`);
                 }
@@ -411,19 +415,6 @@ class MapEditorPage {
                 this.logToConsole(`WASM map creation error: ${error}`);
             }
         }
-        
-        // Update local map data
-        this.mapData = {
-            name: `New ${width}×${height} Map`,
-            width,
-            height,
-            tiles: {},
-            map_units: []
-        };
-        
-        this.updateEditorStatus('Ready');
-        this.logToConsole('New map created');
-        this.renderMapCanvas();
     }
 
     public setBrushTerrain(terrain: number): void {
@@ -579,43 +570,11 @@ class MapEditorPage {
     private initializeCanvas(): void {
         if (!this.mapCanvas) return;
         
-        // Set up initial canvas state and render using WASM
-        this.renderMapCanvas();
+        // Canvas is now bound to WASM editor and will be rendered automatically
         this.logToConsole('Canvas initialized');
     }
 
-    private renderMapCanvas(): void {
-        if (!this.mapCanvas || !this.wasmInitialized) return;
-
-        try {
-            // Use WASM World Renderer to draw to canvas
-            const result = (window as any).worldRendererRender(
-                'map-canvas', 
-                this.mapCanvas.width, 
-                this.mapCanvas.height
-            );
-            
-            if (!result.success) {
-                this.logToConsole(`WASM render failed: ${result.error}`);
-                // Fallback to basic canvas clear
-                if (this.canvasContext) {
-                    this.canvasContext.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
-                    this.canvasContext.fillStyle = '#f0f0f0';
-                    this.canvasContext.fillRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
-                }
-            } else {
-                this.logToConsole(`WASM render successful: ${this.mapCanvas.width}x${this.mapCanvas.height}`);
-            }
-        } catch (error) {
-            this.logToConsole(`WASM render error: ${error}`);
-            // Fallback rendering
-            if (this.canvasContext) {
-                this.canvasContext.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
-                this.canvasContext.fillStyle = '#f0f0f0';
-                this.canvasContext.fillRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
-            }
-        }
-    }
+    // renderMapCanvas() method removed - WASM now pushes updates directly to canvas
 
     private handleCanvasClick(event: MouseEvent): void {
         if (!this.mapCanvas || !this.mapData) return;
@@ -671,7 +630,7 @@ class MapEditorPage {
         }
         
         try {
-            // Use WASM editor to paint terrain
+            // Use WASM editor to paint terrain - WASM will push the update directly to canvas
             const result = (window as any).editorPaintTerrain(row, col);
             
             if (result.success) {
@@ -681,8 +640,7 @@ class MapEditorPage {
                     this.mapData.tiles[key] = { tileType: this.currentTerrain };
                 }
                 
-                // Re-render canvas using WASM
-                this.renderMapCanvas();
+                // No need to call renderMapCanvas() - WASM pushes the update directly
                 
                 const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
                 this.logToConsole(`Painted ${terrainNames[this.currentTerrain]} at (${row}, ${col})`);
@@ -696,95 +654,79 @@ class MapEditorPage {
 
     // Map resize methods
     public addRow(side: string): void {
-        if (!this.mapData) return;
+        if (!this.mapData || !this.wasmInitialized) return;
         
         this.logToConsole(`Adding row to ${side}`);
-        if (side === 'top') {
-            // Shift all existing tiles down by 1 row
-            const newTiles: { [key: string]: { tileType: number } } = {};
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                newTiles[`${row + 1},${col}`] = tile;
+        const newHeight = this.mapData.height + 1;
+        
+        try {
+            const result = (window as any).editorSetMapSize(newHeight, this.mapData.width);
+            if (result.success) {
+                this.mapData.height = newHeight;
+                this.logToConsole(`${result.message}`);
+            } else {
+                this.logToConsole(`Failed to add row: ${result.error}`);
             }
-            this.mapData.tiles = newTiles;
+        } catch (error) {
+            this.logToConsole(`Error adding row: ${error}`);
         }
-        this.mapData.height += 1;
-        this.renderMapCanvas();
     }
 
     public removeRow(side: string): void {
-        if (!this.mapData || this.mapData.height <= 1) return;
+        if (!this.mapData || this.mapData.height <= 1 || !this.wasmInitialized) return;
         
         this.logToConsole(`Removing row from ${side}`);
-        const newTiles: { [key: string]: { tileType: number } } = {};
+        const newHeight = this.mapData.height - 1;
         
-        if (side === 'top') {
-            // Remove top row and shift everything up
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                if (row > 0) {
-                    newTiles[`${row - 1},${col}`] = tile;
-                }
+        try {
+            const result = (window as any).editorSetMapSize(newHeight, this.mapData.width);
+            if (result.success) {
+                this.mapData.height = newHeight;
+                this.logToConsole(`${result.message}`);
+            } else {
+                this.logToConsole(`Failed to remove row: ${result.error}`);
             }
-        } else {
-            // Remove bottom row
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                if (row < this.mapData.height - 1) {
-                    newTiles[key] = tile;
-                }
-            }
+        } catch (error) {
+            this.logToConsole(`Error removing row: ${error}`);
         }
-        
-        this.mapData.tiles = newTiles;
-        this.mapData.height -= 1;
-        this.renderMapCanvas();
     }
 
     public addColumn(side: string): void {
-        if (!this.mapData) return;
+        if (!this.mapData || !this.wasmInitialized) return;
         
         this.logToConsole(`Adding column to ${side}`);
-        if (side === 'left') {
-            // Shift all existing tiles right by 1 column
-            const newTiles: { [key: string]: { tileType: number } } = {};
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                newTiles[`${row},${col + 1}`] = tile;
+        const newWidth = this.mapData.width + 1;
+        
+        try {
+            const result = (window as any).editorSetMapSize(this.mapData.height, newWidth);
+            if (result.success) {
+                this.mapData.width = newWidth;
+                this.logToConsole(`${result.message}`);
+            } else {
+                this.logToConsole(`Failed to add column: ${result.error}`);
             }
-            this.mapData.tiles = newTiles;
+        } catch (error) {
+            this.logToConsole(`Error adding column: ${error}`);
         }
-        this.mapData.width += 1;
-        this.renderMapCanvas();
     }
 
     public removeColumn(side: string): void {
-        if (!this.mapData || this.mapData.width <= 1) return;
+        if (!this.mapData || this.mapData.width <= 1 || !this.wasmInitialized) return;
         
         this.logToConsole(`Removing column from ${side}`);
-        const newTiles: { [key: string]: { tileType: number } } = {};
+        const newWidth = this.mapData.width - 1;
         
-        if (side === 'left') {
-            // Remove left column and shift everything left
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                if (col > 0) {
-                    newTiles[`${row},${col - 1}`] = tile;
-                }
+        try {
+            const result = (window as any).editorSetMapSize(this.mapData.height, newWidth);
+            if (result.success) {
+                this.mapData.width = newWidth;
+                this.logToConsole(`${result.message}`);
+            } else {
+                this.logToConsole(`Failed to remove column: ${result.error}`);
             }
-        } else {
-            // Remove right column
-            for (const [key, tile] of Object.entries(this.mapData.tiles)) {
-                const [row, col] = key.split(',').map(Number);
-                if (col < this.mapData.width - 1) {
-                    newTiles[key] = tile;
-                }
-            }
+        } catch (error) {
+            this.logToConsole(`Error removing column: ${error}`);
         }
-        
-        this.mapData.tiles = newTiles;
-        this.mapData.width -= 1;
-        this.renderMapCanvas();
     }
 
     private async saveMap(): Promise<void> {
@@ -846,7 +788,7 @@ class MapEditorPage {
 
     private clearConsole(): void {
         if (this.editorOutput) {
-            this.editorOutput.textContent = '';
+            this.editorOutput.innerHTML = '';
         }
     }
 
@@ -854,10 +796,20 @@ class MapEditorPage {
     private logToConsole(message: string): void {
         if (this.editorOutput) {
             const timestamp = new Date().toLocaleTimeString();
-            this.editorOutput.textContent += `[${timestamp}] ${message}\n`;
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            // Use innerHTML to properly handle line breaks
+            const currentContent = this.editorOutput.innerHTML;
+            this.editorOutput.innerHTML = currentContent + (currentContent ? '<br>' : '') + this.escapeHtml(logEntry);
             this.editorOutput.scrollTop = this.editorOutput.scrollHeight;
         }
         console.log(`[MapEditor] ${message}`);
+    }
+
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     private updateEditorStatus(status: string): void {
