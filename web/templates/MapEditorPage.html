@@ -1,0 +1,233 @@
+<!-- templates/MapEditorPage.html -->
+{{# include "BasePage.html" #}}
+
+{{ define "ExtraHeaderButtons" }}
+<!-- Save Button -->
+<button id="save-map-btn" type="button"
+    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+    </svg>
+    Save
+</button>
+
+<!-- Export Button -->
+<button id="export-map-btn" type="button"
+    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    </svg>
+    Export
+</button>
+{{ end }}
+
+{{ define "BodySection" }}
+    <input id="mapIdInput" value="{{ .MapId }}" type="hidden" />
+    <input id="isNewMap" value="{{ if .MapId }}false{{ else }}true{{ end }}" type="hidden" />
+    
+    <!-- Map Editor Container -->
+    <main class="flex-1 bg-gray-50 dark:bg-gray-900">
+        <!-- Editor Status Bar -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <span id="editor-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                        Loading...
+                    </span>
+                    <span id="map-info" class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ if .Map.Name }}{{ .Map.Name }}{{ else }}New Map{{ end }}
+                    </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="validate-map-btn" type="button" class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        🔍 Validate
+                    </button>
+                    <button id="clear-console-btn" type="button" class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        Clear Console
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Layout -->
+        <div class="flex h-[calc(100vh-12rem)]">
+            <!-- Left Sidebar: Tools and Controls -->
+            <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+                <div class="p-4 space-y-6">
+                    <!-- Map Management -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Map Management</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button data-action="create-new-map" data-width="5" data-height="5" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 5×5</button>
+                            <button data-action="create-new-map" data-width="8" data-height="8" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×8</button>
+                            <button data-action="create-new-map" data-width="8" data-height="12" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×12</button>
+                            <button data-action="create-new-map" data-width="12" data-height="16" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 12×16</button>
+                        </div>
+                    </div>
+
+                    <!-- Terrain Palette -->
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎨 Terrain Palette</h3>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button class="terrain-button px-4 py-3 text-left border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                    data-terrain="1">
+                                🌱 Grass
+                            </button>
+                            <button class="terrain-button px-4 py-3 text-left border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                    data-terrain="2">
+                                🏜️ Desert
+                            </button>
+                            <button class="terrain-button px-4 py-3 text-left border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                    data-terrain="3">
+                                🌊 Water
+                            </button>
+                            <button class="terrain-button px-4 py-3 text-left border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                    data-terrain="4">
+                                ⛰️ Mountain
+                            </button>
+                            <button class="terrain-button px-4 py-3 text-left border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" 
+                                    data-terrain="5">
+                                🗿 Rock
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Brush Settings -->
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🖌️ Brush Settings</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Brush Size:</label>
+                                <select id="brush-size" 
+                                        class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                    <option value="0">Single (1 hex)</option>
+                                    <option value="1">Small (7 hexes)</option>
+                                    <option value="2">Medium (19 hexes)</option>
+                                    <option value="3">Large (37 hexes)</option>
+                                    <option value="4">X-Large (61 hexes)</option>
+                                    <option value="5">XX-Large (91 hexes)</option>
+                                </select>
+                            </div>
+                            <div id="brush-info" class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                Current: Grass, Single brush (1 hex)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Painting Tools -->
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎯 Painting Tools</h3>
+                        <div class="space-y-3">
+                            <div class="flex space-x-2">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Row:</label>
+                                    <input type="number" id="paint-row" placeholder="0" min="0" value="2"
+                                           class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Col:</label>
+                                    <input type="number" id="paint-col" placeholder="0" min="0" value="2"
+                                           class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2">
+                                <button data-action="paint-terrain" class="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700">🖌️ Paint</button>
+                                <button data-action="flood-fill" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">🌊 Flood Fill</button>
+                                <button data-action="remove-terrain" class="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700">🗑️ Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History Controls -->
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">↶↷ History</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button data-action="undo" id="undo-btn" class="px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">↶ Undo</button>
+                            <button data-action="redo" id="redo-btn" class="px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">↷ Redo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Editor Area -->
+            <div class="flex-1 flex flex-col">
+                <!-- Map Canvas Container -->
+                <div class="flex-1 bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+                    <div id="editor-canvas" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                        <div class="p-4 text-center">
+                            <div class="text-gray-500 dark:text-gray-400 mb-4">
+                                <svg class="h-16 w-16 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m-6 3l6-3" />
+                                </svg>
+                                <h3 class="text-lg font-medium">Map Preview</h3>
+                                <p class="text-sm">Map preview will appear here when rendered</p>
+                            </div>
+                            <img id="map-image" alt="Map preview" class="max-w-full border border-gray-300 dark:border-gray-600 rounded hidden">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Console Output -->
+                <div class="h-48 bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                    <div class="p-4">
+                        <h4 class="text-sm font-medium text-gray-100 mb-2">Console Output</h4>
+                        <div id="editor-output" class="bg-black text-green-400 font-mono text-xs p-3 rounded h-32 overflow-y-auto">
+                            Map Editor loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Advanced Tools -->
+            <div class="w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-y-auto">
+                <div class="p-4 space-y-6">
+                    <!-- Rendering Options -->
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎨 Rendering</h3>
+                        <div class="space-y-2">
+                            <button data-action="render-map" data-width="400" data-height="300" class="w-full px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Render Small</button>
+                            <button data-action="render-map" data-width="600" data-height="450" class="w-full px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Render Medium</button>
+                            <button data-action="render-map" data-width="800" data-height="600" class="w-full px-3 py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">Render Large</button>
+                            <button data-action="download-image" class="w-full px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700">💾 Download PNG</button>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎮 Export Options</h3>
+                        <div class="space-y-2">
+                            <button data-action="export-game" data-players="2" class="w-full px-3 py-2 text-xs bg-orange-600 text-white rounded hover:bg-orange-700">Export 2P Game</button>
+                            <button data-action="export-game" data-players="3" class="w-full px-3 py-2 text-xs bg-orange-600 text-white rounded hover:bg-orange-700">Export 3P Game</button>
+                            <button data-action="export-game" data-players="4" class="w-full px-3 py-2 text-xs bg-orange-600 text-white rounded hover:bg-orange-700">Export 4P Game</button>
+                            <button data-action="download-game-data" class="w-full px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700">💾 Download Game</button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Tools -->
+                    <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🔧 Advanced Tools</h3>
+                        <div class="space-y-2">
+                            <button data-action="fill-all-grass" class="w-full px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700">🌱 Fill All Grass</button>
+                            <button data-action="create-test-pattern" class="w-full px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">🎨 Test Pattern</button>
+                            <button data-action="create-island-map" class="w-full px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">🏝️ Island Map</button>
+                            <button data-action="create-mountain-ridge" class="w-full px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700">⛰️ Mountain Ridge</button>
+                            <button data-action="show-terrain-stats" class="w-full px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700">📈 Terrain Stats</button>
+                            <button data-action="randomize-terrain" class="w-full px-3 py-2 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700">🎲 Randomize</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{{ end }}
+
+{{ define "PostBodySection" }}
+<!-- WASM and Editor Scripts -->
+<script src="/static/wasm/wasm_exec.js"></script>
+<!-- Include generated JS for MapEditorPage -->
+{{# include "gen/MapEditorPage.html" #}}
+{{ end }}
+
+{{ define "MapEditorPage" }}
+{{ template "BasePage" . }}
+{{ end }}

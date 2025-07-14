@@ -10,7 +10,7 @@ func (r *RootViewsHandler) setupMapsMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", r.ViewRenderer(Copier(&MapListingPage{}), ""))
 	mux.HandleFunc("/new", r.ViewRenderer(Copier(&MapEditorPage{}), ""))
-	mux.HandleFunc("/{mapId}/view", r.ViewRenderer(Copier(&MapDetailPage{}), ""))
+	mux.HandleFunc("/{mapId}/view", r.ViewRenderer(Copier(&MapDetailsPage{}), ""))
 	mux.HandleFunc("/{mapId}/edit", r.ViewRenderer(Copier(&MapEditorPage{}), ""))
 	mux.HandleFunc("/{mapId}/copy", func(w http.ResponseWriter, r *http.Request) {
 		notationId := r.PathValue("notationId")

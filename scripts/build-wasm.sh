@@ -3,23 +3,6 @@
 # Build script for WeeWar WASM modules
 set -e
 
-echo "Building WeeWar WASM modules..."
-
-# Create output directory
-mkdir -p wasm
-
-# Build main CLI WASM
-echo "Building weewar-cli WASM..."
-cd cmd/weewar-wasm
-GOOS=js GOARCH=wasm go build -o ../../wasm/weewar-cli.wasm
-cd ../..
-
-# Build map editor WASM
-echo "Building map editor WASM..."
-cd cmd/editor-wasm
-GOOS=js GOARCH=wasm go build -o ../../wasm/editor.wasm
-cd ../..
-
 # Copy wasm_exec.js from Go installation
 echo "Copying wasm_exec.js..."
 GO_ROOT=$(go env GOROOT)

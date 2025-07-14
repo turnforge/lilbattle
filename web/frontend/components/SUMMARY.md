@@ -20,7 +20,7 @@ This folder contains the core client-side TypeScript logic for LeetCoach interac
     *   `DrawingSectionEdit.ts`: Initializes Excalidraw (via `ExcalidrawWrapper.tsx`). Handles Save (generates JSON/SVGs, calls `ContentApi` multiple times). Signals container. Handles theme changes.
     *   `SystemDescriptionEdit.ts`: Uses `<textarea>` for DSL. Handles Save (calls `ContentApi`), Cancel. Validate button calls `SystemModelApi`.
 *   **Managers & Handlers:** (`SectionManager.ts`, `LlmInteractionHandler.ts`, `ThemeManager.ts`, `Modal.ts`, `ToastManager.ts`, `TableOfContents.ts`, `DocumentTitle.ts`, `FullscreenHandler.ts`) - Core logic largely the same, but `SectionManager` now manages `BaseSection` (container) instances.
-*   **Page Entry Points:** (`DesignEditorPage.ts`, `HomePage.ts`, `LoginPage.ts`, `MapDetailsPage.ts`) - `DesignEditorPage` simplified as containers manage their own content loading. `MapDetailsPage.ts` provides foundation for maps functionality.
+*   **Page Entry Points:** (`DesignEditorPage.ts`, `HomePage.ts`, `LoginPage.ts`, `MapDetailsPage.ts`, `MapEditorPage.ts`) - `DesignEditorPage` simplified as containers manage their own content loading. `MapDetailsPage.ts` provides foundation for maps functionality. `MapEditorPage.ts` provides complete WASM-integrated map editor with professional UI.
 *   **Utilities:** (`Api.ts`, `TemplateLoader.ts`, `types.ts`, `converters.ts`, `ExcalidrawWrapper.tsx`).
 
 **Key Concepts/Responsibilities:**
@@ -28,3 +28,9 @@ This folder contains the core client-side TypeScript logic for LeetCoach interac
 *   Client-Side Interactivity, Component Orchestration, API Interaction, DOM Manipulation.
 *   **Composition Pattern:** Encapsulated view/edit logic for sections.
 *   Markdown Editing/Viewing for Text sections via Toast UI Editor.
+*   **WASM Integration:** Professional map editor with complete Go backend integration via `MapEditorPage.ts`:
+    *   Clean event delegation using data attributes (no global namespace pollution)
+    *   Professional 3-panel layout with terrain palette, brush controls, and advanced tools
+    *   Real-time console output and status tracking
+    *   Theme management integration and responsive design
+    *   Ready for WASM module connection with stubbed editor functions

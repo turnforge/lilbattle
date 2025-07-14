@@ -23,8 +23,8 @@ class MapDetailsPage {
     }
 
     private initializeComponents(): void {
-        const designIdInput = document.getElementById("designIdInput") as HTMLInputElement | null;
-        const designId = designIdInput?.value.trim() || null; // Allow null if input not found/empty
+        const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
+        const mapId = mapIdInput?.value.trim() || null; // Allow null if input not found/empty
 
         ThemeManager.init();
         this.modal = Modal.init();
@@ -67,11 +67,11 @@ class MapDetailsPage {
     private loadInitialState(): void {
         this.updateThemeButtonState();
 
-        const designIdInput = document.getElementById("designIdInput") as HTMLInputElement | null;
-        const designId = designIdInput?.value.trim() || null;
+        const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
+        const mapId = mapIdInput?.value.trim() || null;
 
-        if (designId) {
-            this.currentMapId = designId;
+        if (mapId) {
+            this.currentMapId = mapId;
             console.log(`Found Map ID: ${this.currentMapId}. Loading data...`);
             this.loadMapData(this.currentMapId);
         } else {
@@ -81,11 +81,11 @@ class MapDetailsPage {
     }
 
     /**
-     * Fetches design metadata, initializes section shells, and triggers content loading for each section.
+     * Fetches map metadata, initializes section shells, and triggers content loading for each section.
      */
-    private async loadMapData(designId: string): Promise<void> {
+    private async loadMapData(mapId: string): Promise<void> {
         // TODO: Show global loading indicator
-        console.log(`MapDetailsPage: Loading design ${designId}...`);
+        console.log(`MapDetailsPage: Loading map ${mapId}...`);
 
         // here is where we would do "reload" via ajax - this coul dbe via ajax or via htmx
     }

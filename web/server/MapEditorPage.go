@@ -19,6 +19,7 @@ type TBButton struct {
 }
 
 type MapEditorPage struct {
+	BasePage
 	Header        Header
 	IsOwner       bool
 	MapId         string
@@ -76,16 +77,16 @@ func (v *MapEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	templateName := queryParams.Get("template")
 	loggedInUserId := vc.AuthMiddleware.GetLoggedInUserId(r)
 
-	slog.Info("Loading composer for notation with ID: ", "nid", v.MapId)
+	slog.Info("Loading composer for map with ID: ", "nid", v.MapId)
 
 	if v.MapId == "" {
-		if loggedInUserId == "" {
+		if false && loggedInUserId == "" {
 			// For now enforce login even on new
 			qs := r.URL.RawQuery
 			if len(qs) > 0 {
 				qs = "?" + qs
 			}
-			http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/notations/new%s", qs)), http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/maps/new%s", qs)), http.StatusSeeOther)
 			return nil, true
 		}
 		v.IsOwner = true
@@ -100,19 +101,19 @@ func (v *MapEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 			Id: v.MapId,
 		})
 		if err != nil {
-			log.Println("Error getting notation: ", err)
+			log.Println("Error getting map: ", err)
 			return err, false
 		}
 
 		v.IsOwner = loggedInUserId == resp.Map.CreatorId
 		log.Println("LoggedUser: ", loggedInUserId, resp.Map.CreatorId)
 
-		if !v.IsOwner {
+		if false && !v.IsOwner {
 			log.Println("Composer is NOT the owner.  Redirecting to view page...")
 			if loggedInUserId == "" {
-				http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/notations/%s/compose", v.MapId)), http.StatusSeeOther)
+				http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/maps/%s/compose", v.MapId)), http.StatusSeeOther)
 			} else {
-				http.Redirect(w, r, fmt.Sprintf("/notations/%s/view", v.MapId), http.StatusSeeOther)
+				http.Redirect(w, r, fmt.Sprintf("/maps/%s/view", v.MapId), http.StatusSeeOther)
 			}
 			return nil, true
 		}
