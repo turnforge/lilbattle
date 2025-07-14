@@ -5,9 +5,10 @@
         
         <!-- Fixed Resize Controls (positioned relative to panel, not viewport) -->
         <!-- Top Add/Remove Controls -->
-        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 flex items-center space-x-1 z-20">
+        <div style="position: absolute; top: 0px; left: 50%" class="transform -translate-x-1/2 flex items-center space-x-1 z-20">
+          <!--<div class="absolute top-2 left-1/2 transform -translate-x-1/2 flex items-center space-x-1 z-20">-->
             <button data-action="remove-row" data-side="top" class="w-8 h-8 flex items-center justify-center text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Remove top row">
-                ▲−
+                ▼−
             </button>
             <button data-action="add-row" data-side="top" class="w-8 h-8 flex items-center justify-center text-xs bg-green-500 text-white rounded-full hover:bg-green-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Add row at top">
                 ▲+
@@ -15,7 +16,9 @@
         </div>
 
         <!-- Left Add/Remove Controls -->
-        <div class="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1 z-20">
+        <div style="position: absolute; left: 0px; top: 50%" >
+        <!--<div class="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1
+          z-20">-->
             <button data-action="remove-col" data-side="left" class="w-8 h-8 flex items-center justify-center text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Remove left column">
                 ◀−
             </button>
@@ -25,7 +28,8 @@
         </div>
 
         <!-- Right Add/Remove Controls -->
-        <div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1 z-20">
+        <div style="position: absolute; right: 0px; top: 50%" >
+        <!--<div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1 z-20">-->
             <button data-action="remove-col" data-side="right" class="w-8 h-8 flex items-center justify-center text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Remove right column">
                 −▶
             </button>
@@ -35,12 +39,13 @@
         </div>
 
         <!-- Bottom Add/Remove Controls -->
-        <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center space-x-1 z-20">
+        <div style="position: absolute; bottom: 0px; left: 50%" class="transform -translate-x-1/2 flex items-center space-x-1 z-20">
+        <!--<div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center space-x-1 z-20">-->
             <button data-action="remove-row" data-side="bottom" class="w-8 h-8 flex items-center justify-center text-xs bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Remove bottom row">
                 −▼
             </button>
             <button data-action="add-row" data-side="bottom" class="w-8 h-8 flex items-center justify-center text-xs bg-green-500 text-white rounded-full hover:bg-green-600 transition-all shadow-lg hover:shadow-xl border-2 border-white" title="Add row at bottom">
-                +▼
+                +▲
             </button>
         </div>
 
@@ -51,7 +56,8 @@
                 <canvas id="map-canvas" 
                         width="320" 
                         height="240"
-                        class="block cursor-crosshair bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
+                        class="block cursor-crosshair bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600"
+                        style="margin: 20px">
                 </canvas>
             </div>
         </div>
