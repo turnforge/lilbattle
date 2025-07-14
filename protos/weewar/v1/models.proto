@@ -1,0 +1,142 @@
+// protos/apptemplate/v1/models.proto
+
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+package weewar.v1;
+
+message Pagination {
+  /**
+   * Instead of an offset an abstract  "page" key is provided that offers
+   * an opaque "pointer" into some offset in a result set.
+   */
+  string page_key = 1;
+
+  /**
+   * If a pagekey is not supported we can also support a direct integer offset
+   * for cases where it makes sense.
+   */
+  int32 page_offset = 2;
+
+  /**
+   * Number of results to return.
+   */
+  int32 page_size = 3;
+}
+
+message PaginationResponse {
+  /**
+   * The key/pointer string that subsequent List requests should pass to
+   * continue the pagination.
+   */
+  string next_page_key = 2;
+
+  /**
+   * Also support an integer offset if possible
+   */
+  int32 next_page_offset = 3;
+
+  /**
+   * Whether theere are more results.
+   */
+  bool has_more = 4;
+
+  /**
+   * Total number of results.
+   */
+  int32 total_results = 5;
+}
+
+
+
+message Game {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the game
+  string id = 3;
+
+  // Name if items have names
+  string name = 4;
+
+  // Description if game has a description
+  string description = 5;
+
+  // Some tags
+  repeated string tags = 6;
+
+  // A possible image url
+  string image_url = 7;
+
+  // Difficulty - example attribute
+  string difficulty = 8;
+}
+
+message Map {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the map
+  string id = 3;
+
+  // Name if items have names
+  string name = 4;
+
+  // Description if map has a description
+  string description = 5;
+
+  // Some tags
+  repeated string tags = 6;
+
+  // A possible image url
+  string image_url = 7;
+
+  // Difficulty - example attribute
+  string difficulty = 8;
+}
+
+message GameInstance {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the gameinstance
+  string id = 3;
+
+  // Name if items have names
+  string name = 4;
+
+  // Description if gameinstance has a description
+  string description = 5;
+
+  // Some tags
+  repeated string tags = 6;
+
+  // A possible image url
+  string image_url = 7;
+
+  // Difficulty - example attribute
+  string difficulty = 8;
+}
+
+message User {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the user
+  string id = 3;
+
+  // Name if items have names
+  string name = 4;
+
+  // Description if user has a description
+  string description = 5;
+
+  // Some tags
+  repeated string tags = 6;
+
+  // A possible image url
+  string image_url = 7;
+
+  // Difficulty - example attribute
+  string difficulty = 8;
+}

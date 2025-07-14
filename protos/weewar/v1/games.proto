@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+package weewar.v1;
+
+import "google/protobuf/field_mask.proto";
+import "weewar/v1/models.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+
+// GamesService manages the game examples catalog
+service GamesService {
+  /**
+   * Create a new game
+   */
+  rpc CreateGame(CreateGameRequest) returns (CreateGameResponse) {
+    option (google.api.http) = {
+      post: "/v1/games",
+      body: "*",
+    };
+  }
+
+  /**
+   * Batch get multiple games by ID
+   */
+  rpc GetGames(GetGamesRequest) returns (GetGamesResponse) { 
+    option (google.api.http) = {
+      get: "/v1/games:batchGet"
+    };
+  }
+
+  // ListGames returns all available games
+  rpc ListGames(ListGamesRequest) returns (ListGamesResponse) {
+    option (google.api.http) = {
+      get: "/v1/games"
+    };
+  }
+
+  // GetGame returns a specific game with metadata
+  rpc GetGame(GetGameRequest) returns (GetGameResponse) {
+    option (google.api.http) = {
+      get: "/v1/games/{id}"
+    };
+  }
+
+  /**
+   * Delete a particular game
+   */
+  rpc DeleteGame(DeleteGameRequest) returns (DeleteGameResponse) { 
+    option (google.api.http) = {
+      delete: "/v1/games/{id=*}"
+    };
+  }
+
+
+  // GetGame returns a specific game with metadata
+  rpc UpdateGame(UpdateGameRequest) returns (UpdateGameResponse) {
+    option (google.api.http) = {
+      patch: "/v1/games/{game.id=*}"
+      body: "*"
+    };
+  }
+}
+
+// GameInfo represents a game in the catalog
+message GameInfo {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string icon = 7;
+  string last_updated = 8;
+}
+
+// Request messages
+message ListGamesRequest {
+  // Pagination info
+  Pagination pagination = 1;
+
+  // May be filter by owner id
+  string owner_id = 2;
+}
+
+message ListGamesResponse {
+  repeated Game items = 1;
+
+  PaginationResponse pagination = 2;
+}
+
+message GetGameRequest {
+  string id = 1;
+  string version = 2; // Optional, defaults to default_version
+}
+
+message GetGameResponse {
+  Game game = 1;
+}
+
+message GetGameContentRequest {
+  string id = 1;
+  string version = 2; // Optional, defaults to default_version
+}
+
+message GetGameContentResponse {
+  string weewar_content = 1;
+  string recipe_content = 2;
+  string readme_content = 3;
+}
+
+message UpdateGameRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateGameRequest"
+    }
+  };
+
+  /**
+   * Game being updated
+   */
+  Game game = 1;
+
+  /**
+   * Mask of fields being updated in this Game to make partial changes.
+   */
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+/**
+ * The request for (partially) updating an Game.
+ */
+message UpdateGameResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateGameResponse"
+    }
+  };
+
+  /**
+   * Game being updated
+   */
+  Game game = 1;
+}
+
+/**
+ * Request to delete an game.
+ */
+message DeleteGameRequest {
+  /**
+   * ID of the game to be deleted.
+   */
+  string id = 1;
+}
+
+/**
+ * Game deletion response
+ */
+message DeleteGameResponse {
+}
+
+/**
+ * Request to batch get games
+ */
+message GetGamesRequest {
+  /**
+   * IDs of the game to be fetched
+   */
+  repeated string ids = 1;
+}
+
+/**
+ * Game batch-get response
+ */
+message GetGamesResponse {
+  map<string, Game> games = 1;
+}
+
+/**
+ * Game creation request object
+ */
+message CreateGameRequest {
+  /**
+   * Game being updated
+   */
+  Game game = 1;
+}
+
+/**
+ * Response of an game creation.
+ */
+message CreateGameResponse {
+  /**
+   * Game being created
+   */
+  Game game = 1;
+
+  /**
+   * Error specific to a field if there are any errors.
+   */
+  map<string, string> field_errors = 2;
+}

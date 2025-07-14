@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+package weewar.v1;
+
+import "google/protobuf/field_mask.proto";
+import "weewar/v1/models.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+
+// MapsService manages the map examples catalog
+service MapsService {
+  /**
+   * Create a new map
+   */
+  rpc CreateMap(CreateMapRequest) returns (CreateMapResponse) {
+    option (google.api.http) = {
+      post: "/v1/maps",
+      body: "*",
+    };
+  }
+
+  /**
+   * Batch get multiple maps by ID
+   */
+  rpc GetMaps(GetMapsRequest) returns (GetMapsResponse) { 
+    option (google.api.http) = {
+      get: "/v1/maps:batchGet"
+    };
+  }
+
+  // ListMaps returns all available maps
+  rpc ListMaps(ListMapsRequest) returns (ListMapsResponse) {
+    option (google.api.http) = {
+      get: "/v1/maps"
+    };
+  }
+
+  // GetMap returns a specific map with metadata
+  rpc GetMap(GetMapRequest) returns (GetMapResponse) {
+    option (google.api.http) = {
+      get: "/v1/maps/{id}"
+    };
+  }
+
+  /**
+   * Delete a particular map
+   */
+  rpc DeleteMap(DeleteMapRequest) returns (DeleteMapResponse) { 
+    option (google.api.http) = {
+      delete: "/v1/maps/{id=*}"
+    };
+  }
+
+
+  // GetMap returns a specific map with metadata
+  rpc UpdateMap(UpdateMapRequest) returns (UpdateMapResponse) {
+    option (google.api.http) = {
+      patch: "/v1/maps/{map.id=*}"
+      body: "*"
+    };
+  }
+}
+
+// MapInfo represents a map in the catalog
+message MapInfo {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  string difficulty = 5;
+  repeated string tags = 6;
+  string icon = 7;
+  string last_updated = 8;
+}
+
+// Request messages
+message ListMapsRequest {
+  // Pagination info
+  Pagination pagination = 1;
+
+  // May be filter by owner id
+  string owner_id = 2;
+}
+
+message ListMapsResponse {
+  repeated Map items = 1;
+
+  PaginationResponse pagination = 2;
+}
+
+message GetMapRequest {
+  string id = 1;
+  string version = 2; // Optional, defaults to default_version
+}
+
+message GetMapResponse {
+  Map map = 1;
+}
+
+message GetMapContentRequest {
+  string id = 1;
+  string version = 2; // Optional, defaults to default_version
+}
+
+message GetMapContentResponse {
+  string weewar_content = 1;
+  string recipe_content = 2;
+  string readme_content = 3;
+}
+
+message UpdateMapRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateMapRequest"
+    }
+  };
+
+  /**
+   * Map being updated
+   */
+  Map map = 1;
+
+  /**
+   * Mask of fields being updated in this Map to make partial changes.
+   */
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+/**
+ * The request for (partially) updating an Map.
+ */
+message UpdateMapResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateMapResponse"
+    }
+  };
+
+  /**
+   * Map being updated
+   */
+  Map map = 1;
+}
+
+/**
+ * Request to delete an map.
+ */
+message DeleteMapRequest {
+  /**
+   * ID of the map to be deleted.
+   */
+  string id = 1;
+}
+
+/**
+ * Map deletion response
+ */
+message DeleteMapResponse {
+}
+
+/**
+ * Request to batch get maps
+ */
+message GetMapsRequest {
+  /**
+   * IDs of the map to be fetched
+   */
+  repeated string ids = 1;
+}
+
+/**
+ * Map batch-get response
+ */
+message GetMapsResponse {
+  map<string, Map> maps = 1;
+}
+
+/**
+ * Map creation request object
+ */
+message CreateMapRequest {
+  /**
+   * Map being updated
+   */
+  Map map = 1;
+}
+
+/**
+ * Response of an map creation.
+ */
+message CreateMapResponse {
+  /**
+   * Map being created
+   */
+  Map map = 1;
+
+  /**
+   * Error specific to a field if there are any errors.
+   */
+  map<string, string> field_errors = 2;
+}
