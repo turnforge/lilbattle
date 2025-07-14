@@ -10,8 +10,8 @@ import (
 
 type GameDetailPage struct {
 	BasePage
-	Header  Header
-	Game *protos.Game
+	Header Header
+	Game   *protos.Game
 	GameId string
 }
 
@@ -44,14 +44,14 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 		return nil, true
 	}
 
-	if resp.Appitem != nil {
+	if resp.Game != nil {
 		// Convert from GameProject to Game (assuming we need the basic info)
 		p.Game = &protos.Game{
-			Id:          resp.Appitem.Id,
-			Name:        resp.Appitem.Name,
-			Description: resp.Appitem.Description,
-			CreatedAt:   resp.Appitem.CreatedAt,
-			UpdatedAt:   resp.Appitem.UpdatedAt,
+			Id:          resp.Game.Id,
+			Name:        resp.Game.Name,
+			Description: resp.Game.Description,
+			CreatedAt:   resp.Game.CreatedAt,
+			UpdatedAt:   resp.Game.UpdatedAt,
 		}
 		p.Title = p.Game.Name
 	}
@@ -59,6 +59,6 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 	return nil, false
 }
 
-func (p *GameDetailPage) Copy() View { 
-	return &GameDetailPage{} 
+func (p *GameDetailPage) Copy() View {
+	return &GameDetailPage{}
 }

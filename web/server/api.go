@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	gfn "github.com/panyam/goutils/fn"
+	oa "github.com/panyam/oneauth"
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/v1connect"
 	"github.com/panyam/turnengine/games/weewar/services"
 	svc "github.com/panyam/turnengine/games/weewar/services"
-	gfn "github.com/panyam/goutils/fn"
-	oa "github.com/panyam/oneauth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -62,11 +62,16 @@ func NewApiHandler(middleware *oa.Middleware, clients *svc.ClientMgr) *ApiHandle
 
 	// Add AppItems Connect handler
 	// We will do this for each service we have registered
-	log.Println("Adding AppItems Connect handler...")
-	appitemsAdapter := NewConnectAppItemsServiceAdapter(services.NewAppItemsService())
-	appitemsConnectPath, appitemsConnectHandler := v1connect.NewAppItemsServiceHandler(appitemsAdapter)
-	out.mux.Handle(appitemsConnectPath, appitemsConnectHandler)
-	log.Printf("Registered AppItems Connect handler at: %s", appitemsConnectPath)
+	log.Println("Adding Games Connect handler...")
+	gamesAdapter := NewConnectGamesServiceAdapter(services.NewGamesService())
+	gamesConnectPath, gamesConnectHandler := v1connect.NewGamesServiceHandler(gamesAdapter)
+	out.mux.Handle(gamesConnectPath, gamesConnectHandler)
+	log.Printf("Registered Games Connect handler at: %s", gamesConnectPath)
+
+	mapsAdapter := NewConnectMapsServiceAdapter(services.NewMapsService())
+	mapsConnectPath, mapsConnectHandler := v1connect.NewMapsServiceHandler(mapsAdapter)
+	out.mux.Handle(mapsConnectPath, mapsConnectHandler)
+	log.Printf("Registered Maps Connect handler at: %s", mapsConnectPath)
 
 	return &out
 }
@@ -127,7 +132,12 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 	ctx := context.Background()
 
 	// Register existing services
-	err := v1.RegisterAppItemsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+	err := v1.RegisterGamesServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+	if err != nil {
+		log.Fatal("Unable to register appitems service: ", err)
+		return nil, err
+	}
+	err = v1.RegisterMapsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
 	if err != nil {
 		log.Fatal("Unable to register appitems service: ", err)
 		return nil, err

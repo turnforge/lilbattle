@@ -10,9 +10,9 @@ import (
 
 type MapDetailPage struct {
 	BasePage
-	Header  Header
-	Map *protos.Map
-	MapId string
+	Header Header
+	Map    *protos.Map
+	MapId  string
 }
 
 func (p *MapDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
@@ -44,14 +44,14 @@ func (p *MapDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 		return nil, true
 	}
 
-	if resp.Appitem != nil {
+	if resp.Map != nil {
 		// Convert from MapProject to Map (assuming we need the basic info)
 		p.Map = &protos.Map{
-			Id:          resp.Appitem.Id,
-			Name:        resp.Appitem.Name,
-			Description: resp.Appitem.Description,
-			CreatedAt:   resp.Appitem.CreatedAt,
-			UpdatedAt:   resp.Appitem.UpdatedAt,
+			Id:          resp.Map.Id,
+			Name:        resp.Map.Name,
+			Description: resp.Map.Description,
+			CreatedAt:   resp.Map.CreatedAt,
+			UpdatedAt:   resp.Map.UpdatedAt,
 		}
 		p.Title = p.Map.Name
 	}
@@ -59,6 +59,6 @@ func (p *MapDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	return nil, false
 }
 
-func (p *MapDetailPage) Copy() View { 
-	return &MapDetailPage{} 
+func (p *MapDetailPage) Copy() View {
+	return &MapDetailPage{}
 }

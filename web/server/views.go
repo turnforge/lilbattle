@@ -10,10 +10,10 @@ import (
 	"reflect"
 	"strings"
 
-	svc "github.com/panyam/turnengine/games/weewar/services"
 	gotl "github.com/panyam/goutils/template"
 	oa "github.com/panyam/oneauth"
 	tmplr "github.com/panyam/templar"
+	svc "github.com/panyam/turnengine/games/weewar/services"
 )
 
 const TEMPLATES_FOLDER = "./web/templates"
@@ -47,6 +47,9 @@ type View interface {
 type RootViewsHandler struct {
 	mux     *http.ServeMux
 	Context *ViewContext
+
+	GamesHandler *GamesHandler
+	MapsHandler  *MapsHandler
 }
 
 func NewRootViewsHandler(middleware *oa.Middleware, clients *svc.ClientMgr) *RootViewsHandler {
@@ -93,6 +96,9 @@ func NewRootViewsHandler(middleware *oa.Middleware, clients *svc.ClientMgr) *Roo
 		ClientMgr:      clients,
 		Templates:      templates,
 	}
+
+	out.GamesHandler = NewGamesHandler(out.Context)
+	out.MapsHandler = NewMapsHandler(out.Context)
 
 	// setup routes
 	out.setupRoutes()
@@ -159,10 +165,11 @@ func (n *RootViewsHandler) setupRoutes() {
 	// Typically "/views" is dedicated for returning view fragments - eg via htmx
 	n.mux.Handle("/views/", http.StripPrefix("/views", n.setupViewsMux()))
 
-	// Then seutp your "resource" specific endpoints
-	n.mux.Handle("/appitems/", http.StripPrefix("/appitems", n.setupAppItemsMux()))
-
 	n.mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir(STATIC_FOLDER))))
+
+	// Then seutp your "resource" specific endpoints
+	n.mux.Handle("/games/", http.StripPrefix("/games", n.GamesHandler.Handler()))
+	n.mux.Handle("/maps/", http.StripPrefix("/maps", n.MapsHandler.Handler()))
 
 	n.mux.HandleFunc("/about", n.ViewRenderer(Copier(&GenericPage{}), "AboutPage"))
 	n.mux.HandleFunc("/contact", n.ViewRenderer(Copier(&GenericPage{}), "ContactUsPage"))
@@ -198,31 +205,5 @@ func (n *RootViewsHandler) setupViewsMux() *http.ServeMux {
 	*/
 
 	// n.HandleView(Copier(&components.SelectTemplatePage{}), r, w)
-	return mux
-}
-
-func (n *RootViewsHandler) setupAppItemsMux() *http.ServeMux {
-	mux := http.NewServeMux()
-
-	// AppItem detail page
-	mux.HandleFunc("/{appItemId}", n.ViewRenderer(Copier(&AppItemDetailPage{}), ""))
-	
-	// here we ahve specific pages we go to for this resource
-	/*
-		mux.HandleFunc("/new", n.ViewRenderer(Copier(&ComposerPage{}), ""))
-		mux.HandleFunc("/{notationId}/view", n.ViewRenderer(Copier(&NotationViewerPage{}), ""))
-
-		mux.HandleFunc("/{notationId}/compose", n.ViewRenderer(Copier(&ComposerPage{}), ""))
-		mux.HandleFunc("/{notationId}/copy", func(w http.ResponseWriter, r *http.Request) {
-			notationId := r.PathValue("notationId")
-			http.Redirect(w, r, fmt.Sprintf("/notations/new?copyFrom=%s", notationId), http.StatusFound)
-		}) // .Methods("GET")
-		mux.HandleFunc("/{notationId}", func(w http.ResponseWriter, r *http.Request) {
-			log.Println("=============")
-			log.Println("Catch all - should not be coming here", r.Header)
-			log.Println("=============")
-			http.Redirect(w, r, "/", http.StatusFound)
-		}) // .Methods("DELETE")
-	*/
 	return mux
 }

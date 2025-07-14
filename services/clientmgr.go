@@ -16,11 +16,10 @@ const APP_ID = "weewar"
 var ErrNoSuchEntity = errors.New("entity not found")
 
 type ClientMgr struct {
-	svcAddr             string
-	gamesSvcClient      protos.GamesServiceClient
-	gameSetupsSvcClient protos.GameSetupsServiceClient
-	mapsSvcClient       protos.MapsServiceClient
-	authSvc             *AuthService
+	svcAddr        string
+	gamesSvcClient protos.GamesServiceClient
+	mapsSvcClient  protos.MapsServiceClient
+	authSvc        *AuthService
 	// We may need an auth svc at some point
 }
 
@@ -63,21 +62,6 @@ func (c *ClientMgr) GetMapsSvcClient() (out protos.MapsServiceClient, err error)
 		c.mapsSvcClient = protos.NewMapsServiceClient(mapsSvcConn)
 	}
 	return c.mapsSvcClient, nil
-}
-
-// We will have one client per service here
-func (c *ClientMgr) GetGameSetupsSvcClient() (out protos.GameSetupsServiceClient, err error) {
-	if c.gameSetupsSvcClient == nil {
-		log.Println("Addr: ", c.svcAddr)
-		gameSetupsSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Printf("cannot connect with server %v", err)
-			return nil, err
-		}
-
-		c.gameSetupsSvcClient = protos.NewGameSetupsServiceClient(gameSetupsSvcConn)
-	}
-	return c.gameSetupsSvcClient, nil
 }
 
 // We will have one client per service here

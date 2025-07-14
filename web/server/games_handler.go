@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
@@ -114,10 +113,4 @@ func (h *GamesHandler) handleGameDetails(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	*/
-}
-
-// toJSON converts data to JSON string for template use
-func toJSON(v any) string {
-	b, _ := json.Marshal(v)
-	return string(b)
 }
