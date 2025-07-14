@@ -1,6 +1,7 @@
 import { ThemeManager } from './ThemeManager';
 import { Modal } from './Modal';
 import { ToastManager } from './ToastManager';
+import { DockviewApi, DockviewComponent } from 'dockview-core';
 
 /**
  * Map Editor page with WASM integration for hex-based map editing
@@ -38,8 +39,12 @@ class MapEditorPage {
     private wasmViewState: any = null;
     private wasmCanvasRenderer: any = null;
 
+    // Dockview interface
+    private dockview: DockviewApi | null = null;
+
     constructor() {
         this.initializeComponents();
+        this.initializeDockview();
         this.bindEvents();
         this.loadInitialState();
         this.initializeWasm();
@@ -73,6 +78,77 @@ class MapEditorPage {
         }
 
         this.logToConsole('Map Editor initialized');
+    }
+
+    private initializeDockview(): void {
+        const container = document.getElementById('dockview-container');
+        if (!container) {
+            console.error('❌ DockView container not found');
+            return;
+        }
+
+        // Apply theme class based on current theme
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        container.className = isDarkMode ? 'dockview-theme-dark flex-1' : 'dockview-theme-light flex-1';
+        
+        // Listen for theme changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    container.className = isDarkMode ? 'dockview-theme-dark flex-1' : 'dockview-theme-light flex-1';
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        // Create DockView component
+        const dockviewComponent = new DockviewComponent(container, {
+            createComponent: (options: any) => {
+                switch (options.name) {
+                    case 'tools':
+                        return this.createToolsComponent();
+                    case 'canvas':
+                        return this.createCanvasComponent();
+                    case 'console':
+                        return this.createConsoleComponent();
+                    case 'advancedTools':
+                        return this.createAdvancedToolsComponent();
+                    default:
+                        return {
+                            element: document.createElement('div'),
+                            init: () => {},
+                            dispose: () => {}
+                        };
+                }
+            }
+        });
+
+        this.dockview = dockviewComponent.api;
+        
+        // Load saved layout or create default
+        const savedLayout = this.loadDockviewLayout();
+        if (savedLayout) {
+            try {
+                this.dockview.fromJSON(savedLayout);
+            } catch (e) {
+                console.warn('Failed to restore dockview layout, using default', e);
+                this.createDefaultDockviewLayout();
+            }
+        } else {
+            this.createDefaultDockviewLayout();
+        }
+        
+        // Save layout on changes
+        this.dockview.onDidLayoutChange(() => {
+            this.saveDockviewLayout();
+        });
+
+        this.logToConsole('Dockview initialized');
     }
 
     private bindEvents(): void {
@@ -943,6 +1019,169 @@ class MapEditorPage {
         this.themeToggleIcon.innerHTML = iconSVG;
         this.themeToggleButton.setAttribute('aria-label', label);
         this.themeToggleButton.setAttribute('title', label);
+    }
+
+    // Dockview panel creation methods
+    private createToolsComponent() {
+        const template = document.getElementById('tools-panel-template');
+        if (!template) {
+            console.error('Tools panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        const container = template.cloneNode(true) as HTMLElement;
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        
+        return {
+            element: container,
+            init: () => {
+                // Tools panel is already initialized through global event binding
+            },
+            dispose: () => {}
+        };
+    }
+
+    private createCanvasComponent() {
+        const template = document.getElementById('canvas-panel-template');
+        if (!template) {
+            console.error('Canvas panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        const container = template.cloneNode(true) as HTMLElement;
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        
+        return {
+            element: container,
+            init: () => {
+                // Find the canvas element within this cloned template and update references
+                const canvasElement = container.querySelector('#map-canvas') as HTMLCanvasElement;
+                if (canvasElement) {
+                    this.mapCanvas = canvasElement;
+                    this.canvasContext = canvasElement.getContext('2d');
+                }
+                
+                // Update the canvas container reference
+                const canvasContainer = container.querySelector('#editor-canvas-container');
+                if (canvasContainer) {
+                    this.editorCanvas = canvasContainer as HTMLElement;
+                }
+                
+                // Rebind canvas events
+                if (this.mapCanvas) {
+                    this.mapCanvas.addEventListener('click', this.handleCanvasClick.bind(this));
+                    this.mapCanvas.addEventListener('mousemove', this.handleCanvasMouseMove.bind(this));
+                }
+            },
+            dispose: () => {}
+        };
+    }
+
+    private createConsoleComponent() {
+        const template = document.getElementById('console-panel-template');
+        if (!template) {
+            console.error('Console panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        const container = template.cloneNode(true) as HTMLElement;
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        
+        return {
+            element: container,
+            init: () => {
+                // Find the editor output element within this cloned template
+                const outputElement = container.querySelector('#editor-output');
+                if (outputElement) {
+                    this.editorOutput = outputElement as HTMLElement;
+                }
+            },
+            dispose: () => {}
+        };
+    }
+
+    private createAdvancedToolsComponent() {
+        const template = document.getElementById('advanced-tools-panel-template');
+        if (!template) {
+            console.error('Advanced tools panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        const container = template.cloneNode(true) as HTMLElement;
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        
+        return {
+            element: container,
+            init: () => {
+                // Advanced tools panel is already initialized through global event binding
+            },
+            dispose: () => {}
+        };
+    }
+
+    private createDefaultDockviewLayout(): void {
+        if (!this.dockview) return;
+
+        // Add canvas panel first (center)
+        this.dockview.addPanel({
+            id: 'canvas',
+            component: 'canvas',
+            title: '🗺️ Map Canvas'
+        });
+
+        // Add tools panel to the left of canvas
+        this.dockview.addPanel({
+            id: 'tools',
+            component: 'tools',
+            title: '🎨 Tools & Terrain',
+            position: { direction: 'left', referencePanel: 'canvas' }
+        });
+
+        // Add advanced tools panel to the right of canvas
+        this.dockview.addPanel({
+            id: 'advancedTools',
+            component: 'advancedTools',
+            title: '🔧 Advanced Tools',
+            position: { direction: 'right', referencePanel: 'canvas' }
+        });
+
+        // Add console panel below canvas
+        this.dockview.addPanel({
+            id: 'console',
+            component: 'console',
+            title: '💻 Console',
+            position: { direction: 'below', referencePanel: 'canvas' }
+        });
+    }
+
+    private saveDockviewLayout(): void {
+        if (!this.dockview) return;
+        
+        const layout = this.dockview.toJSON();
+        localStorage.setItem('map-editor-dockview-layout', JSON.stringify(layout));
+    }
+    
+    private loadDockviewLayout(): any {
+        const saved = localStorage.getItem('map-editor-dockview-layout');
+        return saved ? JSON.parse(saved) : null;
+    }
+
+    public destroy(): void {
+        // Save layout before destroying
+        this.saveDockviewLayout();
+        
+        // Dispose dockview
+        if (this.dockview) {
+            this.dockview.dispose();
+        }
     }
 }
 

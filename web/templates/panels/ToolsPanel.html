@@ -1,0 +1,109 @@
+<!-- Map Editor Tools Panel -->
+<div id="tools-panel" class="h-full overflow-y-auto">
+    <div class="p-4 space-y-6">
+        <!-- Map Management -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Map Management</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button data-action="create-new-map" data-width="5" data-height="5" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 5×5</button>
+                <button data-action="create-new-map" data-width="8" data-height="8" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×8</button>
+                <button data-action="create-new-map" data-width="8" data-height="12" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×12</button>
+                <button data-action="create-new-map" data-width="12" data-height="16" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 12×16</button>
+                <button data-action="create-new-map" data-width="50" data-height="50" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 50×50</button>
+                <button data-action="create-new-map" data-width="100" data-height="100" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 100×100</button>
+            </div>
+        </div>
+
+        <!-- Terrain Palette -->
+        <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎨 Terrain Palette</h3>
+            <div class="grid grid-cols-3 gap-2">
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="0" title="Unknown">
+                    <div class="text-lg">❓</div>
+                    <div class="text-xs">Unknown</div>
+                </button>
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="1" title="Grass">
+                    <div class="text-lg">🌱</div>
+                    <div class="text-xs">Grass</div>
+                </button>
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="2" title="Desert">
+                    <div class="text-lg">🏜️</div>
+                    <div class="text-xs">Desert</div>
+                </button>
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="3" title="Water">
+                    <div class="text-lg">🌊</div>
+                    <div class="text-xs">Water</div>
+                </button>
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="4" title="Mountain">
+                    <div class="text-lg">⛰️</div>
+                    <div class="text-xs">Mountain</div>
+                </button>
+                <button class="terrain-button p-3 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" 
+                        data-terrain="5" title="Rock">
+                    <div class="text-lg">🗿</div>
+                    <div class="text-xs">Rock</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Brush Settings -->
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🖌️ Brush Settings</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Brush Size:</label>
+                    <select id="brush-size" 
+                            class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="0">Single (1 hex)</option>
+                        <option value="1">Small (7 hexes)</option>
+                        <option value="2">Medium (19 hexes)</option>
+                        <option value="3">Large (37 hexes)</option>
+                        <option value="4">X-Large (61 hexes)</option>
+                        <option value="5">XX-Large (91 hexes)</option>
+                    </select>
+                </div>
+                <div id="brush-info" class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                    Current: Grass, Single brush (1 hex)
+                </div>
+            </div>
+        </div>
+
+        <!-- Painting Tools -->
+        <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎯 Painting Tools</h3>
+            <div class="space-y-3">
+                <div class="flex space-x-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Row:</label>
+                        <input type="number" id="paint-row" placeholder="0" min="0" value="2"
+                               class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Col:</label>
+                        <input type="number" id="paint-col" placeholder="0" min="0" value="2"
+                               class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-2">
+                    <button data-action="paint-terrain" class="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700">🖌️ Paint</button>
+                    <button data-action="flood-fill" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">🌊 Flood Fill</button>
+                    <button data-action="remove-terrain" class="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700">🗑️ Remove</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Controls -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">↶↷ History</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button data-action="undo" id="undo-btn" class="px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">↶ Undo</button>
+                <button data-action="redo" id="redo-btn" class="px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">↷ Redo</button>
+            </div>
+        </div>
+    </div>
+</div>

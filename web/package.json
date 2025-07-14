@@ -23,6 +23,7 @@
     "@toast-ui/editor": "^3.2.2",
     "@toast-ui/editor-plugin-code-syntax-highlight": "^3.1.0",
     "axios": "*",
+    "dockview-core": "^1.0.0",
     "galore": "*",
     "golden-layout": "^2.6.0",
     "prismjs": "^1.30.0",

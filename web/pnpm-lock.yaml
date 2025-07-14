@@ -23,6 +23,9 @@ importers:
       axios:
         specifier: '*'
         version: 1.10.0
+      dockview-core:
+        specifier: ^1.0.0
+        version: 1.17.2
       galore:
         specifier: '*'
         version: 0.0.69
@@ -2062,6 +2065,9 @@ packages:
   dns-packet@5.6.1:
     resolution: {integrity: sha512-l4gcSouhcgIKRvyy99RNVOgxXiicE+2jZoNmaNmZ6JXiGajBOJAesk1OBlJuM5k2c+eudGdLxDqXuPCKIj6kpw==}
     engines: {node: '>=6'}
+
+  dockview-core@1.17.2:
+    resolution: {integrity: sha512-eHMVEo4ckOc+ieFm5gSM/vE0niGojNQP/9z6l5JqGNqCcxWWnvu6PRTuTYIg5XCENpk1XIa/El/uIOOtTaafUw==}
 
   dom-converter@0.2.0:
     resolution: {integrity: sha512-gd3ypIPfOMr9h5jIKq8E3sHOTCjeirnl0WK5ZdS1AW0Odt0b1PaWaHdJ4Qk4klv+YB9aJBS7mESXjFoDQPu6DA==}
@@ -7718,6 +7724,8 @@ snapshots:
   dns-packet@5.6.1:
     dependencies:
       '@leichtgewicht/ip-codec': 2.0.5
+
+  dockview-core@1.17.2: {}
 
   dom-converter@0.2.0:
     dependencies:

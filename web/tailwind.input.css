@@ -1,6 +1,31 @@
+/* Import DockView CSS first */
+@import 'dockview-core/dist/styles/dockview.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Ensure full height for dockview */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+#dockview-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Make splitters more visible for better user experience */
+.dockview-theme-dark .dockview-splitter {
+  min-width: 10px !important;
+  min-height: 10px !important;
+  opacity: 0.8 !important;
+}
+
+.dockview-theme-dark .dockview-splitter:hover {
+  opacity: 1 !important;
+}
 
 /* Add any custom styles here */
  
