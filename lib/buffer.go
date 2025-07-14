@@ -168,6 +168,21 @@ func (b *Buffer) ToDataURL() (string, error) {
 	return "data:image/png;base64," + encoded, nil
 }
 
+// GetImageData returns the underlying image data for direct pixel access
+func (b *Buffer) GetImageData() *image.RGBA {
+	return b.img
+}
+
+// GetWidth returns the buffer width
+func (b *Buffer) GetWidth() int {
+	return b.width
+}
+
+// GetHeight returns the buffer height
+func (b *Buffer) GetHeight() int {
+	return b.height
+}
+
 // FillPath fills a given path with the given color (with alpha channel compositing)
 func (b *Buffer) FillPath(points []Point, fillColor Color) {
 	if len(points) < 2 {

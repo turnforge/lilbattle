@@ -69,9 +69,9 @@ func (br *BaseRenderer) CreateGameForRenderingWithAssets(world *World, originalG
 		Seed:          int64(world.Seed),
 	}
 
-	// Preserve AssetManager from original game if available
+	// Preserve AssetProvider from original game if available
 	if originalGame != nil {
-		game.SetAssetManager(originalGame.GetAssetManager())
+		game.SetAssetProvider(originalGame.GetAssetProvider())
 	}
 
 	// Convert World units back to Game format (2D array)

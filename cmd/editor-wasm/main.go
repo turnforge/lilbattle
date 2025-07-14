@@ -9,6 +9,7 @@ import (
 	"syscall/js"
 
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
+	"github.com/panyam/turnengine/games/weewar/assets"
 )
 
 // Global editor instance for WASM
@@ -522,6 +523,7 @@ func setCanvasSize(this js.Value, args []js.Value) any {
 var globalWorld *weewar.World
 var globalViewState *weewar.ViewState
 var globalCanvasRenderer *weewar.CanvasRenderer
+var globalEmbeddedAssetManager *assets.EmbeddedAssetManager
 
 // worldCreateTestMap creates a test map for World creation
 func worldCreateTestMap(this js.Value, args []js.Value) any {
@@ -624,11 +626,21 @@ func canvasRendererCreate(this js.Value, args []js.Value) any {
 	})
 }
 
-// worldRendererRender renders a World using the CanvasRenderer
+// worldRendererRender renders a World using BufferRenderer and blits to canvas
 func worldRendererRender(this js.Value, args []js.Value) any {
-	if globalWorld == nil || globalViewState == nil || globalCanvasRenderer == nil {
-		return createEditorResponse(false, "", "Missing World, ViewState, or CanvasRenderer - run creation functions first", nil)
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic in worldRendererRender: %v\n", r)
+		}
+	}()
+	
+	if globalWorld == nil {
+		return createEditorResponse(false, "", "globalWorld is nil - run worldCreate first", nil)
 	}
+	if globalViewState == nil {
+		return createEditorResponse(false, "", "globalViewState is nil - run viewStateCreate first", nil)
+	}
+	fmt.Printf("DEBUG: Global objects are non-nil\n")
 
 	if len(args) < 3 {
 		return createEditorResponse(false, "", "Missing canvasID/width/height arguments", nil)
@@ -638,27 +650,47 @@ func worldRendererRender(this js.Value, args []js.Value) any {
 	width := args[1].Int()
 	height := args[2].Int()
 
-	// Create CanvasBuffer for the specified canvas
-	canvasBuffer := weewar.NewCanvasBuffer(canvasID, width, height)
-	if canvasBuffer == nil {
-		return createEditorResponse(false, "", "Failed to create CanvasBuffer - canvas element not found", nil)
-	}
-
-	// Create a Game instance with AssetManager (like CLI does) to get asset support
-	// For now, create a simple test game - in production this could be from globalEditor.ExportToGame()
+	// Create a Game instance with embedded assets (same as CLI)
 	testGame, err := weewar.NewGame(2, globalWorld.Map, int64(globalWorld.Seed))
 	if err != nil {
 		return createEditorResponse(false, "", fmt.Sprintf("Failed to create game for rendering: %v", err), nil)
 	}
+	fmt.Printf("DEBUG: testGame created successfully\n")
 
+	// Use embedded assets if available
+	if globalEmbeddedAssetManager != nil {
+		testGame.SetAssetProvider(globalEmbeddedAssetManager)
+		fmt.Printf("DEBUG: embedded asset manager set on testGame\n")
+	} else {
+		fmt.Printf("DEBUG: globalEmbeddedAssetManager is nil\n")
+	}
+
+	// Use BufferRenderer (same as CLI) to avoid canvas deadlock issues
+	bufferRenderer := weewar.NewBufferRenderer()
+	buffer := weewar.NewBuffer(width, height)
+	
 	// Calculate render options based on world and canvas size
 	baseRenderer := &weewar.BaseRenderer{}
 	options := baseRenderer.CalculateRenderOptions(width, height, globalWorld)
+	fmt.Printf("DEBUG: render options calculated - tileWidth=%d, tileHeight=%d\n", options.TileWidth, options.TileHeight)
 
-	// Render using the SAME pattern as CLI: RenderWorldWithAssets with original game for AssetManager!
-	globalCanvasRenderer.RenderWorldWithAssets(globalWorld, globalViewState, canvasBuffer, options, testGame)
+	// Render using BufferRenderer with embedded assets (same as CLI)
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Panic in BufferRenderer: %v\n", r)
+			}
+		}()
+		bufferRenderer.RenderWorldWithAssets(globalWorld, globalViewState, buffer, options, testGame)
+	}()
 
-	return createEditorResponse(true, "World rendered with CanvasRenderer", "", map[string]any{
+	// Convert buffer to canvas ImageData and blit to HTML canvas
+	err = blitBufferToCanvas(buffer, canvasID)
+	if err != nil {
+		return createEditorResponse(false, "", fmt.Sprintf("Failed to blit buffer to canvas: %v", err), nil)
+	}
+
+	return createEditorResponse(true, "World rendered with BufferRenderer", "", map[string]any{
 		"canvasID":   canvasID,
 		"width":      width,
 		"height":     height,
@@ -670,8 +702,17 @@ func worldRendererRender(this js.Value, args []js.Value) any {
 
 // loadEmbeddedAssets switches global game instance to use embedded assets
 func loadEmbeddedAssets(this js.Value, args []js.Value) any {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic in loadEmbeddedAssets: %v\n", r)
+		}
+	}()
+	
 	// Create embedded asset manager
-	embeddedAssets := weewar.NewEmbeddedAssetManager()
+	embeddedAssets := assets.NewEmbeddedAssetManager()
+	if embeddedAssets == nil {
+		return createEditorResponse(false, "", "Failed to create embedded asset manager", nil)
+	}
 
 	// Preload common assets
 	err := embeddedAssets.PreloadCommonAssets()
@@ -679,20 +720,8 @@ func loadEmbeddedAssets(this js.Value, args []js.Value) any {
 		return createEditorResponse(false, "", fmt.Sprintf("Failed to preload embedded assets: %v", err), nil)
 	}
 
-	// Update global world's game to use embedded assets if it exists
-	if globalWorld != nil {
-		// Create a new game with embedded assets
-		testGame, err := weewar.NewGame(globalWorld.PlayerCount, globalWorld.Map, int64(globalWorld.Seed))
-		if err != nil {
-			return createEditorResponse(false, "", fmt.Sprintf("Failed to create game with embedded assets: %v", err), nil)
-		}
-
-		// Switch to embedded asset provider
-		testGame.SetAssetProvider(embeddedAssets)
-
-		// Update the global reference (this is a bit hacky, but works for testing)
-		// In a real implementation, we'd manage this better
-	}
+	// Store globally for use in rendering
+	globalEmbeddedAssetManager = embeddedAssets
 
 	tileCount, unitCount := embeddedAssets.GetCacheStats()
 
@@ -705,7 +734,7 @@ func loadEmbeddedAssets(this js.Value, args []js.Value) any {
 
 // testEmbeddedAssets tests embedded asset loading
 func testEmbeddedAssets(this js.Value, args []js.Value) any {
-	embeddedAssets := weewar.NewEmbeddedAssetManager()
+	embeddedAssets := assets.NewEmbeddedAssetManager()
 
 	// Test asset existence checks
 	hasTile := embeddedAssets.HasTileAsset(1)    // Grass tile
@@ -851,6 +880,50 @@ func testFetchAssets(this js.Value, args []js.Value) any {
 		"baseURL":       baseURL,
 		"note":          "Using HTTP fetch instead of os.Open() - check console for fetch URLs",
 	})
+}
+
+// blitBufferToCanvas converts a BufferRenderer output to HTML canvas ImageData and blits it
+func blitBufferToCanvas(buffer *weewar.Buffer, canvasID string) error {
+	// Get buffer image data
+	imageData := buffer.GetImageData()
+	width := buffer.GetWidth()
+	height := buffer.GetHeight()
+
+	// Get canvas element from DOM
+	canvas := js.Global().Get("document").Call("getElementById", canvasID)
+	if canvas.IsUndefined() {
+		return fmt.Errorf("canvas element '%s' not found", canvasID)
+	}
+
+	// Get 2D context
+	ctx := canvas.Call("getContext", "2d")
+	if ctx.IsUndefined() {
+		return fmt.Errorf("failed to get 2D context for canvas '%s'", canvasID)
+	}
+
+	// Create ImageData object
+	imageDataJS := ctx.Call("createImageData", width, height)
+	if imageDataJS.IsUndefined() {
+		return fmt.Errorf("failed to create ImageData object")
+	}
+
+	// Get the data array from ImageData
+	dataArray := imageDataJS.Get("data")
+	if dataArray.IsUndefined() {
+		return fmt.Errorf("failed to get data array from ImageData")
+	}
+
+	// Convert Go image.RGBA to JavaScript Uint8ClampedArray
+	// The buffer is in RGBA format, and ImageData expects RGBA format
+	pixels := imageData.Pix
+	for i := 0; i < len(pixels); i++ {
+		dataArray.SetIndex(i, pixels[i])
+	}
+
+	// Put the ImageData to the canvas
+	ctx.Call("putImageData", imageDataJS, 0, 0)
+
+	return nil
 }
 
 // createEditorResponse creates a JavaScript-compatible response object

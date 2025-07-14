@@ -34,6 +34,9 @@ class MapEditorPage {
     // WASM interface
     private wasmModule: any = null;
     private wasmInitialized: boolean = false;
+    private wasmWorld: any = null;
+    private wasmViewState: any = null;
+    private wasmCanvasRenderer: any = null;
 
     constructor() {
         this.initializeComponents();
@@ -245,17 +248,103 @@ class MapEditorPage {
         try {
             this.logToConsole('Loading WASM module...');
             
-            // This will be implemented when we copy the WASM files
-            // For now, we'll use a placeholder
+            // Check if WASM functions are available
+            if (typeof (window as any).editorCreate === 'undefined') {
+                this.logToConsole('WASM functions not available - loading WASM module...');
+                await this.loadWasmModule();
+                // Check again after loading
+                if (typeof (window as any).editorCreate === 'undefined') {
+                    throw new Error('WASM module loaded but functions not available');
+                }
+            }
+            
+            // Initialize WASM editor
+            this.logToConsole('Initializing WASM editor...');
+            const editorResult = (window as any).editorCreate();
+            if (!editorResult.success) {
+                throw new Error(editorResult.error);
+            }
+            
+            // Create World-Renderer components
+            this.logToConsole('Creating World-Renderer components...');
+            
+            // Create World
+            const worldResult = (window as any).worldCreate(2, null, 12345);
+            if (!worldResult.success) {
+                throw new Error(`World creation failed: ${worldResult.error}`);
+            }
+            this.wasmWorld = worldResult.data;
+            
+            // Create ViewState
+            const viewStateResult = (window as any).viewStateCreate();
+            if (!viewStateResult.success) {
+                throw new Error(`ViewState creation failed: ${viewStateResult.error}`);
+            }
+            this.wasmViewState = viewStateResult.data;
+            
+            // Create CanvasRenderer
+            const rendererResult = (window as any).canvasRendererCreate();
+            if (!rendererResult.success) {
+                throw new Error(`CanvasRenderer creation failed: ${rendererResult.error}`);
+            }
+            this.wasmCanvasRenderer = rendererResult.data;
+            
+            // Load embedded assets for terrain images
+            this.logToConsole('Loading embedded terrain and unit assets...');
+            const assetsResult = (window as any).loadEmbeddedAssets();
+            if (assetsResult.success) {
+                this.logToConsole(`Assets loaded: ${assetsResult.data.tilesLoaded} tiles, ${assetsResult.data.unitsLoaded} units`);
+            } else {
+                this.logToConsole(`Asset loading failed: ${assetsResult.error}`);
+                // Continue anyway - we can still render with fallback colors
+            }
+            
+            // Test asset loading to verify
+            const testResult = (window as any).testEmbeddedAssets();
+            if (testResult.success) {
+                this.logToConsole(`Asset test: ${testResult.data.tilesInCache} tiles, ${testResult.data.unitsInCache} units in cache`);
+                if (testResult.data.tileLoadError) {
+                    this.logToConsole(`Tile load error: ${testResult.data.tileLoadError}`);
+                }
+                if (testResult.data.unitLoadError) {
+                    this.logToConsole(`Unit load error: ${testResult.data.unitLoadError}`);
+                }
+            }
+            
             this.wasmInitialized = true;
             this.updateEditorStatus('Ready');
-            this.logToConsole('WASM module loaded successfully');
+            this.logToConsole('WASM module loaded and initialized successfully');
             
         } catch (error) {
             console.error('Failed to initialize WASM:', error);
             this.logToConsole(`WASM initialization failed: ${error}`);
             this.updateEditorStatus('WASM Error');
         }
+    }
+
+    private async loadWasmModule(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.logToConsole('Loading editor.wasm...');
+            
+            // Create a new WebAssembly instance
+            const go = new (window as any).Go();
+            
+            WebAssembly.instantiateStreaming(fetch('/static/wasm/editor.wasm'), go.importObject)
+                .then((result) => {
+                    this.logToConsole('WASM module instantiated, starting...');
+                    go.run(result.instance);
+                    
+                    // Wait a bit for the module to register its functions
+                    setTimeout(() => {
+                        this.logToConsole('WASM module should be ready');
+                        resolve();
+                    }, 100);
+                })
+                .catch((error) => {
+                    this.logToConsole(`WASM loading failed: ${error}`);
+                    reject(error);
+                });
+        });
     }
 
     private initializeNewMap(): void {
@@ -299,6 +388,22 @@ class MapEditorPage {
     // Editor functions called by the template
     public createNewMap(width: number, height: number): void {
         this.logToConsole(`Creating new ${width}×${height} map...`);
+        
+        // Create new map using WASM
+        if (this.wasmInitialized) {
+            try {
+                const result = (window as any).editorNewMap(height, width); // Note: WASM expects (rows, cols)
+                if (result.success) {
+                    this.logToConsole(`WASM map created: ${result.message}`);
+                } else {
+                    this.logToConsole(`WASM map creation failed: ${result.error}`);
+                }
+            } catch (error) {
+                this.logToConsole(`WASM map creation error: ${error}`);
+            }
+        }
+        
+        // Update local map data
         this.mapData = {
             name: `New ${width}×${height} Map`,
             width,
@@ -306,6 +411,7 @@ class MapEditorPage {
             tiles: {},
             map_units: []
         };
+        
         this.updateEditorStatus('Ready');
         this.logToConsole('New map created');
         this.renderMapCanvas();
@@ -313,6 +419,19 @@ class MapEditorPage {
 
     public setBrushTerrain(terrain: number): void {
         this.currentTerrain = terrain;
+        
+        // Update WASM editor brush terrain
+        if (this.wasmInitialized) {
+            try {
+                const result = (window as any).editorSetBrushTerrain(terrain);
+                if (!result.success) {
+                    this.logToConsole(`WASM setBrushTerrain failed: ${result.error}`);
+                }
+            } catch (error) {
+                this.logToConsole(`WASM setBrushTerrain error: ${error}`);
+            }
+        }
+        
         const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
         this.logToConsole(`Brush terrain set to: ${terrainNames[terrain]}`);
         this.updateBrushInfo();
@@ -321,6 +440,19 @@ class MapEditorPage {
 
     public setBrushSize(size: number): void {
         this.brushSize = size;
+        
+        // Update WASM editor brush size
+        if (this.wasmInitialized) {
+            try {
+                const result = (window as any).editorSetBrushSize(size);
+                if (!result.success) {
+                    this.logToConsole(`WASM setBrushSize failed: ${result.error}`);
+                }
+            } catch (error) {
+                this.logToConsole(`WASM setBrushSize error: ${error}`);
+            }
+        }
+        
         const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
         this.logToConsole(`Brush size set to: ${sizeNames[size]}`);
         this.updateBrushInfo();
@@ -436,85 +568,44 @@ class MapEditorPage {
 
     // Canvas management methods
     private initializeCanvas(): void {
-        if (!this.mapCanvas || !this.canvasContext) return;
+        if (!this.mapCanvas) return;
         
-        // Set up initial canvas state
+        // Set up initial canvas state and render using WASM
         this.renderMapCanvas();
         this.logToConsole('Canvas initialized');
     }
 
     private renderMapCanvas(): void {
-        if (!this.mapCanvas || !this.canvasContext || !this.mapData) return;
+        if (!this.mapCanvas || !this.wasmInitialized) return;
 
-        const ctx = this.canvasContext;
-        const canvas = this.mapCanvas;
-
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Set background
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Calculate hex grid parameters
-        const hexSize = 20;
-        const hexWidth = hexSize * 2;
-        const hexHeight = Math.sqrt(3) * hexSize;
-        const rowHeight = hexHeight * 0.75;
-
-        // Draw grid
-        for (let row = 0; row < this.mapData.height; row++) {
-            for (let col = 0; col < this.mapData.width; col++) {
-                const x = col * hexWidth + (row % 2) * hexSize + hexSize + 20;
-                const y = row * rowHeight + hexSize + 20;
-                
-                this.drawHex(ctx, x, y, hexSize, this.getTerrainColor(row, col));
-            }
-        }
-    }
-
-    private drawHex(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, fillColor: string): void {
-        const angle = Math.PI / 3;
-        
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const angle_deg = 60 * i;
-            const angle_rad = Math.PI / 180 * angle_deg;
-            const xPos = x + size * Math.cos(angle_rad);
-            const yPos = y + size * Math.sin(angle_rad);
+        try {
+            // Use WASM World Renderer to draw to canvas
+            const result = (window as any).worldRendererRender(
+                'map-canvas', 
+                this.mapCanvas.width, 
+                this.mapCanvas.height
+            );
             
-            if (i === 0) {
-                ctx.moveTo(xPos, yPos);
+            if (!result.success) {
+                this.logToConsole(`WASM render failed: ${result.error}`);
+                // Fallback to basic canvas clear
+                if (this.canvasContext) {
+                    this.canvasContext.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
+                    this.canvasContext.fillStyle = '#f0f0f0';
+                    this.canvasContext.fillRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
+                }
             } else {
-                ctx.lineTo(xPos, yPos);
+                this.logToConsole(`WASM render successful: ${this.mapCanvas.width}x${this.mapCanvas.height}`);
+            }
+        } catch (error) {
+            this.logToConsole(`WASM render error: ${error}`);
+            // Fallback rendering
+            if (this.canvasContext) {
+                this.canvasContext.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
+                this.canvasContext.fillStyle = '#f0f0f0';
+                this.canvasContext.fillRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
             }
         }
-        ctx.closePath();
-        
-        // Fill
-        ctx.fillStyle = fillColor;
-        ctx.fill();
-        
-        // Stroke
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    }
-
-    private getTerrainColor(row: number, col: number): string {
-        // Get terrain type from map data, default to grass
-        const terrainType = this.mapData?.tiles[`${row},${col}`]?.tileType || 1;
-        
-        const colors: { [key: number]: string } = {
-            0: '#808080', // Unknown - gray
-            1: '#90EE90', // Grass - light green
-            2: '#F4A460', // Desert - sandy brown
-            3: '#4169E1', // Water - blue
-            4: '#8B4513', // Mountain - brown
-            5: '#696969'  // Rock - dark gray
-        };
-        
-        return colors[terrainType] || colors[1];
     }
 
     private handleCanvasClick(event: MouseEvent): void {
@@ -565,17 +656,33 @@ class MapEditorPage {
     }
 
     private paintHexAtCoords(row: number, col: number): void {
-        if (!this.mapData) return;
+        if (!this.wasmInitialized) {
+            this.logToConsole('WASM not initialized - cannot paint terrain');
+            return;
+        }
         
-        // Update map data
-        const key = `${row},${col}`;
-        this.mapData.tiles[key] = { tileType: this.currentTerrain };
-        
-        // Re-render canvas
-        this.renderMapCanvas();
-        
-        const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
-        this.logToConsole(`Painted ${terrainNames[this.currentTerrain]} at (${row}, ${col})`);
+        try {
+            // Use WASM editor to paint terrain
+            const result = (window as any).editorPaintTerrain(row, col);
+            
+            if (result.success) {
+                // Update local map data to stay in sync
+                if (this.mapData) {
+                    const key = `${row},${col}`;
+                    this.mapData.tiles[key] = { tileType: this.currentTerrain };
+                }
+                
+                // Re-render canvas using WASM
+                this.renderMapCanvas();
+                
+                const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
+                this.logToConsole(`Painted ${terrainNames[this.currentTerrain]} at (${row}, ${col})`);
+            } else {
+                this.logToConsole(`Paint failed: ${result.error}`);
+            }
+        } catch (error) {
+            this.logToConsole(`Paint error: ${error}`);
+        }
     }
 
     // Map resize methods

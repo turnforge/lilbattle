@@ -1,6 +1,9 @@
 package weewar
 
-import "image"
+import (
+	"image"
+	"github.com/panyam/turnengine/games/weewar/assets"
+)
 
 // =============================================================================
 // Asset Manager Interface - Platform Abstraction
@@ -25,4 +28,4 @@ type AssetProvider interface {
 
 // Ensure our implementations satisfy the interface
 var _ AssetProvider = (*AssetManager)(nil)
-var _ AssetProvider = (*EmbeddedAssetManager)(nil)
+var _ AssetProvider = (*assets.EmbeddedAssetManager)(nil)
