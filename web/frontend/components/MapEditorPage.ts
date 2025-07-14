@@ -233,10 +233,10 @@ class MapEditorPage {
         this.updateEditorStatus('Initializing...');
 
         if (this.isNewMap) {
-            this.logToConsole('Creating new map...');
+            this.logToConsole('Time: ${performance.now()} Creating new map...');
             this.initializeNewMap();
         } else if (this.currentMapId) {
-            this.logToConsole(`Loading existing map: ${this.currentMapId}`);
+            this.logToConsole(`Time: ${performance.now()} Loading existing map: ${this.currentMapId}`);
             this.loadExistingMap(this.currentMapId);
         } else {
             this.logToConsole('Error: No map ID provided');
@@ -400,7 +400,7 @@ class MapEditorPage {
 
     // Editor functions called by the template
     public createNewMap(width: number, height: number): void {
-        this.logToConsole(`Creating new ${width}×${height} map...`);
+        this.logToConsole(`Time: ${performance.now()} Creating new ${width}×${height} map...`);
         
         // Create new map using WASM - it will automatically render to canvas
         if (this.wasmInitialized) {
@@ -424,7 +424,7 @@ class MapEditorPage {
                     };
                     
                     this.updateEditorStatus('Ready');
-                    this.logToConsole('New map created and rendered');
+                    this.logToConsole(`Time: ${performance.now()} New map created and rendered`);
                 } else {
                     this.logToConsole(`WASM map creation failed: ${result.error}`);
                 }
@@ -595,7 +595,7 @@ class MapEditorPage {
     private resizeCanvas(width: number, height: number): void {
         if (!this.mapCanvas) return;
         
-        this.logToConsole(`Resizing canvas DOM to ${width}x${height}`);
+        this.logToConsole(`Time: ${performance.now()} Resizing canvas DOM to ${width}x${height}`);
         
         // Update canvas DOM element size (this clears the canvas content)
         this.mapCanvas.width = width;
@@ -610,12 +610,12 @@ class MapEditorPage {
             try {
                 const result = (window as any).editorSetCanvasSize(width, height);
                 if (result.success) {
-                    this.logToConsole(`WASM canvas buffer updated to ${width}x${height}`);
+                    this.logToConsole(`Time: ${performance.now()} WASM canvas buffer updated to ${width}x${height}`);
                     
                     // Force a re-render with proper game rendering (not simplified hexagons)
                     const renderResult = (window as any).editorRenderToCanvas();
                     if (renderResult.success) {
-                        this.logToConsole(`Map re-rendered with proper terrain images`);
+                        this.logToConsole(`Time: ${performance.now()} Map re-rendered with proper terrain images`);
                     } else {
                         this.logToConsole(`Re-render failed: ${renderResult.error}`);
                     }
@@ -627,7 +627,7 @@ class MapEditorPage {
             }
         }
         
-        this.logToConsole(`Canvas resized to ${width}x${height}`);
+        this.logToConsole(`Time: ${performance.now()} Canvas resized to ${width}x${height}`);
     }
 
     // renderMapCanvas() method removed - WASM now pushes updates directly to canvas
