@@ -743,16 +743,49 @@ class MapEditorPage {
     }
 
     private pixelToHex(x: number, y: number): {row: number, col: number} | null {
-        // Convert pixel coordinates to hex grid coordinates
-        const hexSize = 20;
-        const hexWidth = hexSize * 2;
-        const rowHeight = Math.sqrt(3) * hexSize * 0.75;
+        if (!this.mapCanvas || !this.mapData) return null;
         
-        // Approximate row and column
-        const row = Math.floor((y - hexSize - 20) / rowHeight);
-        const col = Math.floor((x - hexSize - 20 - (row % 2) * hexSize) / hexWidth);
+        // Calculate hex size based on canvas and map dimensions
+        const canvasWidth = this.mapCanvas.width;
+        const canvasHeight = this.mapCanvas.height;
+        const mapWidth = this.mapData.width;
+        const mapHeight = this.mapData.height;
         
-        return { row, col };
+        // Calculate hex size from canvas dimensions
+        // Assuming some padding and the hex layout used by WASM
+        const hexSize = Math.min(
+            (canvasWidth - 40) / (mapWidth * 1.5 + 0.5),  // Account for hex overlap
+            (canvasHeight - 40) / (mapHeight * Math.sqrt(3) * 0.75 + Math.sqrt(3) * 0.25)
+        );
+        
+        // Hex grid calculations
+        const hexWidth = hexSize * Math.sqrt(3);
+        const hexHeight = hexSize * 2;
+        const rowHeight = hexHeight * 0.75;
+        
+        // Account for padding/margins (adjust based on actual canvas layout)
+        const offsetX = 20;
+        const offsetY = 20;
+        
+        // Convert to hex grid coordinates
+        const adjustedX = x - offsetX;
+        const adjustedY = y - offsetY;
+        
+        // Calculate row first
+        const row = Math.floor(adjustedY / rowHeight);
+        
+        // Calculate column, accounting for hex offset on odd rows
+        const oddRowOffset = (row % 2) * (hexWidth / 2);
+        const col = Math.floor((adjustedX - oddRowOffset) / hexWidth);
+        
+        // Validate coordinates are within map bounds
+        if (row >= 0 && row < mapHeight && col >= 0 && col < mapWidth) {
+            this.logToConsole(`Pixel (${x}, ${y}) -> Hex (${row}, ${col}) [canvas: ${canvasWidth}x${canvasHeight}, map: ${mapWidth}x${mapHeight}, hexSize: ${hexSize.toFixed(1)}]`);
+            return { row, col };
+        }
+        
+        this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds (${row}, ${col}) [map: ${mapWidth}x${mapHeight}]`);
+        return null;
     }
 
     private paintHexAtCoords(row: number, col: number): void {
