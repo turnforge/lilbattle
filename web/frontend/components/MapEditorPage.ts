@@ -750,15 +750,15 @@ class MapEditorPage {
             try {
                 const result = (window as any).editorPixelToCoords(x, y);
                 if (result && result.success && result.data) {
-                    const { row, col, cubeQ, cubeR } = result.data;
+                    const { row, col, cubeQ, cubeR, withinBounds } = result.data;
                     
-                    // Validate coordinates are within map bounds
-                    if (row >= 0 && row < this.mapData.height && col >= 0 && col < this.mapData.width) {
-                        this.logToConsole(`Pixel (${x}, ${y}) -> Hex (${row}, ${col}) Q=${cubeQ} R=${cubeR} [WASM conversion]`);
+                    // Use WASM-provided bounds validation (supports arbitrary coordinate regions)
+                    if (withinBounds) {
+                        this.logToConsole(`Pixel (${x}, ${y}) -> Hex (${row}, ${col}) Q=${cubeQ} R=${cubeR} [WASM conversion, within bounds]`);
                         return { row, col, cubeQ, cubeR };
                     }
                     
-                    this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds (${row}, ${col}) [map: ${this.mapData.width}x${this.mapData.height}]`);
+                    this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds (${row}, ${col}) Q=${cubeQ} R=${cubeR} [WASM conversion]`);
                     return null;
                 }
             } catch (error) {
@@ -791,13 +791,13 @@ class MapEditorPage {
         const oddRowOffset = (row % 2) * (hexWidth / 2);
         const col = Math.floor((adjustedX - oddRowOffset) / hexWidth);
         
-        // Validate coordinates are within map bounds
+        // Validate coordinates are within map bounds (fallback - less accurate for arbitrary coordinate regions)
         if (row >= 0 && row < this.mapData.height && col >= 0 && col < this.mapData.width) {
-            this.logToConsole(`Pixel (${x}, ${y}) -> Hex (${row}, ${col}) [Browser fallback]`);
+            this.logToConsole(`Pixel (${x}, ${y}) -> Hex (${row}, ${col}) [Browser fallback - assumes 0,0 origin]`);
             return { row, col };
         }
         
-        this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds (${row}, ${col}) [map: ${this.mapData.width}x${this.mapData.height}]`);
+        this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds (${row}, ${col}) [map: ${this.mapData.width}x${this.mapData.height}] [Browser fallback]`);
         return null;
     }
 

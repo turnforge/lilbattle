@@ -88,7 +88,7 @@ func (w *World) GetMapSize() (rows, cols int) {
 	if w.Map == nil {
 		return 0, 0
 	}
-	return w.Map.NumRows, w.Map.NumCols
+	return w.Map.NumRows(), w.Map.NumCols()
 }
 
 // GetTileAt returns the tile at the specified display coordinates
@@ -217,7 +217,7 @@ func (w *World) IsValidPosition(row, col int) bool {
 	if w.Map == nil {
 		return false
 	}
-	return row >= 0 && row < w.Map.NumRows && col >= 0 && col < w.Map.NumCols
+	return row >= 0 && row < w.Map.NumRows() && col >= 0 && col < w.Map.NumCols()
 }
 
 // IsValidCubePosition checks if the given cube coordinates are within the world bounds
@@ -234,7 +234,7 @@ func (w *World) GetWorldBounds() (minRow, minCol, maxRow, maxCol int) {
 	if w.Map == nil {
 		return 0, 0, 0, 0
 	}
-	return 0, 0, w.Map.NumRows - 1, w.Map.NumCols - 1
+	return 0, 0, w.Map.NumRows() - 1, w.Map.NumCols() - 1
 }
 
 // Clone creates a deep copy of the world state (useful for undo/redo systems)
@@ -246,7 +246,7 @@ func (w *World) Clone() *World {
 	// Clone map
 	var clonedMap *Map
 	if w.Map != nil {
-		clonedMap = NewMap(w.Map.NumRows, w.Map.NumCols, false)
+		clonedMap = NewMap(w.Map.NumRows(), w.Map.NumCols(), false)
 		for coord, tile := range w.Map.Tiles {
 			if tile != nil {
 				newTile := &Tile{

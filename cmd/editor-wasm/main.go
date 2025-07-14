@@ -75,6 +75,9 @@ func main() {
 	// Canvas rendering function
 	js.Global().Set("editorRenderToCanvas", js.FuncOf(renderEditorToCanvasJS))
 
+	// Coordinate conversion functions
+	js.Global().Set("editorPixelToCoords", js.FuncOf(pixelToCoords))
+
 	fmt.Println("WeeWar Map Editor WASM loaded")
 	<-c
 }
@@ -835,8 +838,8 @@ func worldCreate(this js.Value, args []js.Value) any {
 		"world":       world,
 		"playerCount": playerCount,
 		"seed":        seed,
-		"mapRows":     testMap.NumRows,
-		"mapCols":     testMap.NumCols,
+		"mapRows":     testMap.NumRows(),
+		"mapCols":     testMap.NumCols(),
 	})
 }
 
@@ -1192,6 +1195,84 @@ func blitBufferToCanvas(buffer *weewar.Buffer, canvasID string) error {
 		canvasID, canvasWidth, canvasHeight, width, height)
 
 	return nil
+}
+
+// pixelToCoords converts pixel coordinates to hex tile coordinates
+// Takes pixel x,y and returns the corresponding row,col and cube coordinates
+func pixelToCoords(this js.Value, args []js.Value) any {
+	if len(args) < 2 {
+		return createEditorResponse(false, "", "Missing x/y pixel arguments", nil)
+	}
+
+	pixelX := args[0].Float()
+	pixelY := args[1].Float()
+
+	// Use the same tile dimensions as WASM rendering
+	const TILE_WIDTH = 60.0
+	const TILE_HEIGHT = 52.0
+	const Y_INCREMENT = 39.0
+
+	// Get the current map if available for proper coordinate conversion
+	var evenRowsOffset bool = false // Default: odd rows offset (EvenRowsOffset() returns false)
+	if globalWorld != nil && globalWorld.Map != nil {
+		evenRowsOffset = globalWorld.Map.EvenRowsOffset()
+	}
+
+	// Convert pixel Y to row (this is straightforward)
+	row := int((pixelY - TILE_HEIGHT/2) / Y_INCREMENT)
+
+	// Convert pixel X to col (this requires handling the hex offset)
+	var col int
+	isEvenRow := (row % 2) == 0
+
+	if evenRowsOffset {
+		// Even rows are offset to the right
+		if isEvenRow {
+			// Even row: x = col * tileWidth + tileWidth/2 + tileWidth/2
+			col = int((pixelX - TILE_WIDTH) / TILE_WIDTH)
+		} else {
+			// Odd row: x = col * tileWidth + tileWidth/2
+			col = int((pixelX - TILE_WIDTH/2) / TILE_WIDTH)
+		}
+	} else {
+		// Odd rows are offset to the right (default behavior)
+		if !isEvenRow {
+			// Odd row: x = col * tileWidth + tileWidth/2 + tileWidth/2
+			col = int((pixelX - TILE_WIDTH) / TILE_WIDTH)
+		} else {
+			// Even row: x = col * tileWidth + tileWidth/2
+			col = int((pixelX - TILE_WIDTH/2) / TILE_WIDTH)
+		}
+	}
+
+	// Calculate cube coordinates if we have a map
+	var cubeQ, cubeR int
+	var isWithinBounds bool = false
+	
+	if globalWorld != nil && globalWorld.Map != nil {
+		cubeCoord := globalWorld.Map.ArrayToHex(row, col)
+		cubeQ = cubeCoord.Q
+		cubeR = cubeCoord.R
+		
+		// Use proper Q/R bounds validation instead of row/col bounds
+		isWithinBounds = globalWorld.Map.IsWithinBounds(cubeQ, cubeR)
+	} else {
+		// Fallback calculation for cube coordinates (assuming odd-row offset)
+		cubeR = row
+		cubeQ = col - (row + (row&1)) / 2
+		// Cannot validate bounds without map, assume valid
+		isWithinBounds = true
+	}
+
+	return createEditorResponse(true, "Pixel to coordinates conversion successful", "", map[string]any{
+		"pixelX":        pixelX,
+		"pixelY":        pixelY,
+		"row":           row,
+		"col":           col,
+		"cubeQ":         cubeQ,
+		"cubeR":         cubeR,
+		"withinBounds":  isWithinBounds,
+	})
 }
 
 // createEditorResponse creates a JavaScript-compatible response object

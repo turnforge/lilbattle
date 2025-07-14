@@ -137,8 +137,8 @@ func getGameState(this js.Value, args []js.Value) any {
 		"currentPlayer": game.GetCurrentPlayer(),
 		"status":        string(game.GetGameStatus()),
 		"mapSize": map[string]int{
-			"rows": game.Map.NumRows,
-			"cols": game.Map.NumCols,
+			"rows": game.Map.NumRows(),
+			"cols": game.Map.NumCols(),
 		},
 	}
 
@@ -175,8 +175,8 @@ func renderGame(this js.Value, args []js.Value) any {
 	game := globalCLI.GetGame()
 
 	// Calculate tile sizes
-	tileWidth := float64(width) / float64(game.Map.NumCols)
-	tileHeight := float64(height) / float64(game.Map.NumRows)
+	tileWidth := float64(width) / float64(game.Map.NumCols())
+	tileHeight := float64(height) / float64(game.Map.NumRows())
 	yIncrement := tileHeight * 0.75
 
 	err := game.RenderToBuffer(buffer, tileWidth, tileHeight, yIncrement)

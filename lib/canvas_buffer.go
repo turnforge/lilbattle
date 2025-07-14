@@ -265,8 +265,8 @@ func (g *Game) renderMapToCanvas(canvasBuffer *CanvasBuffer, tileWidth, tileHeig
 	hexRadius := (tileWidth * 0.4) / PixelsPerMM
 
 	// Render each tile
-	for row := 0; row < g.Map.NumRows; row++ {
-		for col := 0; col < g.Map.NumCols; col++ {
+	for row := 0; row < g.Map.NumRows(); row++ {
+		for col := 0; col < g.Map.NumCols(); col++ {
 			// Calculate hex center position
 			x := float64(col) * (tileWidth / PixelsPerMM)
 			y := float64(row) * (yIncrement / PixelsPerMM)

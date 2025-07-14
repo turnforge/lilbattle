@@ -39,8 +39,8 @@ func TestMapEditorNewMap(t *testing.T) {
 		t.Fatal("Map should be loaded after NewMap")
 	}
 	
-	if currentMap.NumRows != 5 || currentMap.NumCols != 8 {
-		t.Errorf("Expected map size 5x8, got %dx%d", currentMap.NumRows, currentMap.NumCols)
+	if currentMap.NumRows() != 5 || currentMap.NumCols() != 8 {
+		t.Errorf("Expected map size 5x8, got %dx%d", currentMap.NumRows(), currentMap.NumCols())
 	}
 	
 	// Check that map is filled with grass (terrain type 1)
@@ -481,8 +481,8 @@ func TestMapEditorExportToGame(t *testing.T) {
 		t.Error("Game should have a map")
 	}
 	
-	if game.Map.NumRows != 5 || game.Map.NumCols != 5 {
-		t.Errorf("Expected map size 5x5, got %dx%d", game.Map.NumRows, game.Map.NumCols)
+	if game.Map.NumRows() != 5 || game.Map.NumCols() != 5 {
+		t.Errorf("Expected map size 5x5, got %dx%d", game.Map.NumRows(), game.Map.NumCols())
 	}
 }
 

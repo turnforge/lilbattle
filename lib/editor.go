@@ -208,8 +208,8 @@ func (e *MapEditor) PaintTerrain(row, col int) error {
 	for _, coord := range positions {
 		// Check if position is within map bounds
 		displayRow, displayCol := e.currentMap.HexToDisplay(coord)
-		if displayRow < 0 || displayRow >= e.currentMap.NumRows ||
-		   displayCol < 0 || displayCol >= e.currentMap.NumCols {
+		if displayRow < 0 || displayRow >= e.currentMap.NumRows() ||
+		   displayCol < 0 || displayCol >= e.currentMap.NumCols() {
 			continue // Skip out-of-bounds positions
 		}
 		
@@ -302,8 +302,8 @@ func (e *MapEditor) FloodFill(row, col int) error {
 			if !visited[neighbor] {
 				// Check if neighbor is within bounds
 				nRow, nCol := e.currentMap.HexToDisplay(neighbor)
-				if nRow >= 0 && nRow < e.currentMap.NumRows &&
-				   nCol >= 0 && nCol < e.currentMap.NumCols {
+				if nRow >= 0 && nRow < e.currentMap.NumRows() &&
+				   nCol >= 0 && nCol < e.currentMap.NumCols() {
 					queue = append(queue, neighbor)
 				}
 			}
@@ -414,7 +414,7 @@ func (e *MapEditor) copyMap(original *Map) *Map {
 		return nil
 	}
 	
-	copy := NewMap(original.NumRows, original.NumCols, false)
+	copy := NewMap(original.NumRows(), original.NumCols(), false)
 	
 	// Copy all tiles
 	for coord, tile := range original.Tiles {
@@ -461,8 +461,8 @@ func (e *MapEditor) GetMapInfo() *MapInfo {
 	
 	return &MapInfo{
 		Filename:      e.filename,
-		Width:         e.currentMap.NumCols,
-		Height:        e.currentMap.NumRows,
+		Width:         e.currentMap.NumCols(),
+		Height:        e.currentMap.NumRows(),
 		TotalTiles:    totalTiles,
 		TerrainCounts: terrainCounts,
 		Modified:      e.modified,
@@ -492,7 +492,7 @@ func (e *MapEditor) ValidateMap() []string {
 	var issues []string
 	
 	// Check for missing tiles (holes in the map)
-	expectedTiles := e.currentMap.NumRows * e.currentMap.NumCols
+	expectedTiles := e.currentMap.NumRows() * e.currentMap.NumCols()
 	actualTiles := len(e.currentMap.Tiles)
 	
 	if actualTiles < expectedTiles {
@@ -510,11 +510,11 @@ func (e *MapEditor) ValidateMap() []string {
 	}
 	
 	// Check map dimensions
-	if e.currentMap.NumRows < 3 || e.currentMap.NumCols < 3 {
+	if e.currentMap.NumRows() < 3 || e.currentMap.NumCols() < 3 {
 		issues = append(issues, "Map is very small (recommended minimum 3x3)")
 	}
 	
-	if e.currentMap.NumRows > 50 || e.currentMap.NumCols > 50 {
+	if e.currentMap.NumRows() > 50 || e.currentMap.NumCols() > 50 {
 		issues = append(issues, "Map is very large (may cause performance issues)")
 	}
 	
@@ -564,8 +564,8 @@ func (e *MapEditor) RenderToFile(filename string, width, height int) error {
 	buffer := NewBuffer(width, height)
 	
 	// Calculate tile size based on map dimensions and buffer size
-	tileWidth := float64(width) / float64(e.currentMap.NumCols)
-	tileHeight := float64(height) / float64(e.currentMap.NumRows)
+	tileWidth := float64(width) / float64(e.currentMap.NumCols())
+	tileHeight := float64(height) / float64(e.currentMap.NumRows())
 	yIncrement := tileHeight * 0.75 // Hex grid spacing
 	
 	err = game.RenderToBuffer(buffer, tileWidth, tileHeight, yIncrement)
@@ -630,8 +630,8 @@ func (e *MapEditor) renderFullMap() error {
 	}
 	
 	// Simplified rendering directly using FillPath for each tile
-	tileWidth := float64(e.canvasWidth) / float64(e.currentMap.NumCols)
-	tileHeight := float64(e.canvasHeight) / float64(e.currentMap.NumRows)
+	tileWidth := float64(e.canvasWidth) / float64(e.currentMap.NumCols())
+	tileHeight := float64(e.canvasHeight) / float64(e.currentMap.NumRows())
 	
 	// Render each tile as a hexagon
 	for coord, tile := range e.currentMap.Tiles {

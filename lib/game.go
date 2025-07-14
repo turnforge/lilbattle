@@ -88,9 +88,11 @@ type TileWithCoord struct {
 
 // Map represents the game map with hex grid topology
 type Map struct {
-	// Display bounds (for UI rendering only)
-	NumRows int `json:"numRows"`
-	NumCols int `json:"numCols"`
+	// Coordinate bounds - defines the valid region of the hex grid
+	MinQ int `json:"minQ"` // Minimum Q coordinate (inclusive)
+	MaxQ int `json:"maxQ"` // Maximum Q coordinate (inclusive)
+	MinR int `json:"minR"` // Minimum R coordinate (inclusive)
+	MaxR int `json:"maxR"` // Maximum R coordinate (inclusive)
 
 	// Cube coordinate storage - primary data structure
 	Tiles map[CubeCoord]*Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
@@ -99,13 +101,64 @@ type Map struct {
 	TileList []*TileWithCoord `json:"tiles"`
 }
 
+// NumRows returns the number of rows in the map (calculated from bounds)
+func (m *Map) NumRows() int {
+	if m.MinR > m.MaxR {
+		return 0 // Empty map
+	}
+	return m.MaxR - m.MinR + 1
+}
+
+// NumCols returns the number of columns in the map (calculated from bounds)
+func (m *Map) NumCols() int {
+	if m.MinQ > m.MaxQ {
+		return 0 // Empty map
+	}
+	return m.MaxQ - m.MinQ + 1
+}
+
+// IsWithinBounds checks if the given cube coordinates are within the map bounds
+func (m *Map) IsWithinBounds(q, r int) bool {
+	return q >= m.MinQ && q <= m.MaxQ && r >= m.MinR && r <= m.MaxR
+}
+
+// IsWithinBoundsCube checks if the given cube coordinate is within the map bounds
+func (m *Map) IsWithinBoundsCube(coord CubeCoord) bool {
+	return m.IsWithinBounds(coord.Q, coord.R)
+}
+
+// GetBounds returns the current map bounds
+func (m *Map) GetBounds() (minQ, maxQ, minR, maxR int) {
+	return m.MinQ, m.MaxQ, m.MinR, m.MaxR
+}
+
+// SetBounds updates the map bounds (use carefully - may invalidate existing tiles)
+func (m *Map) SetBounds(minQ, maxQ, minR, maxR int) {
+	m.MinQ, m.MaxQ, m.MinR, m.MaxR = minQ, maxQ, minR, maxR
+}
+
 // NewMap creates a new empty map with the specified dimensions
+// Creates a map with bounds from (0,0) to (numCols-1, numRows-1) for backward compatibility
 // evenRowsOffset parameter is deprecated and ignored (cube coordinates are universal)
 func NewMap(numRows, numCols int, evenRowsOffset bool) *Map {
 	_ = evenRowsOffset // Deprecated: cube coordinates eliminate offset confusion
 	return &Map{
-		NumRows:  numRows,
-		NumCols:  numCols,
+		MinQ:     0,
+		MaxQ:     numCols - 1,
+		MinR:     0,
+		MaxR:     numRows - 1,
+		Tiles:    make(map[CubeCoord]*Tile),
+		TileList: make([]*TileWithCoord, 0),
+	}
+}
+
+// NewMapWithBounds creates a new empty map with the specified coordinate bounds
+func NewMapWithBounds(minQ, maxQ, minR, maxR int) *Map {
+	return &Map{
+		MinQ:     minQ,
+		MaxQ:     maxQ,
+		MinR:     minR,
+		MaxR:     maxR,
 		Tiles:    make(map[CubeCoord]*Tile),
 		TileList: make([]*TileWithCoord, 0),
 	}
@@ -127,10 +180,29 @@ func (m *Map) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements custom JSON unmarshaling for Map
 func (m *Map) UnmarshalJSON(data []byte) error {
-	// Create a temporary struct with the same fields
+	// First try to unmarshal with new bounds format
 	type mapJSON Map
 	if err := json.Unmarshal(data, (*mapJSON)(m)); err != nil {
 		return err
+	}
+	
+	// Handle backward compatibility: if bounds are not set but we have old numRows/numCols,
+	// check if the JSON contains the old fields and convert them
+	if m.MinQ == 0 && m.MaxQ == 0 && m.MinR == 0 && m.MaxR == 0 {
+		// Try to parse old format
+		var legacy struct {
+			NumRows int `json:"numRows"`
+			NumCols int `json:"numCols"`
+		}
+		if err := json.Unmarshal(data, &legacy); err == nil {
+			if legacy.NumRows > 0 && legacy.NumCols > 0 {
+				// Convert old format to new bounds (assuming 0,0 origin)
+				m.MinQ = 0
+				m.MaxQ = legacy.NumCols - 1
+				m.MinR = 0
+				m.MaxR = legacy.NumRows - 1
+			}
+		}
 	}
 	
 	// Initialize the cube map if it's nil
@@ -602,7 +674,7 @@ func (g *Game) GetMapSize() (rows, cols int) {
 	if g.Map == nil {
 		return 0, 0
 	}
-	return g.Map.NumRows, g.Map.NumCols
+	return g.Map.NumRows(), g.Map.NumCols()
 }
 
 // GetMapName returns loaded map name

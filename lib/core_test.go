@@ -29,11 +29,11 @@ func getTestOutputPath(testName, filename string) string {
 func TestNewMap(t *testing.T) {
 	m := NewMap(10, 15, true)
 
-	if m.NumRows != 10 {
-		t.Errorf("Expected NumRows to be 10, got %d", m.NumRows)
+	if m.NumRows() != 10 {
+		t.Errorf("Expected NumRows to be 10, got %d", m.NumRows())
 	}
-	if m.NumCols != 15 {
-		t.Errorf("Expected NumCols to be 15, got %d", m.NumCols)
+	if m.NumCols() != 15 {
+		t.Errorf("Expected NumCols to be 15, got %d", m.NumCols())
 	}
 	// EvenRowsOffset is deprecated and always returns false
 	if m.EvenRowsOffset() {
