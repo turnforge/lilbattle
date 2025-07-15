@@ -1,4 +1,4 @@
-package weewar
+package main
 
 import (
 	"os"
@@ -314,9 +314,9 @@ status
 func TestCLIPositionParsing(t *testing.T) {
 	// Test position parsing
 	testCases := []struct {
-		input     string
-		expectRow int
-		expectCol int
+		input       string
+		expectRow   int
+		expectCol   int
 		expectValid bool
 	}{
 		{"A1", 0, 0, true},
@@ -430,13 +430,13 @@ func TestCLIREPLCommands(t *testing.T) {
 	}
 
 	cli := NewWeeWarCLI(game)
-	
+
 	// Enable interactive mode to test REPL commands
 	cli.interactive = true
 
 	// Test REPL-specific commands
 	testCases := []struct {
-		command string
+		command       string
 		shouldSucceed bool
 	}{
 		{"state", true},
@@ -450,7 +450,7 @@ func TestCLIREPLCommands(t *testing.T) {
 	for _, tc := range testCases {
 		response := cli.executeREPLCommand(tc.command)
 		if response.Success != tc.shouldSucceed {
-			t.Errorf("REPL command '%s': expected success=%v, got success=%v", 
+			t.Errorf("REPL command '%s': expected success=%v, got success=%v",
 				tc.command, tc.shouldSucceed, response.Success)
 		}
 	}
@@ -458,7 +458,7 @@ func TestCLIREPLCommands(t *testing.T) {
 	// Test REPL command availability
 	commands := cli.GetAvailableCommands()
 	replCommands := []string{"state", "refresh", "turn", "actions"}
-	
+
 	for _, replCmd := range replCommands {
 		found := false
 		for _, cmd := range commands {
@@ -500,7 +500,7 @@ func TestCLIGameStateIntegration(t *testing.T) {
 	cli := NewWeeWarCLI(game)
 
 	// Test GameInterface method integration
-	
+
 	// Test GetCurrentPlayer
 	currentPlayer := cli.game.GetCurrentPlayer()
 	if currentPlayer != 0 {
@@ -537,7 +537,7 @@ func TestCLIGameStateIntegration(t *testing.T) {
 		t.Errorf("Move command failed: %s", response.Error)
 	}
 
-	// Verify unit moved - A1 unit should now be at B3 (1,2) 
+	// Verify unit moved - A1 unit should now be at B3 (1,2)
 	unit := cli.game.GetUnitAt(2, 1) // B3 = row 2, col 1 (0-based)
 	if unit == nil {
 		t.Error("Unit not found at expected position after move")

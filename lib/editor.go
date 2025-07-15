@@ -2,17 +2,18 @@ package weewar
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 )
 
 // =============================================================================
-// Map Editor Core
+// World Editor Core
 // =============================================================================
 
-// MapEditor provides tools for creating and editing hex maps
-type MapEditor struct {
-	// Current map being edited
-	currentMap *Map
+// WorldEditor provides tools for creating and editing game worlds (maps, units, etc.)
+type WorldEditor struct {
+	// Current world being edited
+	currentWorld *World
 
 	// Editor state
 	filename     string
@@ -20,29 +21,25 @@ type MapEditor struct {
 	brushTerrain int // Current terrain type for painting
 	brushSize    int // Brush radius (0 = single hex, 1 = 7 hexes, etc.)
 
-	// Canvas rendering
-	canvasBuffer    *CanvasBuffer    // Direct HTML canvas rendering (deprecated)
+	// Rendering and viewport
+	drawable        Drawable         // Platform-agnostic drawing interface
 	layeredRenderer *LayeredRenderer // Fast layered rendering system
 	canvasWidth     int
 	canvasHeight    int
-
-	// Undo/redo system
-	history    []*Map // Map snapshots for undo
-	historyPos int    // Current position in history
-	maxHistory int    // Maximum undo steps
+	scrollX         float64 // Horizontal scroll offset for viewport
+	scrollY         float64 // Vertical scroll offset for viewport
 }
 
-// NewMapEditor creates a new map editor instance
-func NewMapEditor() *MapEditor {
-	return &MapEditor{
-		currentMap:   nil,
+// NewWorldEditor creates a new world editor instance
+func NewWorldEditor() *WorldEditor {
+	return &WorldEditor{
+		currentWorld: nil,
 		filename:     "",
 		modified:     false,
 		brushTerrain: 1, // Default to grass
 		brushSize:    0, // Single hex brush
-		history:      make([]*Map, 0),
-		historyPos:   -1,
-		maxHistory:   50, // Keep last 50 operations
+		scrollX:      0, // No initial scroll offset
+		scrollY:      0, // No initial scroll offset
 	}
 }
 
@@ -50,83 +47,43 @@ func NewMapEditor() *MapEditor {
 // Map Management
 // =============================================================================
 
-// NewMap creates a new empty map for editing
-func (e *MapEditor) NewMap(rows, cols int) error {
-	if rows < 1 || rows > 100 {
-		return fmt.Errorf("invalid rows: %d (must be 1-100)", rows)
-	}
-	if cols < 1 || cols > 100 {
-		return fmt.Errorf("invalid cols: %d (must be 1-100)", cols)
-	}
-
-	// Create new map with cube coordinate storage
-	e.currentMap = NewMap(rows, cols, false)
+// NewWorld creates a new 1x1 world for editing (use Add/Remove methods to expand)
+func (e *WorldEditor) NewWorld() error {
+	// Create new map with single tile at origin (Q=0, R=0)
+	gameMap := NewMapWithBounds(0, 0, 0, 0)
 	e.filename = ""
 	e.modified = false
 
-	// Fill with default terrain (grass) - optimized for large maps
-	for row := 0; row < rows; row++ {
-		for col := 0; col < cols; col++ {
-			tile := NewTile(row, col, 1) // Grass terrain
-			// Use direct cube coordinate insertion for performance
-			coord := e.currentMap.DisplayToHex(row, col)
-			e.currentMap.Tiles[coord] = tile
-		}
+	// Create single tile at origin with default terrain (grass)
+	coord := CubeCoord{Q: 0, R: 0}
+	tile := NewTile(coord, 1) // Grass terrain
+	gameMap.AddTile(tile)
+
+	// Create world with map and initialize units by player
+	e.currentWorld = &World{
+		Map:           gameMap,
+		UnitsByPlayer: make([][]*Unit, 2), // Start with 2 players
+		PlayerCount:   2,
 	}
 
-	// Add some random units for testing the unit layer
-	numUnits := 3 // Add 3 random units
-	for i := 0; i < numUnits; i++ {
-		// Pick random position
-		row := i * 2 // Spread units out
-		col := i*2 + 1
-		if row < rows && col < cols {
-			coord := e.currentMap.DisplayToHex(row, col)
-			if tile := e.currentMap.TileAtCube(coord); tile != nil {
-				// Create a basic unit (type 1, player 0)
-				unit := &Unit{
-					UnitType:        1,  // Basic unit type
-					DistanceLeft:    3,  // Movement points
-					AvailableHealth: 10, // Health
-					TurnCounter:     0,  // Turn created
-					Row:             row,
-					Col:             col,
-					PlayerID:        i % 2, // Alternate between player 0 and 1
-				}
-				tile.Unit = unit
-				fmt.Printf("Created unit type %d for player %d at (%d, %d)\n", unit.UnitType, unit.PlayerID, row, col)
-
-				// Mark unit layer as dirty
-				if e.layeredRenderer != nil {
-					e.layeredRenderer.MarkUnitDirty(coord)
-					fmt.Printf("Marked unit layer dirty at coord %v\n", coord)
-				}
-			}
-		}
-	}
-
-	// Clear history but defer initial snapshot for performance
-	// The snapshot will be taken on the first edit operation
-	e.clearHistory()
-
-	// Update layered renderer with new map
+	// Update layered renderer with new world
 	if e.layeredRenderer != nil {
-		e.layeredRenderer.SetMap(e.currentMap)
+		e.layeredRenderer.SetWorld(e.currentWorld)
 	}
 
 	return nil
 }
 
 // LoadMap loads an existing map for editing
-func (e *MapEditor) LoadMap(filename string) error {
+func (e *WorldEditor) LoadMap(filename string) error {
 	// TODO: Implement map loading from file
 	// For now, create a placeholder implementation
 	return fmt.Errorf("map loading not yet implemented")
 }
 
 // SaveMap saves the current map to file
-func (e *MapEditor) SaveMap(filename string) error {
-	if e.currentMap == nil {
+func (e *WorldEditor) SaveMap(filename string) error {
+	if e.currentWorld == nil {
 		return fmt.Errorf("no map to save")
 	}
 
@@ -139,31 +96,33 @@ func (e *MapEditor) SaveMap(filename string) error {
 }
 
 // GetCurrentMap returns the map being edited (read-only access)
-func (e *MapEditor) GetCurrentMap() *Map {
-	return e.currentMap
+func (e *WorldEditor) GetCurrentMap() *Map {
+	return e.currentWorld.Map
 }
 
 // IsModified returns whether the map has unsaved changes
-func (e *MapEditor) IsModified() bool {
+func (e *WorldEditor) IsModified() bool {
 	return e.modified
 }
 
 // CalculateCanvasSize returns the optimal canvas size for the current map
-func (e *MapEditor) CalculateCanvasSize(rows, cols int) (width, height int) {
-	if e.currentMap == nil {
+func (e *WorldEditor) CalculateCanvasSize(rows, cols int) (width, height int) {
+	if e.currentWorld == nil {
 		return 400, 300 // Default size for empty editor
 	}
 
 	// Use the world renderer to calculate proper tile dimensions
 	renderer := &BaseRenderer{}
-	tempWorld := &World{Map: e.currentMap}
+	tempWorld := &World{Map: e.currentWorld.Map}
 
 	// Use a reasonable base canvas size for calculation
 	options := renderer.CalculateRenderOptions(800, 600, tempWorld)
 
+	mapWidth, mapHeight := e.currentWorld.Map.CanvasSize(options.TileWidth, options.TileHeight, options.YIncrement)
+
 	// Calculate canvas dimensions with minimal padding
-	width = int(float64(cols)*options.TileWidth + options.TileWidth/2)
-	height = int(float64(rows)*options.YIncrement + options.TileHeight/2)
+	width = int(mapWidth + math.Max(e.scrollX, 0))
+	height = int(mapHeight + math.Max(e.scrollY, 0))
 	fmt.Println("Ok here, rows, cols, w, h: ", rows, cols, width, height, options)
 
 	// Ensure minimum size for usability
@@ -178,22 +137,22 @@ func (e *MapEditor) CalculateCanvasSize(rows, cols int) (width, height int) {
 }
 
 // GetFilename returns the current filename (empty if new map)
-func (e *MapEditor) GetFilename() string {
+func (e *WorldEditor) GetFilename() string {
 	return e.filename
 }
 
 // GetCanvasSize returns the current canvas dimensions
-func (e *MapEditor) GetCanvasSize() (width, height int) {
+func (e *WorldEditor) GetCanvasSize() (width, height int) {
 	return e.canvasWidth, e.canvasHeight
 }
 
 // GetLayeredRenderer returns the layered renderer for direct access
-func (e *MapEditor) GetLayeredRenderer() *LayeredRenderer {
+func (e *WorldEditor) GetLayeredRenderer() *LayeredRenderer {
 	return e.layeredRenderer
 }
 
 // SetAssetProvider updates the asset provider for terrain/unit sprites
-func (e *MapEditor) SetAssetProvider(provider AssetProvider) {
+func (e *WorldEditor) SetAssetProvider(provider AssetProvider) {
 	if e.layeredRenderer != nil {
 		e.layeredRenderer.SetAssetProvider(provider)
 	}
@@ -204,7 +163,7 @@ func (e *MapEditor) SetAssetProvider(provider AssetProvider) {
 // =============================================================================
 
 // SetBrushTerrain sets the terrain type for painting
-func (e *MapEditor) SetBrushTerrain(terrainType int) error {
+func (e *WorldEditor) SetBrushTerrain(terrainType int) error {
 	if terrainType < 0 || terrainType >= len(terrainData) {
 		return fmt.Errorf("invalid terrain type: %d", terrainType)
 	}
@@ -213,7 +172,7 @@ func (e *MapEditor) SetBrushTerrain(terrainType int) error {
 }
 
 // SetBrushSize sets the brush radius (0 = single hex, 1 = 7 hexes, etc.)
-func (e *MapEditor) SetBrushSize(size int) error {
+func (e *WorldEditor) SetBrushSize(size int) error {
 	if size < 0 || size > 5 {
 		return fmt.Errorf("invalid brush size: %d (must be 0-5)", size)
 	}
@@ -222,13 +181,13 @@ func (e *MapEditor) SetBrushSize(size int) error {
 }
 
 // PaintTerrain paints terrain at the specified display position
-func (e *MapEditor) PaintTerrain(row, col int) error {
-	if e.currentMap == nil {
+func (e *WorldEditor) PaintTerrain(row, col int) error {
+	if e.currentWorld == nil {
 		return fmt.Errorf("no map loaded")
 	}
 
 	// Convert to cube coordinate
-	centerCoord := e.currentMap.DisplayToHex(row, col)
+	centerCoord := e.currentWorld.RowColToHex(row, col)
 
 	// Get all positions to paint based on brush size
 	positions := e.getBrushPositions(centerCoord)
@@ -236,17 +195,17 @@ func (e *MapEditor) PaintTerrain(row, col int) error {
 	// Paint each position
 	for _, coord := range positions {
 		// Check if position is within map bounds
-		displayRow, displayCol := e.currentMap.HexToDisplay(coord)
-		if displayRow < 0 || displayRow >= e.currentMap.NumRows() ||
-			displayCol < 0 || displayCol >= e.currentMap.NumCols() {
+		displayRow, displayCol := e.currentWorld.HexToRowCol(coord)
+		if displayRow < 0 || displayRow >= e.currentWorld.NumRows() ||
+			displayCol < 0 || displayCol >= e.currentWorld.NumCols() {
 			continue // Skip out-of-bounds positions
 		}
 
 		// Get existing tile or create new one
-		tile := e.currentMap.TileAtCube(coord)
+		tile := e.currentWorld.TileAt(coord)
 		if tile == nil {
 			tile = NewTile(displayRow, displayCol, e.brushTerrain)
-			e.currentMap.AddTileCube(coord, tile)
+			e.currentWorld.AddTile(tile)
 		} else {
 			tile.TileType = e.brushTerrain
 		}
@@ -267,13 +226,13 @@ func (e *MapEditor) PaintTerrain(row, col int) error {
 }
 
 // RemoveTerrain removes terrain at the specified position
-func (e *MapEditor) RemoveTerrain(row, col int) error {
-	if e.currentMap == nil {
+func (e *WorldEditor) RemoveTerrain(row, col int) error {
+	if e.currentWorld == nil {
 		return fmt.Errorf("no map loaded")
 	}
 
-	coord := e.currentMap.DisplayToHex(row, col)
-	e.currentMap.DeleteTileCube(coord)
+	coord := e.currentWorld.RowColToHex(row, col)
+	e.currentWorld.DeleteTileCube(coord)
 
 	e.takeSnapshot()
 	e.modified = true
@@ -287,13 +246,13 @@ func (e *MapEditor) RemoveTerrain(row, col int) error {
 }
 
 // FloodFill fills a connected region with the current brush terrain
-func (e *MapEditor) FloodFill(row, col int) error {
-	if e.currentMap == nil {
+func (e *WorldEditor) FloodFill(row, col int) error {
+	if e.currentWorld == nil {
 		return fmt.Errorf("no map loaded")
 	}
 
-	startCoord := e.currentMap.DisplayToHex(row, col)
-	startTile := e.currentMap.TileAtCube(startCoord)
+	startCoord := e.currentWorld.RowColToHex(row, col)
+	startTile := e.currentWorld.TileAtCube(startCoord)
 	if startTile == nil {
 		return fmt.Errorf("no tile at position (%d, %d)", row, col)
 	}
@@ -317,7 +276,7 @@ func (e *MapEditor) FloodFill(row, col int) error {
 		visited[current] = true
 
 		// Check if this position has the original terrain
-		tile := e.currentMap.TileAtCube(current)
+		tile := e.currentWorld.TileAtCube(current)
 		if tile == nil || tile.TileType != originalTerrain {
 			continue
 		}
@@ -330,9 +289,9 @@ func (e *MapEditor) FloodFill(row, col int) error {
 		for _, neighbor := range neighbors {
 			if !visited[neighbor] {
 				// Check if neighbor is within bounds
-				nRow, nCol := e.currentMap.HexToDisplay(neighbor)
-				if nRow >= 0 && nRow < e.currentMap.NumRows() &&
-					nCol >= 0 && nCol < e.currentMap.NumCols() {
+				nRow, nCol := e.currentWorld.HexToRowCol(neighbor)
+				if nRow >= 0 && nRow < e.currentWorld.NumRows() &&
+					nCol >= 0 && nCol < e.currentWorld.NumCols() {
 					queue = append(queue, neighbor)
 				}
 			}
@@ -355,13 +314,13 @@ func (e *MapEditor) FloodFill(row, col int) error {
 // =============================================================================
 
 // Undo reverts the last operation
-func (e *MapEditor) Undo() error {
+func (e *WorldEditor) Undo() error {
 	if e.historyPos <= 0 {
 		return fmt.Errorf("nothing to undo")
 	}
 
 	e.historyPos--
-	e.currentMap = e.copyMap(e.history[e.historyPos])
+	e.currentWorld = e.copyMap(e.history[e.historyPos])
 	e.modified = true
 
 	// Mark entire terrain as dirty since undo can affect entire state
@@ -373,13 +332,13 @@ func (e *MapEditor) Undo() error {
 }
 
 // Redo reapplies the next operation
-func (e *MapEditor) Redo() error {
+func (e *WorldEditor) Redo() error {
 	if e.historyPos >= len(e.history)-1 {
 		return fmt.Errorf("nothing to redo")
 	}
 
 	e.historyPos++
-	e.currentMap = e.copyMap(e.history[e.historyPos])
+	e.currentWorld = e.copyMap(e.history[e.historyPos])
 	e.modified = true
 
 	// Mark entire terrain as dirty since redo can affect entire state
@@ -391,12 +350,12 @@ func (e *MapEditor) Redo() error {
 }
 
 // CanUndo returns whether undo is available
-func (e *MapEditor) CanUndo() bool {
+func (e *WorldEditor) CanUndo() bool {
 	return e.historyPos > 0
 }
 
 // CanRedo returns whether redo is available
-func (e *MapEditor) CanRedo() bool {
+func (e *WorldEditor) CanRedo() bool {
 	return e.historyPos < len(e.history)-1
 }
 
@@ -405,7 +364,7 @@ func (e *MapEditor) CanRedo() bool {
 // =============================================================================
 
 // getBrushPositions returns all cube coordinates affected by the current brush
-func (e *MapEditor) getBrushPositions(center CubeCoord) []CubeCoord {
+func (e *WorldEditor) getBrushPositions(center CubeCoord) []CubeCoord {
 	if e.brushSize == 0 {
 		return []CubeCoord{center}
 	}
@@ -415,8 +374,8 @@ func (e *MapEditor) getBrushPositions(center CubeCoord) []CubeCoord {
 }
 
 // takeSnapshot saves the current map state for undo
-func (e *MapEditor) takeSnapshot() {
-	if e.currentMap == nil {
+func (e *WorldEditor) takeSnapshot() {
+	if e.currentWorld == nil {
 		return
 	}
 
@@ -426,7 +385,7 @@ func (e *MapEditor) takeSnapshot() {
 	}
 
 	// Add current map to history
-	mapCopy := e.copyMap(e.currentMap)
+	mapCopy := e.copyMap(e.currentWorld)
 	e.history = append(e.history, mapCopy)
 	e.historyPos = len(e.history) - 1
 
@@ -438,7 +397,7 @@ func (e *MapEditor) takeSnapshot() {
 }
 
 // copyMap creates a deep copy of a map
-func (e *MapEditor) copyMap(original *Map) *Map {
+func (e *WorldEditor) copyMap(original *Map) *Map {
 	if original == nil {
 		return nil
 	}
@@ -462,7 +421,7 @@ func (e *MapEditor) copyMap(original *Map) *Map {
 }
 
 // clearHistory clears the undo/redo history
-func (e *MapEditor) clearHistory() {
+func (e *WorldEditor) clearHistory() {
 	e.history = make([]*Map, 0)
 	e.historyPos = -1
 }
@@ -472,8 +431,8 @@ func (e *MapEditor) clearHistory() {
 // =============================================================================
 
 // GetMapInfo returns information about the current map
-func (e *MapEditor) GetMapInfo() *MapInfo {
-	if e.currentMap == nil {
+func (e *WorldEditor) GetMapInfo() *MapInfo {
+	if e.currentWorld == nil {
 		return nil
 	}
 
@@ -481,7 +440,7 @@ func (e *MapEditor) GetMapInfo() *MapInfo {
 	terrainCounts := make(map[int]int)
 	totalTiles := 0
 
-	for _, tile := range e.currentMap.Tiles {
+	for _, tile := range e.currentWorld.Tiles {
 		if tile != nil {
 			terrainCounts[tile.TileType]++
 			totalTiles++
@@ -490,8 +449,8 @@ func (e *MapEditor) GetMapInfo() *MapInfo {
 
 	return &MapInfo{
 		Filename:      e.filename,
-		Width:         e.currentMap.NumCols(),
-		Height:        e.currentMap.NumRows(),
+		Width:         e.currentWorld.NumCols(),
+		Height:        e.currentWorld.NumRows(),
 		TotalTiles:    totalTiles,
 		TerrainCounts: terrainCounts,
 		Modified:      e.modified,
@@ -513,23 +472,23 @@ type MapInfo struct {
 // =============================================================================
 
 // ValidateMap checks the map for common issues
-func (e *MapEditor) ValidateMap() []string {
-	if e.currentMap == nil {
+func (e *WorldEditor) ValidateMap() []string {
+	if e.currentWorld == nil {
 		return []string{"No map loaded"}
 	}
 
 	var issues []string
 
 	// Check for missing tiles (holes in the map)
-	expectedTiles := e.currentMap.NumRows() * e.currentMap.NumCols()
-	actualTiles := len(e.currentMap.Tiles)
+	expectedTiles := e.currentWorld.NumRows() * e.currentWorld.NumCols()
+	actualTiles := len(e.currentWorld.Tiles)
 
 	if actualTiles < expectedTiles {
 		issues = append(issues, fmt.Sprintf("Map has holes: %d tiles missing", expectedTiles-actualTiles))
 	}
 
 	// Check for invalid terrain types
-	for _, tile := range e.currentMap.Tiles {
+	for _, tile := range e.currentWorld.Tiles {
 		if tile != nil {
 			if tile.TileType < 0 || tile.TileType >= len(terrainData) {
 				issues = append(issues, fmt.Sprintf("Invalid terrain type %d at (%d, %d)",
@@ -539,11 +498,11 @@ func (e *MapEditor) ValidateMap() []string {
 	}
 
 	// Check map dimensions
-	if e.currentMap.NumRows() < 3 || e.currentMap.NumCols() < 3 {
+	if e.currentWorld.NumRows() < 3 || e.currentWorld.NumCols() < 3 {
 		issues = append(issues, "Map is very small (recommended minimum 3x3)")
 	}
 
-	if e.currentMap.NumRows() > 50 || e.currentMap.NumCols() > 50 {
+	if e.currentWorld.NumRows() > 50 || e.currentWorld.NumCols() > 50 {
 		issues = append(issues, "Map is very large (may cause performance issues)")
 	}
 
@@ -555,8 +514,8 @@ func (e *MapEditor) ValidateMap() []string {
 // =============================================================================
 
 // ExportToGame converts the edited map to a Game instance for testing
-func (e *MapEditor) ExportToGame(playerCount int) (*Game, error) {
-	if e.currentMap == nil {
+func (e *WorldEditor) ExportToGame(playerCount int) (*Game, error) {
+	if e.currentWorld == nil {
 		return nil, fmt.Errorf("no map to export")
 	}
 
@@ -566,7 +525,7 @@ func (e *MapEditor) ExportToGame(playerCount int) (*Game, error) {
 	}
 
 	// Create a copy of the map for the game
-	gamemap := e.copyMap(e.currentMap)
+	gamemap := e.copyMap(e.currentWorld)
 
 	// Create the game
 	game, err := NewGame(playerCount, gamemap, 12345) // Use fixed seed for testing
@@ -578,8 +537,8 @@ func (e *MapEditor) ExportToGame(playerCount int) (*Game, error) {
 }
 
 // RenderToFile saves the current map as a PNG image
-func (e *MapEditor) RenderToFile(filename string, width, height int) error {
-	if e.currentMap == nil {
+func (e *WorldEditor) RenderToFile(filename string, width, height int) error {
+	if e.currentWorld == nil {
 		return fmt.Errorf("no map to render")
 	}
 
@@ -593,8 +552,8 @@ func (e *MapEditor) RenderToFile(filename string, width, height int) error {
 	buffer := NewBuffer(width, height)
 
 	// Calculate tile size based on map dimensions and buffer size
-	tileWidth := float64(width) / float64(e.currentMap.NumCols())
-	tileHeight := float64(height) / float64(e.currentMap.NumRows())
+	tileWidth := float64(width) / float64(e.currentWorld.NumCols())
+	tileHeight := float64(height) / float64(e.currentWorld.NumRows())
 	yIncrement := tileHeight * 0.75 // Hex grid spacing
 
 	err = game.RenderToBuffer(buffer, tileWidth, tileHeight, yIncrement)
@@ -615,7 +574,7 @@ func (e *MapEditor) RenderToFile(filename string, width, height int) error {
 // =============================================================================
 
 // SetCanvas initializes the canvas for real-time rendering
-func (e *MapEditor) SetCanvas(canvasID string, width, height int) error {
+func (e *WorldEditor) SetCanvas(canvasID string, width, height int) error {
 	// Create new layered renderer for fast prototyping
 	var err error
 	e.layeredRenderer, err = NewLayeredRenderer(canvasID, width, height)
@@ -627,7 +586,7 @@ func (e *MapEditor) SetCanvas(canvasID string, width, height int) error {
 	e.canvasHeight = height
 
 	// If we have a current map, mark all terrain as dirty for initial render
-	if e.currentMap != nil {
+	if e.currentWorld != nil {
 		e.layeredRenderer.MarkAllTerrainDirty()
 	}
 
@@ -635,7 +594,7 @@ func (e *MapEditor) SetCanvas(canvasID string, width, height int) error {
 }
 
 // SetCanvasSize resizes the canvas
-func (e *MapEditor) SetCanvasSize(width, height int) error {
+func (e *WorldEditor) SetCanvasSize(width, height int) error {
 	if e.layeredRenderer == nil {
 		return fmt.Errorf("no layered renderer initialized")
 	}
@@ -653,23 +612,23 @@ func (e *MapEditor) SetCanvasSize(width, height int) error {
 }
 
 // renderFullMap renders the entire current map to the canvas
-func (e *MapEditor) renderFullMap() error {
-	if e.canvasBuffer == nil || e.currentMap == nil {
+func (e *WorldEditor) renderFullMap() error {
+	if e.drawable == nil || e.currentWorld == nil {
 		return nil // No canvas or map to render
 	}
 
 	// Simplified rendering directly using FillPath for each tile
-	tileWidth := float64(e.canvasWidth) / float64(e.currentMap.NumCols())
-	tileHeight := float64(e.canvasHeight) / float64(e.currentMap.NumRows())
+	tileWidth := float64(e.canvasWidth) / float64(e.currentWorld.NumCols())
+	tileHeight := float64(e.canvasHeight) / float64(e.currentWorld.NumRows())
 
 	// Render each tile as a hexagon
-	for coord, tile := range e.currentMap.Tiles {
+	for coord, tile := range e.currentWorld.Tiles {
 		if tile == nil {
 			continue
 		}
 
 		// Convert hex coordinates to display coordinates
-		displayRow, displayCol := e.currentMap.HexToDisplay(coord)
+		displayRow, displayCol := e.currentWorld.HexToRowCol(coord)
 
 		// Calculate tile position
 		x := float64(displayCol) * tileWidth
@@ -701,20 +660,20 @@ func (e *MapEditor) renderFullMap() error {
 		}
 
 		// Fill the hexagon
-		e.canvasBuffer.FillPath(hexPoints, fillColor)
+		e.drawable.FillPath(hexPoints, fillColor)
 
 		// Draw border
 		borderColor := Color{R: 0, G: 0, B: 0, A: 100}
 		strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
-		e.canvasBuffer.StrokePath(hexPoints, borderColor, strokeProps)
+		e.drawable.StrokePath(hexPoints, borderColor, strokeProps)
 	}
 
 	return nil
 }
 
 // renderTiles renders specific tiles to the canvas (for partial updates)
-func (e *MapEditor) renderTiles(coords []CubeCoord) error {
-	if e.canvasBuffer == nil || e.currentMap == nil || len(coords) == 0 {
+func (e *WorldEditor) renderTiles(coords []CubeCoord) error {
+	if e.drawable == nil || e.currentWorld == nil || len(coords) == 0 {
 		return nil // No canvas, map, or tiles to render
 	}
 
