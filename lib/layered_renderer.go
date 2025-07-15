@@ -48,7 +48,7 @@ type LayeredRenderer struct {
 
 // NewLayeredRenderer creates a new layered renderer with default tile dimensions
 func NewLayeredRenderer(canvasID string, width, height int) (*LayeredRenderer, error) {
-	return NewLayeredRendererWithTileSize(canvasID, width, height, 60.0, 52.0, 39.0)
+	return NewLayeredRendererWithTileSize(canvasID, width, height, DefaultTileWidth, DefaultTileHeight, DefaultYIncrement)
 }
 
 // NewLayeredRendererWithTileSize creates a new layered renderer with specified tile dimensions
@@ -471,7 +471,7 @@ func (r *LayeredRenderer) drawSimpleHexToBuffer(buffer *Buffer, x, y float64, co
 	for dy := -radiusY; dy <= radiusY; dy++ {
 		for dx := -radiusX; dx <= radiusX; dx++ {
 			// Ellipse equation: (x/a)² + (y/b)² <= 1
-			if float64(dx*dx)/float64(radiusX*radiusX) + float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
+			if float64(dx*dx)/float64(radiusX*radiusX)+float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
 				px, py := centerX+dx, centerY+dy
 				if px >= 0 && py >= 0 && px < r.width && py < r.height {
 					// Convert our Color to color.RGBA
@@ -512,14 +512,14 @@ func (r *LayeredRenderer) hexToPixel(coord CubeCoord) (float64, float64) {
 
 	// Use the exact same calculation as game.go XYForTile
 	x := float64(col)*r.tileWidth + r.tileWidth/2
-	
+
 	// Apply offset for alternating rows (hex grid staggering)
 	isEvenRow := (row % 2) == 0
 	// Assuming odd rows are offset (EvenRowsOffset() returns false)
 	if !isEvenRow {
 		x += r.tileWidth / 2
 	}
-	
+
 	y := float64(row)*r.yIncrement + r.tileHeight/2
 
 	return x, y
@@ -543,7 +543,7 @@ func (r *LayeredRenderer) clearHexArea(buffer *Buffer, coord CubeCoord) {
 	for dy := -radiusY; dy <= radiusY; dy++ {
 		for dx := -radiusX; dx <= radiusX; dx++ {
 			// Ellipse equation: (x/a)² + (y/b)² <= 1
-			if float64(dx*dx)/float64(radiusX*radiusX) + float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
+			if float64(dx*dx)/float64(radiusX*radiusX)+float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
 				px, py := centerX+dx, centerY+dy
 				if px >= 0 && py >= 0 && px < r.width && py < r.height {
 					bufferImg.Set(px, py, transparentColor)
@@ -616,7 +616,7 @@ func (r *LayeredRenderer) drawSimpleUnitToBuffer(buffer *Buffer, x, y float64, p
 	for dy := -radiusY; dy <= radiusY; dy++ {
 		for dx := -radiusX; dx <= radiusX; dx++ {
 			// Ellipse equation: (x/a)² + (y/b)² <= 1
-			if float64(dx*dx)/float64(radiusX*radiusX) + float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
+			if float64(dx*dx)/float64(radiusX*radiusX)+float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
 				px, py := centerX+dx, centerY+dy
 				if px >= 0 && py >= 0 && px < r.width && py < r.height {
 					rgba := color.RGBA{R: unitColor.R, G: unitColor.G, B: unitColor.B, A: unitColor.A}

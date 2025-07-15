@@ -736,9 +736,9 @@ func (g *Game) RowColToPixel(row, col int) (x, y float64) {
 	}
 
 	// Use standard tile dimensions
-	tileWidth := 60.0
-	tileHeight := 52.0
-	yIncrement := 39.0
+	tileWidth := DefaultTileHeight
+	tileHeight := DefaultTileWidth
+	yIncrement := DefaultYIncrement
 
 	return g.Map.XYForTile(row, col, tileWidth, tileHeight, yIncrement)
 }
@@ -750,8 +750,8 @@ func (g *Game) PixelToRowCol(x, y float64) (row, col int, valid bool) {
 	}
 
 	// Use standard tile dimensions
-	tileWidth := 60.0
-	yIncrement := 39.0
+	tileWidth := DefaultTileWidth
+	yIncrement := DefaultYIncrement
 
 	// Calculate approximate row and column
 	row = int(y / yIncrement)

@@ -250,7 +250,6 @@ func (cb *CanvasBuffer) DrawImage(x, y, width, height float64, img image.Image) 
 	cb.context.DrawImage(canvasX, canvasY, img, canvas.Resolution(PixelsPerMM))
 }
 
-
 // RenderToCanvasBuffer creates a canvas buffer-compatible version of RenderToBuffer
 func (g *Game) RenderToCanvasBuffer(canvasBuffer *CanvasBuffer, tileWidth, tileHeight, yIncrement float64) error {
 	// Use the new RenderTo method that works with any Drawable
@@ -305,7 +304,7 @@ func (g *Game) renderMapToCanvas(canvasBuffer *CanvasBuffer, tileWidth, tileHeig
 			}
 
 			// Create hexagon path
-			hexPath := createHexagonPath(centerX, centerY, hexRadius)
+			hexPath := CreateHexagonPath(centerX, centerY, hexRadius)
 
 			// Fill the hexagon
 			ctx.DrawPath(0, 0, hexPath)

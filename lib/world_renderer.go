@@ -4,12 +4,6 @@ package weewar
 // WorldRenderer Interface - Platform-Agnostic Rendering
 // =============================================================================
 
-const (
-	DefaultTileWidth  = 60.0
-	DefaultTileHeight = 52.0
-	DefaultYIncrement = 39.0
-)
-
 // WorldRenderer provides platform-agnostic rendering of game worlds.
 // This interface abstracts away the differences between Buffer (PNG) and CanvasBuffer (HTML Canvas).
 type WorldRenderer interface {

@@ -52,7 +52,7 @@ func createHexPoints(cx, cy, radius float64) []Point {
 }
 
 // createHexagonPath creates a hexagon path centered at (cx, cy) with given radius
-func createHexagonPath(cx, cy, radius float64) *canvas.Path {
+func CreateHexagonPath(cx, cy, radius float64) *canvas.Path {
 	path := &canvas.Path{}
 
 	// Create hexagon with 6 sides
