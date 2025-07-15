@@ -183,12 +183,14 @@ func (w *World) MoveUnit(unit *Unit, newCoord CubeCoord) {
 // =============================================================================
 
 // IsValidPosition checks if the given coordinates are within the world bounds
+/*
 func (w *World) IsValidPosition(coord CubeCoord) bool {
 	if w.Map == nil {
 		return false
 	}
 	return row >= 0 && row < w.Map.NumRows() && col >= 0 && col < w.Map.NumCols()
 }
+*/
 
 // GetWorldBounds returns the bounding box of the world in display coordinates
 func (w *World) GetWorldBoundsRect() (minRow, minCol, maxRow, maxCol int) {

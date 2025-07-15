@@ -188,13 +188,42 @@ func (br *BufferRenderer) RenderUI(world *World, viewState *ViewState, drawable 
 
 // renderHealthBar renders a health bar for a unit using Game's proven method
 func (br *BufferRenderer) renderHealthBar(drawable Drawable, x, y, tileWidth, tileHeight float64, currentHealth, maxHealth int) {
-	// For now, only render health bars on Buffer (since Game's method expects Buffer)
-	if buffer, ok := drawable.(*Buffer); ok {
-		// Create a temporary game to access the renderHealthBar method
-		tempGame := &Game{}
-		tempGame.renderHealthBar(buffer, x, y, tileWidth, tileHeight, currentHealth, maxHealth)
+	if currentHealth >= maxHealth {
+		return // Don't render health bar for full health
 	}
-	// For non-Buffer drawables, we could implement a simplified health bar here if needed
+
+	// Calculate health bar dimensions
+	barWidth := tileWidth * 0.8
+	barHeight := 6.0
+	barX := x - barWidth/2
+	barY := y + tileHeight/2 - barHeight - 2
+
+	// Background bar (red)
+	backgroundBar := []Point{
+		{X: barX, Y: barY},
+		{X: barX + barWidth, Y: barY},
+		{X: barX + barWidth, Y: barY + barHeight},
+		{X: barX, Y: barY + barHeight},
+	}
+	redColor := Color{R: 255, G: 0, B: 0, A: 255}
+	drawable.FillPath(backgroundBar, redColor)
+
+	// Health bar (green, proportional to health)
+	healthRatio := float64(currentHealth) / float64(maxHealth)
+	healthWidth := barWidth * healthRatio
+	healthBar := []Point{
+		{X: barX, Y: barY},
+		{X: barX + healthWidth, Y: barY},
+		{X: barX + healthWidth, Y: barY + barHeight},
+		{X: barX, Y: barY + barHeight},
+	}
+	greenColor := Color{R: 0, G: 255, B: 0, A: 255}
+	drawable.FillPath(healthBar, greenColor)
+
+	// Health bar border
+	borderColor := Color{R: 0, G: 0, B: 0, A: 255}
+	strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}
+	drawable.StrokePath(backgroundBar, borderColor, strokeProps)
 }
 
 // =============================================================================

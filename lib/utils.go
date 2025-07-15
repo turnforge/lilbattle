@@ -6,6 +6,13 @@ import (
 	"github.com/tdewolff/canvas"
 )
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 // Helper function to create circle points
 func createCirclePoints(centerX, centerY, radius float64, segments int) []Point {
 	points := make([]Point, segments)
