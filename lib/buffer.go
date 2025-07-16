@@ -3,6 +3,7 @@ package weewar
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -158,12 +159,12 @@ func (b *Buffer) Save(path string) error {
 // ToDataURL converts the buffer to a base64 data URL for web use
 func (b *Buffer) ToDataURL() (string, error) {
 	var buf bytes.Buffer
-	
+
 	err := png.Encode(&buf, b.img)
 	if err != nil {
 		return "", err
 	}
-	
+
 	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
 	return "data:image/png;base64," + encoded, nil
 }
@@ -210,22 +211,15 @@ func (b *Buffer) FillPath(points []Point, fillColor Color) {
 	// Fill the path
 	ctx.Fill()
 
-	// Render canvas to a temporary file and then load it
-	tempFile := "/tmp/temp_fill.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
+	// Render canvas to bytes buffer
+	var buf bytes.Buffer
+	err := c.Write(&buf, renderers.PNG(canvas.DPMM(PixelsPerMM)))
 	if err != nil {
 		return // Skip if rendering fails
 	}
 
-	// Load the temporary image
-	file, err := os.Open(tempFile)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	defer os.Remove(tempFile)
-
-	tempImg, _, err := image.Decode(file)
+	// Decode the image from bytes
+	tempImg, _, err := image.Decode(&buf)
 	if err != nil {
 		return
 	}
@@ -292,22 +286,15 @@ func (b *Buffer) StrokePath(points []Point, strokeColor Color, strokeProperties 
 	// Stroke the path
 	ctx.Stroke()
 
-	// Render canvas to a temporary file and then load it
-	tempFile := "/tmp/temp_stroke.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
+	// Render canvas to bytes buffer
+	var buf bytes.Buffer
+	err := c.Write(&buf, renderers.PNG(canvas.DPMM(PixelsPerMM)))
 	if err != nil {
 		return // Skip if rendering fails
 	}
 
-	// Load the temporary image
-	file, err := os.Open(tempFile)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	defer os.Remove(tempFile)
-
-	tempImg, _, err := image.Decode(file)
+	// Decode the image from bytes
+	tempImg, _, err := image.Decode(&buf)
 	if err != nil {
 		return
 	}
@@ -337,7 +324,7 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 
 	// Choose font weight
 	fontWeight := canvas.FontRegular
-	if bold {
+	if true || bold {
 		fontWeight = canvas.FontBold
 	}
 
@@ -345,29 +332,32 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 	rgba := color.RGBA{R: textColor.R, G: textColor.G, B: textColor.B, A: textColor.A}
 
 	// Convert font size from pixels to mm
-	face := fontFamily.Face(fontSize/PixelsPerMM, rgba, fontWeight, canvas.FontNormal)
+	face := fontFamily.Face(fontSize, rgba, fontWeight, canvas.FontNormal)
+
+	// Set fill color on context to match text color
+	ctx.SetFillColor(rgba)
 
 	// Create text line for rendering
 	textLine := canvas.NewTextLine(face, text, canvas.Left)
+
+	// Get text bounds to position background properly
+	bounds := textLine.Bounds()
+
+	// Position background to properly contain text
+	// Canvas DrawText positions text at baseline, estimate descender space
+	textWidth := bounds.W()
+	textHeight := bounds.H()
 
 	// Convert buffer coordinates to canvas coordinates (once)
 	canvasX, canvasY := b.bufferToCanvasXY(x, y)
 
 	// Draw background rectangle if specified
-	if backgroundColor.A > 0 {
+	if false && backgroundColor.A > 0 {
 		// Add padding around text (in mm)
 		padding := 2.0 / PixelsPerMM // Convert 2 pixels to mm
 
-		// Get text bounds to position background properly
-		bounds := textLine.Bounds()
-
-		// Position background to properly contain text
-		// Canvas DrawText positions text at baseline, estimate descender space
-		textWidth := bounds.W()
-		textHeight := bounds.H()
-		
 		bgX := canvasX - padding
-		bgY := canvasY - (textHeight * 0.2) - padding  // Account for descenders below baseline
+		bgY := canvasY - (textHeight * 0.2) - padding // Account for descenders below baseline
 		bgWidth := textWidth + (padding * 2)
 		bgHeight := textHeight + (padding * 2)
 
@@ -376,25 +366,24 @@ func (b *Buffer) DrawTextWithStyle(x, y float64, text string, fontSize float64, 
 		ctx.Fill()
 	}
 
-	// Draw the text using converted coordinates
-	ctx.DrawText(canvasX, canvasY, textLine)
+	// Reset fill color to text color after drawing background
+	// ctx.SetStrokeColor(rgba)
+	// ctx.SetFillColor(rgba)
 
-	// Render canvas to a temporary file and then load it
-	tempFile := "/tmp/temp_text.png"
-	err := renderers.Write(tempFile, c, canvas.DPMM(PixelsPerMM))
+	// Draw the text using converted coordinates
+	ctx.DrawText(canvasX-(textWidth/2), canvasY, textLine)
+	// ctx.Fill()
+
+	// Render canvas to bytes buffer
+	var buf bytes.Buffer
+	err := c.Write(&buf, renderers.PNG(canvas.DPMM(PixelsPerMM)))
 	if err != nil {
+		fmt.Println("error: ", err)
 		return // Skip if rendering fails
 	}
 
-	// Load the temporary image
-	file, err := os.Open(tempFile)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	defer os.Remove(tempFile)
-
-	tempImg, _, err := image.Decode(file)
+	// Decode the image from bytes
+	tempImg, _, err := image.Decode(&buf)
 	if err != nil {
 		return
 	}

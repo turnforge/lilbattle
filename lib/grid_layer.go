@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"image/draw"
-	"log"
 )
 
 // =============================================================================
@@ -53,9 +52,9 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 			currX = startX + options.TileWidth/2.0
 		}
 		rowCoord := leftCoord
-		fmt.Println("Row, LeftCoord: ", i, y, leftCoord)
+		// fmt.Println("Row, LeftCoord: ", i, y, leftCoord)
 		for ; currX < width; currX += options.TileWidth {
-			fmt.Println("currX, currY, Coord: ", currX, y, rowCoord, width, height, options)
+			// fmt.Println("currX, currY, Coord: ", currX, y, rowCoord, width, height, options)
 			// Draw grid lines if enabled
 			if options.ShowGrid {
 				gl.drawHexGrid(currX, y, options)
@@ -90,8 +89,6 @@ func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOp
 	// Get hexagon vertices
 	vertices := gl.getHexVertices(centerX, centerY, options.TileWidth, options.TileHeight)
 
-	log.Println("centerX, centerY, Vertices: ", centerX, centerY, vertices)
-
 	// Draw lines between vertices
 	gridColor := color.RGBA{R: 128, G: 128, B: 128, A: 255} // Dark gray
 	bufferImg := gl.buffer.GetImageData()
@@ -107,7 +104,7 @@ func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOp
 // drawCoordinates draws Q,R coordinates in the center of a hex
 func (gl *GridLayer) drawCoordinates(coord CubeCoord, centerX, centerY float64, options LayerRenderOptions) {
 	// Format coordinate text
-	text := "Hello World" // fmt.Sprintf("%d,%d", coord.Q, coord.R)
+	text := fmt.Sprintf("%d,%d", coord.Q, coord.R)
 
 	// Only draw text if it's within the visible area
 	if centerX < 0 || centerY < 0 || centerX > float64(gl.width) || centerY > float64(gl.height) {
@@ -115,15 +112,15 @@ func (gl *GridLayer) drawCoordinates(coord CubeCoord, centerX, centerY float64, 
 	}
 
 	// Use the buffer's DrawText method with embedded font
-	fontSize := 32.0
-	textColor := Color{R: 0, G: 0, B: 0, A: 255}             // Black text for better visibility
-	backgroundColor := Color{R: 255, G: 255, B: 255, A: 200} // Semi-transparent white background
+	fontSize := 12.0
+	textColor := Color{R: 20, G: 25, B: 25, A: 255}          // Black text for better visibility
+	backgroundColor := Color{R: 255, G: 255, B: 255, A: 255} // Semi-transparent white background
 
 	// Draw text at hex center with background
 	gl.buffer.DrawTextWithStyle(centerX, centerY, text, fontSize, textColor, false, backgroundColor)
 
 	// Log the coordinate for debugging
-	fmt.Printf("DEBUG: Drew coordinate text '%s' at (%.1f, %.1f)\n", text, centerX, centerY)
+	// fmt.Printf("DEBUG: Drew coordinate text '%s' at (%.1f, %.1f)\n", text, centerX, centerY)
 }
 
 // getHexVertices returns the vertices of a hexagon centered at (centerX, centerY)

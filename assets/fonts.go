@@ -4,5 +4,5 @@ import (
 	_ "embed"
 )
 
-//go:embed fonts/Roboto-Regular.ttf
+//go:embed fonts/static/Roboto-Bold.ttf
 var RobotoRegularTTF []byte
