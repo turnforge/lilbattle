@@ -30,6 +30,7 @@ type WorldEditor struct {
 
 	unitLayer *UnitLayer
 	tileLayer *TileLayer
+	gridLayer *GridLayer
 }
 
 // NewWorldEditor creates a new world editor instance
@@ -152,6 +153,24 @@ func (e *WorldEditor) SetBrushSize(size int) error {
 		return fmt.Errorf("invalid brush size: %d (must be 0-5)", size)
 	}
 	e.brushSize = size
+	return nil
+}
+
+// SetShowGrid enables or disables grid line rendering
+func (e *WorldEditor) SetShowGrid(showGrid bool) error {
+	if e.layeredRenderer == nil {
+		return fmt.Errorf("no layered renderer available")
+	}
+	e.layeredRenderer.renderOptions.ShowGrid = showGrid
+	return nil
+}
+
+// SetShowCoordinates enables or disables coordinate label rendering
+func (e *WorldEditor) SetShowCoordinates(showCoordinates bool) error {
+	if e.layeredRenderer == nil {
+		return fmt.Errorf("no layered renderer available")
+	}
+	e.layeredRenderer.renderOptions.ShowCoordinates = showCoordinates
 	return nil
 }
 
@@ -421,9 +440,11 @@ func (e *WorldEditor) SetDrawable(drawable Drawable, width, height int) error {
 
 	e.tileLayer = NewTileLayer(width, height, e.layeredRenderer)
 	e.unitLayer = NewUnitLayer(width, height, e.layeredRenderer)
+	e.gridLayer = NewGridLayer(width, height, e.layeredRenderer)
 	e.layeredRenderer.layers = []Layer{
-		e.tileLayer,
-		e.unitLayer,
+		e.gridLayer, // Grid layer renders first (background)
+		e.tileLayer, // Terrain tiles (middle layer)
+		e.unitLayer, // Units (top layer)
 	}
 
 	return nil

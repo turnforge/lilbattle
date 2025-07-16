@@ -164,6 +164,14 @@ func registerEditorFunctions() {
 	js.Global().Set("editorSetBrushSize", createWrapper(1, 1, func(args []js.Value) (interface{}, error) {
 		return setBrushSize(args[0].Int())
 	}))
+	
+	// Visual settings
+	js.Global().Set("editorSetShowGrid", createWrapper(1, 1, func(args []js.Value) (interface{}, error) {
+		return nil, setShowGrid(args[0].Bool())
+	}))
+	js.Global().Set("editorSetShowCoordinates", createWrapper(1, 1, func(args []js.Value) (interface{}, error) {
+		return nil, setShowCoordinates(args[0].Bool())
+	}))
 
 	// Rendering
 	js.Global().Set("editorRender", createWrapper(0, 0, func(args []js.Value) (interface{}, error) {
@@ -182,6 +190,9 @@ func registerEditorFunctions() {
 	}))
 	js.Global().Set("editorGetTerrainTypes", createWrapper(0, 0, func(args []js.Value) (interface{}, error) {
 		return getTerrainTypes()
+	}))
+	js.Global().Set("editorGetTileDimensions", createWrapper(0, 0, func(args []js.Value) (interface{}, error) {
+		return getTileDimensions()
 	}))
 }
 
@@ -266,6 +277,14 @@ func setBrushSize(size int) (map[string]interface{}, error) {
 	}, nil
 }
 
+func setShowGrid(showGrid bool) error {
+	return globalEditor.SetShowGrid(showGrid)
+}
+
+func setShowCoordinates(showCoordinates bool) error {
+	return globalEditor.SetShowCoordinates(showCoordinates)
+}
+
 func renderEditor() error {
 	return globalEditor.RenderFull()
 }
@@ -323,6 +342,14 @@ func getTerrainTypes() (map[string]interface{}, error) {
 
 	return map[string]interface{}{
 		"terrainTypes": terrainTypes,
+	}, nil
+}
+
+func getTileDimensions() (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"tileWidth":   int(weewar.DefaultTileWidth),
+		"tileHeight":  int(weewar.DefaultTileHeight),
+		"yIncrement":  int(weewar.DefaultYIncrement),
 	}, nil
 }
 

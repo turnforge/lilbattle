@@ -31,6 +31,17 @@ class MapEditorPage {
     private mapCanvas: HTMLCanvasElement | null = null;
     private canvasContext: CanvasRenderingContext2D | null = null;
     private editorOutput: HTMLElement | null = null;
+    
+    // Tile dimensions for client-side calculations
+    private tileDimensions: {
+        tileWidth: number;
+        tileHeight: number;
+        yIncrement: number;
+    } | null = null;
+    
+    // Scroll and padding management
+    private scrollOffset: { x: number; y: number } = { x: 0, y: 0 };
+    private canvasPadding: number = 150; // Padding around map for extension
 
     // WASM interface
     private wasmModule: any = null;
@@ -48,6 +59,69 @@ class MapEditorPage {
         this.bindEvents();
         this.loadInitialState();
         this.initializeWasm();
+    }
+    
+    // Calculate canvas size with padding for map extension
+    private calculateCanvasSize(mapWidth: number, mapHeight: number): { width: number; height: number } {
+        if (!this.tileDimensions) {
+            // Fallback calculation
+            return {
+                width: Math.max(mapWidth * 40 + 2 * this.canvasPadding, 400),
+                height: Math.max(mapHeight * 35 + 2 * this.canvasPadding, 300)
+            };
+        }
+        
+        // Calculate based on actual tile dimensions
+        const mapPixelWidth = mapWidth * this.tileDimensions.tileWidth;
+        const mapPixelHeight = mapHeight * this.tileDimensions.yIncrement;
+        
+        return {
+            width: Math.max(mapPixelWidth + 2 * this.canvasPadding, 400),
+            height: Math.max(mapPixelHeight + 2 * this.canvasPadding, 300)
+        };
+    }
+    
+    // Client-side coordinate conversion using cached tile dimensions
+    private clientPixelToCoords(x: number, y: number): { q: number; r: number; withinBounds: boolean } {
+        if (!this.tileDimensions) {
+            // Fallback - use WASM function
+            const result = (window as any).pixelToCoords(x, y);
+            return {
+                q: result.data.cubeQ,
+                r: result.data.cubeR,
+                withinBounds: result.data.withinBounds
+            };
+        }
+        
+        // Adjust for scroll offset
+        const adjustedX = x - this.scrollOffset.x;
+        const adjustedY = y - this.scrollOffset.y;
+        
+        // Simple hex coordinate conversion (can be optimized)
+        const col = Math.floor(adjustedX / (this.tileDimensions.tileWidth * 0.75));
+        const row = Math.floor(adjustedY / this.tileDimensions.yIncrement);
+        
+        // Convert to cube coordinates (simplified)
+        const q = col;
+        const r = row;
+        
+        // Check if within current map bounds
+        const withinBounds = this.mapData ? 
+            (q >= 0 && q < this.mapData.width && r >= 0 && r < this.mapData.height) : false;
+        
+        return { q, r, withinBounds };
+    }
+    
+    // Set scroll offset (for panning/zooming)
+    public setScrollOffset(x: number, y: number): void {
+        this.scrollOffset = { x, y };
+        // Request editor refresh after scroll change
+        this.editorRefresh();
+    }
+    
+    // Get current scroll offset
+    public getScrollOffset(): { x: number; y: number } {
+        return { ...this.scrollOffset };
     }
 
     private initializeComponents(): void {
@@ -179,15 +253,6 @@ class MapEditorPage {
             clearConsoleButton.addEventListener('click', this.clearConsole.bind(this));
         }
 
-        // Map management buttons
-        document.querySelectorAll('[data-action="create-new-map"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const target = e.target as HTMLElement;
-                const width = parseInt(target.dataset.width || '8');
-                const height = parseInt(target.dataset.height || '8');
-                this.createNewMap(width, height);
-            });
-        });
 
         // Terrain palette buttons
         document.querySelectorAll('.terrain-button').forEach(button => {
@@ -217,6 +282,23 @@ class MapEditorPage {
         document.querySelector('[data-action="remove-terrain"]')?.addEventListener('click', () => {
             this.removeTerrain();
         });
+
+        // Visual options
+        const showGridCheckbox = document.getElementById('show-grid') as HTMLInputElement;
+        if (showGridCheckbox) {
+            showGridCheckbox.addEventListener('change', (e) => {
+                const checked = (e.target as HTMLInputElement).checked;
+                this.setShowGrid(checked);
+            });
+        }
+        
+        const showCoordinatesCheckbox = document.getElementById('show-coordinates') as HTMLInputElement;
+        if (showCoordinatesCheckbox) {
+            showCoordinatesCheckbox.addEventListener('change', (e) => {
+                const checked = (e.target as HTMLInputElement).checked;
+                this.setShowCoordinates(checked);
+            });
+        }
 
         // History buttons
         document.querySelector('[data-action="undo"]')?.addEventListener('click', () => {
@@ -325,84 +407,72 @@ class MapEditorPage {
             this.logToConsole('Loading WASM module...');
             
             // Check if WASM functions are available
-            if (typeof (window as any).editorCreate === 'undefined') {
+            if (typeof (window as any).editorSetCanvas === 'undefined') {
                 this.logToConsole('WASM functions not available - loading WASM module...');
                 await this.loadWasmModule();
                 // Check again after loading
-                if (typeof (window as any).editorCreate === 'undefined') {
+                if (typeof (window as any).editorSetCanvas === 'undefined') {
                     throw new Error('WASM module loaded but functions not available');
                 }
             }
             
-            // Initialize WASM editor with canvas binding (auto-sized)
-            this.logToConsole('Initializing WASM editor...');
-            const editorResult = (window as any).editorCreate('map-canvas');
-            if (!editorResult.success) {
-                throw new Error(editorResult.error);
+            // Get tile dimensions for client-side calculations
+            this.logToConsole('Getting tile dimensions...');
+            const tileDimResult = (window as any).editorGetTileDimensions();
+            if (!tileDimResult.success) {
+                throw new Error(tileDimResult.error);
             }
-            this.logToConsole(`Editor bound to canvas: ${editorResult.data.canvasID}`);
             
-            // Apply initial canvas size from WASM
-            this.resizeCanvas(editorResult.data.canvasWidth, editorResult.data.canvasHeight);
+            // Store tile dimensions for client-side use
+            this.tileDimensions = {
+                tileWidth: tileDimResult.data.tileWidth,
+                tileHeight: tileDimResult.data.tileHeight,
+                yIncrement: tileDimResult.data.yIncrement
+            };
+            this.logToConsole(`Tile dimensions: ${JSON.stringify(this.tileDimensions)}`);
             
-            // Update local map data with initial size
+            // Get initial map info from the global editor
+            this.logToConsole('Getting initial map info...');
+            const mapInfoResult = (window as any).editorGetMapInfo();
+            if (!mapInfoResult.success) {
+                throw new Error(mapInfoResult.error);
+            }
+            
+            // Calculate initial canvas size with padding
+            const canvasSize = this.calculateCanvasSize(mapInfoResult.data.width, mapInfoResult.data.height);
+            
+            // Bind WASM editor to canvas
+            this.logToConsole('Binding WASM editor to canvas...');
+            const canvasResult = (window as any).editorSetCanvas('map-canvas', canvasSize.width, canvasSize.height);
+            if (!canvasResult.success) {
+                throw new Error(canvasResult.error);
+            }
+            this.logToConsole(`Editor bound to canvas: ${canvasResult.data.canvasID}`);
+            
+            // Apply canvas size
+            this.resizeCanvas(canvasSize.width, canvasSize.height);
+            
+            // Update local map data with initial info
             this.mapData = {
-                name: "New Map",
-                width: editorResult.data.mapWidth,
-                height: editorResult.data.mapHeight,
+                name: mapInfoResult.data.filename || 'Default Map',
+                width: mapInfoResult.data.width,
+                height: mapInfoResult.data.height,
                 tiles: {},
                 map_units: []
             };
             
-            // Create World-Renderer components
-            this.logToConsole('Creating World-Renderer components...');
-            
-            // Create World
-            const worldResult = (window as any).worldCreate(2, null, 12345);
-            if (!worldResult.success) {
-                throw new Error(`World creation failed: ${worldResult.error}`);
-            }
-            this.wasmWorld = worldResult.data;
-            
-            // Create ViewState
-            const viewStateResult = (window as any).viewStateCreate();
-            if (!viewStateResult.success) {
-                throw new Error(`ViewState creation failed: ${viewStateResult.error}`);
-            }
-            this.wasmViewState = viewStateResult.data;
-            
-            // Create CanvasRenderer
-            const rendererResult = (window as any).canvasRendererCreate();
-            if (!rendererResult.success) {
-                throw new Error(`CanvasRenderer creation failed: ${rendererResult.error}`);
-            }
-            this.wasmCanvasRenderer = rendererResult.data;
-            
-            // Load embedded assets for terrain images
-            this.logToConsole('Loading embedded terrain and unit assets...');
-            const assetsResult = (window as any).loadEmbeddedAssets();
-            if (assetsResult.success) {
-                this.logToConsole(`Assets loaded: ${assetsResult.data.tilesLoaded} tiles, ${assetsResult.data.unitsLoaded} units`);
-            } else {
-                this.logToConsole(`Asset loading failed: ${assetsResult.error}`);
-                // Continue anyway - we can still render with fallback colors
-            }
-            
-            // Test asset loading to verify
-            const testResult = (window as any).testEmbeddedAssets();
-            if (testResult.success) {
-                this.logToConsole(`Asset test: ${testResult.data.tilesInCache} tiles, ${testResult.data.unitsInCache} units in cache`);
-                if (testResult.data.tileLoadError) {
-                    this.logToConsole(`Tile load error: ${testResult.data.tileLoadError}`);
-                }
-                if (testResult.data.unitLoadError) {
-                    this.logToConsole(`Unit load error: ${testResult.data.unitLoadError}`);
-                }
-            }
+            // Initialize scroll offsets with padding
+            this.scrollOffset = {
+                x: this.canvasPadding,
+                y: this.canvasPadding
+            };
             
             this.wasmInitialized = true;
             this.updateEditorStatus('Ready');
-            this.logToConsole('WASM module loaded and initialized successfully');
+            this.logToConsole('WASM editor initialized successfully');
+            
+            // Request initial editor refresh
+            this.editorRefresh();
             
         } catch (error) {
             console.error('Failed to initialize WASM:', error);
@@ -475,40 +545,6 @@ class MapEditorPage {
     }
 
     // Editor functions called by the template
-    public createNewMap(width: number, height: number): void {
-        this.logToConsole(`Time: ${performance.now()} Creating new ${width}×${height} map...`);
-        
-        // Create new map using WASM - it will automatically render to canvas
-        if (this.wasmInitialized) {
-            try {
-                const result = (window as any).editorSetMapSize(height, width); // Note: WASM expects (rows, cols)
-                if (result.success) {
-                    this.logToConsole(`${result.message}`);
-                    
-                    // Resize canvas to match new map dimensions
-                    if (result.data.canvasWidth && result.data.canvasHeight) {
-                        this.resizeCanvas(result.data.canvasWidth, result.data.canvasHeight);
-                    }
-                    
-                    // Update local map data to stay in sync
-                    this.mapData = {
-                        name: `New ${width}×${height} Map`,
-                        width,
-                        height,
-                        tiles: {},
-                        map_units: []
-                    };
-                    
-                    this.updateEditorStatus('Ready');
-                    this.logToConsole(`Time: ${performance.now()} New map created and rendered`);
-                } else {
-                    this.logToConsole(`WASM map creation failed: ${result.error}`);
-                }
-            } catch (error) {
-                this.logToConsole(`WASM map creation error: ${error}`);
-            }
-        }
-    }
 
     public setBrushTerrain(terrain: number): void {
         this.currentTerrain = terrain;
@@ -549,6 +585,38 @@ class MapEditorPage {
         const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
         this.logToConsole(`Brush size set to: ${sizeNames[size]}`);
         this.updateBrushInfo();
+    }
+    
+    public setShowGrid(showGrid: boolean): void {
+        if (this.wasmInitialized) {
+            try {
+                const result = (window as any).editorSetShowGrid(showGrid);
+                if (!result.success) {
+                    this.logToConsole(`WASM setShowGrid failed: ${result.error}`);
+                } else {
+                    this.logToConsole(`Grid visibility set to: ${showGrid}`);
+                    this.editorRefresh();
+                }
+            } catch (error) {
+                this.logToConsole(`WASM setShowGrid error: ${error}`);
+            }
+        }
+    }
+    
+    public setShowCoordinates(showCoordinates: boolean): void {
+        if (this.wasmInitialized) {
+            try {
+                const result = (window as any).editorSetShowCoordinates(showCoordinates);
+                if (!result.success) {
+                    this.logToConsole(`WASM setShowCoordinates failed: ${result.error}`);
+                } else {
+                    this.logToConsole(`Coordinate visibility set to: ${showCoordinates}`);
+                    this.editorRefresh();
+                }
+            } catch (error) {
+                this.logToConsole(`WASM setShowCoordinates error: ${error}`);
+            }
+        }
     }
 
     public paintTerrain(): void {
@@ -603,6 +671,22 @@ class MapEditorPage {
         
         // WASM now handles rendering automatically when map changes
         this.logToConsole('Map rendering handled by WASM');
+    }
+    
+    // Request a refresh from the WASM editor (non-blocking)
+    private editorRefresh(): void {
+        if (!this.wasmInitialized) {
+            return;
+        }
+        
+        try {
+            const result = (window as any).editorRender();
+            if (!result.success) {
+                this.logToConsole(`Editor refresh failed: ${result.error}`);
+            }
+        } catch (error) {
+            this.logToConsole(`Editor refresh error: ${error}`);
+        }
     }
 
     public downloadImage(): void {
@@ -731,14 +815,22 @@ class MapEditorPage {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
         
-        const coords = this.pixelToHex(x, y);
-        if (coords) {
-            // Update coordinate inputs
-            const rowInput = document.getElementById('paint-row') as HTMLInputElement;
-            const colInput = document.getElementById('paint-col') as HTMLInputElement;
-            
-            if (rowInput) rowInput.value = coords.row.toString();
-            if (colInput) colInput.value = coords.col.toString();
+        // Use client-side coordinate conversion for performance
+        const coords = this.clientPixelToCoords(x, y);
+        
+        // Update coordinate inputs with cube coordinates
+        const rowInput = document.getElementById('paint-row') as HTMLInputElement;
+        const colInput = document.getElementById('paint-col') as HTMLInputElement;
+        
+        if (rowInput) rowInput.value = coords.r.toString();
+        if (colInput) colInput.value = coords.q.toString();
+        
+        // Show if cursor is outside map bounds (for potential extension)
+        if (!coords.withinBounds) {
+            // Visual feedback for extension area
+            this.mapCanvas.style.cursor = 'pointer';
+        } else {
+            this.mapCanvas.style.cursor = 'default';
         }
     }
 

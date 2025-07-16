@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 )
 
 // Layer represents a single rendering layer (terrain, units, UI, etc.)
@@ -159,7 +160,7 @@ func (tl *BaseLayer) drawSimpleHexToBuffer(x, y float64, hexColor Color, options
 }
 
 // parseHexColor converts hex color string to Color
-func (tl *TileLayer) parseHexColor(hexColor string) Color {
+func (tl *BaseLayer) parseHexColor(hexColor string) Color {
 	if len(hexColor) > 0 && hexColor[0] == '#' {
 		hexColor = hexColor[1:]
 	}
@@ -177,260 +178,186 @@ func (tl *TileLayer) parseHexColor(hexColor string) Color {
 }
 
 // =============================================================================
-// TileLayer - Terrain Rendering
+// GridLayer - Grid Line and Coordinate Rendering
 // =============================================================================
 
-// TileLayer handles rendering of terrain tiles
-type TileLayer struct {
-	*BaseLayer
-	terrainSprites map[int]image.Image // Cached terrain sprites
-}
-
-// NewTileLayer creates a new tile layer
-func NewTileLayer(width, height int, scheduler LayerScheduler) *TileLayer {
-	return &TileLayer{
-		BaseLayer:      NewBaseLayer("terrain", width, height, scheduler),
-		terrainSprites: make(map[int]image.Image),
+// NewGridLayer creates a new grid layer
+func NewGridLayer(width, height int, scheduler LayerScheduler) *GridLayer {
+	return &GridLayer{
+		BaseLayer: NewBaseLayer("grid", width, height, scheduler),
 	}
 }
 
-// Render renders terrain tiles to the layer buffer
-func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
+// Render renders hex grid lines and coordinates
+func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	if world == nil || world.Map == nil {
 		return
 	}
 
-	// Clear buffer if full rebuild needed
-	if tl.allDirty {
-		tl.buffer.Clear()
-
-		// Render all tiles
-		for coord, tile := range world.Map.Tiles {
-			if tile != nil {
-				tl.renderTile(world, coord, tile, options)
-			}
+	// Only render if grid or coordinates are enabled
+	if !options.ShowGrid && !options.ShowCoordinates {
+		if !gl.allDirty {
+			return // Nothing to render
 		}
-
-		tl.allDirty = false
-	} else {
-		// Render only dirty tiles
-		for coord := range tl.dirtyCoords {
-			tile := world.Map.TileAt(coord)
-			tl.renderTile(world, coord, tile, options)
-		}
-	}
-
-	// Clear dirty tracking
-	tl.ClearDirty()
-}
-
-// renderTile renders a single terrain tile
-func (tl *TileLayer) renderTile(world *World, coord CubeCoord, tile *Tile, options LayerRenderOptions) {
-	if tile == nil {
+		// Clear buffer if switching from visible to hidden
+		gl.buffer.Clear()
+		gl.allDirty = false
+		gl.ClearDirty()
 		return
 	}
 
-	// Get pixel position using Map's coordinate system
-	x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+	// Clear buffer for full redraw (grid/coordinates are view-dependent)
+	gl.buffer.Clear()
 
-	// Apply viewport offset
-	x += options.ScrollX
-	y += options.ScrollY
+	// Get all tiles in the map
+	tiles := world.Map.Tiles
 
-	// Try to use real terrain sprite if available
-	if tl.assetProvider != nil && tl.assetProvider.HasTileAsset(tile.TileType) {
-		tl.renderTerrainSprite(tile.TileType, x, y, options)
-	} else {
-		// Fallback to colored hexagon
-		color := tl.getTerrainColor(tile.TileType)
-		tl.drawSimpleHexToBuffer(x, y, color, options)
-	}
-}
-
-// renderTerrainSprite renders a terrain sprite
-func (tl *TileLayer) renderTerrainSprite(tileType int, x, y float64, options LayerRenderOptions) {
-	// Check cache first
-	cachedSprite, exists := tl.terrainSprites[tileType]
-	if !exists {
-		// Load and cache sprite
-		img, err := tl.assetProvider.GetTileImage(tileType)
-		if err != nil {
-			// Fallback to colored hex
-			color := tl.getTerrainColor(tileType)
-			tl.drawSimpleHexToBuffer(x, y, color, options)
-			return
+	for coord, tile := range tiles {
+		if tile == nil {
+			continue
 		}
-		tl.terrainSprites[tileType] = img
-		cachedSprite = img
+
+		// Get pixel position for this tile
+		x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+
+		// Apply viewport offset
+		x += options.ScrollX
+		y += options.ScrollY
+
+		// Check if tile is within visible area
+		if x < -options.TileWidth || x > float64(gl.width)+options.TileWidth ||
+			y < -options.TileHeight || y > float64(gl.height)+options.TileHeight {
+			continue
+		}
+
+		// Draw grid lines if enabled
+		if options.ShowGrid {
+			gl.drawHexGrid(x, y, options)
+		}
+
+		// Draw coordinates if enabled
+		if options.ShowCoordinates {
+			gl.drawCoordinates(coord, x, y, options)
+		}
 	}
 
-	// Draw sprite to buffer
-	tl.drawImageToBuffer(cachedSprite, x, y, options.TileWidth, options.TileHeight)
+	// Mark as clean
+	gl.allDirty = false
+	gl.ClearDirty()
 }
 
-// getTerrainColor returns color for terrain type
-func (tl *TileLayer) getTerrainColor(terrainType int) Color {
-	switch terrainType {
-	case 1: // Grass
-		return Color{R: 0x22, G: 0x8B, B: 0x22}
-	case 2: // Desert
-		return Color{R: 0xEE, G: 0xCB, B: 0xAD}
-	case 3: // Water
-		return Color{R: 0x41, G: 0x69, B: 0xE1}
-	case 4: // Mountain
-		return Color{R: 0x8B, G: 0x89, B: 0x89}
-	case 5: // Rock
-		return Color{R: 0x69, G: 0x69, B: 0x69}
-	default:
-		return Color{R: 0xC8, G: 0xC8, B: 0xC8}
+// drawHexGrid draws hexagonal grid lines around a tile
+func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOptions) {
+	// Get hexagon vertices
+	vertices := gl.getHexVertices(centerX, centerY, options.TileWidth, options.TileHeight)
+
+	// Draw lines between vertices
+	gridColor := color.RGBA{R: 64, G: 64, B: 64, A: 255} // Dark gray
+	bufferImg := gl.buffer.GetImageData()
+
+	for i := 0; i < len(vertices); i++ {
+		x1, y1 := vertices[i][0], vertices[i][1]
+		x2, y2 := vertices[(i+1)%len(vertices)][0], vertices[(i+1)%len(vertices)][1]
+
+		gl.drawLine(bufferImg, int(x1), int(y1), int(x2), int(y2), gridColor)
 	}
 }
 
-// =============================================================================
-// UnitLayer - Unit Rendering
-// =============================================================================
+// drawCoordinates draws Q,R coordinates in the center of a hex
+func (gl *GridLayer) drawCoordinates(coord CubeCoord, centerX, centerY float64, options LayerRenderOptions) {
+	// Simple text rendering - draw coordinate text
+	text := fmt.Sprintf("%d,%d", coord.Q, coord.R)
 
-// UnitLayer handles rendering of units
-type UnitLayer struct {
-	*BaseLayer
-	unitSprites map[string]image.Image // Cached unit sprites by "type_player"
+	// For now, draw a simple representation (can be enhanced with proper text rendering)
+	gl.drawSimpleText(text, centerX, centerY)
 }
 
-// NewUnitLayer creates a new unit layer
-func NewUnitLayer(width, height int, scheduler LayerScheduler) *UnitLayer {
-	return &UnitLayer{
-		BaseLayer:   NewBaseLayer("units", width, height, scheduler),
-		unitSprites: make(map[string]image.Image),
+// getHexVertices returns the vertices of a hexagon centered at (centerX, centerY)
+func (gl *GridLayer) getHexVertices(centerX, centerY, tileWidth, tileHeight float64) [][2]float64 {
+	// Hexagon vertices (flat-top orientation)
+	vertices := make([][2]float64, 6)
+
+	// Use actual tile dimensions for proper hexagon shape
+	radiusX := tileWidth / 2
+	radiusY := tileHeight / 2
+
+	// Hexagon angles (flat-top)
+	for i := 0; i < 6; i++ {
+		angle := float64(i) * 60.0 * 3.14159 / 180.0 // Convert to radians
+		vertices[i][0] = centerX + radiusX*math.Cos(angle)
+		vertices[i][1] = centerY + radiusY*math.Sin(angle)
 	}
+
+	return vertices
 }
 
-// Render renders units to the layer buffer
-func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
-	if world == nil {
-		return
+// drawLine draws a line between two points using Bresenham's algorithm
+func (gl *GridLayer) drawLine(img draw.Image, x1, y1, x2, y2 int, c color.RGBA) {
+	dx := abs(x2 - x1)
+	dy := abs(y2 - y1)
+
+	x, y := x1, y1
+
+	var xInc, yInc int
+	if x1 < x2 {
+		xInc = 1
+	} else {
+		xInc = -1
+	}
+	if y1 < y2 {
+		yInc = 1
+	} else {
+		yInc = -1
 	}
 
-	// Clear buffer if full rebuild needed
-	if ul.allDirty {
-		ul.buffer.Clear()
-
-		// Render all units from all players
-		for _, playerUnits := range world.UnitsByPlayer {
-			for _, unit := range playerUnits {
-				if unit != nil {
-					ul.renderUnit(world, unit, options)
-				}
+	var err int
+	if dx > dy {
+		err = dx / 2
+		for x != x2 {
+			if x >= 0 && y >= 0 && x < gl.width && y < gl.height {
+				img.Set(x, y, c)
 			}
-		}
-
-		ul.allDirty = false
-	} else {
-		// Clear and render only dirty unit positions
-		for coord := range ul.dirtyCoords {
-			ul.clearHexArea(coord, options)
-
-			// Find unit at this position
-			unit := ul.findUnitAt(world, coord)
-			if unit != nil {
-				ul.renderUnit(world, unit, options)
+			err -= dy
+			if err < 0 {
+				y += yInc
+				err += dx
 			}
+			x += xInc
 		}
-	}
-
-	// Clear dirty tracking
-	ul.ClearDirty()
-}
-
-// renderUnit renders a single unit
-func (ul *UnitLayer) renderUnit(world *World, unit *Unit, options LayerRenderOptions) {
-	// Get pixel position using Map's coordinate system
-	x, y := world.Map.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
-
-	// Apply viewport offset
-	x += options.ScrollX
-	y += options.ScrollY
-
-	// Try to use real unit sprite if available
-	if ul.assetProvider != nil && ul.assetProvider.HasUnitAsset(unit.UnitType, unit.PlayerID) {
-		ul.renderUnitSprite(unit.UnitType, unit.PlayerID, x, y, options)
 	} else {
-		// Fallback to colored circle
-		ul.drawSimpleUnitToBuffer(x, y, unit.PlayerID, options)
-	}
-}
-
-// renderUnitSprite renders a unit sprite
-func (ul *UnitLayer) renderUnitSprite(unitType, playerID int, x, y float64, options LayerRenderOptions) {
-	// Check cache first
-	spriteKey := fmt.Sprintf("%d_%d", unitType, playerID)
-	cachedSprite, exists := ul.unitSprites[spriteKey]
-	if !exists {
-		// Load and cache sprite
-		img, err := ul.assetProvider.GetUnitImage(unitType, playerID)
-		if err != nil {
-			// Fallback to colored circle
-			ul.drawSimpleUnitToBuffer(x, y, playerID, options)
-			return
+		err = dy / 2
+		for y != y2 {
+			if x >= 0 && y >= 0 && x < gl.width && y < gl.height {
+				img.Set(x, y, c)
+			}
+			err -= dx
+			if err < 0 {
+				x += xInc
+				err += dy
+			}
+			y += yInc
 		}
-		ul.unitSprites[spriteKey] = img
-		cachedSprite = img
 	}
-
-	// Draw sprite to buffer
-	ul.drawImageToBuffer(cachedSprite, x, y, options.TileWidth, options.TileHeight)
 }
 
-// drawSimpleUnitToBuffer draws a colored circle for a unit
-func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int, options LayerRenderOptions) {
-	// Get player color
-	var unitColor Color
-	switch playerID {
-	case 0:
-		unitColor = Color{R: 255, G: 0, B: 0, A: 255} // Red
-	case 1:
-		unitColor = Color{R: 0, G: 0, B: 255, A: 255} // Blue
-	case 2:
-		unitColor = Color{R: 0, G: 255, B: 0, A: 255} // Green
-	case 3:
-		unitColor = Color{R: 255, G: 255, B: 0, A: 255} // Yellow
-	default:
-		unitColor = Color{R: 128, G: 128, B: 128, A: 255} // Gray
-	}
+// drawSimpleText draws simple text at the given position
+func (gl *GridLayer) drawSimpleText(text string, centerX, centerY float64) {
+	// For now, draw simple dots to represent coordinates
+	// This can be enhanced with proper text rendering later
+	bufferImg := gl.buffer.GetImageData()
+	textColor := color.RGBA{R: 255, G: 255, B: 255, A: 255} // White
 
-	bufferImg := ul.buffer.GetImageData()
+	x, y := int(centerX), int(centerY)
 
-	// Draw smaller ellipse for units (60% of tile size)
-	radiusX := int(options.TileWidth * 0.3)
-	radiusY := int(options.TileHeight * 0.3)
-	centerX, centerY := int(x), int(y)
-
-	for dy := -radiusY; dy <= radiusY; dy++ {
-		for dx := -radiusX; dx <= radiusX; dx++ {
-			if float64(dx*dx)/float64(radiusX*radiusX)+float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
-				px, py := centerX+dx, centerY+dy
-				if px >= 0 && py >= 0 && px < ul.width && py < ul.height {
-					rgba := color.RGBA{R: unitColor.R, G: unitColor.G, B: unitColor.B, A: unitColor.A}
-					bufferImg.Set(px, py, rgba)
+	// Draw a small cross or dot to indicate coordinates
+	for i := -2; i <= 2; i++ {
+		for j := -2; j <= 2; j++ {
+			px, py := x+i, y+j
+			if px >= 0 && py >= 0 && px < gl.width && py < gl.height {
+				if (i == 0 && abs(j) <= 2) || (j == 0 && abs(i) <= 2) {
+					bufferImg.Set(px, py, textColor)
 				}
 			}
 		}
 	}
-}
-
-// clearHexArea clears a hexagonal area at the given coordinate
-func (ul *UnitLayer) clearHexArea(coord CubeCoord, options LayerRenderOptions) {
-	// For now, just clear the entire buffer - can optimize later
-	ul.buffer.Clear()
-}
-
-// findUnitAt finds a unit at the given coordinate
-func (ul *UnitLayer) findUnitAt(world *World, coord CubeCoord) *Unit {
-	for _, playerUnits := range world.UnitsByPlayer {
-		for _, unit := range playerUnits {
-			if unit != nil && unit.Coord == coord {
-				return unit
-			}
-		}
-	}
-	return nil
 }

@@ -62,8 +62,8 @@ func NewLayeredRendererWithTileSize(drawable Drawable, width, height int, tileWi
 			YIncrement:      yIncrement,
 			ScrollX:         0,
 			ScrollY:         0,
-			ShowGrid:        false,
-			ShowCoordinates: false,
+			ShowGrid:        true,
+			ShowCoordinates: true,
 		},
 	}
 

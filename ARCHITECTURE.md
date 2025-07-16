@@ -2,6 +2,12 @@
 
 ## Current Architecture (Post-Refactoring v3.0)
 
+### Recent Major Updates
+- **LayeredRenderer Enhancement**: Added GridLayer for hex grid visualization
+- **WASM Editor Integration**: Global editor/world architecture with client-side optimizations
+- **Visual Controls**: Added grid and coordinate display toggles
+- **Client-side Performance**: Tile dimension caching and scroll management
+
 ### Core Components
 
 #### 1. Game Object (`lib/game.go`)

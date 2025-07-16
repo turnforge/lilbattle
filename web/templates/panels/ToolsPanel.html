@@ -1,18 +1,6 @@
 <!-- Map Editor Tools Panel -->
 <div id="tools-panel" class="h-full overflow-y-auto">
     <div class="p-4 space-y-6">
-        <!-- Map Management -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Map Management</h3>
-            <div class="grid grid-cols-2 gap-2">
-                <button data-action="create-new-map" data-width="5" data-height="5" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 5×5</button>
-                <button data-action="create-new-map" data-width="8" data-height="8" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×8</button>
-                <button data-action="create-new-map" data-width="8" data-height="12" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 8×12</button>
-                <button data-action="create-new-map" data-width="12" data-height="16" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 12×16</button>
-                <button data-action="create-new-map" data-width="50" data-height="50" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 50×50</button>
-                <button data-action="create-new-map" data-width="100" data-height="100" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">New 100×100</button>
-            </div>
-        </div>
 
         <!-- Terrain Palette -->
         <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
@@ -94,6 +82,21 @@
                     <button data-action="flood-fill" class="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">🌊 Flood Fill</button>
                     <button data-action="remove-terrain" class="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700">🗑️ Remove</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Visual Options -->
+        <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">👁️ Visual Options</h3>
+            <div class="space-y-2">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" id="show-grid" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400" checked>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Show Grid</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" id="show-coordinates" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Show Coordinates</span>
+                </label>
             </div>
         </div>
 
