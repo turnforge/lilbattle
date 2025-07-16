@@ -84,7 +84,7 @@ func (bl *BaseLayer) GetName() string {
 
 func (bl *BaseLayer) MarkDirty(coord CubeCoord) {
 	bl.dirtyCoords[coord] = true
-	if bl.scheduler != nil {
+	if true || bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
 	}
 }
@@ -92,7 +92,7 @@ func (bl *BaseLayer) MarkDirty(coord CubeCoord) {
 func (bl *BaseLayer) MarkAllDirty() {
 	bl.allDirty = true
 	bl.dirtyCoords = make(map[CubeCoord]bool)
-	if bl.scheduler != nil {
+	if true || bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
 	}
 }

@@ -443,6 +443,11 @@ func (e *WorldEditor) SetDrawable(drawable Drawable, width, height int) error {
 		e.unitLayer, // Units (top layer)
 	}
 
+	// Update layered renderer with new world
+	if e.layeredRenderer != nil {
+		e.layeredRenderer.SetWorld(e.currentWorld)
+	}
+
 	return nil
 }
 

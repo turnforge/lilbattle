@@ -36,6 +36,7 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 		return
 	}
 
+	fmt.Println("point 3")
 	// Clear buffer for full redraw (grid/coordinates are view-dependent)
 	gl.buffer.Clear()
 
@@ -53,8 +54,9 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 			currX = startX + options.TileWidth/2.0
 		}
 		rowCoord := leftCoord
+		fmt.Println("Row, LeftCoord: ", i, y, leftCoord)
 		for ; currX < width; currX += options.TileWidth {
-			fmt.Printf("currX, currY, Coord: ", currX, y, rowCoord)
+			fmt.Println("currX, currY, Coord: ", currX, y, rowCoord, width, height)
 			// Draw grid lines if enabled
 			if options.ShowGrid {
 				gl.drawHexGrid(currX, y, options)
