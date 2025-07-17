@@ -153,6 +153,19 @@ export class PhaserPanel {
     }
     
     /**
+     * Set theme for editor (light/dark)
+     */
+    public setTheme(isDark: boolean): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set theme');
+            return;
+        }
+        
+        this.phaserEditor.setTheme(isDark);
+        this.log(`Theme set to: ${isDark ? 'dark' : 'light'}`);
+    }
+    
+    /**
      * Remove a tile at the specified coordinates
      */
     public removeTile(q: number, r: number): void {

@@ -114,6 +114,10 @@ export class PhaserMapEditor {
         this.scene?.setShowCoordinates(show);
     }
     
+    public setTheme(isDark: boolean) {
+        this.scene?.setTheme(isDark);
+    }
+    
     public paintTile(q: number, r: number, terrain: number, color: number = 0, brushSize: number = 0) {
         if (!this.scene) return;
         

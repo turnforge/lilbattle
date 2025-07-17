@@ -286,6 +286,11 @@ class MapEditorPage {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     const isDarkMode = document.documentElement.classList.contains('dark');
                     container.className = isDarkMode ? 'dockview-theme-dark flex-1' : 'dockview-theme-light flex-1';
+                    
+                    // Update Phaser editor theme
+                    if (this.phaserPanel) {
+                        this.phaserPanel.setTheme(isDarkMode);
+                    }
                 }
             });
         });
@@ -1261,6 +1266,10 @@ class MapEditorPage {
                 if (showCoordinatesCheckbox) {
                     this.phaserPanel.setShowCoordinates(showCoordinatesCheckbox.checked);
                 }
+                
+                // Set initial theme
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                this.phaserPanel.setTheme(isDarkMode);
                 
                 this.updateEditorStatus('Phaser Ready');
                 this.logToConsole('Phaser panel initialized successfully as default!');

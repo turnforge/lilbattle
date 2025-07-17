@@ -12,6 +12,9 @@ export class PhaserMapScene extends Phaser.Scene {
     private showGrid: boolean = false;
     private showCoordinates: boolean = false;
     
+    // Theme management
+    private isDarkTheme: boolean = false;
+    
     // Camera controls
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
     private wasdKeys: any = null;
@@ -57,6 +60,9 @@ export class PhaserMapScene extends Phaser.Scene {
         // Initialize grid and coordinates display
         this.updateGridDisplay();
         this.setShowCoordinates(this.showCoordinates);
+        
+        // Set initial theme
+        this.updateTheme();
         
         console.log('[PhaserMapScene] Scene created successfully');
     }
@@ -307,6 +313,21 @@ export class PhaserMapScene extends Phaser.Scene {
         this.updateCoordinatesDisplay();
     }
     
+    public setTheme(isDark: boolean) {
+        this.isDarkTheme = isDark;
+        this.updateTheme();
+    }
+    
+    private updateTheme() {
+        // Update camera background color based on theme
+        const backgroundColor = this.isDarkTheme ? 0x1f2937 : 0xf3f4f6; // gray-800 : gray-100
+        this.cameras.main.setBackgroundColor(backgroundColor);
+        
+        // Update grid and coordinates
+        this.updateGridDisplay();
+        this.updateCoordinatesDisplay();
+    }
+    
     private updateCoordinatesDisplay() {
         // Clear existing coordinate texts
         this.coordinateTexts.forEach(text => text.destroy());
@@ -374,8 +395,10 @@ export class PhaserMapScene extends Phaser.Scene {
         const minR = Math.min(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r) - 2;
         const maxR = Math.max(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r) + 2;
         
-        // Draw grid lines
-        this.gridGraphics.lineStyle(1, 0x888888, 0.3);
+        // Draw grid lines with theme-appropriate colors
+        const gridColor = this.isDarkTheme ? 0xcccccc : 0x444444;
+        const gridAlpha = this.isDarkTheme ? 0.4 : 0.3;
+        this.gridGraphics.lineStyle(1, gridColor, gridAlpha);
         
         // Draw grid for all visible hexes
         for (let q = minQ; q <= maxQ; q++) {
@@ -429,10 +452,13 @@ export class PhaserMapScene extends Phaser.Scene {
         
         const coordText = `QR:${q}, ${r}\nRC:${row}, ${col}`;
         
+        const textColor = this.isDarkTheme ? '#ffffff' : '#000000';
+        const strokeColor = this.isDarkTheme ? '#000000' : '#ffffff';
+        
         const text = this.add.text(position.x, position.y, coordText, {
             fontSize: '10px',
-            color: '#ffffff',
-            stroke: '#000000',
+            color: textColor,
+            stroke: strokeColor,
             strokeThickness: 1,
             align: 'center'
         });
@@ -471,8 +497,85 @@ export class PhaserMapScene extends Phaser.Scene {
     private onTileClick(q: number, r: number) {
         console.log(`[PhaserMapScene] Tile clicked: Q=${q}, R=${r}`);
         
+        // Get current terrain and brush settings from tools panel
+        const terrainSelection = this.getCurrentTerrainSelection();
+        const brushSize = this.getCurrentBrushSize();
+        
+        // Handle painting based on terrain selection
+        if (terrainSelection.terrain === 0) {
+            // Clear terrain (terrain 0 means remove tiles)
+            this.clearTileArea(q, r, brushSize);
+        } else {
+            // Paint terrain
+            this.paintTileArea(q, r, terrainSelection.terrain, terrainSelection.color, brushSize);
+        }
+        
         // Emit event that can be caught by the parent component
-        this.events.emit('tileClicked', { q, r });
+        this.events.emit('tileClicked', { q, r, terrain: terrainSelection.terrain, brushSize });
+    }
+    
+    private getCurrentTerrainSelection(): { terrain: number; color: number } {
+        // Find selected terrain button
+        const selectedButton = document.querySelector('.terrain-button.bg-blue-100, .terrain-button.bg-blue-900') as HTMLElement;
+        if (selectedButton) {
+            const terrain = parseInt(selectedButton.getAttribute('data-terrain') || '1');
+            return { terrain, color: 0 }; // Default color 0
+        }
+        return { terrain: 1, color: 0 }; // Default to grass
+    }
+    
+    private getCurrentBrushSize(): number {
+        const brushSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        return brushSelect ? parseInt(brushSelect.value) : 0;
+    }
+    
+    private paintTileArea(centerQ: number, centerR: number, terrain: number, color: number, brushSize: number) {
+        if (brushSize === 0) {
+            // Single tile
+            this.setTile(centerQ, centerR, terrain, color);
+        } else {
+            // Multiple tiles in radius
+            const radius = this.getBrushRadius(brushSize);
+            for (let q = centerQ - radius; q <= centerQ + radius; q++) {
+                for (let r = centerR - radius; r <= centerR + radius; r++) {
+                    // Use cube distance to determine if tile is within brush radius
+                    const distance = Math.abs(q - centerQ) + Math.abs(r - centerR) + Math.abs(-q - r - (-centerQ - centerR));
+                    if (distance <= radius * 2) { // Hex distance formula
+                        this.setTile(q, r, terrain, color);
+                    }
+                }
+            }
+        }
+    }
+    
+    private clearTileArea(centerQ: number, centerR: number, brushSize: number) {
+        if (brushSize === 0) {
+            // Single tile
+            this.removeTile(centerQ, centerR);
+        } else {
+            // Multiple tiles in radius
+            const radius = this.getBrushRadius(brushSize);
+            for (let q = centerQ - radius; q <= centerQ + radius; q++) {
+                for (let r = centerR - radius; r <= centerR + radius; r++) {
+                    // Use cube distance to determine if tile is within brush radius
+                    const distance = Math.abs(q - centerQ) + Math.abs(r - centerR) + Math.abs(-q - r - (-centerQ - centerR));
+                    if (distance <= radius * 2) { // Hex distance formula
+                        this.removeTile(q, r);
+                    }
+                }
+            }
+        }
+    }
+    
+    private getBrushRadius(brushSize: number): number {
+        switch (brushSize) {
+            case 1: return 1;   // Small (3 hexes)
+            case 3: return 2;   // Medium (5 hexes) 
+            case 5: return 3;   // Large (9 hexes)
+            case 10: return 4;  // X-Large (15 hexes)
+            case 15: return 5;  // XX-Large (21 hexes)
+            default: return 0;  // Single hex
+        }
     }
     
     // Get all tiles data (for integration with WASM)
