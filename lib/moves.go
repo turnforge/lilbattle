@@ -96,7 +96,7 @@ func (g *Game) FindPath(from, to Position) ([]Tile, error) {
 }
 
 // IsValidMove checks if movement is legal using cube coordinates
-func (g *Game) IsValidMove(from, to CubeCoord) bool {
+func (g *Game) IsValidMove(from, to AxialCoord) bool {
 	// Check if both positions are valid
 	startTile := g.World.Map.TileAt(from)
 	endTile := g.World.Map.TileAt(to)
@@ -131,7 +131,7 @@ func (g *Game) IsValidMove(from, to CubeCoord) bool {
 }
 
 // GetMovementCost calculates movement points required using cube coordinates
-func (g *Game) GetMovementCost(from, to CubeCoord) int {
+func (g *Game) GetMovementCost(from, to AxialCoord) int {
 	// For now, return a simple cost based on distance
 	// TODO: Implement proper terrain-based movement costs
 	if from == to {
@@ -177,7 +177,7 @@ func (g *Game) GetUnitAttackRange(unit *Unit) int {
 }
 
 // MoveUnit executes unit movement using cube coordinates
-func (g *Game) MoveUnit(unit *Unit, to CubeCoord) error {
+func (g *Game) MoveUnit(unit *Unit, to AxialCoord) error {
 	if unit == nil {
 		return fmt.Errorf("unit is nil")
 	}
@@ -291,7 +291,7 @@ func (g *Game) AttackUnit(attacker, defender *Unit) (*CombatResult, error) {
 }
 
 // CanMoveUnit validates potential movement using cube coordinates
-func (g *Game) CanMoveUnit(unit *Unit, to CubeCoord) bool {
+func (g *Game) CanMoveUnit(unit *Unit, to AxialCoord) bool {
 	if unit == nil {
 		return false
 	}
@@ -329,7 +329,7 @@ func (g *Game) CanAttackUnit(attacker, defender *Unit) bool {
 }
 
 // MoveUnitAt executes unit movement from one coordinate to another
-func (g *Game) MoveUnitAt(from, to CubeCoord) error {
+func (g *Game) MoveUnitAt(from, to AxialCoord) error {
 	// Find unit at from position
 	fromTile := g.World.Map.TileAt(from)
 	if fromTile == nil {
@@ -344,7 +344,7 @@ func (g *Game) MoveUnitAt(from, to CubeCoord) error {
 }
 
 // AttackUnitAt executes combat between units at the given coordinates
-func (g *Game) AttackUnitAt(attackerPos, targetPos CubeCoord) (*CombatResult, error) {
+func (g *Game) AttackUnitAt(attackerPos, targetPos AxialCoord) (*CombatResult, error) {
 	// Find attacker unit
 	attackerTile := g.World.Map.TileAt(attackerPos)
 	if attackerTile == nil {
@@ -370,7 +370,7 @@ func (g *Game) AttackUnitAt(attackerPos, targetPos CubeCoord) (*CombatResult, er
 }
 
 // CanAttack validates potential attack using position coordinates
-func (g *Game) CanAttack(from, to CubeCoord) (bool, error) {
+func (g *Game) CanAttack(from, to AxialCoord) (bool, error) {
 	attacker := g.GetUnitAt(from)
 	if attacker == nil {
 		return false, fmt.Errorf("no unit at attacker position (%d, %d)", from.Q, from.R)
@@ -414,7 +414,7 @@ func (g *Game) calculateDamage(attacker, defender *Unit) int {
 
 // calculateDistance calculates distance between two positions
 // Source: https://www.redblobgames.com/grids/hexagons-v1/#distances
-func (g *Game) calculateDistance(a, b CubeCoord) int {
+func (g *Game) calculateDistance(a, b AxialCoord) int {
 	// Simplified hex distance calculation
 	return (abs(a.Q-b.Q) + abs(a.Q+a.R-b.Q-b.R) + abs(a.R-b.R)) / 2
 }

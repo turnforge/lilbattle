@@ -81,15 +81,6 @@ func createErrorResponse(error string) js.Value {
 	return marshalToJS(response)
 }
 
-func createMessageResponse(message string, data any) js.Value {
-	response := WASMResponse{
-		Success: true,
-		Message: message,
-		Data:    data,
-	}
-	return marshalToJS(response)
-}
-
 func marshalToJS(obj any) js.Value {
 	bytes, _ := json.Marshal(obj)
 	return js.Global().Get("JSON").Call("parse", string(bytes))
@@ -153,12 +144,6 @@ func registerEditorFunctions() {
 	}))
 
 	// Terrain editing
-	js.Global().Set("editorPaintTerrain", createWrapper(2, 2, func(args []js.Value) (any, error) {
-		return nil, paintTerrain(args[0].Int(), args[1].Int())
-	}))
-	js.Global().Set("editorRemoveTerrain", createWrapper(2, 2, func(args []js.Value) (any, error) {
-		return nil, removeTerrain(args[0].Int(), args[1].Int())
-	}))
 	js.Global().Set("editorFloodFill", createWrapper(2, 2, func(args []js.Value) (any, error) {
 		return nil, floodFill(args[0].Int(), args[1].Int())
 	}))
@@ -209,6 +194,9 @@ func registerEditorFunctions() {
 	js.Global().Set("editorPixelToCoords", createWrapper(2, 2, func(args []js.Value) (any, error) {
 		return pixelToCoords(args[0].Float(), args[1].Float())
 	}))
+	js.Global().Set("editorHexToPixel", createWrapper(2, 2, func(args []js.Value) (any, error) {
+		return hexToPixel(args[0].Int(), args[1].Int())
+	}))
 	js.Global().Set("editorSetTilesAt", createWrapper(4, 4, func(args []js.Value) (any, error) {
 		return setTilesAt(args[0].Int(), args[1].Int(), args[2].Int(), args[3].Int())
 	}))
@@ -258,19 +246,8 @@ func setMapSize(rows, cols int) (map[string]any, error) {
 	return newMap(rows, cols)
 }
 
-func paintTerrain(q, r int) error {
-	// Create cube coordinate directly from Q, R values
-	coord := weewar.CubeCoord{Q: q, R: r}
-	return globalEditor.PaintTerrain(coord)
-}
-
-func removeTerrain(q, r int) error {
-	coord := weewar.CubeCoord{Q: q, R: r}
-	return globalEditor.RemoveTerrain(coord)
-}
-
 func floodFill(q, r int) error {
-	coord := weewar.CubeCoord{Q: q, R: r}
+	coord := weewar.AxialCoord{Q: q, R: r}
 	return globalEditor.FloodFill(coord)
 }
 
@@ -384,32 +361,16 @@ func getTileDimensions() (map[string]any, error) {
 
 func getMapBounds() (map[string]any, error) {
 	// Get map bounds from the editor
-	minX, minY, maxX, maxY, minQ, maxQ, minR, maxR, startingCoord, startingX := globalEditor.GetMapBounds()
+	mapBounds := globalEditor.GetMapBounds()
 
 	return map[string]any{
 		// Tile dimensions
-		"tileWidth":  int(weewar.DefaultTileWidth),
-		"tileHeight": int(weewar.DefaultTileHeight),
-		"yIncrement": int(weewar.DefaultYIncrement),
-
-		// Map bounds in pixels
-		"minX": minX,
-		"minY": minY,
-		"maxX": maxX,
-		"maxY": maxY,
-
-		// Map bounds in hex coordinates
-		"minQ": minQ,
-		"maxQ": maxQ,
-		"minR": minR,
-		"maxR": maxR,
-
-		// Starting position info
-		"startingCoord": map[string]any{
-			"q": startingCoord.Q,
-			"r": startingCoord.R,
+		"tileDimensions": map[string]any{
+			"tileWidth":  int(weewar.DefaultTileWidth),
+			"tileHeight": int(weewar.DefaultTileHeight),
+			"yIncrement": int(weewar.DefaultYIncrement),
 		},
-		"startingX": startingX,
+		"bounds": mapBounds,
 	}, nil
 }
 
@@ -417,12 +378,20 @@ func getMapBounds() (map[string]any, error) {
 // Utility Function Implementations
 // =============================================================================
 
+func hexToPixel(q, r int) (any, error) {
+	x, y := globalWorld.Map.CenterXYForTile(weewar.AxialCoord{q, r}, weewar.DefaultTileWidth, weewar.DefaultTileHeight, weewar.DefaultYIncrement)
+	return map[string]any{
+		"x": x,
+		"y": y,
+	}, nil
+}
+
 func pixelToCoords(x, y float64) (map[string]any, error) {
 
 	coord := globalWorld.Map.XYToQR(x, y, weewar.DefaultTileWidth, weewar.DefaultTileHeight, weewar.DefaultYIncrement)
 
 	// Convert cube coordinates to row/col using proper conversion
-	row, col := globalWorld.Map.HexToRowCol(coord)
+	row, col := weewar.HexToRowCol(coord)
 
 	isWithinBounds := globalWorld.Map.IsWithinBoundsCube(coord)
 
@@ -450,7 +419,11 @@ func calculateCanvasSize(rows, cols int) (map[string]any, error) {
 
 func calculateCanvasSizeInternal() (width, height int) {
 	// Get map bounds and add padding for hover effects and potential expansion
-	minX, minY, maxX, maxY, _, _, _, _, _, _ := globalEditor.GetMapBounds()
+	mapBounds := globalEditor.GetMapBounds()
+	minX := mapBounds.MinX
+	minY := mapBounds.MinY
+	maxX := mapBounds.MaxX
+	maxY := mapBounds.MaxY
 
 	// Add padding around the map bounds so we can show hexes being hovered
 	// and allow for potential map expansion
@@ -467,10 +440,18 @@ func calculateCanvasSizeInternal() (width, height int) {
 
 func setTilesAt(q, r, terrainType, radius int) (any, error) {
 	// Create cube coordinate from Q, R values
-	coord := weewar.CubeCoord{Q: q, R: r}
+	coord := weewar.AxialCoord{Q: q, R: r}
 
 	// Use the stateless setTilesAt method
-	return globalEditor.SetTilesAt(coord, terrainType, radius)
+	coords, newBounds, err := globalEditor.SetTilesAt(coord, terrainType, radius)
+
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"coords":    coords,
+		"newBounds": newBounds,
+	}, nil
 }
 
 func testAssets() (map[string]any, error) {

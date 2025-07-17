@@ -34,19 +34,19 @@ type Unit struct {
 	TurnCounter     int // Which turn this unit was created/last acted
 
 	// Position on the map
-	Coord CubeCoord `json:"coord"` // Cube coordinate position
+	Coord AxialCoord `json:"coord"` // Cube coordinate position
 
 	// Player ownership
 	PlayerID int
 }
 
 // GetPosition returns the unit's cube coordinate position
-func (u *Unit) GetPosition() CubeCoord {
+func (u *Unit) GetPosition() AxialCoord {
 	return u.Coord
 }
 
 // SetPosition sets the unit's position using cube coordinates
-func (u *Unit) SetPosition(coord CubeCoord) {
+func (u *Unit) SetPosition(coord AxialCoord) {
 	u.Coord = coord
 }
 

@@ -143,13 +143,13 @@ func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int, options 
 }
 
 // clearHexArea clears a hexagonal area at the given coordinate
-func (ul *UnitLayer) clearHexArea(coord CubeCoord, options LayerRenderOptions) {
+func (ul *UnitLayer) clearHexArea(coord AxialCoord, options LayerRenderOptions) {
 	// For now, just clear the entire buffer - can optimize later
 	ul.buffer.Clear()
 }
 
 // findUnitAt finds a unit at the given coordinate
-func (ul *UnitLayer) findUnitAt(world *World, coord CubeCoord) *Unit {
+func (ul *UnitLayer) findUnitAt(world *World, coord AxialCoord) *Unit {
 	for _, playerUnits := range world.UnitsByPlayer {
 		for _, unit := range playerUnits {
 			if unit != nil && unit.Coord == coord {

@@ -176,7 +176,7 @@ func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, wo
 }
 
 // formatCoordinate formats cube coordinates for display
-func formatCoordinate(coord CubeCoord) string {
+func formatCoordinate(coord AxialCoord) string {
 	return ""
 	// Simplified - return empty string to avoid text rendering complexity for now
 	// Can be enhanced later: return fmt.Sprintf("%d,%d", coord.Q, coord.R)

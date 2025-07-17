@@ -26,7 +26,7 @@ type MovePrediction struct {
 }
 
 // PredictionPosition represents a map position for predictions
-type PredictionPosition = CubeCoord
+type PredictionPosition = AxialCoord
 
 // CombatPredictor provides combat analysis capabilities
 type CombatPredictor struct {
@@ -41,7 +41,7 @@ func NewCombatPredictor(assetManager *AssetManager) *CombatPredictor {
 }
 
 // PredictDamage calculates damage prediction for an attack
-func (cp *CombatPredictor) PredictDamage(game *Game, from, to CubeCoord) (*DamagePrediction, error) {
+func (cp *CombatPredictor) PredictDamage(game *Game, from, to AxialCoord) (*DamagePrediction, error) {
 	// Get attacker and target units
 	attacker := game.GetUnitAt(from)
 	target := game.GetUnitAt(to)
@@ -90,7 +90,7 @@ func (cp *CombatPredictor) PredictDamage(game *Game, from, to CubeCoord) (*Damag
 }
 
 // CanAttackPosition checks if an attack is valid and possible
-func (cp *CombatPredictor) CanAttackPosition(game *Game, from, to CubeCoord) (bool, error) {
+func (cp *CombatPredictor) CanAttackPosition(game *Game, from, to AxialCoord) (bool, error) {
 	return game.CanAttack(from, to)
 }
 

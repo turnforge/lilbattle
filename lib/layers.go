@@ -13,7 +13,7 @@ type Layer interface {
 	Render(world *World, options LayerRenderOptions)
 
 	// Dirty tracking for efficient updates
-	MarkDirty(coord CubeCoord)
+	MarkDirty(coord AxialCoord)
 	MarkAllDirty()
 	ClearDirty()
 	IsDirty() bool
@@ -50,7 +50,7 @@ type BaseLayer struct {
 	buffer              *Buffer
 
 	// Dirty tracking
-	dirtyCoords map[CubeCoord]bool
+	dirtyCoords map[AxialCoord]bool
 	allDirty    bool
 
 	// Asset provider
@@ -67,7 +67,7 @@ func NewBaseLayer(name string, width, height int, scheduler LayerScheduler) *Bas
 		width:       width,
 		height:      height,
 		buffer:      NewBuffer(int(width), int(height)),
-		dirtyCoords: make(map[CubeCoord]bool),
+		dirtyCoords: make(map[AxialCoord]bool),
 		allDirty:    true, // Start with everything dirty
 		scheduler:   scheduler,
 	}
@@ -78,7 +78,7 @@ func (bl *BaseLayer) GetName() string {
 	return bl.name
 }
 
-func (bl *BaseLayer) MarkDirty(coord CubeCoord) {
+func (bl *BaseLayer) MarkDirty(coord AxialCoord) {
 	bl.dirtyCoords[coord] = true
 	if true || bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
@@ -87,14 +87,15 @@ func (bl *BaseLayer) MarkDirty(coord CubeCoord) {
 
 func (bl *BaseLayer) MarkAllDirty() {
 	bl.allDirty = true
-	bl.dirtyCoords = make(map[CubeCoord]bool)
+	bl.dirtyCoords = make(map[AxialCoord]bool)
+	fmt.Println("Layer, Scheduler: ", bl.GetName(), bl.scheduler)
 	if true || bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
 	}
 }
 
 func (bl *BaseLayer) ClearDirty() {
-	bl.dirtyCoords = make(map[CubeCoord]bool)
+	bl.dirtyCoords = make(map[AxialCoord]bool)
 	bl.allDirty = false
 }
 
@@ -103,7 +104,7 @@ func (bl *BaseLayer) IsDirty() bool {
 }
 
 func (bl *BaseLayer) SetViewPort(x, y, width, height int) {
-	fmt.Printf("BaseLayer.SetViewPort called on layer '%s' with: x=%d, y=%d, width=%d, height=%d\n", bl.name, x, y, width, height)
+	// fmt.Printf("BaseLayer.SetViewPort called on layer '%s' with: x=%d, y=%d, width=%d, height=%d\n", bl.name, x, y, width, height)
 	bl.x = x
 	bl.y = y
 	bl.width = width

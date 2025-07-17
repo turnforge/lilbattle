@@ -1,7 +1,6 @@
 package weewar
 
 import (
-	"fmt"
 	"image"
 	"image/draw"
 	"time"
@@ -188,7 +187,7 @@ func (r *LayeredRenderer) SetViewPort(x, y, width, height int) error {
 
 	// Recreate all layer buffers with new size
 	for _, layer := range r.layers {
-		fmt.Printf("LayeredRenderer updating layer: %s\n", layer.GetName())
+		// fmt.Printf("LayeredRenderer updating layer: %s\n", layer.GetName())
 		layer.SetViewPort(x, y, width, height)
 	}
 	return nil

@@ -20,56 +20,56 @@ const (
 // This file implements cube coordinates for hexagonal grids, providing a
 // mathematically clean coordinate system that is independent of array storage
 // and EvenRowsOffset configurations.
-
-// CubeCoord represents a position in hex cube coordinate space
-// Constraint: Q + R + S = 0 (S is calculated as -Q-R)
 type CubeCoord struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	// S is not stored since S = -Q-R always
+}
+
+// AxialCoord represents a position in hex cube coordinate space
+// Constraint: Q + R + S = 0 (S is calculated as -Q-R)
+type AxialCoord struct {
 	Q int `json:"q"`
 	R int `json:"r"`
 	// S is not stored since S = -Q-R always
 }
 
-// NewCubeCoord creates a new cube coordinate
-func NewCubeCoord(q, r int) CubeCoord {
-	return CubeCoord{Q: q, R: r}
+// NewAxialCoord creates a new cube coordinate
+func NewAxialCoord(q, r int) AxialCoord {
+	return AxialCoord{Q: q, R: r}
 }
 
 // S returns the S coordinate (calculated as -Q-R)
-func (c CubeCoord) S() int {
+func (c AxialCoord) S() int {
 	return -c.Q - c.R
-}
-
-// IsValid checks if the cube coordinate is valid (always true by construction)
-func (c CubeCoord) IsValid() bool {
-	return true // Always valid since S is calculated
 }
 
 // =============================================================================
 // Hex Directions (Universal - independent of EvenRowsOffset)
 // =============================================================================
 
-// HexDirections defines the 6 direction vectors in cube coordinates
+// AxialCoordNeighbors defines the 6 direction vectors in cube coordinates
 // Order must match NeighborDirection enum: LEFT, TOP_LEFT, TOP_RIGHT, RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT
-var HexDirections = [6]CubeCoord{
-	{Q: 1, R: -1}, // LEFT
-	{Q: 1, R: 0},  // TOP_LEFT
-	{Q: 0, R: 1},  // TOP_RIGHT
-	{Q: -1, R: 1}, // RIGHT
-	{Q: -1, R: 0}, // BOTTOM_RIGHT
-	{Q: 0, R: -1}, // BOTTOM_LEFT
+var AxialCoordNeighbors = [6]AxialCoord{
+	{Q: -1, R: 0}, // LEFT
+	{Q: 0, R: -1}, // TOP_LEFT
+	{Q: 1, R: -1}, // TOP_RIGHT
+	{Q: 1, R: 0},  // RIGHT
+	{Q: 0, R: 1},  // BOTTOM_RIGHT
+	{Q: -1, R: 1}, // BOTTOM_LEFT
 }
 
 // Neighbor returns the neighboring cube coordinate in the specified direction
-func (c CubeCoord) Neighbor(direction NeighborDirection) CubeCoord {
-	dir := HexDirections[int(direction)]
-	return CubeCoord{
+func (c AxialCoord) Neighbor(direction NeighborDirection) AxialCoord {
+	dir := AxialCoordNeighbors[int(direction)]
+	return AxialCoord{
 		Q: c.Q + dir.Q,
 		R: c.R + dir.R,
 	}
 }
 
 // Neighbors returns all 6 neighboring cube coordinates
-func (c CubeCoord) Neighbors(out *[6]CubeCoord) {
+func (c AxialCoord) Neighbors(out *[6]AxialCoord) {
 	for i := 0; i < 6; i++ {
 		out[i] = c.Neighbor(NeighborDirection(i))
 	}
@@ -80,24 +80,24 @@ func (c CubeCoord) Neighbors(out *[6]CubeCoord) {
 // =============================================================================
 
 // Distance calculates the hex distance between two cube coordinates
-func (c CubeCoord) Distance(other CubeCoord) int {
+func (c AxialCoord) Distance(other AxialCoord) int {
 	return (abs(c.Q-other.Q) + abs(c.R-other.R) + abs(c.S()-other.S())) / 2
 }
 
 // CubeDistance calculates the hex distance between two cube coordinates (standalone function)
-func CubeDistance(coord1, coord2 CubeCoord) int {
+func CubeDistance(coord1, coord2 AxialCoord) int {
 	return coord1.Distance(coord2)
 }
 
 // Range returns all cube coordinates within the specified radius
-func (c CubeCoord) Range(radius int) []CubeCoord {
-	var results []CubeCoord
+func (c AxialCoord) Range(radius int) []AxialCoord {
+	var results []AxialCoord
 	for q := -radius; q <= radius; q++ {
 		r1 := max(-radius, -q-radius)
 		r2 := min(radius, -q+radius)
 		for r := r1; r <= r2; r++ {
 			// s := -q - r (not needed since S is calculated)
-			coord := CubeCoord{Q: c.Q + q, R: c.R + r}
+			coord := AxialCoord{Q: c.Q + q, R: c.R + r}
 			results = append(results, coord)
 		}
 	}
@@ -105,12 +105,12 @@ func (c CubeCoord) Range(radius int) []CubeCoord {
 }
 
 // Ring returns all cube coordinates at exactly the specified radius
-func (c CubeCoord) Ring(radius int) []CubeCoord {
+func (c AxialCoord) Ring(radius int) []AxialCoord {
 	if radius == 0 {
-		return []CubeCoord{c}
+		return []AxialCoord{c}
 	}
 
-	var results []CubeCoord
+	var results []AxialCoord
 	// Start at one direction and walk around the ring
 	coord := c
 
@@ -140,13 +140,13 @@ func (c CubeCoord) Ring(radius int) []CubeCoord {
 // =============================================================================
 
 // String returns a string representation of the cube coordinate
-func (c CubeCoord) String() string {
+func (c AxialCoord) String() string {
 	return fmt.Sprintf("(%d,%d)", c.Q, c.R)
 	// return fmt.Sprintf("(%d,%d,%d)", c.Q, c.R, c.S())
 }
 
-func (c CubeCoord) Plus(dQ, dR int) CubeCoord {
-	return CubeCoord{c.Q + dQ, c.R + dR}
+func (c AxialCoord) Plus(dQ, dR int) AxialCoord {
+	return AxialCoord{c.Q + dQ, c.R + dR}
 }
 
 // Some functions to work with hex tiles
@@ -156,4 +156,52 @@ type HexTile struct {
 	TileWidth      float64
 	TileHeight     float64
 	LeftSideHeight float64
+}
+
+func CubeToAxial(x, y, z int) (q, r int) {
+	return x, z
+}
+
+func AxialToCube(q, r int) (x, y, z int) {
+	return q, (-q - r), r
+}
+
+func CubeToOddR(x, y, z int) (row, col int) {
+	col = x + (z-(z&1))/2
+	row = z
+	return
+}
+
+func OddRToCube(row, col int) (x, y, z int) {
+	x = col - (row-(row&1))/2
+	z = row
+	y = -x - z
+	return
+}
+
+// HexToRowCol converts cube coordinates to display coordinates (row, col)
+// Uses a standard hex-to-array conversion (odd-row offset style)
+func HexToRowCol(coord AxialCoord) (row, col int) {
+	/*
+		row = coord.R
+		col = coord.Q + (coord.R+(coord.R&1))/2
+		return row, col
+	*/
+	// cube_to_oddr(cube):
+	x, _, z := AxialToCube(coord.Q, coord.R)
+	col = x + (z-(z&1))/2
+	row = z
+	return row, col
+}
+
+// RowColToHex converts display coordinates (row, col) to cube coordinates
+// Uses a standard array-to-hex conversion (odd-row offset style)
+func RowColToHex(row, col int) AxialCoord {
+	// q := col - (row+(row&1))/2 return NewAxialCoord(q, row)
+	// oddr_to_cube(hex):
+	x := col - (row-(row&1))/2
+	z := row
+	y := -x - z
+	q, r := CubeToAxial(x, y, z)
+	return AxialCoord{q, r}
 }

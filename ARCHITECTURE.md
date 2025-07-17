@@ -60,7 +60,7 @@ type World struct {
 - Normalized origin management (OriginX/OriginY in tile units)
 - Direct hex-to-pixel conversion using Red Blob Games formulas
 - Dynamic map resizing with Add/Remove methods
-- Efficient tile storage via `map[CubeCoord]*Tile`
+- Efficient tile storage via `map[AxialCoord]*Tile`
 
 ```go
 type Map struct {
@@ -71,7 +71,7 @@ type Map struct {
     OriginX, OriginY float64
     
     // Cube coordinate storage - primary data structure
-    Tiles map[CubeCoord]*Tile
+    Tiles map[AxialCoord]*Tile
 }
 ```
 
@@ -205,7 +205,7 @@ func paintTerrain(this js.Value, args []js.Value) any {
 func paintTerrain(args []js.Value) (interface{}, error) {
     row := args[0].Int()
     col := args[1].Int()
-    coord := weewar.CubeCoord{Q: col, R: row}
+    coord := weewar.AxialCoord{Q: col, R: row}
     return nil, globalEditor.PaintTerrain(coord)
 }
 
@@ -242,7 +242,7 @@ func main() {
 func paintTerrain(args []js.Value) (interface{}, error) {
     row := args[0].Int()
     col := args[1].Int()  
-    coord := weewar.CubeCoord{Q: col, R: row}
+    coord := weewar.AxialCoord{Q: col, R: row}
     return nil, globalEditor.PaintTerrain(coord)
 }
 
@@ -268,7 +268,7 @@ func pixelToCoords(args []js.Value) (interface{}, error) {
 ### Coordinate System
 
 #### Cube Coordinates (Internal)
-- Primary system: `CubeCoord{Q, R}` with `S = -Q - R`
+- Primary system: `AxialCoord{Q, R}` with `S = -Q - R`
 - Bounds: `minQ/maxQ/minR/maxR` (dynamic, expandable)
 - Normalized origin: `OriginX/OriginY` in tile units
 - Universal throughout: Map, Editor, Renderer, WASM
@@ -309,7 +309,7 @@ User Action → WorldEditor → World (state) → LayerDirty → LayeredRenderer
 ```go
 type Layer interface {
     Render(world *World, options LayerRenderOptions)
-    MarkDirty(coord CubeCoord)
+    MarkDirty(coord AxialCoord)
     MarkAllDirty()
     // ...
 }
@@ -414,7 +414,7 @@ type Layer interface {
 #### Coordinate Usage
 - **Always use cube coordinates** in internal APIs
 - CLI translates chess notation at boundary only
-- Direct CubeCoord{Q, R} in all function signatures
+- Direct AxialCoord{Q, R} in all function signatures
 - Use Map bounds, not NumRows/NumCols
 
 #### Rendering Principles
@@ -451,7 +451,7 @@ type Layer interface {
 
 #### Coordinate Performance
 - O(1) coordinate conversion
-- Direct map access via CubeCoord keys
+- Direct map access via AxialCoord keys
 - No array iteration for bounds checking
 - Efficient hex mathematics
 

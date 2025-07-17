@@ -47,6 +47,15 @@ func GetTerrainData(terrainType int) *TerrainData {
 	return &terrainData[0] // Default to unknown
 }
 
+type MapBounds struct {
+	MinX, MinY, MaxX, MaxY float64
+	MinQ, MinR, MaxQ, MaxR int
+	MinXCoord, MinYCoord   AxialCoord
+	MaxXCoord, MaxYCoord   AxialCoord
+	StartingCoord          AxialCoord
+	StartingX              float64
+}
+
 // Map represents the game map with hex grid topology
 type Map struct {
 	// Coordinate bounds - These can be evaluated.
@@ -55,8 +64,11 @@ type Map struct {
 	minR int `json:"-"` // Minimum R coordinate (inclusive)
 	maxR int `json:"-"` // Maximum R coordinate (inclusive)
 
+	boundsChanged bool
+	lastMapBounds MapBounds
+
 	// Cube coordinate storage - primary data structure
-	Tiles map[CubeCoord]*Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
+	Tiles map[AxialCoord]*Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
 
 	// JSON-friendly representation
 	TileList []*Tile `json:"tiles"`
@@ -68,7 +80,7 @@ func (m *Map) IsWithinBounds(q, r int) bool {
 }
 
 // IsWithinBoundsCube checks if the given cube coordinate is within the map bounds
-func (m *Map) IsWithinBoundsCube(coord CubeCoord) bool {
+func (m *Map) IsWithinBoundsCube(coord AxialCoord) bool {
 	return m.IsWithinBounds(coord.Q, coord.R)
 }
 
@@ -95,7 +107,7 @@ func NewMapWithBounds(minQ, maxQ, minR, maxR int) *Map {
 		maxQ:     maxQ,
 		minR:     minR,
 		maxR:     maxR,
-		Tiles:    make(map[CubeCoord]*Tile),
+		Tiles:    make(map[AxialCoord]*Tile),
 		TileList: make([]*Tile, 0),
 	}
 }
@@ -143,7 +155,7 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 
 	// Initialize the cube map if it's nil
 	if m.Tiles == nil {
-		m.Tiles = make(map[CubeCoord]*Tile)
+		m.Tiles = make(map[AxialCoord]*Tile)
 	}
 
 	// Convert tile list back to cube map
@@ -171,24 +183,28 @@ func (m *Map) syncMapFromTileList() {
 // =============================================================================
 
 // TileAt returns the tile at the specified cube coordinate (primary method)
-func (m *Map) TileAt(coord CubeCoord) *Tile {
+func (m *Map) TileAt(coord AxialCoord) *Tile {
 	return m.Tiles[coord]
 }
 
 // AddTileCube adds a tile at the specified cube coordinate (primary method)
 func (m *Map) AddTile(tile *Tile) {
+	q, r := tile.Coord.Q, tile.Coord.R
+	if q < m.minQ || q > m.maxQ || r < m.minR || r > m.maxR {
+		m.boundsChanged = true
+	}
 	m.Tiles[tile.Coord] = tile
 }
 
 // DeleteTile removes the tile at the specified cube coordinate
-func (m *Map) DeleteTile(coord CubeCoord) {
+func (m *Map) DeleteTile(coord AxialCoord) {
 	delete(m.Tiles, coord)
 }
 
 // GetAllTiles returns all tiles as a map from cube coordinates to tiles
-func (m *Map) CopyAllTiles() map[CubeCoord]*Tile {
+func (m *Map) CopyAllTiles() map[AxialCoord]*Tile {
 	// Return a copy to prevent external modification
-	result := make(map[CubeCoord]*Tile)
+	result := make(map[AxialCoord]*Tile)
 	for coord, tile := range m.Tiles {
 		result[coord] = tile
 	}
@@ -202,33 +218,43 @@ func (m *Map) CopyAllTiles() map[CubeCoord]*Tile {
 // CenterXYForTile converts cube coordinates directly to pixel center x,y coordinates for rendering
 // Uses odd-r layout (odd rows offset) as our fixed, consistent layout
 // Based on formulas from redblobgames.com for pointy-topped hexagons
-func (m *Map) CenterXYForTile(coord CubeCoord, tileWidth, tileHeight, yIncrement float64) (x, y float64) {
+func (m *Map) CenterXYForTile(coord AxialCoord, tileWidth, tileHeight, yIncrement float64) (x, y float64) {
 	// Direct cube coordinate to pixel conversion using proper hex math
-	q := float64(coord.Q)
-	r := float64(coord.R)
+	if false {
+		q := float64(coord.Q)
+		r := float64(coord.R)
 
-	// For pointy-topped hexagons with odd-r layout:
-	// x = size * sqrt(3) * (q + r/2)
-	// y = size * 3/2 * r
-	size := tileWidth / SQRT3
+		// For pointy-topped hexagons with odd-r layout:
+		// x = size * sqrt(3) * (q + r/2)
+		// y = size * 3/2 * r
+		size := tileWidth / SQRT3
 
-	// Convert normalized origin to pixel coordinates
-	// Note: Both OriginX and OriginY are in tile width units for consistency with hex geometry
-	originPixelX := 0.0 // m.OriginX * tileWidth
-	originPixelY := 0.0 // m.OriginY * tileHeight
+		// Convert normalized origin to pixel coordinates
+		// Note: Both OriginX and OriginY are in tile width units for consistency with hex geometry
 
-	// tileWidth = size * SQRT3
-	x = originPixelX + tileWidth*(q+r/2.0) // 1.732050808 ≈ sqrt(3)
-	y = originPixelY + size*1.5*r
+		// tileWidth = size * SQRT3
+		x = tileWidth * (q + r/2.0) // 1.732050808 ≈ sqrt(3)
+		y = size * 1.5 * r
+	} else {
+		row, col := HexToRowCol(coord)
+		// fmt.Printf("HexToRow, QR: %s, RowCol: (%d, %d)\n", coord, row, col)
+		y = yIncrement * float64(row)  // + (tileHeight / 2)
+		x = tileWidth * (float64(col)) //  + 0.5)
+		if row%2 == 1 {
+			x += tileWidth / 2
+		}
+
+		// x = tileWidth * (float64(col) + 0.5*float64(row&1))
+	}
 
 	return x, y
 }
 
 // XYToQR converts screen coordinates to cube coordinates for the map
-// Given x,y screen coordinates and tile size properties, returns the CubeCoord
+// Given x,y screen coordinates and tile size properties, returns the AxialCoord
 // Uses the Map's normalized OriginX/OriginY for proper coordinate translation
 // Based on formulas from redblobgames.com for pointy-topped hexagons with odd-r layout
-func (m *Map) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord CubeCoord) {
+func (m *Map) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord AxialCoord) {
 	if false {
 		// Convert normalized origin to pixel coordinates
 		// Note: Both OriginX and OriginY are in tile width units for consistency with hex geometry
@@ -253,7 +279,7 @@ func (m *Map) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord Cub
 
 		// Round to nearest integer coordinates using cube coordinate rounding
 		// This ensures we get the correct hex tile even for coordinates near boundaries
-		coord = roundCubeCoord(fractionalQ, fractionalR)
+		coord = roundAxialCoord(fractionalQ, fractionalR)
 
 		fmt.Println("X,Y: ", x, y)
 		fmt.Println("FQ, FR, FQ+FR: ", fractionalQ, fractionalR, fractionalQ+fractionalR)
@@ -270,7 +296,7 @@ func (m *Map) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord Cub
 			col = -col
 		}
 		// col := int((x + tileWidth/2) / tileWidth)
-		coord = m.RowColToHex(row, col)
+		coord = RowColToHex(row, col)
 		// fmt.Println("X,Y: ", x, y)
 		// fmt.Println("Row, Col: ", row, col)
 	}
@@ -279,10 +305,10 @@ func (m *Map) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord Cub
 	return
 }
 
-// roundCubeCoord rounds fractional cube coordinates to the nearest integer cube coordinate
+// roundAxialCoord rounds fractional cube coordinates to the nearest integer cube coordinate
 // Uses the cube coordinate constraint (q + r + s = 0) to ensure valid hex coordinates
 // Reference: https://www.redblobgames.com/grids/hexagons-v1/#rounding
-func roundCubeCoord(fractionalQ, fractionalR float64) CubeCoord {
+func roundAxialCoord(fractionalQ, fractionalR float64) AxialCoord {
 	// Calculate s from the cube coordinate constraint: s = -q - r
 	fractionalS := -fractionalQ - fractionalR
 
@@ -306,74 +332,112 @@ func roundCubeCoord(fractionalQ, fractionalR float64) CubeCoord {
 	}
 
 	// Return the rounded cube coordinate (s is implicit)
-	return CubeCoord{Q: roundedQ, R: roundedR}
+	return AxialCoord{Q: roundedQ, R: roundedR}
 }
 
 // getMapBounds calculates the pixel bounds of the entire map
 // TODO - cache this and only update when bounds changed beyond min/max Q/R
-func (m *Map) GetMapBounds(tileWidth, tileHeight, yIncrement float64) (minX, minY, maxX, maxY float64, minXCoord, minYCoord, maxXCoord, maxYCoord CubeCoord, startingCoord CubeCoord, startingX float64) {
-	minX = math.Inf(1)
-	minY = math.Inf(1)
-	maxX = math.Inf(-1)
-	maxY = math.Inf(-1)
+func (m *Map) GetMapBounds(tileWidth, tileHeight, yIncrement float64) MapBounds {
+	if true || !m.boundsChanged {
+		// TODO - return last avlues
+		// m.boundsChanged = false
+		minX := math.Inf(1)
+		minY := math.Inf(1)
+		maxX := math.Inf(-1)
+		maxY := math.Inf(-1)
+		minQ := int(math.Inf(1))
+		minR := int(math.Inf(1))
+		maxQ := int(math.Inf(-1))
+		maxR := int(math.Inf(-1))
+		startingX := 0.0
+		var minXCoord, minYCoord, maxXCoord, maxYCoord, startingCoord AxialCoord
 
-	for coord := range m.Tiles {
-		// Use origin at (0,0) for bounds calculation
-		x, y := m.CenterXYForTile(coord, tileWidth, tileHeight, yIncrement)
+		for coord := range m.Tiles {
+			// Use origin at (0,0) for bounds calculation
+			x, y := m.CenterXYForTile(coord, tileWidth, tileHeight, yIncrement)
+			// fmt.Printf("Tile Coords: QR: %s, XY: (%f, %f)\n", coord, x, y)
 
-		if x < minX {
-			minX = x
-			minXCoord = coord
-		}
-		if y < minY {
-			minY = y
-			minYCoord = coord
-		}
-		if x+tileWidth > maxX {
-			maxX = x + tileWidth
-			maxXCoord = coord
-		}
-		if y+tileHeight > maxY {
-			maxY = y + tileHeight
-			maxYCoord = coord
-		}
-	}
-
-	// Now that we have minY and minX coords, we can findout starting by walking "left" from minYCoord and "up" from
-	// minXcoord and see where they meet
-	// NOTE - the rows "decrease" as we go up vertically
-	minYRow := minYCoord.Q + minYCoord.R // S coord is same in a row for pointy-top hexes
-	minXRow := minXCoord.Q + minXCoord.R // S coord is same in a row for pointy-top hexes
-
-	// if minx == miny or both minXCoord and minYCoord are in the same row then easy
-	startingCoord = minXCoord
-	startingX = minX
-
-	if minXCoord != minYCoord || minXRow != minYRow {
-		// The hard case
-		if minXRow < minYRow {
-			// because X should be "below" Y so it should have a higher row number than minYCoord
-			panic("minXRow cannot be less than minYRow??")
-		}
-		startingCoord = minXCoord
-		for i := minXRow; i >= minYRow; i-- {
-			if i%2 == 0 {
-				// Always take the "Right" path first so we are guaranteed
-				// to always be on a tile whose X Coordinate is >= minX
-				startingCoord = startingCoord.Neighbor(TOP_RIGHT)
-			} else {
-				startingCoord = startingCoord.Neighbor(TOP_LEFT)
+			if coord.Q < minQ {
+				minQ = coord.Q
+			}
+			if coord.Q > maxQ {
+				maxQ = coord.Q
+			}
+			if coord.R < minR {
+				minR = coord.R
+			}
+			if coord.R > maxR {
+				maxR = coord.R
+			}
+			if x < minX {
+				minX = x
+				minXCoord = coord
+			}
+			if y < minY {
+				minY = y
+				minYCoord = coord
+			}
+			if x+tileWidth > maxX {
+				maxX = x + tileWidth
+				maxXCoord = coord
+			}
+			if y+tileHeight > maxY {
+				maxY = y + tileHeight
+				maxYCoord = coord
 			}
 		}
-	}
 
-	// If distance was odd then we would have a half tile width shift to the right
-	if (minXRow-minYRow)%2 == 0 {
-		startingX += tileWidth / 2.0
-	}
-	// startingX, _ = m.CenterXYForTile(startingCoord, tileWidth, tileHeight, yIncrement)
+		// Now that we have minY and minX coords, we can findout starting by walking "left" from minYCoord and "up" from
+		// minXcoord and see where they meet
+		// NOTE - the rows "decrease" as we go up vertically
+		minYRow := minYCoord.R // S coord is same in a row for pointy-top hexes
+		minXRow := minXCoord.R // S coord is same in a row for pointy-top hexes
 
-	return minX, minY, maxX, maxY, minXCoord, minYCoord, maxXCoord, maxYCoord, startingCoord, startingX
+		// if minx == miny or both minXCoord and minYCoord are in the same row then easy
+		startingCoord = minXCoord
+		startingX = minX
+
+		if minXCoord != minYCoord || minXRow != minYRow {
+			// The hard case
+			if minXRow < minYRow {
+				// because X should be "below" Y so it should have a higher row number than minYCoord
+				panic(fmt.Sprintf("minXRow (%d, %f) cannot be less than minYRow (%d, %f)??", minXRow, minX, minYRow, minY))
+			}
+			startingCoord = minXCoord
+			for i := minXRow; i >= minYRow; i-- {
+				if i%2 == 0 {
+					// Always take the "Right" path first so we are guaranteed
+					// to always be on a tile whose X Coordinate is >= minX
+					startingCoord = startingCoord.Neighbor(TOP_RIGHT)
+				} else {
+					startingCoord = startingCoord.Neighbor(TOP_LEFT)
+				}
+			}
+		}
+
+		// If distance was odd then we would have a half tile width shift to the right
+		if (minXRow-minYRow)%2 == 0 {
+			startingX += tileWidth / 2.0
+		}
+		// startingX, _ = m.CenterXYForTile(startingCoord, tileWidth, tileHeight, yIncrement)
+		// fmt.Printf("StartingX, StartingCoord: ", startingX, startingCoord)
+
+		m.lastMapBounds.MinX = minX
+		m.lastMapBounds.MinY = minY
+		m.lastMapBounds.MaxX = maxX
+		m.lastMapBounds.MaxY = maxY
+		m.lastMapBounds.MinQ = minQ
+		m.lastMapBounds.MinR = minR
+		m.lastMapBounds.MaxQ = maxQ
+		m.lastMapBounds.MaxR = maxR
+		m.lastMapBounds.StartingX = startingX
+		m.lastMapBounds.MinXCoord = minXCoord
+		m.lastMapBounds.MinYCoord = minYCoord
+		m.lastMapBounds.MaxXCoord = maxXCoord
+		m.lastMapBounds.MaxYCoord = maxYCoord
+		m.lastMapBounds.StartingCoord = startingCoord
+	}
+	return m.lastMapBounds
 }
 
 // =============================================================================
@@ -413,7 +477,7 @@ func CreateTestMap(rows, cols int) (*Map, error) {
 				tileType = 3 // Some water
 			}
 
-			tile := NewTile(CubeCoord{q, r}, tileType)
+			tile := NewTile(AxialCoord{q, r}, tileType)
 			gameMap.AddTile(tile)
 		}
 	}

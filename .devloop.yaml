@@ -24,6 +24,8 @@ rules:
       - "make binlocal"
       # - "go test -short ./..."
       - "echo '✅ Backend build and tests complete'"
+      - "pkill weewar || true"
+      # - "kill -9 `ps -ef | grep weewar  | sed -e \"s/  */:/g\" | cut -d ':' -f 3`"
       - "/tmp/weewar serve"
 
   # Frontend Development & Testing

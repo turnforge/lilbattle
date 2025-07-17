@@ -34,7 +34,7 @@ func (gs GameStatus) String() string {
 }
 
 // Position represents a coordinate position (row, col)
-type Position = CubeCoord
+type Position = AxialCoord
 
 // CombatResult represents the outcome of a combat action
 type CombatResult struct {
@@ -101,7 +101,6 @@ type GameController interface {
 	// Returns: True if turn can be ended
 	CanEndTurn() bool
 }
-*/
 
 // =============================================================================
 // Map and Position Interface
@@ -161,12 +160,12 @@ type MapInterface interface {
 	// IsValidMove checks if movement is legal using cube coordinates
 	// Called by: Input validation, AI move filtering, UI feedback
 	// Returns: True if move is valid
-	IsValidMove(from, to CubeCoord) bool
+	IsValidMove(from, to AxialCoord) bool
 
 	// GetMovementCost calculates movement points required using cube coordinates
 	// Called by: Movement validation, AI cost analysis, UI display
 	// Returns: Movement points required
-	GetMovementCost(from, to CubeCoord) int
+	GetMovementCost(from, to AxialCoord) int
 }
 
 // =============================================================================
@@ -216,7 +215,7 @@ type UnitInterface interface {
 	// MoveUnit executes unit movement using cube coordinates
 	// Called by: UI move confirmation, AI move execution, CLI move command
 	// Returns: Error if movement fails
-	MoveUnit(unit *Unit, to CubeCoord) error
+	MoveUnit(unit *Unit, to AxialCoord) error
 
 	// AttackUnit executes combat between units
 	// Called by: UI attack confirmation, AI attack execution, CLI attack command
@@ -226,7 +225,7 @@ type UnitInterface interface {
 	// CanMoveUnit validates potential movement using cube coordinates
 	// Called by: UI button enabling, AI move filtering, Input validation
 	// Returns: True if unit can move to specified position
-	CanMoveUnit(unit *Unit, to CubeCoord) bool
+	CanMoveUnit(unit *Unit, to AxialCoord) bool
 
 	// CanAttackUnit validates potential attack
 	// Called by: UI button enabling, AI target filtering, Input validation
@@ -256,3 +255,4 @@ type GameInterface interface {
 	MapInterface
 	UnitInterface
 }
+*/

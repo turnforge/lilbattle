@@ -104,7 +104,7 @@ func (w *World) GetMapSizeRect() (rows, cols int) {
 }
 
 // GetTileAt returns the tile at the specified cube coordinates
-func (w *World) GetTileAt(coord CubeCoord) *Tile {
+func (w *World) GetTileAt(coord AxialCoord) *Tile {
 	if w.Map == nil {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (w *World) GetTileAt(coord CubeCoord) *Tile {
 }
 
 // GetUnitsAt returns all units at the specified display coordinates
-func (w *World) GetUnitsAt(coord CubeCoord) []*Unit {
+func (w *World) GetUnitsAt(coord AxialCoord) []*Unit {
 	units := make([]*Unit, 0)
 	// TODO - Going through all units to search in a tile is expense
 	// Build a second index unitsByCoord along with units to handle this.
@@ -136,7 +136,7 @@ func (w *World) GetPlayerUnits(playerID int) []*Unit {
 // =============================================================================
 
 // SetTileTypeCube changes the terrain type at the specified cube coordinates
-func (w *World) SetTileType(coord CubeCoord, terrainType int) bool {
+func (w *World) SetTileType(coord AxialCoord, terrainType int) bool {
 	if w.Map == nil {
 		return false
 	}
@@ -174,23 +174,13 @@ func (w *World) RemoveUnit(unit *Unit) bool {
 }
 
 // MoveUnit moves a unit to a new position
-func (w *World) MoveUnit(unit *Unit, newCoord CubeCoord) {
+func (w *World) MoveUnit(unit *Unit, newCoord AxialCoord) {
 	unit.Coord = newCoord
 }
 
 // =============================================================================
 // World Validation and Utilities
 // =============================================================================
-
-// IsValidPosition checks if the given coordinates are within the world bounds
-/*
-func (w *World) IsValidPosition(coord CubeCoord) bool {
-	if w.Map == nil {
-		return false
-	}
-	return row >= 0 && row < w.Map.NumRows() && col >= 0 && col < w.Map.NumCols()
-}
-*/
 
 // GetWorldBounds returns the bounding box of the world in display coordinates
 func (w *World) GetWorldBoundsRect() (minRow, minCol, maxRow, maxCol int) {

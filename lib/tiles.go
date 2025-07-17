@@ -10,7 +10,7 @@ type TerrainData struct {
 
 // Tile represents a single hex tile on the map
 type Tile struct {
-	Coord CubeCoord `json:"coord"`
+	Coord AxialCoord `json:"coord"`
 
 	TileType int `json:"tileType"` // Reference to TerrainData by ID
 
@@ -19,7 +19,7 @@ type Tile struct {
 }
 
 // NewTile creates a new tile at the specified position
-func NewTile(coord CubeCoord, tileType int) *Tile {
+func NewTile(coord AxialCoord, tileType int) *Tile {
 	return &Tile{
 		Coord:    coord,
 		TileType: tileType,

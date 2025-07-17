@@ -35,7 +35,7 @@ type Unit struct {
 
 // After  
 type Unit struct {
-    Coord CubeCoord `json:"coord"`
+    Coord AxialCoord `json:"coord"`
     // ...
 }
 ```
@@ -47,14 +47,14 @@ func (m *Map) TileAt(row, col int) *Tile
 func (g *Game) IsValidMove(fromRow, fromCol, toRow, toCol int) bool
 
 // After
-func (m *Map) TileAt(coord CubeCoord) *Tile  
-func (g *Game) IsValidMove(from, to CubeCoord) bool
+func (m *Map) TileAt(coord AxialCoord) *Tile  
+func (g *Game) IsValidMove(from, to AxialCoord) bool
 ```
 
 #### 3. Coordinate Conversion
 ```go
 // Direct hex-to-pixel conversion (no row/col intermediate)
-func (m *Map) CenterXYForTile(coord CubeCoord, tileWidth, tileHeight, yIncrement, originX, originY float64) (x, y float64) {
+func (m *Map) CenterXYForTile(coord AxialCoord, tileWidth, tileHeight, yIncrement, originX, originY float64) (x, y float64) {
     q := float64(coord.Q)
     r := float64(coord.R)
     
@@ -76,18 +76,18 @@ func (m *Map) CenterXYForTile(coord CubeCoord, tileWidth, tileHeight, yIncrement
 - ✅ Updated Map bounds to use MinQ/MaxQ/MinR/MaxR
 
 #### Phase 2: Core Data Structures  
-- ✅ Unit struct now uses `Coord CubeCoord` instead of Row/Col
+- ✅ Unit struct now uses `Coord AxialCoord` instead of Row/Col
 - ✅ Removed Row/Col fields from Tile struct
 - ✅ Added helper methods for backward compatibility
 
 #### Phase 3: API Methods
-- ✅ `TileAt()` now takes CubeCoord (primary method)
+- ✅ `TileAt()` now takes AxialCoord (primary method)
 - ✅ `IsValidMove()` uses cube coordinates
 - ✅ `GetMovementCost()` uses cube coordinates  
 - ✅ Proper hex distance calculation with `CubeDistance()`
 
 #### Phase 4: Movement System
-- ✅ `MoveUnit()` takes CubeCoord parameter
+- ✅ `MoveUnit()` takes AxialCoord parameter
 - ✅ `CanMoveUnit()` uses cube coordinates
 - ✅ Unit positioning uses cube coordinates internally
 

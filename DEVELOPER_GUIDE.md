@@ -75,7 +75,7 @@ WorldRenderer.RenderWorldWithAssets(world, viewState, drawable, options, game)
 🧮 Cube Coordinate Foundation
 ├── Pure hex mathematics (Q, R coordinates)
 ├── No EvenRowsOffset confusion (universal coordinates)
-├── Direct map storage (map[CubeCoord]*Tile)
+├── Direct map storage (map[AxialCoord]*Tile)
 └── Efficient neighbor/distance calculations
      ↓
 🌍 World-Renderer-Observer Pattern
@@ -131,10 +131,10 @@ type Map struct {
 // NEW: Pure cube coordinate storage
 type Map struct {
     NumRows, NumCols int              // Display bounds only
-    Tiles map[CubeCoord]*Tile         // Direct coordinate lookup
+    Tiles map[AxialCoord]*Tile         // Direct coordinate lookup
 }
 
-type CubeCoord struct {
+type AxialCoord struct {
     Q int `json:"q"`  // Primary coordinate
     R int `json:"r"`  // Primary coordinate  
     // S calculated as -Q-R (not stored)
@@ -153,18 +153,18 @@ type CubeCoord struct {
 
 ```go
 // Primary storage methods
-map.TileAtCube(coord CubeCoord) *Tile
-map.AddTileCube(coord CubeCoord, tile *Tile)
-map.DeleteTileCube(coord CubeCoord)
+map.TileAtCube(coord AxialCoord) *Tile
+map.AddTileCube(coord AxialCoord, tile *Tile)
+map.DeleteTileCube(coord AxialCoord)
 
 // Display conversion (backward compatibility)
-map.DisplayToHex(row, col int) CubeCoord
-map.HexToDisplay(coord CubeCoord) (row, col int)
+map.DisplayToHex(row, col int) AxialCoord
+map.HexToDisplay(coord AxialCoord) (row, col int)
 
 // Cube coordinate operations
-coord.Neighbors() []CubeCoord
-coord.Distance(other CubeCoord) int
-coord.Range(radius int) []CubeCoord
+coord.Neighbors() []AxialCoord
+coord.Distance(other AxialCoord) int
+coord.Range(radius int) []AxialCoord
 ```
 
 ## Map Editor

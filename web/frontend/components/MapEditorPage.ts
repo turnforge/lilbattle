@@ -3,6 +3,23 @@ import { Modal } from './Modal';
 import { ToastManager } from './ToastManager';
 import { DockviewApi, DockviewComponent } from 'dockview-core';
 
+class MapBounds {
+  MinQ: number;
+  MaxQ: number;
+  MinR: number;
+  MaxR: number;
+  StartingCoord: { q: number; r: number };
+  StartingX: number;
+  MinX: number;
+  MinY: number;
+  MaxX: number;
+  MaxY: number;
+  MinXCoord: {Q: number, R: number};
+  MinYCoord: {Q: number, R: number};
+  MaxXCoord: {Q: number, R: number};
+  MaxYCoord: {Q: number, R: number};
+}
+
 /**
  * Map Editor page with WASM integration for hex-based map editing
  */
@@ -16,6 +33,8 @@ class MapEditorPage {
 
     private currentMapId: string | null = null;
     private isNewMap: boolean = false;
+    private mapBounds: MapBounds
+
     private mapData: {
         name: string;
         width: number;
@@ -23,17 +42,7 @@ class MapEditorPage {
         tiles: { [key: string]: { tileType: number } };
         map_units: any[];
         // Cube coordinate bounds for proper coordinate validation
-        minQ?: number;
-        maxQ?: number;
-        minR?: number;
-        maxR?: number;
         // Map bounds data from GetMapBounds for rendering optimization
-        startingCoord?: { q: number; r: number };
-        startingX?: number;
-        minX?: number;
-        minY?: number;
-        maxX?: number;
-        maxY?: number;
     } | null = null;
     
     // Editor state
@@ -53,6 +62,7 @@ class MapEditorPage {
     
     // Scroll and padding management
     private scrollOffset: { x: number; y: number } = { x: 150, y: 150 }; // Padding around map for extension
+    private canvasSize : { width: number; height: number } = { width: 400, height: 400 }; // Padding around map for extension
 
     // WASM interface
     private wasmModule: any = null;
@@ -78,11 +88,11 @@ class MapEditorPage {
         this.updateMapBoundsFromWasm();
         
         // Use the updated bounds from mapData if available
-        if (this.mapData && this.mapData.minX !== undefined && this.mapData.maxX !== undefined && 
-            this.mapData.minY !== undefined && this.mapData.maxY !== undefined) {
+        if (this.mapBounds && this.mapBounds.MinX !== undefined && this.mapBounds.MaxX !== undefined && 
+            this.mapBounds.MinY !== undefined && this.mapBounds.MaxY !== undefined) {
             
-            const mapPixelWidth = this.mapData.maxX - this.mapData.minX;
-            const mapPixelHeight = this.mapData.maxY - this.mapData.minY;
+            const mapPixelWidth = this.mapBounds.MaxX - this.mapBounds.MinX;
+            const mapPixelHeight = this.mapBounds.MaxY - this.mapBounds.MinY;
             
             const canvasSize = {
                 width: Math.max(mapPixelWidth + this.scrollOffset.x * 2, 400),
@@ -458,32 +468,6 @@ class MapEditorPage {
             this.downloadGameData();
         });
 
-        // Map resize controls
-        document.querySelectorAll('[data-action="add-row"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const side = (e.target as HTMLElement).dataset.side || 'bottom';
-                this.addRow(side);
-            });
-        });
-        document.querySelectorAll('[data-action="remove-row"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const side = (e.target as HTMLElement).dataset.side || 'bottom';
-                this.removeRow(side);
-            });
-        });
-        document.querySelectorAll('[data-action="add-col"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const side = (e.target as HTMLElement).dataset.side || 'right';
-                this.addColumn(side);
-            });
-        });
-        document.querySelectorAll('[data-action="remove-col"]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const side = (e.target as HTMLElement).dataset.side || 'right';
-                this.removeColumn(side);
-            });
-        });
-
         // Canvas interactions
         if (this.mapCanvas) {
             this.mapCanvas.addEventListener('click', this.handleCanvasClick.bind(this));
@@ -840,26 +824,13 @@ class MapEditorPage {
                 const bounds = boundsResult.data;
                 
                 // Update tile dimensions if available
-                if (bounds.tileWidth && bounds.tileHeight && bounds.yIncrement) {
-                    this.tileDimensions = {
-                        tileWidth: bounds.tileWidth,
-                        tileHeight: bounds.tileHeight,
-                        yIncrement: bounds.yIncrement
-                    };
+                const tileDims = bounds.tileDimensions
+                if (tileDims.tileWidth && tileDims.tileHeight && tileDims.yIncrement) {
+                    this.tileDimensions = tileDims
                     this.logToConsole(`Tile dimensions updated: ${JSON.stringify(this.tileDimensions)}`);
                 }
                 
-                // Update mapData with bounds information
-                this.mapData.minQ = bounds.minQ;
-                this.mapData.maxQ = bounds.maxQ;
-                this.mapData.minR = bounds.minR;
-                this.mapData.maxR = bounds.maxR;
-                this.mapData.startingCoord = { q: bounds.startingCoord.q, r: bounds.startingCoord.r };
-                this.mapData.startingX = bounds.startingX;
-                this.mapData.minX = bounds.minX;
-                this.mapData.minY = bounds.minY;
-                this.mapData.maxX = bounds.maxX;
-                this.mapData.maxY = bounds.maxY;
+                this.setMapBounds(bounds.bounds)
                 
                 this.logToConsole(`Map bounds updated: Q(${bounds.minQ}-${bounds.maxQ}) R(${bounds.minR}-${bounds.maxR}) Starting(${bounds.startingCoord.q},${bounds.startingCoord.r})`);
             } else {
@@ -868,6 +839,11 @@ class MapEditorPage {
         } catch (error) {
             this.logToConsole(`Error getting map bounds from WASM: ${error}`);
         }
+    }
+
+    private setMapBounds(bounds: MapBounds)  {
+        // Update mapData with bounds information
+        this.mapBounds = bounds
     }
 
     // Canvas management methods
@@ -887,6 +863,7 @@ class MapEditorPage {
         // Update canvas DOM element size (this clears the canvas content)
         this.mapCanvas.width = width;
         this.mapCanvas.height = height;
+        this.canvasSize = {width, height};
         
         // Update canvas CSS size for proper display
         this.mapCanvas.style.width = `${width}px`;
@@ -961,13 +938,26 @@ class MapEditorPage {
         }
     }
 
+    private hexToPixel(q: number, r: number): {x: number, y: number} | null {
+        if (!this.mapCanvas || !this.mapData) return null;
+
+          const result = (window as any).editorHexToPixel(q, r);
+          if (result && result.success && result.data) {
+              const { x, y } = result.data;
+              this.logToConsole(`HexCoord (${q}, ${r}) -> XY (${x}, ${y}))`);
+              return result.data
+          }
+          return null
+    }
+
     private pixelToHex(mx: number, my: number): {row: number, col: number, cubeQ: number, cubeR: number} | null {
         if (!this.mapCanvas || !this.mapData) return null;
 
         const x = mx - this.scrollOffset.x;
         const y = my - this.scrollOffset.y;
 
-        // console.log("Doing pixelToHex, x, y: ", x, y, this.mapData)
+        console.log("Doing pixelToHex, x, y: ", x, y, this.mapData);
+        console.log("Mouse X/Y: ", mx, my);
         
         // Use WASM coordinate conversion for maximum accuracy
         if (this.wasmInitialized && (window as any).editorPixelToCoords) {
@@ -975,7 +965,8 @@ class MapEditorPage {
                 const result = (window as any).editorPixelToCoords(x, y);
                 if (result && result.success && result.data) {
                     const { row, col, cubeQ, cubeR, withinBounds } = result.data;
-                    this.logToConsole(`Pixel (${x}, ${y}) -> RowCal (${row}, ${col}) = QR(${cubeQ}, ${cubeR}) [WASM conversion, within bounds]`);
+                    const rev = this.hexToPixel(cubeQ, cubeR)!
+                    this.logToConsole(`Pixel (${x}, ${y}) -> RowCal (${row}, ${col}) = QR(${cubeQ}, ${cubeR}) [WASM conversion, within bounds], Reverse: ${rev.x}, ${rev.y}`);
                     return result.data
                 }
             } catch (error) {
@@ -1034,7 +1025,7 @@ class MapEditorPage {
                 // result.data is a list of coords on which the given terrain type was set
                 const mapData = this.mapData
                 if (mapData) {
-                    result.data.forEach((coord: {q: number, r: number}) => {
+                    result.data.coords.forEach((coord: {q: number, r: number}) => {
                       const key = `${coord.q},${coord.r}`;
                       if (terrainType <= 0) {
                         delete mapData.tiles[key]
@@ -1042,6 +1033,16 @@ class MapEditorPage {
                         mapData.tiles[key] = { tileType: terrainType };
                       }
                     })
+                }
+
+                this.setMapBounds(result.data.newBounds)
+
+                // Now see if bounds have changed
+                const newWidth = Math.max(this.scrollOffset.x * 2 + (result.data.newBounds.MaxX - result.data.newBounds.MinX), 400)
+                const newHeight = Math.max(this.scrollOffset.y * 2 + (result.data.newBounds.MaxY - result.data.newBounds.MinY), 300)
+
+                if (this.canvasSize.width != newWidth || this.canvasSize.height != newWidth) {
+                  this.resizeCanvas(newWidth, newHeight)
                 }
                 
                 // Log the paint action with brush info
@@ -1053,103 +1054,6 @@ class MapEditorPage {
             }
         } catch (error) {
             this.logToConsole(`Paint error: ${error}`);
-        }
-    }
-
-    // Map resize methods
-    public addRow(side: string): void {
-        if (!this.mapData || !this.wasmInitialized) return;
-        
-        this.logToConsole(`Adding row to ${side}`);
-        const newHeight = this.mapData.height + 1;
-        
-        try {
-            const result = (window as any).editorSetMapSize(newHeight, this.mapData.width);
-            if (result.success) {
-                this.mapData.height = newHeight;
-                this.logToConsole(`${result.message}`);
-                
-                // Resize canvas to match new dimensions
-                if (result.data.canvasWidth && result.data.canvasHeight) {
-                    this.resizeCanvas(result.data.canvasWidth, result.data.canvasHeight);
-                }
-            } else {
-                this.logToConsole(`Failed to add row: ${result.error}`);
-            }
-        } catch (error) {
-            this.logToConsole(`Error adding row: ${error}`);
-        }
-    }
-
-    public removeRow(side: string): void {
-        if (!this.mapData || this.mapData.height <= 1 || !this.wasmInitialized) return;
-        
-        this.logToConsole(`Removing row from ${side}`);
-        const newHeight = this.mapData.height - 1;
-        
-        try {
-            const result = (window as any).editorSetMapSize(newHeight, this.mapData.width);
-            if (result.success) {
-                this.mapData.height = newHeight;
-                this.logToConsole(`${result.message}`);
-                
-                // Resize canvas to match new dimensions
-                if (result.data.canvasWidth && result.data.canvasHeight) {
-                    this.resizeCanvas(result.data.canvasWidth, result.data.canvasHeight);
-                }
-            } else {
-                this.logToConsole(`Failed to remove row: ${result.error}`);
-            }
-        } catch (error) {
-            this.logToConsole(`Error removing row: ${error}`);
-        }
-    }
-
-    public addColumn(side: string): void {
-        if (!this.mapData || !this.wasmInitialized) return;
-        
-        this.logToConsole(`Adding column to ${side}`);
-        const newWidth = this.mapData.width + 1;
-        
-        try {
-            const result = (window as any).editorSetMapSize(this.mapData.height, newWidth);
-            if (result.success) {
-                this.mapData.width = newWidth;
-                this.logToConsole(`${result.message}`);
-                
-                // Resize canvas to match new dimensions
-                if (result.data.canvasWidth && result.data.canvasHeight) {
-                    this.resizeCanvas(result.data.canvasWidth, result.data.canvasHeight);
-                }
-            } else {
-                this.logToConsole(`Failed to add column: ${result.error}`);
-            }
-        } catch (error) {
-            this.logToConsole(`Error adding column: ${error}`);
-        }
-    }
-
-    public removeColumn(side: string): void {
-        if (!this.mapData || this.mapData.width <= 1 || !this.wasmInitialized) return;
-        
-        this.logToConsole(`Removing column from ${side}`);
-        const newWidth = this.mapData.width - 1;
-        
-        try {
-            const result = (window as any).editorSetMapSize(this.mapData.height, newWidth);
-            if (result.success) {
-                this.mapData.width = newWidth;
-                this.logToConsole(`${result.message}`);
-                
-                // Resize canvas to match new dimensions
-                if (result.data.canvasWidth && result.data.canvasHeight) {
-                    this.resizeCanvas(result.data.canvasWidth, result.data.canvasHeight);
-                }
-            } else {
-                this.logToConsole(`Failed to remove column: ${result.error}`);
-            }
-        } catch (error) {
-            this.logToConsole(`Error removing column: ${error}`);
         }
     }
 

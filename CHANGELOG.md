@@ -149,7 +149,7 @@ renderer.RenderWorld(world, viewState, canvas, options)
 #### Cube Coordinate System Implementation
 - **BREAKING**: Migrated from array-based storage to pure cube coordinate storage
 - **BREAKING**: Eliminated `EvenRowsOffset` field - source of coordinate confusion
-- **NEW**: `CubeCoord` struct with Q, R coordinates (S calculated as -Q-R)
+- **NEW**: `AxialCoord` struct with Q, R coordinates (S calculated as -Q-R)
 - **NEW**: Universal hex mathematics with consistent coordinate system
 - **PERFORMANCE**: O(1) coordinate lookup vs O(n²) nested array traversal
 - **MEMORY**: Eliminated S field storage and linked neighbor lists
@@ -165,7 +165,7 @@ type Map struct {
 // NEW: Pure cube coordinate storage  
 type Map struct {
     NumRows, NumCols int              // Display bounds only
-    Tiles map[CubeCoord]*Tile         // Direct coordinate lookup
+    Tiles map[AxialCoord]*Tile         // Direct coordinate lookup
 }
 ```
 

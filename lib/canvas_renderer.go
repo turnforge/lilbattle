@@ -25,7 +25,7 @@ func (cr *CanvasRenderer) RenderWorld(world *World, viewState *ViewState, drawab
 
 	// Render all layers directly using World data
 	cr.RenderTerrain(world, viewState, drawable, options)
-	
+
 	// Render highlights if viewState is provided
 	if viewState != nil {
 		cr.RenderHighlights(world, viewState, drawable, options)
@@ -51,16 +51,16 @@ func (cr *CanvasRenderer) RenderTerrain(world *World, viewState *ViewState, draw
 
 		// Use Map's CenterXYForTile method (Map handles origin internally)
 		x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
-		
+
 		// Get terrain color based on tile type
 		terrainColor := cr.GetTerrainColor(tile.TileType)
-		
+
 		// Create hex shape for the tile
 		hexPath := cr.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
-		
+
 		// Fill the hex with terrain color
 		drawable.FillPath(hexPath, terrainColor)
-		
+
 		// Add border if grid is enabled
 		if options.ShowGrid {
 			borderColor := Color{R: 64, G: 64, B: 64, A: 255} // Dark gray border
@@ -202,8 +202,8 @@ func (cr *CanvasRenderer) RenderUI(world *World, viewState *ViewState, drawable 
 
 	// Render brush preview in editor mode
 	if viewState.HoveredTile != nil && viewState.BrushSize >= 0 {
-		// Show brush preview at hovered tile - note: HoveredTile should be updated to use CubeCoord
-		// For now, assume it has a Coord field that's CubeCoord
+		// Show brush preview at hovered tile - note: HoveredTile should be updated to use AxialCoord
+		// For now, assume it has a Coord field that's AxialCoord
 		hoveredCoord := viewState.HoveredTile.Coord // This may need updating when we update ViewState
 
 		// Use Map's CenterXYForTile method (Map handles origin internally)
@@ -232,10 +232,10 @@ func (cr *CanvasRenderer) createCirclePoints(centerX, centerY, radius float64, s
 	for i := 0; i < segments; i++ {
 		angle := float64(i) * 360.0 / float64(segments)
 		angleRad := angle * 3.14159 / 180.0
-		
+
 		x := centerX + radius*cosApprox(angleRad)
 		y := centerY + radius*sinApprox(angleRad)
-		
+
 		points[i] = Point{X: x, Y: y}
 	}
 	return points
@@ -246,13 +246,13 @@ func (cr *CanvasRenderer) renderHealthBar(drawable Drawable, x, y, tileWidth, ti
 	if currentHealth >= maxHealth {
 		return // Don't render health bar for full health
 	}
-	
+
 	// Calculate health bar dimensions
 	barWidth := tileWidth * 0.8
 	barHeight := 6.0
 	barX := x - barWidth/2
 	barY := y + tileHeight/2 - barHeight - 2
-	
+
 	// Background bar (red)
 	backgroundBar := []Point{
 		{X: barX, Y: barY},
@@ -262,7 +262,7 @@ func (cr *CanvasRenderer) renderHealthBar(drawable Drawable, x, y, tileWidth, ti
 	}
 	redColor := Color{R: 255, G: 0, B: 0, A: 255}
 	drawable.FillPath(backgroundBar, redColor)
-	
+
 	// Health bar (green, proportional to health)
 	healthRatio := float64(currentHealth) / float64(maxHealth)
 	healthWidth := barWidth * healthRatio
@@ -274,7 +274,7 @@ func (cr *CanvasRenderer) renderHealthBar(drawable Drawable, x, y, tileWidth, ti
 	}
 	greenColor := Color{R: 0, G: 255, B: 0, A: 255}
 	drawable.FillPath(healthBar, greenColor)
-	
+
 	// Health bar border
 	borderColor := Color{R: 0, G: 0, B: 0, A: 255}
 	strokeProps := StrokeProperties{Width: 1.0, LineCap: "round", LineJoin: "round"}

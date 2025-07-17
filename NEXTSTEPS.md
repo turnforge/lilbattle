@@ -76,6 +76,8 @@
 - [x] Improved coordinate conversion for accurate hex positioning
 - [x] Enhanced map bounds calculation using consolidated WASM function
 - [x] Better default map size (5x5) for immediate usability
+- [x] Fixed hex tile rendering issue - tiles now properly display when clicked
+- [x] Asset provider properly initialized for tile layer rendering
 - [ ] Canvas padding for map extension areas
 - [ ] Hover effects and visual cues
 - [ ] Map boundary visualization

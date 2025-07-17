@@ -24,12 +24,12 @@ type AIAction struct {
 
 // Threat represents a danger to a player
 type Threat struct {
-	Position     Position `json:"position"`     // Position of threat
-	ThreatLevel  float64  `json:"threatLevel"`  // Severity (0-1)
-	ThreatType   string   `json:"threatType"`   // Type of threat
-	TargetUnit   *Unit    `json:"targetUnit"`   // Unit being threatened
-	ThreatUnit   *Unit    `json:"threatUnit"`   // Unit posing threat
-	Description  string   `json:"description"`  // Human-readable description
+	Position    Position `json:"position"`    // Position of threat
+	ThreatLevel float64  `json:"threatLevel"` // Severity (0-1)
+	ThreatType  string   `json:"threatType"`  // Type of threat
+	TargetUnit  *Unit    `json:"targetUnit"`  // Unit being threatened
+	ThreatUnit  *Unit    `json:"threatUnit"`  // Unit posing threat
+	Description string   `json:"description"` // Human-readable description
 }
 
 // Opportunity represents an advantage a player can take
@@ -103,46 +103,46 @@ type AIInterface interface {
 	// Called by: AI turn processing, Auto-play systems, AI vs AI games
 	// Returns: AI action (move, attack, end turn)
 	GetAIMove(playerID int, difficulty AIDifficulty) (*AIAction, error)
-	
+
 	// EvaluatePosition returns strategic value of current position
 	// Called by: AI difficulty adjustment, Game balance analysis, Statistics
 	// Returns: Position evaluation score (higher = better for player)
 	EvaluatePosition(playerID int) float64
-	
+
 	// GetBestMove returns optimal move for player
 	// Called by: AI hint system, Tutorial mode, Move suggestion
 	// Returns: Best available action for player
 	GetBestMove(playerID int) (*AIAction, error)
-	
+
 	// AI Analysis
 	// GetThreats returns immediate threats to player
 	// Called by: AI defensive planning, Warning systems, Tutorial hints
 	// Returns: Array of threat objects
 	GetThreats(playerID int) []Threat
-	
+
 	// GetOpportunities returns attack/advancement opportunities
 	// Called by: AI offensive planning, Hint systems, Strategy analysis
 	// Returns: Array of opportunity objects
 	GetOpportunities(playerID int) []Opportunity
-	
+
 	// GetStrategicValue returns value of specific position
 	// Called by: AI movement planning, Territory evaluation, Base placement
 	// Returns: Strategic value score
 	GetStrategicValue(position Position) float64
-	
+
 	// AI Configuration
 	// SetAIPersonality changes AI playing style
 	// Called by: Game setup, Player preferences, Dynamic difficulty
 	SetAIPersonality(playerID int, personality AIPersonality)
-	
+
 	// GetAIPersonality returns current AI playing style
 	// Called by: UI display, Game statistics, AI debugging
 	GetAIPersonality(playerID int) AIPersonality
-	
+
 	// SetAIThinkingTime sets maximum time AI can spend on decisions
 	// Called by: Game settings, Performance tuning, Real-time constraints
 	SetAIThinkingTime(playerID int, maxSeconds float64)
-	
+
 	// GetAIThinkingTime returns current AI thinking time limit
 	// Called by: Performance monitoring, UI display
 	GetAIThinkingTime(playerID int) float64
@@ -158,11 +158,11 @@ type AIPlayer interface {
 	GetPlayerID() int
 	GetDifficulty() AIDifficulty
 	GetPersonality() AIPersonality
-	
+
 	// AI Decision Making
-	ChooseAction(game GameInterface) (*AIAction, error)
-	EvaluateGameState(game GameInterface) float64
-	
+	ChooseAction(game *Game) (*AIAction, error)
+	EvaluateGameState(game *Game) float64
+
 	// AI Learning (for future implementation)
 	UpdateFromGameResult(won bool, finalScore float64)
 	SaveLearningData() ([]byte, error)
@@ -175,12 +175,12 @@ type AIPlayer interface {
 
 // AIActionType constants for action types
 const (
-	AIActionMove      = "move"
-	AIActionAttack    = "attack"
+	AIActionMove       = "move"
+	AIActionAttack     = "attack"
 	AIActionCreateUnit = "create_unit"
-	AIActionEndTurn   = "end_turn"
-	AIActionCapture   = "capture"
-	AIActionRepair    = "repair"
+	AIActionEndTurn    = "end_turn"
+	AIActionCapture    = "capture"
+	AIActionRepair     = "repair"
 )
 
 // ThreatType constants for threat types
@@ -193,8 +193,8 @@ const (
 
 // OpportunityType constants for opportunity types
 const (
-	OpportunityWeakUnit     = "weak_unit"
+	OpportunityWeakUnit       = "weak_unit"
 	OpportunityUndefendedBase = "undefended_base"
-	OpportunityFlanking     = "flanking"
-	OpportunityTerritoryGain = "territory_gain"
+	OpportunityFlanking       = "flanking"
+	OpportunityTerritoryGain  = "territory_gain"
 )

@@ -77,7 +77,7 @@ func (g *Game) PlayerCount() int {
 // initializeStartingUnits adds initial units to the game
 func (g *Game) initializeStartingUnits() error {
 	// Add some basic starting units for each player using cube coordinates
-	startingPositions := [][]CubeCoord{
+	startingPositions := [][]AxialCoord{
 		{{Q: 1, R: 1}, {Q: 2, R: 1}},  // Player 0
 		{{Q: 9, R: 6}, {Q: 10, R: 6}}, // Player 1
 	}
@@ -332,7 +332,7 @@ func (g *Game) GetMapName() string {
 }
 
 // GetTileType returns terrain type at position using cube coordinates
-func (g *Game) GetTileType(coord CubeCoord) int {
+func (g *Game) GetTileType(coord AxialCoord) int {
 	tile := g.World.Map.TileAt(coord)
 	if tile == nil {
 		return 0 // Default/unknown terrain
@@ -345,7 +345,7 @@ func (g *Game) GetTileType(coord CubeCoord) int {
 // =============================================================================
 
 // GetUnitAt returns unit at specific position using cube coordinates
-func (g *Game) GetUnitAt(coord CubeCoord) *Unit {
+func (g *Game) GetUnitAt(coord AxialCoord) *Unit {
 	tile := g.World.Map.TileAt(coord)
 	if tile == nil {
 		return nil
@@ -410,7 +410,7 @@ func (g *Game) GetUnitHealth(unit *Unit) int {
 }
 
 // CreateUnit spawns new unit using cube coordinates
-func (g *Game) CreateUnit(unitType, playerID int, coord CubeCoord) (*Unit, error) {
+func (g *Game) CreateUnit(unitType, playerID int, coord AxialCoord) (*Unit, error) {
 	// Validate parameters
 	if playerID < 0 || playerID >= g.World.PlayerCount {
 		return nil, fmt.Errorf("invalid player ID: %d", playerID)

@@ -28,6 +28,9 @@ type WorldEditor struct {
 	scrollX         int // Horizontal scroll offset for viewport
 	scrollY         int // Vertical scroll offset for viewport
 
+	// Asset provider for sprites
+	assetProvider AssetProvider
+
 	unitLayer *UnitLayer
 	tileLayer *TileLayer
 	gridLayer *GridLayer
@@ -58,7 +61,7 @@ func (e *WorldEditor) NewWorld() error {
 	e.modified = false
 
 	// Create single tile at origin with default terrain (grass)
-	coord := CubeCoord{Q: 0, R: 0}
+	coord := AxialCoord{Q: 0, R: 0}
 	tile := NewTile(coord, 1) // Grass terrain
 	gameMap.AddTile(tile)
 
@@ -109,7 +112,7 @@ func (e *WorldEditor) IsModified() bool {
 }
 
 // GetMapBounds returns the optimal canvas size for the current map
-func (e *WorldEditor) GetMapBounds() (minX, minY, maxX, maxY float64, minXCoord, minYCoord, maxXCoord, maxYCoord CubeCoord, startingCoord CubeCoord, startingX float64) {
+func (e *WorldEditor) GetMapBounds() MapBounds {
 	return e.currentWorld.Map.GetMapBounds(DefaultTileWidth, DefaultTileHeight, DefaultYIncrement)
 }
 
@@ -125,6 +128,7 @@ func (e *WorldEditor) GetLayeredRenderer() *LayeredRenderer {
 
 // SetAssetProvider updates the asset provider for terrain/unit sprites
 func (e *WorldEditor) SetAssetProvider(provider AssetProvider) {
+	e.assetProvider = provider
 	if e.layeredRenderer != nil {
 		e.layeredRenderer.SetAssetProvider(provider)
 	}
@@ -170,58 +174,8 @@ func (e *WorldEditor) SetShowCoordinates(showCoordinates bool) error {
 	return nil
 }
 
-// PaintTerrain paints terrain at the specified cube coordinate
-func (e *WorldEditor) PaintTerrain(coord CubeCoord) error {
-	if e.currentWorld == nil {
-		return fmt.Errorf("no world loaded")
-	}
-
-	// Get all positions to paint based on brush size
-	positions := e.getBrushPositions(coord)
-
-	// Paint each position
-	for _, paintCoord := range positions {
-		// Check if position is within map bounds
-		if !e.currentWorld.Map.IsWithinBoundsCube(paintCoord) {
-			continue // Skip out-of-bounds positions
-		}
-
-		// Get existing tile or create new one
-		tile := e.currentWorld.Map.TileAt(paintCoord)
-		if tile == nil {
-			tile = NewTile(paintCoord, e.brushTerrain)
-			e.currentWorld.Map.AddTile(tile)
-		} else {
-			tile.TileType = e.brushTerrain
-		}
-	}
-
-	e.modified = true
-
-	// Mark affected tiles as dirty for efficient rendering
-	for _, paintCoord := range positions {
-		e.tileLayer.MarkDirty(paintCoord)
-	}
-
-	return nil
-}
-
-// RemoveTerrain removes terrain at the specified cube coordinate
-func (e *WorldEditor) RemoveTerrain(coord CubeCoord) error {
-	if e.currentWorld == nil {
-		return fmt.Errorf("no world loaded")
-	}
-
-	e.currentWorld.Map.DeleteTile(coord)
-	e.modified = true
-
-	// Mark affected tile as dirty for efficient rendering
-	e.tileLayer.MarkDirty(coord)
-	return nil
-}
-
 // FloodFill fills a connected region with the current brush terrain
-func (e *WorldEditor) FloodFill(coord CubeCoord) error {
+func (e *WorldEditor) FloodFill(coord AxialCoord) error {
 	if e.currentWorld == nil {
 		return fmt.Errorf("no world loaded")
 	}
@@ -237,8 +191,8 @@ func (e *WorldEditor) FloodFill(coord CubeCoord) error {
 	}
 
 	// Use breadth-first search for flood fill
-	visited := make(map[CubeCoord]bool)
-	queue := []CubeCoord{coord}
+	visited := make(map[AxialCoord]bool)
+	queue := []AxialCoord{coord}
 
 	for len(queue) > 0 {
 		current := queue[0]
@@ -259,7 +213,7 @@ func (e *WorldEditor) FloodFill(coord CubeCoord) error {
 		tile.TileType = e.brushTerrain
 
 		// Add neighbors to queue
-		var neighbors [6]CubeCoord
+		var neighbors [6]AxialCoord
 		current.Neighbors(&neighbors)
 		for _, neighbor := range neighbors {
 			if !visited[neighbor] {
@@ -291,15 +245,16 @@ func (e *WorldEditor) FloodFill(coord CubeCoord) error {
 // =============================================================================
 
 // SetTilesAt sets terrain at the specified coordinate with given radius (stateless)
-func (e *WorldEditor) SetTilesAt(coord CubeCoord, terrainType, radius int) ([]CubeCoord, error) {
+func (e *WorldEditor) SetTilesAt(coord AxialCoord, terrainType, radius int) (coords []AxialCoord, newBounds MapBounds, err error) {
 	if e.currentWorld == nil {
-		return nil, fmt.Errorf("no world loaded")
+		err = fmt.Errorf("no world loaded")
+		return
 	}
 
 	// Get all positions to paint based on radius
-	var positions []CubeCoord
+	var positions []AxialCoord
 	if radius == 0 {
-		positions = []CubeCoord{coord}
+		positions = []AxialCoord{coord}
 	} else {
 		positions = coord.Range(radius)
 	}
@@ -307,43 +262,32 @@ func (e *WorldEditor) SetTilesAt(coord CubeCoord, terrainType, radius int) ([]Cu
 	// Paint each position
 	for _, paintCoord := range positions {
 		// Check if position is within map bounds
-		if !e.currentWorld.Map.IsWithinBoundsCube(paintCoord) {
-			continue // Skip out-of-bounds positions
-		}
-
 		if terrainType == 0 {
 			// Terrain type 0 (Clear) means delete the tile
 			e.currentWorld.Map.DeleteTile(paintCoord)
 		} else {
 			// Get existing tile or create new one
-			tile := e.currentWorld.Map.TileAt(paintCoord)
-			if tile == nil {
-				tile = &Tile{
-					Coord:    paintCoord,
-					TileType: terrainType,
-				}
-				e.currentWorld.Map.AddTile(tile)
-			} else {
-				tile.TileType = terrainType
+			tile := &Tile{
+				Coord:    paintCoord,
+				TileType: terrainType,
 			}
+			e.currentWorld.Map.AddTile(tile)
 		}
 
 		// Mark tile layer as dirty for this coordinate
-		if e.layeredRenderer != nil {
-			for _, layer := range e.layeredRenderer.layers {
-				layer.MarkDirty(paintCoord)
-			}
-		}
+		e.tileLayer.MarkAllDirty()
 	}
 
 	e.modified = true
-	return positions, nil
+	// after tiles are set bounds can change so return that as well
+
+	return positions, e.currentWorld.Map.GetMapBounds(DefaultTileWidth, DefaultTileHeight, DefaultYIncrement), nil
 }
 
 // getBrushPositions returns all cube coordinates affected by the current brush
-func (e *WorldEditor) getBrushPositions(center CubeCoord) []CubeCoord {
+func (e *WorldEditor) getBrushPositions(center AxialCoord) []AxialCoord {
 	if e.brushSize == 0 {
-		return []CubeCoord{center}
+		return []AxialCoord{center}
 	}
 
 	// Use the Range method from cube coordinates
@@ -489,13 +433,18 @@ func (e *WorldEditor) SetDrawable(drawable Drawable, width, height int) error {
 	e.unitLayer = NewUnitLayer(width, height, e.layeredRenderer)
 	e.layeredRenderer.layers = []Layer{
 		e.gridLayer, // Grid layer renders first (background)
-		// e.tileLayer, // Terrain tiles (middle layer)
-		// e.unitLayer, // Units (top layer)
+		e.tileLayer, // Terrain tiles (middle layer)
+		e.unitLayer, // Units (top layer)
 	}
 
 	// Update layered renderer with new world
 	if e.layeredRenderer != nil {
 		e.layeredRenderer.SetWorld(e.currentWorld)
+	}
+
+	// Re-apply asset provider if it was previously set
+	if e.assetProvider != nil {
+		e.layeredRenderer.SetAssetProvider(e.assetProvider)
 	}
 
 	return nil
@@ -534,7 +483,7 @@ func (e *WorldEditor) RenderFull() error {
 }
 
 // RenderTiles renders specific tiles using the layered renderer (for partial updates)
-func (e *WorldEditor) RenderTiles(coords []CubeCoord) error {
+func (e *WorldEditor) RenderTiles(coords []AxialCoord) error {
 	if e.layeredRenderer == nil || e.currentWorld == nil || len(coords) == 0 {
 		return nil // No renderer, map, or tiles to render
 	}

@@ -1,6 +1,9 @@
 package weewar
 
-import "image"
+import (
+	"fmt"
+	"image"
+)
 
 // =============================================================================
 // TileLayer - Terrain Rendering
@@ -26,6 +29,7 @@ func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
 		return
 	}
 
+	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.Map.Tiles)
 	// Clear buffer if full rebuild needed
 	if tl.allDirty {
 		tl.buffer.Clear()
@@ -51,7 +55,7 @@ func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
 }
 
 // renderTile renders a single terrain tile
-func (tl *TileLayer) renderTile(world *World, coord CubeCoord, tile *Tile, options LayerRenderOptions) {
+func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, options LayerRenderOptions) {
 	if tile == nil {
 		return
 	}
@@ -64,6 +68,7 @@ func (tl *TileLayer) renderTile(world *World, coord CubeCoord, tile *Tile, optio
 	y += float64(tl.y)
 
 	// Try to use real terrain sprite if available
+	// fmt.Println("3 - TLX/Y: ", x, y, tl.assetProvider)
 	if tl.assetProvider != nil && tl.assetProvider.HasTileAsset(tile.TileType) {
 		tl.renderTerrainSprite(tile.TileType, x, y, options)
 	} else {

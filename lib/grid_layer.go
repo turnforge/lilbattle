@@ -39,45 +39,77 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	gl.buffer.Clear()
 
 	// Get optimal starting coordinate and position from map bounds
-	minX, minY, _, _, _, _, _, _, startingCoord, startingX := world.Map.GetMapBounds(options.TileWidth, options.TileHeight, options.YIncrement)
+	mapBounds := world.Map.GetMapBounds(options.TileWidth, options.TileHeight, options.YIncrement)
+	minX := mapBounds.MinX
+	minY := mapBounds.MinY
+	startingCoord := mapBounds.StartingCoord
+	startingX := mapBounds.StartingX
 
 	// Use viewport position as content offset
 	viewportX := float64(gl.x)
 	viewportY := float64(gl.y)
-	fmt.Println("ViewportX,Y: ", viewportX, viewportY)
+	TW2 := (options.TileWidth / 2.0)
+	// startr, startc := HexToRowCol(startingCoord)
+	// fmt.Println("ViewportX,Y: ", viewportX, viewportY, "StartingCoord: ", startingCoord, ", StartingCoordRC: ", startr, startc)
 	startY := viewportY - minY // + (options.TileHeight / 2.0)
-	startX := viewportX - (minX + startingX) - (options.TileWidth / 2.0)
-	height := float64(gl.height)
-	width := float64(gl.width)
-	leftCoord := startingCoord.Neighbor(LEFT)
-	for i := 0; ; i++ {
-		currX := startX
-		if i%2 == 1 {
-			currX = startX + options.TileWidth/2.0
+	startX := viewportX - (minX + startingX) + TW2
+	startCoord := startingCoord
+	// go left till we are < 0
+	for startX > 0 {
+		startCoord = startCoord.Neighbor(LEFT)
+		startX -= options.TileWidth
+	}
+	// startr, startc = HexToRowCol(startCoord)
+	// fmt.Println("AfterMoving Left: StartingCoord: ", startingCoord, ", StartingCoordRC: ", startr, startc, options.TileWidth)
+
+	// Now go up till we are above y = 0
+	for i := 0; startY > 0; i++ {
+		if i%2 == 0 {
+			startCoord = startCoord.Neighbor(TOP_LEFT)
+			startX -= TW2
+		} else {
+			startCoord = startCoord.Neighbor(TOP_RIGHT)
+			startX += TW2
 		}
-		rowCoord := leftCoord
-		// fmt.Println("Row, LeftCoord: ", i, startY, leftCoord)
+		startY -= options.YIncrement
+	}
+
+	height, width := float64(gl.height), float64(gl.width)
+	// startr, startc = HexToRowCol(startCoord)
+	// fmt.Printf("2. Here...., StartX, StartY: %f, %f, StartCoord: %s, StartRC: (%d, %d)\n", startX, startY, startCoord, startr, startc)
+
+	// Now we can start drawing it
+	currY := startY
+	// fmt.Printf("w,h: ", width, height)
+	for i := 0; ; i++ {
+		// Draw a row first
+		currCoord := startCoord
+		currX := startX
 		for ; currX < width; currX += options.TileWidth {
-			// fmt.Println("currX, currY, Coord: ", currX, startY, rowCoord, width, height, options)
 			// Draw grid lines if enabled
+			// r, c := HexToRowCol(currCoord)
+			// fmt.Printf("3. currXcurrY: (%f, %f), CurrCorrd: %s, RowCol: %d,%d, ShowGrid: %t\n", currX, currY, currCoord, r, c, options.ShowGrid)
 			if options.ShowGrid {
-				gl.drawHexGrid(currX, startY, options)
+				gl.drawHexGrid(currX, currY, options)
 			}
 
 			// Draw coordinates if enabled
-			if options.ShowCoordinates {
-				gl.drawCoordinates(rowCoord, currX, startY, options)
+			if false && options.ShowCoordinates {
+				gl.drawCoordinates(currCoord, currX, currY, options)
 			}
-			rowCoord = rowCoord.Neighbor(RIGHT)
+			currCoord = currCoord.Neighbor(RIGHT)
 		}
 
 		if i%2 == 0 {
-			leftCoord = leftCoord.Neighbor(BOTTOM_RIGHT)
+			startCoord = startCoord.Neighbor(BOTTOM_LEFT)
+			startX -= TW2
 		} else {
-			leftCoord = leftCoord.Neighbor(BOTTOM_LEFT)
+			startCoord = startCoord.Neighbor(BOTTOM_RIGHT)
+			startX += TW2
 		}
-		startY += options.YIncrement
-		if startY >= height {
+
+		currY += options.YIncrement
+		if currY >= height {
 			// out of bounds so stop
 			break
 		}
@@ -106,7 +138,7 @@ func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOp
 }
 
 // drawCoordinates draws Q,R coordinates in the center of a hex
-func (gl *GridLayer) drawCoordinates(coord CubeCoord, centerX, centerY float64, options LayerRenderOptions) {
+func (gl *GridLayer) drawCoordinates(coord AxialCoord, centerX, centerY float64, options LayerRenderOptions) {
 	// Format coordinate text
 	text := fmt.Sprintf("%d,%d", coord.Q, coord.R)
 
@@ -144,6 +176,7 @@ func (gl *GridLayer) getHexVertices(centerX, centerY, tileWidth, tileHeight floa
 	vertices[3][0], vertices[3][1] = centerX, centerY+radiusY
 	vertices[4][0], vertices[4][1] = centerX-radiusX, centerY+h4
 	vertices[5][0], vertices[5][1] = centerX-radiusX, centerY-h4
+	// fmt.Println("VERTS: ", centerX, centerY, vertices)
 
 	return vertices
 }
