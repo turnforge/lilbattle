@@ -25,12 +25,12 @@ type TBButton struct {
 }
 
 type TerrainType struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	MoveCost     int    `json:"moveCost"`
-	DefenseBonus int    `json:"defenseBonus"`
-	IconDataURL  string `json:"iconDataURL"`
-	HasPlayerColors bool `json:"hasPlayerColors"`
+	ID              int    `json:"id"`
+	Name            string `json:"name"`
+	MoveCost        int    `json:"moveCost"`
+	DefenseBonus    int    `json:"defenseBonus"`
+	IconDataURL     string `json:"iconDataURL"`
+	HasPlayerColors bool   `json:"hasPlayerColors"`
 }
 
 type UnitType struct {
@@ -41,17 +41,17 @@ type UnitType struct {
 
 type MapEditorPage struct {
 	BasePage
-	Header           Header
-	IsOwner          bool
-	MapId            string
-	Map              *protos.Map
-	Errors           map[string]string
-	TBButtons        []*TBButton
-	AllowCustomId    bool
-	NatureTerrains   []TerrainType
-	CityTerrains     []TerrainType
-	UnitTypes        []UnitType
-	PlayerCount      int
+	Header         Header
+	IsOwner        bool
+	MapId          string
+	Map            *protos.Map
+	Errors         map[string]string
+	TBButtons      []*TBButton
+	AllowCustomId  bool
+	NatureTerrains []TerrainType
+	CityTerrains   []TerrainType
+	UnitTypes      []UnitType
+	PlayerCount    int
 }
 
 func (g *MapEditorPage) Copy() View { return &MapEditorPage{} }
@@ -62,7 +62,7 @@ func imageToDataURL(img image.Image) (string, error) {
 	if err := png.Encode(&buf, img); err != nil {
 		return "", err
 	}
-	
+
 	// Encode as base64
 	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
 	return fmt.Sprintf("data:image/png;base64,%s", encoded), nil
@@ -75,20 +75,20 @@ func (v *MapEditorPage) SetupDefaults() {
 	v.Header.ShowHomeButton = true
 	v.Header.ShowLogoutButton = false
 	v.Header.ShowComposeButton = false
-	
+
 	// Initialize terrain types with actual asset images
 	v.NatureTerrains = []TerrainType{}
 	v.CityTerrains = []TerrainType{}
 	v.PlayerCount = 4 // Default player count for map editor
-	
+
 	// No longer need hardcoded map - terrain type is now in TerrainData struct
-	
+
 	for i := 0; i <= 26; i++ {
 		terrainData := weewar.GetTerrainData(i)
 		if terrainData != nil {
 			// Use web-accessible static URL path for the tile asset
 			iconDataURL := fmt.Sprintf("/static/assets/v1/Tiles/%d/0.png", i)
-			
+
 			terrain := TerrainType{
 				ID:              terrainData.ID,
 				Name:            terrainData.Name,
@@ -97,15 +97,17 @@ func (v *MapEditorPage) SetupDefaults() {
 				IconDataURL:     iconDataURL,
 				HasPlayerColors: terrainData.Type == weewar.TerrainPlayer,
 			}
-			
+
 			if terrainData.Type == weewar.TerrainPlayer {
 				v.CityTerrains = append(v.CityTerrains, terrain)
-			} else {
+				log.Println("Appending City Terrains: ", terrain)
+			} else if terrainData.ID != 0 { // Skip Clear (ID 0) since we have a dedicated button
 				v.NatureTerrains = append(v.NatureTerrains, terrain)
+				log.Println("Appending Nature Terrains: ", terrain)
 			}
 		}
 	}
-	
+
 	// Sort terrain lists by name for easier visual grouping
 	// Clear should always be first in Nature Terrains
 	sort.Slice(v.CityTerrains, func(i, j int) bool {
@@ -121,17 +123,17 @@ func (v *MapEditorPage) SetupDefaults() {
 		}
 		return v.NatureTerrains[i].Name < v.NatureTerrains[j].Name
 	})
-	
+
 	// Load unit types with icons
 	v.UnitTypes = []UnitType{}
 	unitIDs := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29}
-	
+
 	for _, unitID := range unitIDs {
 		unitData := weewar.GetUnitData(unitID)
 		if unitData != nil {
 			// Use web-accessible static URL path for the unit asset
 			iconDataURL := fmt.Sprintf("/static/assets/v1/Units/%d/0.png", unitID)
-			
+
 			v.UnitTypes = append(v.UnitTypes, UnitType{
 				ID:          unitData.ID,
 				Name:        unitData.Name,
@@ -139,7 +141,7 @@ func (v *MapEditorPage) SetupDefaults() {
 			})
 		}
 	}
-	
+
 	v.Header.Styles = map[string]any{
 		"FixedHeightHeader":          true,
 		"HeaderHeightIfFixed":        "70px",

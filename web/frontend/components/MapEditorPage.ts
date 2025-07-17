@@ -368,6 +368,113 @@ class MapEditorPage {
             clearConsoleButton.addEventListener('click', this.clearConsole.bind(this));
         }
 
+        // Map title editing
+        const mapTitleInput = document.getElementById('map-title-input') as HTMLInputElement;
+        const saveTitleButton = document.getElementById('save-title-btn') as HTMLButtonElement;
+        const cancelTitleButton = document.getElementById('cancel-title-btn') as HTMLButtonElement;
+        
+        if (mapTitleInput && saveTitleButton && cancelTitleButton) {
+            let originalTitle = mapTitleInput.value;
+            let isEditing = false;
+            
+            const updateEditingState = (editing: boolean) => {
+                isEditing = editing;
+                if (editing) {
+                    mapTitleInput.classList.add('editing');
+                    saveTitleButton.classList.remove('hidden');
+                    cancelTitleButton.classList.remove('hidden');
+                } else {
+                    mapTitleInput.classList.remove('editing');
+                    saveTitleButton.classList.add('hidden');
+                    cancelTitleButton.classList.add('hidden');
+                }
+            };
+            
+            const cancelEditing = () => {
+                mapTitleInput.value = originalTitle;
+                mapTitleInput.blur();
+                updateEditingState(false);
+                resizeInput();
+            };
+            
+            const saveTitle = () => {
+                const newTitle = mapTitleInput.value.trim();
+                if (newTitle && newTitle !== originalTitle) {
+                    this.saveMapTitle(newTitle);
+                    originalTitle = newTitle; // Update original after successful save
+                }
+                mapTitleInput.blur();
+                updateEditingState(false);
+            };
+            
+            // Focus events for editing state
+            mapTitleInput.addEventListener('focus', () => {
+                updateEditingState(true);
+            });
+            
+            mapTitleInput.addEventListener('blur', (e) => {
+                // Don't blur if clicking on save/cancel buttons
+                const relatedTarget = e.relatedTarget as HTMLElement;
+                if (relatedTarget && (relatedTarget.id === 'save-title-btn' || relatedTarget.id === 'cancel-title-btn')) {
+                    return;
+                }
+                
+                // Auto-save if there are changes
+                const newTitle = mapTitleInput.value.trim();
+                if (newTitle && newTitle !== originalTitle) {
+                    this.saveMapTitle(newTitle);
+                    originalTitle = newTitle;
+                } else if (!newTitle) {
+                    mapTitleInput.value = originalTitle;
+                }
+                updateEditingState(false);
+            });
+            
+            // Input changes
+            mapTitleInput.addEventListener('input', () => {
+                resizeInput();
+                const hasChanges = mapTitleInput.value.trim() !== originalTitle;
+                // Update button states based on changes
+                if (hasChanges && mapTitleInput.value.trim()) {
+                    saveTitleButton.classList.remove('opacity-50');
+                    saveTitleButton.disabled = false;
+                } else {
+                    saveTitleButton.classList.add('opacity-50');
+                    saveTitleButton.disabled = true;
+                }
+            });
+            
+            // Keyboard shortcuts
+            mapTitleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveTitle();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEditing();
+                }
+            });
+            
+            // Button events
+            saveTitleButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                saveTitle();
+            });
+            
+            cancelTitleButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                cancelEditing();
+            });
+            
+            // Auto-resize input based on content
+            const resizeInput = () => {
+                mapTitleInput.style.width = 'auto';
+                mapTitleInput.style.width = Math.max(120, mapTitleInput.scrollWidth + 20) + 'px';
+            };
+            mapTitleInput.addEventListener('input', resizeInput);
+            resizeInput(); // Initial resize
+        }
+
 
         // Terrain palette buttons - radio button behavior
         document.querySelectorAll('.terrain-button').forEach(button => {
@@ -1039,6 +1146,39 @@ class MapEditorPage {
         this.logToConsole('Exporting map...');
         // TODO: Implement map export functionality
         this.toastManager?.showToast('Export', 'Export functionality not yet implemented', 'info');
+    }
+
+    private async saveMapTitle(newTitle: string): Promise<void> {
+        if (!newTitle.trim()) {
+            this.toastManager?.showToast('Error', 'Map title cannot be empty', 'error');
+            return;
+        }
+
+        // Update the local map data
+        if (this.mapData) {
+            this.mapData.name = newTitle;
+        }
+
+        try {
+            this.logToConsole(`Updating map title to: ${newTitle}`);
+            
+            // Save the map (this will include the title update)
+            await this.saveMap();
+            
+            this.logToConsole('Map title updated successfully');
+            this.toastManager?.showToast('Success', 'Map title updated', 'success');
+            
+        } catch (error) {
+            console.error('Failed to save map title:', error);
+            this.logToConsole(`Failed to save map title: ${error}`);
+            this.toastManager?.showToast('Error', 'Failed to update map title', 'error');
+            
+            // Revert the title on error
+            const mapTitleInput = document.getElementById('map-title-input') as HTMLInputElement;
+            if (mapTitleInput && this.mapData) {
+                mapTitleInput.value = this.mapData.name || 'Untitled Map';
+            }
+        }
     }
 
 
