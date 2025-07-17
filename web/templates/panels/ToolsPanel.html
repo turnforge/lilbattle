@@ -1,23 +1,6 @@
 <!-- Map Editor Tools Panel -->
 <div id="tools-panel" class="h-full overflow-y-auto">
   <div class="p-4 space-y-6">
-    <!-- Clear Tool -->
-    <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-      <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
-        🗑️ Clear Tool
-      </h3>
-      <div id="clear-palette" class="grid grid-cols-1 gap-2">
-        <button
-          class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          data-terrain="0"
-          title="Clear Terrain"
-        >
-          <div class="text-sm">🗑️</div>
-          <div class="text-xs">Clear</div>
-        </button>
-      </div>
-    </div>
-
     <!-- Nature Terrains -->
     <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
       <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
@@ -27,13 +10,22 @@
         id="nature-terrain-palette"
         class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto w-full"
       >
+        <button
+          class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-600"
+          data-terrain="0"
+          title="Clear"
+        >
+          <div class="text-sm">🗑️</div>
+        </button>
         {{ range .NatureTerrains }}
         <button
-          class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors{{ if eq .ID 5 }} bg-blue-100 dark:bg-blue-900 border-blue-500{{ end }}"
+          class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors{{ if eq .ID 0 }} bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-600{{ else if eq .ID 5 }} bg-blue-100 dark:bg-blue-900 border-blue-500{{ end }}"
           data-terrain="{{ .ID }}"
-          title="{{ .Name }} (Move: {{ .MoveCost }}, Defense: {{ .DefenseBonus }})"
+          title="{{ .Name }}{{ if ne .ID 0 }} (Move: {{ .MoveCost }}, Defense: {{ .DefenseBonus }}){{ end }}"
         >
-          {{ if .IconDataURL }}
+          {{ if eq .ID 0 }}
+          <div class="text-sm">🗑️</div>
+          {{ else if .IconDataURL }}
           <div class="flex justify-center mb-1">
             <img
               src="{{ .IconDataURL }}"
@@ -164,7 +156,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Painting Tools -->
     <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">

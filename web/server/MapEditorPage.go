@@ -89,31 +89,36 @@ func (v *MapEditorPage) SetupDefaults() {
 			// Use web-accessible static URL path for the tile asset
 			iconDataURL := fmt.Sprintf("/static/assets/v1/Tiles/%d/0.png", i)
 			
-			// Skip Clear terrain (ID 0) as it has its own dedicated section
-			if terrainData.ID != 0 {
-				terrain := TerrainType{
-					ID:              terrainData.ID,
-					Name:            terrainData.Name,
-					MoveCost:        terrainData.MoveCost,
-					DefenseBonus:    terrainData.DefenseBonus,
-					IconDataURL:     iconDataURL,
-					HasPlayerColors: terrainData.Type == weewar.TerrainPlayer,
-				}
-				
-				if terrainData.Type == weewar.TerrainPlayer {
-					v.CityTerrains = append(v.CityTerrains, terrain)
-				} else {
-					v.NatureTerrains = append(v.NatureTerrains, terrain)
-				}
+			terrain := TerrainType{
+				ID:              terrainData.ID,
+				Name:            terrainData.Name,
+				MoveCost:        terrainData.MoveCost,
+				DefenseBonus:    terrainData.DefenseBonus,
+				IconDataURL:     iconDataURL,
+				HasPlayerColors: terrainData.Type == weewar.TerrainPlayer,
+			}
+			
+			if terrainData.Type == weewar.TerrainPlayer {
+				v.CityTerrains = append(v.CityTerrains, terrain)
+			} else {
+				v.NatureTerrains = append(v.NatureTerrains, terrain)
 			}
 		}
 	}
 	
 	// Sort terrain lists by name for easier visual grouping
+	// Clear should always be first in Nature Terrains
 	sort.Slice(v.CityTerrains, func(i, j int) bool {
 		return v.CityTerrains[i].Name < v.CityTerrains[j].Name
 	})
 	sort.Slice(v.NatureTerrains, func(i, j int) bool {
+		// Clear (ID 0) should always be first
+		if v.NatureTerrains[i].ID == 0 {
+			return true
+		}
+		if v.NatureTerrains[j].ID == 0 {
+			return false
+		}
 		return v.NatureTerrains[i].Name < v.NatureTerrains[j].Name
 	})
 	
