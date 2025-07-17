@@ -29,18 +29,21 @@ type TerrainType struct {
 	MoveCost     int    `json:"moveCost"`
 	DefenseBonus int    `json:"defenseBonus"`
 	IconDataURL  string `json:"iconDataURL"`
+	HasPlayerColors bool `json:"hasPlayerColors"`
 }
 
 type MapEditorPage struct {
 	BasePage
-	Header        Header
-	IsOwner       bool
-	MapId         string
-	Map           *protos.Map
-	Errors        map[string]string
-	TBButtons     []*TBButton
-	AllowCustomId bool
-	TerrainTypes  []TerrainType
+	Header           Header
+	IsOwner          bool
+	MapId            string
+	Map              *protos.Map
+	Errors           map[string]string
+	TBButtons        []*TBButton
+	AllowCustomId    bool
+	NatureTerrains   []TerrainType
+	CityTerrains     []TerrainType
+	PlayerCount      int
 }
 
 func (g *MapEditorPage) Copy() View { return &MapEditorPage{} }
@@ -66,7 +69,12 @@ func (v *MapEditorPage) SetupDefaults() {
 	v.Header.ShowComposeButton = false
 	
 	// Initialize terrain types with actual asset images
-	v.TerrainTypes = []TerrainType{}
+	v.NatureTerrains = []TerrainType{}
+	v.CityTerrains = []TerrainType{}
+	v.PlayerCount = 4 // Default player count for map editor
+	
+	// Define which terrains are city/player terrains vs nature terrains
+	cityTerrainIDs := map[int]bool{1: true, 2: true, 3: true, 16: true, 20: true}
 	
 	// Create asset manager to load terrain tile images
 	assetManager := weewar.NewAssetManager("./assets/v1") // Adjust path as needed
@@ -90,13 +98,20 @@ func (v *MapEditorPage) SetupDefaults() {
 				iconDataURL = "" // Template can handle missing icons
 			}
 			
-			v.TerrainTypes = append(v.TerrainTypes, TerrainType{
-				ID:           terrainData.ID,
-				Name:         terrainData.Name,
-				MoveCost:     terrainData.MoveCost,
-				DefenseBonus: terrainData.DefenseBonus,
-				IconDataURL:  iconDataURL,
-			})
+			terrain := TerrainType{
+				ID:              terrainData.ID,
+				Name:            terrainData.Name,
+				MoveCost:        terrainData.MoveCost,
+				DefenseBonus:    terrainData.DefenseBonus,
+				IconDataURL:     iconDataURL,
+				HasPlayerColors: cityTerrainIDs[i],
+			}
+			
+			if cityTerrainIDs[i] {
+				v.CityTerrains = append(v.CityTerrains, terrain)
+			} else {
+				v.NatureTerrains = append(v.NatureTerrains, terrain)
+			}
 		}
 	}
 	v.Header.Styles = map[string]any{

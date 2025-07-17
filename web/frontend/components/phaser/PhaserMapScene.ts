@@ -68,21 +68,32 @@ export class PhaserMapScene extends Phaser.Scene {
     }
     
     private loadTerrainAssets() {
-        // Load terrain assets from the copied assets directory
-        const terrainTypes = [1, 2, 3, 16, 20]; // Grass, Desert, Water, Mountain, Rock
+        // City/Player terrains (have color variations 0-12 for different players)
+        const cityTerrains = [1, 2, 3, 16, 20]; // Land Base, Naval Base, Airport Base, Missile Silo, Mines
         
-        terrainTypes.forEach(type => {
-            const assetPath = `/static/assets/v1/Tiles/${type}/0.png`;
-            this.load.image(`terrain_${type}`, assetPath);
-        });
+        // Nature terrains (only have default texture, no player ownership)
+        const natureTerrains = [4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 21, 22, 23, 25, 26];
         
-        // Load additional terrain variations for colors
-        [1, 2, 3, 16, 20].forEach(type => {
+        // Load city terrains with all color variations
+        cityTerrains.forEach(type => {
             for (let color = 0; color <= 12; color++) {
                 const assetPath = `/static/assets/v1/Tiles/${type}/${color}.png`;
                 this.load.image(`terrain_${type}_${color}`, assetPath);
+                if (color === 0) {
+                    this.load.image(`terrain_${type}`, assetPath); // Default alias
+                }
             }
         });
+        
+        // Load nature terrains with only default texture
+        natureTerrains.forEach(type => {
+            const assetPath = `/static/assets/v1/Tiles/${type}/0.png`;
+            this.load.image(`terrain_${type}`, assetPath);
+            this.load.image(`terrain_${type}_0`, assetPath); // Color 0 alias for consistency
+        });
+        
+        console.log(`[PhaserMapScene] Loading city terrain assets: ${cityTerrains.join(', ')} (with colors)`);
+        console.log(`[PhaserMapScene] Loading nature terrain assets: ${natureTerrains.join(', ')} (default only)`);
     }
     
     private loadUnitAssets() {
@@ -272,6 +283,18 @@ export class PhaserMapScene extends Phaser.Scene {
             this.tiles.set(key, tileSprite);
         } else {
             console.warn(`[PhaserMapScene] Texture not found: ${textureKey}`);
+            console.warn(`[PhaserMapScene] Available textures:`, this.textures.list);
+            
+            // Try fallback to basic terrain texture without color
+            const fallbackKey = `terrain_${terrainType}`;
+            if (this.textures.exists(fallbackKey)) {
+                console.log(`[PhaserMapScene] Using fallback texture: ${fallbackKey}`);
+                const tileSprite = this.add.sprite(position.x, position.y, fallbackKey);
+                tileSprite.setOrigin(0.5, 0.5);
+                this.tiles.set(key, tileSprite);
+            } else {
+                console.error(`[PhaserMapScene] Fallback texture also not found: ${fallbackKey}`);
+            }
         }
         
         // Update coordinate text if enabled
@@ -518,10 +541,20 @@ export class PhaserMapScene extends Phaser.Scene {
         // Find selected terrain button
         const selectedButton = document.querySelector('.terrain-button.bg-blue-100, .terrain-button.bg-blue-900') as HTMLElement;
         if (selectedButton) {
-            const terrain = parseInt(selectedButton.getAttribute('data-terrain') || '1');
-            return { terrain, color: 0 }; // Default color 0
+            const terrain = parseInt(selectedButton.getAttribute('data-terrain') || '5');
+            const hasColors = selectedButton.getAttribute('data-has-colors') === 'true';
+            
+            // If it's a city terrain, get the selected player color
+            if (hasColors) {
+                const playerColorSelect = document.getElementById('player-color') as HTMLSelectElement;
+                const color = playerColorSelect ? parseInt(playerColorSelect.value) : 0;
+                return { terrain, color };
+            } else {
+                // Nature terrain always uses color 0
+                return { terrain, color: 0 };
+            }
         }
-        return { terrain: 1, color: 0 }; // Default to grass
+        return { terrain: 5, color: 0 }; // Default to grass
     }
     
     private getCurrentBrushSize(): number {
