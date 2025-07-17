@@ -5,9 +5,10 @@
         <!-- Terrain Palette -->
         <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🎨 Terrain Palette</h3>
-            <div id="terrain-palette" class="grid grid-cols-5 gap-2 max-h-64 overflow-y-auto w-full">
+            <!--<div  id="terrain-palette"class="grid grid-cols-5 gap-2">-->
+            <div id="terrain-palette" class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto w-full">
                 {{ range .TerrainTypes }}
-                <button class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors block w-full{{ if eq .ID 1 }} bg-blue-100 dark:bg-blue-900 border-blue-500{{ end }}" 
+                <button class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors{{ if eq .ID 1 }} bg-blue-100 dark:bg-blue-900 border-blue-500{{ end }}" 
                         data-terrain="{{ .ID }}" title="{{ .Name }} (Move: {{ .MoveCost }}, Defense: {{ .DefenseBonus }})">
                     {{ if .IconDataURL }}
                         <div class="flex justify-center mb-1">
@@ -30,12 +31,12 @@
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Brush Size:</label>
                     <select id="brush-size" 
                             class="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="0">Single (1 hex)</option>
-                        <option value="1">Small (7 hexes)</option>
-                        <option value="2">Medium (19 hexes)</option>
-                        <option value="3">Large (37 hexes)</option>
-                        <option value="4">X-Large (61 hexes)</option>
-                        <option value="5">XX-Large (91 hexes)</option>
+                        <option value="1">Single (1 hex)</option>
+                        <option value="3">Small (3 hexes)</option>
+                        <option value="5">Medium (5)</option>
+                        <option value="9">Large (9 hexes)</option>
+                        <option value="15">X-Large (15 hexes)</option>
+                        <option value="21">XX-Large (21 hexes)</option>
                     </select>
                 </div>
                 <div id="brush-info" class="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 p-2 rounded">

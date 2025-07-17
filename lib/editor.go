@@ -291,9 +291,9 @@ func (e *WorldEditor) FloodFill(coord CubeCoord) error {
 // =============================================================================
 
 // SetTilesAt sets terrain at the specified coordinate with given radius (stateless)
-func (e *WorldEditor) SetTilesAt(coord CubeCoord, terrainType, radius int) error {
+func (e *WorldEditor) SetTilesAt(coord CubeCoord, terrainType, radius int) ([]CubeCoord, error) {
 	if e.currentWorld == nil {
-		return fmt.Errorf("no world loaded")
+		return nil, fmt.Errorf("no world loaded")
 	}
 
 	// Get all positions to paint based on radius
@@ -337,7 +337,7 @@ func (e *WorldEditor) SetTilesAt(coord CubeCoord, terrainType, radius int) error
 	}
 
 	e.modified = true
-	return nil
+	return positions, nil
 }
 
 // getBrushPositions returns all cube coordinates affected by the current brush

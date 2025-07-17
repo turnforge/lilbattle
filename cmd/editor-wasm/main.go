@@ -210,7 +210,7 @@ func registerEditorFunctions() {
 		return pixelToCoords(args[0].Float(), args[1].Float())
 	}))
 	js.Global().Set("editorSetTilesAt", createWrapper(4, 4, func(args []js.Value) (any, error) {
-		return nil, setTilesAt(args[0].Int(), args[1].Int(), args[2].Int(), args[3].Int())
+		return setTilesAt(args[0].Int(), args[1].Int(), args[2].Int(), args[3].Int())
 	}))
 }
 
@@ -356,7 +356,7 @@ func validateMap() (map[string]any, error) {
 func getTerrainTypes() (map[string]any, error) {
 	// Get all terrain types from the terrain data array (0-26)
 	terrainTypes := []map[string]any{}
-	
+
 	for i := 0; i <= 26; i++ {
 		terrainData := weewar.GetTerrainData(i)
 		if terrainData != nil {
@@ -465,10 +465,10 @@ func calculateCanvasSizeInternal() (width, height int) {
 	return width, height
 }
 
-func setTilesAt(q, r, terrainType, radius int) error {
+func setTilesAt(q, r, terrainType, radius int) (any, error) {
 	// Create cube coordinate from Q, R values
 	coord := weewar.CubeCoord{Q: q, R: r}
-	
+
 	// Use the stateless setTilesAt method
 	return globalEditor.SetTilesAt(coord, terrainType, radius)
 }

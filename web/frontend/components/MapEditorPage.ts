@@ -929,7 +929,7 @@ class MapEditorPage {
         const coords = this.pixelToHex(x, y);
         if (coords) {
             // Paint at clicked coordinates (works both within and outside current map bounds)
-            this.paintHexAtCoords(coords.row, coords.col);
+            this.paintHexAtCoords(coords);
         }
     }
 
@@ -975,15 +975,8 @@ class MapEditorPage {
                 const result = (window as any).editorPixelToCoords(x, y);
                 if (result && result.success && result.data) {
                     const { row, col, cubeQ, cubeR, withinBounds } = result.data;
-                    
-                    // Use WASM-provided bounds validation (supports arbitrary coordinate regions)
-                    if (withinBounds) {
-                        this.logToConsole(`Pixel (${x}, ${y}) -> RowCal (${row}, ${col}) = QR(${cubeQ}, ${cubeR}) [WASM conversion, within bounds]`);
-                        return { row, col, cubeQ, cubeR };
-                    }
-                    
-                    this.logToConsole(`Pixel (${x}, ${y}) -> Out of bounds RowCal (${row}, ${col}) = QR(${cubeQ}, ${cubeR}) [WASM conversion]`);
-                    return null;
+                    this.logToConsole(`Pixel (${x}, ${y}) -> RowCal (${row}, ${col}) = QR(${cubeQ}, ${cubeR}) [WASM conversion, within bounds]`);
+                    return result.data
                 }
             } catch (error) {
                 console.warn('WASM coordinate conversion failed, falling back to browser calculation:', error);
@@ -1022,12 +1015,7 @@ class MapEditorPage {
         }
     }
 
-    private paintHexAtCoords(row: number, col: number): void {
-        if (!this.wasmInitialized) {
-            this.logToConsole('WASM not initialized - cannot paint terrain');
-            return;
-        }
-        
+    private paintHexAtCoords(coord: {row: number, col: number, cubeQ: number, cubeR: number}): void {
         try {
             // Get current terrain type from selected terrain button
             const selectedTerrainButton = document.querySelector('.terrain-button.bg-blue-100') as HTMLElement;
@@ -1039,19 +1027,27 @@ class MapEditorPage {
             const brushSize = brushSizeSelect ? parseInt(brushSizeSelect.value) : 0;
             
             // Use stateless WASM editor function
-            const result = (window as any).editorSetTilesAt(col, row, terrainType, brushSize);
+            const result = (window as any).editorSetTilesAt(coord.cubeQ, coord.cubeR, terrainType, brushSize);
             
             if (result.success) {
                 // Update local map data to stay in sync (only the center hex for simplicity)
-                if (this.mapData) {
-                    const key = `${row},${col}`;
-                    this.mapData.tiles[key] = { tileType: terrainType };
+                // result.data is a list of coords on which the given terrain type was set
+                const mapData = this.mapData
+                if (mapData) {
+                    result.data.forEach((coord: {q: number, r: number}) => {
+                      const key = `${coord.q},${coord.r}`;
+                      if (terrainType <= 0) {
+                        delete mapData.tiles[key]
+                      } else {
+                        mapData.tiles[key] = { tileType: terrainType };
+                      }
+                    })
                 }
                 
                 // Log the paint action with brush info
                 const sizeNames = ['Single', 'Small', 'Medium', 'Large', 'X-Large', 'XX-Large'];
                 const sizeName = sizeNames[brushSize] || 'Unknown';
-                this.logToConsole(`Set terrain ${terrainType} at (Q=${col}, R=${row}) with ${sizeName} brush (radius=${brushSize})`);
+                // this.logToConsole(`Set terrain ${terrainType} at (Q=${col}, R=${row}) with ${sizeName} brush (radius=${brushSize})`);
             } else {
                 this.logToConsole(`Set terrain failed: ${result.error}`);
             }
