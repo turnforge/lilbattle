@@ -1,50 +1,27 @@
-import { ThemeManager } from './ThemeManager';
-import { Modal } from './Modal';
-import { ToastManager } from './ToastManager';
+import { BasePage } from './BasePage';
 
 /**
  * Main application initialization
  */
-class MapDetailsPage {
-    private themeManager: typeof ThemeManager | null = null;
-    private modal: Modal | null = null;
-    private toastManager: ToastManager | null = null;
-
-    private themeToggleButton: HTMLButtonElement | null = null;
-    private themeToggleIcon: HTMLElement | null = null;
-
+class MapDetailsPage extends BasePage {
     private currentMapId: string | null = null;
     private isLoadingMap: boolean = false; // Loading state
 
     constructor() {
-        this.initializeComponents();
-        this.bindEvents();
+        super();
+        this.initializeSpecificComponents();
+        this.bindSpecificEvents();
         this.loadInitialState();
     }
 
-    private initializeComponents(): void {
+    protected initializeSpecificComponents(): void {
         const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
         const mapId = mapIdInput?.value.trim() || null; // Allow null if input not found/empty
 
-        ThemeManager.init();
-        this.modal = Modal.init();
-        this.toastManager = ToastManager.init();
-
-        this.themeToggleButton = document.getElementById('theme-toggle-button') as HTMLButtonElement;
-        this.themeToggleIcon = document.getElementById('theme-toggle-icon');
-
-        if (!this.themeToggleButton || !this.themeToggleIcon) {
-            console.warn("Theme toggle button or icon element not found in Header.");
-        }
-
-        console.log('LeetCoach application initialized');
+        console.log('MapDetailsPage application initialized');
     }
 
-    private bindEvents(): void {
-        if (this.themeToggleButton) {
-            this.themeToggleButton.addEventListener('click', this.handleThemeToggleClick.bind(this));
-        }
-
+    protected bindSpecificEvents(): void {
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         if (mobileMenuButton) {
             mobileMenuButton.addEventListener('click', () => {
@@ -65,7 +42,7 @@ class MapDetailsPage {
 
     /** Load document data and set initial UI states */
     private loadInitialState(): void {
-        this.updateThemeButtonState();
+        // Theme button state is handled by BasePage
 
         const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
         const mapId = mapIdInput?.value.trim() || null;
@@ -76,7 +53,7 @@ class MapDetailsPage {
             this.loadMapData(this.currentMapId);
         } else {
             console.error("Map ID input element not found or has no value. Cannot load document.");
-            this.toastManager?.showToast("Error", "Could not load document: Map ID missing.", "error");
+            this.showToast("Error", "Could not load document: Map ID missing.", "error");
         }
     }
 
@@ -90,47 +67,26 @@ class MapDetailsPage {
         // here is where we would do "reload" via ajax - this coul dbe via ajax or via htmx
     }
 
-    /** Handles click on the new theme toggle button */
-    private handleThemeToggleClick(): void {
-        const currentSetting = ThemeManager.getCurrentThemeSetting();
-        const nextSetting = ThemeManager.getNextTheme(currentSetting);
-        ThemeManager.setTheme(nextSetting);
-        this.updateThemeButtonState(nextSetting); // Update icon to reflect the *new* state
-
-        // Optional: Show toast feedback
-        // this.toastManager?.showToast('Theme Changed', `Switched to ${ThemeManager.getThemeLabel(nextSetting)}`, 'info', 2000);
-
-        // Notify all other child components when themes have changed - or we could do this via event bus
-    }
- 
-    /** Updates the theme toggle button's icon and aria-label */
-    private updateThemeButtonState(currentTheme?: string): void {
-        if (!this.themeToggleButton || !this.themeToggleIcon) return;
-
-        const themeToDisplay = currentTheme || ThemeManager.getCurrentThemeSetting();
-        const iconSVG = ThemeManager.getIconSVG(themeToDisplay);
-        const label = `Toggle theme (currently: ${ThemeManager.getThemeLabel(themeToDisplay)})`;
-
-        this.themeToggleIcon.innerHTML = iconSVG;
-        this.themeToggleButton.setAttribute('aria-label', label);
-        this.themeToggleButton.setAttribute('title', label); // Add tooltip
-    }
+    // Theme management is handled by BasePage
 
     /** Save document (Placeholder - needs full implementation later) */
     private saveDocument(): void {
         console.log("Save button clicked (Placeholder - Requires API integration for full save)");
         // This full save logic will be replaced by incremental saves triggered by component callbacks
-        this.toastManager?.showToast('Save Action', 'Incremental saves handle updates. Full save TBD.', 'info');
+        this.showToast('Save Action', 'Incremental saves handle updates. Full save TBD.', 'info');
     }
 
     /** Export document (Placeholder) */
     private exportDocument(): void {
-        if (this.toastManager) {
-            this.toastManager.showToast('Export started', 'Your document is being prepared for export.', 'info');
-            setTimeout(() => {
-                this.toastManager?.showToast('Export complete', 'Document export simulation finished.', 'success');
-            }, 1500);
-        }
+        this.showToast('Export started', 'Your document is being prepared for export.', 'info');
+        setTimeout(() => {
+            this.showToast('Export complete', 'Document export simulation finished.', 'success');
+        }, 1500);
+    }
+
+    public destroy(): void {
+        // Clean up any specific resources for MapDetailsPage
+        // Currently no specific cleanup needed
     }
 }
 

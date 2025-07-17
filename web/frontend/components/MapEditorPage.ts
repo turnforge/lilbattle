@@ -39,6 +39,9 @@ class MapEditorPage extends BasePage {
     
     // Editor state
     private currentTerrain: number = 1; // Default to grass
+    private currentUnit: number = 0; // Default to no unit
+    private currentPlayerId: number = 1; // Default to player 1
+    private placementMode: 'terrain' | 'unit' | 'clear' = 'terrain'; // Track what we're placing
     private brushSize: number = 0; // Default to single hex
     private editorOutput: HTMLElement | null = null;
 
@@ -293,20 +296,67 @@ class MapEditorPage extends BasePage {
                 const clickedButton = e.currentTarget as HTMLElement;
                 const terrain = clickedButton.getAttribute('data-terrain');
                 if (terrain) {
-                    // Remove selection from all buttons
-                    document.querySelectorAll('.terrain-button').forEach(btn => {
+                    // Remove selection from all terrain and unit buttons
+                    document.querySelectorAll('.terrain-button, .unit-button').forEach(btn => {
                         btn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
                     });
                     
                     // Add selection to clicked button
                     clickedButton.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
                     
-                    // Update current terrain (no longer needed, but keeping for compatibility)
-                    this.currentTerrain = parseInt(terrain);
-                    this.logToConsole(`Selected terrain: ${terrain}`);
+                    // Update editor state
+                    const terrainValue = parseInt(terrain);
+                    if (terrainValue === 0) {
+                        this.placementMode = 'clear';
+                        this.logToConsole('Selected clear mode');
+                    } else {
+                        this.currentTerrain = terrainValue;
+                        this.placementMode = 'terrain';
+                        this.logToConsole(`Selected terrain: ${terrain}`);
+                    }
                 }
             });
         });
+
+        // Unit palette buttons - radio button behavior
+        document.querySelectorAll('.unit-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const clickedButton = e.currentTarget as HTMLElement;
+                const unit = clickedButton.getAttribute('data-unit');
+                if (unit) {
+                    // Remove selection from all terrain and unit buttons
+                    document.querySelectorAll('.terrain-button, .unit-button').forEach(btn => {
+                        btn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
+                    });
+                    
+                    // Add selection to clicked button
+                    clickedButton.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
+                    
+                    // Update editor state
+                    this.currentUnit = parseInt(unit);
+                    this.placementMode = 'unit';
+                    
+                    // Get current player selection
+                    const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
+                    if (unitPlayerSelect) {
+                        this.currentPlayerId = parseInt(unitPlayerSelect.value);
+                    }
+                    
+                    this.logToConsole(`Selected unit: ${unit} for player ${this.currentPlayerId}`);
+                }
+            });
+        });
+
+        // Unit player color selector
+        const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
+        if (unitPlayerSelect) {
+            unitPlayerSelect.addEventListener('change', (e) => {
+                this.currentPlayerId = parseInt((e.target as HTMLSelectElement).value);
+                if (this.placementMode === 'unit') {
+                    this.logToConsole(`Unit player changed to: ${this.currentPlayerId}`);
+                }
+            });
+        }
 
         // Brush size selector
         const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
@@ -1110,18 +1160,6 @@ class MapEditorPage extends BasePage {
     
     private handlePhaserTileClick(q: number, r: number): void {
         try {
-            // Get current terrain type from selected terrain button
-            const selectedTerrainButton = document.querySelector('.terrain-button.bg-blue-100') as HTMLElement;
-            const terrainType = selectedTerrainButton ? 
-                parseInt(selectedTerrainButton.getAttribute('data-terrain') || '1') : 1;
-            
-            // Get current brush size from dropdown
-            const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
-            const brushSize = brushSizeSelect ? parseInt(brushSizeSelect.value) : 0;
-            
-            // Paint with current settings
-            this.phaserPanel?.paintTile(q, r, terrainType, 0, brushSize);
-            
             // Update coordinate inputs
             const rowInput = document.getElementById('paint-row') as HTMLInputElement;
             const colInput = document.getElementById('paint-col') as HTMLInputElement;
@@ -1129,9 +1167,88 @@ class MapEditorPage extends BasePage {
             if (rowInput) rowInput.value = r.toString();
             if (colInput) colInput.value = q.toString();
             
+            // Handle different placement modes
+            if (this.placementMode === 'clear') {
+                this.handleClearClick(q, r);
+            } else if (this.placementMode === 'unit') {
+                this.handleUnitPlacement(q, r);
+            } else if (this.placementMode === 'terrain') {
+                this.handleTerrainPlacement(q, r);
+            }
+            
         } catch (error) {
-            this.logToConsole(`Phaser paint error: ${error}`);
+            this.logToConsole(`Phaser click error: ${error}`);
         }
+    }
+    
+    private handleClearClick(q: number, r: number): void {
+        const unitKey = `${q},${r}`;
+        const tileKey = `${q},${r}`;
+        
+        // First priority: remove unit if exists
+        if (this.mapData && this.mapData.units[unitKey]) {
+            delete this.mapData.units[unitKey];
+            this.phaserPanel?.removeUnit(q, r);
+            this.logToConsole(`Removed unit at Q=${q}, R=${r}`);
+            this.markAsChanged();
+            return;
+        }
+        
+        // Second priority: remove tile if exists
+        if (this.mapData && this.mapData.tiles[tileKey]) {
+            delete this.mapData.tiles[tileKey];
+            this.phaserPanel?.removeTile(q, r);
+            this.logToConsole(`Removed tile at Q=${q}, R=${r}`);
+            this.markAsChanged();
+        } else {
+            this.logToConsole(`Nothing to clear at Q=${q}, R=${r}`);
+        }
+    }
+    
+    private handleUnitPlacement(q: number, r: number): void {
+        if (!this.mapData) return;
+        
+        const tileKey = `${q},${r}`;
+        const unitKey = `${q},${r}`;
+        
+        // Check if tile exists at this location
+        if (!this.mapData.tiles[tileKey]) {
+            this.logToConsole(`Cannot place unit at Q=${q}, R=${r} - no tile exists`);
+            return;
+        }
+        
+        // Place or replace unit (only one unit per tile)
+        this.mapData.units[unitKey] = {
+            tileType: this.currentUnit,
+            playerId: this.currentPlayerId
+        };
+        
+        // Use brush size 1 for units
+        this.phaserPanel?.paintUnit(q, r, this.currentUnit, this.currentPlayerId);
+        this.logToConsole(`Placed unit ${this.currentUnit} (player ${this.currentPlayerId}) at Q=${q}, R=${r}`);
+        this.markAsChanged();
+    }
+    
+    private handleTerrainPlacement(q: number, r: number): void {
+        // Get current brush size from dropdown
+        const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        const brushSize = brushSizeSelect ? parseInt(brushSizeSelect.value) : 0;
+        
+        // Paint terrain with current settings
+        this.phaserPanel?.paintTile(q, r, this.currentTerrain, 0, brushSize);
+        
+        // Update mapData tiles
+        if (this.mapData) {
+            // For now, just update the clicked tile in mapData
+            // The full brush area will be handled by the Phaser panel
+            const tileKey = `${q},${r}`;
+            this.mapData.tiles[tileKey] = {
+                tileType: this.currentTerrain
+            };
+        }
+        
+        this.logToConsole(`Painted terrain ${this.currentTerrain} at Q=${q}, R=${r} with brush size ${brushSize}`);
+        this.markAsChanged();
     }
     
     // Public methods for Phaser panel (for backward compatibility with UI)

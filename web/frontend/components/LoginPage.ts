@@ -1,8 +1,7 @@
 
-import { ThemeManager } from './ThemeManager';
-import { ToastManager } from './ToastManager';
+import { BasePage } from './BasePage';
 
-class LoginPage {
+class LoginPage extends BasePage {
     private form: HTMLFormElement | null;
     private titleElement: HTMLElement | null;
     private submitButton: HTMLButtonElement | null;
@@ -15,10 +14,13 @@ class LoginPage {
     private isSignUpMode: boolean = false;
 
     constructor() {
-        // Initialize global components
-        ThemeManager.init();
-        ToastManager.init(); // Initialize toast for potential messages
+        super();
+        this.initializeSpecificComponents();
+        this.bindSpecificEvents();
+        this.updateUI(); // Set initial UI state
+    }
 
+    protected initializeSpecificComponents(): void {
         // Find form elements
         this.callbackURL = (document.getElementById("callbackURL") as HTMLInputElement)
         this.form = document.getElementById('auth-form') as HTMLFormElement;
@@ -35,11 +37,9 @@ class LoginPage {
             return;
         }
 
-        this.bindEvents();
-        this.updateUI(); // Set initial UI state
     }
 
-    private bindEvents(): void {
+    protected bindSpecificEvents(): void {
         this.toggleLink?.addEventListener('click', (e) => {
             e.preventDefault();
             this.isSignUpMode = !this.isSignUpMode;
@@ -78,6 +78,11 @@ class LoginPage {
             this.emailInput.autocomplete = 'email';
              (this.form.querySelector('#password') as HTMLInputElement).autocomplete = 'current-password';
         }
+    }
+
+    public destroy(): void {
+        // Clean up any specific resources for LoginPage
+        // Currently no specific cleanup needed
     }
 
     public static init(): LoginPage {

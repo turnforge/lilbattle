@@ -84,8 +84,8 @@ export abstract class BasePage {
     /**
      * Show a modal dialog
      */
-    protected showModal(title: string, content: string, options?: any): void {
-        this.modal?.show(title, content, options);
+    protected showModal(templateId: string, data?: any): void {
+        this.modal?.show(templateId, data);
     }
 
     /**
