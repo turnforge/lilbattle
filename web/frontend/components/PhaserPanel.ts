@@ -253,6 +253,17 @@ export class PhaserPanel {
     }
     
     /**
+     * Get the current viewport center in hex coordinates
+     */
+    public getViewportCenter(): { q: number; r: number } {
+        if (!this.isInitialized || !this.phaserEditor) {
+            return { q: 0, r: 0 };
+        }
+        
+        return this.phaserEditor.getViewportCenter();
+    }
+    
+    /**
      * Set tiles data (load a map)
      */
     public setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): void {

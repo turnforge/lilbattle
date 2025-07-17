@@ -815,8 +815,12 @@ class MapEditorPage {
         this.logToConsole('Creating island map...');
         
         if (this.phaserPanel && this.phaserPanel.getIsInitialized()) {
-            // Create island pattern: center at (0,0) with radius 5
-            this.phaserPanel.createIslandPattern(0, 0, 5);
+            // Get current viewport center
+            const center = this.phaserPanel.getViewportCenter();
+            this.logToConsole(`Creating island at viewport center: Q=${center.q}, R=${center.r}`);
+            
+            // Create island pattern at viewport center with radius 5
+            this.phaserPanel.createIslandPattern(center.q, center.r, 5);
             this.logToConsole('Island map created using Phaser');
         } else {
             this.logToConsole('Phaser panel not available, cannot create island map');
@@ -827,11 +831,21 @@ class MapEditorPage {
         this.logToConsole('Creating mountain ridge...');
         
         if (this.phaserPanel && this.phaserPanel.getIsInitialized()) {
-            // Create a horizontal mountain ridge from (-4,-2) to (4,2)
-            for (let q = -4; q <= 4; q++) {
-                for (let r = -2; r <= 2; r++) {
+            // Get current viewport center
+            const center = this.phaserPanel.getViewportCenter();
+            this.logToConsole(`Creating mountain ridge at viewport center: Q=${center.q}, R=${center.r}`);
+            
+            // Create a horizontal mountain ridge centered around viewport center
+            const ridgeWidth = 9; // from -4 to +4
+            const ridgeHeight = 5; // from -2 to +2
+            const startQ = center.q - Math.floor(ridgeWidth / 2);
+            const startR = center.r - Math.floor(ridgeHeight / 2);
+            
+            for (let q = startQ; q < startQ + ridgeWidth; q++) {
+                for (let r = startR; r < startR + ridgeHeight; r++) {
+                    const relativeR = r - center.r;
                     // Create a ridge pattern - mountains in center, rocks on edges
-                    if (Math.abs(r) <= 1) {
+                    if (Math.abs(relativeR) <= 1) {
                         this.phaserPanel.paintTile(q, r, 4, 0); // Mountain
                     } else {
                         this.phaserPanel.paintTile(q, r, 5, 0); // Rock
@@ -1328,7 +1342,7 @@ class MapEditorPage {
                 const isDarkMode = document.documentElement.classList.contains('dark');
                 this.phaserPanel.setTheme(isDarkMode);
                 
-                this.updateEditorStatus('Phaser Ready');
+                this.updateEditorStatus('Ready');
                 this.logToConsole('Phaser panel initialized successfully as default!');
             } else {
                 throw new Error('Failed to initialize Phaser panel');

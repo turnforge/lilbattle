@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 
 export class PhaserMapScene extends Phaser.Scene {
     private tileWidth: number = 64;
@@ -20,7 +21,7 @@ export class PhaserMapScene extends Phaser.Scene {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
     private wasdKeys: any = null;
     private zoomSpeed: number = 0.1;
-    private panSpeed: number = 200;
+    private panSpeed: number = 100;
     
     // Mouse interaction
     private isMouseDown: boolean = false;
@@ -145,7 +146,7 @@ export class PhaserMapScene extends Phaser.Scene {
                 // If in paint mode, immediately paint at start position
                 if (this.isPaintMode) {
                     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = this.pixelToHex(worldPoint.x, worldPoint.y);
+                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
                     this.onTileClick(hexCoords.q, hexCoords.r);
                 }
             }
@@ -156,7 +157,7 @@ export class PhaserMapScene extends Phaser.Scene {
                 // Only paint on mouse up if we didn't drag and weren't in paint mode
                 if (!this.hasDragged && !this.isPaintMode) {
                     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = this.pixelToHex(worldPoint.x, worldPoint.y);
+                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
                     this.onTileClick(hexCoords.q, hexCoords.r);
                 }
                 
@@ -183,7 +184,7 @@ export class PhaserMapScene extends Phaser.Scene {
                 if (this.isPaintMode) {
                     // Paint mode: paint at current position
                     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = this.pixelToHex(worldPoint.x, worldPoint.y);
+                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
                     this.onTileClick(hexCoords.q, hexCoords.r);
                 } else {
                     // Pan mode: move camera
@@ -237,43 +238,11 @@ export class PhaserMapScene extends Phaser.Scene {
         return { q, r };
     }
     
-    // Convert pixel coordinates to hex coordinates (matching lib/map.go XYToQR)
-    private pixelToHex(x: number, y: number): { q: number; r: number } {
-        // Match the Go implementation from map.go XYToQR
-        const row = Math.floor((y + this.tileHeight / 2) / this.yIncrement);
-        
-        let halfDists = Math.floor(1 + Math.abs(x * 2 / this.tileWidth));
-        if ((row & 1) !== 0) {
-            halfDists = Math.floor(1 + Math.abs((x - this.tileWidth / 2) * 2 / this.tileWidth));
-        }
-        
-        let col = Math.floor(halfDists / 2);
-        if (x < 0) {
-            col = -col;
-        }
-        
-        return this.rowColToHex(row, col);
-    }
-    
-    // Convert hex coordinates to pixel coordinates (matching lib/map.go CenterXYForTile)
-    private hexToPixel(q: number, r: number): { x: number; y: number } {
-        // Match the Go implementation from map.go CenterXYForTile
-        const { row, col } = this.hexToRowCol(q, r);
-        
-        let y = this.yIncrement * row;
-        let x = this.tileWidth * col;
-        
-        if ((row & 1) === 1) {
-            x += this.tileWidth / 2;
-        }
-        
-        return { x, y };
-    }
     
     // Public methods for map manipulation
     public setTile(q: number, r: number, terrainType: number, color: number = 0) {
         const key = `${q},${r}`;
-        const position = this.hexToPixel(q, r);
+        const position = hexToPixel(q, r);
         
         // Remove existing tile if it exists
         if (this.tiles.has(key)) {
@@ -335,7 +304,7 @@ export class PhaserMapScene extends Phaser.Scene {
     // Unit management methods
     public setUnit(q: number, r: number, unitType: number, color: number = 1) {
         const key = `${q},${r}`;
-        const position = this.hexToPixel(q, r);
+        const position = hexToPixel(q, r);
         
         // Remove existing unit if it exists
         if (this.units.has(key)) {
@@ -424,10 +393,10 @@ export class PhaserMapScene extends Phaser.Scene {
         const maxY = worldView.y + worldView.height + padding;
         
         // Convert bounds to hex coordinates
-        const topLeft = this.pixelToHex(minX, minY);
-        const topRight = this.pixelToHex(maxX, minY);
-        const bottomLeft = this.pixelToHex(minX, maxY);
-        const bottomRight = this.pixelToHex(maxX, maxY);
+        const topLeft = pixelToHex(minX, minY);
+        const topRight = pixelToHex(maxX, minY);
+        const bottomLeft = pixelToHex(minX, maxY);
+        const bottomRight = pixelToHex(maxX, maxY);
         
         // Find the bounding box in hex coordinates
         const minQ = Math.min(topLeft.q, topRight.q, bottomLeft.q, bottomRight.q) - 1;
@@ -462,10 +431,10 @@ export class PhaserMapScene extends Phaser.Scene {
         const maxY = worldView.y + worldView.height + padding;
         
         // Convert bounds to hex coordinates to find range
-        const topLeft = this.pixelToHex(minX, minY);
-        const topRight = this.pixelToHex(maxX, minY);
-        const bottomLeft = this.pixelToHex(minX, maxY);
-        const bottomRight = this.pixelToHex(maxX, maxY);
+        const topLeft = pixelToHex(minX, minY);
+        const topRight = pixelToHex(maxX, minY);
+        const bottomLeft = pixelToHex(minX, maxY);
+        const bottomRight = pixelToHex(maxX, maxY);
         
         // Find the bounding box in hex coordinates
         const minQ = Math.min(topLeft.q, topRight.q, bottomLeft.q, bottomRight.q) - 2;
@@ -489,7 +458,7 @@ export class PhaserMapScene extends Phaser.Scene {
     private drawHexagon(q: number, r: number) {
         if (!this.gridGraphics) return;
         
-        const position = this.hexToPixel(q, r);
+        const position = hexToPixel(q, r);
         const halfWidth = this.tileWidth / 2;
         const halfHeight = this.tileHeight / 2;
         
@@ -518,7 +487,7 @@ export class PhaserMapScene extends Phaser.Scene {
         if (!this.showCoordinates) return;
         
         const key = `${q},${r}`;
-        const position = this.hexToPixel(q, r);
+        const position = hexToPixel(q, r);
         
         // Remove existing text
         if (this.coordinateTexts.has(key)) {

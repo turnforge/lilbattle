@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { PhaserMapScene } from './PhaserMapScene';
+import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 
 export class PhaserMapEditor {
     private game: Phaser.Game | null = null;
@@ -200,7 +201,7 @@ export class PhaserMapEditor {
         if (!this.scene) return;
         
         // Convert hex coordinates to pixel coordinates
-        const position = this.hexToPixel(q, r);
+        const position = hexToPixel(q, r);
         
         // Center camera on position
         this.scene.cameras.main.centerOn(position.x, position.y);
@@ -216,25 +217,30 @@ export class PhaserMapEditor {
         return this.scene?.cameras.main.zoom || 1;
     }
     
-    // Helper method for hex to pixel conversion (matches scene implementation)
-    private hexToPixel(q: number, r: number): { x: number; y: number } {
-        const tileWidth = 64;
-        const yIncrement = 48;
+    /**
+     * Get the current viewport center in hex coordinates
+     */
+    public getViewportCenter(): HexCoord {
+        if (!this.scene) return { q: 0, r: 0 };
         
-        // Match the Go implementation from map.go CenterXYForTile
-        const x_coord = q;
-        const z_coord = r;
-        const col = x_coord + Math.floor((z_coord - (z_coord & 1)) / 2);
-        const row = z_coord;
+        const camera = this.scene.cameras.main;
         
-        let y = yIncrement * row;
-        let x = tileWidth * col;
+        // Get the center of the viewport in world coordinates
+        const centerX = camera.scrollX + (camera.width / 2) / camera.zoom;
+        const centerY = camera.scrollY + (camera.height / 2) / camera.zoom;
         
-        if (row % 2 === 1) {
-            x += tileWidth / 2;
-        }
+        // Convert pixel coordinates to hex coordinates
+        return pixelToHex(centerX, centerY);
+    }
+    
+    /**
+     * Get the current camera position in pixel coordinates
+     */
+    public getCameraPosition(): PixelCoord {
+        if (!this.scene) return { x: 0, y: 0 };
         
-        return { x, y };
+        const camera = this.scene.cameras.main;
+        return { x: camera.scrollX, y: camera.scrollY };
     }
     
     // Advanced map generation methods
