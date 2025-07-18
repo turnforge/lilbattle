@@ -30,7 +30,8 @@ export interface ShortcutManagerConfig {
     shortcuts: ShortcutConfig[];
     helpContainer?: string;
     timeout?: number; // ms to return to normal state (current: 3000ms, immediate mode: 300ms)
-    immediateExecution?: boolean; // Future: enable immediate execution with preview
+    immediateExecution?: boolean; // Enable immediate execution with preview
+    previewDelay?: number; // ms delay before preview execution (default: 300ms)
 }
 
 export enum KeyboardState {
@@ -47,12 +48,16 @@ export class KeyboardShortcutManager {
     private timeout: number = 3000; // Default 3 second timeout
     private timeoutId: number | null = null;
     private helpOverlay: HTMLElement | null = null;
-    private immediateExecution: boolean = false; // Future: enable immediate execution mode
+    private immediateExecution: boolean = false; // Enable immediate execution mode
+    private previewDelay: number = 300; // Default 300ms preview delay
+    private previewTimeoutId: number | null = null; // Separate timeout for preview
+    private isPreviewActive: boolean = false; // Track if preview is currently active
 
     constructor(config: ShortcutManagerConfig) {
         this.helpContainer = config.helpContainer || null;
         this.timeout = config.timeout || 3000;
         this.immediateExecution = config.immediateExecution || false;
+        this.previewDelay = config.previewDelay || 300;
         
         // Register shortcuts
         config.shortcuts.forEach(shortcut => {
@@ -88,6 +93,12 @@ export class KeyboardShortcutManager {
         // Handle escape key
         if (event.key === 'Escape') {
             event.preventDefault();
+            
+            // Cancel preview if active in immediate execution mode
+            if (this.immediateExecution && this.isPreviewActive) {
+                this.cancelCurrentPreview();
+            }
+            
             this.resetState();
             return;
         }
@@ -135,6 +146,11 @@ export class KeyboardShortcutManager {
             this.currentArgs += key;
             this.updateStateIndicator();
             this.resetTimeout();
+            
+            // Handle immediate execution mode
+            if (this.immediateExecution) {
+                this.schedulePreviewExecution();
+            }
         } else if (key === 'Enter' || key === ' ') {
             // Execute command with args
             event.preventDefault();
@@ -145,6 +161,14 @@ export class KeyboardShortcutManager {
             this.currentArgs = this.currentArgs.slice(0, -1);
             this.updateStateIndicator();
             this.resetTimeout();
+            
+            // Handle immediate execution mode
+            if (this.immediateExecution) {
+                this.cancelPreviewExecution();
+                if (this.currentArgs.length > 0) {
+                    this.schedulePreviewExecution();
+                }
+            }
         }
     }
 
@@ -161,6 +185,61 @@ export class KeyboardShortcutManager {
             shortcut.handler(args);
         } catch (error) {
             console.error('Error executing shortcut:', error);
+        }
+    }
+    
+    private schedulePreviewExecution(): void {
+        // Cancel any existing preview timeout
+        this.cancelPreviewExecution();
+        
+        // Schedule preview execution
+        this.previewTimeoutId = window.setTimeout(() => {
+            this.executePreview();
+        }, this.previewDelay);
+    }
+    
+    private cancelPreviewExecution(): void {
+        if (this.previewTimeoutId) {
+            window.clearTimeout(this.previewTimeoutId);
+            this.previewTimeoutId = null;
+        }
+        
+        // Cancel current preview if active
+        if (this.isPreviewActive) {
+            this.cancelCurrentPreview();
+        }
+    }
+    
+    private executePreview(): void {
+        const shortcut = this.shortcuts.get(this.currentCommand);
+        if (shortcut && this.currentArgs) {
+            try {
+                // Call preview handler if available
+                if (shortcut.previewHandler) {
+                    shortcut.previewHandler(this.currentArgs);
+                    this.isPreviewActive = true;
+                } else {
+                    // Fallback to regular handler for immediate execution
+                    shortcut.handler(this.currentArgs);
+                    this.isPreviewActive = true;
+                }
+            } catch (error) {
+                console.error('Error executing preview:', error);
+            }
+        }
+    }
+    
+    private cancelCurrentPreview(): void {
+        if (this.isPreviewActive) {
+            const shortcut = this.shortcuts.get(this.currentCommand);
+            if (shortcut && shortcut.cancelHandler) {
+                try {
+                    shortcut.cancelHandler();
+                } catch (error) {
+                    console.error('Error canceling preview:', error);
+                }
+            }
+            this.isPreviewActive = false;
         }
     }
 
@@ -181,6 +260,7 @@ export class KeyboardShortcutManager {
         this.currentCommand = '';
         this.currentArgs = '';
         this.clearTimeout();
+        this.cancelPreviewExecution();
         this.updateStateIndicator();
         this.hideHelp();
     }
@@ -331,6 +411,7 @@ export class KeyboardShortcutManager {
 
     public destroy(): void {
         document.removeEventListener('keydown', this.handleKeydown.bind(this));
+        this.cancelPreviewExecution();
         this.resetState();
         this.hideHelp();
     }

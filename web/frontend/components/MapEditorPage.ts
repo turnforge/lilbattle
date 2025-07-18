@@ -59,6 +59,15 @@ class MapEditorPage extends BasePage {
     // Keyboard shortcut manager
     private keyboardShortcutManager: KeyboardShortcutManager | null = null;
 
+    // State management for undo/restore operations
+    private savedUIState: {
+        terrain: number;
+        unit: number;
+        playerId: number;
+        brushSize: number;
+        placementMode: 'terrain' | 'unit' | 'clear';
+    } | null = null;
+
     // Change tracking for unsaved changes
     private hasUnsavedChanges: boolean = false;
     private originalMapData: string = '';
@@ -465,6 +474,8 @@ class MapEditorPage extends BasePage {
             {
                 key: 'n',
                 handler: (args?: string) => this.selectNatureTerrain(args),
+                previewHandler: (args?: string) => this.previewNatureTerrain(args),
+                cancelHandler: () => this.cancelSelection(),
                 description: 'Select nature terrain by index',
                 category: 'Terrain',
                 requiresArgs: true,
@@ -475,6 +486,8 @@ class MapEditorPage extends BasePage {
             {
                 key: 'c',
                 handler: (args?: string) => this.selectCityTerrain(args),
+                previewHandler: (args?: string) => this.previewCityTerrain(args),
+                cancelHandler: () => this.cancelSelection(),
                 description: 'Select city terrain by index',
                 category: 'Terrain',
                 requiresArgs: true,
@@ -485,6 +498,8 @@ class MapEditorPage extends BasePage {
             {
                 key: 'u',
                 handler: (args?: string) => this.selectUnit(args),
+                previewHandler: (args?: string) => this.previewUnit(args),
+                cancelHandler: () => this.cancelSelection(),
                 description: 'Select unit type by index',
                 category: 'Units',
                 requiresArgs: true,
@@ -495,6 +510,8 @@ class MapEditorPage extends BasePage {
             {
                 key: 'p',
                 handler: (args?: string) => this.selectPlayer(args),
+                previewHandler: (args?: string) => this.previewPlayer(args),
+                cancelHandler: () => this.cancelSelection(),
                 description: 'Set current player',
                 category: 'Units',
                 requiresArgs: true,
@@ -505,6 +522,8 @@ class MapEditorPage extends BasePage {
             {
                 key: 'b',
                 handler: (args?: string) => this.selectBrushSize(args),
+                previewHandler: (args?: string) => this.previewBrushSize(args),
+                cancelHandler: () => this.cancelSelection(),
                 description: 'Set brush size',
                 category: 'Tools',
                 requiresArgs: true,
@@ -522,10 +541,12 @@ class MapEditorPage extends BasePage {
 
         this.keyboardShortcutManager = new KeyboardShortcutManager({
             shortcuts,
-            timeout: 3000
+            timeout: 3000,
+            immediateExecution: true, // Enable immediate execution mode
+            previewDelay: 300 // 300ms preview delay
         });
         
-        this.logToConsole('Keyboard shortcuts initialized');
+        this.logToConsole('Keyboard shortcuts initialized with immediate execution mode');
     }
 
     private loadInitialState(): void {
@@ -1683,6 +1704,147 @@ class MapEditorPage extends BasePage {
         this.logToConsole(`Stats refreshed: ${tilesData.length} tiles, ${Object.keys(unitsData).length} units`);
     }
     
+    // State management for undo/restore operations
+    private saveUIState(): void {
+        this.savedUIState = {
+            terrain: this.currentTerrain,
+            unit: this.currentUnit,
+            playerId: this.currentPlayerId,
+            brushSize: this.brushSize,
+            placementMode: this.placementMode
+        };
+    }
+    
+    private restoreUIState(): void {
+        if (this.savedUIState) {
+            this.currentTerrain = this.savedUIState.terrain;
+            this.currentUnit = this.savedUIState.unit;
+            this.currentPlayerId = this.savedUIState.playerId;
+            this.brushSize = this.savedUIState.brushSize;
+            this.placementMode = this.savedUIState.placementMode;
+            
+            // Update UI elements
+            this.updateTerrainButtonSelection(this.currentTerrain);
+            this.updateUnitButtonSelection(this.currentUnit);
+            
+            const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+            if (brushSizeSelect) {
+                brushSizeSelect.value = this.brushSize.toString();
+            }
+            
+            const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
+            if (unitPlayerSelect) {
+                unitPlayerSelect.value = this.currentPlayerId.toString();
+            }
+        }
+    }
+    
+    private showPreviewIndicator(message: string): void {
+        // Add visual indicator for preview state
+        const existingIndicator = document.getElementById('preview-indicator');
+        if (existingIndicator) {
+            existingIndicator.textContent = message;
+            return;
+        }
+        
+        const indicator = document.createElement('div');
+        indicator.id = 'preview-indicator';
+        indicator.className = 'fixed top-16 right-4 bg-orange-500 text-white px-3 py-2 rounded-lg shadow-lg z-40 font-medium text-sm';
+        indicator.textContent = message;
+        document.body.appendChild(indicator);
+    }
+    
+    private hidePreviewIndicator(): void {
+        const indicator = document.getElementById('preview-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    // Preview handlers for immediate execution mode
+    private previewNatureTerrain(args?: string): void {
+        const index = parseInt(args || '1');
+        const natureTerrain = [1, 2, 3, 4, 5];
+        const terrainNames = ['Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
+        
+        if (index >= 1 && index <= natureTerrain.length) {
+            this.saveUIState();
+            const terrainType = natureTerrain[index - 1];
+            this.setBrushTerrain(terrainType);
+            this.placementMode = 'terrain';
+            this.updateTerrainButtonSelection(terrainType);
+            this.showPreviewIndicator(`Preview: ${terrainNames[index - 1]} terrain`);
+        }
+    }
+    
+    private previewCityTerrain(args?: string): void {
+        const index = parseInt(args || '1');
+        const cityTerrain = [1, 2, 4, 5];
+        const cityNames = ['Grass', 'Desert', 'Mountain', 'Rock'];
+        
+        if (index >= 1 && index <= cityTerrain.length) {
+            this.saveUIState();
+            const terrainType = cityTerrain[index - 1];
+            this.setBrushTerrain(terrainType);
+            this.placementMode = 'terrain';
+            this.updateTerrainButtonSelection(terrainType);
+            this.showPreviewIndicator(`Preview: ${cityNames[index - 1]} city terrain`);
+        }
+    }
+    
+    private previewUnit(args?: string): void {
+        const index = parseInt(args || '1');
+        const unitTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+        
+        if (index >= 1 && index <= unitTypes.length) {
+            this.saveUIState();
+            const unitType = unitTypes[index - 1];
+            this.currentUnit = unitType;
+            this.placementMode = 'unit';
+            this.updateUnitButtonSelection(unitType);
+            this.showPreviewIndicator(`Preview: Unit ${unitType} for player ${this.currentPlayerId}`);
+        }
+    }
+    
+    private previewPlayer(args?: string): void {
+        const playerId = parseInt(args || '1');
+        
+        if (playerId >= 1 && playerId <= 4) {
+            this.saveUIState();
+            this.currentPlayerId = playerId;
+            
+            const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
+            if (unitPlayerSelect) {
+                unitPlayerSelect.value = playerId.toString();
+            }
+            
+            this.showPreviewIndicator(`Preview: Player ${playerId} selected`);
+        }
+    }
+    
+    private previewBrushSize(args?: string): void {
+        const size = parseInt(args || '0');
+        const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
+        
+        if (size >= 0 && size <= 5) {
+            this.saveUIState();
+            this.setBrushSize(size);
+            
+            const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+            if (brushSizeSelect) {
+                brushSizeSelect.value = size.toString();
+            }
+            
+            this.showPreviewIndicator(`Preview: ${sizeNames[size]} brush`);
+        }
+    }
+    
+    private cancelSelection(): void {
+        this.restoreUIState();
+        this.hidePreviewIndicator();
+        this.logToConsole('Selection cancelled - state restored');
+    }
+
     // Keyboard shortcut handlers
     private selectNatureTerrain(args?: string): void {
         const index = parseInt(args || '1');
@@ -1691,6 +1853,8 @@ class MapEditorPage extends BasePage {
         // 1 = Grass, 2 = Desert, 3 = Water, 4 = Mountain, 5 = Rock
         const natureTerrain = [1, 2, 3, 4, 5]; // Grass, Desert, Water, Mountain, Rock
         const terrainNames = ['Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
+        
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
         
         if (index >= 1 && index <= natureTerrain.length) {
             const terrainType = natureTerrain[index - 1];
@@ -1713,6 +1877,8 @@ class MapEditorPage extends BasePage {
         const cityTerrain = [1, 2, 4, 5]; // Grass, Desert, Mountain, Rock (as city variants)
         const cityNames = ['Grass', 'Desert', 'Mountain', 'Rock'];
         
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
+        
         if (index >= 1 && index <= cityTerrain.length) {
             const terrainType = cityTerrain[index - 1];
             this.setBrushTerrain(terrainType);
@@ -1733,6 +1899,8 @@ class MapEditorPage extends BasePage {
         // This should match the unit palette in the UI
         const unitTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
         
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
+        
         if (index >= 1 && index <= unitTypes.length) {
             const unitType = unitTypes[index - 1];
             this.currentUnit = unitType;
@@ -1748,6 +1916,8 @@ class MapEditorPage extends BasePage {
     
     private selectPlayer(args?: string): void {
         const playerId = parseInt(args || '1');
+        
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
         
         if (playerId >= 1 && playerId <= 4) {
             this.currentPlayerId = playerId;
@@ -1769,6 +1939,8 @@ class MapEditorPage extends BasePage {
         const size = parseInt(args || '0');
         const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
         
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
+        
         if (size >= 0 && size <= 5) {
             this.setBrushSize(size);
             
@@ -1786,6 +1958,8 @@ class MapEditorPage extends BasePage {
     }
     
     private resetToDefaults(): void {
+        this.hidePreviewIndicator(); // Hide preview indicator when committing
+        
         // Reset to default terrain (grass)
         this.setBrushTerrain(1);
         this.placementMode = 'terrain';
