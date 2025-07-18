@@ -13,7 +13,36 @@
 
 ### Core Components
 
-#### 1. Game Object (`lib/game.go`)
+#### 1. KeyboardShortcutManager (`web/frontend/components/KeyboardShortcutManager.ts`) 🚧 PLANNED
+**Purpose**: Reusable keyboard shortcut system for all pages
+- **Configuration-driven**: Define shortcuts declaratively with ShortcutConfig interface
+- **State Machine**: Handle multi-key commands (n12, c5, u3) with timeout and visual feedback
+- **Context Awareness**: Disable shortcuts in input fields, modals, and other contexts
+- **Help System**: Auto-generated help overlay from shortcut configuration
+- **Event Integration**: Toast notifications and UI synchronization
+- **Framework Agnostic**: Can be used across Map Editor, Game Play, and Detail pages
+
+```typescript
+interface ShortcutConfig {
+  key: string;
+  handler: (args?: string) => void;
+  description: string;
+  category?: string;
+  requiresArgs?: boolean;
+  argType?: 'number' | 'string';
+  contextFilter?: (event: KeyboardEvent) => boolean;
+}
+
+class KeyboardShortcutManager {
+  private shortcuts: Map<string, ShortcutConfig>;
+  private state: KeyboardState;
+  private helpOverlay: HelpOverlay;
+  // Configuration-driven initialization
+  constructor(config: ShortcutManagerConfig) { ... }
+}
+```
+
+#### 2. Game Object (`lib/game.go`)
 **Purpose**: Flow control and game logic management
 - Manages game state transitions (turns, player actions)
 - Handles game rules and validation

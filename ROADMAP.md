@@ -48,7 +48,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 
 ## ✅ Phase 3: Map Editor Implementation (Completed January 2025)
 **Status**: Completed  
-**Timeline**: Completed 2025-01-14
+**Timeline**: Completed 2025-01-17
 
 ### WASM-Based Editor ✅
 - [x] Professional 3-panel editor layout ported from `oldweb/editor.html`
@@ -133,7 +133,35 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - **Maintainability**: Clean component separation with event-driven architecture
 - **Extensibility**: Phaser.js foundation enables advanced features (animations, effects)
 
-## 📋 Phase 5: Games Management System (Planned)
+## ⌨️ Phase 5: Keyboard Shortcut System (Planned)
+**Status**: Planned  
+**Timeline**: January 2025
+
+### Comprehensive Keyboard Shortcuts 🚧
+- [ ] Generic KeyboardShortcutManager class for reusable architecture
+- [ ] Multi-key command system: `n12` (nature terrain), `c5` (city terrain), `u3` (unit type)
+- [ ] Smart number handling with preview feedback and auto-complete
+- [ ] Context-aware shortcuts (disable in input fields, modals)
+- [ ] Help system with `?` key overlay showing all available shortcuts
+- [ ] Toast notifications and visual feedback for all shortcut actions
+
+### Map Editor Shortcuts 🚧
+- [ ] `n<index>` - Select nature terrain by index
+- [ ] `c<index>` - Select city terrain by index  
+- [ ] `u<index>` - Select unit type for current player
+- [ ] `p<number>` - Set current player
+- [ ] `b<size>` - Set brush size
+- [ ] `esc` - Reset all tools to defaults
+- [ ] `?` - Show comprehensive help overlay
+
+### Benefits Planned ⚡
+- **Rapid Workflow**: Significantly faster map building with keyboard-first approach
+- **One-handed Operation**: Optimized for mouse + keyboard workflow
+- **Reusable Architecture**: Framework can be used across all application pages
+- **Professional UX**: Industry-standard keyboard shortcut conventions
+- **Context Intelligence**: Smart activation based on current page and input state
+
+## 📋 Phase 6: Games Management System (Planned)
 **Status**: Planned  
 **Timeline**: February 2025
 
@@ -149,7 +177,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [ ] Game details page with current state display
 - [ ] Player dashboard and game management
 
-## 🎯 Phase 5: Gameplay Integration (Planned)
+## 🎯 Phase 7: Gameplay Integration (Planned)
 **Status**: Future  
 **Timeline**: Q2 2025
 
@@ -165,7 +193,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [ ] Tournament mode with rankings and statistics
 - [ ] Advanced analytics and game history
 
-## 🔮 Phase 6: Platform Features (Future)
+## 🔮 Phase 8: Platform Features (Future)
 **Status**: Future vision  
 **Timeline**: 2025-2026
 

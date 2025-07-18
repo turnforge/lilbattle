@@ -115,6 +115,15 @@
 - **Loading UX**: Professional loading indicator during map data initialization
 - **Error Handling**: Comprehensive error handling and user feedback for save/load operations
 
+### 12. Mouse-Cursor Zoom (v4.5) ✅ COMPLETED
+**Completed**: Professional zoom behavior that centers on mouse cursor position
+**Key Achievements**:
+- **Zoom-to-Cursor**: Fixed zoom to center around mouse position instead of arbitrary point
+- **Proper Coordinate Conversion**: Uses camera.centerX/Y for accurate world-to-screen mapping
+- **Smooth Navigation**: Eliminates disorienting zoom jumps for better user experience
+- **Professional Feel**: Matches behavior of modern map editors and design tools
+- **Mathematical Precision**: Calculates world coordinates before/after zoom to maintain cursor position
+
 ## Current Development Focus
 
 ### Phase 4: Phaser.js Polish and Integration ✅ COMPLETED
@@ -155,7 +164,34 @@
 - [x] Event callback system for tile clicks and map changes
 - [x] Clean initialization and cleanup methods
 
-### Phase 5: Next Development Priorities (Upcoming) 🚧
+### Phase 5: Keyboard Shortcut System (v5.0) 🚧 PLANNED
+**Goal**: Implement comprehensive keyboard shortcut system for rapid map building
+**Design Decisions**:
+- **Multi-key State Machine**: Commands like `n12` (nature terrain 12), `c5` (city terrain 5), `u3` (unit 3)
+- **One-handed Operation**: Optimized for mouse + keyboard workflow (no chord shortcuts)
+- **Reusable Architecture**: Generic KeyboardShortcutManager for use across all pages
+- **Smart Number Handling**: Support single/double digits with preview feedback
+- **Context Awareness**: Disable shortcuts in input fields and modals
+- **Help System**: `?` key shows overlay with all available shortcuts
+
+**Core Commands**:
+- `n<index>` - Select nature terrain by index
+- `c<index>` - Select city terrain by index  
+- `u<index>` - Select unit type for current player
+- `p<number>` - Set current player
+- `b<size>` - Set brush size
+- `esc` - Reset all tools to defaults
+- `?` - Show help overlay
+
+**Implementation Components**:
+- Generic KeyboardShortcutManager class
+- Configuration-driven shortcut definitions
+- Visual feedback system with toast notifications
+- Help overlay with auto-generated content
+- UI synchronization with existing tool panels
+- State machine for multi-key command handling
+
+### Phase 6: Next Development Priorities (Upcoming) 🚧
 
 #### A. WASM Integration Enhancement
 **Goal**: Connect Phaser editor to Go backend for data persistence
