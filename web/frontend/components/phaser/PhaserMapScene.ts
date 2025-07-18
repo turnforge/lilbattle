@@ -544,21 +544,11 @@ export class PhaserMapScene extends Phaser.Scene {
     private onTileClick(q: number, r: number) {
         console.log(`[PhaserMapScene] Tile clicked: Q=${q}, R=${r}`);
         
-        // Get current terrain and brush settings from tools panel
-        const terrainSelection = this.getCurrentTerrainSelection();
-        const brushSize = this.getCurrentBrushSize();
+        // DISABLED: Old terrain painting logic - now handled by MapEditorPage
+        // The MapEditorPage will handle all placement logic based on the current mode
         
-        // Handle painting based on terrain selection
-        if (terrainSelection.terrain === 0) {
-            // Clear terrain (terrain 0 means remove tiles)
-            this.clearTileArea(q, r, brushSize);
-        } else {
-            // Paint terrain
-            this.paintTileArea(q, r, terrainSelection.terrain, terrainSelection.color, brushSize);
-        }
-        
-        // Emit event that can be caught by the parent component
-        this.events.emit('tileClicked', { q, r, terrain: terrainSelection.terrain, brushSize });
+        // Just emit the tile click event for the MapEditorPage to handle
+        this.events.emit('tileClicked', { q, r });
     }
     
     private getCurrentTerrainSelection(): { terrain: number; color: number } {

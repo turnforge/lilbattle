@@ -77,18 +77,12 @@ export class PhaserMapEditor {
     }
     
     private handleTileClick(q: number, r: number) {
-        // Paint tile with current terrain and brush settings
-        this.paintTile(q, r, this.currentTerrain, this.currentColor, this.brushSize);
-        
-        // Call external callback if set
+        // Let the external callback handle the logic (MapEditorPage will decide what to do)
         if (this.onTileClickCallback) {
             this.onTileClickCallback(q, r);
         }
         
-        // Notify of map change
-        if (this.onMapChangeCallback) {
-            this.onMapChangeCallback();
-        }
+        // Note: onMapChangeCallback will be called by the specific paint methods when needed
     }
     
     // Public API methods
@@ -309,6 +303,39 @@ export class PhaserMapEditor {
         if (this.onMapChangeCallback) {
             this.onMapChangeCallback();
         }
+    }
+    
+    /**
+     * Paint a unit at the specified coordinates
+     */
+    public paintUnit(q: number, r: number, unitType: number, playerId: number) {
+        if (!this.scene) return;
+        
+        // For now, we'll use the scene's setTile method to represent units
+        // In the future, this should be replaced with actual unit sprites
+        this.scene.setUnit(q, r, unitType, playerId);
+        
+        if (this.onMapChangeCallback) {
+            this.onMapChangeCallback();
+        }
+        
+        console.log(`[PhaserMapEditor] Painted unit ${unitType} (player ${playerId}) at Q=${q}, R=${r}`);
+    }
+    
+    /**
+     * Remove a unit at the specified coordinates
+     */
+    public removeUnit(q: number, r: number) {
+        if (!this.scene) return;
+        
+        // Remove unit from the scene
+        this.scene.removeUnit(q, r);
+        
+        if (this.onMapChangeCallback) {
+            this.onMapChangeCallback();
+        }
+        
+        console.log(`[PhaserMapEditor] Removed unit at Q=${q}, R=${r}`);
     }
     
     // Cleanup

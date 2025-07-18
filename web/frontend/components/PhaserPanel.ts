@@ -179,6 +179,42 @@ export class PhaserPanel {
     }
     
     /**
+     * Paint a unit at the specified coordinates
+     */
+    public paintUnit(q: number, r: number, unitType: number, playerId: number): boolean {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot paint unit');
+            return false;
+        }
+        
+        try {
+            this.phaserEditor.paintUnit(q, r, unitType, playerId);
+            this.log(`Painted unit ${unitType} (player ${playerId}) at Q=${q}, R=${r}`);
+            return true;
+        } catch (error) {
+            this.log(`Failed to paint unit: ${error}`);
+            return false;
+        }
+    }
+    
+    /**
+     * Remove a unit at the specified coordinates
+     */
+    public removeUnit(q: number, r: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot remove unit');
+            return;
+        }
+        
+        try {
+            this.phaserEditor.removeUnit(q, r);
+            this.log(`Removed unit at Q=${q}, R=${r}`);
+        } catch (error) {
+            this.log(`Failed to remove unit: ${error}`);
+        }
+    }
+    
+    /**
      * Clear all tiles from the map
      */
     public clearAllTiles(): void {

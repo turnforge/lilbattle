@@ -32,7 +32,7 @@ class MapEditorPage extends BasePage {
         width: number;
         height: number;
         tiles: { [key: string]: { tileType: number } };
-        units: { [key: string]: { tileType: number, playerId: number } };
+        units: { [key: string]: { unitType: number, playerId: number } };
         // Cube coordinate bounds for proper coordinate validation
         // Map bounds data from GetMapBounds for rendering optimization
     } | null = null;
@@ -731,6 +731,12 @@ class MapEditorPage extends BasePage {
                 
                 this.logToConsole(`Saving ${tilesData.length} tiles`);
             }
+            
+            // Units are already stored in mapData.units, so they will be included in mapToSave
+            const unitCount = Object.keys(mapToSave.units || {}).length;
+            if (unitCount > 0) {
+                this.logToConsole(`Saving ${unitCount} units`);
+            }
 
             const url = this.isNewMap ? '/api/maps' : `/api/maps/${this.currentMapId}`;
             const method = this.isNewMap ? 'POST' : 'PUT';
@@ -1168,6 +1174,8 @@ class MapEditorPage extends BasePage {
             if (colInput) colInput.value = q.toString();
             
             // Handle different placement modes
+            this.logToConsole(`Click at Q=${q}, R=${r} in ${this.placementMode} mode`);
+            
             if (this.placementMode === 'clear') {
                 this.handleClearClick(q, r);
             } else if (this.placementMode === 'unit') {
@@ -1183,7 +1191,6 @@ class MapEditorPage extends BasePage {
     
     private handleClearClick(q: number, r: number): void {
         const unitKey = `${q},${r}`;
-        const tileKey = `${q},${r}`;
         
         // First priority: remove unit if exists
         if (this.mapData && this.mapData.units[unitKey]) {
@@ -1194,9 +1201,13 @@ class MapEditorPage extends BasePage {
             return;
         }
         
-        // Second priority: remove tile if exists
-        if (this.mapData && this.mapData.tiles[tileKey]) {
-            delete this.mapData.tiles[tileKey];
+        // Second priority: remove tile if exists (check Phaser scene)
+        if (this.tileExistsAt(q, r)) {
+            // Remove from mapData if it exists there
+            if (this.mapData) {
+                const tileKey = `${q},${r}`;
+                delete this.mapData.tiles[tileKey];
+            }
             this.phaserPanel?.removeTile(q, r);
             this.logToConsole(`Removed tile at Q=${q}, R=${r}`);
             this.markAsChanged();
@@ -1211,21 +1222,23 @@ class MapEditorPage extends BasePage {
         const tileKey = `${q},${r}`;
         const unitKey = `${q},${r}`;
         
-        // Check if tile exists at this location
-        if (!this.mapData.tiles[tileKey]) {
+        // Check if tile exists at this location by asking Phaser panel
+        if (!this.tileExistsAt(q, r)) {
             this.logToConsole(`Cannot place unit at Q=${q}, R=${r} - no tile exists`);
             return;
         }
         
+        
         // Place or replace unit (only one unit per tile)
         this.mapData.units[unitKey] = {
-            tileType: this.currentUnit,
+            unitType: this.currentUnit,
             playerId: this.currentPlayerId
         };
         
         // Use brush size 1 for units
         this.phaserPanel?.paintUnit(q, r, this.currentUnit, this.currentPlayerId);
         this.logToConsole(`Placed unit ${this.currentUnit} (player ${this.currentPlayerId}) at Q=${q}, R=${r}`);
+        
         this.markAsChanged();
     }
     
@@ -1249,6 +1262,18 @@ class MapEditorPage extends BasePage {
         
         this.logToConsole(`Painted terrain ${this.currentTerrain} at Q=${q}, R=${r} with brush size ${brushSize}`);
         this.markAsChanged();
+    }
+    
+    /**
+     * Check if a tile exists at the given coordinates
+     */
+    private tileExistsAt(q: number, r: number): boolean {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return false;
+        }
+        
+        const tilesData = this.phaserPanel.getTilesData();
+        return tilesData.some(tile => tile.q === q && tile.r === r);
     }
     
     // Public methods for Phaser panel (for backward compatibility with UI)
