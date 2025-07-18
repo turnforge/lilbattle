@@ -1009,14 +1009,14 @@ class MapEditorPage extends BasePage {
     private createDefaultDockviewLayout(): void {
         if (!this.dockview) return;
 
-        // Add main Phaser Map editor panel first (center)
+        // Add main Phaser Map editor panel first (center) - will take remaining width
         this.dockview.addPanel({
             id: 'phaser',
             component: 'phaser',
             title: '🗺️ Map Editor'
         });
 
-        // Add tools panel to the left of Phaser
+        // Add tools panel to the left of Phaser (270px width)
         this.dockview.addPanel({
             id: 'tools',
             component: 'tools',
@@ -1024,29 +1024,61 @@ class MapEditorPage extends BasePage {
             position: { direction: 'left', referencePanel: 'phaser' }
         });
 
-        // Add TileStats panel to the right of Phaser (replacing the hints panel)
-        this.dockview.addPanel({
-            id: 'tilestats',
-            component: 'tilestats',
-            title: '📊 Map Statistics',
-            position: { direction: 'right', referencePanel: 'phaser' }
-        });
-
-        // Add advanced tools panel to the right of TileStats
+        // Add advanced tools panel to the right of Phaser (260px width)
         this.dockview.addPanel({
             id: 'advancedTools',
             component: 'advancedTools',
             title: '🔧 Advanced & View',
-            position: { direction: 'right', referencePanel: 'tilestats' }
+            position: { direction: 'right', referencePanel: 'phaser' }
         });
 
-        // Add console panel below Phaser
+        // Add TileStats panel below the Advanced Tools panel
+        this.dockview.addPanel({
+            id: 'tilestats',
+            component: 'tilestats',
+            title: '📊 Map Statistics',
+            position: { direction: 'below', referencePanel: 'advancedTools' }
+        });
+
+        // Add console panel below Phaser (250px height)
         this.dockview.addPanel({
             id: 'console',
             component: 'console',
             title: '💻 Console',
             position: { direction: 'below', referencePanel: 'phaser' }
         });
+
+        // Set panel sizes after layout is created
+        setTimeout(() => {
+            this.setPanelSizes();
+        }, 100);
+    }
+
+    private setPanelSizes(): void {
+        if (!this.dockview) return;
+
+        try {
+            // Set left panel (Tools) to 270px width
+            const toolsPanel = this.dockview.getPanel('tools');
+            if (toolsPanel) {
+                toolsPanel.api.setSize({ width: 270 });
+            }
+
+            // Set right panel (Advanced Tools) to 260px width
+            const advancedToolsPanel = this.dockview.getPanel('advancedTools');
+            if (advancedToolsPanel) {
+                advancedToolsPanel.api.setSize({ width: 260 });
+            }
+
+            const consolePanel = this.dockview.getPanel('console');
+            if (consolePanel) {
+                consolePanel.api.setSize({ height: 250 });
+            }
+
+            this.logToConsole('Panel sizes set: Tools=270px, Advanced=260px, Map Editor=remaining');
+        } catch (error) {
+            this.logToConsole(`Failed to set panel sizes: ${error}`);
+        }
     }
 
     private saveDockviewLayout(): void {

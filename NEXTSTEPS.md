@@ -83,6 +83,27 @@
 - **Terrain Organization**: Proper Nature vs City categorization with alphabetical sorting
 - **Code Simplification**: Eliminated unnecessary AssetManager dependencies
 
+### 9. Unit Placement System (v4.2) ✅ COMPLETED
+**Completed**: Complete unit editing functionality with terrain preservation
+**Key Achievements**:
+- **Three Placement Modes**: Terrain, Unit, and Clear modes with proper radio button behavior
+- **Smart Clear Logic**: Units removed first, then tiles on subsequent clicks
+- **Unit Toggle**: Clicking same unit type removes it (intuitive UX)
+- **Terrain Preservation**: Units placed on top of existing terrain without modification
+- **Brush Size Control**: Units always use size 1, terrain uses selected brush size
+- **Data Integrity**: Units stored separately in mapData.units with proper player assignment
+- **Input Validation**: Units can only be placed on existing tiles
+
+### 10. TileStats Panel & Layout (v4.3) ✅ COMPLETED  
+**Completed**: Professional statistics panel and optimized layout design
+**Key Achievements**:
+- **TileStats Panel**: Real-time statistics showing terrain types, unit counts, and player distribution
+- **Border Layout**: Fixed-width sidebars (Tools: 270px, Advanced: 260px) with maximized map editor
+- **Auto-refresh**: Stats update automatically when map changes, plus manual refresh button
+- **Visual Organization**: Color-coded statistics with icons and proper grouping
+- **Layout Optimization**: TileStats below Advanced Tools, maximizing map editor space
+- **Professional UI**: Clean design matching existing theme with responsive dark/light mode
+
 ## Current Development Focus
 
 ### Phase 4: Phaser.js Polish and Integration ✅ COMPLETED
