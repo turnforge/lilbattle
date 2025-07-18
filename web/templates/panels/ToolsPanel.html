@@ -13,17 +13,19 @@
         <button
           class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-600"
           data-terrain="0"
+          data-nature-index="0"
           title="Clear"
         >
           <div class="text-sm">🗑️</div>
         </button>
-        {{ range .NatureTerrains }}
+        {{ $natureIndex := 1 }} {{ range .NatureTerrains }}
         <button
           class="terrain-button p-2 text-xs text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors{{ if eq .ID 0 }} bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-600{{ else if eq .ID 5 }} bg-blue-100 dark:bg-blue-900 border-blue-500{{ end }} overflow-hidden"
           data-terrain="{{ .ID }}"
+          data-nature-index="{{ $natureIndex }}"
           title="{{ .Name }}{{ if ne .ID 0 }} (Move: {{ .MoveCost }}, Defense: {{ .DefenseBonus }}){{ end }}"
         >
-          {{ if eq .ID 0 }}
+          {{ $natureIndex = Add $natureIndex 1 }} {{ if eq .ID 0 }}
           <div class="text-sm">🗑️</div>
           {{ else if .IconDataURL }}
           <div class="flex justify-center mb-1">
@@ -74,14 +76,15 @@
 
         <!-- City Terrain Palette -->
         <div id="city-terrain-palette" class="grid grid-cols-3 gap-2">
-          {{ range .CityTerrains }}
+          {{ $cityIndex := 1 }} {{ range .CityTerrains }}
           <button
             class="terrain-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden"
             data-terrain="{{ .ID }}"
+            data-city-index="{{ $cityIndex }}"
             data-has-colors="true"
             title="{{ .Name }} (Move: {{ .MoveCost }}, Defense: {{ .DefenseBonus }})"
           >
-            {{ if .IconDataURL }}
+            {{ $cityIndex = Add $cityIndex 1 }} {{ if .IconDataURL }}
             <div class="flex justify-center mb-1">
               <img
                 src="{{ .IconDataURL }}"
@@ -133,13 +136,14 @@
           id="unit-palette"
           class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto"
         >
-          {{ range .UnitTypes }}
+          {{ $unitIndex := 1 }} {{ range .UnitTypes }}
           <button
             class="unit-button p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden"
             data-unit="{{ .ID }}"
+            data-unit-index="{{ $unitIndex }}"
             title="{{ .Name }}"
           >
-            {{ if .IconDataURL }}
+            {{ $unitIndex = Add $unitIndex 1 }} {{ if .IconDataURL }}
             <div class="flex justify-center mb-1">
               <img
                 src="{{ .IconDataURL }}"

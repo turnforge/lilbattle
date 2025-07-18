@@ -32,6 +32,7 @@ export interface ShortcutManagerConfig {
     timeout?: number; // ms to return to normal state (current: 3000ms, immediate mode: 300ms)
     immediateExecution?: boolean; // Enable immediate execution with preview
     previewDelay?: number; // ms delay before preview execution (default: 300ms)
+    onStateChange?: (state: KeyboardState, command?: string) => void; // Callback when state changes
 }
 
 export enum KeyboardState {
@@ -52,12 +53,14 @@ export class KeyboardShortcutManager {
     private previewDelay: number = 300; // Default 300ms preview delay
     private previewTimeoutId: number | null = null; // Separate timeout for preview
     private isPreviewActive: boolean = false; // Track if preview is currently active
+    private onStateChange: ((state: KeyboardState, command?: string) => void) | null = null;
 
     constructor(config: ShortcutManagerConfig) {
         this.helpContainer = config.helpContainer || null;
         this.timeout = config.timeout || 3000;
         this.immediateExecution = config.immediateExecution || false;
         this.previewDelay = config.previewDelay || 300;
+        this.onStateChange = config.onStateChange || null;
         
         // Register shortcuts
         config.shortcuts.forEach(shortcut => {
@@ -130,6 +133,11 @@ export class KeyboardShortcutManager {
                 this.currentArgs = '';
                 this.updateStateIndicator();
                 this.startTimeout();
+                
+                // Notify state change
+                if (this.onStateChange) {
+                    this.onStateChange(this.state, key);
+                }
             } else {
                 // Execute immediately
                 this.executeShortcut(shortcut);
@@ -263,6 +271,11 @@ export class KeyboardShortcutManager {
         this.cancelPreviewExecution();
         this.updateStateIndicator();
         this.hideHelp();
+        
+        // Notify state change
+        if (this.onStateChange) {
+            this.onStateChange(this.state);
+        }
     }
 
     private startTimeout(): void {

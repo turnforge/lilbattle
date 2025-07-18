@@ -2,7 +2,9 @@ import { BasePage } from './BasePage';
 import { DockviewApi, DockviewComponent } from 'dockview-core';
 import { PhaserPanel } from './PhaserPanel';
 import { TileStatsPanel } from './TileStatsPanel';
-import { KeyboardShortcutManager, ShortcutConfig } from './KeyboardShortcutManager';
+import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './KeyboardShortcutManager';
+
+const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
 
 class MapBounds {
   MinQ: number;
@@ -524,7 +526,7 @@ class MapEditorPage extends BasePage {
                 handler: (args?: string) => this.selectBrushSize(args),
                 previewHandler: (args?: string) => this.previewBrushSize(args),
                 cancelHandler: () => this.cancelSelection(),
-                description: 'Set brush size',
+                description: 'Set brush size (1-6)',
                 category: 'Tools',
                 requiresArgs: true,
                 argType: 'number'
@@ -543,10 +545,38 @@ class MapEditorPage extends BasePage {
             shortcuts,
             timeout: 3000,
             immediateExecution: true, // Enable immediate execution mode
-            previewDelay: 300 // 300ms preview delay
+            previewDelay: 300, // 300ms preview delay
+            onStateChange: (state, command) => this.handleKeyboardStateChange(state, command)
         });
         
         this.logToConsole('Keyboard shortcuts initialized with immediate execution mode');
+    }
+
+    private handleKeyboardStateChange(state: KeyboardState, command?: string): void {
+        if (state === KeyboardState.AWAITING_ARGS && command) {
+            // Show overlays immediately when entering AWAITING_ARGS state
+            let overlayType: 'nature' | 'city' | 'unit' | null = null;
+            
+            switch (command) {
+                case 'n':
+                    overlayType = 'nature';
+                    break;
+                case 'c':
+                    overlayType = 'city';
+                    break;
+                case 'u':
+                    overlayType = 'unit';
+                    break;
+            }
+            
+            if (overlayType) {
+                this.showNumberOverlays(overlayType);
+                this.logToConsole(`Showing ${overlayType} shortcut overlays`);
+            }
+        } else if (state === KeyboardState.NORMAL) {
+            // Hide overlays when returning to NORMAL state
+            this.hideNumberOverlays();
+        }
     }
 
     private loadInitialState(): void {
@@ -768,8 +798,7 @@ class MapEditorPage extends BasePage {
     public setBrushSize(size: number): void {
         this.brushSize = size;
         
-        const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
-        this.logToConsole(`Brush size set to: ${sizeNames[size]}`);
+        this.logToConsole(`Brush size set to: ${BRUSH_SIZE_NAMES[size]}`);
         this.updateBrushInfo();
     }
     
@@ -1154,18 +1183,21 @@ class MapEditorPage extends BasePage {
         const brushInfo = document.getElementById('brush-info');
         if (brushInfo) {
             const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
-            const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
-            brushInfo.textContent = `Current: ${terrainNames[this.currentTerrain]}, ${sizeNames[this.brushSize]}`;
+            brushInfo.textContent = `Current: ${terrainNames[this.currentTerrain]}, ${BRUSH_SIZE_NAMES[this.brushSize]}`;
         }
     }
 
     private updateTerrainButtonSelection(terrain: number): void {
+        // Remove selection from all terrain and unit buttons
+        document.querySelectorAll('.terrain-button, .unit-button').forEach(button => {
+            button.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
+        });
+        
+        // Add selection to the correct terrain button
         document.querySelectorAll('.terrain-button').forEach(button => {
             const buttonTerrain = button.getAttribute('data-terrain');
             if (buttonTerrain === terrain.toString()) {
                 button.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
-            } else {
-                button.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
             }
         });
     }
@@ -1760,49 +1792,184 @@ class MapEditorPage extends BasePage {
             indicator.remove();
         }
     }
+    
+    // Visual index mapping functions
+    private getTerrainIdByNatureIndex(index: number): number | null {
+        if (index === 0) return 0; // Clear button
+        
+        const button = document.querySelector(`[data-nature-index="${index}"]`) as HTMLElement;
+        if (button) {
+            return parseInt(button.getAttribute('data-terrain') || '0');
+        }
+        return null;
+    }
+    
+    private getTerrainIdByCityIndex(index: number): number | null {
+        const button = document.querySelector(`[data-city-index="${index}"]`) as HTMLElement;
+        if (button) {
+            return parseInt(button.getAttribute('data-terrain') || '0');
+        }
+        return null;
+    }
+    
+    private getUnitIdByIndex(index: number): number | null {
+        const button = document.querySelector(`[data-unit-index="${index}"]`) as HTMLElement;
+        if (button) {
+            return parseInt(button.getAttribute('data-unit') || '0');
+        }
+        return null;
+    }
+    
+    // Helper functions to get terrain names from buttons
+    private getTerrainNameByNatureIndex(index: number): string {
+        if (index === 0) return 'Clear';
+        
+        const button = document.querySelector(`[data-nature-index="${index}"]`) as HTMLElement;
+        if (button) {
+            const title = button.getAttribute('title') || '';
+            // Extract name from title (e.g., "Grass (Move: 1, Defense: 0)" -> "Grass")
+            const name = title.split('(')[0].trim();
+            return name || 'Unknown';
+        }
+        return 'Unknown';
+    }
+    
+    private getTerrainNameByCityIndex(index: number): string {
+        const button = document.querySelector(`[data-city-index="${index}"]`) as HTMLElement;
+        if (button) {
+            const title = button.getAttribute('title') || '';
+            // Extract name from title (e.g., "Land Base (Move: 1, Defense: 0)" -> "Land Base")
+            const name = title.split('(')[0].trim();
+            return name || 'Unknown';
+        }
+        return 'Unknown';
+    }
+    
+    private getUnitNameByIndex(index: number): string {
+        const button = document.querySelector(`[data-unit-index="${index}"]`) as HTMLElement;
+        if (button) {
+            const title = button.getAttribute('title') || '';
+            return title || 'Unknown';
+        }
+        return 'Unknown';
+    }
+    
+    // Dynamic number overlay system
+    private showNumberOverlays(type: 'nature' | 'city' | 'unit'): void {
+        this.hideNumberOverlays(); // Remove any existing overlays
+        
+        let selector = '';
+        let maxIndex = 0;
+        
+        switch (type) {
+            case 'nature':
+                selector = '[data-nature-index]';
+                maxIndex = document.querySelectorAll(selector).length;
+                break;
+            case 'city':
+                selector = '[data-city-index]';
+                maxIndex = document.querySelectorAll(selector).length;
+                break;
+            case 'unit':
+                selector = '[data-unit-index]';
+                maxIndex = document.querySelectorAll(selector).length;
+                break;
+        }
+        
+        const buttons = document.querySelectorAll(selector);
+        buttons.forEach((button) => {
+            const element = button as HTMLElement;
+            let index = '';
+            
+            switch (type) {
+                case 'nature':
+                    index = element.getAttribute('data-nature-index') || '';
+                    break;
+                case 'city':
+                    index = element.getAttribute('data-city-index') || '';
+                    break;
+                case 'unit':
+                    index = element.getAttribute('data-unit-index') || '';
+                    break;
+            }
+            
+            if (index) {
+                const overlay = document.createElement('div');
+                overlay.className = 'shortcut-number-overlay absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10 -mt-1 -mr-1';
+                overlay.textContent = index;
+                
+                // Make button container relative if not already
+                if (getComputedStyle(element).position === 'static') {
+                    element.style.position = 'relative';
+                }
+                
+                element.appendChild(overlay);
+            }
+        });
+        
+        this.logToConsole(`Showing ${type} shortcut numbers (1-${maxIndex - 1})`);
+    }
+    
+    private hideNumberOverlays(): void {
+        const overlays = document.querySelectorAll('.shortcut-number-overlay');
+        overlays.forEach(overlay => overlay.remove());
+    }
 
     // Preview handlers for immediate execution mode
     private previewNatureTerrain(args?: string): void {
         const index = parseInt(args || '1');
-        const natureTerrain = [1, 2, 3, 4, 5];
-        const terrainNames = ['Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
         
-        if (index >= 1 && index <= natureTerrain.length) {
+        if (index === 0) {
+            // N+0 for clear mode
             this.saveUIState();
-            const terrainType = natureTerrain[index - 1];
-            this.setBrushTerrain(terrainType);
+            this.placementMode = 'clear';
+            this.updateTerrainButtonSelection(0);
+            this.showPreviewIndicator('Preview: Clear mode');
+            return;
+        }
+        
+        // Use visual index mapping
+        const terrainId = this.getTerrainIdByNatureIndex(index);
+        const terrainName = this.getTerrainNameByNatureIndex(index);
+        
+        if (terrainId !== null) {
+            this.saveUIState();
+            this.setBrushTerrain(terrainId);
             this.placementMode = 'terrain';
-            this.updateTerrainButtonSelection(terrainType);
-            this.showPreviewIndicator(`Preview: ${terrainNames[index - 1]} terrain`);
+            this.updateTerrainButtonSelection(terrainId);
+            this.showPreviewIndicator(`Preview: ${terrainName} terrain`);
         }
     }
     
     private previewCityTerrain(args?: string): void {
         const index = parseInt(args || '1');
-        const cityTerrain = [1, 2, 4, 5];
-        const cityNames = ['Grass', 'Desert', 'Mountain', 'Rock'];
         
-        if (index >= 1 && index <= cityTerrain.length) {
+        // Use visual index mapping
+        const terrainId = this.getTerrainIdByCityIndex(index);
+        const terrainName = this.getTerrainNameByCityIndex(index);
+        
+        if (terrainId !== null) {
             this.saveUIState();
-            const terrainType = cityTerrain[index - 1];
-            this.setBrushTerrain(terrainType);
+            this.setBrushTerrain(terrainId);
             this.placementMode = 'terrain';
-            this.updateTerrainButtonSelection(terrainType);
-            this.showPreviewIndicator(`Preview: ${cityNames[index - 1]} city terrain`);
+            this.updateTerrainButtonSelection(terrainId);
+            this.showPreviewIndicator(`Preview: ${terrainName}`);
         }
     }
     
     private previewUnit(args?: string): void {
         const index = parseInt(args || '1');
-        const unitTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
         
-        if (index >= 1 && index <= unitTypes.length) {
+        // Use visual index mapping
+        const unitId = this.getUnitIdByIndex(index);
+        const unitName = this.getUnitNameByIndex(index);
+        
+        if (unitId !== null) {
             this.saveUIState();
-            const unitType = unitTypes[index - 1];
-            this.currentUnit = unitType;
+            this.currentUnit = unitId;
             this.placementMode = 'unit';
-            this.updateUnitButtonSelection(unitType);
-            this.showPreviewIndicator(`Preview: Unit ${unitType} for player ${this.currentPlayerId}`);
+            this.updateUnitButtonSelection(unitId);
+            this.showPreviewIndicator(`Preview: ${unitName} for player ${this.currentPlayerId}`);
         }
     }
     
@@ -1823,19 +1990,22 @@ class MapEditorPage extends BasePage {
     }
     
     private previewBrushSize(args?: string): void {
-        const size = parseInt(args || '0');
-        const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
+        const index = parseInt(args || '1'); // 1-based index
         
-        if (size >= 0 && size <= 5) {
+        // Map 1-based index to actual brush size values
+        const brushSizeValues = [0, 1, 3, 5, 10, 15]; // Corresponds to the select options
+        
+        if (index >= 1 && index <= brushSizeValues.length) {
             this.saveUIState();
-            this.setBrushSize(size);
+            const actualSize = brushSizeValues[index - 1];
+            this.setBrushSize(actualSize);
             
             const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
             if (brushSizeSelect) {
-                brushSizeSelect.value = size.toString();
+                brushSizeSelect.value = actualSize.toString();
             }
             
-            this.showPreviewIndicator(`Preview: ${sizeNames[size]} brush`);
+            this.showPreviewIndicator(`Preview: ${BRUSH_SIZE_NAMES[index - 1]} brush`);
         }
     }
     
@@ -1849,21 +2019,26 @@ class MapEditorPage extends BasePage {
     private selectNatureTerrain(args?: string): void {
         const index = parseInt(args || '1');
         
-        // Map terrain numbers to nature terrain types
-        // 1 = Grass, 2 = Desert, 3 = Water, 4 = Mountain, 5 = Rock
-        const natureTerrain = [1, 2, 3, 4, 5]; // Grass, Desert, Water, Mountain, Rock
-        const terrainNames = ['Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
-        
         this.hidePreviewIndicator(); // Hide preview indicator when committing
+        this.hideNumberOverlays(); // Hide number overlays when committing
         
-        if (index >= 1 && index <= natureTerrain.length) {
-            const terrainType = natureTerrain[index - 1];
-            this.setBrushTerrain(terrainType);
+        if (index === 0) {
+            // N+0 for clear mode
+            this.placementMode = 'clear';
+            this.updateTerrainButtonSelection(0);
+            this.showToast('Clear Mode', 'Clear mode selected', 'success');
+            return;
+        }
+        
+        // Use visual index mapping
+        const terrainId = this.getTerrainIdByNatureIndex(index);
+        const terrainName = this.getTerrainNameByNatureIndex(index);
+        
+        if (terrainId !== null) {
+            this.setBrushTerrain(terrainId);
             this.placementMode = 'terrain';
-            this.updateTerrainButtonSelection(terrainType);
-            
-            // Show toast notification
-            this.showToast('Terrain Selected', `${terrainNames[index - 1]} terrain selected`, 'success');
+            this.updateTerrainButtonSelection(terrainId);
+            this.showToast('Terrain Selected', `${terrainName} selected`, 'success');
         } else {
             this.showToast('Invalid Selection', `Nature terrain ${index} not available`, 'error');
         }
@@ -1872,21 +2047,18 @@ class MapEditorPage extends BasePage {
     private selectCityTerrain(args?: string): void {
         const index = parseInt(args || '1');
         
-        // Map to city terrain types (for now, reuse existing terrain)
-        // This can be expanded when city terrain types are added
-        const cityTerrain = [1, 2, 4, 5]; // Grass, Desert, Mountain, Rock (as city variants)
-        const cityNames = ['Grass', 'Desert', 'Mountain', 'Rock'];
-        
         this.hidePreviewIndicator(); // Hide preview indicator when committing
+        this.hideNumberOverlays(); // Hide number overlays when committing
         
-        if (index >= 1 && index <= cityTerrain.length) {
-            const terrainType = cityTerrain[index - 1];
-            this.setBrushTerrain(terrainType);
+        // Use visual index mapping
+        const terrainId = this.getTerrainIdByCityIndex(index);
+        const terrainName = this.getTerrainNameByCityIndex(index);
+        
+        if (terrainId !== null) {
+            this.setBrushTerrain(terrainId);
             this.placementMode = 'terrain';
-            this.updateTerrainButtonSelection(terrainType);
-            
-            // Show toast notification
-            this.showToast('City Terrain Selected', `${cityNames[index - 1]} city terrain selected`, 'success');
+            this.updateTerrainButtonSelection(terrainId);
+            this.showToast('City Terrain Selected', `${terrainName} selected`, 'success');
         } else {
             this.showToast('Invalid Selection', `City terrain ${index} not available`, 'error');
         }
@@ -1895,20 +2067,18 @@ class MapEditorPage extends BasePage {
     private selectUnit(args?: string): void {
         const index = parseInt(args || '1');
         
-        // Map unit numbers to unit types (based on existing unit data)
-        // This should match the unit palette in the UI
-        const unitTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-        
         this.hidePreviewIndicator(); // Hide preview indicator when committing
+        this.hideNumberOverlays(); // Hide number overlays when committing
         
-        if (index >= 1 && index <= unitTypes.length) {
-            const unitType = unitTypes[index - 1];
-            this.currentUnit = unitType;
+        // Use visual index mapping
+        const unitId = this.getUnitIdByIndex(index);
+        const unitName = this.getUnitNameByIndex(index);
+        
+        if (unitId !== null) {
+            this.currentUnit = unitId;
             this.placementMode = 'unit';
-            this.updateUnitButtonSelection(unitType);
-            
-            // Show toast notification
-            this.showToast('Unit Selected', `Unit ${unitType} selected for player ${this.currentPlayerId}`, 'success');
+            this.updateUnitButtonSelection(unitId);
+            this.showToast('Unit Selected', `${unitName} selected for player ${this.currentPlayerId}`, 'success');
         } else {
             this.showToast('Invalid Selection', `Unit ${index} not available`, 'error');
         }
@@ -1936,24 +2106,29 @@ class MapEditorPage extends BasePage {
     }
     
     private selectBrushSize(args?: string): void {
-        const size = parseInt(args || '0');
-        const sizeNames = ['Single (1 hex)', 'Small (7 hexes)', 'Medium (19 hexes)', 'Large (37 hexes)', 'X-Large (61 hexes)', 'XX-Large (91 hexes)'];
+        const index = parseInt(args || '1'); // 1-based index
         
         this.hidePreviewIndicator(); // Hide preview indicator when committing
         
-        if (size >= 0 && size <= 5) {
-            this.setBrushSize(size);
+        // Map 1-based index to actual brush size values
+        const brushSizeValues = [0, 1, 3, 5, 10, 15]; // Corresponds to the select options
+        
+        if (index >= 1 && index <= brushSizeValues.length) {
+            const actualSize = brushSizeValues[index - 1];
+            this.setBrushSize(actualSize);
             
-            // Update brush size selector in UI
+            // Update brush size selector in UI and trigger onchange
             const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
             if (brushSizeSelect) {
-                brushSizeSelect.value = size.toString();
+                brushSizeSelect.value = actualSize.toString();
+                // Trigger the onchange event
+                brushSizeSelect.dispatchEvent(new Event('change'));
             }
             
             // Show toast notification
-            this.showToast('Brush Size Selected', `${sizeNames[size]} brush selected`, 'success');
+            this.showToast('Brush Size Selected', `${BRUSH_SIZE_NAMES[index - 1]} brush selected`, 'success');
         } else {
-            this.showToast('Invalid Selection', `Brush size ${size} not available`, 'error');
+            this.showToast('Invalid Selection', `Brush size ${index} not available`, 'error');
         }
     }
     
