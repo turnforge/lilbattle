@@ -126,8 +126,20 @@ export class PhaserMapScene extends Phaser.Scene {
         // Create cursor keys for camera movement
         this.cursors = this.input.keyboard!.createCursorKeys();
         
-        // Add WASD keys
+        // Add WASD keys  
         this.wasdKeys = this.input.keyboard!.addKeys('W,S,A,D');
+        
+        // Set up document-level keydown listener to handle input context properly
+        document.addEventListener('keydown', (event: KeyboardEvent) => {
+            // If user is focused on an input field, don't let Phaser prevent default for arrow keys
+            if (this.isInInputContext()) {
+                const arrowKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                if (arrowKeys.includes(event.key)) {
+                    // Stop the event from reaching Phaser's keyboard handlers
+                    event.stopImmediatePropagation();
+                }
+            }
+        }, true); // Use capture phase to intercept before Phaser
         
         // Mouse wheel zoom - zoom around cursor position
         this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[], deltaX: number, deltaY: number) => {
