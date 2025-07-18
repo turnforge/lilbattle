@@ -410,6 +410,7 @@ export class KeyboardShortcutManager {
             `;
         });
 
+
         html += `
             <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                 <p class="text-sm text-gray-600 dark:text-gray-400 text-center">

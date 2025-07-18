@@ -1,11 +1,13 @@
 import * as Phaser from 'phaser';
-import { PhaserMapScene } from './PhaserMapScene';
+import { EditablePhaserMapScene } from './EditablePhaserMapScene';
 import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 
 export class PhaserMapEditor {
     private game: Phaser.Game | null = null;
-    private scene: PhaserMapScene | null = null;
+    private scene: EditablePhaserMapScene | null = null;
     private containerElement: HTMLElement | null = null;
+    private sceneReadyPromise: Promise<EditablePhaserMapScene> | null = null;
+    private sceneReadyResolver: ((scene: EditablePhaserMapScene) => void) | null = null;
     
     private currentTerrain: number = 1;
     private currentColor: number = 0;
@@ -14,6 +16,7 @@ export class PhaserMapEditor {
     // Event callbacks
     private onTileClickCallback: ((q: number, r: number) => void) | null = null;
     private onMapChangeCallback: (() => void) | null = null;
+    private onReferenceScaleChangeCallback: ((x: number, y: number) => void) | null = null;
     
     constructor(containerId: string) {
         this.containerElement = document.getElementById(containerId);
@@ -26,13 +29,18 @@ export class PhaserMapEditor {
     }
     
     private initialize() {
+        // Create the scene ready promise immediately
+        this.sceneReadyPromise = new Promise<EditablePhaserMapScene>((resolve) => {
+            this.sceneReadyResolver = resolve;
+        });
+        
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             parent: this.containerElement!,
             width: '100%',
             height: '100%',
             backgroundColor: '#2c3e50',
-            scene: PhaserMapScene,
+            scene: EditablePhaserMapScene,
             scale: {
                 mode: Phaser.Scale.RESIZE,
                 width: '100%',
@@ -58,10 +66,16 @@ export class PhaserMapEditor {
         
         // Get reference to the scene once it's created
         this.game.events.once('ready', () => {
-            this.scene = this.game!.scene.getScene('PhaserMapScene') as PhaserMapScene;
+            this.scene = this.game!.scene.getScene('EditablePhaserMapScene') as EditablePhaserMapScene;
             
             // Set up event listeners
             this.setupEventListeners();
+            
+            // Resolve the scene ready promise
+            if (this.sceneReadyResolver) {
+                console.log('[PhaserMapEditor] Scene is ready, resolving promise');
+                this.sceneReadyResolver(this.scene);
+            }
             
             console.log('[PhaserMapEditor] Phaser game initialized successfully');
         });
@@ -74,6 +88,13 @@ export class PhaserMapEditor {
         this.scene.events.on('tileClicked', (data: { q: number; r: number }) => {
             this.handleTileClick(data.q, data.r);
         });
+        
+        // Listen for reference scale change events
+        this.scene.events.on('referenceScaleChanged', (data: { x: number; y: number }) => {
+            if (this.onReferenceScaleChangeCallback) {
+                this.onReferenceScaleChangeCallback(data.x, data.y);
+            }
+        });
     }
     
     private handleTileClick(q: number, r: number) {
@@ -85,6 +106,22 @@ export class PhaserMapEditor {
         // Note: onMapChangeCallback will be called by the specific paint methods when needed
     }
     
+    /**
+     * Wait for scene to be ready - this should be used by all methods that need the scene
+     */
+    public async waitForSceneReady(): Promise<EditablePhaserMapScene> {
+        if (this.scene) {
+            return this.scene;
+        }
+        
+        if (!this.sceneReadyPromise) {
+            throw new Error('[PhaserMapEditor] Scene ready promise not initialized');
+        }
+        
+        console.log('[PhaserMapEditor] Waiting for scene to be ready...');
+        return this.sceneReadyPromise;
+    }
+
     // Public API methods
     public setTerrain(terrain: number) {
         this.currentTerrain = terrain;
@@ -171,14 +208,21 @@ export class PhaserMapEditor {
         return this.scene?.getTilesData() || [];
     }
     
-    public setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>) {
-        if (!this.scene) return;
-        
-        this.scene.clearAllTiles();
-        
-        tiles.forEach(tile => {
-            this.scene!.setTile(tile.q, tile.r, tile.terrain, tile.color);
-        });
+    public async setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>) {
+        try {
+            const scene = await this.waitForSceneReady();
+            console.log(`[PhaserMapEditor] Setting tiles data: ${tiles.length} tiles`);
+            
+            scene.clearAllTiles();
+            
+            tiles.forEach(tile => {
+                scene.setTile(tile.q, tile.r, tile.terrain, tile.color);
+            });
+            
+            console.log(`[PhaserMapEditor] Successfully loaded ${tiles.length} tiles`);
+        } catch (error) {
+            console.error('[PhaserMapEditor] Failed to set tiles data:', error);
+        }
     }
     
     // Event callbacks
@@ -194,6 +238,10 @@ export class PhaserMapEditor {
     
     public onMapChange(callback: () => void) {
         this.onMapChangeCallback = callback;
+    }
+    
+    public onReferenceScaleChange(callback: (x: number, y: number) => void) {
+        this.onReferenceScaleChangeCallback = callback;
     }
     
     // Camera controls
@@ -353,5 +401,107 @@ export class PhaserMapEditor {
         
         this.scene = null;
         this.containerElement = null;
+    }
+    
+    // Reference image methods (editor-only)
+    
+    /**
+     * Load reference image from clipboard
+     */
+    public async loadReferenceFromClipboard(): Promise<boolean> {
+        try {
+            const scene = await this.waitForSceneReady();
+            return scene.loadReferenceFromClipboard();
+        } catch (error) {
+            console.error('[PhaserMapEditor] Failed to load reference from clipboard:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Load reference image from file
+     */
+    public async loadReferenceFromFile(file: File): Promise<boolean> {
+        console.log(`[PhaserMapEditor] loadReferenceFromFile called with: ${file.name}`);
+        
+        try {
+            const scene = await this.waitForSceneReady();
+            console.log(`[PhaserMapEditor] Scene ready, type: ${scene.constructor.name}`);
+            
+            // Check if the method exists
+            if (typeof scene.loadReferenceFromFile !== 'function') {
+                console.error('[PhaserMapEditor] loadReferenceFromFile method not found on scene');
+                return false;
+            }
+            
+            console.log(`[PhaserMapEditor] Method exists, calling scene.loadReferenceFromFile`);
+            const result = await scene.loadReferenceFromFile(file);
+            console.log(`[PhaserMapEditor] Scene loadReferenceFromFile returned: ${result}`);
+            return result;
+        } catch (error) {
+            console.error('[PhaserMapEditor] Error in loadReferenceFromFile:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Set reference image mode
+     */
+    public setReferenceMode(mode: number): void {
+        if (this.scene) {
+            this.scene.setReferenceMode(mode);
+        }
+    }
+    
+    /**
+     * Set reference image alpha
+     */
+    public setReferenceAlpha(alpha: number): void {
+        if (this.scene) {
+            this.scene.setReferenceAlpha(alpha);
+        }
+    }
+    
+    /**
+     * Set reference image position
+     */
+    public setReferencePosition(x: number, y: number): void {
+        if (this.scene) {
+            this.scene.setReferencePosition(x, y);
+        }
+    }
+    
+    /**
+     * Set reference image scale
+     */
+    public setReferenceScale(x: number, y: number): void {
+        if (this.scene) {
+            this.scene.setReferenceScale(x, y);
+        }
+    }
+    
+    /**
+     * Get reference image state
+     */
+    public getReferenceState(): {
+        mode: number;
+        alpha: number;
+        position: { x: number; y: number };
+        scale: { x: number; y: number };
+        hasImage: boolean;
+    } | null {
+        if (this.scene) {
+            return this.scene.getReferenceState();
+        }
+        return null;
+    }
+    
+    /**
+     * Clear reference image
+     */
+    public clearReferenceImage(): void {
+        if (this.scene) {
+            this.scene.clearReferenceImage();
+        }
     }
 }

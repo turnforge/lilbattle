@@ -14,6 +14,7 @@ export class PhaserPanel {
     private onTileClickCallback: ((q: number, r: number) => void) | null = null;
     private onMapChangeCallback: (() => void) | null = null;
     private onLogCallback: ((message: string) => void) | null = null;
+    private onReferenceScaleChangeCallback: ((x: number, y: number) => void) | null = null;
     
     constructor() {
         // Constructor kept minimal - initialize() must be called separately
@@ -77,6 +78,13 @@ export class PhaserPanel {
             this.log('Map changed');
             if (this.onMapChangeCallback) {
                 this.onMapChangeCallback();
+            }
+        });
+        
+        // Handle reference scale changes
+        this.phaserEditor.onReferenceScaleChange((x: number, y: number) => {
+            if (this.onReferenceScaleChangeCallback) {
+                this.onReferenceScaleChangeCallback(x, y);
             }
         });
     }
@@ -302,14 +310,18 @@ export class PhaserPanel {
     /**
      * Set tiles data (load a map)
      */
-    public setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): void {
+    public async setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): Promise<void> {
         if (!this.isInitialized || !this.phaserEditor) {
             this.log('Phaser panel not initialized - cannot set tiles data');
             return;
         }
         
-        this.phaserEditor.setTilesData(tiles);
-        this.log(`Loaded ${tiles.length} tiles`);
+        try {
+            await this.phaserEditor.setTilesData(tiles);
+            this.log(`Loaded ${tiles.length} tiles`);
+        } catch (error) {
+            this.log(`Failed to load tiles: ${error}`);
+        }
     }
     
     /**
@@ -360,6 +372,10 @@ export class PhaserPanel {
         this.onLogCallback = callback;
     }
     
+    public onReferenceScaleChange(callback: (x: number, y: number) => void): void {
+        this.onReferenceScaleChangeCallback = callback;
+    }
+    
     /**
      * Show/hide the panel
      */
@@ -403,6 +419,133 @@ export class PhaserPanel {
         }
         
         this.phaserEditor.resize(width, height);
+    }
+    
+    // Reference image methods (editor-only)
+    
+    /**
+     * Load reference image from clipboard
+     */
+    public async loadReferenceFromClipboard(): Promise<boolean> {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot load reference image');
+            return false;
+        }
+        
+        try {
+            const result = await this.phaserEditor.loadReferenceFromClipboard();
+            this.log(result ? 'Reference image loaded from clipboard' : 'No image found in clipboard');
+            return result;
+        } catch (error) {
+            this.log(`Failed to load reference image: ${error}`);
+            return false;
+        }
+    }
+    
+    /**
+     * Load reference image from file
+     */
+    public async loadReferenceFromFile(file: File): Promise<boolean> {
+        this.log(`loadReferenceFromFile called with file: ${file.name} (${file.size} bytes)`);
+        
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot load reference image');
+            return false;
+        }
+        
+        this.log('Phaser panel initialized, calling phaserEditor.loadReferenceFromFile');
+        
+        try {
+            const result = await this.phaserEditor.loadReferenceFromFile(file);
+            this.log(result ? `Reference image loaded from file: ${file.name}` : 'Failed to load file');
+            return result;
+        } catch (error) {
+            this.log(`Failed to load reference image from file: ${error}`);
+            return false;
+        }
+    }
+    
+    /**
+     * Set reference image mode (0=hidden, 1=background, 2=overlay)
+     */
+    public setReferenceMode(mode: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set reference mode');
+            return;
+        }
+        
+        this.phaserEditor.setReferenceMode(mode);
+        const modeNames = ['hidden', 'background', 'overlay'];
+        this.log(`Reference mode set to: ${modeNames[mode] || mode}`);
+    }
+    
+    /**
+     * Set reference image alpha transparency
+     */
+    public setReferenceAlpha(alpha: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set reference alpha');
+            return;
+        }
+        
+        this.phaserEditor.setReferenceAlpha(alpha);
+        this.log(`Reference alpha set to: ${alpha}`);
+    }
+    
+    /**
+     * Set reference image position (for mode 2)
+     */
+    public setReferencePosition(x: number, y: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set reference position');
+            return;
+        }
+        
+        this.phaserEditor.setReferencePosition(x, y);
+        this.log(`Reference position set to: (${x}, ${y})`);
+    }
+    
+    /**
+     * Set reference image scale (for mode 2)
+     */
+    public setReferenceScale(x: number, y: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set reference scale');
+            return;
+        }
+        
+        this.phaserEditor.setReferenceScale(x, y);
+        this.log(`Reference scale set to: (${x}, ${y})`);
+    }
+    
+    /**
+     * Get reference image state
+     */
+    public getReferenceState(): {
+        mode: number;
+        alpha: number;
+        position: { x: number; y: number };
+        scale: { x: number; y: number };
+        hasImage: boolean;
+    } | null {
+        if (!this.isInitialized || !this.phaserEditor) {
+            return null;
+        }
+        
+        return this.phaserEditor.getReferenceState();
+    }
+    
+    /**
+     * Clear reference image
+     */
+    public clearReferenceImage(): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot clear reference image');
+            return;
+        }
+        
+        this.phaserEditor.clearReferenceImage();
+        this.log('Reference image cleared');
     }
     
     /**

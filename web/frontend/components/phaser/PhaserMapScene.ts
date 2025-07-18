@@ -20,7 +20,7 @@ export class PhaserMapScene extends Phaser.Scene {
     // Camera controls
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
     private wasdKeys: any = null;
-    private zoomSpeed: number = 0.1;
+    private zoomSpeed: number = 0.01;
     private panSpeed: number = 100;
     
     // Mouse interaction
@@ -35,8 +35,8 @@ export class PhaserMapScene extends Phaser.Scene {
     private unitsLoaded: boolean = false;
     private sceneReadyCallback: (() => void) | null = null;
     
-    constructor() {
-        super({ key: 'PhaserMapScene' });
+    constructor(config?: string | Phaser.Types.Scenes.SettingsConfig) {
+        super(config || { key: 'PhaserMapScene' });
     }
     
     preload() {
@@ -219,20 +219,22 @@ export class PhaserMapScene extends Phaser.Scene {
     }
     
     update() {
-        // Handle camera movement with keyboard
-        const camera = this.cameras.main;
-        
-        if (this.cursors?.left.isDown || this.wasdKeys?.A.isDown) {
-            camera.scrollX -= this.panSpeed * (1 / camera.zoom);
-        }
-        if (this.cursors?.right.isDown || this.wasdKeys?.D.isDown) {
-            camera.scrollX += this.panSpeed * (1 / camera.zoom);
-        }
-        if (this.cursors?.up.isDown || this.wasdKeys?.W.isDown) {
-            camera.scrollY -= this.panSpeed * (1 / camera.zoom);
-        }
-        if (this.cursors?.down.isDown || this.wasdKeys?.S.isDown) {
-            camera.scrollY += this.panSpeed * (1 / camera.zoom);
+        // Handle camera movement with keyboard only if not in input context
+        if (!this.isInInputContext()) {
+            const camera = this.cameras.main;
+            
+            if (this.cursors?.left.isDown || this.wasdKeys?.A.isDown) {
+                camera.scrollX -= this.panSpeed * (1 / camera.zoom);
+            }
+            if (this.cursors?.right.isDown || this.wasdKeys?.D.isDown) {
+                camera.scrollX += this.panSpeed * (1 / camera.zoom);
+            }
+            if (this.cursors?.up.isDown || this.wasdKeys?.W.isDown) {
+                camera.scrollY -= this.panSpeed * (1 / camera.zoom);
+            }
+            if (this.cursors?.down.isDown || this.wasdKeys?.S.isDown) {
+                camera.scrollY += this.panSpeed * (1 / camera.zoom);
+            }
         }
         
         // Update grid and coordinates when camera moves or zooms
@@ -240,6 +242,24 @@ export class PhaserMapScene extends Phaser.Scene {
         this.updateCoordinatesDisplay();
     }
     
+    /**
+     * Check if user is currently focused on an input field
+     */
+    private isInInputContext(): boolean {
+        const activeElement = document.activeElement as HTMLElement;
+        if (!activeElement) return false;
+        
+        const tagName = activeElement.tagName.toLowerCase();
+        return (
+            tagName === 'input' ||
+            tagName === 'textarea' ||
+            tagName === 'select' ||
+            activeElement.contentEditable === 'true' ||
+            activeElement.closest('.modal') !== null ||
+            activeElement.closest('[contenteditable="true"]') !== null
+        );
+    }
+
     // Helper functions for coordinate conversion (matching lib/hex_coords.go)
     private hexToRowCol(q: number, r: number): { row: number; col: number } {
         // HexToRowCol: cube_to_oddr conversion

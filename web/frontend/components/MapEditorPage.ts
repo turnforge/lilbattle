@@ -143,6 +143,8 @@ class MapEditorPage extends BasePage {
                         return this.createConsoleComponent();
                     case 'advancedTools':
                         return this.createAdvancedToolsComponent();
+                    case 'referenceImage':
+                        return this.createReferenceImageComponent();
                     default:
                         return {
                             element: document.createElement('div'),
@@ -468,6 +470,121 @@ class MapEditorPage extends BasePage {
         document.querySelector('[data-action="init-phaser"]')?.addEventListener('click', () => {
             this.initializePhaser();
         });
+        
+        // Reference image controls
+        const loadReferenceBtn = document.getElementById('load-reference-btn');
+        if (loadReferenceBtn) {
+            loadReferenceBtn.addEventListener('click', () => {
+                this.loadReferenceFromClipboard();
+            });
+        }
+        
+        const referenceModeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
+        if (referenceModeSelect) {
+            referenceModeSelect.addEventListener('change', (e) => {
+                const mode = parseInt((e.target as HTMLSelectElement).value);
+                this.setReferenceMode(mode);
+            });
+        }
+        
+        const referenceAlphaSlider = document.getElementById('reference-alpha') as HTMLInputElement;
+        const referenceAlphaValue = document.getElementById('reference-alpha-value');
+        if (referenceAlphaSlider && referenceAlphaValue) {
+            referenceAlphaSlider.addEventListener('input', (e) => {
+                const alpha = parseInt((e.target as HTMLInputElement).value) / 100;
+                referenceAlphaValue.textContent = `${Math.round(alpha * 100)}%`;
+                this.setReferenceAlpha(alpha);
+            });
+        }
+        
+        const resetPositionBtn = document.getElementById('reference-reset-position');
+        if (resetPositionBtn) {
+            resetPositionBtn.addEventListener('click', () => {
+                this.resetReferencePosition();
+            });
+        }
+        
+        const resetScaleBtn = document.getElementById('reference-reset-scale');
+        if (resetScaleBtn) {
+            resetScaleBtn.addEventListener('click', () => {
+                this.resetReferenceScale();
+            });
+        }
+        
+        // X/Y Scale controls
+        const scaleXMinusBtn = document.getElementById('reference-scale-x-minus');
+        const scaleXPlusBtn = document.getElementById('reference-scale-x-plus');
+        const scaleYMinusBtn = document.getElementById('reference-scale-y-minus');
+        const scaleYPlusBtn = document.getElementById('reference-scale-y-plus');
+        const scaleXInput = document.getElementById('reference-scale-x-value') as HTMLInputElement;
+        const scaleYInput = document.getElementById('reference-scale-y-value') as HTMLInputElement;
+        
+        if (scaleXMinusBtn) {
+            scaleXMinusBtn.addEventListener('click', () => {
+                this.adjustReferenceScaleX(-0.01);
+            });
+        }
+        
+        if (scaleXPlusBtn) {
+            scaleXPlusBtn.addEventListener('click', () => {
+                this.adjustReferenceScaleX(0.01);
+            });
+        }
+        
+        if (scaleYMinusBtn) {
+            scaleYMinusBtn.addEventListener('click', () => {
+                this.adjustReferenceScaleY(-0.01);
+            });
+        }
+        
+        if (scaleYPlusBtn) {
+            scaleYPlusBtn.addEventListener('click', () => {
+                this.adjustReferenceScaleY(0.01);
+            });
+        }
+        
+        // Input field change handlers
+        if (scaleXInput) {
+            scaleXInput.addEventListener('change', () => {
+                const value = parseFloat(scaleXInput.value);
+                if (!isNaN(value)) {
+                    this.setReferenceScaleX(value);
+                }
+            });
+        }
+        
+        if (scaleYInput) {
+            scaleYInput.addEventListener('change', () => {
+                const value = parseFloat(scaleYInput.value);
+                if (!isNaN(value)) {
+                    this.setReferenceScaleY(value);
+                }
+            });
+        }
+        
+        const clearReferenceBtn = document.getElementById('clear-reference-btn');
+        if (clearReferenceBtn) {
+            clearReferenceBtn.addEventListener('click', () => {
+                this.clearReferenceImage();
+            });
+        }
+        
+        // File input and load from file button
+        const fileInput = document.getElementById('reference-file-input') as HTMLInputElement;
+        const loadFileBtn = document.getElementById('load-reference-file-btn');
+        
+        if (loadFileBtn && fileInput) {
+            loadFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                    this.loadReferenceFromFile(file);
+                }
+            });
+        }
     }
 
     private initializeKeyboardShortcuts(): void {
@@ -531,6 +648,7 @@ class MapEditorPage extends BasePage {
                 requiresArgs: true,
                 argType: 'number'
             },
+            
             
             // Reset shortcuts (esc)
             {
@@ -684,7 +802,7 @@ class MapEditorPage extends BasePage {
     /**
      * Load map data (tiles and units) into the Phaser scene
      */
-    private loadMapDataIntoPhaser(): void {
+    private async loadMapDataIntoPhaser(): Promise<void> {
         this.logToConsole('loadMapDataIntoPhaser called');
         this.logToConsole(`Phaser panel initialized: ${this.phaserPanel ? this.phaserPanel.getIsInitialized() : 'panel is null'}`);
         this.logToConsole(`Map data exists: ${this.mapData ? 'YES' : 'NO'}`);
@@ -711,8 +829,8 @@ class MapEditorPage extends BasePage {
                 });
                 
                 if (tilesArray.length > 0) {
-                    this.logToConsole(`Attempting to load ${tilesArray.length} tiles: ${JSON.stringify(tilesArray)}`);
-                    this.phaserPanel.setTilesData(tilesArray);
+                    this.logToConsole(`Attempting to load ${tilesArray.length} tiles`);
+                    await this.phaserPanel.setTilesData(tilesArray);
                     this.logToConsole(`Loaded ${tilesArray.length} tiles into Phaser`);
                 }
             }
@@ -731,7 +849,7 @@ class MapEditorPage extends BasePage {
                             this.logToConsole(`Loading unit ${unit.unit_type} (player ${playerId}) at Q=${unit.q}, R=${unit.r}`);
                             
                             // Paint unit in Phaser (units render above tiles due to depth=10)
-                            const success = this.phaserPanel.paintUnit(unit.q, unit.r, unit.unit_type, playerId);
+                            const success = this.phaserPanel!.paintUnit(unit.q, unit.r, unit.unit_type, playerId);
                             if (success) {
                                 unitsLoaded++;
                             } else {
@@ -1329,6 +1447,27 @@ class MapEditorPage extends BasePage {
             dispose: () => {}
         };
     }
+    
+    private createReferenceImageComponent() {
+        const template = document.getElementById('reference-image-panel-template');
+        if (!template) {
+            console.error('Reference image panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        const container = template.cloneNode(true) as HTMLElement;
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        
+        return {
+            element: container,
+            init: () => {
+                // Reference image panel is already initialized through global event binding
+            },
+            dispose: () => {}
+        };
+    }
 
     private createDefaultDockviewLayout(): void {
         if (!this.dockview) return;
@@ -1362,6 +1501,14 @@ class MapEditorPage extends BasePage {
             component: 'tilestats',
             title: '📊 Map Statistics',
             position: { direction: 'below', referencePanel: 'advancedTools' }
+        });
+        
+        // Add Reference Image panel below the TileStats panel
+        this.dockview.addPanel({
+            id: 'referenceImage',
+            component: 'referenceImage',
+            title: '🖼️ Reference Image',
+            position: { direction: 'below', referencePanel: 'tilestats' }
         });
 
         // Add console panel below Phaser (250px height)
@@ -1398,8 +1545,14 @@ class MapEditorPage extends BasePage {
             if (consolePanel) {
                 consolePanel.api.setSize({ height: 250 });
             }
+            
+            // Set reference image panel to 300px height to accommodate controls
+            const referenceImagePanel = this.dockview.getPanel('referenceImage');
+            if (referenceImagePanel) {
+                referenceImagePanel.api.setSize({ height: 300 });
+            }
 
-            this.logToConsole('Panel sizes set: Tools=270px, Advanced=260px, Map Editor=remaining');
+            this.logToConsole('Panel sizes set: Tools=270px, Advanced=260px, ReferenceImage=300px, Map Editor=remaining');
         } catch (error) {
             this.logToConsole(`Failed to set panel sizes: ${error}`);
         }
@@ -1538,6 +1691,10 @@ class MapEditorPage extends BasePage {
                 this.markAsChanged();
             });
             
+            this.phaserPanel.onReferenceScaleChange((x: number, y: number) => {
+                this.updateReferenceScaleDisplay();
+            });
+            
             // Initialize the panel
             const success = this.phaserPanel.initialize('editor-canvas-container');
             
@@ -1565,8 +1722,8 @@ class MapEditorPage extends BasePage {
                     this.logToConsole('Loading pending map data into Phaser...');
                     this.showMapLoadingIndicator();
                     // Use setTimeout with loading indicator
-                    setTimeout(() => {
-                        this.loadMapDataIntoPhaser();
+                    setTimeout(async () => {
+                        await this.loadMapDataIntoPhaser();
                         this.hasPendingMapDataLoad = false;
                         this.hideMapLoadingIndicator();
                     }, 100);
@@ -2189,6 +2346,235 @@ class MapEditorPage extends BasePage {
         const unitButton = document.querySelector(`[data-unit="${unitType}"]`);
         if (unitButton) {
             unitButton.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
+        }
+    }
+
+    // Reference image methods
+    private async loadReferenceFromClipboard(): Promise<void> {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            this.showToast('Error', 'Phaser panel not ready', 'error');
+            return;
+        }
+        
+        try {
+            const success = await this.phaserPanel.loadReferenceFromClipboard();
+            if (success) {
+                this.showToast('Success', 'Reference image loaded from clipboard', 'success');
+                this.updateReferenceStatus('Image loaded');
+                
+                // Enable mode selector
+                const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
+                if (modeSelect && modeSelect.value === '0') {
+                    modeSelect.value = '1'; // Default to background mode
+                    this.setReferenceMode(1);
+                }
+            } else {
+                this.showToast('Error', 'No image found in clipboard', 'error');
+            }
+        } catch (error) {
+            this.logToConsole(`Failed to load reference image: ${error}`);
+            this.showToast('Error', 'Failed to load reference image', 'error');
+        }
+    }
+    
+    private async loadReferenceFromFile(file: File): Promise<void> {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            this.showToast('Error', 'Phaser panel not ready', 'error');
+            return;
+        }
+        
+        try {
+            this.logToConsole(`Loading reference image from file: ${file.name} (${file.size} bytes)`);
+            const success = await this.phaserPanel.loadReferenceFromFile(file);
+            if (success) {
+                this.showToast('Success', `Reference image loaded: ${file.name}`, 'success');
+                this.updateReferenceStatus(`File loaded: ${file.name}`);
+                
+                // Enable mode selector
+                const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
+                if (modeSelect && modeSelect.value === '0') {
+                    modeSelect.value = '1'; // Default to background mode
+                    this.setReferenceMode(1);
+                }
+            } else {
+                this.showToast('Error', 'Failed to load image file', 'error');
+            }
+        } catch (error) {
+            this.logToConsole(`Failed to load reference image from file: ${error}`);
+            this.showToast('Error', 'Failed to load reference image', 'error');
+        }
+    }
+    
+    private setReferenceMode(mode: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        this.phaserPanel.setReferenceMode(mode);
+        
+        // Update UI dropdown to reflect current mode
+        const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
+        if (modeSelect && modeSelect.value !== mode.toString()) {
+            modeSelect.value = mode.toString();
+        }
+        
+        // Show/hide position controls based on mode
+        const positionControls = document.getElementById('reference-position-controls');
+        if (positionControls) {
+            positionControls.style.display = mode === 2 ? 'block' : 'none';
+        }
+        
+        // Update scale display when switching to overlay mode
+        if (mode === 2) {
+            this.updateReferenceScaleDisplay();
+        }
+        
+        const modeNames = ['Hidden', 'Background', 'Overlay'];
+        this.logToConsole(`Reference mode set to: ${modeNames[mode]}`);
+        this.updateReferenceStatus(mode === 0 ? 'Hidden' : `${modeNames[mode]} mode`);
+    }
+    
+    private setReferenceAlpha(alpha: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        this.phaserPanel.setReferenceAlpha(alpha);
+        this.logToConsole(`Reference alpha set to: ${Math.round(alpha * 100)}%`);
+    }
+    
+    private resetReferencePosition(): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        this.phaserPanel.setReferencePosition(0, 0);
+        this.logToConsole('Reference position reset to center');
+        this.showToast('Position Reset', 'Reference image centered', 'success');
+    }
+    
+    private resetReferenceScale(): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        this.phaserPanel.setReferenceScale(1, 1);
+        this.logToConsole('Reference scale reset to 100%');
+        this.showToast('Scale Reset', 'Reference image scale reset', 'success');
+        this.updateReferenceScaleDisplay();
+    }
+    
+    private adjustReferenceScaleX(delta: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        const state = this.phaserPanel.getReferenceState();
+        if (!state) return;
+        
+        const newScaleX = Math.max(0.1, Math.min(5.0, state.scale.x + delta));
+        this.phaserPanel.setReferenceScale(newScaleX, state.scale.y);
+        this.updateReferenceScaleDisplay();
+        this.logToConsole(`Reference X scale: ${newScaleX.toFixed(2)}`);
+    }
+    
+    private adjustReferenceScaleY(delta: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        const state = this.phaserPanel.getReferenceState();
+        if (!state) return;
+        
+        const newScaleY = Math.max(0.1, Math.min(5.0, state.scale.y + delta));
+        this.phaserPanel.setReferenceScale(state.scale.x, newScaleY);
+        this.updateReferenceScaleDisplay();
+        this.logToConsole(`Reference Y scale: ${newScaleY.toFixed(2)}`);
+    }
+    
+    private setReferenceScaleX(scaleX: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        const state = this.phaserPanel.getReferenceState();
+        if (!state) return;
+        
+        const clampedScale = Math.max(0.1, Math.min(5.0, scaleX));
+        this.phaserPanel.setReferenceScale(clampedScale, state.scale.y);
+        this.updateReferenceScaleDisplay();
+        this.logToConsole(`Reference X scale: ${clampedScale.toFixed(2)}`);
+    }
+    
+    private setReferenceScaleY(scaleY: number): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        const state = this.phaserPanel.getReferenceState();
+        if (!state) return;
+        
+        const clampedScale = Math.max(0.1, Math.min(5.0, scaleY));
+        this.phaserPanel.setReferenceScale(state.scale.x, clampedScale);
+        this.updateReferenceScaleDisplay();
+        this.logToConsole(`Reference Y scale: ${clampedScale.toFixed(2)}`);
+    }
+    
+    private updateReferenceScaleDisplay(): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        const state = this.phaserPanel.getReferenceState();
+        if (!state) return;
+        
+        const scaleXInput = document.getElementById('reference-scale-x-value') as HTMLInputElement;
+        const scaleYInput = document.getElementById('reference-scale-y-value') as HTMLInputElement;
+        
+        if (scaleXInput) {
+            scaleXInput.value = state.scale.x.toFixed(2);
+        }
+        
+        if (scaleYInput) {
+            scaleYInput.value = state.scale.y.toFixed(2);
+        }
+    }
+    
+    private clearReferenceImage(): void {
+        if (!this.phaserPanel || !this.phaserPanel.getIsInitialized()) {
+            return;
+        }
+        
+        this.phaserPanel.clearReferenceImage();
+        
+        // Reset UI controls
+        const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
+        if (modeSelect) {
+            modeSelect.value = '0';
+        }
+        
+        const alphaSlider = document.getElementById('reference-alpha') as HTMLInputElement;
+        const alphaValue = document.getElementById('reference-alpha-value');
+        if (alphaSlider && alphaValue) {
+            alphaSlider.value = '50';
+            alphaValue.textContent = '50%';
+        }
+        
+        // Hide position controls
+        const positionControls = document.getElementById('reference-position-controls');
+        if (positionControls) {
+            positionControls.style.display = 'none';
+        }
+        
+        this.updateReferenceStatus('No reference image loaded');
+        this.logToConsole('Reference image cleared');
+        this.showToast('Cleared', 'Reference image removed', 'success');
+    }
+    
+    private updateReferenceStatus(status: string): void {
+        const statusElement = document.getElementById('reference-status');
+        if (statusElement) {
+            statusElement.textContent = status;
         }
     }
 
