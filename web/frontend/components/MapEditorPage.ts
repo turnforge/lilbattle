@@ -695,7 +695,7 @@ class MapEditorPage extends BasePage {
         }
         
         try {
-            // Load tiles using setTilesData for better performance
+            // Load tiles first using setTilesData for better performance
             if (this.mapData.tiles) {
                 const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
                 Object.entries(this.mapData.tiles).forEach(([key, tileData]: [string, any]) => {
@@ -717,35 +717,49 @@ class MapEditorPage extends BasePage {
                 }
             }
             
-            // Load units - check for map_units in the server data structure
+            // Load units AFTER tiles are loaded - ensure proper rendering order
             const serverData = this.mapData as any;
             if (serverData.map_units && Array.isArray(serverData.map_units)) {
-                serverData.map_units.forEach((unit: any) => {
-                    if (unit.q !== undefined && unit.r !== undefined && unit.unit_type !== undefined) {
-                        const playerId = unit.player || 1;
-                        
-                        // Note: For now, units will be loaded via the units data structure
-                        // The PhaserPanel doesn't have a paintUnit method yet, so we'll
-                        // let the normal unit placement logic handle this through the UI
-                        
-                        // Also store in mapData.units for consistency
-                        const key = `${unit.q},${unit.r}`;
-                        if (this.mapData && !this.mapData.units) {
-                            this.mapData.units = {};
+                let unitsLoaded = 0;
+                
+                // Add delay to ensure tiles are rendered first and textures are loaded
+                setTimeout(() => {
+                    serverData.map_units.forEach((unit: any) => {
+                        if (unit.q !== undefined && unit.r !== undefined && unit.unit_type !== undefined) {
+                            const playerId = unit.player || 1;
+                            
+                            this.logToConsole(`Loading unit ${unit.unit_type} (player ${playerId}) at Q=${unit.q}, R=${unit.r}`);
+                            
+                            // Paint unit in Phaser (units render above tiles due to depth=10)
+                            const success = this.phaserPanel.paintUnit(unit.q, unit.r, unit.unit_type, playerId);
+                            if (success) {
+                                unitsLoaded++;
+                            } else {
+                                this.logToConsole(`Failed to paint unit ${unit.unit_type} at Q=${unit.q}, R=${unit.r}`);
+                            }
+                            
+                            // Also store in mapData.units for consistency
+                            const key = `${unit.q},${unit.r}`;
+                            if (this.mapData && !this.mapData.units) {
+                                this.mapData.units = {};
+                            }
+                            if (this.mapData && this.mapData.units) {
+                                this.mapData.units[key] = {
+                                    unitType: unit.unit_type,
+                                    playerId: playerId
+                                };
+                            }
                         }
-                        if (this.mapData && this.mapData.units) {
-                            this.mapData.units[key] = {
-                                unitType: unit.unit_type,
-                                playerId: playerId
-                            };
-                        }
-                    }
-                });
-                this.logToConsole(`Loaded ${serverData.map_units.length} units into Phaser`);
+                    });
+                    this.logToConsole(`Successfully loaded ${unitsLoaded} units into Phaser`);
+                    
+                    // Refresh tile stats after all loading is complete
+                    this.refreshTileStats();
+                }, 300); // Increased delay to ensure tiles are rendered first
+            } else {
+                // No units to load, refresh stats immediately
+                this.refreshTileStats();
             }
-            
-            // Refresh tile stats after loading
-            this.refreshTileStats();
             
         } catch (error) {
             console.error('Error loading map data into Phaser:', error);
