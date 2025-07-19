@@ -2,38 +2,56 @@
 
 **Purpose:**
 
-This folder contains the core client-side TypeScript logic for LeetCoach interactivity, managing UI state, user events, API interactions, and DOM manipulation using a Composition pattern for section rendering and avoiding major frameworks (except for Excalidraw's React and Toast UI Editor dependencies).
+This folder contains the core client-side TypeScript logic for the webapp, managing UI state, user events, API interactions, and DOM manipulation using a modern component-based architecture with strict separation of concerns and event-driven communication.
 
-**Key Files/Components & Recent Refactoring:**
+**Core Architecture Components:**
 
-*   **Composition Refactor:** Sections are managed by `BaseSection.ts` (as `SectionContainer`), which instantiates mode-specific `[Type]View.ts` and `[Type]Edit.ts` components. These mode components now handle their own data fetching (`ContentApi`) and saving logic.
-    *   **Refactored:** `Text`, `Drawing`, `SystemDescription`.
-    *   **Pending Refactor:** `Plot`.
+## Modern Component System (New)
 
-*   **`BaseSection.ts` (Section Container):** Manages section frame, universal controls, mode state, orchestrates `View`/`Edit` component lifecycle, passes `designId`/`sectionId` and `onSaveSuccess`/`onCancel` callbacks.
-*   **View Mode Components:**
-    *   `TextSectionView.ts`: Fetches Markdown, renders it as HTML using Toast UI Editor Viewer. Handles theme changes.
-    *   `DrawingSectionView.ts`: Fetches SVG previews, renders the correct one. Handles theme changes.
-    *   `SystemDescriptionView.ts`: Fetches DSL, displays in `<pre><code>`, has Validate/Generate Diagram buttons, calls respective APIs, displays results/placeholders.
-*   **Edit Mode Components:**
-    *   `TextSectionEdit.ts`: Initializes **Toast UI Editor** with fetched Markdown. Handles content changes, Save (gets Markdown, calls `ContentApi`), Cancel. Signals container via callbacks. Handles theme changes.
-    *   `DrawingSectionEdit.ts`: Initializes Excalidraw (via `ExcalidrawWrapper.tsx`). Handles Save (generates JSON/SVGs, calls `ContentApi` multiple times). Signals container. Handles theme changes.
-    *   `SystemDescriptionEdit.ts`: Uses `<textarea>` for DSL. Handles Save (calls `ContentApi`), Cancel. Validate button calls `SystemModelApi`.
-*   **Managers & Handlers:** (`SectionManager.ts`, `LlmInteractionHandler.ts`, `ThemeManager.ts`, `Modal.ts`, `ToastManager.ts`, `TableOfContents.ts`, `DocumentTitle.ts`, `FullscreenHandler.ts`) - Core logic largely the same, but `SectionManager` now manages `BaseSection` (container) instances.
-*   **Page Entry Points:** (`DesignEditorPage.ts`, `HomePage.ts`, `LoginPage.ts`, `MapDetailsPage.ts`, `MapEditorPage.ts`) - `DesignEditorPage` simplified as containers manage their own content loading. `MapDetailsPage.ts` provides foundation for maps functionality. `MapEditorPage.ts` provides interactive canvas-based map editor with real-time hex grid visualization and terrain painting.
-*   **Utilities:** (`Api.ts`, `TemplateLoader.ts`, `types.ts`, `converters.ts`, `ExcalidrawWrapper.tsx`).
+*   **`EventBus.ts`**: Type-safe, synchronous event system with error isolation and source exclusion for inter-component communication
+*   **`Component.ts`**: Base interface and abstract class defining standard component lifecycle with simplified constructor pattern
+*   **`MapViewer.ts`**: Phaser-based map visualization component with proper DOM scoping and event-driven initialization  
+*   **`MapStatsPanel.ts`**: Statistics display component with safe DOM selectors and event-driven updates
+*   **`MapDetailsPage.ts`**: Orchestrator page following new architecture - handles data loading and component coordination only
+*   **`DESIGN_PRINCIPLES.md`**: Comprehensive documentation of architecture decisions, timing patterns, and critical lessons learned
 
-**Key Concepts/Responsibilities:**
+## Component Features
 
-*   Client-Side Interactivity, Component Orchestration, API Interaction, DOM Manipulation.
-*   **Composition Pattern:** Encapsulated view/edit logic for sections.
-*   Markdown Editing/Viewing for Text sections via Toast UI Editor.
-*   **Interactive Canvas Editor:** Canvas-based map editor with complete hex grid visualization via `MapEditorPage.ts`:
-    *   Clean event delegation using data attributes (no global namespace pollution)
-    *   Real-time HTML5 canvas rendering with hex grid and terrain colors
-    *   Interactive terrain painting via mouse clicks and coordinate tracking
-    *   Map resizing controls (Add/Remove buttons) for dynamic map size adjustment
-    *   Grid-based terrain palette with 6 terrain types (Unknown, Grass, Desert, Water, Mountain, Rock)
-    *   Real-time console output and status tracking
-    *   Theme management integration and responsive design
-    *   Ready for WASM module connection with comprehensive TypeScript integration
+*   **Strict DOM Scoping**: Components only access DOM within their root elements using `this.findElement()`
+*   **Event-Driven Communication**: All inter-component communication through EventBus, no direct method calls
+*   **Layout vs Behavior Separation**: Parents control layout/sizing, components handle internal behavior only
+*   **HTMX Integration Ready**: Components support both initialization and hydration patterns
+*   **Error Isolation**: Component failures don't cascade to other components
+*   **Simplified Constructor Pattern**: `new Component(rootElement, eventBus)` - parent ensures root element exists
+
+## Legacy Components (Being Migrated)
+
+*   **Section-Based System**: `BaseSection.ts`, `TextSectionView/Edit.ts`, `DrawingSectionView/Edit.ts` - older composition pattern
+*   **Managers & Handlers**: `ThemeManager.ts`, `Modal.ts`, `ToastManager.ts`, `TableOfContents.ts` - utility components  
+*   **Map Editor**: `MapEditorPage.ts` - interactive canvas-based hex grid map editor (needs migration to new architecture)
+*   **Other Pages**: `DesignEditorPage.ts`, `HomePage.ts`, `LoginPage.ts` - various page implementations
+
+## Key Architecture Principles
+
+*   **Separation of Concerns**: Clear boundaries between layout, behavior, and communication responsibilities
+*   **Event-Driven**: Components communicate through EventBus events, never direct method calls  
+*   **DOM Isolation**: Components only access DOM within their assigned root elements
+*   **Error Resilience**: Component failures are isolated and don't affect other components
+*   **Timing Awareness**: Proper handling of initialization order, race conditions, and async operations
+*   **WebGL Integration**: Specialized patterns for graphics libraries like Phaser with timing considerations
+
+## Critical Timing Patterns Learned
+
+*   **TypeScript Field Initializers**: Avoid explicit `= null` for constructor-set fields
+*   **Event Subscription Order**: Subscribe to events BEFORE creating components that emit them
+*   **WebGL Context Readiness**: Use small setTimeout for graphics library initialization completion
+*   **State → Subscribe → Create**: Strict three-phase initialization order
+*   **Async in Handlers**: EventBus stays synchronous, handlers use `.then()/.catch()` for async operations
+
+## Integration Capabilities
+
+*   **Phaser.js**: WebGL-based map rendering with proper timing handling
+*   **HTMX**: Component hydration support for server-driven UI updates  
+*   **Canvas/WebGL**: Specialized initialization patterns for graphics contexts
+*   **Toast/Modal Systems**: User feedback and interaction patterns
+*   **Theme Management**: Coordinated theming across component boundaries

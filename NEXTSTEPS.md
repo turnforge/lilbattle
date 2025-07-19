@@ -157,6 +157,25 @@
 - **Race Condition Management**: Map data loading must be sequenced after Phaser initialization to prevent DOM corruption
 - **Template Build System**: JavaScript bundle inclusion requires careful coordination between template structure and build system output
 
+### 16. Component Architecture Refactoring (v4.8) ✅ COMPLETED
+**Completed**: Major architectural transformation to modern component-based system with event-driven communication
+**Key Achievements**:
+- **EventBus System**: Type-safe, synchronous event system with error isolation and source exclusion for inter-component communication
+- **Component Base Classes**: Standard lifecycle management with simplified constructor pattern and proper separation of concerns
+- **MapViewer Component**: Phaser-based map visualization with strict DOM scoping and event-driven initialization
+- **MapStatsPanel Component**: Statistics display component with safe DOM selectors and real-time updates
+- **Critical Timing Fixes**: Resolved TypeScript initializer issues, event subscription race conditions, and WebGL context timing problems
+- **Architecture Documentation**: Comprehensive DESIGN_PRINCIPLES.md with real-world lessons learned and best practices
+
+### 17. Timing and Initialization Mastery (v4.8) ✅ COMPLETED  
+**Completed**: Deep understanding of JavaScript/TypeScript timing patterns and WebGL library integration
+**Critical Discoveries**:
+- **TypeScript Field Initializers**: Explicit `= null` initializers can reset values after constructor execution - use type-only declarations
+- **Event Subscription Order**: Must subscribe to events BEFORE creating components that emit during construction to avoid race conditions
+- **WebGL Context Readiness**: Graphics libraries need event loop tick after "initialized" status for full WebGL context preparation
+- **State → Subscribe → Create**: Strict three-phase initialization order prevents timing bugs and ensures reliable component communication
+- **Async EventBus Handlers**: EventBus stays synchronous for performance, handlers use `.then()/.catch()` for async operations without blocking
+
 ## Current Development Focus
 
 ### Phase 4: Phaser.js Polish and Integration ✅ COMPLETED

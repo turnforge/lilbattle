@@ -18,7 +18,7 @@ import { Map } from './Map';
  * - Statistics display (delegated to MapStatsPanel)
  */
 class MapDetailsPage extends BasePage {
-    private currentMapId: string | null = null;
+    private currentMapId: string | null;
     private isLoadingMap: boolean = false;
     private map: Map | null = null;
     
@@ -28,16 +28,14 @@ class MapDetailsPage extends BasePage {
 
     constructor() {
         super();
+        this.loadInitialState();
         this.initializeSpecificComponents();
         this.bindSpecificEvents();
-        this.loadInitialState();
     }
 
     protected initializeSpecificComponents(): void {
-        // Initialize components with delay to ensure DOM is ready
-        setTimeout(() => {
-            this.initializeComponents();
-        }, 100);
+        // Initialize components immediately
+        this.initializeComponents();
     }
     
     /**
@@ -47,8 +45,21 @@ class MapDetailsPage extends BasePage {
         try {
             console.log('Initializing MapDetailsPage components');
             
+            // Subscribe to MapViewer ready event BEFORE creating the component
+            console.log('MapDetailsPage: Subscribing to map-viewer-ready event');
+            this.eventBus.subscribe('map-viewer-ready', () => {
+                console.log('MapDetailsPage: MapViewer is ready, loading map data...');
+                if (this.currentMapId) {
+                  // Give Phaser time to fully initialize webgl context and scene
+                  setTimeout(async () => {
+                    await this.loadMapData()
+                  }, 10)
+                }
+            }, 'map-details-page');
+            
             // Create MapViewer component
             const mapViewerRoot = this.ensureElement('[data-component="map-viewer"]', 'map-viewer-root');
+            console.log('MapDetailsPage: Creating MapViewer with eventBus:', this.eventBus);
             this.mapViewer = new MapViewer(mapViewerRoot, this.eventBus, true);
             
             // Create MapStatsPanel component  
@@ -56,11 +67,6 @@ class MapDetailsPage extends BasePage {
             this.mapStatsPanel = new MapStatsPanel(mapStatsRoot, this.eventBus, true);
             
             console.log('MapDetailsPage components initialized');
-            
-            // Now load the map data if we have it
-            if (this.currentMapId) {
-                this.loadMapData();
-            }
             
         } catch (error) {
             console.error('Failed to initialize components:', error);

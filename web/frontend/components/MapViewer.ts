@@ -14,11 +14,12 @@ import { Map } from './Map';
  * Layout and styling are handled by parent container and CSS classes.
  */
 export class MapViewer extends BaseComponent {
-    private phaserViewer: PhaserViewer | null = null;
-    private loadedMapData: MapDataLoadedPayload | null = null;
-    private viewerContainer: HTMLElement | null = null;
+    private phaserViewer: PhaserViewer | null;
+    private loadedMapData: MapDataLoadedPayload | null;
+    private viewerContainer: HTMLElement | null;
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        console.log('MapViewer constructor: received eventBus:', eventBus);
         super('map-viewer', rootElement, eventBus, debugMode);
     }
     
@@ -39,20 +40,23 @@ export class MapViewer extends BaseComponent {
             
             // Find or create the Phaser container within our root element
             this.viewerContainer = this.findElement('#phaser-viewer-container');
+            console.log('After findElement:', this.viewerContainer);
+            
             if (!this.viewerContainer) {
                 // Create the container if it doesn't exist
                 this.viewerContainer = document.createElement('div');
                 this.viewerContainer.id = 'phaser-viewer-container';
                 this.viewerContainer.className = 'w-full h-full min-h-96';
                 this.rootElement.appendChild(this.viewerContainer);
+                console.log('After creating container:', this.viewerContainer);
             }
             
-            // Initialize Phaser viewer with delay to ensure container is ready
-            setTimeout(() => {
-                this.initializePhaserViewer();
-            }, 100);
-            
             this.log('MapViewer bound to DOM');
+            
+            // Initialize Phaser viewer immediately
+            console.log('MapViewer: About to call initializePhaserViewer()');
+            this.initializePhaserViewer();
+            console.log('MapViewer: Called initializePhaserViewer()');
             
         } catch (error) {
             this.handleError('Failed to bind MapViewer to DOM', error);
@@ -72,65 +76,6 @@ export class MapViewer extends BaseComponent {
         this.viewerContainer = null;
     }
     
-    protected async hydrateExistingDOM(validation: DOMValidation): Promise<boolean> {
-        try {
-            this.log('Hydrating MapViewer with existing DOM');
-            
-            // Find existing Phaser container
-            this.viewerContainer = this.findElement('#phaser-viewer-container');
-            if (!this.viewerContainer) {
-                throw new Error('Phaser viewer container not found during hydration');
-            }
-            
-            // Initialize Phaser with delay
-            setTimeout(() => {
-                this.initializePhaserViewer();
-            }, 100);
-            
-            // Subscribe to events
-            this.subscribe<MapDataLoadedPayload>(EventTypes.MAP_DATA_LOADED, (payload) => {
-                this.handleMapDataLoaded(payload);
-            });
-            
-            this.log('MapViewer hydrated successfully');
-            return true;
-            
-        } catch (error) {
-            this.handleError('Failed to hydrate MapViewer', error);
-            return false;
-        }
-    }
-    
-    protected async createMissingDOM(validation: DOMValidation): Promise<boolean> {
-        try {
-            this.log('Creating missing DOM for MapViewer');
-            
-            // Create Phaser container if missing
-            if (validation.missingElements.includes('phaser-viewer-container')) {
-                const container = document.createElement('div');
-                container.id = 'phaser-viewer-container';
-                container.className = 'w-full h-full min-h-96';
-                this.rootElement.appendChild(container);
-                this.viewerContainer = container;
-            }
-            
-            setTimeout(() => {
-                this.initializePhaserViewer();
-            }, 100);
-            
-            // Subscribe to events
-            this.subscribe<MapDataLoadedPayload>(EventTypes.MAP_DATA_LOADED, (payload) => {
-                this.handleMapDataLoaded(payload);
-            });
-            
-            this.log('MapViewer DOM created successfully');
-            return true;
-            
-        } catch (error) {
-            this.handleError('Failed to create MapViewer DOM', error);
-            return false;
-        }
-    }
     
     public validateDOM(rootElement: HTMLElement): DOMValidation {
         const validation: DOMValidation = {
@@ -155,11 +100,13 @@ export class MapViewer extends BaseComponent {
      */
     private initializePhaserViewer(): void {
         try {
+            console.log('MapViewer: initializePhaserViewer() called');
             if (!this.viewerContainer) {
                 throw new Error('Viewer container not available');
             }
             
             this.log('Initializing Phaser viewer');
+            console.log('MapViewer: viewerContainer is:', this.viewerContainer);
             
             // Create new PhaserViewer instance
             this.phaserViewer = new PhaserViewer();
@@ -176,10 +123,12 @@ export class MapViewer extends BaseComponent {
             }
             
             // Emit ready event
+            console.log('MapViewer: Emitting MAP_VIEWER_READY event');
             this.emit(EventTypes.MAP_VIEWER_READY, {
                 componentId: this.componentId,
                 success: true
             });
+            console.log('MapViewer: MAP_VIEWER_READY event emitted');
             
             // Load map data if we have it
             if (this.loadedMapData) {

@@ -421,3 +421,165 @@ See `ComponentIsolationTest.ts` for our validation suite.
 7. **Reusability**: ✅ Components work in different contexts without modification
 
 This architecture evolved through practical problem-solving and has proven robust in preventing the types of issues that led to our original DOM corruption bug.
+
+## Critical Timing and Initialization Lessons
+
+### 1. TypeScript Class Field Initializers vs Constructor Assignment
+
+**Problem Discovered**: When class fields are explicitly initialized in the class body, TypeScript may reset them after constructor execution, overwriting values set in methods called by the constructor.
+
+```typescript
+// ❌ PROBLEMATIC: Explicit initializer can reset value
+class Component {
+    private viewerContainer: HTMLElement | null = null; // This resets after constructor!
+    
+    constructor() {
+        this.bindToDOM(); // Sets viewerContainer
+        // TypeScript may reset viewerContainer to null here
+    }
+}
+
+// ✅ CORRECT: No explicit initializer 
+class Component {
+    private viewerContainer: HTMLElement | null; // No initializer
+    
+    constructor() {
+        this.bindToDOM(); // Sets viewerContainer and it stays set
+    }
+}
+```
+
+**Key Learning**: Avoid explicit `= null` initializers for fields that get set during construction. Use TypeScript's type system instead: `field: Type | null`.
+
+### 2. Event Subscription vs Component Creation Order
+
+**Problem**: Race condition where components emit events before subscribers are registered.
+
+```typescript
+// ❌ WRONG ORDER: Component emits before subscription
+const component = new Component(); // Emits 'ready' event immediately
+eventBus.subscribe('ready', handler); // Too late!
+
+// ✅ CORRECT ORDER: Subscribe before creating
+eventBus.subscribe('ready', handler); // Ready to receive
+const component = new Component(); // Emits 'ready' event → handler called
+```
+
+**Pattern**: Always subscribe to events BEFORE creating components that might emit them during construction.
+
+### 3. WebGL/Canvas Initialization Timing
+
+**Problem**: Even when Phaser reports "initialized", the WebGL context and scene may still be setting up asynchronously.
+
+```typescript
+// ❌ PROBLEMATIC: Immediate usage after "initialized"
+this.phaserViewer.initialize(containerId); // Returns true
+this.phaserViewer.loadMapData(data); // May fail - WebGL not fully ready
+
+// ✅ WORKING: Small delay for WebGL context completion
+this.phaserViewer.initialize(containerId);
+setTimeout(() => {
+    this.phaserViewer.loadMapData(data); // WebGL context ready
+}, 10); // Next event loop tick
+```
+
+**Key Learning**: Graphics libraries often need a tick for full initialization even when they report "ready".
+
+### 4. Async Operations in Event Handlers
+
+**Problem**: EventBus handlers may need to perform async operations without blocking the event system.
+
+```typescript
+// ✅ CORRECT: Async handler with proper error handling
+eventBus.subscribe('ready', () => {
+    // Non-blocking async operation
+    this.loadData()
+        .then(() => console.log('Success'))
+        .catch(error => this.handleError(error));
+});
+
+// ❌ AVOID: Making EventBus itself async
+// EventBus should stay synchronous for performance
+```
+
+**Pattern**: EventBus stays synchronous, individual handlers use `.then()/.catch()` or wrap async operations.
+
+### 5. Constructor Execution Order in Inheritance
+
+**Learning**: In TypeScript/JavaScript inheritance, parent constructor completes fully before child-specific initialization.
+
+```typescript
+class BasePage {
+    constructor() {
+        this.loadInitialState();    // Must happen first
+        this.initializeComponents(); // Then components  
+        this.bindEvents();          // Then event binding
+    }
+}
+```
+
+**Critical**: `loadInitialState()` must run before component creation so data is available when components emit ready events.
+
+### 6. Component State Initialization Patterns
+
+**Discovered Pattern**: Three-phase initialization works best:
+
+```typescript
+// Phase 1: State setup (synchronous)
+this.loadInitialState(); // Set currentMapId, etc.
+
+// Phase 2: Event subscriptions (before component creation)  
+this.eventBus.subscribe('component-ready', this.handleReady);
+
+// Phase 3: Component creation (may emit events immediately)
+this.component = new Component(root, eventBus);
+```
+
+### 7. Debug Logging for Timing Issues
+
+**Essential Practice**: When debugging timing issues, log:
+- Constructor entry/exit
+- Event emissions
+- Event receptions  
+- Async operation start/completion
+
+```typescript
+// Timing debug pattern
+console.log('About to emit ready event');
+this.emit('ready', data);
+console.log('Ready event emitted');
+
+// In subscriber
+console.log('Received ready event, starting async work');
+```
+
+### 8. WebGL Context and Container Sizing
+
+**Timing Issue**: WebGL contexts need containers to have dimensions before initialization works properly.
+
+```typescript
+// Pattern for WebGL initialization
+protected bindToDOM(): void {
+    // 1. Ensure container exists and has dimensions
+    this.viewerContainer = this.findElement('#container') || this.createContainer();
+    
+    // 2. Initialize immediately (container is ready)
+    this.initializePhaserViewer();
+    
+    // 3. But delay actual usage for WebGL context readiness  
+    setTimeout(() => this.loadMapData(), 10);
+}
+```
+
+## Updated Best Practices
+
+1. **No explicit class field initializers** for constructor-set fields
+2. **Subscribe before create** - always register event handlers before creating components
+3. **Separate "initialized" from "ready"** - graphics libraries need settling time
+4. **Use setTimeout(fn, 0-10ms)** for WebGL context readiness, not longer delays
+5. **State → Subscribe → Create** - strict initialization order
+6. **Async in handlers, sync EventBus** - keep event system simple
+7. **Debug timing issues** with comprehensive logging
+8. **Test race conditions** by varying initialization order
+
+These patterns prevent timing-related bugs and ensure components work reliably across different execution environments and load conditions.
