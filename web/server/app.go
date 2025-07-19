@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/panyam/turnengine/games/weewar/services"
-	svc "github.com/panyam/turnengine/games/weewar/services"
 	oa "github.com/panyam/oneauth"
 	oa2 "github.com/panyam/oneauth/oauth2"
 	"github.com/panyam/templar"
+	"github.com/panyam/turnengine/games/weewar/services"
+	svc "github.com/panyam/turnengine/games/weewar/services"
 )
 
 // You can all this anything - but App is just a convention for all "top level" routes and handlers
@@ -80,7 +80,7 @@ func (a *App) Handler() http.Handler {
 	r.Handle("/examples/", http.StripPrefix("/examples", http.FileServer(http.Dir("./examples/"))))
 
 	r.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("DEBUG: App handler received request: %s %s", r.Method, r.URL.Path)
+		// log.Printf("DEBUG: App handler received request: %s %s", r.Method, r.URL.Path)
 		a.ViewsRoot.Handler().ServeHTTP(w, r)
 	}))
 

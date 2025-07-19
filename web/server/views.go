@@ -147,7 +147,7 @@ func (b *RootViewsHandler) HandleError(err error, w io.Writer) {
 
 func (n *RootViewsHandler) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("DEBUG: RootViewsHandler received request: %s %s", r.Method, r.URL.Path)
+		// log.Printf("DEBUG: RootViewsHandler received request: %s %s", r.Method, r.URL.Path)
 		n.mux.ServeHTTP(w, r)
 	})
 }
