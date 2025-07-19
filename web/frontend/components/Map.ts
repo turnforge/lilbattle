@@ -1,5 +1,22 @@
 import { HexCoord } from './phaser/hexUtils';
 
+class MapBounds {
+  MinQ: number;
+  MaxQ: number;
+  MinR: number;
+  MaxR: number;
+  StartingCoord: { q: number; r: number };
+  StartingX: number;
+  MinX: number;
+  MinY: number;
+  MaxX: number;
+  MaxY: number;
+  MinXCoord: {Q: number, R: number};
+  MinYCoord: {Q: number, R: number};
+  MaxXCoord: {Q: number, R: number};
+  MaxYCoord: {Q: number, R: number};
+}
+
 export interface TileData {
     tileType: number;
     playerId?: number; // Player ID for city terrains that support ownership

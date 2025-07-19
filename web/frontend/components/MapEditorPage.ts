@@ -6,25 +6,9 @@ import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './Keyboa
 import { Map } from './Map';
 import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload } from './EventBus';
 import { EditorToolsPanel } from './EditorToolsPanel';
+import { MapSaveManager } from './MapSaveManager';
 
 const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
-
-class MapBounds {
-  MinQ: number;
-  MaxQ: number;
-  MinR: number;
-  MaxR: number;
-  StartingCoord: { q: number; r: number };
-  StartingX: number;
-  MinX: number;
-  MinY: number;
-  MaxX: number;
-  MaxY: number;
-  MinXCoord: {Q: number, R: number};
-  MinYCoord: {Q: number, R: number};
-  MaxXCoord: {Q: number, R: number};
-  MaxYCoord: {Q: number, R: number};
-}
 
 /**
  * Map Editor page with WASM integration for hex-based map editing
@@ -32,7 +16,6 @@ class MapBounds {
 class MapEditorPage extends BasePage {
     private currentMapId: string | null = null;
     private isNewMap: boolean = false;
-    private mapBounds: MapBounds
 
     private map: Map | null = null;
     
@@ -75,6 +58,9 @@ class MapEditorPage extends BasePage {
 
     // Pending UI state to apply when Phaser becomes ready
     private pendingGridState: boolean | null = null;
+    
+    // Save manager for map persistence
+    private saveManager: MapSaveManager = new MapSaveManager();
 
     constructor() {
         super();
@@ -151,7 +137,6 @@ class MapEditorPage extends BasePage {
 
         this.editorOutput = document.getElementById('editor-output');
 
-        this.logToConsole('Map Editor initialized');
     }
 
     private initializeDockview(): void {
@@ -231,7 +216,6 @@ class MapEditorPage extends BasePage {
             this.saveDockviewLayout();
         });
 
-        this.logToConsole('Dockview initialized');
     }
 
     protected bindSpecificEvents(): void {
@@ -653,7 +637,6 @@ class MapEditorPage extends BasePage {
             onStateChange: (state, command) => this.handleKeyboardStateChange(state, command)
         });
         
-        this.logToConsole('Keyboard shortcuts initialized with immediate execution mode');
     }
 
     private handleKeyboardStateChange(state: KeyboardState, command?: string): void {
@@ -675,7 +658,6 @@ class MapEditorPage extends BasePage {
             
             if (overlayType) {
                 this.showNumberOverlays(overlayType);
-                this.logToConsole(`Showing ${overlayType} shortcut overlays`);
             }
         } else if (state === KeyboardState.NORMAL) {
             // Hide overlays when returning to NORMAL state
@@ -688,10 +670,8 @@ class MapEditorPage extends BasePage {
         this.updateEditorStatus('Initializing...');
 
         if (this.isNewMap) {
-            this.logToConsole(`Time: ${performance.now()} Creating new map...`);
             this.initializeNewMap();
         } else if (this.currentMapId) {
-            this.logToConsole(`Time: ${performance.now()} Loading existing map: ${this.currentMapId}`);
             this.loadExistingMap(this.currentMapId);
         } else {
             this.logToConsole('No map ID provided, defaulting to new map');
@@ -709,12 +689,10 @@ class MapEditorPage extends BasePage {
         
         if (templateMapData) {
             this.map = Map.deserialize(templateMapData);
-            this.logToConsole('New map initialized with template data');
             // Mark that we have map data to load into Phaser
             this.hasPendingMapDataLoad = true;
         } else {
             this.map = new Map('New Map', 8, 8);
-            this.logToConsole('New map initialized with default data');
             // Even for a default new map, we want to load it into Phaser
             this.hasPendingMapDataLoad = true;
         }
@@ -754,25 +732,18 @@ class MapEditorPage extends BasePage {
     private loadMapDataFromElement(): any {
         try {
             const mapDataElement = document.getElementById('map-data-json');
-            this.logToConsole(`Map data element found: ${mapDataElement ? 'YES' : 'NO'}`);
             
             if (mapDataElement && mapDataElement.textContent) {
-                this.logToConsole(`Raw map data content: ${mapDataElement.textContent.substring(0, 200)}...`);
                 const mapData = JSON.parse(mapDataElement.textContent);
                 
                 if (mapData && mapData !== null) {
-                    this.logToConsole('Map data found in page element');
-                    this.logToConsole(`Map data keys: ${Object.keys(mapData).join(', ')}`);
                     if (mapData.tiles) {
-                        this.logToConsole(`Tiles data keys: ${Object.keys(mapData.tiles).join(', ')}`);
                     }
                     if (mapData.map_units) {
-                        this.logToConsole(`Units data length: ${mapData.map_units.length}`);
                     }
                     return mapData;
                 }
             }
-            this.logToConsole('No map data found in page element');
             return null;
         } catch (error) {
             console.error('Error parsing map data from element:', error);
@@ -785,12 +756,8 @@ class MapEditorPage extends BasePage {
      * Load map data (tiles and units) into the Phaser scene
      */
     private async loadMapDataIntoPhaser(): Promise<void> {
-        this.logToConsole('loadMapDataIntoPhaser called');
-        this.logToConsole(`Phaser component initialized: ${this.phaserEditorComponent ? this.phaserEditorComponent.getIsInitialized() : 'component is null'}`);
-        this.logToConsole(`Map data exists: ${this.map ? 'YES' : 'NO'}`);
         
         if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized() || !this.map) {
-            this.logToConsole('Skipping Phaser data load - preconditions not met');
             return;
         }
         
@@ -809,9 +776,7 @@ class MapEditorPage extends BasePage {
                 });
                 
                 if (tilesArray.length > 0) {
-                    this.logToConsole(`Attempting to load ${tilesArray.length} tiles`);
                     await this.phaserEditorComponent.setTilesData(tilesArray);
-                    this.logToConsole(`Loaded ${tilesArray.length} tiles into Phaser`);
                 }
             }
             
@@ -823,17 +788,14 @@ class MapEditorPage extends BasePage {
                 // Add delay to ensure tiles are rendered first and textures are loaded
                 setTimeout(() => {
                     allUnits.forEach((unit) => {
-                        this.logToConsole(`Loading unit ${unit.unitType} (player ${unit.playerId}) at Q=${unit.q}, R=${unit.r}`);
                         
                         // Paint unit in Phaser (units render above tiles due to depth=10)
                         const success = this.phaserEditorComponent!.paintUnit(unit.q, unit.r, unit.unitType, unit.playerId);
                         if (success) {
                             unitsLoaded++;
                         } else {
-                            this.logToConsole(`Failed to paint unit ${unit.unitType} at Q=${unit.q}, R=${unit.r}`);
                         }
                     });
-                    this.logToConsole(`Successfully loaded ${unitsLoaded} units into Phaser`);
                     
                     // Refresh tile stats after all loading is complete
                     this.refreshTileStats();
@@ -892,7 +854,6 @@ class MapEditorPage extends BasePage {
         this.currentTerrain = terrain;
         
         const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
-        this.logToConsole(`Brush terrain set to: ${terrainNames[terrain]}`);
         this.updateBrushInfo();
         this.updateTerrainButtonSelection(terrain);
     }
@@ -900,16 +861,13 @@ class MapEditorPage extends BasePage {
     public setBrushSize(size: number): void {
         this.brushSize = size;
         
-        this.logToConsole(`Brush size set to: ${BRUSH_SIZE_NAMES[size]}`);
         this.updateBrushInfo();
     }
     
     public setShowGrid(showGrid: boolean): void {
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             this.phaserEditorComponent.setShowGrid(showGrid);
-            this.logToConsole(`Grid visibility set to: ${showGrid}`);
         } else {
-            this.logToConsole('Phaser component not ready for grid toggle, storing state for later');
             // Store the desired grid state and apply it when Phaser becomes ready
             this.pendingGridState = showGrid;
         }
@@ -918,9 +876,7 @@ class MapEditorPage extends BasePage {
     public setShowCoordinates(showCoordinates: boolean): void {
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             this.phaserEditorComponent.setShowCoordinates(showCoordinates);
-            this.logToConsole(`Coordinate visibility set to: ${showCoordinates}`);
         } else {
-            this.logToConsole('Phaser component not available for coordinates toggle');
         }
     }
 
@@ -931,7 +887,6 @@ class MapEditorPage extends BasePage {
         if (rowInput && colInput) {
             const row = parseInt(rowInput.value);
             const col = parseInt(colInput.value);
-            this.logToConsole(`Painting terrain ${this.currentTerrain} at (${row}, ${col})`);
             // TODO: Implement actual painting logic with WASM
         }
     }
@@ -943,7 +898,6 @@ class MapEditorPage extends BasePage {
         if (rowInput && colInput) {
             const row = parseInt(rowInput.value);
             const col = parseInt(colInput.value);
-            this.logToConsole(`Flood filling with terrain ${this.currentTerrain} from (${row}, ${col})`);
             // TODO: Implement flood fill logic with WASM
         }
     }
@@ -955,64 +909,51 @@ class MapEditorPage extends BasePage {
         if (rowInput && colInput) {
             const row = parseInt(rowInput.value);
             const col = parseInt(colInput.value);
-            this.logToConsole(`Removing terrain at (${row}, ${col})`);
             // TODO: Implement terrain removal logic with WASM
         }
     }
 
     public downloadImage(): void {
-        this.logToConsole('Downloading map image...');
         // TODO: Implement image download
         this.showToast('Download', 'Image download not yet implemented', 'info');
     }
 
     public exportToGame(players: number): void {
-        this.logToConsole(`Exporting as ${players}-player game...`);
         // TODO: Implement game export
         this.showToast('Export', `${players}-player game export not yet implemented`, 'info');
     }
 
     public downloadGameData(): void {
-        this.logToConsole('Downloading game data...');
         // TODO: Implement game data download
         this.showToast('Download', 'Game data download not yet implemented', 'info');
     }
 
     // Advanced tool functions
     public fillAllGrass(): void {
-        this.logToConsole('Filling all tiles with grass...');
         
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             this.phaserEditorComponent.fillAllTerrain(1, 0); // Terrain type 1 = Grass
-            this.logToConsole('All tiles filled with grass using Phaser');
         } else {
-            this.logToConsole('Phaser component not available, cannot fill grass');
         }
     }
 
     public createIslandMap(): void {
-        this.logToConsole('Creating island map...');
         
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             // Get current viewport center
             const center = this.phaserEditorComponent.getViewportCenter();
-            this.logToConsole(`Creating island at viewport center: Q=${center.q}, R=${center.r}`);
             
             // Create island pattern at viewport center with radius 5
             this.phaserEditorComponent.createIslandPattern(center.q, center.r, 5);
-            this.logToConsole('Island map created using Phaser');
         } else {
-            this.logToConsole('Phaser component not available, cannot create island map');
         }
     }
 
     public createMountainRidge(): void {
-        this.logToConsole('Creating mountain ridge...');
         
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             // Get current viewport center
             const center = this.phaserEditorComponent.getViewportCenter();
-            this.logToConsole(`Creating mountain ridge at viewport center: Q=${center.q}, R=${center.r}`);
             
             // Create a horizontal mountain ridge centered around viewport center
             const ridgeWidth = 9; // from -4 to +4
@@ -1031,14 +972,12 @@ class MapEditorPage extends BasePage {
                     }
                 }
             }
-            this.logToConsole('Mountain ridge created using Phaser');
         } else {
             this.logToConsole('Phaser panel not available, cannot create mountain ridge');
         }
     }
 
     public showTerrainStats(): void {
-        this.logToConsole('Calculating terrain statistics...');
         
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             const tiles = this.phaserEditorComponent.getTilesData();
@@ -1062,18 +1001,10 @@ class MapEditorPage extends BasePage {
                 }
             });
             
-            this.logToConsole('Terrain statistics:');
-            this.logToConsole(`- Grass: ${stats.grass} tiles`);
-            this.logToConsole(`- Desert: ${stats.desert} tiles`);
-            this.logToConsole(`- Water: ${stats.water} tiles`);
-            this.logToConsole(`- Mountain: ${stats.mountain} tiles`);
-            this.logToConsole(`- Rock: ${stats.rock} tiles`);
             if (stats.other > 0) {
-                this.logToConsole(`- Other: ${stats.other} tiles`);
             }
             this.logToConsole(`Total tiles: ${tiles.length}`);
         } else {
-            this.logToConsole('Phaser component not available, cannot calculate stats');
         }
     }
 
@@ -1102,16 +1033,10 @@ class MapEditorPage extends BasePage {
             }
             
             this.markAsChanged();
-            this.logToConsole('Map cleared successfully');
             this.showToast('Map Cleared', 'All tiles and units have been removed', 'info');
         } else {
             this.logToConsole('Phaser panel not available, cannot clear map');
         }
-    }
-
-    private setMapBounds(bounds: MapBounds)  {
-        // Update map with bounds information
-        this.mapBounds = bounds
     }
 
     // Canvas management methods removed - now handled by Phaser panel
@@ -1122,91 +1047,40 @@ class MapEditorPage extends BasePage {
             return;
         }
 
+        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
+            this.showToast('Error', 'Editor not ready', 'error');
+            return;
+        }
+
         try {
-            this.logToConsole('Saving map...');
             this.updateEditorStatus('Saving...');
+            
+            const tilesData = this.phaserEditorComponent.getTilesData();
+            
+            const result = await this.saveManager.saveMap(
+                this.map,
+                this.currentMapId,
+                this.isNewMap,
+                tilesData,
+                (message) => this.logToConsole(message)
+            );
 
-            // Build tiles data in the correct format for CreateMap API
-            const tiles: { [key: string]: any } = {};
-            if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
-                const tilesData = this.phaserEditorComponent.getTilesData();
-                
-                tilesData.forEach((tile: any) => {
-                    const key = `${tile.q},${tile.r}`;
-                    tiles[key] = {
-                        q: tile.q,
-                        r: tile.r,
-                        tile_type: tile.terrain,
-                        player: tile.color
-                    };
-                });
-                
-                this.logToConsole(`Saving ${tilesData.length} tiles`);
-            }
-
-            // Build units data in the correct format for CreateMap API
-            const mapUnits: any[] = [];
-            const allUnits = this.map.getAllUnits();
-            if (allUnits.length > 0) {
-                allUnits.forEach((unit) => {
-                    mapUnits.push({
-                        q: unit.q,
-                        r: unit.r,
-                        player: unit.playerId,
-                        unit_type: unit.unitType
-                    });
-                });
-                this.logToConsole(`Saving ${mapUnits.length} units`);
-            }
-
-            // Build the CreateMapRequest structure
-            const createMapRequest = {
-                map: {
-                    id: this.currentMapId || 'new-map',
-                    name: this.map.getName() || 'Untitled Map',
-                    description: '',
-                    tags: [],
-                    difficulty: 'medium',
-                    creator_id: 'editor-user', // TODO: Get actual user ID
-                    tiles: tiles,
-                    map_units: mapUnits
-                }
-            };
-
-            const url = this.isNewMap ? '/api/v1/maps' : `/api/v1/maps/${this.currentMapId}`;
-            const method = this.isNewMap ? 'POST' : 'PATCH';
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(createMapRequest),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                this.logToConsole('Map saved successfully');
-                this.logToConsole(`Response: ${JSON.stringify(result)}`);
+            if (result.success) {
                 this.updateEditorStatus('Saved');
                 this.showToast('Success', 'Map saved successfully', 'success');
-                
-                // Mark as saved (clears unsaved changes flag)
                 this.markAsSaved();
                 
                 // If this was a new map, update the current map ID
-                const mapId = result.map?.id || result.id;
-                if (this.isNewMap && mapId) {
-                    this.currentMapId = mapId;
+                if (this.isNewMap && result.mapId) {
+                    this.currentMapId = result.mapId;
                     this.isNewMap = false;
                     // Update URL without reload
-                    history.replaceState(null, '', `/maps/${mapId}/edit`);
-                    this.logToConsole(`Map ID updated to: ${mapId}`);
-                    this.logToConsole(`URL updated to: /maps/${mapId}/edit`);
+                    history.replaceState(null, '', `/maps/${result.mapId}/edit`);
+                    this.logToConsole(`Map ID updated to: ${result.mapId}`);
+                    this.logToConsole(`URL updated to: /maps/${result.mapId}/edit`);
                 }
             } else {
-                const errorText = await response.text();
-                throw new Error(`Save failed: ${response.status} ${response.statusText} - ${errorText}`);
+                throw new Error(result.error || 'Unknown save error');
             }
         } catch (error) {
             console.error('Save failed:', error);
@@ -1216,10 +1090,25 @@ class MapEditorPage extends BasePage {
         }
     }
 
-    private exportMap(): void {
-        this.logToConsole('Exporting map...');
-        // TODO: Implement map export functionality
-        this.showToast('Export', 'Export functionality not yet implemented', 'info');
+    private async exportMap(): Promise<void> {
+        if (!this.map || !this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
+            this.showToast('Error', 'No map data to export', 'error');
+            return;
+        }
+
+        try {
+            const tilesData = this.phaserEditorComponent.getTilesData();
+            const success = await this.saveManager.exportMap(this.map, tilesData, 'json');
+            
+            if (success) {
+                this.showToast('Success', 'Map exported successfully', 'success');
+            } else {
+                this.showToast('Error', 'Failed to export map', 'error');
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            this.showToast('Error', 'Export failed', 'error');
+        }
     }
 
     private async saveMapTitle(newTitle: string): Promise<void> {
@@ -1241,7 +1130,6 @@ class MapEditorPage extends BasePage {
             // Save the map (this will include the title update)
             await this.saveMap();
             
-            this.logToConsole('Map title updated successfully');
             this.showToast('Success', 'Map title updated', 'success');
             
         } catch (error) {
@@ -1757,34 +1645,6 @@ class MapEditorPage extends BasePage {
         }
     }
     
-    private handleUnitPlacement(q: number, r: number): void {
-        if (!this.map) return;
-        
-        const tileKey = `${q},${r}`;
-        const unitKey = `${q},${r}`;
-        
-        // Check if tile exists at this location by asking Phaser panel
-        if (!this.tileExistsAt(q, r)) {
-            this.logToConsole(`Cannot place unit at Q=${q}, R=${r} - no tile exists`);
-            return;
-        }
-        
-        // Check if there's already a unit at this location
-        const existingUnit = this.getUnitAt(q, r);
-        
-        if (existingUnit && existingUnit.unitType === this.currentUnit) {
-            // Same unit type exists - toggle it off (remove it)
-            this.removeUnitAt(q, r);
-            this.logToConsole(`Removed unit ${this.currentUnit} at Q=${q}, R=${r} (toggle)`);
-        } else {
-            // Different unit or no unit - place/replace the unit
-            this.setUnitAt(q, r, this.currentUnit, this.currentPlayerId);
-            this.logToConsole(`Placed unit ${this.currentUnit} (player ${this.currentPlayerId}) at Q=${q}, R=${r}`);
-        }
-        
-        this.markAsChanged();
-    }
-    
     private handleTerrainPlacement(q: number, r: number): void {
         // Get current brush size from dropdown
         const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
@@ -1895,7 +1755,6 @@ class MapEditorPage extends BasePage {
             // Create EditorToolsPanel component
             this.editorToolsPanel = new EditorToolsPanel(container, this.eventBus, true);
             
-            this.logToConsole('EditorToolsPanel initialized successfully!');
             
         } catch (error) {
             this.logToConsole(`Failed to initialize EditorToolsPanel: ${error}`);
@@ -1905,7 +1764,6 @@ class MapEditorPage extends BasePage {
     // TileStats panel methods
     private initializeTileStatsPanel(container: HTMLElement): void {
         try {
-            this.logToConsole('Initializing TileStats panel...');
             
             // Initialize TileStats panel
             this.tileStatsPanel = new TileStatsPanel();
@@ -1922,7 +1780,6 @@ class MapEditorPage extends BasePage {
                 // Initial stats update
                 this.refreshTileStats();
                 
-                this.logToConsole('TileStats panel initialized successfully!');
             } else {
                 throw new Error('Failed to initialize TileStats panel');
             }
@@ -1951,7 +1808,6 @@ class MapEditorPage extends BasePage {
         // Update the stats panel
         this.tileStatsPanel.updateStats(tilesData, unitsData);
         
-        this.logToConsole(`Stats refreshed: ${tilesData.length} tiles, ${Object.keys(unitsData).length} units`);
     }
     
     /**
