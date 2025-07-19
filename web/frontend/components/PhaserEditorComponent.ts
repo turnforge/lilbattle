@@ -429,6 +429,16 @@ export class PhaserEditorComponent extends BaseComponent {
     }
     
     /**
+     * Center camera on specific coordinates
+     */
+    public centerCamera(q: number = 0, r: number = 0): void {
+        if (this.phaserEditor && this.isInitialized) {
+            this.phaserEditor.centerCamera(q, r);
+            this.log(`Camera centered on Q=${q}, R=${r}`);
+        }
+    }
+    
+    /**
      * Map generation methods
      */
     public fillAllTerrain(terrain: number, color: number = 0): void {

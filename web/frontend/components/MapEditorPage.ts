@@ -837,10 +837,16 @@ class MapEditorPage extends BasePage {
                     
                     // Refresh tile stats after all loading is complete
                     this.refreshTileStats();
+                    
+                    // Center camera on the loaded map
+                    this.centerCameraOnMap();
                 }, 300); // Increased delay to ensure tiles are rendered first
             } else {
                 // No units to load, refresh stats immediately
                 this.refreshTileStats();
+                
+                // Center camera on the loaded map
+                this.centerCameraOnMap();
             }
             
         } catch (error) {
@@ -1946,6 +1952,44 @@ class MapEditorPage extends BasePage {
         this.tileStatsPanel.updateStats(tilesData, unitsData);
         
         this.logToConsole(`Stats refreshed: ${tilesData.length} tiles, ${Object.keys(unitsData).length} units`);
+    }
+    
+    /**
+     * Center the camera on the loaded map by calculating bounds and focusing on center
+     */
+    private centerCameraOnMap(): void {
+        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized() || !this.map) {
+            this.logToConsole('Cannot center camera - components not ready');
+            return;
+        }
+        
+        const allTiles = this.map.getAllTiles();
+        if (allTiles.length === 0) {
+            this.logToConsole('No tiles to center camera on');
+            return;
+        }
+        
+        // Calculate bounds of all tiles
+        let minQ = allTiles[0].q;
+        let maxQ = allTiles[0].q;
+        let minR = allTiles[0].r;
+        let maxR = allTiles[0].r;
+        
+        allTiles.forEach(tile => {
+            minQ = Math.min(minQ, tile.q);
+            maxQ = Math.max(maxQ, tile.q);
+            minR = Math.min(minR, tile.r);
+            maxR = Math.max(maxR, tile.r);
+        });
+        
+        // Calculate center point
+        const centerQ = Math.floor((minQ + maxQ) / 2);
+        const centerR = Math.floor((minR + maxR) / 2);
+        
+        this.logToConsole(`Centering camera on Q=${centerQ}, R=${centerR} (bounds: Q=${minQ}-${maxQ}, R=${minR}-${maxR})`);
+        
+        // Center the camera using the PhaserEditorComponent's method
+        this.phaserEditorComponent.centerCamera(centerQ, centerR);
     }
     
     // State management for undo/restore operations
