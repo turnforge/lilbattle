@@ -186,6 +186,7 @@ export const EventTypes = {
     MAP_VIEWER_READY: 'map-viewer-ready',
     MAP_VIEWER_ERROR: 'map-viewer-error',
     COMPONENT_INITIALIZED: 'component-initialized',
+    COMPONENT_HYDRATED: 'component-hydrated',
     COMPONENT_ERROR: 'component-error'
 } as const;
 
