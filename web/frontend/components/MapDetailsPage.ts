@@ -1,15 +1,30 @@
 import { BasePage } from './BasePage';
-import { PhaserViewer } from './PhaserViewer';
+import { EventBus, EventTypes } from './EventBus';
+import { MapViewer } from './MapViewer';
+import { MapStatsPanel } from './MapStatsPanel';
 import { Map } from './Map';
 
 /**
- * Map Details page with readonly map viewer
+ * Map Details Page - Orchestrator for map viewing functionality
+ * Responsible for:
+ * - Data loading and coordination
+ * - Component initialization and management
+ * - Page-level event coordination
+ * - Navigation and user actions
+ * 
+ * Does NOT handle:
+ * - Direct DOM manipulation (delegated to components)
+ * - Phaser management (delegated to MapViewer)
+ * - Statistics display (delegated to MapStatsPanel)
  */
 class MapDetailsPage extends BasePage {
     private currentMapId: string | null = null;
     private isLoadingMap: boolean = false;
-    private phaserViewer: PhaserViewer | null = null;
     private map: Map | null = null;
+    
+    // Component instances
+    private mapViewer: MapViewer | null = null;
+    private mapStatsPanel: MapStatsPanel | null = null;
 
     constructor() {
         super();
@@ -19,36 +34,58 @@ class MapDetailsPage extends BasePage {
     }
 
     protected initializeSpecificComponents(): void {
-        // Initialize Phaser viewer with delay to ensure container is properly sized
+        // Initialize components with delay to ensure DOM is ready
         setTimeout(() => {
-            this.initializePhaserViewer();
-        }, 1000);
+            this.initializeComponents();
+        }, 100);
     }
     
-    private initializePhaserViewer(): void {
-        // Initialize Phaser viewer
-        this.phaserViewer = new PhaserViewer();
-        
-        // Set up logging
-        this.phaserViewer.onLog((message: string) => {
-            console.log(message);
-        });
-        
-        // Initialize the viewer with the container
-        const success = this.phaserViewer.initialize('phaser-viewer-container');
-        if (!success) {
-            console.error('Failed to initialize Phaser viewer');
-            this.showToast('Error', 'Failed to initialize map viewer', 'error');
-            return;
-        }
-        
-        console.log('MapDetailsPage application initialized with Phaser viewer');
-        
-        // Now that Phaser is initialized, load the map data
-        if (this.currentMapId) {
-            this.loadMapData();
+    /**
+     * Initialize page components using the new simplified component architecture
+     */
+    private initializeComponents(): void {
+        try {
+            console.log('Initializing MapDetailsPage components');
+            
+            // Create MapViewer component
+            const mapViewerRoot = this.ensureElement('[data-component="map-viewer"]', 'map-viewer-root');
+            this.mapViewer = new MapViewer(mapViewerRoot, this.eventBus, true);
+            
+            // Create MapStatsPanel component  
+            const mapStatsRoot = this.ensureElement('[data-component="map-stats-panel"]', 'map-stats-root');
+            this.mapStatsPanel = new MapStatsPanel(mapStatsRoot, this.eventBus, true);
+            
+            console.log('MapDetailsPage components initialized');
+            
+            // Now load the map data if we have it
+            if (this.currentMapId) {
+                this.loadMapData();
+            }
+            
+        } catch (error) {
+            console.error('Failed to initialize components:', error);
+            this.showToast('Error', 'Failed to initialize page components', 'error');
         }
     }
+    
+    /**
+     * Ensure an element exists, create if missing
+     * This is acceptable for page-level orchestration to find component root elements
+     */
+    private ensureElement(selector: string, fallbackId: string): HTMLElement {
+        let element = document.querySelector(selector) as HTMLElement;
+        if (!element) {
+            console.warn(`Element not found: ${selector}, creating fallback`);
+            element = document.createElement('div');
+            element.id = fallbackId;
+            element.className = 'w-full h-full';
+            // Fallback should be more specific than just body
+            const mainContainer = document.querySelector('main') || document.body;
+            mainContainer.appendChild(element);
+        }
+        return element;
+    }
+    
 
     protected bindSpecificEvents(): void {
         const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -59,7 +96,7 @@ class MapDetailsPage extends BasePage {
         }
 
         // Bind copy map button if it exists
-        const copyButton = document.querySelector('button:has(svg[d*="M8 16H6"])'); // Copy icon SVG path
+        const copyButton = document.querySelector('[data-action="copy-map"]');
         if (copyButton) {
             copyButton.addEventListener('click', this.copyMap.bind(this));
         }
@@ -82,26 +119,27 @@ class MapDetailsPage extends BasePage {
     }
 
     /**
-     * Load map data from the hidden JSON element and display it
+     * Load map data and coordinate between components
      */
     private async loadMapData(): Promise<void> {
         try {
             console.log(`MapDetailsPage: Loading map data...`);
             
-            // Load map data from the hidden JSON element (similar to MapEditorPage)
+            // Load map data from the hidden JSON element
             const mapData = this.loadMapDataFromElement();
             
             if (mapData) {
                 this.map = Map.deserialize(mapData);
                 console.log('Map data loaded successfully');
                 
-                // Load the map into the Phaser viewer
-                await this.loadMapIntoViewer();
+                // Use MapViewer component to load the map
+                if (this.mapViewer) {
+                    await this.mapViewer.loadMap(mapData);
+                    this.showToast('Success', 'Map loaded successfully', 'success');
+                } else {
+                    console.warn('MapViewer component not available');
+                }
                 
-                // Update statistics
-                this.updateMapStatistics();
-                
-                this.showToast('Success', 'Map loaded successfully', 'success');
             } else {
                 console.error('No map data found');
                 this.showToast('Error', 'No map data found', 'error');
@@ -145,132 +183,6 @@ class MapDetailsPage extends BasePage {
         }
     }
     
-    /**
-     * Load the map data into the Phaser viewer
-     */
-    private async loadMapIntoViewer(): Promise<void> {
-        if (!this.phaserViewer || !this.phaserViewer.getIsInitialized() || !this.map) {
-            console.log('Skipping Phaser viewer load - preconditions not met');
-            return;
-        }
-        
-        try {
-            // Get tiles data
-            const allTiles = this.map.getAllTiles();
-            const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
-            
-            allTiles.forEach(tile => {
-                tilesArray.push({
-                    q: tile.q,
-                    r: tile.r,
-                    terrain: tile.tileType,
-                    color: tile.playerId || 0
-                });
-            });
-            
-            // Get units data
-            const allUnits = this.map.getAllUnits();
-            const unitsArray: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
-            
-            allUnits.forEach(unit => {
-                unitsArray.push({
-                    q: unit.q,
-                    r: unit.r,
-                    unitType: unit.unitType,
-                    playerId: unit.playerId
-                });
-            });
-            
-            // Load into viewer
-            await this.phaserViewer.loadMapData(tilesArray, unitsArray);
-            
-            console.log(`Loaded ${tilesArray.length} tiles and ${unitsArray.length} units into viewer`);
-            
-        } catch (error) {
-            console.error('Failed to load map into viewer:', error);
-            throw error;
-        }
-    }
-    
-    /**
-     * Update the map statistics sidebar with real data
-     */
-    private updateMapStatistics(): void {
-        if (!this.map) return;
-        
-        const allTiles = this.map.getAllTiles();
-        const allUnits = this.map.getAllUnits();
-        
-        // Count terrain types
-        const terrainCounts: { [key: number]: number } = {};
-        allTiles.forEach(tile => {
-            terrainCounts[tile.tileType] = (terrainCounts[tile.tileType] || 0) + 1;
-        });
-        
-        // Update basic stats
-        this.updateBasicStats(allTiles.length, allUnits.length);
-        this.updateTerrainDistribution(terrainCounts, allTiles.length);
-    }
-    
-    /**
-     * Update basic statistics in the sidebar
-     */
-    private updateBasicStats(totalTiles: number, totalUnits: number): void {
-        // Update total tiles - use specific selector within the statistics section only
-        const statsSection = document.querySelector('.w-80'); // The sidebar with statistics
-        if (statsSection) {
-            const elements = statsSection.querySelectorAll('.text-gray-900, .text-white');
-            elements.forEach(el => {
-                if (el.parentElement?.textContent?.includes('Total Tiles:')) {
-                    el.textContent = totalTiles.toString();
-                }
-            });
-        }
-        
-        // Could also update map dimensions if available from bounds
-        const bounds = this.map?.getBounds();
-        if (bounds && statsSection) {
-            const width = bounds.maxQ - bounds.minQ + 1;
-            const height = bounds.maxR - bounds.minR + 1;
-            
-            const dimensionsElements = statsSection.querySelectorAll('.text-gray-900, .text-white');
-            dimensionsElements.forEach(el => {
-                if (el.parentElement?.textContent?.includes('Dimensions:')) {
-                    el.textContent = `${width} × ${height}`;
-                }
-            });
-        }
-    }
-    
-    /**
-     * Update terrain distribution in the sidebar
-     */
-    private updateTerrainDistribution(terrainCounts: { [key: number]: number }, totalTiles: number): void {
-        // Terrain type mapping
-        const terrainNames: { [key: number]: string } = {
-            1: '🌱 Grass',
-            2: '🏜️ Desert', 
-            3: '🌊 Water',
-            16: '⛰️ Mountain',
-            20: '🗿 Rock'
-        };
-        
-        // Update terrain counts - scope to statistics sidebar only
-        const statsSection = document.querySelector('.w-80'); // The sidebar with statistics
-        if (statsSection) {
-            Object.entries(terrainNames).forEach(([terrainType, name]) => {
-                const count = terrainCounts[parseInt(terrainType)] || 0;
-                const percentage = totalTiles > 0 ? Math.round((count / totalTiles) * 100) : 0;
-                
-                const elements = statsSection.querySelectorAll('.text-gray-900, .text-white');
-                elements.forEach(el => {
-                    if (el.parentElement?.textContent?.includes(name)) {
-                        el.textContent = `${count} (${percentage}%)`;
-                    }
-                });
-            });
-        }
-    }
 
     // Theme management is handled by BasePage
 
@@ -287,10 +199,15 @@ class MapDetailsPage extends BasePage {
     }
 
     public destroy(): void {
-        // Clean up Phaser viewer
-        if (this.phaserViewer) {
-            this.phaserViewer.destroy();
-            this.phaserViewer = null;
+        // Clean up components
+        if (this.mapViewer) {
+            this.mapViewer.destroy();
+            this.mapViewer = null;
+        }
+        
+        if (this.mapStatsPanel) {
+            this.mapStatsPanel.destroy();
+            this.mapStatsPanel = null;
         }
         
         // Clean up map data

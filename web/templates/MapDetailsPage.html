@@ -11,7 +11,7 @@
 </a>
 
 <!-- Copy Button -->
-<button class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+<button data-action="copy-map" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
     <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
     </svg>
@@ -50,9 +50,9 @@
 
         <!-- Map Content -->
         <div class="flex-1 flex max-w-7xl mx-auto w-full">
-            <!-- Map Preview Section -->
+            <!-- Map Preview Section - MapViewer Component Root -->
             <div class="flex-1 p-6">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full" data-component="map-viewer">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Map Preview</h2>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Interactive map viewer</p>
@@ -64,55 +64,55 @@
                 </div>
             </div>
 
-            <!-- Map Stats Sidebar -->
+            <!-- Map Stats Sidebar - MapStatsPanel Component Root -->
             <div class="w-80 p-6 pl-0">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" data-component="map-stats-panel">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Map Statistics</h2>
                     </div>
                     <div class="p-4 space-y-4">
                         <!-- Basic Stats -->
-                        <div>
+                        <div data-stat-section="basic">
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Basic Info</h3>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Dimensions:</span>
-                                    <span class="text-gray-900 dark:text-white">8 × 8</span>
+                                    <span class="text-gray-900 dark:text-white" data-stat="dimensions">8 × 8</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">Total Tiles:</span>
-                                    <span class="text-gray-900 dark:text-white">64</span>
+                                    <span class="text-gray-900 dark:text-white" data-stat="total-tiles">64</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600 dark:text-gray-400">Players:</span>
-                                    <span class="text-gray-900 dark:text-white">2-4</span>
+                                    <span class="text-gray-600 dark:text-gray-400">Total Units:</span>
+                                    <span class="text-gray-900 dark:text-white" data-stat="total-units">0</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Terrain Distribution -->
-                        <div>
+                        <div data-stat-section="terrain">
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Terrain Distribution</h3>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">🌱 Grass:</span>
-                                    <span class="text-gray-900 dark:text-white">32 (50%)</span>
+                                    <span class="text-gray-900 dark:text-white" data-terrain="1">32 (50%)</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">🏜️ Desert:</span>
-                                    <span class="text-gray-900 dark:text-white">12 (19%)</span>
+                                    <span class="text-gray-900 dark:text-white" data-terrain="2">12 (19%)</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">🌊 Water:</span>
-                                    <span class="text-gray-900 dark:text-white">8 (13%)</span>
+                                    <span class="text-gray-900 dark:text-white" data-terrain="3">8 (13%)</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">⛰️ Mountain:</span>
-                                    <span class="text-gray-900 dark:text-white">8 (13%)</span>
+                                    <span class="text-gray-900 dark:text-white" data-terrain="16">8 (13%)</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600 dark:text-gray-400">🗿 Rock:</span>
-                                    <span class="text-gray-900 dark:text-white">4 (6%)</span>
+                                    <span class="text-gray-900 dark:text-white" data-terrain="20">4 (6%)</span>
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-import { EventBus, EventHandler } from './EventBus';
+import { EventBus, EventHandler, EventTypes } from './EventBus';
 
 /**
  * Standard component state interface
@@ -11,15 +11,6 @@ export interface ComponentState {
     lastUpdated: number;
 }
 
-/**
- * Component initialization configuration
- */
-export interface ComponentConfig {
-    componentId: string;
-    rootElement: HTMLElement;
-    eventBus: EventBus;
-    debugMode?: boolean;
-}
 
 /**
  * DOM validation result for hydration scenarios
@@ -48,27 +39,10 @@ export interface Component {
     readonly rootElement: HTMLElement;
     
     /**
-     * Initialize the component with its root element and dependencies
-     * @param config - Component configuration including root element and event bus
-     * @returns Promise that resolves to true if initialization succeeded
+     * Handle dynamic content updates (e.g., from HTMX or server responses)
+     * @param newHTML - New HTML content to replace current content
      */
-    initialize(config: ComponentConfig): Promise<boolean>;
-    
-    /**
-     * Hydrate existing DOM content instead of creating new elements
-     * Used when server sends pre-rendered HTML fragments (HTMX scenarios)
-     * @param rootElement - Root element with existing DOM structure
-     * @param eventBus - Event bus for component communication
-     * @returns Promise that resolves to true if hydration succeeded
-     */
-    hydrate(rootElement: HTMLElement, eventBus: EventBus): Promise<boolean>;
-    
-    /**
-     * Validate that existing DOM structure matches component expectations
-     * @param rootElement - Root element to validate
-     * @returns Validation result with missing/invalid elements
-     */
-    validateDOM(rootElement: HTMLElement): DOMValidation;
+    contentUpdated(newHTML: string): void;
     
     /**
      * Clean up the component and release resources
@@ -102,11 +76,11 @@ export abstract class BaseComponent implements Component {
     protected state: ComponentState;
     protected eventUnsubscribers: (() => void)[] = [];
     
-    constructor() {
-        // These will be set during initialize()
-        this.componentId = '';
-        this.rootElement = null as any;
-        this.eventBus = null as any;
+    constructor(componentId: string, rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        this.componentId = componentId;
+        this.rootElement = rootElement;
+        this.eventBus = eventBus;
+        this.debugMode = debugMode;
         
         this.state = {
             isInitialized: false,
@@ -114,113 +88,47 @@ export abstract class BaseComponent implements Component {
             hasError: false,
             lastUpdated: Date.now()
         };
-    }
-    
-    public async initialize(config: ComponentConfig): Promise<boolean> {
+        
+        // Mark as component in DOM for debugging
+        this.rootElement.setAttribute('data-component', this.componentId);
+        
+        // Initialize the component
         try {
-            // Set up component properties
-            (this as any).componentId = config.componentId;
-            (this as any).rootElement = config.rootElement;
-            this.eventBus = config.eventBus;
-            this.debugMode = config.debugMode || false;
+            this.initializeComponent();
+            this.bindToDOM();
             
-            this.log('Initializing component...');
+            this.state.isInitialized = true;
+            this.state.isReady = true;
+            this.state.lastUpdated = Date.now();
             
-            // Validate root element
-            if (!this.rootElement) {
-                throw new Error('Root element is required');
-            }
+            // Emit initialization event
+            this.eventBus.emit(EventTypes.COMPONENT_INITIALIZED, {
+                componentId: this.componentId,
+                success: true
+            }, this.componentId);
             
-            // Mark as component in DOM for debugging
-            this.rootElement.setAttribute('data-component', this.componentId);
-            
-            // Call component-specific initialization
-            const success = await this.initializeComponent();
-            
-            if (success) {
-                this.state.isInitialized = true;
-                this.state.isReady = true;
-                this.state.lastUpdated = Date.now();
-                
-                // Emit initialization event
-                this.eventBus.emit('component-initialized', {
-                    componentId: this.componentId,
-                    success: true
-                }, this.componentId);
-                
-                this.log('Component initialized successfully');
-                return true;
-            } else {
-                throw new Error('Component-specific initialization failed');
-            }
+            this.log('Component initialized successfully');
             
         } catch (error) {
-            this.handleError('Initialization failed', error);
-            return false;
+            this.handleError('Component initialization failed', error);
         }
     }
     
-    public async hydrate(rootElement: HTMLElement, eventBus: EventBus): Promise<boolean> {
+    public contentUpdated(newHTML: string): void {
         try {
-            // Set up component properties for hydration
-            (this as any).rootElement = rootElement;
-            this.eventBus = eventBus;
+            this.log('Content updated, re-binding to DOM');
             
-            this.log('Hydrating component with existing DOM...');
+            // Update the DOM
+            this.rootElement.innerHTML = newHTML;
             
-            // Validate existing DOM structure
-            const validation = this.validateDOM(rootElement);
+            // Re-bind to the new DOM structure
+            this.bindToDOM();
             
-            if (validation.warnings.length > 0) {
-                validation.warnings.forEach(warning => this.log(`Warning: ${warning}`));
-            }
-            
-            let success: boolean;
-            
-            if (validation.isValid) {
-                // DOM is valid - hydrate existing content
-                success = await this.hydrateExistingDOM(validation);
-            } else {
-                // DOM is incomplete - create missing elements
-                this.log(`DOM validation failed. Missing: ${validation.missingElements.join(', ')}`);
-                success = await this.createMissingDOM(validation);
-            }
-            
-            if (success) {
-                this.state.isInitialized = true;
-                this.state.isReady = true;
-                this.state.lastUpdated = Date.now();
-                
-                // Mark as component in DOM
-                rootElement.setAttribute('data-component', this.componentId);
-                
-                // Emit hydration event
-                this.eventBus.emit('component-hydrated', {
-                    componentId: this.componentId,
-                    success: true,
-                    hadExistingDOM: validation.isValid
-                }, this.componentId);
-                
-                this.log('Component hydrated successfully');
-                return true;
-            } else {
-                throw new Error('Component-specific hydration failed');
-            }
+            this.state.lastUpdated = Date.now();
             
         } catch (error) {
-            this.handleError('Hydration failed', error);
-            return false;
+            this.handleError('Content update failed', error);
         }
-    }
-    
-    public validateDOM(rootElement: HTMLElement): DOMValidation {
-        // Default implementation - components can override
-        return {
-            isValid: true,
-            missingElements: [],
-            invalidElements: [],
-            warnings: []
-        };
     }
     
     public destroy(): void {
@@ -318,29 +226,21 @@ export abstract class BaseComponent implements Component {
     
     /**
      * Component-specific initialization logic
-     * Called after base initialization is complete
+     * Called once during construction to set up the component
      */
-    protected abstract initializeComponent(): Promise<boolean>;
+    protected abstract initializeComponent(): void;
+    
+    /**
+     * Bind to DOM elements (handles both empty and pre-populated root elements)
+     * Called during initialization and after content updates
+     */
+    protected abstract bindToDOM(): void;
     
     /**
      * Component-specific cleanup logic
      * Called during destroy before base cleanup
      */
     protected abstract destroyComponent(): void;
-    
-    /**
-     * Hydrate existing DOM elements (bind to pre-rendered content)
-     * Called when DOM structure is valid and component should bind to existing elements
-     * @param validation - Result of DOM validation with any existing data
-     */
-    protected abstract hydrateExistingDOM(validation: DOMValidation): Promise<boolean>;
-    
-    /**
-     * Create missing DOM elements and bind to them
-     * Called when DOM validation fails and elements need to be created
-     * @param validation - Result of DOM validation showing what's missing
-     */
-    protected abstract createMissingDOM(validation: DOMValidation): Promise<boolean>;
 }
 
 /**

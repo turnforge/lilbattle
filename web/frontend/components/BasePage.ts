@@ -1,19 +1,25 @@
 import { ThemeManager } from './ThemeManager';
 import { Modal } from './Modal';
 import { ToastManager } from './ToastManager';
+import { EventBus } from './EventBus';
 
 /**
  * Base class for all pages that provides common UI components and functionality
+ * Includes page-level EventBus for component communication
  */
 export abstract class BasePage {
     protected themeManager: typeof ThemeManager | null = null;
     protected modal: Modal | null = null;
     protected toastManager: ToastManager | null = null;
+    protected eventBus: EventBus;
 
     protected themeToggleButton: HTMLButtonElement | null = null;
     protected themeToggleIcon: HTMLElement | null = null;
 
     constructor() {
+        // Create page-level event bus
+        this.eventBus = new EventBus(true); // Enable debug mode
+        
         this.initializeBaseComponents();
         this.bindBaseEvents();
     }
