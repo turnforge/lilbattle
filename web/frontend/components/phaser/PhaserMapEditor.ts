@@ -190,6 +190,10 @@ export class PhaserMapEditor {
         this.scene?.clearAllTiles();
     }
     
+    public clearAllUnits() {
+        this.scene?.clearAllUnits();
+    }
+    
     public createTestPattern() {
         this.scene?.createTestPattern();
         
@@ -212,6 +216,10 @@ export class PhaserMapEditor {
         try {
             const scene = await this.waitForSceneReady();
             console.log(`[PhaserMapEditor] Setting tiles data: ${tiles.length} tiles`);
+            
+            // Wait for assets to be ready before placing tiles
+            await scene.waitForAssetsReady();
+            console.log(`[PhaserMapEditor] Assets ready, placing tiles`);
             
             scene.clearAllTiles();
             
@@ -477,6 +485,15 @@ export class PhaserMapEditor {
     public setReferenceScale(x: number, y: number): void {
         if (this.scene) {
             this.scene.setReferenceScale(x, y);
+        }
+    }
+    
+    /**
+     * Set reference image scale with top-left corner as pivot
+     */
+    public setReferenceScaleFromTopLeft(x: number, y: number): void {
+        if (this.scene) {
+            this.scene.setReferenceScaleFromTopLeft(x, y);
         }
     }
     

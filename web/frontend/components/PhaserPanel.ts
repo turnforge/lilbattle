@@ -236,6 +236,19 @@ export class PhaserPanel {
     }
     
     /**
+     * Clear all units from the map
+     */
+    public clearAllUnits(): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot clear units');
+            return;
+        }
+        
+        this.phaserEditor.clearAllUnits();
+        this.log('All units cleared');
+    }
+    
+    /**
      * Create a test pattern for debugging
      */
     public createTestPattern(): void {
@@ -516,6 +529,19 @@ export class PhaserPanel {
         
         this.phaserEditor.setReferenceScale(x, y);
         this.log(`Reference scale set to: (${x}, ${y})`);
+    }
+    
+    /**
+     * Set reference image scale with top-left corner as pivot
+     */
+    public setReferenceScaleFromTopLeft(x: number, y: number): void {
+        if (!this.isInitialized || !this.phaserEditor) {
+            this.log('Phaser panel not initialized - cannot set reference scale from top-left');
+            return;
+        }
+        
+        this.phaserEditor.setReferenceScaleFromTopLeft(x, y);
+        this.log(`Reference scale set from top-left to: (${x}, ${y})`);
     }
     
     /**

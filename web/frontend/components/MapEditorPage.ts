@@ -459,6 +459,9 @@ class MapEditorPage extends BasePage {
         document.querySelector('[data-action="randomize-terrain"]')?.addEventListener('click', () => {
             this.randomizeTerrain();
         });
+        document.querySelector('[data-action="clear-map"]')?.addEventListener('click', () => {
+            this.clearMap();
+        });
         document.querySelector('[data-action="download-image"]')?.addEventListener('click', () => {
             this.downloadImage();
         });
@@ -1116,6 +1119,28 @@ class MapEditorPage extends BasePage {
         }
     }
 
+    public clearMap(): void {
+        this.logToConsole('Clearing entire map...');
+        
+        if (this.phaserPanel && this.phaserPanel.getIsInitialized()) {
+            // Clear all tiles and units from Phaser
+            this.phaserPanel.clearAllTiles();
+            this.phaserPanel.clearAllUnits();
+            
+            // Clear mapData as well
+            if (this.mapData) {
+                this.mapData.tiles = {};
+                this.mapData.units = {};
+            }
+            
+            this.markAsChanged();
+            this.logToConsole('Map cleared successfully');
+            this.showToast('Map Cleared', 'All tiles and units have been removed', 'info');
+        } else {
+            this.logToConsole('Phaser panel not available, cannot clear map');
+        }
+    }
+
     private setMapBounds(bounds: MapBounds)  {
         // Update mapData with bounds information
         this.mapBounds = bounds
@@ -1764,6 +1789,22 @@ class MapEditorPage extends BasePage {
     }
     
     private handleClearClick(q: number, r: number): void {
+        // Get current brush size from dropdown
+        const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        const brushSize = brushSizeSelect ? parseInt(brushSizeSelect.value) : 0;
+        
+        if (brushSize === 0) {
+            // Single tile clear
+            this.clearSingleTile(q, r);
+        } else {
+            // Multi-tile clear with brush
+            this.clearTileArea(q, r, brushSize);
+        }
+        
+        this.markAsChanged();
+    }
+    
+    private clearSingleTile(q: number, r: number): void {
         const unitKey = `${q},${r}`;
         
         // First priority: remove unit if exists
@@ -1771,7 +1812,6 @@ class MapEditorPage extends BasePage {
             delete this.mapData.units[unitKey];
             this.phaserPanel?.removeUnit(q, r);
             this.logToConsole(`Removed unit at Q=${q}, R=${r}`);
-            this.markAsChanged();
             return;
         }
         
@@ -1784,9 +1824,56 @@ class MapEditorPage extends BasePage {
             }
             this.phaserPanel?.removeTile(q, r);
             this.logToConsole(`Removed tile at Q=${q}, R=${r}`);
-            this.markAsChanged();
         } else {
             this.logToConsole(`Nothing to clear at Q=${q}, R=${r}`);
+        }
+    }
+    
+    private clearTileArea(centerQ: number, centerR: number, brushSize: number): void {
+        const radius = this.getBrushRadius(brushSize);
+        let clearedCount = 0;
+        
+        for (let dq = -radius; dq <= radius; dq++) {
+            for (let dr = -radius; dr <= radius; dr++) {
+                // Use cube distance to determine if tile is within brush radius
+                const distance = Math.abs(dq) + Math.abs(dr) + Math.abs(-dq - dr);
+                if (distance <= radius * 2) {
+                    const q = centerQ + dq;
+                    const r = centerR + dr;
+                    
+                    // Clear unit first if it exists
+                    const unitKey = `${q},${r}`;
+                    if (this.mapData && this.mapData.units[unitKey]) {
+                        delete this.mapData.units[unitKey];
+                        this.phaserPanel?.removeUnit(q, r);
+                        clearedCount++;
+                    }
+                    
+                    // Then clear tile if it exists
+                    if (this.tileExistsAt(q, r)) {
+                        if (this.mapData) {
+                            const tileKey = `${q},${r}`;
+                            delete this.mapData.tiles[tileKey];
+                        }
+                        this.phaserPanel?.removeTile(q, r);
+                        clearedCount++;
+                    }
+                }
+            }
+        }
+        
+        this.logToConsole(`Cleared ${clearedCount} tiles/units with brush size ${brushSize} at Q=${centerQ}, R=${centerR}`);
+    }
+    
+    private getBrushRadius(brushSize: number): number {
+        switch (brushSize) {
+            case 0: return 0;  // Single
+            case 1: return 1;  // Small (7 hexes)
+            case 2: return 2;  // Medium (19 hexes)
+            case 3: return 3;  // Large (37 hexes)
+            case 4: return 4;  // X-Large (61 hexes)
+            case 5: return 5;  // XX-Large (91 hexes)
+            default: return 0;
         }
     }
     
@@ -1831,8 +1918,11 @@ class MapEditorPage extends BasePage {
         const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
         const brushSize = brushSizeSelect ? parseInt(brushSizeSelect.value) : 0;
         
+        // Determine color based on terrain type
+        const playerColor = this.getPlayerColorForTerrain(this.currentTerrain);
+        
         // Paint terrain with current settings
-        this.phaserPanel?.paintTile(q, r, this.currentTerrain, 0, brushSize);
+        this.phaserPanel?.paintTile(q, r, this.currentTerrain, playerColor, brushSize);
         
         // Update mapData tiles
         if (this.mapData) {
@@ -1844,10 +1934,27 @@ class MapEditorPage extends BasePage {
             };
         }
         
-        this.logToConsole(`Painted terrain ${this.currentTerrain} at Q=${q}, R=${r} with brush size ${brushSize}`);
+        this.logToConsole(`Painted terrain ${this.currentTerrain} (color ${playerColor}) at Q=${q}, R=${r} with brush size ${brushSize}`);
         this.markAsChanged();
     }
     
+    /**
+     * Get the appropriate player color for a terrain type
+     */
+    private getPlayerColorForTerrain(terrainType: number): number {
+        // City terrains that support player colors
+        const cityTerrains = [1, 2, 3, 16, 20]; // Land Base, Naval Base, Airport Base, Missile Silo, Mines
+        
+        if (cityTerrains.includes(terrainType)) {
+            // For city terrains, get the selected player color
+            const playerColorSelect = document.getElementById('player-color') as HTMLSelectElement;
+            return playerColorSelect ? parseInt(playerColorSelect.value) : 0;
+        } else {
+            // For nature terrains, always use color 0 (neutral)
+            return 0;
+        }
+    }
+
     /**
      * Check if a tile exists at the given coordinates
      */
@@ -2458,7 +2565,7 @@ class MapEditorPage extends BasePage {
             return;
         }
         
-        this.phaserPanel.setReferenceScale(1, 1);
+        this.phaserPanel.setReferenceScaleFromTopLeft(1, 1);
         this.logToConsole('Reference scale reset to 100%');
         this.showToast('Scale Reset', 'Reference image scale reset', 'success');
         this.updateReferenceScaleDisplay();
@@ -2473,7 +2580,7 @@ class MapEditorPage extends BasePage {
         if (!state) return;
         
         const newScaleX = Math.max(0.1, Math.min(5.0, state.scale.x + delta));
-        this.phaserPanel.setReferenceScale(newScaleX, state.scale.y);
+        this.phaserPanel.setReferenceScaleFromTopLeft(newScaleX, state.scale.y);
         this.updateReferenceScaleDisplay();
         this.logToConsole(`Reference X scale: ${newScaleX.toFixed(2)}`);
     }
@@ -2487,7 +2594,7 @@ class MapEditorPage extends BasePage {
         if (!state) return;
         
         const newScaleY = Math.max(0.1, Math.min(5.0, state.scale.y + delta));
-        this.phaserPanel.setReferenceScale(state.scale.x, newScaleY);
+        this.phaserPanel.setReferenceScaleFromTopLeft(state.scale.x, newScaleY);
         this.updateReferenceScaleDisplay();
         this.logToConsole(`Reference Y scale: ${newScaleY.toFixed(2)}`);
     }
@@ -2501,7 +2608,7 @@ class MapEditorPage extends BasePage {
         if (!state) return;
         
         const clampedScale = Math.max(0.1, Math.min(5.0, scaleX));
-        this.phaserPanel.setReferenceScale(clampedScale, state.scale.y);
+        this.phaserPanel.setReferenceScaleFromTopLeft(clampedScale, state.scale.y);
         this.updateReferenceScaleDisplay();
         this.logToConsole(`Reference X scale: ${clampedScale.toFixed(2)}`);
     }
@@ -2515,7 +2622,7 @@ class MapEditorPage extends BasePage {
         if (!state) return;
         
         const clampedScale = Math.max(0.1, Math.min(5.0, scaleY));
-        this.phaserPanel.setReferenceScale(state.scale.x, clampedScale);
+        this.phaserPanel.setReferenceScaleFromTopLeft(state.scale.x, clampedScale);
         this.updateReferenceScaleDisplay();
         this.logToConsole(`Reference Y scale: ${clampedScale.toFixed(2)}`);
     }

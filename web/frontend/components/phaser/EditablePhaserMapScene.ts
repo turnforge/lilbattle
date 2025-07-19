@@ -404,6 +404,35 @@ export class EditablePhaserMapScene extends PhaserMapScene {
     }
     
     /**
+     * Set reference image scale with top-left corner as pivot point
+     */
+    public setReferenceScaleFromTopLeft(newScaleX: number, newScaleY: number): void {
+        if (!this.referenceImage) {
+            this.setReferenceScale(newScaleX, newScaleY);
+            return;
+        }
+        
+        // Get current dimensions and scale
+        const currentScaleX = this.referenceScale.x;
+        const currentScaleY = this.referenceScale.y;
+        const imageWidth = this.referenceImage.width;
+        const imageHeight = this.referenceImage.height;
+        
+        // Calculate current top-left corner position
+        // Reference image is centered (origin 0.5, 0.5), so top-left is center minus half the scaled dimensions
+        const currentTopLeftX = this.referencePosition.x - (imageWidth * currentScaleX) / 2;
+        const currentTopLeftY = this.referencePosition.y - (imageHeight * currentScaleY) / 2;
+        
+        // Calculate what the new center position should be to keep top-left corner fixed
+        const newCenterX = currentTopLeftX + (imageWidth * newScaleX) / 2;
+        const newCenterY = currentTopLeftY + (imageHeight * newScaleY) / 2;
+        
+        // Update position and scale
+        this.setReferencePosition(newCenterX, newCenterY);
+        this.setReferenceScale(newScaleX, newScaleY);
+    }
+    
+    /**
      * Update camera controls based on reference mode
      */
     private updateCameraControls(): void {

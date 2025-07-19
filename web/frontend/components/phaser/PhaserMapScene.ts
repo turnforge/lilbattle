@@ -34,12 +34,29 @@ export class PhaserMapScene extends Phaser.Scene {
     private terrainsLoaded: boolean = false;
     private unitsLoaded: boolean = false;
     private sceneReadyCallback: (() => void) | null = null;
+    private assetsReadyPromise: Promise<void> | null = null;
+    private assetsReadyResolver: (() => void) | null = null;
     
     constructor(config?: string | Phaser.Types.Scenes.SettingsConfig) {
         super(config || { key: 'PhaserMapScene' });
     }
     
     preload() {
+        // Set up assets ready promise
+        this.assetsReadyPromise = new Promise<void>((resolve) => {
+            this.assetsReadyResolver = resolve;
+        });
+        
+        // Track when all assets are loaded
+        this.load.on('complete', () => {
+            console.log('[PhaserMapScene] All assets loaded successfully');
+            this.terrainsLoaded = true;
+            this.unitsLoaded = true;
+            if (this.assetsReadyResolver) {
+                this.assetsReadyResolver();
+            }
+        });
+        
         // Load terrain assets
         this.loadTerrainAssets();
         
@@ -686,6 +703,20 @@ export class PhaserMapScene extends Phaser.Scene {
         } else {
             this.sceneReadyCallback = callback;
         }
+    }
+    
+    // Wait for assets to be loaded
+    public async waitForAssetsReady(): Promise<void> {
+        if (this.terrainsLoaded && this.unitsLoaded) {
+            return Promise.resolve();
+        }
+        
+        if (!this.assetsReadyPromise) {
+            throw new Error('[PhaserMapScene] Assets ready promise not initialized');
+        }
+        
+        console.log('[PhaserMapScene] Waiting for assets to be ready...');
+        return this.assetsReadyPromise;
     }
     
     // Get all tiles data (for integration with WASM)
