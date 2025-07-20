@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -151,6 +153,63 @@ func (s *MapsServiceImpl) saveMapData(mapID string, mapData *MapData) error {
 	}
 	
 	return nil
+}
+
+// checkMapId checks if a map ID already exists in storage
+func (s *MapsServiceImpl) checkMapId(mapID string) (bool, error) {
+	metadataPath := s.getMetadataPath(mapID)
+	_, err := os.ReadFile(metadataPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Map doesn't exist - ID is available
+			return false, nil
+		}
+		// Other file system error
+		return false, fmt.Errorf("failed to check map ID %s: %w", mapID, err)
+	}
+	// Map exists - ID is taken
+	return true, nil
+}
+
+// newMapId generates a new unique map ID of specified length (default 8 chars)
+func (s *MapsServiceImpl) newMapId(numChars ...int) (string, error) {
+	const maxRetries = 10
+	
+	// Default to 8 characters if not specified
+	length := 8
+	if len(numChars) > 0 && numChars[0] > 0 {
+		length = numChars[0]
+	}
+	
+	// Calculate number of bytes needed (2 hex chars per byte)
+	numBytes := (length + 1) / 2
+	
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		// Generate random bytes
+		bytes := make([]byte, numBytes)
+		if _, err := rand.Read(bytes); err != nil {
+			return "", fmt.Errorf("failed to generate random bytes: %w", err)
+		}
+		
+		// Convert to hex string and truncate to exact length
+		mapID := hex.EncodeToString(bytes)[:length]
+		
+		// Check if this ID is already taken
+		exists, err := s.checkMapId(mapID)
+		if err != nil {
+			return "", fmt.Errorf("failed to check map ID uniqueness: %w", err)
+		}
+		
+		if !exists {
+			// Found a unique ID
+			return mapID, nil
+		}
+		
+		// ID collision, try again
+		log.Printf("Map ID collision detected (attempt %d/%d): %s", attempt+1, maxRetries, mapID)
+	}
+	
+	return "", fmt.Errorf("failed to generate unique map ID after %d attempts", maxRetries)
 }
 
 // convertToProtoTiles converts storage tiles to protobuf format
@@ -314,22 +373,37 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 		return nil, fmt.Errorf("map data is required")
 	}
 	
-	if req.Map.Id == "" {
-		return nil, fmt.Errorf("map ID is required")
-	}
+	var mapID string
 	
-	// Check if map already exists
-	if _, err := s.loadMapMetadata(req.Map.Id); err == nil {
-		return &v1.CreateMapResponse{
-			FieldErrors: map[string]string{
-				"id": "Map with this ID already exists",
-			},
-		}, nil
+	// Determine which map ID to use
+	if req.Map.Id != "" {
+		// Map ID provided - check if it's available
+		exists, err := s.checkMapId(req.Map.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check map ID: %w", err)
+		}
+		
+		if exists {
+			// Map ID is taken, generate a new one
+			mapID, err = s.newMapId()
+			if err != nil {
+				return nil, fmt.Errorf("failed to generate new map ID: %w", err)
+			}
+		} else {
+			// Map ID is available, use it
+			mapID = req.Map.Id
+		}
+	} else {
+		// No map ID provided, generate a new one
+		mapID, err = s.newMapId()
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate map ID: %w", err)
+		}
 	}
 	
 	now := time.Now()
 	metadata := &MapMetadata{
-		ID:          req.Map.Id,
+		ID:          mapID,
 		Name:        req.Map.Name,
 		Description: req.Map.Description,
 		Tags:        req.Map.Tags,
@@ -339,7 +413,7 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 		UpdatedAt:   now,
 	}
 	
-	if err := s.saveMapMetadata(req.Map.Id, metadata); err != nil {
+	if err := s.saveMapMetadata(mapID, metadata); err != nil {
 		return nil, fmt.Errorf("failed to create map: %w", err)
 	}
 	
@@ -357,8 +431,8 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 		mapData.MapUnits = []*MapUnitData{}
 	}
 	
-	if err := s.saveMapData(req.Map.Id, mapData); err != nil {
-		log.Printf("Failed to create data.json for map %s: %v", req.Map.Id, err)
+	if err := s.saveMapData(mapID, mapData); err != nil {
+		log.Printf("Failed to create data.json for map %s: %v", mapID, err)
 	}
 	
 	resp = &v1.CreateMapResponse{
