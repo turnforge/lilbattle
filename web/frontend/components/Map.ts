@@ -1,5 +1,58 @@
 import { HexCoord } from './phaser/hexUtils';
 
+// Observer pattern interfaces
+export interface MapObserver {
+    onMapEvent(event: MapEvent): void;
+}
+
+export interface MapEvent {
+    type: MapEventType;
+    data: any;
+}
+
+export enum MapEventType {
+    TILES_CHANGED = 'tiles-changed',      // Batch tile operations
+    UNITS_CHANGED = 'units-changed',      // Batch unit operations
+    MAP_LOADED = 'map-loaded',
+    MAP_SAVED = 'map-saved',
+    MAP_CLEARED = 'map-cleared',
+    MAP_METADATA_CHANGED = 'map-metadata-changed'
+}
+
+// Batch event data types
+export interface TileChange {
+    q: number;
+    r: number;
+    tile: TileData | null;  // null means tile was removed
+}
+
+export interface UnitChange {
+    q: number;
+    r: number;
+    unit: UnitData | null;  // null means unit was removed
+}
+
+export interface TilesChangedEventData {
+    changes: TileChange[];
+}
+
+export interface UnitsChangedEventData {
+    changes: UnitChange[];
+}
+
+export interface MapLoadedEventData {
+    mapId: string | null;
+    isNewMap: boolean;
+    tileCount: number;
+    unitCount: number;
+}
+
+export interface SaveResult {
+    success: boolean;
+    mapId?: string;
+    error?: string;
+}
+
 class MapBounds {
   MinQ: number;
   MaxQ: number;
@@ -35,15 +88,116 @@ export interface MapMetadata {
 
 /**
  * Map class handles all map data management including tiles, units, and metadata.
- * This centralizes map state to reduce coupling with UI components.
+ * Enhanced with Observer pattern for change notifications and self-contained persistence.
  */
 export class Map {
+    // Core data
     private metadata: MapMetadata;
     private tiles: { [key: string]: TileData } = {};
     private units: { [key: string]: UnitData } = {};
     
+    // Persistence state
+    private mapId: string | null = null;
+    private isNewMap: boolean = true;
+    private hasUnsavedChanges: boolean = false;
+    
+    // Observer pattern
+    private observers: MapObserver[] = [];
+    private pendingTileChanges: TileChange[] = [];
+    private pendingUnitChanges: UnitChange[] = [];
+    private batchTimeout: number | null = null;
+    
     constructor(name: string = 'New Map', width: number = 40, height: number = 40) {
         this.metadata = { name, width, height };
+    }
+    
+    // Observer pattern methods
+    public subscribe(observer: MapObserver): void {
+        if (!this.observers.includes(observer)) {
+            this.observers.push(observer);
+        }
+    }
+    
+    public unsubscribe(observer: MapObserver): void {
+        const index = this.observers.indexOf(observer);
+        if (index > -1) {
+            this.observers.splice(index, 1);
+        }
+    }
+    
+    private emit(event: MapEvent): void {
+        this.observers.forEach(observer => {
+            try {
+                observer.onMapEvent(event);
+            } catch (error) {
+                console.error('Error in map observer:', error);
+            }
+        });
+    }
+    
+    // Batched change management
+    private scheduleBatchEmit(): void {
+        if (this.batchTimeout !== null) {
+            return; // Already scheduled
+        }
+        
+        this.batchTimeout = window.setTimeout(() => {
+            this.flushBatchedChanges();
+        }, 0); // Emit on next tick
+    }
+    
+    private flushBatchedChanges(): void {
+        if (this.pendingTileChanges.length > 0) {
+            this.emit({
+                type: MapEventType.TILES_CHANGED,
+                data: { changes: [...this.pendingTileChanges] } as TilesChangedEventData
+            });
+            this.pendingTileChanges = [];
+        }
+        
+        if (this.pendingUnitChanges.length > 0) {
+            this.emit({
+                type: MapEventType.UNITS_CHANGED,
+                data: { changes: [...this.pendingUnitChanges] } as UnitsChangedEventData
+            });
+            this.pendingUnitChanges = [];
+        }
+        
+        this.batchTimeout = null;
+    }
+    
+    private addTileChange(q: number, r: number, tile: TileData | null): void {
+        this.pendingTileChanges.push({ q, r, tile });
+        this.hasUnsavedChanges = true;
+        this.scheduleBatchEmit();
+    }
+    
+    private addUnitChange(q: number, r: number, unit: UnitData | null): void {
+        this.pendingUnitChanges.push({ q, r, unit });
+        this.hasUnsavedChanges = true;
+        this.scheduleBatchEmit();
+    }
+    
+    // Persistence methods
+    public getMapId(): string | null {
+        return this.mapId;
+    }
+    
+    public setMapId(mapId: string | null): void {
+        this.mapId = mapId;
+        this.isNewMap = mapId === null;
+    }
+    
+    public getIsNewMap(): boolean {
+        return this.isNewMap;
+    }
+    
+    public getHasUnsavedChanges(): boolean {
+        return this.hasUnsavedChanges;
+    }
+    
+    public markAsSaved(): void {
+        this.hasUnsavedChanges = false;
     }
     
     // Map metadata methods
@@ -52,7 +206,14 @@ export class Map {
     }
     
     public setName(name: string): void {
-        this.metadata.name = name;
+        if (this.metadata.name !== name) {
+            this.metadata.name = name;
+            this.hasUnsavedChanges = true;
+            this.emit({
+                type: MapEventType.MAP_METADATA_CHANGED,
+                data: { name, width: this.metadata.width, height: this.metadata.height }
+            });
+        }
     }
     
     public getWidth(): number {
@@ -88,13 +249,16 @@ export class Map {
     
     public setTileAt(q: number, r: number, tileType: number, playerId?: number): void {
         const key = `${q},${r}`;
-        this.tiles[key] = { tileType, playerId };
+        const tile: TileData = { tileType, playerId };
+        this.tiles[key] = tile;
+        this.addTileChange(q, r, tile);
     }
     
     public removeTileAt(q: number, r: number): boolean {
         const key = `${q},${r}`;
         if (key in this.tiles) {
             delete this.tiles[key];
+            this.addTileChange(q, r, null);
             return true;
         }
         return false;
@@ -117,7 +281,14 @@ export class Map {
     }
     
     public clearAllTiles(): void {
+        // Batch all tile removals
+        const allTiles = this.getAllTiles();
         this.tiles = {};
+        
+        // Add all removals to pending changes
+        allTiles.forEach(tile => {
+            this.addTileChange(tile.q, tile.r, null);
+        });
     }
     
     // Unit management methods
@@ -133,13 +304,16 @@ export class Map {
     
     public setUnitAt(q: number, r: number, unitType: number, playerId: number): void {
         const key = `${q},${r}`;
-        this.units[key] = { unitType, playerId };
+        const unit: UnitData = { unitType, playerId };
+        this.units[key] = unit;
+        this.addUnitChange(q, r, unit);
     }
     
     public removeUnitAt(q: number, r: number): boolean {
         const key = `${q},${r}`;
         if (key in this.units) {
             delete this.units[key];
+            this.addUnitChange(q, r, null);
             return true;
         }
         return false;
@@ -162,13 +336,25 @@ export class Map {
     }
     
     public clearAllUnits(): void {
+        // Batch all unit removals
+        const allUnits = this.getAllUnits();
         this.units = {};
+        
+        // Add all removals to pending changes
+        allUnits.forEach(unit => {
+            this.addUnitChange(unit.q, unit.r, null);
+        });
     }
     
     // Utility methods
     public clearAll(): void {
         this.clearAllTiles();
         this.clearAllUnits();
+        
+        this.emit({
+            type: MapEventType.MAP_CLEARED,
+            data: {}
+        });
     }
     
     public getTileCount(): number {
@@ -203,6 +389,218 @@ export class Map {
         };
     }
     
+    // Self-contained persistence methods
+    public async save(): Promise<SaveResult> {
+        try {
+            // Build save data format
+            const tiles: { [key: string]: any } = {};
+            Object.entries(this.tiles).forEach(([key, tile]) => {
+                const [q, r] = key.split(',').map(Number);
+                tiles[key] = {
+                    q,
+                    r,
+                    tile_type: tile.tileType,
+                    player: tile.playerId || 0
+                };
+            });
+
+            const mapUnits: any[] = [];
+            Object.entries(this.units).forEach(([key, unit]) => {
+                const [q, r] = key.split(',').map(Number);
+                mapUnits.push({
+                    q,
+                    r,
+                    player: unit.playerId,
+                    unit_type: unit.unitType
+                });
+            });
+
+            // Build request
+            const createMapRequest = {
+                map: {
+                    id: this.mapId || 'new-map',
+                    name: this.metadata.name || 'Untitled Map',
+                    description: '',
+                    tags: [],
+                    difficulty: 'medium',
+                    creator_id: 'editor-user',
+                    tiles: tiles,
+                    map_units: mapUnits
+                }
+            };
+
+            const url = this.isNewMap ? '/api/v1/maps' : `/api/v1/maps/${this.mapId}`;
+            const method = this.isNewMap ? 'POST' : 'PATCH';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(createMapRequest),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const newMapId = result.map?.id || result.id;
+                
+                if (this.isNewMap && newMapId) {
+                    this.mapId = newMapId;
+                    this.isNewMap = false;
+                }
+                
+                this.markAsSaved();
+                
+                this.emit({
+                    type: MapEventType.MAP_SAVED,
+                    data: { mapId: this.mapId, success: true }
+                });
+                
+                return { success: true, mapId: newMapId };
+            } else {
+                const errorText = await response.text();
+                throw new Error(`Save failed: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown save error';
+            
+            this.emit({
+                type: MapEventType.MAP_SAVED,
+                data: { mapId: this.mapId, success: false, error: errorMessage }
+            });
+            
+            return { success: false, error: errorMessage };
+        }
+    }
+    
+    public async load(mapId: string): Promise<void> {
+        try {
+            // For now, we load from HTML element (server-side rendered data)
+            // Future enhancement: could load directly from API
+            this.loadFromElement('map-data-json');
+            this.setMapId(mapId);
+            this.hasUnsavedChanges = false;
+            
+            this.emit({
+                type: MapEventType.MAP_LOADED,
+                data: {
+                    mapId: this.mapId,
+                    isNewMap: this.isNewMap,
+                    tileCount: this.getTileCount(),
+                    unitCount: this.getUnitCount()
+                } as MapLoadedEventData
+            });
+        } catch (error) {
+            throw new Error(`Failed to load map ${mapId}: ${error}`);
+        }
+    }
+    
+    public loadFromElement(elementId: string): void {
+        const element = document.getElementById(elementId);
+        if (!element || !element.textContent) {
+            throw new Error(`Map data element '${elementId}' not found or empty`);
+        }
+        
+        try {
+            const data = JSON.parse(element.textContent);
+            this.loadFromData(data);
+        } catch (error) {
+            throw new Error(`Failed to parse map data from element: ${error}`);
+        }
+    }
+    
+    public loadFromData(data: any): void {
+        if (!data) {
+            throw new Error('No map data provided');
+        }
+        
+        // Clear existing data without emitting events
+        this.tiles = {};
+        this.units = {};
+        
+        // Load metadata
+        if (data.name) this.metadata.name = data.name;
+        if (data.width) this.metadata.width = data.width;
+        if (data.height) this.metadata.height = data.height;
+        
+        // Batch load tiles
+        const tileChanges: TileChange[] = [];
+        if (data.tiles) {
+            Object.entries(data.tiles).forEach(([key, tileData]: [string, any]) => {
+                const [q, r] = key.split(',').map(Number);
+                let tileType: number;
+                let playerId: number | undefined;
+                
+                if (tileData.tileType !== undefined) {
+                    tileType = tileData.tileType;
+                    playerId = tileData.playerId;
+                } else if (tileData.tile_type !== undefined) {
+                    tileType = tileData.tile_type;
+                    playerId = tileData.player || 0;
+                } else {
+                    return; // Skip invalid tile
+                }
+                
+                const tile: TileData = { tileType, playerId };
+                this.tiles[key] = tile;
+                tileChanges.push({ q, r, tile });
+            });
+        }
+        
+        // Batch load units
+        const unitChanges: UnitChange[] = [];
+        if (data.units) {
+            Object.entries(data.units).forEach(([key, unitData]: [string, any]) => {
+                const [q, r] = key.split(',').map(Number);
+                let unitType: number, playerId: number;
+                
+                if (unitData.unitType !== undefined && unitData.playerId !== undefined) {
+                    unitType = unitData.unitType;
+                    playerId = unitData.playerId;
+                } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
+                    unitType = unitData.unit_type;
+                    playerId = unitData.player;
+                } else {
+                    return; // Skip invalid unit
+                }
+                
+                const unit: UnitData = { unitType, playerId };
+                this.units[key] = unit;
+                unitChanges.push({ q, r, unit });
+            });
+        }
+        
+        // Handle map_units array format (from server)
+        if (data.map_units && Array.isArray(data.map_units)) {
+            data.map_units.forEach((unit: any) => {
+                if (unit.q !== undefined && unit.r !== undefined && unit.unit_type !== undefined) {
+                    const key = `${unit.q},${unit.r}`;
+                    const unitData: UnitData = {
+                        unitType: unit.unit_type,
+                        playerId: unit.player || 1
+                    };
+                    this.units[key] = unitData;
+                    unitChanges.push({ q: unit.q, r: unit.r, unit: unitData });
+                }
+            });
+        }
+        
+        // Emit batched changes immediately
+        if (tileChanges.length > 0) {
+            this.emit({
+                type: MapEventType.TILES_CHANGED,
+                data: { changes: tileChanges } as TilesChangedEventData
+            });
+        }
+        
+        if (unitChanges.length > 0) {
+            this.emit({
+                type: MapEventType.UNITS_CHANGED,
+                data: { changes: unitChanges } as UnitsChangedEventData
+            });
+        }
+        
+        this.hasUnsavedChanges = false;
+    }
+    
     // Serialization methods
     public serialize(): {
         name: string;
@@ -222,61 +620,7 @@ export class Map {
     
     public static deserialize(data: any): Map {
         const map = new Map(data.name || 'Untitled Map', data.width || 40, data.height || 40);
-        
-        // Handle tiles - support both tileType and tile_type formats
-        if (data.tiles) {
-            Object.entries(data.tiles).forEach(([key, tileData]: [string, any]) => {
-                let tileType: number;
-                let playerId: number | undefined;
-                
-                if (tileData.tileType !== undefined) {
-                    tileType = tileData.tileType;
-                    playerId = tileData.playerId;
-                } else if (tileData.tile_type !== undefined) {
-                    tileType = tileData.tile_type;
-                    playerId = tileData.player || 0;
-                } else {
-                    console.warn(`Map.deserialize: No tileType found for tile at ${key}:`, tileData);
-                    return; // Skip this tile
-                }
-                
-                map.tiles[key] = { tileType, playerId };
-            });
-        }
-        
-        // Handle units - support both unitType/playerId and unit_type/player formats
-        if (data.units) {
-            Object.entries(data.units).forEach(([key, unitData]: [string, any]) => {
-                let unitType: number, playerId: number;
-                
-                if (unitData.unitType !== undefined && unitData.playerId !== undefined) {
-                    unitType = unitData.unitType;
-                    playerId = unitData.playerId;
-                } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
-                    unitType = unitData.unit_type;
-                    playerId = unitData.player;
-                } else {
-                    console.warn(`Map.deserialize: No unitType/playerId found for unit at ${key}:`, unitData);
-                    return; // Skip this unit
-                }
-                
-                map.units[key] = { unitType, playerId };
-            });
-        }
-        
-        // Handle map_units array format (from server)
-        if (data.map_units && Array.isArray(data.map_units)) {
-            data.map_units.forEach((unit: any) => {
-                if (unit.q !== undefined && unit.r !== undefined && unit.unit_type !== undefined) {
-                    const key = `${unit.q},${unit.r}`;
-                    map.units[key] = {
-                        unitType: unit.unit_type,
-                        playerId: unit.player || 1
-                    };
-                }
-            });
-        }
-        
+        map.loadFromData(data);
         return map;
     }
     

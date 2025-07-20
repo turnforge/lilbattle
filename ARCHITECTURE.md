@@ -578,15 +578,104 @@ The coordinate conversion now exactly matches the Go backend:
 - **Seamless Integration**: Easy integration with WASM and backend APIs
 - **Mathematical Correctness**: Proper hex geometry throughout the system
 
+### Unified Map Architecture (v5.0)
+
+#### Map Class Enhancement
+**Purpose**: Single source of truth for all map data with Observer pattern
+- **Observer Pattern**: MapObserver interface with type-safe MapEvent system
+- **Batched Events**: TileChange and UnitChange arrays with setTimeout scheduling
+- **Self-contained Persistence**: Map handles save/load operations directly
+- **Automatic Change Tracking**: Eliminates manual change marking
+- **Event Types**: TILES_CHANGED, UNITS_CHANGED, MAP_LOADED, MAP_SAVED, MAP_CLEARED, MAP_METADATA_CHANGED
+
+```typescript
+export interface MapObserver {
+    onMapEvent(event: MapEvent): void;
+}
+
+export interface MapEvent {
+    type: MapEventType;
+    data: any;
+}
+
+export class Map {
+    // Core data
+    private metadata: MapMetadata;
+    private tiles: { [key: string]: TileData } = {};
+    private units: { [key: string]: UnitData } = {};
+    
+    // Observer pattern
+    private observers: MapObserver[] = [];
+    private pendingTileChanges: TileChange[] = [];
+    private pendingUnitChanges: UnitChange[] = [];
+    private batchTimeout: number | null = null;
+    
+    // Methods for Observer pattern
+    public subscribe(observer: MapObserver): void
+    public unsubscribe(observer: MapObserver): void
+    private emit(event: MapEvent): void
+    
+    // Batched change management
+    private scheduleBatchEmit(): void
+    private flushBatchedChanges(): void
+    
+    // Self-contained persistence
+    public async save(): Promise<SaveResult>
+    public async load(mapId: string): Promise<void>
+    public loadFromElement(elementId: string): void
+    public loadFromData(data: any): void
+}
+```
+
+#### Component Integration Pattern
+```typescript
+// MapEditorPage implements MapObserver
+export class MapEditorPage extends BasePage implements MapObserver {
+    private map: Map;
+    
+    constructor() {
+        // Create Map instance as single source of truth
+        this.map = new Map();
+        this.map.subscribe(this); // Subscribe to changes
+    }
+    
+    // Implement Observer interface
+    public onMapEvent(event: MapEvent): void {
+        switch (event.type) {
+            case MapEventType.TILES_CHANGED:
+                this.handleTilesChanged(event.data);
+                break;
+            case MapEventType.MAP_SAVED:
+                this.handleMapSaved(event.data);
+                break;
+            // Handle other events...
+        }
+    }
+    
+    // Use Map as single source of truth
+    private save(): void {
+        this.map.save(); // Map handles persistence
+    }
+}
+```
+
+#### Architecture Benefits
+- **Single Source of Truth**: All map data flows through Map class
+- **Event-Driven Updates**: Components automatically stay synchronized
+- **Performance**: Batched events reduce UI update frequency
+- **Maintainability**: Centralized map logic easier to debug and extend
+- **Type Safety**: Comprehensive TypeScript interfaces prevent errors
+- **Clean Separation**: Components focus on UI, Map handles data
+
 ### Future Extensions
 
 #### Planned Features
-1. **Advanced Editor**: Multi-tile selection, copy/paste, templates via Phaser
-2. **Network Play**: Real-time multiplayer with WebSocket integration
-3. **Mobile Support**: Touch-friendly controls via Phaser input system
-4. **Performance**: Further Phaser optimizations (sprite batching, culling)
-5. **AI Integration**: Clean World state for AI decision making
-6. **Advanced UI**: Animation systems, visual effects, improved UX
+1. **Component Integration**: Complete Observer pattern integration across all components
+2. **Advanced Editor**: Multi-tile selection, copy/paste, templates via unified Map
+3. **Network Play**: Real-time multiplayer with Map state synchronization
+4. **Mobile Support**: Touch-friendly controls via Phaser input system
+5. **Performance**: Optimized Map operations and event batching
+6. **AI Integration**: Clean Map state for AI decision making
 
 #### Architecture Benefits for Extensions
 - **Phaser.js Foundation**: Professional game engine enables advanced features
@@ -604,8 +693,8 @@ The coordinate conversion now exactly matches the Go backend:
 
 ---
 
-**Last Updated**: 2025-01-17  
-**Architecture Version**: 4.0 (Phaser-First Frontend)  
-**Status**: Production-ready Phaser.js editor with accurate coordinate system
+**Last Updated**: 2025-01-20  
+**Architecture Version**: 5.0 (Unified Map with Observer Pattern)  
+**Status**: Production-ready with single source of truth architecture
 
-**Key Achievement**: Complete migration to modern web technologies with professional UX and pixel-perfect coordinate accuracy matching the Go backend implementation.
+**Key Achievement**: Unified Map architecture with Observer pattern providing single source of truth, event-driven component communication, and significant codebase simplification from 2700+ lines to centralized map operations.

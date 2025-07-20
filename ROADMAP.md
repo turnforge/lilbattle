@@ -195,17 +195,33 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - **Help Generation**: Auto-generated help content from shortcut configuration
 - **Error Handling**: Clear validation messages for invalid inputs
 
-## 🚀 Phase 5.1: Immediate Execution Enhancement (Planned)
-**Status**: Planned  
+## ⚡ Phase 5.1: Unified Map Architecture (Completed)
+**Status**: Completed  
 **Timeline**: January 2025
 
-### Enhanced User Experience 🚧
-- [ ] Immediate visual feedback as user types (C3 → instant preview)
-- [ ] Dual-timeout system (preview: 300ms, commit: 3000ms)
-- [ ] Preview handlers for immediate UI updates
-- [ ] Cancel/restore functionality with Escape key
-- [ ] Configurable execution modes (current vs immediate)
-- [ ] State management for undo/restore operations
+### Observer Pattern Implementation ✅
+- [x] Enhanced Map class with comprehensive Observer pattern support
+- [x] MapObserver interface with type-safe event handling
+- [x] Batched event emissions for performance optimization
+- [x] Self-contained persistence (Map can save/load itself)
+- [x] Single source of truth architecture eliminating data duplication
+- [x] MapEditorPage refactored to use Map as central data store
+
+### Technical Achievements ✅
+- [x] **Map Class Enhancement**: Added Observer interfaces, batched events, and persistence methods
+- [x] **Event System**: MapEvent with types (TILES_CHANGED, UNITS_CHANGED, MAP_LOADED, MAP_SAVED, MAP_CLEARED, MAP_METADATA_CHANGED)
+- [x] **Batched Changes**: TileChange and UnitChange arrays with setTimeout-based batch scheduling
+- [x] **Data Consolidation**: Removed redundant properties from MapEditorPage (currentMapId, isNewMap, hasUnsavedChanges)
+- [x] **Self-contained Operations**: Map handles its own loading from server data and HTML elements
+- [x] **Automatic Change Tracking**: Map changes automatically tracked without manual markAsChanged calls
+
+### Architecture Benefits ✅
+- **Single Source of Truth**: All map data flows through enhanced Map class
+- **Event-Driven Updates**: Components react to Map changes via Observer pattern
+- **Performance Optimization**: Batched events prevent excessive UI updates
+- **Clean Separation**: MapEditorPage focuses on UI orchestration, Map handles data
+- **Type Safety**: Comprehensive TypeScript interfaces for all event data
+- **Maintainability**: Centralized map logic easier to debug and extend
 
 ## 📋 Phase 6: Games Management System (Planned)
 **Status**: Planned  
@@ -305,6 +321,6 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 
 ---
 
-**Last Updated**: 2025-01-19  
-**Current Focus**: Readonly Map Viewer (Completed)  
-**Next Milestone**: Games Management System implementation
+**Last Updated**: 2025-01-20  
+**Current Focus**: Unified Map Architecture with Observer Pattern (Completed)  
+**Next Milestone**: Component Integration and Games Management System

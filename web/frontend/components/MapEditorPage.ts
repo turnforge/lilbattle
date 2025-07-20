@@ -3,20 +3,16 @@ import { DockviewApi, DockviewComponent } from 'dockview-core';
 import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './KeyboardShortcutManager';
-import { Map } from './Map';
+import { Map, MapObserver, MapEvent, MapEventType, TilesChangedEventData, UnitsChangedEventData, MapLoadedEventData } from './Map';
 import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload } from './EventBus';
 import { EditorToolsPanel } from './EditorToolsPanel';
-import { MapSaveManager } from './MapSaveManager';
 
 const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
 
 /**
- * Map Editor page with WASM integration for hex-based map editing
+ * Map Editor page with unified Map architecture and Observer pattern
  */
-class MapEditorPage extends BasePage {
-    private currentMapId: string | null = null;
-    private isNewMap: boolean = false;
-
+class MapEditorPage extends BasePage implements MapObserver {
     private map: Map | null = null;
     
     // Editor state
@@ -51,16 +47,11 @@ class MapEditorPage extends BasePage {
         placementMode: 'terrain' | 'unit' | 'clear';
     } | null = null;
 
-    // Change tracking for unsaved changes
-    private hasUnsavedChanges: boolean = false;
-    private originalMapData: string = '';
+    // UI state  
     private hasPendingMapDataLoad: boolean = false;
 
     // Pending UI state to apply when Phaser becomes ready
     private pendingGridState: boolean | null = null;
-    
-    // Save manager for map persistence
-    private saveManager: MapSaveManager = new MapSaveManager();
 
     constructor() {
         super();
@@ -76,6 +67,42 @@ class MapEditorPage extends BasePage {
         this.bindSpecificEvents();
         this.initializeKeyboardShortcuts();
         this.setupUnsavedChangesWarning();
+    }
+    
+    // MapObserver implementation
+    public onMapEvent(event: MapEvent): void {
+        switch (event.type) {
+            case MapEventType.MAP_LOADED:
+                const loadedData = event.data as MapLoadedEventData;
+                this.updateEditorStatus('Loaded');
+                this.updateSaveButtonState();
+                break;
+                
+            case MapEventType.MAP_SAVED:
+                this.updateEditorStatus('Saved');
+                this.updateSaveButtonState();
+                if (event.data.success && event.data.mapId) {
+                    // Update URL if this was a new map
+                    if (this.map?.getIsNewMap()) {
+                        history.replaceState(null, '', `/maps/${event.data.mapId}/edit`);
+                    }
+                }
+                break;
+                
+            case MapEventType.TILES_CHANGED:
+            case MapEventType.UNITS_CHANGED:
+                // Map data changed, update UI state
+                this.updateSaveButtonState();
+                break;
+                
+            case MapEventType.MAP_CLEARED:
+                this.updateSaveButtonState();
+                break;
+                
+            case MapEventType.MAP_METADATA_CHANGED:
+                this.updateSaveButtonState();
+                break;
+        }
     }
     
     /**
@@ -120,10 +147,7 @@ class MapEditorPage extends BasePage {
             this.handlePhaserReady();
         }, 'map-editor-page');
         
-        // Subscribe to map changes
-        this.eventBus.subscribe(EditorEventTypes.MAP_CHANGED, () => {
-            this.markAsChanged();
-        }, 'map-editor-page');
+        // Map changes are automatically tracked by Map class via Observer pattern
         
         console.log('MapEditorPage: Editor event subscriptions complete');
     }
@@ -132,8 +156,7 @@ class MapEditorPage extends BasePage {
         const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
         const isNewMapInput = document.getElementById("isNewMap") as HTMLInputElement | null;
         
-        this.currentMapId = mapIdInput?.value.trim() || null;
-        this.isNewMap = isNewMapInput?.value === "true";
+        // Map ID and new map state are now handled by the Map instance
 
         this.editorOutput = document.getElementById('editor-output');
 
@@ -233,7 +256,7 @@ class MapEditorPage extends BasePage {
                 // Only handle our specific shortcuts in input fields, let other keys pass through
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
-                    if (this.hasUnsavedChanges) {
+                    if (this.map?.getHasUnsavedChanges()) {
                         this.saveMap();
                     }
                 }
@@ -243,7 +266,7 @@ class MapEditorPage extends BasePage {
             // Ctrl+S or Cmd+S to save
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                if (this.hasUnsavedChanges) {
+                if (this.map?.getHasUnsavedChanges()) {
                     this.saveMap();
                 }
             }
@@ -669,13 +692,23 @@ class MapEditorPage extends BasePage {
         // Theme button state is handled by BasePage
         this.updateEditorStatus('Initializing...');
 
-        if (this.isNewMap) {
-            this.initializeNewMap();
-        } else if (this.currentMapId) {
-            this.loadExistingMap(this.currentMapId);
+        // Read initial state from DOM
+        const mapIdInput = document.getElementById("mapIdInput") as HTMLInputElement | null;
+        const isNewMapInput = document.getElementById("isNewMap") as HTMLInputElement | null;
+        
+        const mapId = mapIdInput?.value.trim() || null;
+        const isNewMap = isNewMapInput?.value === "true";
+
+        // Create Map instance and subscribe to events
+        this.map = new Map('New Map', 8, 8);
+        this.map.subscribe(this);
+        
+        if (!isNewMap && mapId) {
+            // Load existing map
+            this.map.setMapId(mapId);
+            this.loadExistingMap(mapId);
         } else {
-            this.logToConsole('No map ID provided, defaulting to new map');
-            this.isNewMap = true;
+            // Initialize new map
             this.initializeNewMap();
         }
         
@@ -685,15 +718,12 @@ class MapEditorPage extends BasePage {
 
     private initializeNewMap(): void {
         // Try to load template map data from hidden element first
-        const templateMapData = this.loadMapDataFromElement();
-        
-        if (templateMapData) {
-            this.map = Map.deserialize(templateMapData);
-            // Mark that we have map data to load into Phaser
+        try {
+            this.map!.loadFromElement('map-data-json');
             this.hasPendingMapDataLoad = true;
-        } else {
-            this.map = new Map('New Map', 8, 8);
-            // Even for a default new map, we want to load it into Phaser
+        } catch (error) {
+            // No template data, map is already initialized as empty
+            console.log('No template data found, using empty map');
             this.hasPendingMapDataLoad = true;
         }
         
@@ -702,23 +732,8 @@ class MapEditorPage extends BasePage {
 
     private async loadExistingMap(mapId: string): Promise<void> {
         try {
-            this.logToConsole(`Loading map data for ${mapId}...`);
-            this.updateEditorStatus('Loading...');
-            
-            // Load map data from hidden element (passed from backend)
-            const mapData = this.loadMapDataFromElement();
-            
-            if (mapData) {
-                this.map = Map.deserialize(mapData);
-                this.updateEditorStatus('Loaded');
-                this.logToConsole('Map data loaded from server');
-                
-                // Mark that we have map data to load into Phaser
-                this.hasPendingMapDataLoad = true;
-            } else {
-                throw new Error('No map data found in page');
-            }
-            
+            await this.map!.load(mapId);
+            this.hasPendingMapDataLoad = true;
         } catch (error) {
             console.error('Failed to load map:', error);
             this.logToConsole(`Failed to load map: ${error}`);
@@ -1032,7 +1047,7 @@ class MapEditorPage extends BasePage {
                 this.map.clearAll();
             }
             
-            this.markAsChanged();
+            // Map changes are automatically tracked by Map class
             this.showToast('Map Cleared', 'All tiles and units have been removed', 'info');
         } else {
             this.logToConsole('Phaser panel not available, cannot clear map');
@@ -1047,38 +1062,12 @@ class MapEditorPage extends BasePage {
             return;
         }
 
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            this.showToast('Error', 'Editor not ready', 'error');
-            return;
-        }
-
         try {
             this.updateEditorStatus('Saving...');
-            
-            const tilesData = this.phaserEditorComponent.getTilesData();
-            
-            const result = await this.saveManager.saveMap(
-                this.map,
-                this.currentMapId,
-                this.isNewMap,
-                tilesData,
-                (message) => this.logToConsole(message)
-            );
+            const result = await this.map.save();
 
             if (result.success) {
-                this.updateEditorStatus('Saved');
                 this.showToast('Success', 'Map saved successfully', 'success');
-                this.markAsSaved();
-                
-                // If this was a new map, update the current map ID
-                if (this.isNewMap && result.mapId) {
-                    this.currentMapId = result.mapId;
-                    this.isNewMap = false;
-                    // Update URL without reload
-                    history.replaceState(null, '', `/maps/${result.mapId}/edit`);
-                    this.logToConsole(`Map ID updated to: ${result.mapId}`);
-                    this.logToConsole(`URL updated to: /maps/${result.mapId}/edit`);
-                }
             } else {
                 throw new Error(result.error || 'Unknown save error');
             }
@@ -1466,20 +1455,14 @@ class MapEditorPage extends BasePage {
 
     // Unsaved changes tracking
     private setupUnsavedChangesWarning(): void {
-        // Store initial map state
-        this.originalMapData = JSON.stringify(this.map?.serialize() || {});
-        
         // Browser beforeunload warning
         window.addEventListener('beforeunload', (e) => {
-            if (this.hasUnsavedChanges) {
+            if (this.map?.getHasUnsavedChanges()) {
                 e.preventDefault();
                 e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
                 return 'You have unsaved changes. Are you sure you want to leave?';
             }
         });
-        
-        // Track changes in map data
-        this.trackMapChanges();
         
         // Initialize save button state
         setTimeout(() => {
@@ -1487,45 +1470,13 @@ class MapEditorPage extends BasePage {
         }, 100);
     }
     
-    private trackMapChanges(): void {
-        // Track changes in map title
-        const mapTitleInput = document.getElementById('map-title-input') as HTMLInputElement;
-        if (mapTitleInput) {
-            mapTitleInput.addEventListener('input', () => {
-                this.markAsChanged();
-            });
-        }
-        
-        // Track changes in Phaser component (terrain painting, etc.)
-        if (this.phaserEditorComponent) {
-            this.phaserEditorComponent.onMapChange(() => {
-                this.markAsChanged();
-            });
-        }
-    }
-    
-    private markAsChanged(): void {
-        if (!this.hasUnsavedChanges) {
-            this.hasUnsavedChanges = true;
-            this.updateSaveButtonState();
-            this.logToConsole('Map has unsaved changes');
-        }
-        
-        // Auto-refresh TileStats when map changes
-        this.refreshTileStats();
-    }
-    
-    private markAsSaved(): void {
-        this.hasUnsavedChanges = false;
-        this.originalMapData = JSON.stringify(this.map?.serialize() || {});
-        this.updateSaveButtonState();
-        this.logToConsole('Map changes saved');
-    }
+    // Map changes are now automatically tracked via Observer pattern
+    // No need for manual tracking
     
     private updateSaveButtonState(): void {
         const saveButton = document.getElementById('save-map-btn');
-        if (saveButton) {
-            if (this.hasUnsavedChanges) {
+        if (saveButton && this.map) {
+            if (this.map.getHasUnsavedChanges()) {
                 saveButton.classList.remove('opacity-50');
                 saveButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 saveButton.removeAttribute('disabled');
@@ -1576,7 +1527,7 @@ class MapEditorPage extends BasePage {
             this.clearTileArea(q, r, brushSize);
         }
         
-        this.markAsChanged();
+        // Map changes are automatically tracked by Map class
     }
     
     private clearSingleTile(q: number, r: number): void {
@@ -1664,7 +1615,7 @@ class MapEditorPage extends BasePage {
         }
         
         this.logToConsole(`Painted terrain ${this.currentTerrain} (color ${playerColor}) at Q=${q}, R=${r} with brush size ${brushSize}`);
-        this.markAsChanged();
+        // Map changes are automatically tracked by Map class
     }
     
     /**
