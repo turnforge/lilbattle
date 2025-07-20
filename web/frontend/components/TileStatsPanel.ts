@@ -1,76 +1,133 @@
 import { Map, MapObserver, MapEvent, MapEventType, TilesChangedEventData, UnitsChangedEventData, MapLoadedEventData } from './Map';
+import { BaseComponent } from './Component';
+import { EventBus } from './EventBus';
+import { ComponentLifecycle } from './ComponentLifecycle';
 
 /**
  * TileStatsPanel displays statistics about tiles and units on the map
- * Now reads directly from Map (single source of truth) and observes Map events
+ * 
+ * This component demonstrates the new lifecycle architecture:
+ * 1. initializeDOM() - Set up UI structure without dependencies
+ * 2. injectDependencies() - Receive Map instance when available
+ * 3. activate() - Subscribe to Map events and enable functionality
+ * 
+ * Architecture:
+ * - Reads directly from Map (single source of truth) via explicit setter
+ * - Observes Map events for automatic updates
+ * - Creates its own DOM structure for statistics display
+ * - Handles refresh button and automatic data updates
  */
-export class TileStatsPanel implements MapObserver {
-    private containerElement: HTMLElement | null = null;
-    private isInitialized: boolean = false;
+export class TileStatsPanel extends BaseComponent implements MapObserver {
+    // Dependencies (injected via explicit setters)
     private map: Map | null = null;
     
-    constructor(map?: Map | null) {
-        if (map) {
-            this.map = map;
+    // Internal state tracking
+    private isUIBound = false;
+    private isActivated = false;
+    private pendingOperations: Array<() => void> = [];
+    
+    constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        super('tile-stats-panel', rootElement, eventBus, debugMode);
+    }
+    
+    // ComponentLifecycle Phase 1: Initialize DOM and discover children (no dependencies needed)
+    public initializeDOM(): ComponentLifecycle[] {
+        if (this.isUIBound) {
+            this.log('Already bound to DOM, skipping');
+            return [];
+        }
+        
+        try {
+            this.log('Binding TileStatsPanel to DOM');
+            
+            // Create the stats display structure
+            this.createStatsDisplay();
+            this.setupRefreshButton();
+            
+            this.isUIBound = true;
+            this.log('TileStatsPanel bound to DOM successfully');
+            
+            // This is a leaf component - no children
+            return [];
+            
+        } catch (error) {
+            this.handleError('Failed to bind TileStatsPanel to DOM', error);
+            throw error;
+        }
+    }
+    
+    // Phase 2: Inject dependencies - simplified to use explicit setters
+    public injectDependencies(deps: Record<string, any>): void {
+        this.log('TileStatsPanel: Dependencies injection phase - using explicit setters');
+        
+        // Dependencies should be set directly by parent using setters
+        // This phase just validates that required dependencies are available
+        if (!this.map) {
+            throw new Error('TileStatsPanel requires map - use setMap()');
+        }
+        
+        this.log('Dependencies validation complete');
+    }
+    
+    // Explicit dependency setters
+    public setMap(map: Map): void {
+        this.map = map;
+        this.log('Map set via explicit setter');
+        
+        // Subscribe to map events immediately when map is set
+        if (this.map) {
             this.map.subscribe(this);
         }
     }
     
-    /**
-     * Initialize the TileStats panel with a container element
-     */
-    public initialize(containerId: string): boolean {
-        try {
-            this.containerElement = document.getElementById(containerId);
-            if (!this.containerElement) {
-                throw new Error(`Container element with ID '${containerId}' not found`);
-            }
-            
-            // Create the stats display
-            this.createStatsDisplay();
-            
-            this.isInitialized = true;
-            console.log('[TileStatsPanel] Panel initialized successfully');
-            
-            return true;
-            
-        } catch (error) {
-            console.error(`[TileStatsPanel] Failed to initialize: ${error}`);
-            return false;
-        }
+    // Explicit dependency getters
+    public getMap(): Map | null {
+        return this.map;
     }
-
-    /**
-     * Initialize the TileStats panel with a container element directly
-     */
-    public initializeWithElement(containerElement: HTMLElement): boolean {
-        try {
-            this.containerElement = containerElement;
-            if (!this.containerElement) {
-                throw new Error('Container element is null or undefined');
-            }
-            
-            // Create the stats display
-            this.createStatsDisplay();
-            
-            this.isInitialized = true;
-            console.log('[TileStatsPanel] Panel initialized successfully with element');
-            
-            return true;
-            
-        } catch (error) {
-            console.error(`[TileStatsPanel] Failed to initialize with element: ${error}`);
-            return false;
+    
+    // Phase 3: Activate component
+    public activate(): void {
+        if (this.isActivated) {
+            this.log('Already activated, skipping');
+            return;
         }
+        
+        this.log('Activating TileStatsPanel');
+        
+        // Process any operations that were queued during UI binding
+        this.processPendingOperations();
+        
+        // Initial stats refresh
+        this.refreshStats();
+        
+        this.isActivated = true;
+        this.log('TileStatsPanel activated successfully');
+    }
+    
+    // Phase 4: Deactivate component
+    public deactivate(): void {
+        this.log('Deactivating TileStatsPanel');
+        
+        // Unsubscribe from Map events
+        if (this.map) {
+            this.map.unsubscribe(this);
+        }
+        
+        // Clear any pending operations
+        this.pendingOperations = [];
+        
+        // Reset state
+        this.isActivated = false;
+        this.map = null;
+        
+        this.log('TileStatsPanel deactivated');
     }
     
     /**
      * Create the HTML structure for displaying stats
      */
     private createStatsDisplay(): void {
-        if (!this.containerElement) return;
-        
-        this.containerElement.innerHTML = `
+        this.rootElement.innerHTML = `
             <div class="tile-stats-panel h-full bg-white dark:bg-gray-800 p-4 overflow-y-auto">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Map Statistics</h3>
                 
@@ -119,20 +176,60 @@ export class TileStatsPanel implements MapObserver {
                 </div>
             </div>
         `;
-        
-        // Set up refresh button handler
-        this.setupRefreshButton();
+    }
+    
+    // Deferred Execution System
+    
+    /**
+     * Execute operation when component is ready, or queue it for later
+     */
+    private executeWhenReady(operation: () => void): void {
+        if (this.isActivated && this.map) {
+            // Component is ready - execute immediately
+            try {
+                operation();
+            } catch (error) {
+                this.handleError('Operation failed', error);
+            }
+        } else {
+            // Component not ready - queue for later
+            this.pendingOperations.push(operation);
+            this.log('Component not ready - operation queued');
+        }
+    }
+    
+    /**
+     * Process all pending operations when component becomes ready
+     */
+    private processPendingOperations(): void {
+        if (this.pendingOperations.length > 0) {
+            this.log(`Processing ${this.pendingOperations.length} pending operations`);
+            
+            const operations = [...this.pendingOperations];
+            this.pendingOperations = [];
+            
+            operations.forEach(operation => {
+                try {
+                    operation();
+                } catch (error) {
+                    this.handleError('Pending operation failed', error);
+                }
+            });
+        }
     }
     
     /**
      * Set up refresh button event handler
      */
     private setupRefreshButton(): void {
-        const refreshBtn = document.getElementById('refresh-stats-btn');
+        const refreshBtn = this.rootElement.querySelector('#refresh-stats-btn') as HTMLButtonElement;
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
-                this.refreshStats();
+                this.executeWhenReady(() => this.refreshStats());
             });
+            this.log('Refresh button bound');
+        } else {
+            this.log('Refresh button not found');
         }
     }
     
@@ -153,7 +250,10 @@ export class TileStatsPanel implements MapObserver {
      * Refresh stats by reading current data from Map
      */
     public refreshStats(): void {
-        if (!this.isInitialized || !this.map) return;
+        if (!this.isActivated || !this.map) {
+            this.log('Component not ready for stats refresh');
+            return;
+        }
         
         console.log('[TileStatsPanel] Refreshing stats from Map data');
         
@@ -171,19 +271,19 @@ export class TileStatsPanel implements MapObserver {
      * Update the stats display with current map data (legacy method for backward compatibility)
      */
     public updateStats(tilesData: Array<{ q: number; r: number; terrain: number; color: number }>, unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
-        if (!this.isInitialized) return;
-        
-        this.updateTerrainStats(tilesData);
-        this.updateUnitStats(unitsData);
-        this.updatePlayerStats(unitsData);
+        this.executeWhenReady(() => {
+            this.updateTerrainStats(tilesData);
+            this.updateUnitStats(unitsData);
+            this.updatePlayerStats(unitsData);
+        });
     }
     
     /**
      * Update terrain statistics
      */
     private updateTerrainStats(tilesData: Array<{ q: number; r: number; terrain: number; color: number }>): void {
-        const terrainContainer = document.getElementById('terrain-stats');
-        const totalTilesElement = document.getElementById('total-tiles');
+        const terrainContainer = this.findElement('#terrain-stats');
+        const totalTilesElement = this.findElement('#total-tiles');
         
         if (!terrainContainer || !totalTilesElement) return;
         
@@ -228,8 +328,8 @@ export class TileStatsPanel implements MapObserver {
      * Update unit statistics
      */
     private updateUnitStats(unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
-        const unitContainer = document.getElementById('unit-stats');
-        const totalUnitsElement = document.getElementById('total-units');
+        const unitContainer = this.findElement('#unit-stats');
+        const totalUnitsElement = this.findElement('#total-units');
         
         if (!unitContainer || !totalUnitsElement) return;
         
@@ -273,7 +373,7 @@ export class TileStatsPanel implements MapObserver {
      * Update player statistics
      */
     private updatePlayerStats(unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
-        const playerContainer = document.getElementById('player-stats');
+        const playerContainer = this.findElement('#player-stats');
         
         if (!playerContainer) return;
         
@@ -315,28 +415,28 @@ export class TileStatsPanel implements MapObserver {
     }
     
     /**
-     * Set up event listeners for the refresh button
+     * Set up event listeners for the refresh button (legacy method for backward compatibility)
      */
     public onRefresh(callback: () => void): void {
-        const refreshButton = document.getElementById('refresh-stats-btn');
+        const refreshButton = this.findElement('#refresh-stats-btn');
         if (refreshButton) {
             refreshButton.addEventListener('click', callback);
         }
     }
     
     /**
-     * Get initialization status
+     * Get activation status (legacy method for backward compatibility)
      */
     public getIsInitialized(): boolean {
-        return this.isInitialized;
+        return this.isActivated;
     }
     
     /**
      * Update terrain statistics from Map format data
      */
     private updateTerrainStatsFromMap(tilesData: Array<{ q: number; r: number; tileType: number; playerId?: number }>): void {
-        const terrainContainer = document.getElementById('terrain-stats');
-        const totalTilesElement = document.getElementById('total-tiles');
+        const terrainContainer = this.findElement('#terrain-stats');
+        const totalTilesElement = this.findElement('#total-tiles');
         
         if (!terrainContainer || !totalTilesElement) return;
         
@@ -379,8 +479,8 @@ export class TileStatsPanel implements MapObserver {
      * Update unit statistics from Map format data
      */
     private updateUnitStatsFromMap(unitsData: Array<{ q: number; r: number; unitType: number; playerId: number }>): void {
-        const unitContainer = document.getElementById('unit-stats');
-        const totalUnitsElement = document.getElementById('total-units');
+        const unitContainer = this.findElement('#unit-stats');
+        const totalUnitsElement = this.findElement('#total-units');
         
         if (!unitContainer || !totalUnitsElement) return;
         
@@ -421,7 +521,7 @@ export class TileStatsPanel implements MapObserver {
      * Update player statistics from Map format data
      */
     private updatePlayerStatsFromMap(unitsData: Array<{ q: number; r: number; unitType: number; playerId: number }>): void {
-        const playerContainer = document.getElementById('player-stats');
+        const playerContainer = this.findElement('#player-stats');
         if (!playerContainer) return;
         
         // Count units by player
@@ -458,18 +558,24 @@ export class TileStatsPanel implements MapObserver {
     }
     
     /**
-     * Cleanup
+     * Cleanup (legacy method for backward compatibility)
      */
     public destroy(): void {
-        // Unsubscribe from Map events
-        if (this.map) {
-            this.map.unsubscribe(this);
-        }
-        
-        if (this.containerElement) {
-            this.containerElement.innerHTML = '';
-        }
-        this.containerElement = null;
-        this.isInitialized = false;
+        this.deactivate();
+    }
+    
+    // BaseComponent lifecycle compatibility
+    protected initializeComponent(): void {
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
+    }
+    
+    protected bindToDOM(): void {
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
+    }
+    
+    protected destroyComponent(): void {
+        this.deactivate();
     }
 }

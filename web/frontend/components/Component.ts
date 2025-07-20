@@ -1,4 +1,5 @@
 import { EventBus, EventHandler, EventTypes } from './EventBus';
+import { ComponentLifecycle } from './ComponentLifecycle';
 
 /**
  * Standard component state interface
@@ -66,8 +67,11 @@ export interface Component {
 /**
  * Abstract base class implementing common component functionality
  * Provides standard lifecycle management and event bus integration
+ * 
+ * All components auto-initialize in constructor AND implement ComponentLifecycle
+ * for coordination with other components when needed.
  */
-export abstract class BaseComponent implements Component {
+export abstract class BaseComponent implements Component, ComponentLifecycle {
     public readonly componentId: string;
     public readonly rootElement: HTMLElement;
     
@@ -92,7 +96,14 @@ export abstract class BaseComponent implements Component {
         // Mark as component in DOM for debugging
         this.rootElement.setAttribute('data-component', this.componentId);
         
-        // Initialize the component
+        // Always auto-initialize - lifecycle methods are for coordination, not replacement
+        this.performAutoInitialization();
+    }
+    
+    /**
+     * Auto-initialization that happens for all components
+     */
+    private performAutoInitialization(): void {
         try {
             this.initializeComponent();
             this.bindToDOM();
@@ -107,7 +118,7 @@ export abstract class BaseComponent implements Component {
                 success: true
             }, this.componentId);
             
-            this.log('Component initialized successfully');
+            this.log('Component auto-initialized successfully');
             
         } catch (error) {
             this.handleError('Component initialization failed', error);
@@ -216,9 +227,8 @@ export abstract class BaseComponent implements Component {
     /**
      * Log messages with component identification
      */
-    protected log(message: string): void {
-        if (this.debugMode) {
-            console.log(`[${this.componentId}] ${message}`);
+    protected log(message: string, data: any = null): void {
+        if (this.debugMode) { console.log(`[${this.componentId}] ${message}`, data);
         }
     }
     
@@ -241,6 +251,43 @@ export abstract class BaseComponent implements Component {
      * Called during destroy before base cleanup
      */
     protected abstract destroyComponent(): void;
+    
+    // ComponentLifecycle implementation with default empty methods
+    // Components can override these when they need coordination with other components
+    
+    /**
+     * Default lifecycle method: discover and return child components
+     * Override this if your component creates child components that need lifecycle management
+     */
+    public initializeDOM(): ComponentLifecycle[] {
+        // Default: no child components
+        return [];
+    }
+    
+    /**
+     * Default lifecycle method: inject dependencies  
+     * Override this if your component needs dependencies from other components
+     */
+    public injectDependencies(deps: Record<string, any>): void | Promise<void> {
+        // Default: no dependencies needed
+    }
+    
+    /**
+     * Default lifecycle method: activate component for coordination
+     * Override this if your component needs to coordinate with other components after initialization
+     */
+    public activate(): void | Promise<void> {
+        // Default: no coordination needed - component is already auto-initialized
+    }
+    
+    /**
+     * Default lifecycle method: deactivate component
+     * Override this if your component needs cleanup during lifecycle management
+     */
+    public deactivate(): void | Promise<void> {
+        // Default: use standard destroy method
+        this.destroy();
+    }
 }
 
 /**

@@ -1,11 +1,17 @@
 import { BaseComponent } from './Component';
 import { EventBus, EditorEventTypes } from './EventBus';
 import { MapEditorPageState } from './MapEditorPageState';
+import { ComponentLifecycle } from './ComponentLifecycle';
 
 const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
 
 /**
  * EditorToolsPanel Component - State generator and DOM owner for editor tools
+ * 
+ * This component demonstrates the new lifecycle architecture with explicit dependency injection:
+ * 1. initializeDOM() - Set up UI controls and event handlers without dependencies
+ * 2. injectDependencies() - Receive MapEditorPageState when available
+ * 3. activate() - Enable full functionality once all dependencies are ready
  * 
  * Responsibilities:
  * - Own and manage terrain/unit button DOM elements and styling
@@ -15,58 +21,166 @@ const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)
  * - Update page state via direct method calls (not events)
  * 
  * Architecture:
- * - Receives MapEditorPageState instance from parent
+ * - Receives MapEditorPageState instance via explicit setter (not dependency injection)
  * - Updates state directly when user interacts with controls
  * - Manages its own DOM elements without external interference
  * - Does NOT observe state changes (it's the generator, not observer)
  */
 export class EditorToolsPanel extends BaseComponent {
+    // Dependencies (injected via explicit setters)
     private pageState: MapEditorPageState | null = null;
+    
+    // Internal state tracking
+    private isUIBound = false;
+    private isActivated = false;
+    private pendingOperations: Array<() => void> = [];
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('editor-tools-panel', rootElement, eventBus, debugMode);
     }
     
-    // Method to inject page state from parent
-    public setPageState(pageState: MapEditorPageState): void {
-        this.pageState = pageState;
-        // Initialize UI to match current state
-        this.syncUIWithPageState();
-    }
-    
-    protected initializeComponent(): void {
-        this.log('Initializing EditorToolsPanel component as state generator');
-        // No event subscriptions - this component generates state, doesn't observe it
-        this.log('EditorToolsPanel component initialized');
-    }
-    
-    protected bindToDOM(): void {
+    // ComponentLifecycle Phase 1: Initialize DOM and discover children (no dependencies needed)
+    public initializeDOM(): ComponentLifecycle[] {
+        if (this.isUIBound) {
+            this.log('Already bound to DOM, skipping');
+            return [];
+        }
+        
         try {
             this.log('Binding EditorToolsPanel to DOM');
             
-            // Bind terrain button events
+            // Set up UI elements and event handlers (independent of dependencies)
             this.bindTerrainButtons();
-            
-            // Bind unit button events  
             this.bindUnitButtons();
-            
-            // Bind brush size selection
             this.bindBrushSizeControl();
-            
-            // Bind player selection
             this.bindPlayerControl();
             
-            this.log('EditorToolsPanel bound to DOM');
+            this.isUIBound = true;
+            this.log('EditorToolsPanel bound to DOM successfully');
+            
+            // This is a leaf component - no children
+            return [];
             
         } catch (error) {
             this.handleError('Failed to bind EditorToolsPanel to DOM', error);
+            throw error;
         }
     }
     
+    // Phase 2: Inject dependencies - simplified to use explicit setters
+    public injectDependencies(deps: Record<string, any>): void {
+        this.log('EditorToolsPanel: Dependencies injection phase - using explicit setters');
+        
+        // Dependencies should be set directly by parent using setters
+        // This phase just validates that required dependencies are available
+        if (!this.pageState) {
+            throw new Error('EditorToolsPanel requires page state - use setPageState()');
+        }
+        
+        this.log('Dependencies validation complete');
+    }
+    
+    // Explicit dependency setters
+    public setPageState(pageState: MapEditorPageState): void {
+        this.pageState = pageState;
+        this.log('Page state set via explicit setter');
+        
+        // If already activated, sync UI immediately
+        if (this.isActivated) {
+            this.syncUIWithPageState();
+        }
+    }
+    
+    // Explicit dependency getters
+    public getPageState(): MapEditorPageState | null {
+        return this.pageState;
+    }
+    
+    // Phase 3: Activate component
+    public activate(): void {
+        if (this.isActivated) {
+            this.log('Already activated, skipping');
+            return;
+        }
+        
+        this.log('Activating EditorToolsPanel');
+        
+        // Process any operations that were queued during UI binding
+        this.processPendingOperations();
+        
+        // Sync UI to match current page state
+        this.syncUIWithPageState();
+        
+        this.isActivated = true;
+        this.log('EditorToolsPanel activated successfully');
+    }
+    
+    // Phase 4: Deactivate component
+    public deactivate(): void {
+        this.log('Deactivating EditorToolsPanel');
+        
+        // Clear any pending operations
+        this.pendingOperations = [];
+        
+        // Reset state
+        this.isActivated = false;
+        this.pageState = null;
+        
+        this.log('EditorToolsPanel deactivated');
+    }
+    
+    // Deferred Execution System
+    
+    /**
+     * Execute operation when component is ready, or queue it for later
+     */
+    private executeWhenReady(operation: () => void): void {
+        if (this.isActivated && this.pageState) {
+            // Component is ready - execute immediately
+            try {
+                operation();
+            } catch (error) {
+                this.handleError('Operation failed', error);
+            }
+        } else {
+            // Component not ready - queue for later
+            this.pendingOperations.push(operation);
+            this.log('Component not ready - operation queued');
+        }
+    }
+    
+    /**
+     * Process all pending operations when component becomes ready
+     */
+    private processPendingOperations(): void {
+        if (this.pendingOperations.length > 0) {
+            this.log(`Processing ${this.pendingOperations.length} pending operations`);
+            
+            const operations = [...this.pendingOperations];
+            this.pendingOperations = [];
+            
+            operations.forEach(operation => {
+                try {
+                    operation();
+                } catch (error) {
+                    this.handleError('Pending operation failed', error);
+                }
+            });
+        }
+    }
+    
+    protected initializeComponent(): void {
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
+    }
+    
+    protected bindToDOM(): void {
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
+    }
+    
     protected destroyComponent(): void {
-        this.log('Destroying EditorToolsPanel component');
-        // Event listeners will be automatically removed when DOM elements are destroyed
-        // EventBus subscriptions are automatically cleaned up by BaseComponent
+        this.deactivate();
     }
     
     /**
@@ -86,24 +200,28 @@ export class EditorToolsPanel extends BaseComponent {
                     
                     if (terrainValue === 0) {
                         // Clear mode
-                        this.updateButtonSelection(clickedButton);
-                        
-                        // Update page state directly
-                        if (this.pageState) {
-                            this.pageState.setPlacementMode('clear');
-                        }
-                        
-                        this.log('Selected clear mode');
+                        this.executeWhenReady(() => {
+                            this.updateButtonSelection(clickedButton);
+                            
+                            // Update page state directly
+                            if (this.pageState) {
+                                this.pageState.setPlacementMode('clear');
+                            }
+                            
+                            this.log('Selected clear mode');
+                        });
                     } else {
                         // Terrain selection
-                        this.updateButtonSelection(clickedButton);
-                        
-                        // Update page state directly
-                        if (this.pageState) {
-                            this.pageState.setSelectedTerrain(terrainValue);
-                        }
-                        
-                        this.log(`Selected terrain: ${terrainValue} (${terrainName})`);
+                        this.executeWhenReady(() => {
+                            this.updateButtonSelection(clickedButton);
+                            
+                            // Update page state directly
+                            if (this.pageState) {
+                                this.pageState.setSelectedTerrain(terrainValue);
+                            }
+                            
+                            this.log(`Selected terrain: ${terrainValue} (${terrainName})`);
+                        });
                     }
                 }
             });
@@ -127,19 +245,21 @@ export class EditorToolsPanel extends BaseComponent {
                     const unitValue = parseInt(unit);
                     const unitName = this.getUnitName(unitValue);
                     
-                    this.updateButtonSelection(clickedButton);
-                    
-                    // Get current player selection
-                    const playerSelect = this.findElement('#unit-player-color') as HTMLSelectElement;
-                    const currentPlayer = playerSelect ? parseInt(playerSelect.value) : 1;
-                    
-                    // Update page state directly
-                    if (this.pageState) {
-                        this.pageState.setSelectedUnit(unitValue);
-                        this.pageState.setSelectedPlayer(currentPlayer);
-                    }
-                    
-                    this.log(`Selected unit: ${unitValue} (${unitName}) for player ${currentPlayer}`);
+                    this.executeWhenReady(() => {
+                        this.updateButtonSelection(clickedButton);
+                        
+                        // Get current player selection
+                        const playerSelect = this.findElement('#unit-player-color') as HTMLSelectElement;
+                        const currentPlayer = playerSelect ? parseInt(playerSelect.value) : 1;
+                        
+                        // Update page state directly
+                        if (this.pageState) {
+                            this.pageState.setSelectedUnit(unitValue);
+                            this.pageState.setSelectedPlayer(currentPlayer);
+                        }
+                        
+                        this.log(`Selected unit: ${unitValue} (${unitName}) for player ${currentPlayer}`);
+                    });
                 }
             });
         });
@@ -156,15 +276,17 @@ export class EditorToolsPanel extends BaseComponent {
         if (brushSizeSelect) {
             brushSizeSelect.addEventListener('change', (e) => {
                 const target = e.target as HTMLSelectElement;
-                const brushSize = parseInt(target.value);
-                const sizeName = BRUSH_SIZE_NAMES[brushSize] || `Size ${brushSize}`;
-                
-                // Update page state directly
-                if (this.pageState) {
-                    this.pageState.setBrushSize(brushSize);
-                }
-                
-                this.log(`Brush size changed to: ${sizeName}`);
+                this.executeWhenReady(() => {
+                    const brushSize = parseInt(target.value);
+                    const sizeName = BRUSH_SIZE_NAMES[brushSize] || `Size ${brushSize}`;
+                    
+                    // Update page state directly
+                    if (this.pageState) {
+                        this.pageState.setBrushSize(brushSize);
+                    }
+                    
+                    this.log(`Brush size changed to: ${sizeName}`);
+                });
             });
             
             this.log('Bound brush size control');
@@ -181,15 +303,17 @@ export class EditorToolsPanel extends BaseComponent {
         
         if (playerSelect) {
             playerSelect.addEventListener('change', (e) => {
-                const target = e.target as HTMLSelectElement;
-                const playerId = parseInt(target.value);
-                
-                // Update page state directly
-                if (this.pageState) {
-                    this.pageState.setSelectedPlayer(playerId);
-                }
-                
-                this.log(`Player changed to: ${playerId}`);
+                this.executeWhenReady(() => {
+                    const target = e.target as HTMLSelectElement;
+                    const playerId = parseInt(target.value);
+                    
+                    // Update page state directly
+                    if (this.pageState) {
+                        this.pageState.setSelectedPlayer(playerId);
+                    }
+                    
+                    this.log(`Player changed to: ${playerId}`);
+                });
             });
             
             this.log('Bound player control');

@@ -7,11 +7,15 @@ import { Map, MapObserver, MapEvent, MapEventType, TilesChangedEventData, UnitsC
 import { MapEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './MapEditorPageState';
 import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload } from './EventBus';
 import { EditorToolsPanel } from './EditorToolsPanel';
+import { ReferenceImagePanel } from './ReferenceImagePanel';
+import { ComponentLifecycle } from './ComponentLifecycle';
+import { LifecycleController } from './LifecycleController';
 
 const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
 
 /**
  * Map Editor page with unified Map architecture and centralized page state
+ * Now implements ComponentLifecycle for breadth-first initialization
  */
 class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     private map: Map | null = null;
@@ -29,9 +33,15 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     
     // Editor tools panel for terrain/unit selection
     private editorToolsPanel: EditorToolsPanel | null = null;
+    
+    // Reference image panel for reference image controls
+    private referenceImagePanel: ReferenceImagePanel | null = null;
 
     // Keyboard shortcut manager
     private keyboardShortcutManager: KeyboardShortcutManager | null = null;
+    
+    // Lifecycle controller for managing component initialization
+    private lifecycleController: LifecycleController | null = null;
 
     // State management for undo/restore operations
     // Simplified state backup for preview/cancel functionality
@@ -42,21 +52,171 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
 
     constructor() {
         super();
-        // Phase 1: State setup (must be first)
+        // Basic setup only - detailed initialization moved to lifecycle phases
         this.pageState = new MapEditorPageState();
         this.pageState.subscribe(this); // Subscribe to page state changes
         this.loadInitialState();
-        
-        // Phase 2: Event subscriptions (before component creation)
         this.subscribeToEditorEvents();
         
-        // Phase 3: Component creation and initialization
+        // Initialize the lifecycle controller and start component initialization
+        this.initializeWithLifecycleController();
+    }
+    
+    /**
+     * Initialize the page using the new lifecycle controller
+     */
+    private async initializeWithLifecycleController(): Promise<void> {
+        try {
+            // Create lifecycle controller with debug logging
+            this.lifecycleController = new LifecycleController({
+                enableDebugLogging: true,
+                phaseTimeoutMs: 15000, // Increased timeout for complex initialization
+                continueOnError: false // Fail fast for debugging
+            });
+            
+            // Set up lifecycle event logging
+            this.lifecycleController.onLifecycleEvent((event) => {
+                console.log(`[Lifecycle] ${event.type}: ${event.componentName} - ${event.phase}`, event.error || '');
+            });
+            
+            // Dependencies are set directly using explicit setters in initializeDOM phase
+            
+            // Start breadth-first initialization
+            await this.lifecycleController.initializeFromRoot(this, 'MapEditorPage');
+            
+            console.log('MapEditorPage initialization complete via LifecycleController');
+            
+        } catch (error) {
+            console.error('MapEditorPage lifecycle initialization failed:', error);
+            // Fallback to old initialization method if needed
+            this.fallbackInitialization();
+        }
+    }
+    
+    /**
+     * Fallback initialization if lifecycle controller fails
+     */
+    private fallbackInitialization(): void {
+        console.warn('Using fallback initialization method');
         this.initializeSpecificComponents();
         this.initializeDockview();
         this.bindSpecificEvents();
         this.initializeKeyboardShortcuts();
         this.setupUnsavedChangesWarning();
     }
+    
+    // ComponentLifecycle implementation
+    
+    /**
+     * Phase 1: Initialize DOM and discover child components
+     */
+    public initializeDOM(): ComponentLifecycle[] {
+        try {
+            console.log('MapEditorPage: Starting DOM initialization phase');
+            
+            // Initialize basic components first
+            this.initializeSpecificComponents();
+            this.initializeDockview();
+            
+            // Create child components that implement ComponentLifecycle
+            const childComponents: ComponentLifecycle[] = [];
+            
+            // Create ReferenceImagePanel as a lifecycle-managed component
+            const referenceTemplate = document.getElementById('reference-image-panel-template');
+            if (referenceTemplate) {
+                const referenceContainer = referenceTemplate.cloneNode(true) as HTMLElement;
+                referenceContainer.style.display = 'block';
+                this.referenceImagePanel = new ReferenceImagePanel(referenceContainer, this.eventBus, true);
+                
+                // Set dependencies directly using explicit setters
+                this.referenceImagePanel.setToastCallback((title: string, message: string, type: 'success' | 'error' | 'info') => {
+                    this.showToast(title, message, type);
+                });
+                
+                // PhaserEditorComponent communication via EventBus - no direct dependency needed
+                
+                childComponents.push(this.referenceImagePanel);
+                console.log('MapEditorPage: Created ReferenceImagePanel child component with dependencies');
+            }
+            
+            console.log(`MapEditorPage: DOM initialization complete, discovered ${childComponents.length} child components`);
+            return childComponents;
+            
+        } catch (error) {
+            console.error('MapEditorPage: DOM initialization failed:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Phase 2: Inject dependencies from lifecycle controller
+     */
+    public injectDependencies(deps: Record<string, any>): void {
+        console.log('MapEditorPage: Injecting dependencies:', Object.keys(deps));
+        
+        // MapEditorPage doesn't need any specific dependencies from other components
+        // It provides dependencies to child components instead
+        
+        // Store a reference to the lifecycle controller if provided
+        if (deps.lifecycleController) {
+            console.log('MapEditorPage: Lifecycle controller reference injected');
+        }
+        
+        console.log('MapEditorPage: Dependencies injection complete');
+    }
+    
+    /**
+     * Phase 3: Activate the component when all dependencies are ready
+     */
+    public activate(): void {
+        try {
+            console.log('MapEditorPage: Starting activation phase');
+            
+            // Bind events now that all components are ready
+            this.bindSpecificEvents();
+            this.initializeKeyboardShortcuts();
+            this.setupUnsavedChangesWarning();
+            
+            // Set cross-component dependencies now that all components are created
+            this.setupCrossComponentDependencies();
+            
+            // Update UI state
+            this.updateEditorStatus('Ready');
+            
+            console.log('MapEditorPage: Activation complete');
+            
+        } catch (error) {
+            console.error('MapEditorPage: Activation failed:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Set up dependencies between components that require each other
+     * 
+     * Note: Using EventBus communication for loose coupling instead of direct dependencies
+     * Components communicate via events rather than direct method calls
+     */
+    private setupCrossComponentDependencies(): void {
+        // ReferenceImagePanel and PhaserEditorComponent communicate via EventBus
+        // No direct dependencies needed - they remain decoupled
+        
+        console.log('MapEditorPage: Components use EventBus communication - no direct dependencies needed');
+    }
+    
+    /**
+     * Phase 4: Deactivate and cleanup
+     */
+    public deactivate(): void {
+        console.log('MapEditorPage: Starting deactivation');
+        
+        // Use existing destroy method for cleanup
+        this.destroy();
+        
+        console.log('MapEditorPage: Deactivation complete');
+    }
+    
+    // Dependencies are set directly using explicit setters - no ComponentDependencyDeclaration needed
     
     // MapObserver implementation
     public onMapEvent(event: MapEvent): void {
@@ -441,120 +601,8 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
             this.initializePhaser();
         });
         
-        // Reference image controls
-        const loadReferenceBtn = document.getElementById('load-reference-btn');
-        if (loadReferenceBtn) {
-            loadReferenceBtn.addEventListener('click', () => {
-                this.loadReferenceFromClipboard();
-            });
-        }
-        
-        const referenceModeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
-        if (referenceModeSelect) {
-            referenceModeSelect.addEventListener('change', (e) => {
-                const mode = parseInt((e.target as HTMLSelectElement).value);
-                this.setReferenceMode(mode);
-            });
-        }
-        
-        const referenceAlphaSlider = document.getElementById('reference-alpha') as HTMLInputElement;
-        const referenceAlphaValue = document.getElementById('reference-alpha-value');
-        if (referenceAlphaSlider && referenceAlphaValue) {
-            referenceAlphaSlider.addEventListener('input', (e) => {
-                const alpha = parseInt((e.target as HTMLInputElement).value) / 100;
-                referenceAlphaValue.textContent = `${Math.round(alpha * 100)}%`;
-                this.setReferenceAlpha(alpha);
-            });
-        }
-        
-        const resetPositionBtn = document.getElementById('reference-reset-position');
-        if (resetPositionBtn) {
-            resetPositionBtn.addEventListener('click', () => {
-                this.resetReferencePosition();
-            });
-        }
-        
-        const resetScaleBtn = document.getElementById('reference-reset-scale');
-        if (resetScaleBtn) {
-            resetScaleBtn.addEventListener('click', () => {
-                this.resetReferenceScale();
-            });
-        }
-        
-        // X/Y Scale controls
-        const scaleXMinusBtn = document.getElementById('reference-scale-x-minus');
-        const scaleXPlusBtn = document.getElementById('reference-scale-x-plus');
-        const scaleYMinusBtn = document.getElementById('reference-scale-y-minus');
-        const scaleYPlusBtn = document.getElementById('reference-scale-y-plus');
-        const scaleXInput = document.getElementById('reference-scale-x-value') as HTMLInputElement;
-        const scaleYInput = document.getElementById('reference-scale-y-value') as HTMLInputElement;
-        
-        if (scaleXMinusBtn) {
-            scaleXMinusBtn.addEventListener('click', () => {
-                this.adjustReferenceScaleX(-0.01);
-            });
-        }
-        
-        if (scaleXPlusBtn) {
-            scaleXPlusBtn.addEventListener('click', () => {
-                this.adjustReferenceScaleX(0.01);
-            });
-        }
-        
-        if (scaleYMinusBtn) {
-            scaleYMinusBtn.addEventListener('click', () => {
-                this.adjustReferenceScaleY(-0.01);
-            });
-        }
-        
-        if (scaleYPlusBtn) {
-            scaleYPlusBtn.addEventListener('click', () => {
-                this.adjustReferenceScaleY(0.01);
-            });
-        }
-        
-        // Input field change handlers
-        if (scaleXInput) {
-            scaleXInput.addEventListener('change', () => {
-                const value = parseFloat(scaleXInput.value);
-                if (!isNaN(value)) {
-                    this.setReferenceScaleX(value);
-                }
-            });
-        }
-        
-        if (scaleYInput) {
-            scaleYInput.addEventListener('change', () => {
-                const value = parseFloat(scaleYInput.value);
-                if (!isNaN(value)) {
-                    this.setReferenceScaleY(value);
-                }
-            });
-        }
-        
-        const clearReferenceBtn = document.getElementById('clear-reference-btn');
-        if (clearReferenceBtn) {
-            clearReferenceBtn.addEventListener('click', () => {
-                this.clearReferenceImage();
-            });
-        }
-        
-        // File input and load from file button
-        const fileInput = document.getElementById('reference-file-input') as HTMLInputElement;
-        const loadFileBtn = document.getElementById('load-reference-file-btn');
-        
-        if (loadFileBtn && fileInput) {
-            loadFileBtn.addEventListener('click', () => {
-                fileInput.click();
-            });
-            
-            fileInput.addEventListener('change', (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                    this.loadReferenceFromFile(file);
-                }
-            });
-        }
+        // Reference image controls are now handled by ReferenceImagePanel directly
+        // No event handlers needed here - ReferenceImagePanel binds its own DOM events
     }
 
     private initializeKeyboardShortcuts(): void {
@@ -1106,9 +1154,9 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
         
         return {
             element: container,
-            init: () => {
-                // Initialize EditorToolsPanel component
-                this.initializeEditorToolsPanel(container);
+            init: async () => {
+                // Initialize EditorToolsPanel component using new lifecycle
+                await this.initializeEditorToolsPanelLifecycle(container);
             },
             dispose: () => {
                 // Clean up EditorToolsPanel
@@ -1157,9 +1205,9 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
         
         return {
             element: container,
-            init: () => {
-                // Initialize TileStats panel with the container element directly
-                this.initializeTileStatsPanel(container);
+            init: async () => {
+                // Initialize TileStatsPanel component using new lifecycle
+                await this.initializeTileStatsPanelLifecycle(container);
             },
             dispose: () => {
                 if (this.tileStatsPanel) {
@@ -1217,6 +1265,22 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     }
     
     private createReferenceImageComponent() {
+        // Use the lifecycle-managed ReferenceImagePanel if available
+        if (this.referenceImagePanel) {
+            const container = this.referenceImagePanel.rootElement;
+            return {
+                element: container,
+                init: () => {
+                    // Panel is already initialized through lifecycle controller
+                    console.log('ReferenceImagePanel dockview component initialized (lifecycle-managed)');
+                },
+                dispose: () => {
+                    // Cleanup handled by lifecycle controller
+                }
+            };
+        }
+        
+        // Fallback to template-based creation if lifecycle panel not available
         const template = document.getElementById('reference-image-panel-template');
         if (!template) {
             console.error('Reference image panel template not found');
@@ -1231,7 +1295,7 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
         return {
             element: container,
             init: () => {
-                // Reference image panel is already initialized through global event binding
+                console.log('ReferenceImagePanel dockview component initialized (fallback mode)');
             },
             dispose: () => {}
         };
@@ -1435,6 +1499,31 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     
     
     // EditorToolsPanel methods
+    private async initializeEditorToolsPanelLifecycle(container: HTMLElement): Promise<void> {
+        try {
+            this.logToConsole('Initializing EditorToolsPanel with lifecycle...');
+            
+            // Create EditorToolsPanel component
+            this.editorToolsPanel = new EditorToolsPanel(container, this.eventBus, true);
+            
+            // Phase 1: Initialize DOM
+            await this.editorToolsPanel.initializeDOM();
+            
+            // Phase 2: Set dependencies directly using explicit setters
+            this.editorToolsPanel.setPageState(this.pageState);
+            await this.editorToolsPanel.injectDependencies({});
+            
+            // Phase 3: Activate component
+            await this.editorToolsPanel.activate();
+            
+            this.logToConsole('EditorToolsPanel initialized with lifecycle architecture');
+            
+        } catch (error) {
+            this.logToConsole(`Failed to initialize EditorToolsPanel with lifecycle: ${error}`);
+        }
+    }
+    
+    // Legacy method for backward compatibility
     private initializeEditorToolsPanel(container: HTMLElement): void {
         try {
             this.logToConsole('Initializing EditorToolsPanel...');
@@ -1453,31 +1542,40 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     }
     
     // TileStats panel methods
-    private initializeTileStatsPanel(container: HTMLElement): void {
+    private async initializeTileStatsPanelLifecycle(container: HTMLElement): Promise<void> {
         try {
+            this.logToConsole('Initializing TileStatsPanel with lifecycle...');
             
-            // Initialize TileStats panel with Map instance
-            this.tileStatsPanel = new TileStatsPanel(this.map);
+            // Create TileStatsPanel component
+            this.tileStatsPanel = new TileStatsPanel(container, this.eventBus, true);
             
-            // Initialize the panel with the container element directly
-            const success = this.tileStatsPanel.initializeWithElement(container);
+            // Phase 1: Initialize DOM
+            await this.tileStatsPanel.initializeDOM();
             
-            if (success) {
-                // Set up refresh button handler
-                this.tileStatsPanel.onRefresh(() => {
-                    this.refreshTileStats();
-                });
-                
-                // Initial stats update
-                this.refreshTileStats();
-                
+            // Phase 2: Set dependencies directly using explicit setters
+            if (this.map) {
+                this.tileStatsPanel.setMap(this.map);
             } else {
-                throw new Error('Failed to initialize TileStats panel');
+                throw new Error('Map is not available for TileStatsPanel');
             }
+            await this.tileStatsPanel.injectDependencies({});
+            
+            // Phase 3: Activate component
+            await this.tileStatsPanel.activate();
+            
+            this.logToConsole('TileStatsPanel initialized with lifecycle architecture');
             
         } catch (error) {
-            this.logToConsole(`Failed to initialize TileStats panel: ${error}`);
+            this.logToConsole(`Failed to initialize TileStatsPanel with lifecycle: ${error}`);
         }
+    }
+    
+    // Legacy method for backward compatibility - now uses lifecycle internally
+    private initializeTileStatsPanel(container: HTMLElement): void {
+        // Just call the lifecycle method
+        this.initializeTileStatsPanelLifecycle(container).catch(error => {
+            this.logToConsole(`Failed to initialize TileStats panel: ${error}`);
+        });
     }
     
     private refreshTileStats(): void {
@@ -1960,234 +2058,7 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     
     // Note: Unit button selection is now handled by EditorToolsPanel internally
 
-    // Reference image methods
-    private async loadReferenceFromClipboard(): Promise<void> {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            this.showToast('Error', 'Phaser panel not ready', 'error');
-            return;
-        }
-        
-        try {
-            const success = await this.phaserEditorComponent.loadReferenceFromClipboard();
-            if (success) {
-                this.showToast('Success', 'Reference image loaded from clipboard', 'success');
-                this.updateReferenceStatus('Image loaded');
-                
-                // Enable mode selector
-                const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
-                if (modeSelect && modeSelect.value === '0') {
-                    modeSelect.value = '1'; // Default to background mode
-                    this.setReferenceMode(1);
-                }
-            } else {
-                this.showToast('Error', 'No image found in clipboard', 'error');
-            }
-        } catch (error) {
-            this.logToConsole(`Failed to load reference image: ${error}`);
-            this.showToast('Error', 'Failed to load reference image', 'error');
-        }
-    }
-    
-    private async loadReferenceFromFile(file: File): Promise<void> {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            this.showToast('Error', 'Phaser panel not ready', 'error');
-            return;
-        }
-        
-        try {
-            this.logToConsole(`Loading reference image from file: ${file.name} (${file.size} bytes)`);
-            const success = await this.phaserEditorComponent.loadReferenceFromFile(file);
-            if (success) {
-                this.showToast('Success', `Reference image loaded: ${file.name}`, 'success');
-                this.updateReferenceStatus(`File loaded: ${file.name}`);
-                
-                // Enable mode selector
-                const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
-                if (modeSelect && modeSelect.value === '0') {
-                    modeSelect.value = '1'; // Default to background mode
-                    this.setReferenceMode(1);
-                }
-            } else {
-                this.showToast('Error', 'Failed to load image file', 'error');
-            }
-        } catch (error) {
-            this.logToConsole(`Failed to load reference image from file: ${error}`);
-            this.showToast('Error', 'Failed to load reference image', 'error');
-        }
-    }
-    
-    private setReferenceMode(mode: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        this.phaserEditorComponent.setReferenceMode(mode);
-        
-        // Update UI dropdown to reflect current mode
-        const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
-        if (modeSelect && modeSelect.value !== mode.toString()) {
-            modeSelect.value = mode.toString();
-        }
-        
-        // Show/hide position controls based on mode
-        const positionControls = document.getElementById('reference-position-controls');
-        if (positionControls) {
-            positionControls.style.display = mode === 2 ? 'block' : 'none';
-        }
-        
-        // Update scale display when switching to overlay mode
-        if (mode === 2) {
-            this.updateReferenceScaleDisplay();
-        }
-        
-        const modeNames = ['Hidden', 'Background', 'Overlay'];
-        this.logToConsole(`Reference mode set to: ${modeNames[mode]}`);
-        this.updateReferenceStatus(mode === 0 ? 'Hidden' : `${modeNames[mode]} mode`);
-    }
-    
-    private setReferenceAlpha(alpha: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        this.phaserEditorComponent.setReferenceAlpha(alpha);
-        this.logToConsole(`Reference alpha set to: ${Math.round(alpha * 100)}%`);
-    }
-    
-    private resetReferencePosition(): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        this.phaserEditorComponent.setReferencePosition(0, 0);
-        this.logToConsole('Reference position reset to center');
-        this.showToast('Position Reset', 'Reference image centered', 'success');
-    }
-    
-    private resetReferenceScale(): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        this.phaserEditorComponent.setReferenceScaleFromTopLeft(1, 1);
-        this.logToConsole('Reference scale reset to 100%');
-        this.showToast('Scale Reset', 'Reference image scale reset', 'success');
-        this.updateReferenceScaleDisplay();
-    }
-    
-    private adjustReferenceScaleX(delta: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        const state = this.phaserEditorComponent.getReferenceState();
-        if (!state) return;
-        
-        const newScaleX = Math.max(0.1, Math.min(5.0, state.scale.x + delta));
-        this.phaserEditorComponent.setReferenceScaleFromTopLeft(newScaleX, state.scale.y);
-        this.updateReferenceScaleDisplay();
-        this.logToConsole(`Reference X scale: ${newScaleX.toFixed(2)}`);
-    }
-    
-    private adjustReferenceScaleY(delta: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        const state = this.phaserEditorComponent.getReferenceState();
-        if (!state) return;
-        
-        const newScaleY = Math.max(0.1, Math.min(5.0, state.scale.y + delta));
-        this.phaserEditorComponent.setReferenceScaleFromTopLeft(state.scale.x, newScaleY);
-        this.updateReferenceScaleDisplay();
-        this.logToConsole(`Reference Y scale: ${newScaleY.toFixed(2)}`);
-    }
-    
-    private setReferenceScaleX(scaleX: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        const state = this.phaserEditorComponent.getReferenceState();
-        if (!state) return;
-        
-        const clampedScale = Math.max(0.1, Math.min(5.0, scaleX));
-        this.phaserEditorComponent.setReferenceScaleFromTopLeft(clampedScale, state.scale.y);
-        this.updateReferenceScaleDisplay();
-        this.logToConsole(`Reference X scale: ${clampedScale.toFixed(2)}`);
-    }
-    
-    private setReferenceScaleY(scaleY: number): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        const state = this.phaserEditorComponent.getReferenceState();
-        if (!state) return;
-        
-        const clampedScale = Math.max(0.1, Math.min(5.0, scaleY));
-        this.phaserEditorComponent.setReferenceScaleFromTopLeft(state.scale.x, clampedScale);
-        this.updateReferenceScaleDisplay();
-        this.logToConsole(`Reference Y scale: ${clampedScale.toFixed(2)}`);
-    }
-    
-    private updateReferenceScaleDisplay(): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        const state = this.phaserEditorComponent.getReferenceState();
-        if (!state) return;
-        
-        const scaleXInput = document.getElementById('reference-scale-x-value') as HTMLInputElement;
-        const scaleYInput = document.getElementById('reference-scale-y-value') as HTMLInputElement;
-        
-        if (scaleXInput) {
-            scaleXInput.value = state.scale.x.toFixed(2);
-        }
-        
-        if (scaleYInput) {
-            scaleYInput.value = state.scale.y.toFixed(2);
-        }
-    }
-    
-    private clearReferenceImage(): void {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return;
-        }
-        
-        this.phaserEditorComponent.clearReferenceImage();
-        
-        // Reset UI controls
-        const modeSelect = document.getElementById('reference-mode') as HTMLSelectElement;
-        if (modeSelect) {
-            modeSelect.value = '0';
-        }
-        
-        const alphaSlider = document.getElementById('reference-alpha') as HTMLInputElement;
-        const alphaValue = document.getElementById('reference-alpha-value');
-        if (alphaSlider && alphaValue) {
-            alphaSlider.value = '50';
-            alphaValue.textContent = '50%';
-        }
-        
-        // Hide position controls
-        const positionControls = document.getElementById('reference-position-controls');
-        if (positionControls) {
-            positionControls.style.display = 'none';
-        }
-        
-        this.updateReferenceStatus('No reference image loaded');
-        this.logToConsole('Reference image cleared');
-        this.showToast('Cleared', 'Reference image removed', 'success');
-    }
-    
-    private updateReferenceStatus(status: string): void {
-        const statusElement = document.getElementById('reference-status');
-        if (statusElement) {
-            statusElement.textContent = status;
-        }
-    }
+    // Reference image methods moved to ReferenceImagePanel - no longer needed here
 
     // Public methods for Phaser panel (for backward compatibility with UI)
     public initializePhaser(): void {

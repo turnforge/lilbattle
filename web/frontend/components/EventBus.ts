@@ -213,9 +213,18 @@ export const EditorEventTypes = {
     PHASER_READY: 'phaser-ready',
     PHASER_ERROR: 'phaser-error',
     
-    // Reference image events
+    // Reference image events (ReferenceImagePanel → PhaserEditorComponent)
+    REFERENCE_LOAD_FROM_CLIPBOARD: 'reference-load-from-clipboard',
+    REFERENCE_LOAD_FROM_FILE: 'reference-load-from-file',
+    REFERENCE_SET_MODE: 'reference-set-mode',
+    REFERENCE_SET_ALPHA: 'reference-set-alpha',
+    REFERENCE_SET_POSITION: 'reference-set-position',
+    REFERENCE_SET_SCALE: 'reference-set-scale',
+    REFERENCE_CLEAR: 'reference-clear',
+    
+    // Reference image events (PhaserEditorComponent → ReferenceImagePanel)
     REFERENCE_SCALE_CHANGED: 'reference-scale-changed',
-    REFERENCE_POSITION_CHANGED: 'reference-position-changed',
+    REFERENCE_STATE_CHANGED: 'reference-state-changed',
     REFERENCE_ALPHA_CHANGED: 'reference-alpha-changed',
     REFERENCE_MODE_CHANGED: 'reference-mode-changed',
     
@@ -324,9 +333,42 @@ export interface CoordinatesTogglePayload {
 }
 
 // Reference image event payloads
+
+// ReferenceImagePanel → PhaserEditorComponent events
+export interface ReferenceLoadFromFilePayload {
+    file: File;
+}
+
+export interface ReferenceSetModePayload {
+    mode: number; // 0=hidden, 1=background, 2=overlay
+}
+
+export interface ReferenceSetAlphaPayload {
+    alpha: number; // 0.0 to 1.0
+}
+
+export interface ReferenceSetPositionPayload {
+    x: number;
+    y: number;
+}
+
+export interface ReferenceSetScalePayload {
+    scaleX: number;
+    scaleY: number;
+}
+
+// PhaserEditorComponent → ReferenceImagePanel events
 export interface ReferenceScaleChangedPayload {
     scaleX: number;
     scaleY: number;
+}
+
+export interface ReferenceStateChangedPayload {
+    scale: { x: number; y: number };
+    position: { x: number; y: number };
+    alpha: number;
+    mode: number;
+    isLoaded: boolean;
 }
 
 export interface ReferencePositionChangedPayload {
