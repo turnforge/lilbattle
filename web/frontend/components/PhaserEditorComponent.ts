@@ -580,19 +580,22 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             switch (toolState.placementMode) {
                 case 'terrain':
                     // Update Map data (single source of truth)
+                    let playerId = 0;
                     if (this.map) {
-                        this.map.setTileAt(q, r, toolState.selectedTerrain, 0);
+                        // Determine player ownership for the terrain
+                        playerId = this.getPlayerIdForTerrain(toolState.selectedTerrain, toolState);
+                        this.map.setTileAt(q, r, toolState.selectedTerrain, playerId);
                         // Map will emit TILES_CHANGED event, which will update Phaser via onMapEvent
                     }
                     
-                    this.log(`Painted terrain ${toolState.selectedTerrain} at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
+                    this.log(`Painted terrain ${toolState.selectedTerrain} (player ${playerId}) at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
                     
                     // Emit tile painted event for backward compatibility (for components not yet using Map events)
                     this.emit<TilePaintedPayload>(EditorEventTypes.TILE_PAINTED, {
                         q: q,
                         r: r,
                         terrainType: toolState.selectedTerrain,
-                        playerColor: 0,
+                        playerColor: playerId,
                         brushSize: toolState.brushSize
                     });
                     break;
@@ -632,6 +635,23 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             }
         } catch (error) {
             this.handleError(`Failed to handle tile click at Q=${q}, R=${r}`, error);
+        }
+    }
+    
+    /**
+     * Determine the correct player ID for a terrain type
+     * City terrains use the selected player, nature terrains always use 0
+     */
+    private getPlayerIdForTerrain(terrainType: number, toolState: any): number {
+        // Define city terrains that support player ownership
+        const cityTerrains = [1, 2, 3, 16, 20]; // Land Base, Naval Base, Airport Base, Missile Silo, Mines
+        
+        if (cityTerrains.includes(terrainType)) {
+            // City terrain - use selected player from city tab
+            return toolState.selectedPlayer || 1; // Default to player 1 if not set
+        } else {
+            // Nature terrain - always use neutral (0)
+            return 0;
         }
     }
     

@@ -60,6 +60,7 @@ export class EditorToolsPanel extends BaseComponent {
             this.bindUnitButtons();
             this.bindBrushSizeControl();
             this.bindPlayerControl();
+            this.bindCityPlayerControl();
             
             this.isUIBound = true;
             this.log('EditorToolsPanel bound to DOM successfully');
@@ -473,7 +474,7 @@ export class EditorToolsPanel extends BaseComponent {
     }
     
     /**
-     * Bind player selection control events
+     * Bind unit player selection control events
      */
     private bindPlayerControl(): void {
         const playerSelect = this.findElement('#unit-player-color') as HTMLSelectElement;
@@ -489,13 +490,40 @@ export class EditorToolsPanel extends BaseComponent {
                         this.pageState.setSelectedPlayer(playerId);
                     }
                     
-                    this.log(`Player changed to: ${playerId}`);
+                    this.log(`Unit player changed to: ${playerId}`);
                 });
             });
             
-            this.log('Bound player control');
+            this.log('Bound unit player control');
         } else {
-            this.log('Player control not found');
+            this.log('Unit player control not found');
+        }
+    }
+    
+    /**
+     * Bind city player selection control events
+     */
+    private bindCityPlayerControl(): void {
+        const cityPlayerSelect = this.findElement('#player-color') as HTMLSelectElement;
+        
+        if (cityPlayerSelect) {
+            cityPlayerSelect.addEventListener('change', (e) => {
+                this.executeWhenReady(() => {
+                    const target = e.target as HTMLSelectElement;
+                    const playerId = parseInt(target.value);
+                    
+                    // Update page state directly
+                    if (this.pageState) {
+                        this.pageState.setSelectedPlayer(playerId);
+                    }
+                    
+                    this.log(`City player changed to: ${playerId}`);
+                });
+            });
+            
+            this.log('Bound city player control');
+        } else {
+            this.log('City player control not found');
         }
     }
     
@@ -516,8 +544,8 @@ export class EditorToolsPanel extends BaseComponent {
         // Update brush size dropdown
         this.updateBrushSizeDropdown(toolState.brushSize);
         
-        // Update player dropdown
-        this.updatePlayerDropdown(toolState.selectedPlayer);
+        // Update player dropdowns
+        this.updatePlayerDropdowns(toolState.selectedPlayer);
         
         this.log('UI synced with page state');
     }
@@ -567,12 +595,19 @@ export class EditorToolsPanel extends BaseComponent {
     }
     
     /**
-     * Update player dropdown (internal method for UI sync)
+     * Update player dropdowns (internal method for UI sync)
      */
-    private updatePlayerDropdown(playerId: number): void {
-        const playerSelect = this.findElement('#unit-player-color') as HTMLSelectElement;
-        if (playerSelect) {
-            playerSelect.value = playerId.toString();
+    private updatePlayerDropdowns(playerId: number): void {
+        // Update unit player dropdown
+        const unitPlayerSelect = this.findElement('#unit-player-color') as HTMLSelectElement;
+        if (unitPlayerSelect) {
+            unitPlayerSelect.value = playerId.toString();
+        }
+        
+        // Update city player dropdown  
+        const cityPlayerSelect = this.findElement('#player-color') as HTMLSelectElement;
+        if (cityPlayerSelect) {
+            cityPlayerSelect.value = playerId.toString();
         }
     }
     

@@ -308,6 +308,15 @@ export class Map {
             this.setTileAt(q, r, 1, 0); // Terrain type 1 = Grass, no player ownership
         }
         
+        // Check if same unit type and player already exists - if so, remove it (toggle behavior)
+        const existingUnit = this.getUnitAt(q, r);
+        if (existingUnit && existingUnit.unitType === unitType && existingUnit.playerId === playerId) {
+            // Same unit type and player - remove the unit (toggle off)
+            this.removeUnitAt(q, r);
+            return;
+        }
+        
+        // Different unit type/player or no existing unit - place/replace the unit
         const key = `${q},${r}`;
         const unit: UnitData = { unitType, playerId };
         this.units[key] = unit;
