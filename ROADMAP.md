@@ -288,29 +288,49 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - **Scalable Architecture**: EventBus and Observer patterns provide foundation for complex multiplayer features
 - **Professional UX**: Polished editor with intuitive controls and seamless interaction patterns
 
-## 🎯 Phase 8: Game Mechanics Implementation (Next Priority)
-**Status**: Ready to Start  
+## 🎯 Phase 8: Game Mechanics Implementation (In Progress)
+**Status**: Foundation Analysis Complete, Implementation Ready  
 **Timeline**: February 2025
 
-### Core Game Systems
-- [ ] Integration of CLI game engine with web interface components
-- [ ] Turn-based mechanics with state management via existing Map architecture
-- [ ] Unit movement and combat system integration with Phaser.js rendering
-- [ ] Player management and game session handling through EventBus communication
-- [ ] Game state persistence using established file storage patterns
+### Foundation Discovery ✅
+**Major Finding**: Comprehensive game engine already exists in lib/game.go and cmd/weewar-cli/
+- **Complete Game Class**: Turn management, movement, combat, save/load, events
+- **Professional CLI**: Full command interface with 15+ game commands
+- **Coordinate System**: Proper AxialCoord (cube coordinates) throughout
+- **Multiplayer Ready**: Player validation, turn cycling, victory conditions
 
-### Game Interface Implementation
-- [ ] Interactive unit selection and movement in Phaser editor
-- [ ] Combat resolution with visual feedback and animations
-- [ ] Turn management with player state tracking
-- [ ] Victory condition detection and game completion workflows
-- [ ] Real-time game state updates using Observer pattern architecture
+### Rules Engine Integration (Week 1)
+- [ ] Create RulesEngine struct to load weewar-data.json
+- [ ] Replace hardcoded movement costs with terrain-specific calculations
+- [ ] Replace simple damage with probability-based combat from attack matrices
+- [ ] Update CLI commands to work with data-driven rules
+- [ ] Add rule validation and unit stats commands
 
-### Games Management System
-- [ ] GamesService implementation with file-based storage following Maps patterns
-- [ ] Game listing and creation workflows integrated with existing UI framework
-- [ ] Game details page with current state display using component architecture
-- [ ] Player dashboard and game management via established template system
+### Map-to-Game Bridge (Week 1)
+- [ ] Implement NewGameFromMap() to initialize from Map editor data
+- [ ] Add player count adaptation utilities (convert, remove, merge players)
+- [ ] Update CLI with map management commands
+- [ ] Add map validation for starting positions and terrain types
+
+### Move Recording & WASM (Week 2)
+- [ ] Define structured GameMove format for testing and replay
+- [ ] Add move recording and replay functionality to Game class
+- [ ] Reactivate cmd/weewar-wasm/ module with game APIs
+- [ ] Implement player-action focused WASM APIs for web interface
+- [ ] Test WASM performance and browser integration
+
+### Web Interface Integration (Week 3)
+- [ ] Create GameState component following BaseComponent patterns
+- [ ] Add game mode switching to existing Phaser editor
+- [ ] Implement interactive unit selection and movement
+- [ ] Add turn management UI and game state visualization
+- [ ] Integrate with existing EventBus communication
+
+### Testing & Validation (Week 4)
+- [ ] Create comprehensive test suite using recorded CLI sessions
+- [ ] Validate rules compliance with original WeeWar mechanics
+- [ ] Performance optimization for rules engine and WASM APIs
+- [ ] Create reference game sessions for regression testing
 
 ## 🎯 Phase 7: Gameplay Integration (Planned)
 **Status**: Future  
@@ -395,5 +415,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 ---
 
 **Last Updated**: 2025-01-21  
-**Current Focus**: Comprehensive UI Architecture & Game Foundation (Completed)  
-**Next Milestone**: Game Mechanics Implementation and Turn-Based Gameplay Integration
+**Current Focus**: Game Mechanics Implementation - Rules Engine Integration (In Progress)  
+**Next Milestone**: Complete turn-based gameplay with web interface integration
+
+**Key Discovery**: Strong game foundation already exists (lib/game.go, CLI) - focus shifted from building game system to enhancing existing architecture with rules integration and web interface bridge.

@@ -289,6 +289,11 @@
 
 ### Phase 7: Comprehensive UI Framework & Game Foundation ✅ COMPLETED
 
+### Phase 8: Game Mechanics Implementation 🚧 IN PROGRESS
+**Current Phase**: Rules Engine Integration and Map-to-Game Bridge
+**Status**: Discovered strong existing foundation in lib/game.go and CLI
+**Focus**: Enhance existing systems rather than build from scratch
+
 #### A. Coordinate System Accuracy ✅ COMPLETED
 **Goal**: Perfect coordinate mapping between frontend and backend  
 **Components**:
@@ -362,42 +367,203 @@
 
 ### Phase 8: Game Mechanics Implementation (Next Priority) 🎯
 
-#### A. Core Game Systems Integration (High Priority)
-**Goal**: Integrate CLI game engine with web interface for turn-based gameplay
-**Components**:
-- [ ] Unit selection and movement system in Phaser editor with game logic integration
-- [ ] Combat resolution system with visual feedback and damage calculations
-- [ ] Turn management with player state tracking and EventBus communication
-- [ ] Game state persistence using established Map architecture and file storage
-- [ ] Victory condition detection and game completion workflows
-- [ ] Integration of existing CLI game mechanics with web UI components
+#### Current Analysis: Strong Foundation Already Exists ✅
+**Discovery**: Through analysis of lib/game.go and cmd/weewar-cli/, we have discovered a comprehensive game foundation:
+- **Complete Game Class**: lib/game.go with turn management, movement, combat, save/load, event system
+- **Professional CLI**: Full command interface with move, attack, status, save, load, render, predict commands
+- **Coordinate System**: Proper AxialCoord (cube coordinates) throughout
+- **Movement & Combat**: Basic systems with validation, pathfinding, damage calculation
+- **Victory Conditions**: Last-player-standing logic with event notifications
+- **Deterministic Gameplay**: RNG with seed for reproducible games
 
-#### B. Interactive Gameplay Features (High Priority)
+**What's Missing**: Rules engine integration and web interface bridge
+
+#### A. Rules Engine Integration (Week 1 - High Priority)
+**Goal**: Replace hardcoded values with data-driven rules from weewar-data.json
+**Current State**: Movement costs and combat damage are hardcoded in lib/moves.go
+**Implementation Plan**:
+- [ ] Create RulesEngine struct in lib/rules_engine.go
+  - Load and parse data/weewar-data.json
+  - Provide unit movement data (terrainMovement costs)
+  - Provide combat matrices (attackMatrix probabilities)
+  - Cache data for performance
+- [ ] Integrate RulesEngine with Game class
+  - Replace hardcoded `unit.DistanceLeft = 3` with unit data lookup
+  - Replace simple damage calculation with probability-based combat
+  - Update GetMovementCost() to use terrain-specific costs
+  - Update calculateDamage() to use attack matrices
+- [ ] Update CLI commands to work with real rules
+  - Test existing move/attack commands with data-driven calculations
+  - Ensure predict command uses actual combat probabilities
+  - Validate moveoptions/attackoptions with real movement costs
+- [ ] Add CLI validation commands
+  - `game validate-rules` - verify weewar-data.json integrity
+  - `game show-unit-stats <type>` - display unit capabilities
+  - `game show-terrain-costs <unit> <terrain>` - movement cost lookup
+
+#### B. Map-to-Game Integration (Week 1 - High Priority)
+**Goal**: Initialize games from Map editor data instead of hardcoded test maps
+**Current State**: Game.initializeStartingUnits() uses hardcoded positions
+**Implementation Plan**:
+- [ ] Create NewGameFromMap() function in lib/game.go
+  - Accept Map data from web interface
+  - Extract starting unit positions from map data
+  - Validate player count compatibility
+  - Initialize Game with proper unit placement
+- [ ] Add player count adaptation utilities
+  - `ConvertPlayerToNeutral(playerID)` - remove player, keep units as neutral
+  - `RemovePlayer(playerID)` - remove player and all their units
+  - `MergePlayerUnits(fromPlayer, toPlayer)` - combine players
+- [ ] Update CLI with map management commands
+  - `game new --from-map <mapId> --players <count>` - create from map
+  - `game convert-player <from> <to>` - adapt player count
+  - `game remove-player <playerID>` - remove player from game
+- [ ] Add map validation
+  - Ensure map has required starting positions
+  - Validate terrain types exist in rules data
+  - Check unit placement validity
+
+#### C. Move Recording & Replay System (Week 2 - High Priority)
+**Goal**: Structured move logging for comprehensive testing and validation
+**Current State**: CLI has command recording but not structured game moves
+**Implementation Plan**:
+- [ ] Define GameMove struct in lib/moves.go
+  ```go
+  type GameMove struct {
+      Turn      int           `json:"turn"`
+      Player    int           `json:"player"`
+      Action    string        `json:"action"`    // "move", "attack", "build", "end_turn"
+      From      *AxialCoord   `json:"from,omitempty"`
+      To        *AxialCoord   `json:"to,omitempty"`
+      UnitType  *int          `json:"unitType,omitempty"`
+      Timestamp time.Time     `json:"timestamp"`
+      Result    interface{}   `json:"result"`
+      Valid     bool          `json:"valid"`
+      Error     string        `json:"error,omitempty"`
+  }
+  ```
+- [ ] Add move recording to Game class
+  - RecordMove() method to log all game actions
+  - SaveGameLog() to export moves as JSON
+  - LoadGameLog() to replay moves for testing
+- [ ] Enhance CLI with replay commands
+  - `game record <filename>` - start recording moves
+  - `game replay <filename>` - replay recorded session
+  - `game validate-moves <filename>` - verify move sequence
+  - `game export-moves <filename>` - export current session
+- [ ] Create test suite using recorded games
+  - Record complete 2-player games via CLI
+  - Use recordings for regression testing
+  - Validate rule changes don't break existing games
+
+#### D. WASM Game Module (Week 2 - High Priority)
+**Goal**: Reactivate WASM module to bridge game logic with web interface
+**Current State**: cmd/weewar-wasm/main.go exists but is commented out
+**Implementation Plan**:
+- [ ] Reactivate and enhance WASM module
+  - Uncomment and update cmd/weewar-wasm/main.go
+  - Update to use NewGameFromMap() instead of hardcoded maps
+  - Integrate with RulesEngine for proper validation
+- [ ] Implement player-action focused APIs
+  ```go
+  // Game lifecycle
+  weewarCreateGameFromMap(mapData, playerCount) → gameId
+  weewarLoadGame(gameData) → success
+  weewarGetGameState() → currentPlayer, turn, status, units
+  
+  // Player actions (current player only)
+  weewarSelectUnit(q, r) → unit info + valid moves/attacks
+  weewarMoveUnit(fromQ, fromR, toQ, toR) → validation + move result
+  weewarAttackUnit(attackerQ, attackerR, defenderQ, defenderR) → combat result
+  weewarEndTurn() → next player state
+  
+  // Query methods
+  weewarGetValidMoves(q, r) → array of valid positions
+  weewarGetValidAttacks(q, r) → array of attackable targets
+  weewarGetUnitInfo(q, r) → unit stats, health, movement left
+  ```
+- [ ] Build and test WASM module
+  - Update scripts/build-wasm.sh to include game-wasm
+  - Test APIs through browser console
+  - Validate performance with large maps
+- [ ] Integrate with existing web architecture
+  - Create GameState component following BaseComponent pattern
+  - Wire WASM APIs to EventBus communication
+  - Connect to existing PhaserEditorComponent for visualization
+
+#### E. Web Interface Integration (Week 3 - Medium Priority)
 **Goal**: Transform map editor into interactive game interface
-**Components**:
-- [ ] Unit selection highlighting and movement preview in Phaser
-- [ ] Attack target highlighting and combat prediction display
-- [ ] Turn-based UI controls with player switching and action validation
-- [ ] Game state visualization with unit health, player resources, and turn indicators
-- [ ] Real-time game updates using Observer pattern for multiplayer readiness
+**Current State**: Map editor ready, need game mode integration
+**Implementation Plan**:
+- [ ] Create game mode components
+  - GameState component for WASM integration
+  - GameController for player action orchestration
+  - GameUI components for turn management and unit info
+- [ ] Add mode switching to map editor
+  - "Edit Mode" vs "Game Mode" toggle
+  - Game mode disables terrain/unit editing
+  - Game mode enables unit selection and movement
+- [ ] Implement interactive gameplay
+  - Click units to select and show valid moves
+  - Click valid destinations to move units
+  - Right-click for attack targets
+  - Turn end button with validation
+- [ ] Add game state visualization
+  - Current player indicator
+  - Unit health bars and movement points
+  - Attack range highlighting
+  - Turn counter and game status
 
-#### C. Games Management System (Medium Priority)
-**Goal**: Create game session management following established patterns
-**Components**:
-- [ ] GamesService implementation with file-based storage following Maps architecture
-- [ ] Game creation wizard with map selection using existing UI components
-- [ ] Game listing page following MapListingPage patterns
-- [ ] Game details page with current state display using component architecture
-- [ ] Player management and game session handling through EventBus
+#### F. Testing & Validation (Week 3-4 - High Priority)
+**Goal**: Comprehensive testing using recorded move sessions and CLI validation
+**Implementation Plan**:
+- [ ] Create comprehensive test suite
+  - Unit tests for RulesEngine with weewar-data.json
+  - Integration tests using recorded CLI sessions
+  - Performance tests with large maps and many units
+- [ ] Validate rule compliance
+  - Compare movement costs with original WeeWar
+  - Verify combat probabilities match attack matrices
+  - Test edge cases and special unit behaviors
+- [ ] Create reference game sessions
+  - Record complete 2-player games via CLI
+  - Document expected outcomes for regression testing
+  - Create tutorial scenarios for new players
+- [ ] Performance optimization
+  - Profile rules engine lookups
+  - Optimize WASM API call overhead
+  - Cache frequently accessed unit/terrain data
 
-#### D. Advanced Gameplay Features (Future)
-**Goal**: Professional turn-based strategy experience
-**Components**:
-- [ ] AI player support for single-player games using existing game logic
-- [ ] Multiplayer session management with real-time updates
-- [ ] Game replay and analysis features
-- [ ] Tournament mode and statistics tracking
-- [ ] Advanced combat animations and visual effects
+#### Implementation Timeline
+
+**Week 1: Foundation**
+- Day 1-2: RulesEngine implementation and integration
+- Day 3-4: NewGameFromMap() and player management
+- Day 5: CLI testing and validation
+
+**Week 2: Integration**
+- Day 1-2: Move recording system and replay functionality
+- Day 3-4: WASM module reactivation and API implementation
+- Day 5: WASM testing and performance validation
+
+**Week 3: Web Interface**
+- Day 1-2: GameState and GameController components
+- Day 3-4: Interactive gameplay features
+- Day 5: Mode switching and UI polish
+
+**Week 4: Testing & Polish**
+- Day 1-2: Comprehensive test suite creation
+- Day 3-4: Performance optimization and bug fixes
+- Day 5: Documentation and final validation
+
+#### Success Criteria
+- [ ] CLI can create games from map editor data
+- [ ] Movement and combat use real weewar-data.json rules
+- [ ] Complete games can be recorded and replayed
+- [ ] WASM APIs work in browser with existing UI
+- [ ] Web interface supports basic gameplay (move, attack, end turn)
+- [ ] All existing CLI commands work with new rules engine
+- [ ] Performance is acceptable for real-time gameplay
 
 ### Phase 9: Advanced Features and Polish (Future) 🚧
 

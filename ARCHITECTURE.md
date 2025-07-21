@@ -879,10 +879,284 @@ export class MapEditorPage extends BasePage implements MapObserver {
 ---
 
 **Last Updated**: 2025-01-21  
-**Architecture Version**: 7.0 (Comprehensive UI Architecture & Game Foundation)  
-**Status**: Production-ready with complete UI framework and game foundation established
+**Architecture Version**: 8.0 (Game Mechanics Architecture Design)  
+**Status**: Production-ready UI framework with comprehensive game engine foundation discovered. Ready for rules integration and WASM activation.
 
 **Latest Achievement (v7.0)**: Comprehensive UI framework completion and game foundation:
+
+## Game Mechanics Architecture (v8.0 Design)
+
+### Discovered Foundation: Strong Game Engine Already Exists ✅
+
+#### Comprehensive Game Class (lib/game.go)
+**Purpose**: Complete turn-based game state management with multiplayer support
+- **Game State Management**: CurrentPlayer, TurnCounter, Status (playing/paused/ended)
+- **Turn System**: NextTurn(), EndTurn(), CanEndTurn() with player cycling
+- **Victory Conditions**: checkVictoryConditions() with last-player-standing logic
+- **Save/Load System**: JSON serialization with complete state persistence
+- **Event System**: EventManager with game state change notifications
+- **Deterministic Gameplay**: RNG with seed for reproducible game sessions
+- **Asset Management**: AssetProvider interface for platform flexibility
+
+```go
+type Game struct {
+    World *World           // Pure state (map, units, entities)
+    CurrentPlayer int      // 0-based player index
+    TurnCounter int        // 1-based turn number
+    Status GameStatus      // playing/paused/ended
+    Seed int64             // Random seed for deterministic gameplay
+    rng *rand.Rand         // RNG for combat calculations
+    eventManager *EventManager // Observer pattern for state changes
+    assetProvider AssetProvider // Platform-agnostic asset management
+}
+```
+
+#### Movement & Combat System (lib/moves.go)
+**Purpose**: Complete unit movement and combat mechanics with validation
+- **Movement Validation**: IsValidMove(), CanMoveUnit() with player turn checking
+- **Combat System**: AttackUnit(), CanAttackUnit() with damage calculation
+- **Pathfinding**: FindPath() with A* foundation (currently simplified)
+- **Movement Costs**: GetMovementCost() using proper hex distance calculation
+- **Attack Range**: GetUnitAttackRange() with unit-type specific ranges
+- **Coordinate System**: Full AxialCoord (cube coordinates) throughout
+
+```go
+// Current movement system
+func (g *Game) MoveUnit(unit *Unit, to AxialCoord) error
+func (g *Game) AttackUnit(attacker, defender *Unit) (*CombatResult, error)
+func (g *Game) IsValidMove(from, to AxialCoord) bool
+func (g *Game) GetMovementCost(from, to AxialCoord) int
+func (g *Game) calculateDamage(attacker, defender *Unit) int
+```
+
+#### Professional CLI Interface (cmd/weewar-cli/)
+**Purpose**: Complete command-line interface for gameplay and testing
+- **Game Commands**: move, attack, status, map, units, player, help, save, load
+- **Advanced Commands**: predict, attackoptions, moveoptions, autorender
+- **REPL Mode**: Interactive gameplay with dynamic prompts `weewar[T1:P0]>`
+- **Batch Processing**: Execute commands from files for automated testing
+- **Session Recording**: Record and replay game sessions for analysis
+- **Multiple Display Modes**: compact, detailed, ASCII, JSON output formats
+- **Chess Notation**: A1, B2, C3 coordinate system for user-friendly interaction
+
+### Architecture Gaps Analysis
+
+#### What's Missing for Production Game Mechanics
+
+**1. Rules Engine Integration**
+```go
+// Current: Hardcoded values in lib/moves.go
+unit.DistanceLeft = 3 // TODO: Get from unit data
+baseDamage := 30      // TODO: Use attack matrices
+
+// Needed: Data-driven rules from weewar-data.json
+type RulesEngine struct {
+    unitData map[int]UnitData
+    terrainMovement map[string]map[string]float64
+    attackMatrices map[string]map[string]AttackData
+}
+```
+
+**2. Map-to-Game Integration**
+```go
+// Current: Hardcoded test map creation
+func (g *Game) initializeStartingUnits() // Fixed positions
+
+// Needed: Initialize from Map editor data
+func NewGameFromMap(mapData *Map, playerCount int) (*Game, error)
+func (g *Game) ConvertPlayerToNeutral(playerID int) error
+func (g *Game) RemovePlayer(playerID int) error
+```
+
+**3. WASM Game Module**
+```go
+// Current: cmd/weewar-wasm/main.go commented out
+// Needed: Active WASM APIs for web interface
+weewarCreateGameFromMap(mapData, playerCount)
+weewarSelectUnit(q, r) → validMoves, validAttacks
+weewarMoveUnit(fromQ, fromR, toQ, toR) → moveResult
+weewarAttackUnit(attackerQ, attackerR, defenderQ, defenderR) → combatResult
+```
+
+**4. Move Recording System**
+```go
+// Current: CLI command recording only
+// Needed: Structured game move logging
+type GameMove struct {
+    Turn int, Player int, Action string
+    From/To AxialCoord, Timestamp time.Time
+    Result interface{}, Valid bool
+}
+```
+
+### v8.0 Game Mechanics Architecture Design
+
+#### Rules Engine Pattern
+**Design**: Pluggable rules system driven by weewar-data.json
+```go
+type RulesEngine struct {
+    gameData *GameData
+    unitCache map[int]*UnitData
+    terrainCache map[string]*TerrainData
+}
+
+func (re *RulesEngine) GetMovementCost(unitType int, terrainType string) float64
+func (re *RulesEngine) GetAttackDamage(attackerType, defenderType int) CombatResult
+func (re *RulesEngine) GetUnitStats(unitType int) UnitStats
+```
+
+#### Game Initialization Flow
+```
+Map Editor → Map Data → NewGameFromMap() → Game Instance
+    ↓
+Rules Engine Loading → Unit Stats → Starting Positions
+    ↓
+CLI/WASM Interface → Player Actions → Move Validation
+    ↓
+EventBus Notifications → Web UI Updates → Phaser Rendering
+```
+
+#### WASM API Architecture
+**Design**: Multiplayer-first validation APIs for current player actions
+```go
+// Game lifecycle management
+weewarCreateGameFromMap(mapData, playerCount) → gameId
+weewarGetGameState() → {currentPlayer, turn, units, status}
+
+// Current player actions (validation-focused)
+weewarSelectUnit(q, r) → {unitInfo, validMoves, validAttacks}
+weewarMoveUnit(fromQ, fromR, toQ, toR) → {success, newPosition, movementLeft}
+weewarAttackUnit(attackerQ, attackerR, defenderQ, defenderR) → {damage, health, killed}
+weewarEndTurn() → {nextPlayer, turnNumber}
+
+// Query methods for UI updates
+weewarGetValidMoves(q, r) → [AxialCoord...]
+weewarGetValidAttacks(q, r) → [AxialCoord...]
+weewarGetUnitInfo(q, r) → {type, health, movement, canAct}
+```
+
+#### Move Recording Architecture
+**Design**: Complete game session logging for testing and replay
+```go
+type GameSession struct {
+    GameID string
+    InitialState GameState
+    Moves []GameMove
+    Created time.Time
+}
+
+type GameMove struct {
+    Turn int           `json:"turn"`
+    Player int         `json:"player"`
+    Action string      `json:"action"` // "move", "attack", "build", "end_turn"
+    From *AxialCoord   `json:"from,omitempty"`
+    To *AxialCoord     `json:"to,omitempty"`
+    Timestamp time.Time `json:"timestamp"`
+    Result interface{} `json:"result"`
+    Valid bool         `json:"valid"`
+}
+```
+
+#### Web Interface Integration
+**Design**: Game mode enhancement to existing map editor
+```typescript
+// New components following existing BaseComponent pattern
+class GameState extends BaseComponent {
+    async createGameFromMap(mapData: any, playerCount: number): Promise<void>
+    async selectUnit(q: number, r: number): Promise<UnitSelection>
+    async moveUnit(from: Coord, to: Coord): Promise<MoveResult>
+    async attackUnit(attacker: Coord, target: Coord): Promise<CombatResult>
+    async endTurn(): Promise<TurnResult>
+}
+
+class GameController extends BaseComponent {
+    // Orchestrates game flow using EventBus
+    // Integrates with existing PhaserEditorComponent
+    // Handles mode switching: Edit Mode ↔ Game Mode
+}
+```
+
+### Integration with Existing Architecture
+
+#### EventBus Communication Enhancement
+**Extension**: Add game-specific events to existing EventBus
+```typescript
+// New game events
+UNIT_SELECTED, MOVE_COMPLETED, ATTACK_EXECUTED, TURN_ENDED
+GAME_STATE_CHANGED, PLAYER_SWITCHED, VICTORY_ACHIEVED
+
+// Integration with existing Map events
+TILES_CHANGED, UNITS_CHANGED, MAP_LOADED
+```
+
+#### Phaser Integration
+**Enhancement**: Add game mode to existing PhaserEditorComponent
+```typescript
+class PhaserEditorComponent {
+    private gameMode: boolean = false
+    
+    switchToGameMode(): void {
+        this.gameMode = true
+        this.disableEditing()
+        this.enableUnitSelection()
+    }
+    
+    private handleTileClick(q: number, r: number): void {
+        if (this.gameMode) {
+            this.handleUnitSelection(q, r)
+        } else {
+            this.handleTilePainting(q, r)
+        }
+    }
+}
+```
+
+#### Component Lifecycle Integration
+**Compatibility**: Game components follow existing lifecycle patterns
+```typescript
+// GameState component follows existing BaseComponent pattern
+export class GameState extends BaseComponent implements ComponentLifecycle {
+    public async bindToDOM(): Promise<void> { /* Initialize WASM */ }
+    public async injectDependencies(deps: ComponentDependencies): Promise<void> { /* EventBus setup */ }
+    public async activate(): Promise<void> { /* Subscribe to game events */ }
+}
+```
+
+### Performance & Scalability Considerations
+
+#### Rules Engine Optimization
+- **Caching Strategy**: Cache frequently accessed unit/terrain data
+- **Lazy Loading**: Load rule data on demand, not at startup
+- **Batch Operations**: Validate multiple moves in single API call
+
+#### WASM Performance
+- **Minimal Data Transfer**: Only send essential data across WASM boundary
+- **Batch Updates**: Group multiple game state changes
+- **Memory Management**: Efficient handling of large game states
+
+#### Web Interface Responsiveness
+- **Progressive Updates**: Update UI incrementally during long operations
+- **Background Processing**: Use Web Workers for complex calculations
+- **State Synchronization**: Efficient diff-based updates via EventBus
+
+### Testing Strategy
+
+#### CLI-Driven Testing
+- **Recorded Sessions**: Complete games recorded via CLI for regression testing
+- **Rule Validation**: Compare with original WeeWar mechanics
+- **Performance Benchmarks**: Large maps with many units
+
+#### Integration Testing
+- **WASM API Testing**: Browser console validation of all game APIs
+- **Web UI Testing**: End-to-end gameplay through web interface
+- **Cross-Platform**: Ensure CLI and web produce identical results
+
+#### Automated Testing
+- **Unit Tests**: Rules engine with weewar-data.json validation
+- **Replay Tests**: Recorded sessions for regression detection
+- **Performance Tests**: Response time and memory usage validation
+
+**Previous Achievement (v7.0)**: Comprehensive UI framework completion and game foundation:
 
 ### EventBus Architecture ✅ COMPLETED
 - **Lifecycle-Based Component System**: Template-scoped event binding for dynamic UI components
