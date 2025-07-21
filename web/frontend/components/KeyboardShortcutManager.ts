@@ -11,6 +11,8 @@
  * - Provides instant feedback with option to cancel
  */
 
+import { isInInputContext } from './DOMUtils';
+
 export interface ShortcutConfig {
     key: string;
     handler: (args?: string) => void;
@@ -82,7 +84,7 @@ export class KeyboardShortcutManager {
         const target = event.target as HTMLElement;
         
         // Skip if in input field, textarea, or contenteditable
-        if (this.isInInputContext(target)) {
+        if (isInInputContext(target)) {
             return;
         }
         
@@ -251,17 +253,6 @@ export class KeyboardShortcutManager {
         }
     }
 
-    private isInInputContext(element: HTMLElement): boolean {
-        const tagName = element.tagName.toLowerCase();
-        return (
-            tagName === 'input' ||
-            tagName === 'textarea' ||
-            tagName === 'select' ||
-            element.contentEditable === 'true' ||
-            element.closest('.modal') !== null ||
-            element.closest('[contenteditable="true"]') !== null
-        );
-    }
 
     private resetState(): void {
         this.state = KeyboardState.NORMAL;

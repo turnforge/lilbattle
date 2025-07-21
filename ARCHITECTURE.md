@@ -878,11 +878,19 @@ export class MapEditorPage extends BasePage implements MapObserver {
 
 ---
 
-**Last Updated**: 2025-01-20  
-**Architecture Version**: 6.2 (Tabbed Tools Panel)  
-**Status**: Production-ready with enhanced user interface and keyboard shortcuts
+**Last Updated**: 2025-01-21  
+**Architecture Version**: 6.3 (Input Field Protection & DOMUtils)  
+**Status**: Production-ready with robust keyboard input handling and shared utilities
 
-**Latest Achievement**: Implemented tabbed Tools panel with improved keyboard shortcuts and user workflow:
+**Latest Achievement**: Fixed keyboard input interference and created shared DOM utilities:
+- **Created DOMUtils.ts**: Centralized input context detection with comprehensive coverage
+- **Fixed Phaser Key Interception**: Disabled global WASD and cursor key handlers that interfered with input fields
+- **Enhanced Input Protection**: Space, arrow keys, and all alphanumeric keys now work properly in input fields
+- **Unified Keyboard Handling**: All components use shared `isInInputContext()` and `shouldIgnoreShortcut()` utilities
+- **Maintained Shortcuts**: Editor keyboard shortcuts still work outside input contexts
+- **Better UX**: Users can now type naturally in map names and other input fields without interference
+
+**Previous Achievement**: Implemented tabbed Tools panel with improved keyboard shortcuts and user workflow:
 - Converted stacked Nature/City/Units sections to clean tabbed interface
 - Added instant tab switching with N/C/U keyboard shortcuts (no modifiers required)
 - Implemented multi-digit number selection (1-99) within active tab with visual feedback

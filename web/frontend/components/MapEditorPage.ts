@@ -3,6 +3,7 @@ import { DockviewApi, DockviewComponent } from 'dockview-core';
 import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './KeyboardShortcutManager';
+import { shouldIgnoreShortcut } from './DOMUtils';
 import { Map, MapObserver, MapEvent, MapEventType, TilesChangedEventData, UnitsChangedEventData, MapLoadedEventData } from './Map';
 import { MapEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './MapEditorPageState';
 import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload } from './EventBus';
@@ -398,9 +399,8 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Don't interfere with input fields
-            const target = e.target as HTMLElement;
-            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+            // Don't interfere with input fields (except for specific global shortcuts)
+            if (shouldIgnoreShortcut(e)) {
                 // Only handle our specific shortcuts in input fields, let other keys pass through
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
@@ -606,9 +606,9 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     }
 
     private initializeKeyboardShortcuts(): void {
-        // Context filter to ignore shortcuts when modifier keys are pressed
+        // Context filter to ignore shortcuts when modifier keys are pressed OR when in input fields
         const noModifiersFilter = (event: KeyboardEvent): boolean => {
-            return !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey;
+            return !shouldIgnoreShortcut(event);
         };
         
         const shortcuts: ShortcutConfig[] = [
@@ -1866,15 +1866,8 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     private setupCustomNumberInput(): void {
         // Add our own keydown listener that runs before the KeyboardShortcutManager
         document.addEventListener('keydown', (event) => {
-            // Only handle if we're not in keyboard shortcut mode and no modifiers are pressed
-            if (this.isInKeyboardShortcutMode || 
-                event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
-                return;
-            }
-            
-            // Only handle if the target is not an input field
-            const target = event.target as HTMLElement;
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+            // Only handle if we're not in keyboard shortcut mode and should not ignore shortcuts
+            if (this.isInKeyboardShortcutMode || shouldIgnoreShortcut(event)) {
                 return;
             }
             
