@@ -55,6 +55,7 @@ export class ReferenceImagePanel extends BaseComponent {
             this.bindAlphaControls();
             this.bindPositionControls();
             this.bindScaleControls();
+            this.bindPositionTranslationControls();
             this.bindClearControls();
             
             this.isUIBound = true;
@@ -185,6 +186,7 @@ export class ReferenceImagePanel extends BaseComponent {
         
         // Update UI based on new state
         this.updateReferenceScaleDisplay();
+        this.updateReferencePositionDisplay();
         this.updateReferenceStatus(data.isLoaded ? 
             (data.mode === 0 ? 'Hidden' : ['Hidden', 'Background', 'Overlay'][data.mode] + ' mode') : 
             'No reference image loaded'
@@ -334,6 +336,62 @@ export class ReferenceImagePanel extends BaseComponent {
         }
         
         this.log('Scale controls bound');
+    }
+    
+    private bindPositionTranslationControls(): void {
+        // X Position controls
+        const positionXMinusBtn = this.rootElement.querySelector('#reference-position-x-minus') as HTMLButtonElement;
+        const positionXPlusBtn = this.rootElement.querySelector('#reference-position-x-plus') as HTMLButtonElement;
+        const positionXInput = this.rootElement.querySelector('#reference-position-x-value') as HTMLInputElement;
+        
+        if (positionXMinusBtn) {
+            positionXMinusBtn.addEventListener('click', () => {
+                this.executeWhenReady(() => this.adjustReferencePositionX(-1)); // 1 pixel increments
+            });
+        }
+        
+        if (positionXPlusBtn) {
+            positionXPlusBtn.addEventListener('click', () => {
+                this.executeWhenReady(() => this.adjustReferencePositionX(1));
+            });
+        }
+        
+        if (positionXInput) {
+            positionXInput.addEventListener('change', () => {
+                const value = parseFloat(positionXInput.value);
+                if (!isNaN(value)) {
+                    this.executeWhenReady(() => this.setReferencePositionX(value));
+                }
+            });
+        }
+        
+        // Y Position controls
+        const positionYMinusBtn = this.rootElement.querySelector('#reference-position-y-minus') as HTMLButtonElement;
+        const positionYPlusBtn = this.rootElement.querySelector('#reference-position-y-plus') as HTMLButtonElement;
+        const positionYInput = this.rootElement.querySelector('#reference-position-y-value') as HTMLInputElement;
+        
+        if (positionYMinusBtn) {
+            positionYMinusBtn.addEventListener('click', () => {
+                this.executeWhenReady(() => this.adjustReferencePositionY(-1));
+            });
+        }
+        
+        if (positionYPlusBtn) {
+            positionYPlusBtn.addEventListener('click', () => {
+                this.executeWhenReady(() => this.adjustReferencePositionY(1));
+            });
+        }
+        
+        if (positionYInput) {
+            positionYInput.addEventListener('change', () => {
+                const value = parseFloat(positionYInput.value);
+                if (!isNaN(value)) {
+                    this.executeWhenReady(() => this.setReferencePositionY(value));
+                }
+            });
+        }
+        
+        this.log('Position translation controls bound');
     }
     
     private bindClearControls(): void {
@@ -541,10 +599,27 @@ export class ReferenceImagePanel extends BaseComponent {
             modeSelect.value = mode.toString();
         }
         
-        // Show/hide position controls based on mode
+        // Show/hide controls based on mode
         const positionControls = this.rootElement.querySelector('#reference-position-controls') as HTMLElement;
+        const resetPositionBtn = this.rootElement.querySelector('#reference-reset-position') as HTMLElement;
+        
         if (positionControls) {
-            positionControls.style.display = mode === 2 ? 'block' : 'none';
+            if (mode === 0) {
+                // Hidden mode - hide all controls
+                positionControls.style.display = 'none';
+            } else if (mode === 1) {
+                // Background mode - show scale controls but hide position controls
+                positionControls.style.display = 'block';
+                if (resetPositionBtn) {
+                    resetPositionBtn.style.display = 'none';
+                }
+            } else if (mode === 2) {
+                // Overlay mode - show all controls
+                positionControls.style.display = 'block';
+                if (resetPositionBtn) {
+                    resetPositionBtn.style.display = 'block';
+                }
+            }
         }
         
         // Note: Scale display will be updated when PhaserEditorComponent responds via EventBus
@@ -589,12 +664,13 @@ export class ReferenceImagePanel extends BaseComponent {
     
     private adjustReferenceScaleX(delta: number): void {
         const currentScaleX = this.referenceState?.scale?.x ?? 1.0;
+        const currentScaleY = this.referenceState?.scale?.y ?? 1.0;
         const newScaleX = Math.max(0.1, Math.min(5.0, currentScaleX + delta));
         
         // Emit event to PhaserEditorComponent via EventBus
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
-            { scaleX: newScaleX, scaleY: this.referenceState?.scale?.y ?? 1.0 }, 
+            { scaleX: newScaleX, scaleY: currentScaleY }, 
             this.componentId
         );
         
@@ -607,13 +683,14 @@ export class ReferenceImagePanel extends BaseComponent {
     }
     
     private adjustReferenceScaleY(delta: number): void {
+        const currentScaleX = this.referenceState?.scale?.x ?? 1.0;
         const currentScaleY = this.referenceState?.scale?.y ?? 1.0;
         const newScaleY = Math.max(0.1, Math.min(5.0, currentScaleY + delta));
         
         // Emit event to PhaserEditorComponent via EventBus
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
-            { scaleX: this.referenceState?.scale?.x ?? 1.0, scaleY: newScaleY }, 
+            { scaleX: currentScaleX, scaleY: newScaleY }, 
             this.componentId
         );
         
@@ -627,11 +704,12 @@ export class ReferenceImagePanel extends BaseComponent {
     
     private setReferenceScaleX(scaleX: number): void {
         const clampedScale = Math.max(0.1, Math.min(5.0, scaleX));
+        const currentScaleY = this.referenceState?.scale?.y ?? 1.0;
         
         // Emit event to PhaserEditorComponent via EventBus
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
-            { scaleX: clampedScale, scaleY: this.referenceState?.scale?.y ?? 1.0 }, 
+            { scaleX: clampedScale, scaleY: currentScaleY }, 
             this.componentId
         );
         
@@ -645,11 +723,12 @@ export class ReferenceImagePanel extends BaseComponent {
     
     private setReferenceScaleY(scaleY: number): void {
         const clampedScale = Math.max(0.1, Math.min(5.0, scaleY));
+        const currentScaleX = this.referenceState?.scale?.x ?? 1.0;
         
         // Emit event to PhaserEditorComponent via EventBus
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
-            { scaleX: this.referenceState?.scale?.x ?? 1.0, scaleY: clampedScale }, 
+            { scaleX: currentScaleX, scaleY: clampedScale }, 
             this.componentId
         );
         
@@ -675,6 +754,99 @@ export class ReferenceImagePanel extends BaseComponent {
         
         if (scaleYInput) {
             scaleYInput.value = scaleY.toFixed(2);
+        }
+    }
+    
+    private adjustReferencePositionX(delta: number): void {
+        const currentPositionX = this.referenceState?.position?.x ?? 0;
+        const currentPositionY = this.referenceState?.position?.y ?? 0;
+        const newPositionX = currentPositionX + delta;
+        
+        // Emit event to PhaserEditorComponent via EventBus
+        this.eventBus.emit<ReferenceSetPositionPayload>(
+            EditorEventTypes.REFERENCE_SET_POSITION, 
+            { x: newPositionX, y: currentPositionY }, 
+            this.componentId
+        );
+        
+        // Update local state cache
+        if (this.referenceState?.position) {
+            this.referenceState.position.x = newPositionX;
+        }
+        this.updateReferencePositionDisplay();
+        this.log(`Reference X position: ${newPositionX}`);
+    }
+    
+    private adjustReferencePositionY(delta: number): void {
+        const currentPositionX = this.referenceState?.position?.x ?? 0;
+        const currentPositionY = this.referenceState?.position?.y ?? 0;
+        const newPositionY = currentPositionY + delta;
+        
+        // Emit event to PhaserEditorComponent via EventBus
+        this.eventBus.emit<ReferenceSetPositionPayload>(
+            EditorEventTypes.REFERENCE_SET_POSITION, 
+            { x: currentPositionX, y: newPositionY }, 
+            this.componentId
+        );
+        
+        // Update local state cache
+        if (this.referenceState?.position) {
+            this.referenceState.position.y = newPositionY;
+        }
+        this.updateReferencePositionDisplay();
+        this.log(`Reference Y position: ${newPositionY}`);
+    }
+    
+    private setReferencePositionX(positionX: number): void {
+        const currentPositionY = this.referenceState?.position?.y ?? 0;
+        
+        // Emit event to PhaserEditorComponent via EventBus
+        this.eventBus.emit<ReferenceSetPositionPayload>(
+            EditorEventTypes.REFERENCE_SET_POSITION, 
+            { x: positionX, y: currentPositionY }, 
+            this.componentId
+        );
+        
+        // Update local state cache
+        if (this.referenceState?.position) {
+            this.referenceState.position.x = positionX;
+        }
+        this.updateReferencePositionDisplay();
+        this.log(`Reference X position: ${positionX}`);
+    }
+    
+    private setReferencePositionY(positionY: number): void {
+        const currentPositionX = this.referenceState?.position?.x ?? 0;
+        
+        // Emit event to PhaserEditorComponent via EventBus
+        this.eventBus.emit<ReferenceSetPositionPayload>(
+            EditorEventTypes.REFERENCE_SET_POSITION, 
+            { x: currentPositionX, y: positionY }, 
+            this.componentId
+        );
+        
+        // Update local state cache
+        if (this.referenceState?.position) {
+            this.referenceState.position.y = positionY;
+        }
+        this.updateReferencePositionDisplay();
+        this.log(`Reference Y position: ${positionY}`);
+    }
+    
+    private updateReferencePositionDisplay(): void {
+        const positionXInput = this.rootElement.querySelector('#reference-position-x-value') as HTMLInputElement;
+        const positionYInput = this.rootElement.querySelector('#reference-position-y-value') as HTMLInputElement;
+        
+        // Defensive programming: ensure position values exist
+        const positionX = this.referenceState?.position?.x ?? 0;
+        const positionY = this.referenceState?.position?.y ?? 0;
+        
+        if (positionXInput) {
+            positionXInput.value = positionX.toString();
+        }
+        
+        if (positionYInput) {
+            positionYInput.value = positionY.toString();
         }
     }
     
@@ -704,10 +876,24 @@ export class ReferenceImagePanel extends BaseComponent {
             alphaValue.textContent = '50%';
         }
         
-        // Hide position controls
+        // Hide position controls and reset position button visibility
         const positionControls = this.rootElement.querySelector('#reference-position-controls') as HTMLElement;
+        const resetPositionBtn = this.rootElement.querySelector('#reference-reset-position') as HTMLElement;
         if (positionControls) {
             positionControls.style.display = 'none';
+        }
+        if (resetPositionBtn) {
+            resetPositionBtn.style.display = 'block'; // Reset to default state
+        }
+        
+        // Reset position inputs
+        const positionXInput = this.rootElement.querySelector('#reference-position-x-value') as HTMLInputElement;
+        const positionYInput = this.rootElement.querySelector('#reference-position-y-value') as HTMLInputElement;
+        if (positionXInput) {
+            positionXInput.value = '0';
+        }
+        if (positionYInput) {
+            positionYInput.value = '0';
         }
         
         this.updateReferenceStatus('No reference image loaded');

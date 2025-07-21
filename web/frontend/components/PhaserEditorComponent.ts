@@ -346,7 +346,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         
         // Handle reference scale changes
         this.phaserEditor.onReferenceScaleChange((x: number, y: number) => {
-            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { x, y });
+            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y });
         });
         
         this.log('Phaser event handlers setup complete');

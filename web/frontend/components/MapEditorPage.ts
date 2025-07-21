@@ -557,30 +557,45 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
             });
         });
 
-        // Advanced tool buttons
-        document.querySelector('[data-action="fill-all-grass"]')?.addEventListener('click', () => {
-            this.fillAllGrass();
-        });
-        document.querySelector('[data-action="create-island-map"]')?.addEventListener('click', () => {
-            this.createIslandMap();
-        });
-        document.querySelector('[data-action="create-mountain-ridge"]')?.addEventListener('click', () => {
-            this.createMountainRidge();
-        });
-        document.querySelector('[data-action="show-terrain-stats"]')?.addEventListener('click', () => {
-            this.showTerrainStats();
-        });
-        document.querySelector('[data-action="randomize-terrain"]')?.addEventListener('click', () => {
-            this.randomizeTerrain();
-        });
-        document.querySelector('[data-action="clear-map"]')?.addEventListener('click', () => {
-            this.clearMap();
-        });
-        document.querySelector('[data-action="download-image"]')?.addEventListener('click', () => {
-            this.downloadImage();
-        });
-        document.querySelector('[data-action="download-game-data"]')?.addEventListener('click', () => {
-            this.downloadGameData();
+        // Advanced tool buttons - Use event delegation for dockview compatibility
+        document.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const action = target.getAttribute('data-action');
+            
+            switch (action) {
+                case 'fill-all-grass':
+                    console.log('Fill All Grass clicked via delegation');
+                    this.fillAllGrass();
+                    break;
+                case 'create-island-map':
+                    console.log('Create Island Map clicked via delegation');
+                    this.createIslandMap();
+                    break;
+                case 'create-mountain-ridge':
+                    console.log('Create Mountain Ridge clicked via delegation');
+                    this.createMountainRidge();
+                    break;
+                case 'show-terrain-stats':
+                    console.log('Show Terrain Stats clicked via delegation');
+                    this.showTerrainStats();
+                    break;
+                case 'randomize-terrain':
+                    console.log('Randomize Terrain clicked via delegation');
+                    this.randomizeTerrain();
+                    break;
+                case 'clear-map':
+                    console.log('Clear Map clicked via delegation');
+                    this.clearMap();
+                    break;
+                case 'download-image':
+                    console.log('Download Image clicked via delegation');
+                    this.downloadImage();
+                    break;
+                case 'download-game-data':
+                    console.log('Download Game Data clicked via delegation');
+                    this.downloadGameData();
+                    break;
+            }
         });
         
         // Phaser test buttons
@@ -923,9 +938,11 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     // Advanced tool functions
     public fillAllGrass(): void {
         
-        if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
-            this.phaserEditorComponent.fillAllTerrain(1, 0); // Terrain type 1 = Grass
+        if (this.map) {
+            this.map.fillAllTerrain(1, 0); // Terrain type 1 = Grass
+            this.logToConsole('Filled map with grass via Map Observer pattern');
         } else {
+            this.logToConsole('Map not available, cannot fill grass');
         }
     }
 
@@ -943,7 +960,7 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
 
     public createMountainRidge(): void {
         
-        if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
+        if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized() && this.map) {
             // Get current viewport center
             const center = this.phaserEditorComponent.getViewportCenter();
             
@@ -958,14 +975,14 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
                     const relativeR = r - center.r;
                     // Create a ridge pattern - mountains in center, rocks on edges
                     if (Math.abs(relativeR) <= 1) {
-                        this.phaserEditorComponent.paintTile(q, r, 4, 0); // Mountain
+                        this.map.setTileAt(q, r, 4, 0); // Mountain
                     } else {
-                        this.phaserEditorComponent.paintTile(q, r, 5, 0); // Rock
+                        this.map.setTileAt(q, r, 5, 0); // Rock
                     }
                 }
             }
         } else {
-            this.logToConsole('Phaser panel not available, cannot create mountain ridge');
+            this.logToConsole('Map or Phaser panel not available, cannot create mountain ridge');
         }
     }
 
@@ -1012,23 +1029,22 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     }
 
     public clearMap(): void {
+        console.log('clearMap() method called');
         this.logToConsole('Clearing entire map...');
         
-        if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
-            // Clear all tiles and units from Phaser
-            this.phaserEditorComponent.clearAllTiles();
-            this.phaserEditorComponent.clearAllUnits();
-            
-            // Clear map data as well
-            if (this.map) {
-                this.map.clearAll();
-            }
-            
-            // Map changes are automatically tracked by Map class
-            this.showToast('Map Cleared', 'All tiles and units have been removed', 'info');
+        // Clear map data - this will trigger observer notifications to update Phaser
+        if (this.map) {
+            console.log('Map instance exists, calling clearAll()');
+            this.map.clearAll();
+            this.logToConsole('Map data cleared - Phaser will update via observer pattern');
         } else {
-            this.logToConsole('Phaser panel not available, cannot clear map');
+            console.log('Map instance is null!');
+            this.logToConsole('Map instance not available');
         }
+        
+        // Show success message
+        this.showToast('Map Cleared', 'All tiles and units have been removed', 'info');
+        this.logToConsole('Clear map operation completed');
     }
 
     // Canvas management methods removed - now handled by Phaser panel
@@ -1521,16 +1537,13 @@ class MapEditorPage extends BasePage implements MapObserver, PageStateObserver {
     }
     
     /**
-     * Set unit at the given coordinates
+     * Set unit at the given coordinates - Observer pattern handles Phaser updates
      */
     private setUnitAt(q: number, r: number, unitType: number, playerId: number): void {
-        // Update map data
+        // Update map data - Observer pattern will handle Phaser updates
         if (this.map) {
             this.map.setUnitAt(q, r, unitType, playerId);
         }
-        
-        // Update Phaser scene
-        this.phaserEditorComponent?.paintUnit(q, r, unitType, playerId);
     }
     
     

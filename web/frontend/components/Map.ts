@@ -303,6 +303,11 @@ export class Map {
     }
     
     public setUnitAt(q: number, r: number, unitType: number, playerId: number): void {
+        // Ensure there's a tile at this location - auto-place grass if none exists
+        if (!this.tileExistsAt(q, r)) {
+            this.setTileAt(q, r, 1, 0); // Terrain type 1 = Grass, no player ownership
+        }
+        
         const key = `${q},${r}`;
         const unit: UnitData = { unitType, playerId };
         this.units[key] = unit;
@@ -356,6 +361,31 @@ export class Map {
             data: {}
         });
     }
+    
+    public fillAllTerrain(tileType: number, playerId: number, viewport?: { minQ: number, maxQ: number, minR: number, maxR: number }): void {
+        // If viewport is provided, only fill visible area, otherwise fill entire map bounds
+        if (viewport) {
+            for (let q = viewport.minQ; q <= viewport.maxQ; q++) {
+                for (let r = viewport.minR; r <= viewport.maxR; r++) {
+                    this.setTileAt(q, r, tileType, playerId);
+                }
+            }
+        } else {
+            // Fill based on current map bounds or a reasonable default area
+            const bounds = this.getBounds();
+            const minQ = bounds ? bounds.minQ : -10;
+            const maxQ = bounds ? bounds.maxQ : 10;
+            const minR = bounds ? bounds.minR : -10;
+            const maxR = bounds ? bounds.maxR : 10;
+            
+            for (let q = minQ; q <= maxQ; q++) {
+                for (let r = minR; r <= maxR; r++) {
+                    this.setTileAt(q, r, tileType, playerId);
+                }
+            }
+        }
+    }
+    
     
     public getTileCount(): number {
         return Object.keys(this.tiles).length;
