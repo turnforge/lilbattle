@@ -285,7 +285,7 @@ func (cli *SimpleCLI) handleUnits() string {
 			continue
 		}
 
-		playerLetter := string('A' + playerID)
+		playerLetter := string(rune('A' + playerID))
 		result.WriteString(fmt.Sprintf("Player %s units:\n", playerLetter))
 
 		for i, unit := range units {
@@ -323,7 +323,7 @@ func (cli *SimpleCLI) handlePlayer(args []string) string {
 	}
 
 	units := cli.game.World.UnitsByPlayer[playerID]
-	playerLetter := string('A' + playerID)
+	playerLetter := string(rune('A' + playerID))
 
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("Player %s:\n", playerLetter))
