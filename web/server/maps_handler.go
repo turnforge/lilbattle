@@ -19,13 +19,7 @@ func (r *RootViewsHandler) setupMapsMux() *http.ServeMux {
 		notationId := r.PathValue("notationId")
 		http.Redirect(w, r, fmt.Sprintf("/appitems/new?copyFrom=%s", notationId), http.StatusFound)
 	})
-	mux.HandleFunc("/{mapid}", func(w http.ResponseWriter, r *http.Request) {
-		// Handle Delete here
-		log.Println("=============")
-		log.Println("Catch all - should not be coming here if not a delete call", r.Header)
-		log.Println("=============")
-		http.Redirect(w, r, "/", http.StatusFound)
-	})
+	mux.HandleFunc("/{mapId}", r.handleMapActions)
 	return mux
 }
 
@@ -70,4 +64,55 @@ func (r *RootViewsHandler) createNewMapHandler(w http.ResponseWriter, req *http.
 	// Redirect to the edit page for the newly created map
 	editURL := fmt.Sprintf("/maps/%s/edit", resp.Map.Id)
 	http.Redirect(w, req, editURL, http.StatusFound)
+}
+
+// handleMapActions handles different HTTP methods for map operations
+func (r *RootViewsHandler) handleMapActions(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodDelete:
+		r.deleteMapHandler(w, req)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// deleteMapHandler deletes a map and redirects to the listing page
+func (r *RootViewsHandler) deleteMapHandler(w http.ResponseWriter, req *http.Request) {
+	
+	// Get map ID from URL path
+	mapId := req.PathValue("mapId")
+	if mapId == "" {
+		http.Error(w, "Map ID is required", http.StatusBadRequest)
+		return
+	}
+	
+	// Get logged in user ID for authorization (optional for now)
+	loggedInUserId := r.Context.AuthMiddleware.GetLoggedInUserId(req)
+	log.Printf("Delete map request: mapId=%s, userId=%s", mapId, loggedInUserId)
+	
+	// Get maps service client
+	client, err := r.Context.ClientMgr.GetMapsSvcClient()
+	if err != nil {
+		log.Printf("Failed to get maps service client: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	
+	// Create delete request
+	deleteReq := &protos.DeleteMapRequest{
+		Id: mapId,
+	}
+	
+	// Call DeleteMap service
+	_, err = client.DeleteMap(context.Background(), deleteReq)
+	if err != nil {
+		log.Printf("Failed to delete map %s: %v", mapId, err)
+		http.Error(w, "Failed to delete map", http.StatusInternalServerError)
+		return
+	}
+	
+	log.Printf("Successfully deleted map: %s", mapId)
+	
+	// Redirect back to the maps listing page
+	http.Redirect(w, req, "/maps/", http.StatusFound)
 }

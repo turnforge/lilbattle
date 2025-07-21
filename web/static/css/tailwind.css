@@ -2182,10 +2182,6 @@ select {
   width: 2rem;
 }
 
-.w-80 {
-  width: 20rem;
-}
-
 .w-auto {
   width: auto;
 }
@@ -2224,6 +2220,10 @@ select {
 
 .flex-1 {
   flex: 1 1 0%;
+}
+
+.flex-shrink {
+  flex-shrink: 1;
 }
 
 .flex-shrink-0 {
@@ -2679,10 +2679,6 @@ select {
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
-}
-
-.pl-0 {
-  padding-left: 0px;
 }
 
 .pl-10 {

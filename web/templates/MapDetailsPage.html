@@ -26,13 +26,11 @@
     <main class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 min-h-0">
         <!-- Map Info Section -->
         <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-9xl mx-auto">
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ if .Map.Name }}{{ .Map.Name }}{{ else }}Map Details{{ end }}</h1>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            {{ if .Map.Description }}{{ .Map.Description }}{{ else }}A weewar map{{ end }}
-                        </p>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ .Map.Description }}</p>
                     </div>
                     <div class="text-right">
                         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -49,23 +47,22 @@
         </div>
 
         <!-- Map Content -->
-        <div class="flex-1 flex max-w-7xl mx-auto w-full">
+        <div class="flex-1 flex max-w-9xl mx-auto w-full">
             <!-- Map Preview Section - MapViewer Component Root -->
-            <div class="flex-1 p-6">
+            <div class="flex-1 p-6 pr-3" style="width: calc(100% - 250px);">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full" data-component="map-viewer">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Map Preview</h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Interactive map viewer</p>
                     </div>
                     <!-- Phaser Map Viewer Container -->
-                    <div id="phaser-viewer-container" class="w-full h-full min-h-96">
+                    <div id="phaser-viewer-container" class="w-full h-full min-h-96" style="max-height:800px">
                         <!-- Phaser canvas will be inserted here -->
                     </div>
                 </div>
             </div>
 
             <!-- Map Stats Sidebar - MapStatsPanel Component Root -->
-            <div class="w-80 p-6 pl-0">
+            <div class="p-6 pl-3" style="width: 250px; flex-shrink: 0;">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" data-component="map-stats-panel">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Map Statistics</h2>

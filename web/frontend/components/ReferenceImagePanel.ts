@@ -240,14 +240,29 @@ export class ReferenceImagePanel extends BaseComponent {
     }
     
     private bindDisplayModeControls(): void {
-        const modeSelect = this.rootElement.querySelector('#reference-mode') as HTMLSelectElement;
-        if (modeSelect) {
-            modeSelect.addEventListener('change', (e) => {
-                const mode = parseInt((e.target as HTMLSelectElement).value);
-                this.executeWhenReady(() => this.setReferenceMode(mode));
+        // Bind radio button controls for reference mode
+        const modeRadios = this.rootElement.querySelectorAll('input[name="reference-mode"]') as NodeListOf<HTMLInputElement>;
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if ((e.target as HTMLInputElement).checked) {
+                    const mode = parseInt((e.target as HTMLInputElement).value);
+                    this.executeWhenReady(() => this.setReferenceMode(mode));
+                }
             });
-            this.log('Display mode selector bound');
-        }
+            
+            // Also bind click events to the label/button div for better UX
+            const label = radio.closest('label');
+            if (label) {
+                label.addEventListener('click', () => {
+                    if (!radio.checked) {
+                        radio.checked = true;
+                        const mode = parseInt(radio.value);
+                        this.executeWhenReady(() => this.setReferenceMode(mode));
+                    }
+                });
+            }
+        });
+        this.log('Display mode radio buttons bound');
     }
     
     private bindAlphaControls(): void {
@@ -593,11 +608,24 @@ export class ReferenceImagePanel extends BaseComponent {
             this.componentId
         );
         
-        // Update UI dropdown to reflect current mode
-        const modeSelect = this.rootElement.querySelector('#reference-mode') as HTMLSelectElement;
-        if (modeSelect && modeSelect.value !== mode.toString()) {
-            modeSelect.value = mode.toString();
-        }
+        // Update UI radio buttons to reflect current mode
+        const modeRadios = this.rootElement.querySelectorAll('input[name="reference-mode"]') as NodeListOf<HTMLInputElement>;
+        modeRadios.forEach(radio => {
+            const isSelected = radio.value === mode.toString();
+            radio.checked = isSelected;
+            
+            // Update the visual styling of the button
+            const buttonDiv = radio.nextElementSibling as HTMLElement;
+            if (buttonDiv) {
+                if (isSelected) {
+                    // Selected state - blue background with white text
+                    buttonDiv.className = 'text-xs px-2 py-1 text-center rounded border border-gray-300 dark:border-gray-600 transition-colors duration-200 bg-blue-500 text-white font-medium';
+                } else {
+                    // Unselected state - gray background
+                    buttonDiv.className = 'text-xs px-2 py-1 text-center rounded border border-gray-300 dark:border-gray-600 transition-colors duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600';
+                }
+            }
+        });
         
         // Show/hide controls based on mode
         const positionControls = this.rootElement.querySelector('#reference-position-controls') as HTMLElement;
@@ -863,11 +891,8 @@ export class ReferenceImagePanel extends BaseComponent {
             isLoaded: false
         };
         
-        // Reset UI controls
-        const modeSelect = this.rootElement.querySelector('#reference-mode') as HTMLSelectElement;
-        if (modeSelect) {
-            modeSelect.value = '0';
-        }
+        // Reset UI controls - set mode to Hidden (0) and update radio button styling
+        this.setReferenceMode(0);
         
         const alphaSlider = this.rootElement.querySelector('#reference-alpha') as HTMLInputElement;
         const alphaValue = this.rootElement.querySelector('#reference-alpha-value') as HTMLElement;

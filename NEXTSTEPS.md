@@ -258,18 +258,36 @@
 - **Method Consolidation**: Combined duplicate functionality and streamlined component interfaces
 - **State Management Simplification**: Reduced complexity in page-level state handling and component communication
 
-### 25. Technical Debt Reduction (v5.2) ✅ COMPLETED
-**Completed**: Major technical debt reduction focusing on code organization and architectural clarity
-**Technical Benefits**:
-- **Maintainability Improvement**: Cleaner code structure with reduced cognitive complexity
-- **Component Boundary Clarification**: Better separation of concerns between different panels and editors
-- **Reference Management**: More predictable component initialization and cleanup patterns
-- **Event System Optimization**: Streamlined event delegation and component communication patterns
-- **Code Organization**: Improved readability through consolidated methods and simplified state tracking
+### 25. Comprehensive UI Framework Completion (v7.0) ✅ COMPLETED
+**Completed**: Final polish and completion of comprehensive UI framework with game foundation
+**EventBus Architecture**:
+- **Lifecycle-Based Component System**: Template-scoped event binding for dynamic UI components in dockview containers
+- **EventBus Communication**: Type-safe, loosely-coupled component interaction with source filtering and error isolation
+- **Defensive Programming**: Robust state management with graceful error handling and automatic recovery mechanisms
+- **Observer Pattern Integration**: Unified Map and PageState architecture for reactive updates across all components
+
+**Map Editor Polish**:
+- **Unit Toggle Behavior**: Same unit+player removes unit, different unit/player replaces with intelligent tile placement
+- **City Tile Player Ownership**: Fixed city terrain rendering with proper player colors and ownership controls
+- **Reference Image System**: Complete scale and position controls with horizontal switch UI and mode visibility
+- **Per-Tab Number Overlays**: N/C/U keys toggle overlays per tab with persistent state management
+- **Auto-Tile Placement**: Units automatically place grass tiles when no terrain exists for seamless editing
+
+**Backend Integration**:
+- **Maps Delete Endpoint**: Complete DELETE /maps/{mapId} with proper HTTP method routing and redirects
+- **Web Route Architecture**: Clean HTTP method handling with proper REST semantics and error handling
+- **Service Layer Integration**: Full integration with existing MapsService and file storage backend
+- **Frontend Error Resolution**: Fixed HTMX delete button integration with backend endpoints
+
+**Technical Architecture**:
+- **Pure Observer Pattern**: All map changes go through Map class with Phaser updates via EventBus notifications
+- **Event Delegation Pattern**: Robust button handling that works within dockview and layout systems
+- **Error Recovery Systems**: Comprehensive error handling with user feedback and graceful degradation
+- **Component Encapsulation**: Each component owns its DOM elements with proper lifecycle management
 
 ## Current Development Focus
 
-### Phase 4: Phaser.js Polish and Integration ✅ COMPLETED
+### Phase 7: Comprehensive UI Framework & Game Foundation ✅ COMPLETED
 
 #### A. Coordinate System Accuracy ✅ COMPLETED
 **Goal**: Perfect coordinate mapping between frontend and backend  
@@ -342,56 +360,46 @@
 - **Error Handling**: Clear validation messages for invalid inputs
 - **Responsive UI**: Immediate visual updates in tool panels
 
-### Phase 6: Breadth-First Lifecycle Architecture Implementation (Upcoming) 🚧
+### Phase 8: Game Mechanics Implementation (Next Priority) 🎯
 
-#### A. Component Lifecycle Architecture Implementation (High Priority)
-**Goal**: Implement breadth-first lifecycle architecture to eliminate initialization order dependencies
+#### A. Core Game Systems Integration (High Priority)
+**Goal**: Integrate CLI game engine with web interface for turn-based gameplay
 **Components**:
-- [ ] Create ComponentLifecycle interface with bindToDOM, injectDependencies, activate phases
-- [ ] Implement LifecycleController for breadth-first orchestration with synchronization barriers
-- [ ] Enhance BaseComponent to implement ComponentLifecycle with multi-phase initialization
-- [ ] Refactor MapEditorPage to use LifecycleController for component initialization
-- [ ] Update all existing components (EditorToolsPanel, PhaserEditorComponent, TileStatsPanel) to use new lifecycle
-- [ ] Add phase transition validation and error handling in LifecycleController
-- [ ] Implement component dependency injection system for shared state and event bus
+- [ ] Unit selection and movement system in Phaser editor with game logic integration
+- [ ] Combat resolution system with visual feedback and damage calculations
+- [ ] Turn management with player state tracking and EventBus communication
+- [ ] Game state persistence using established Map architecture and file storage
+- [ ] Victory condition detection and game completion workflows
+- [ ] Integration of existing CLI game mechanics with web UI components
 
-#### B. Observer Pattern Integration (High Priority)
-**Goal**: Complete integration of all components with unified Map architecture
+#### B. Interactive Gameplay Features (High Priority)
+**Goal**: Transform map editor into interactive game interface
 **Components**:
-- [ ] Update PhaserEditorComponent to subscribe to Map events for tile/unit changes
-- [ ] Update TileStatsPanel to read from Map instead of Phaser for data consistency
-- [ ] Remove redundant getTilesData/setTilesData methods from Phaser components
-- [ ] Implement MapObserver in remaining components for automatic updates
-- [ ] Test complete component synchronization via Map events
+- [ ] Unit selection highlighting and movement preview in Phaser
+- [ ] Attack target highlighting and combat prediction display
+- [ ] Turn-based UI controls with player switching and action validation
+- [ ] Game state visualization with unit health, player resources, and turn indicators
+- [ ] Real-time game updates using Observer pattern for multiplayer readiness
 
-#### B. Performance and Data Flow Optimization  
-**Goal**: Optimize the unified Map architecture for production use
+#### C. Games Management System (Medium Priority)
+**Goal**: Create game session management following established patterns
 **Components**:
-- [ ] Performance testing of batched events with large maps
-- [ ] Memory usage optimization for Map Observer pattern
-- [ ] Event debouncing for rapid user interactions
-- [ ] Benchmarking Map operations vs previous scattered approach
-- [ ] Error handling and recovery in Observer pattern
+- [ ] GamesService implementation with file-based storage following Maps architecture
+- [ ] Game creation wizard with map selection using existing UI components
+- [ ] Game listing page following MapListingPage patterns
+- [ ] Game details page with current state display using component architecture
+- [ ] Player management and game session handling through EventBus
 
-#### B. Advanced Editor Features  
-**Goal**: Professional map editing capabilities
+#### D. Advanced Gameplay Features (Future)
+**Goal**: Professional turn-based strategy experience
 **Components**:
-- [ ] Multi-tile selection and area operations
-- [ ] Copy/paste functionality for map sections
-- [ ] Template system for common patterns
-- [ ] Undo/redo system with history management
-- [ ] Advanced brushes (pattern fills, gradients)
+- [ ] AI player support for single-player games using existing game logic
+- [ ] Multiplayer session management with real-time updates
+- [ ] Game replay and analysis features
+- [ ] Tournament mode and statistics tracking
+- [ ] Advanced combat animations and visual effects
 
-#### C. Performance and Polish
-**Goal**: Production-ready editor experience
-**Components**:
-- [ ] Sprite batching for improved rendering performance
-- [ ] Memory management for large maps
-- [ ] Visual feedback for editor operations
-- [ ] Error handling and user feedback systems
-- [ ] Responsive design for different screen sizes
-
-### Phase 3: Unified Game Implementation (Planned) 🚧
+### Phase 9: Advanced Features and Polish (Future) 🚧
 
 #### A. Core Game Struct Implementation
 **Goal**: Create unified Game struct implementing GameInterface

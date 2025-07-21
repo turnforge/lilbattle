@@ -31,20 +31,48 @@
 
     <!-- Reference mode selector -->
     <div>
-      <label
-        for="reference-mode"
-        class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
-      >
+      <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
         Display Mode
-      </label>
-      <select
-        id="reference-mode"
-        class="w-full text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-      >
-        <option value="0">Hidden</option>
-        <option value="1">Background (below tiles)</option>
-        <option value="2">Overlay (above tiles)</option>
-      </select>
+      </div>
+      <div class="flex space-x-1">
+        <label class="flex-1 cursor-pointer">
+          <input
+            type="radio"
+            name="reference-mode"
+            value="0"
+            id="reference-mode-hidden"
+            class="sr-only"
+            checked
+          />
+          <div class="text-xs px-2 py-1 text-center rounded border border-gray-300 dark:border-gray-600 transition-colors duration-200 bg-blue-500 text-white font-medium">
+            Hidden
+          </div>
+        </label>
+        <label class="flex-1 cursor-pointer">
+          <input
+            type="radio"
+            name="reference-mode"
+            value="1"
+            id="reference-mode-background"
+            class="sr-only"
+          />
+          <div class="text-xs px-2 py-1 text-center rounded border border-gray-300 dark:border-gray-600 transition-colors duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">
+            Background
+          </div>
+        </label>
+        <label class="flex-1 cursor-pointer">
+          <input
+            type="radio"
+            name="reference-mode"
+            value="2"
+            id="reference-mode-overlay"
+            class="sr-only"
+          />
+          <div class="text-xs px-2 py-1 text-center rounded border border-gray-300 dark:border-gray-600 transition-colors duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">
+            Overlay
+          </div>
+        </label>
+      </div>
     </div>
 
     <!-- Alpha transparency slider -->

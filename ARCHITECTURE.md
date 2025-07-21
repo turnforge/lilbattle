@@ -879,23 +879,44 @@ export class MapEditorPage extends BasePage implements MapObserver {
 ---
 
 **Last Updated**: 2025-01-21  
-**Architecture Version**: 6.3 (Input Field Protection & DOMUtils)  
-**Status**: Production-ready with robust keyboard input handling and shared utilities
+**Architecture Version**: 7.0 (Comprehensive UI Architecture & Game Foundation)  
+**Status**: Production-ready with complete UI framework and game foundation established
 
-**Latest Achievement**: Fixed keyboard input interference and created shared DOM utilities:
-- **Created DOMUtils.ts**: Centralized input context detection with comprehensive coverage
-- **Fixed Phaser Key Interception**: Disabled global WASD and cursor key handlers that interfered with input fields
-- **Enhanced Input Protection**: Space, arrow keys, and all alphanumeric keys now work properly in input fields
-- **Unified Keyboard Handling**: All components use shared `isInInputContext()` and `shouldIgnoreShortcut()` utilities
-- **Maintained Shortcuts**: Editor keyboard shortcuts still work outside input contexts
-- **Better UX**: Users can now type naturally in map names and other input fields without interference
+**Latest Achievement (v7.0)**: Comprehensive UI framework completion and game foundation:
 
-**Previous Achievement**: Implemented tabbed Tools panel with improved keyboard shortcuts and user workflow:
-- Converted stacked Nature/City/Units sections to clean tabbed interface
-- Added instant tab switching with N/C/U keyboard shortcuts (no modifiers required)
-- Implemented multi-digit number selection (1-99) within active tab with visual feedback
-- Added `noModifiersFilter` to prevent conflicts with browser shortcuts (Cmd+R, etc.)
-- Relocated Clear button from Nature tiles to Phaser toolbar for better UX
-- Maintained full backward compatibility while significantly improving editor workflow
+### EventBus Architecture ✅ COMPLETED
+- **Lifecycle-Based Component System**: Template-scoped event binding for dynamic UI components
+- **EventBus Communication**: Type-safe, loosely-coupled component interaction with source filtering
+- **Defensive Programming**: Robust state management with graceful error handling and automatic recovery
+- **Observer Pattern Integration**: Unified Map and PageState architecture for reactive updates
 
-**Previous Achievement**: Successfully implemented and simplified the breadth-first component lifecycle architecture. Every BaseComponent now automatically supports lifecycle coordination while maintaining full backward compatibility. Components auto-initialize normally but can participate in coordinated initialization when needed. Achieved zero-boilerplate lifecycle support - no explicit interface declarations required.
+### Map Editor Polish ✅ COMPLETED  
+- **Unit Toggle Behavior**: Same unit+player removes unit, different unit/player replaces unit
+- **City Tile Player Ownership**: Fixed city terrain rendering with proper player colors and ownership
+- **Reference Image Controls**: Complete scale and position controls with horizontal switch UI
+- **Per-Tab Number Overlays**: N/C/U keys toggle overlays per tab with persistent state management
+- **Map Details Layout**: Fixed-width 250px right panel with responsive map preview
+
+### Backend Integration ✅ COMPLETED
+- **Maps Delete Endpoint**: Complete DELETE /maps/{mapId} with proper error handling and redirects
+- **Web Route Architecture**: Clean HTTP method handling with proper REST semantics
+- **Service Layer Integration**: Full integration with existing MapsService and file storage
+- **Frontend Error Resolution**: Fixed HTMX delete button integration with backend endpoints
+
+### Reference Image System ✅ COMPLETED
+- **Horizontal Switch UI**: Replaced dropdown with professional switch-style radio buttons
+- **Scale Controls**: Fixed scale state corruption with proper property mapping (scaleX/scaleY)
+- **Position Controls**: Complete X/Y position translation with input fields and +/- buttons
+- **Mode Visibility**: Scale/position controls visible in both background and overlay modes
+- **State Management**: Proper toggle state tracking with visual feedback and EventBus communication
+
+### Technical Architecture ✅ COMPLETED
+- **Pure Observer Pattern**: All map changes go through Map class with Phaser updates via EventBus
+- **Template-Scoped Event Binding**: Dynamic UI components work properly in dockview containers
+- **Event Delegation Pattern**: Robust button handling that works within layout systems
+- **Auto-Tile Placement**: Units automatically place grass tiles when no terrain exists
+- **Error Recovery**: Comprehensive error handling with user feedback and graceful degradation
+
+**Previous Achievement**: Fixed keyboard input interference and created shared DOM utilities for better input handling in complex UI layouts.
+
+**Foundation Achievement**: Successfully implemented breadth-first component lifecycle architecture with zero-boilerplate lifecycle support and full backward compatibility.
