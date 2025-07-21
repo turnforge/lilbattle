@@ -20,12 +20,10 @@ class StartGamePage extends BasePage {
     private currentMapId: string | null;
     private isLoadingMap: boolean = false;
     private map: Map | null = null;
+    private playerCount: number = 2; // Default to 2, will be updated from map data
     private gameConfig: GameConfiguration = {
-        players: [
-            { id: 1, color: 'red', type: 'human', team: 1 },
-            { id: 2, color: 'blue', type: 'ai', team: 2 }
-        ],
-        allowedUnits: ['infantry', 'tank', 'helicopter', 'destroyer'],
+        players: [],
+        allowedUnits: [], // Will be populated with unit IDs
         turnTimeLimit: 0,
         teamMode: 'ffa'
     };
@@ -100,29 +98,11 @@ class StartGamePage extends BasePage {
             startGameButton.addEventListener('click', this.startGame.bind(this));
         }
 
-        // Bind player type selectors
-        const playerSelects = document.querySelectorAll('[data-player]');
-        playerSelects.forEach(select => {
-            select.addEventListener('change', this.handlePlayerConfigChange.bind(this));
-        });
-
-        // Bind unit restriction checkboxes
-        const unitCheckboxes = document.querySelectorAll('[data-unit]');
-        unitCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', this.handleUnitRestrictionChange.bind(this));
-        });
-
         // Bind turn limit selector
         const turnLimitSelect = document.querySelector('[data-config="turn-limit"]');
         if (turnLimitSelect) {
             turnLimitSelect.addEventListener('change', this.handleTurnLimitChange.bind(this));
         }
-
-        // Bind team mode radio buttons
-        const teamModeRadios = document.querySelectorAll('[name="team-mode"]');
-        teamModeRadios.forEach(radio => {
-            radio.addEventListener('change', this.handleTeamModeChange.bind(this));
-        });
     }
 
     /** Load document data and set initial UI states */
@@ -153,6 +133,16 @@ class StartGamePage extends BasePage {
                 this.map = Map.deserialize(mapData);
                 console.log('Map data loaded successfully');
                 
+                // Calculate player count from map units
+                this.playerCount = this.calculatePlayerCountFromMap(mapData);
+                console.log('Detected player count:', this.playerCount);
+                
+                // Initialize game configuration based on map
+                this.initializeGameConfiguration();
+                
+                // Bind unit restriction events (units are now server-rendered)
+                this.bindUnitRestrictionEvents();
+                
                 // Use MapViewer component to load the map
                 if (this.mapViewer) {
                     await this.mapViewer.loadMap(mapData);
@@ -171,6 +161,171 @@ class StartGamePage extends BasePage {
             this.showToast('Error', 'Failed to load map data', 'error');
         }
     }
+    
+    /**
+     * Calculate player count from map units
+     */
+    private calculatePlayerCountFromMap(mapData: any): number {
+        if (!mapData || !mapData.map_units) {
+            return 2; // Default fallback
+        }
+        
+        // Find the highest player ID in map units
+        let maxPlayer = 0;
+        for (const unit of mapData.map_units) {
+            if (unit.player && unit.player > maxPlayer) {
+                maxPlayer = unit.player;
+            }
+        }
+        
+        // Player IDs are 1-based, so player count is maxPlayer
+        // Ensure minimum of 2 players
+        return Math.max(2, maxPlayer);
+    }
+    
+    /**
+     * Initialize game configuration based on detected player count
+     */
+    private initializeGameConfiguration(): void {
+        const playerColors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+        
+        this.gameConfig.players = [];
+        for (let i = 0; i < this.playerCount; i++) {
+            this.gameConfig.players.push({
+                id: i + 1,
+                color: playerColors[i % playerColors.length],
+                type: i === 0 ? 'human' : 'ai', // Player 1 is human, others are AI
+                team: i + 1 // Each player starts on their own team
+            });
+        }
+        
+        // Initialize all units as allowed by default (get from server-rendered checkboxes)
+        const unitCheckboxes = document.querySelectorAll('#unit-restriction-grid input[type="checkbox"]');
+        this.gameConfig.allowedUnits = Array.from(unitCheckboxes).map(cb => (cb as HTMLInputElement).dataset.unit || '');
+        
+        // Update the player configuration UI
+        this.updatePlayerConfigurationUI();
+    }
+    
+    /**
+     * Update the player configuration UI elements
+     */
+    private updatePlayerConfigurationUI(): void {
+        const playersSection = document.querySelector('[data-config-section="players"]');
+        if (!playersSection) return;
+        
+        // Find the players container
+        const playersContainer = playersSection.querySelector('.space-y-3');
+        if (!playersContainer) return;
+        
+        // Clear existing player elements
+        playersContainer.innerHTML = '';
+        
+        // Create player configuration elements
+        for (let i = 0; i < this.playerCount; i++) {
+            const player = this.gameConfig.players[i];
+            const playerElement = this.createPlayerConfigElement(player, i);
+            playersContainer.appendChild(playerElement);
+        }
+    }
+    
+    /**
+     * Create a player configuration element
+     */
+    private createPlayerConfigElement(player: Player, index: number): HTMLElement {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg';
+        
+        const colorClass = this.getPlayerColorClass(player.color);
+        
+        div.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 ${colorClass} rounded-full border border-gray-300"></div>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Player ${player.id}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
+                        data-player="${player.id}" 
+                        data-config="type"
+                        ${index === 0 ? 'disabled' : ''}>
+                    <option value="human" ${player.type === 'human' ? 'selected' : ''}>Human</option>
+                    <option value="ai" ${player.type === 'ai' ? 'selected' : ''}>AI</option>
+                    <option value="open" disabled>Open Invite</option>
+                </select>
+                <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
+                        data-player="${player.id}" 
+                        data-config="team">
+                    <option value="0">None</option>
+                    ${this.generateTeamOptions(player.team)}
+                </select>
+            </div>
+        `;
+        
+        // Bind event listeners
+        const typeSelect = div.querySelector('[data-config="type"]') as HTMLSelectElement;
+        const teamSelect = div.querySelector('[data-config="team"]') as HTMLSelectElement;
+        
+        if (typeSelect) {
+            typeSelect.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'type'));
+        }
+        if (teamSelect) {
+            teamSelect.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'team'));
+        }
+        
+        return div;
+    }
+    
+    /**
+     * Generate team options HTML based on player count
+     */
+    private generateTeamOptions(selectedTeam: number): string {
+        let options = '';
+        for (let i = 1; i <= this.playerCount; i++) {
+            options += `<option value="${i}" ${selectedTeam === i ? 'selected' : ''}>Team ${i}</option>`;
+        }
+        return options;
+    }
+    
+    /**
+     * Get CSS class for player color
+     */
+    private getPlayerColorClass(color: string): string {
+        const colorMap: { [key: string]: string } = {
+            'red': 'bg-red-500',
+            'blue': 'bg-blue-500',
+            'green': 'bg-green-500',
+            'yellow': 'bg-yellow-500',
+            'purple': 'bg-purple-500',
+            'orange': 'bg-orange-500'
+        };
+        return colorMap[color] || 'bg-gray-500';
+    }
+    
+    /**
+     * Bind events to server-rendered unit restriction buttons
+     */
+    private bindUnitRestrictionEvents(): void {
+        const unitButtons = document.querySelectorAll('.unit-restriction-button');
+        unitButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const checkbox = button.querySelector('input[type="checkbox"]') as HTMLInputElement;
+                const mask = button.querySelector('.unit-mask') as HTMLElement;
+                
+                checkbox.checked = !checkbox.checked;
+                mask.style.opacity = checkbox.checked ? '0' : '0.6';
+                
+                // Trigger the restriction change handler
+                const syntheticEvent = new Event('change');
+                Object.defineProperty(syntheticEvent, 'target', {
+                    writable: false,
+                    value: checkbox
+                });
+                this.handleUnitRestrictionChange(syntheticEvent);
+            });
+        });
+    }
+    
     
     /**
      * Load map data from the hidden JSON element in the page
@@ -197,15 +352,20 @@ class StartGamePage extends BasePage {
         }
     }
 
-    private handlePlayerConfigChange(event: Event): void {
+    private handlePlayerConfigChange(event: Event, configType: 'type' | 'team'): void {
         const select = event.target as HTMLSelectElement;
         const playerId = parseInt(select.dataset.player || '0');
-        const playerType = select.value;
+        const value = configType === 'team' ? parseInt(select.value) : select.value;
         
         const player = this.gameConfig.players.find(p => p.id === playerId);
         if (player) {
-            player.type = playerType as PlayerType;
-            console.log(`Player ${playerId} type changed to: ${playerType}`);
+            if (configType === 'type') {
+                player.type = value as PlayerType;
+                console.log(`Player ${playerId} type changed to: ${value}`);
+            } else if (configType === 'team') {
+                player.team = value as number;
+                console.log(`Player ${playerId} team changed to: ${value}`);
+            }
         }
         
         this.validateGameConfiguration();
@@ -213,14 +373,14 @@ class StartGamePage extends BasePage {
 
     private handleUnitRestrictionChange(event: Event): void {
         const checkbox = event.target as HTMLInputElement;
-        const unitType = checkbox.dataset.unit || '';
+        const unitId = checkbox.dataset.unit || '';
         
         if (checkbox.checked) {
-            if (!this.gameConfig.allowedUnits.includes(unitType)) {
-                this.gameConfig.allowedUnits.push(unitType);
+            if (!this.gameConfig.allowedUnits.includes(unitId)) {
+                this.gameConfig.allowedUnits.push(unitId);
             }
         } else {
-            this.gameConfig.allowedUnits = this.gameConfig.allowedUnits.filter(unit => unit !== unitType);
+            this.gameConfig.allowedUnits = this.gameConfig.allowedUnits.filter(unit => unit !== unitId);
         }
         
         console.log('Allowed units updated:', this.gameConfig.allowedUnits);
@@ -234,12 +394,6 @@ class StartGamePage extends BasePage {
         this.validateGameConfiguration();
     }
 
-    private handleTeamModeChange(event: Event): void {
-        const radio = event.target as HTMLInputElement;
-        this.gameConfig.teamMode = radio.value as 'ffa' | 'teams';
-        console.log('Team mode changed to:', this.gameConfig.teamMode);
-        this.validateGameConfiguration();
-    }
 
     private validateGameConfiguration(): boolean {
         const startButton = document.querySelector('[data-action="start-game"]') as HTMLButtonElement;

@@ -43,23 +43,25 @@
         </div>
 
         <!-- Game Configuration Content -->
-        <div class="flex-1 flex max-w-9xl mx-auto w-full">
+        <div class="flex-1 flex flex-col lg:flex-row max-w-9xl mx-auto w-full">
             <!-- Map Preview Section - MapViewer Component Root -->
-            <div class="flex-1 p-6 pr-3" style="width: calc(100% - 350px);">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full" data-component="map-viewer">
+            <div class="flex-1 p-6 lg:pr-3 order-2 lg:order-1">
+                <!-- Mobile: full width, height equals width (square aspect) -->
+                <!-- Desktop: take remaining width, full height -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 w-full h-full lg:h-full aspect-square lg:aspect-auto" data-component="map-viewer">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">
                             {{ if .Map.Name }}Map Preview{{ else }}Map Selection{{ end }}
                         </h2>
                     </div>
                     {{ if .Map.Name }}
-                    <!-- Phaser Map Viewer Container -->
-                    <div id="phaser-viewer-container" class="w-full h-full min-h-96" style="max-height:600px">
-                        <!-- Phaser canvas will be inserted here -->
+                    <!-- Phaser Map Viewer Container: Full width/height in desktop, square aspect in mobile -->
+                    <div id="phaser-viewer-container" class="w-full h-full flex-1">
+                        <!-- Phaser canvas will be inserted here and sized to 100% width/height -->
                     </div>
                     {{ else }}
                     <!-- Map Selection Placeholder -->
-                    <div class="flex items-center justify-center h-full min-h-96 text-center">
+                    <div class="flex items-center justify-center h-full text-center">
                         <div class="p-8">
                             <div class="text-6xl text-gray-400 dark:text-gray-500 mb-4">🗺️</div>
                             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Map Selected</h3>
@@ -73,8 +75,8 @@
                 </div>
             </div>
 
-            <!-- Game Configuration Sidebar -->
-            <div class="p-6 pl-3" style="width: 350px; flex-shrink: 0;">
+            <!-- Game Configuration Panel: +100px wider (484px vs 384px) -->
+            <div class="w-full lg:w-[484px] p-6 lg:pl-3 flex-shrink-0 order-1 lg:order-2">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" data-component="game-config-panel">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Game Configuration</h2>
@@ -85,55 +87,7 @@
                         <div data-config-section="players">
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Players</h3>
                             <div class="space-y-3">
-                                <!-- Player 1 -->
-                                <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-4 h-4 bg-red-500 rounded-full border border-gray-300"></div>
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Player 1</span>
-                                    </div>
-                                    <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" disabled>
-                                        <option>Human (You)</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Player 2 -->
-                                <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-4 h-4 bg-blue-500 rounded-full border border-gray-300"></div>
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Player 2</span>
-                                    </div>
-                                    <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" data-player="2">
-                                        <option value="ai">AI</option>
-                                        <option value="human" disabled>Human</option>
-                                        <option value="open" disabled>Open Invite</option>
-                                    </select>
-                                </div>
-
-                                <!-- Player 3 (Optional) -->
-                                <div class="flex items-center justify-between p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg opacity-50">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-4 h-4 bg-green-500 rounded-full border border-gray-300"></div>
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Player 3</span>
-                                    </div>
-                                    <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" data-player="3" disabled>
-                                        <option value="none">Not Playing</option>
-                                        <option value="ai">AI</option>
-                                        <option value="human" disabled>Human</option>
-                                    </select>
-                                </div>
-
-                                <!-- Player 4 (Optional) -->
-                                <div class="flex items-center justify-between p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg opacity-50">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-4 h-4 bg-yellow-500 rounded-full border border-gray-300"></div>
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Player 4</span>
-                                    </div>
-                                    <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" data-player="4" disabled>
-                                        <option value="none">Not Playing</option>
-                                        <option value="ai">AI</option>
-                                        <option value="human" disabled>Human</option>
-                                    </select>
-                                </div>
+                                <!-- Players will be dynamically generated by JavaScript -->
                             </div>
                         </div>
 
@@ -141,23 +95,24 @@
                         <div data-config-section="units">
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Allowed Units</h3>
                             <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Select which units are allowed in this game</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" data-unit="infantry">
-                                    <span class="text-gray-900 dark:text-white">Infantry</span>
-                                </label>
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" data-unit="tank">
-                                    <span class="text-gray-900 dark:text-white">Tank</span>
-                                </label>
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" data-unit="helicopter">
-                                    <span class="text-gray-900 dark:text-white">Helicopter</span>
-                                </label>
-                                <label class="flex items-center space-x-2">
-                                    <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" data-unit="destroyer">
-                                    <span class="text-gray-900 dark:text-white">Destroyer</span>
-                                </label>
+                            <div id="unit-restriction-grid" class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                                {{ range .UnitTypes }}
+                                <button type="button" 
+                                        class="unit-restriction-button relative p-2 text-center border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden"
+                                        data-unit="{{ .ID }}"
+                                        title="{{ .Name }}">
+                                    <input type="checkbox" checked 
+                                           class="absolute top-1 left-1 w-3 h-3 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700" 
+                                           data-unit="{{ .ID }}">
+                                    <div class="flex justify-center mb-1">
+                                        <img src="{{ .IconDataURL }}" 
+                                             alt="{{ .Name }}" 
+                                             class="w-6 h-6 object-contain unit-icon">
+                                    </div>
+                                    <div class="text-xs truncate">{{ .Name }}</div>
+                                    <div class="absolute inset-0 bg-gray-500 dark:bg-gray-700 opacity-0 transition-opacity unit-mask pointer-events-none"></div>
+                                </button>
+                                {{ end }}
                             </div>
                         </div>
 
@@ -179,20 +134,6 @@
                             </div>
                         </div>
 
-                        <!-- Team Configuration -->
-                        <div data-config-section="teams">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Team Setup</h3>
-                            <div class="space-y-2 text-xs">
-                                <label class="flex items-center space-x-2">
-                                    <input type="radio" name="team-mode" value="ffa" checked class="text-blue-600">
-                                    <span class="text-gray-900 dark:text-white">Free For All</span>
-                                </label>
-                                <label class="flex items-center space-x-2">
-                                    <input type="radio" name="team-mode" value="teams" class="text-blue-600">
-                                    <span class="text-gray-900 dark:text-white">Team vs Team</span>
-                                </label>
-                            </div>
-                        </div>
 
                         <!-- Start Game Button -->
                         <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
