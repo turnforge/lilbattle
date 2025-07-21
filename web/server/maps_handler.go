@@ -15,6 +15,11 @@ func (r *RootViewsHandler) setupMapsMux() *http.ServeMux {
 	mux.HandleFunc("/new", r.createNewMapHandler)
 	mux.HandleFunc("/{mapId}/view", r.ViewRenderer(Copier(&MapDetailsPage{}), ""))
 	mux.HandleFunc("/{mapId}/edit", r.ViewRenderer(Copier(&MapEditorPage{}), ""))
+	mux.HandleFunc("/{mapId}/start", func(w http.ResponseWriter, r *http.Request) {
+		mapId := r.PathValue("mapId")
+		redirectURL := fmt.Sprintf("/games/new?mapId=%s", mapId)
+		http.Redirect(w, r, redirectURL, http.StatusFound)
+	})
 	mux.HandleFunc("/{mapId}/copy", func(w http.ResponseWriter, r *http.Request) {
 		notationId := r.PathValue("notationId")
 		http.Redirect(w, r, fmt.Sprintf("/appitems/new?copyFrom=%s", notationId), http.StatusFound)

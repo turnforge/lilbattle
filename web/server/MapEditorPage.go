@@ -92,8 +92,8 @@ func (v *MapEditorPage) SetupDefaults() {
 			terrain := TerrainType{
 				ID:              terrainData.ID,
 				Name:            terrainData.Name,
-				MoveCost:        terrainData.MoveCost,
-				DefenseBonus:    terrainData.DefenseBonus,
+				MoveCost:        int(terrainData.BaseMoveCost),
+				DefenseBonus:    int(terrainData.DefenseBonus),
 				IconDataURL:     iconDataURL,
 				HasPlayerColors: terrainData.Type == weewar.TerrainPlayer,
 			}
