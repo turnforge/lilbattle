@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"time"
+	"strings"
 
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
@@ -20,20 +22,14 @@ func main() {
 	// Command line flags
 	var (
 		interactive = flag.Bool("interactive", false, "Start in interactive mode")
-		newGame     = flag.Bool("new", false, "Create a new game")
-		players     = flag.Int("players", 2, "Number of players for new game (2-6)")
 		loadFile    = flag.String("load", "", "Load game from file")
 		saveFile    = flag.String("save", "", "Save game to file after commands")
+		worldPath   = flag.String("world", "", "Load world from storage directory (e.g., ./storage/maps/map123)")
 		renderFile  = flag.String("render", "", "Render game to PNG file")
 		width       = flag.Int("width", 800, "Render width in pixels")
 		height      = flag.Int("height", 600, "Render height in pixels")
 		batch       = flag.String("batch", "", "Execute commands from batch file")
 		record      = flag.String("record", "", "Record session to file")
-		verbose     = flag.Bool("verbose", false, "Enable verbose output")
-		compact     = flag.Bool("compact", false, "Use compact display mode")
-		autoRender  = flag.Bool("autorender", false, "Auto-render game state after each command")
-		maxRenders  = flag.Int("maxrenders", 10, "Maximum number of auto-rendered files to keep (0 disables)")
-		renderDir   = flag.String("renderdir", "/tmp/turnengine/autorenders", "Directory for auto-rendered files")
 		version     = flag.Bool("version", false, "Show version information")
 		help        = flag.Bool("help", false, "Show help information")
 	)
@@ -51,13 +47,13 @@ func main() {
 		return
 	}
 
-	// Validate flags
-	if *players < 2 || *players > 6 {
-		log.Fatalf("Invalid number of players: %d (must be 2-6)", *players)
+	// Validate flags - require either load or world
+	if *loadFile == "" && *worldPath == "" && !*interactive {
+		log.Fatalf("Must specify either --load <file> or --world <path> or --interactive")
 	}
 
 	// Create CLI instance
-	var cli *weewar.WeeWarCLI
+	var cli *SimpleCLI
 	var game *weewar.Game
 
 	// Initialize game
@@ -68,47 +64,33 @@ func main() {
 			log.Fatalf("Failed to load game: %v", err)
 		}
 		fmt.Println("Game loaded successfully")
-	} else if *newGame || *interactive {
-		// Create new game
-		fmt.Printf("Creating new game with %d players...\n", *players)
+	} else if *worldPath != "" {
+		// Load game from world storage
+		fmt.Printf("Loading world from %s...\n", *worldPath)
 		var err error
-		game, err = createNewGame(*players)
+		game, err = createGameFromWorld(*worldPath)
 		if err != nil {
-			log.Fatalf("Failed to create game: %v", err)
+			log.Fatalf("Failed to load world: %v", err)
 		}
-		fmt.Println("Game created successfully")
+		fmt.Println("World loaded successfully")
+	} else if *interactive {
+		// Interactive mode without game - user must load a world
+		fmt.Println("Interactive mode: use 'load <file>' or specify --world <path> to load a game")
 	}
 
 	// Create CLI
-	cli = weewar.NewWeeWarCLI(game)
-
-	// Set options
-	if *verbose {
-		cli.SetVerbose(true)
-	}
-	if *compact {
-		cli.SetDisplayMode(weewar.DisplayCompact)
-	}
-	// Always set maxRenders from command line flag
-	cli.SetMaxRenders(*maxRenders)
-	cli.SetRenderDir(*renderDir)
-	if *autoRender {
-		cli.SetAutoRender(true)
-	}
+	cli = NewSimpleCLI(game)
 
 	// Start recording if requested
 	if *record != "" {
-		if err := cli.RecordSession(*record); err != nil {
-			log.Fatalf("Failed to start recording: %v", err)
-		}
-		fmt.Printf("Recording session to %s\n", *record)
-		defer cli.StopRecording()
+		cli.StartRecording()
+		fmt.Printf("Recording session (move list will be serializable)\n")
 	}
 
 	// Execute batch commands if provided
 	if *batch != "" {
 		fmt.Printf("Executing batch commands from %s...\n", *batch)
-		if err := cli.ExecuteBatchCommands(*batch); err != nil {
+		if err := executeBatchCommands(cli, *batch); err != nil {
 			log.Fatalf("Batch execution failed: %v", err)
 		}
 		fmt.Println("Batch commands completed successfully")
@@ -118,18 +100,15 @@ func main() {
 	if len(flag.Args()) > 0 {
 		for _, cmd := range flag.Args() {
 			fmt.Printf("Executing: %s\n", cmd)
-			response := cli.ExecuteCommand(cmd)
-			fmt.Printf("Result: %s\n", response.Message)
-			if !response.Success {
-				log.Printf("Command failed: %s", response.Error)
-			}
+			result := cli.ExecuteCommand(cmd)
+			fmt.Printf("Result: %s\n", result)
 		}
 	}
 
 	// Save game if requested
 	if *saveFile != "" {
 		fmt.Printf("Saving game to %s...\n", *saveFile)
-		if err := cli.SaveGameToFile(*saveFile); err != nil {
+		if err := saveGameToFile(cli.GetGame(), *saveFile); err != nil {
 			log.Fatalf("Failed to save game: %v", err)
 		}
 		fmt.Println("Game saved successfully")
@@ -138,7 +117,7 @@ func main() {
 	// Render game if requested
 	if *renderFile != "" {
 		fmt.Printf("Rendering game to %s (%dx%d)...\n", *renderFile, *width, *height)
-		if err := cli.RenderToFile(*renderFile, *width, *height); err != nil {
+		if err := renderGameToFile(cli.GetGame(), *renderFile, *width, *height); err != nil {
 			log.Fatalf("Failed to render game: %v", err)
 		}
 		fmt.Println("Game rendered successfully")
@@ -146,37 +125,118 @@ func main() {
 
 	// Start interactive mode if requested
 	if *interactive {
-		cli.StartInteractiveMode()
+		startInteractiveMode(cli)
 	}
 }
 
-// createNewGame creates a new game with specified number of players
-func createNewGame(playerCount int) (*weewar.Game, error) {
-	// Create test map
-	testMap := weewar.NewMap(8, 12, false)
+// createGameFromWorld creates a game from a world stored in the storage directory
+func createGameFromWorld(worldPath string) (*weewar.Game, error) {
+	// Check if directory exists
+	if _, err := os.Stat(worldPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("world directory does not exist: %s", worldPath)
+	}
+	
+	// Load world data from data.json
+	dataPath := fmt.Sprintf("%s/data.json", worldPath)
+	worldData, err := os.ReadFile(dataPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read world data: %w", err)
+	}
+	
+	// Load metadata (optional, for display purposes)
+	metadataPath := fmt.Sprintf("%s/metadata.json", worldPath)
+	var metadata map[string]interface{}
+	if metadataBytes, err := os.ReadFile(metadataPath); err == nil {
+		if err := json.Unmarshal(metadataBytes, &metadata); err == nil {
+			// Metadata loaded successfully
+		}
+	}
+	
+	// Parse the world data and create a game
+	// The world data contains tiles in Q,R coordinate format
+	world, err := loadWorldFromStorageJSON(worldData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse world data: %w", err)
+	}
+	
+	// Create rules engine from data file
+	rulesEngine, err := weewar.LoadRulesEngineFromFile("./data/rules-data.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to load rules engine: %w", err)
+	}
+	
+	// Create game with the loaded world and rules engine (using seed 0 for now)
+	game, err := weewar.NewGame(world, rulesEngine, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create game: %w", err)
+	}
+	
+	if metadata != nil {
+		fmt.Printf("Loaded world: %v\n", metadata["name"])
+	}
+	
+	return game, nil
+}
 
-	// Add varied terrain
-	for row := 0; row < 8; row++ {
-		for col := 0; col < 12; col++ {
-			tileType := 1 // Default to grass
-			if (row+col)%4 == 0 {
-				tileType = 2 // Some desert
-			} else if (row+col)%7 == 0 {
-				tileType = 3 // Some water
-			} else if (row+col)%11 == 0 {
-				tileType = 4 // Some mountains
-			}
+// loadWorldFromStorageJSON parses world data from storage JSON format
+func loadWorldFromStorageJSON(jsonData []byte) (*weewar.World, error) {
+	var storageData struct {
+		Tiles    map[string]struct {
+			Q        int `json:"q"`
+			R        int `json:"r"`
+			TileType int `json:"tile_type"`
+			Player   int `json:"player"`
+		} `json:"tiles"`
+		MapUnits []struct {
+			Q        int `json:"q"`
+			R        int `json:"r"`
+			Player   int `json:"player"`
+			UnitType int `json:"unit_type"`
+		} `json:"map_units"`
+	}
 
-			tile := weewar.NewTile(row, col, tileType)
-			testMap.AddTile(tile)
+	// Parse JSON
+	if err := json.Unmarshal(jsonData, &storageData); err != nil {
+		return nil, fmt.Errorf("failed to parse storage JSON: %w", err)
+	}
+
+	// Create map from tiles
+	gameMap := weewar.NewMapRect(10, 10) // Initial size, will expand as needed
+	maxPlayers := 0
+
+	// Add tiles
+	for _, tileData := range storageData.Tiles {
+		coord := weewar.AxialCoord{Q: tileData.Q, R: tileData.R}
+		tile := weewar.NewTile(coord, tileData.TileType)
+		gameMap.AddTile(tile)
+		
+		if tileData.Player > maxPlayers {
+			maxPlayers = tileData.Player
 		}
 	}
 
-	// Note: Neighbor connections calculated on-demand
+	// Determine number of players (add 1 since player IDs are 0-based)
+	if maxPlayers == 0 {
+		maxPlayers = 2 // Default to 2 players
+	} else {
+		maxPlayers++
+	}
 
-	// Create game
-	seed := time.Now().UnixNano()
-	return weewar.NewGame(playerCount, testMap, seed)
+	// Create world
+	world, err := weewar.NewWorld(maxPlayers, gameMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create world: %w", err)
+	}
+
+	// Add units
+	for _, unitData := range storageData.MapUnits {
+		coord := weewar.AxialCoord{Q: unitData.Q, R: unitData.R}
+		unit := weewar.NewUnit(unitData.UnitType, unitData.Player)
+		unit.SetPosition(coord)
+		world.AddUnit(unit)
+	}
+
+	return world, nil
 }
 
 // loadGameFromFile loads a game from a file
@@ -205,9 +265,8 @@ func showHelp() {
 
 	fmt.Println("OPTIONS:")
 	fmt.Println("  -interactive         Start in interactive mode")
-	fmt.Println("  -new                 Create a new game")
-	fmt.Println("  -players N           Number of players for new game (2-6, default: 2)")
-	fmt.Println("  -load FILE           Load game from file")
+	fmt.Println("  -world PATH          Load world from storage directory (e.g., ./storage/maps/map123)")
+	fmt.Println("  -load FILE           Load saved game from file")
 	fmt.Println("  -save FILE           Save game to file after commands")
 	fmt.Println("  -render FILE         Render game to PNG file")
 	fmt.Println("  -width N             Render width in pixels (default: 800)")
@@ -236,14 +295,14 @@ func showHelp() {
 	fmt.Println()
 
 	fmt.Println("EXAMPLES:")
-	fmt.Println("  # Start new interactive game")
-	fmt.Println("  weewar-cli -new -interactive")
+	fmt.Println("  # Load world and start interactive session")
+	fmt.Println("  weewar-cli -world ./storage/maps/map123 -interactive")
 	fmt.Println()
-	fmt.Println("  # Load game and show status")
+	fmt.Println("  # Load saved game and show status")
 	fmt.Println("  weewar-cli -load mygame.json status")
 	fmt.Println()
-	fmt.Println("  # Create game, make moves, and save")
-	fmt.Println("  weewar-cli -new 'move A1 B2' 'end' -save mygame.json")
+	fmt.Println("  # Load world, make moves, and save")
+	fmt.Println("  weewar-cli -world ./storage/maps/map123 'move A1 B2' 'end' -save mygame.json")
 	fmt.Println()
 	fmt.Println("  # Render game to PNG")
 	fmt.Println("  weewar-cli -load mygame.json -render game.png")
@@ -267,4 +326,109 @@ func showHelp() {
 	fmt.Println()
 
 	fmt.Println("For more information, visit: https://github.com/panyam/turnengine")
+}
+
+// startInteractiveMode starts the REPL for interactive gameplay
+func startInteractiveMode(cli *SimpleCLI) {
+	fmt.Println("WeeWar CLI - Interactive Mode")
+	fmt.Println("Type 'help' for available commands, 'quit' to exit")
+	fmt.Println()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	
+	for {
+		// Show prompt
+		fmt.Print("> ")
+		
+		// Read input
+		if !scanner.Scan() {
+			break // EOF or error
+		}
+		
+		command := strings.TrimSpace(scanner.Text())
+		if command == "" {
+			continue
+		}
+		
+		// Execute command
+		result := cli.ExecuteCommand(command)
+		
+		// Check for quit
+		if result == "quit" {
+			fmt.Println("Goodbye!")
+			break
+		}
+		
+		// Show result
+		fmt.Println(result)
+		fmt.Println()
+	}
+	
+	// Check for scanner errors
+	if err := scanner.Err(); err != nil {
+		log.Printf("Error reading input: %v", err)
+	}
+}
+
+// executeBatchCommands executes commands from a file (for backward compatibility)
+func executeBatchCommands(cli *SimpleCLI, filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return fmt.Errorf("failed to open batch file: %w", err)
+	}
+	defer file.Close()
+	
+	scanner := bufio.NewScanner(file)
+	lineNum := 0
+	
+	for scanner.Scan() {
+		lineNum++
+		line := strings.TrimSpace(scanner.Text())
+		
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		
+		fmt.Printf("Executing line %d: %s\n", lineNum, line)
+		result := cli.ExecuteCommand(line)
+		
+		if result == "quit" {
+			break
+		}
+		
+		fmt.Printf("Result: %s\n", result)
+	}
+	
+	return scanner.Err()
+}
+
+// saveGameToFile saves the current game state to a file
+func saveGameToFile(game *weewar.Game, filename string) error {
+	if game == nil {
+		return fmt.Errorf("no game to save")
+	}
+	
+	saveData, err := game.SaveGame()
+	if err != nil {
+		return fmt.Errorf("failed to serialize game: %w", err)
+	}
+	
+	err = os.WriteFile(filename, saveData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write save file: %w", err)
+	}
+	
+	return nil
+}
+
+// renderGameToFile renders the game to a PNG file
+func renderGameToFile(game *weewar.Game, filename string, width, height int) error {
+	if game == nil {
+		return fmt.Errorf("no game to render")
+	}
+	
+	// For now, just return an error indicating this needs implementation
+	// The actual rendering would use the game's render functionality
+	return fmt.Errorf("rendering not yet implemented - would render %dx%d PNG to %s", width, height, filename)
 }

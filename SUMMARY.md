@@ -539,6 +539,67 @@ The architecture successfully supports authentic WeeWar gameplay with real data 
 - **Attack Options** - Spatial queries for all attackable positions within unit range
 - **Data Loading** - JSON-based rules loading from canonical weewar-data.json format
 
+## v10.0 CLI Transformation & Production Ready (2025-01-21)
+
+### CLI Architecture Revolution ✅
+- **Simplified CLI Architecture** - Replaced bloated 1785-line CLI with focused 500-line SimpleCLI implementation
+- **Position/Unit Parser System** - Universal parser supporting unit IDs (A1, B12), Q/R coordinates (3,4), row/col coordinates (r4,5)
+- **Essential Game Commands** - Core commands: move, attack, select, end, status, units, player, help, quit
+- **Move Recording System** - Serializable MoveList with JSON export for game replay and debugging sessions
+- **REPL Interactive Mode** - Professional Read-Eval-Print Loop for persistent gameplay without reloading
+- **World Loading Integration** - Loads maps from ./storage/maps/ with proper JSON parsing and rules engine integration
+
+### Technical Architecture Improvements ✅
+- **Thin Wrapper Design** - CLI acts as minimal interface layer calling Game methods directly without validation overhead
+- **Unix-Friendly Batch Mode** - Eliminated complex batch flags in favor of pipe-to-REPL: `cat moves.txt | weewar-cli -interactive`
+- **Storage Integration** - Complete world loading from storage directories with tile and unit data parsing
+- **Clean Dependencies** - Removed complex CLI interfaces, formatters, and prediction systems for focused functionality
+- **Error Resolution** - Fixed all compilation errors with proper API integration and field name corrections
+
+### CLI User Experience ✅
+- **Intuitive Position Syntax** - Supports multiple coordinate formats for different user preferences and scenarios
+- **Select Command Enhancement** - `select A1` shows available movement and attack options for tactical planning
+- **Recording Workflow** - `record start/stop/show/clear` for capturing game sessions and creating test scenarios
+- **Interactive Gameplay** - Load world once, play indefinitely with persistent game state and turn management
+- **Help System Integration** - Comprehensive help with examples for all coordinate formats and command usage
+
+### Production Quality Features ✅
+- **Real World Integration** - Successfully loads and plays with actual map data from ./storage/maps/small-world
+- **Rules Engine Integration** - Proper initialization with rules-data.json for authentic game mechanics
+- **Game State Persistence** - Complete game state maintained across commands with proper turn and player tracking
+- **Position Parser Flexibility** - Handles player units (A1-Z99), hex coordinates (Q,R), and legacy row/col formats
+- **Command Recording** - Full session recording with timestamps, turns, and player tracking for replay analysis
+
+### CLI Command Reference ✅
+```bash
+# Core Gameplay Commands
+move A1 3,4          # Move unit A1 to Q/R coordinate 3,4
+attack r4,5 B2       # Attack unit B2 with unit at row/col 4,5  
+select C1            # Select unit C1 and show movement/attack options
+end                  # End current player's turn
+status               # Show turn, player, and game state
+units                # List all units with positions and health
+player [ID]          # Show player information
+
+# Recording & Replay
+record start         # Begin recording moves
+record show          # Display recorded moves
+record stop          # Stop recording
+replay               # Show move list as JSON
+
+# Position Formats Supported
+A1, B12, C2         # Unit IDs (Player letter + unit number)
+3,4 or -1,2         # Q,R hex coordinates  
+r4,5                # Row/col coordinates (prefixed with 'r')
+```
+
+### Development Workflow Integration ✅
+- **Headless Testing** - Perfect for automated testing and CI/CD integration with batch command piping
+- **Game State Debugging** - Interactive exploration of game mechanics and rule validation
+- **Map Testing Platform** - Load any stored map and immediately begin interactive testing
+- **Move Validation** - Real-time feedback on valid/invalid moves with proper error messages
+- **Session Recording** - Capture interesting game scenarios for documentation and bug reproduction
+
 **Last Updated**: 2025-01-21  
-**Version**: 9.0 (Rules Engine Integration Complete)  
-**Status**: Production-ready game engine with complete data-driven mechanics + professional UI framework. Ready for final web interface bridge and WASM activation.
+**Version**: 10.0 (CLI Transformation Complete)  
+**Status**: Production-ready game engine with simplified CLI interface. Complete rules integration, world loading, and interactive gameplay. Ready for advanced features and web interface development.

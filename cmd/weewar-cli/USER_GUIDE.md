@@ -1,6 +1,6 @@
 # WeeWar CLI User Guide
 
-A comprehensive guide for playing WeeWar using the command-line interface (CLI).
+A comprehensive guide for playing WeeWar using the simplified command-line interface (CLI).
 
 ## Table of Contents
 - [Getting Started](#getting-started)
@@ -16,598 +16,389 @@ A comprehensive guide for playing WeeWar using the command-line interface (CLI).
 ### Installation
 ```bash
 # Build the CLI executable
-go build -o /tmp/weewar-cli ./cmd/weewar-cli
+go build -o weewar-cli ./cmd/weewar-cli
 
-# Make it executable and add to PATH (optional)
-chmod +x /tmp/weewar-cli
+# Make it executable 
+chmod +x weewar-cli
 ```
 
 ### Quick Start
 ```bash
-# Start a new interactive game
-/tmp/weewar-cli -new -interactive
+# Start interactive game with a world from storage
+./weewar-cli -world ./storage/maps/small-world -interactive
 
-# Start with specific number of players
-/tmp/weewar-cli -new -players 4 -interactive
+# Load a saved game
+./weewar-cli -load my_game.json -interactive
 
-# Run single commands
-/tmp/weewar-cli -new status map
+# Execute single commands
+./weewar-cli -world ./storage/maps/small-world status units quit
 ```
 
 ## REPL Interface
 
 ### Understanding the Prompt
-The CLI uses a smart prompt that shows game state:
-
+The CLI uses a simple interactive prompt:
 ```
-weewar[T1:P0]> 
-```
-
-- `T1` = Turn number (1, 2, 3, etc.)
-- `P0` = Current player (0, 1, 2, etc.)
-
-### Special Game States
-```
-weewar[GAME ENDED - Player 1 Won]>     # Game over
-weewar>                                # No game loaded
+> 
 ```
 
 ### Getting Help
 ```bash
 # Show all available commands
-weewar[T1:P0]> help
+> help
 
-# Get help for specific command
-weewar[T1:P0]> help move
-
-# Show available actions for current player
-weewar[T1:P0]> actions
+# View available commands and position formats
+> help
 ```
 
 ## Game Commands
 
-### Basic Commands
+### Core Commands
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `new [players]` | Start new game | `new 2` |
-| `status` / `s` | Show game status | `status` |
-| `map` | Display game map | `map` |
+| `move <from> <to>` | Move unit | `move A1 3,4` |
+| `attack <att> <tgt>` | Attack target | `attack A1 B2` |
+| `select <unit>` | Select unit, show options | `select A1` |
+| `end` | End current turn | `end` |
+| `status` | Show game status | `status` |
 | `units` | Show all units | `units` |
-| `actions` | Show available actions | `actions` |
-| `help` | Show help | `help move` |
+| `player [ID]` | Show player info | `player A` |
+| `help` | Show help | `help` |
 | `quit` | Exit game | `quit` |
 
-### Movement Commands
+### Recording Commands
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `move <from> <to>` | Move unit | `move A1 B2` |
-| `attack <from> <to>` | Attack unit | `attack A1 B2` |
-| `end` | End current turn | `end` |
-
-### Prediction Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `predict <from> <to>` | Show damage prediction | `predict A1 B2` |
-| `attackoptions <unit>` | Show attack targets | `attackoptions A1` |
-| `moveoptions <unit>` | Show movement options | `moveoptions A1` |
-
-### Information Commands
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `turn` | Detailed turn info | `turn` |
-| `player [id]` | Player information | `player 1` |
-| `refresh` / `r` | Refresh display | `refresh` |
-
-### File Operations
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `save <file>` | Save game | `save game.json` |
-| `load <file>` | Load game | `load game.json` |
-| `render <file>` | Render PNG | `render game.png` |
-
-### Display Options
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `verbose` | Toggle verbose mode | `verbose` |
-| `compact` | Set compact display | `compact` |
+| `record start` | Begin recording moves | `record start` |
+| `record stop` | Stop recording | `record stop` |
+| `record show` | Display recorded moves | `record show` |
+| `record clear` | Clear move list | `record clear` |
+| `replay` | Show moves as JSON | `replay` |
 
 ## Position System
 
-### Chess Notation
-WeeWar CLI uses chess-style notation for positions on a hex grid:
+### Flexible Position Formats
+WeeWar CLI supports three position formats:
 
-```
-         A     B     C     D     E     F     G     H     I     J     K     L
- 1    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    --    --    --
+#### 1. Unit IDs (Player + Unit Number)
+- `A1`, `A2`, `A3` - Player A's units 1, 2, 3
+- `B1`, `B12`, `B99` - Player B's units
+- `C2` - Player C's unit 2
 
- 2      🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
-        --    P0    P0    --    --    --    --    --    --    --    --    --
+#### 2. Q/R Hex Coordinates  
+- `3,4` - Hex coordinate Q=3, R=4
+- `-1,2` - Negative coordinates supported
+- `0,0` - Origin coordinate
 
- 3    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    --    --    --
-
- 7    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    P1    P1    --
-
- 8      🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱    🌱
-        --    --    --    --    --    --    --    --    --    --    --    --
-```
+#### 3. Row/Col Coordinates (prefixed with 'r')
+- `r4,5` - Row 4, Column 5 
+- `r0,0` - Row 0, Column 0
 
 ### Position Examples
-- `A1` = Top-left corner
-- `B2` = Second column, second row  
-- `L8` = Bottom-right corner
-
-### Moving Units
 ```bash
-# Move unit from B2 to B3
-weewar[T1:P0]> move B2 B3
-✓ Unit moved from B2 to B3
+# Move unit A1 to hex coordinate 3,4
+> move A1 3,4
 
-# Attack enemy unit at C4 with unit at B3
-weewar[T1:P0]> attack B3 C4
-✓ Attack from B3 to C4: 25 damage dealt
+# Attack unit B2 with unit at row/col 4,5
+> attack r4,5 B2
 
-# Check updated map to see new positions
-weewar[T1:P0]> map
-=== Game Map ===
-         A     B     C     D     E     F
- 1    🌱    🌱    🌱    🌱    🌱    🌱
-      --    --    --    --    --    --
-
- 2      🌱    🌱    🌱    🌱    🌱    🌱
-        --    --    P1    --    --    --
-
- 3    🌱    🌱    🌱    🌱    🌱    🌱
-      --    P0    --    --    --    --
-
- 4      🌱    🌱    🌱    🌱    🌱    🌱
-        --    --    --    --    --    --
+# Move using different coordinate systems
+> move 2,3 A1    # Move from Q/R to unit
+> move A1 r5,6   # Move from unit to row/col
 ```
 
 ## Gameplay Tutorial
 
-### Starting a New Game
+### Starting a Game
 ```bash
-# Start interactive game
-weewar[T1:P0]> new
+# Start with a world from storage
+$ ./weewar-cli -world ./storage/maps/small-world -interactive
+Loading world from ./storage/maps/small-world...
+Loaded world: Small World
+World loaded successfully
+WeeWar CLI - Interactive Mode
+Type 'help' for available commands, 'quit' to exit
 
-# Check initial game state
-weewar[T1:P0]> status
-=== Game Status ===
+> status
 Turn: 1
 Current Player: 0
 Game Status: playing
-Map: DefaultMap
-Players: 2
-  Player 0: 2 units
-  Player 1: 2 units
+Player A: 1 units
 
-# See what actions are available
-weewar[T1:P0]> actions
-=== Available Actions (Player 0) ===
-  Move unit at B2 (movement: 3)
-  Move unit at C2 (movement: 3)
-  No attack opportunities
-  End turn (use 'end' command)
+> units
+Player A units:
+  A1: Type 1 at (1,2) (HP: 100)
 ```
 
 ### Basic Turn Sequence
 ```bash
-# 1. Check available actions
-weewar[T1:P0]> actions
+# 1. Check game status
+> status
 
-# 2. View the map
-weewar[T1:P0]> map
+# 2. See your units  
+> units
 
-# 3. Move units
-weewar[T1:P0]> move B2 B3
+# 3. Select a unit to see movement/attack options
+> select A1
+Selected A1 at (1,2)
+Can move to 5 positions: (0,2), (1,1), (1,3), (2,1), (2,2)
+No valid attacks available
 
-# 4. Check for attack opportunities
-weewar[T1:P0]> actions
+# 4. Move the unit
+> move A1 2,2
+Moved A1 from (1,2) to (2,2)
 
-# 5. End turn when done
-weewar[T1:P0]> end
+# 5. End your turn
+> end  
+Turn ended. Current player: 1
 ```
-
-### Understanding the Map
-The map now uses rich emoji symbols for terrain types with hex grid layout. Each tile spans 2 lines:
-
-```bash
-weewar[T1:P0]> map
-=== Game Map ===
-Size: 8x12
-         A     B     C     D     E     F     G     H     I     J     K     L
- 1    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    --    --    --
-
- 2      🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️
-        --    P0    P0    --    --    --    --    --    --    --    --    --
-
- 3    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱
-      --    --    --    --    --    --    --    --    --    --    --    --
-
- 4      🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱
-        --    --    --    --    --    --    --    --    --    --    --    --
-
- 5    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    --    --    --
-
- 6      🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️
-        --    --    --    --    --    --    --    --    --    --    --    --
-
- 7    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🌱    🌱
-      --    --    --    --    --    --    --    --    --    P1    P1    --
-
- 8      🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱    🌱    🏜️    🌱    🌱
-        --    --    --    --    --    --    --    --    --    --    --    --
-
-Terrain Key:
-🌱=Grass  🏜️=Desert  🌊=Water  ⛰️=Mountains  🗿=Rock  🏥=Hospital
-🌾=Swamp  🌲=Forest  🌋=Lava  💧=Shallow  🚀=Missile  🌉=Bridge
-⛏️=Mines  🏙️=City  🛣️=Road  🗼=Tower  ❄️=Snow  🏰=Land Base
-🏛️=Naval Base  ✈️=Airport  ❓=Unknown
-
-Units: P0, P1, etc. (Player number), -- = No unit
-Hex Layout: Offset rows based on EvenRowsOffset flag
-```
-
-**Key Features:**
-- **2-Line Format**: Each tile has terrain emoji on top line, unit info on bottom line
-- **Emoji Terrain**: Each terrain type has a distinctive emoji for easy recognition
-- **Hex Grid**: Notice how alternate rows are offset to show the hexagonal structure
-- **Clear Unit Display**: Units appear as "P0", "P1", etc. on separate line from terrain
-- **Better Spacing**: More space around each tile for improved readability
-- **Rich Variety**: Supports up to 99 different terrain types with clear visual distinction
 
 ### Combat Example
 ```bash
-# Check if units can attack
-weewar[T1:P0]> actions
-=== Available Actions (Player 0) ===
-  Attack with unit at B3 -> enemy at C4
+# Select unit to see attack options
+> select A1
+Selected A1 at (2,3)
+Can move to 3 positions: (1,3), (2,2), (3,2)  
+Can attack 1 positions: (3,3)
 
-# Execute attack
-weewar[T1:P0]> attack B3 C4
-✓ Attack from B3 to C4: 25 damage dealt
+# Attack enemy unit
+> attack A1 B1
+Attack successful! A1 attacked B1. Defender took 25 damage
 
-# Check result
-weewar[T1:P0]> units
-=== Units ===
-Player 0: 2 units
-  1. B3 - Type:1 Health:100 Movement:2
-  2. C2 - Type:1 Health:100 Movement:3
-Player 1: 2 units
-  1. C4 - Type:1 Health:75 Movement:3
-  2. K7 - Type:1 Health:100 Movement:3
-```
-
-### Prediction and Planning Examples
-
-```bash
-# Show movement options for a unit
-weewar[T1:P0]> moveoptions B2
-=== Movement Options for Soldier (Basic) at B2 ===
-Movement Points: 3
-Available positions (4):
-  1. A2 - Grass (Move Cost: 1)
-  2. B1 - Grass (Move Cost: 1)
-  3. B3 - Grass (Move Cost: 1)
-  4. C2 - Grass (Move Cost: 1)
-
-Use 'move <unit> <destination>' to move the unit.
-
-# Show attack options for a unit
-weewar[T1:P0]> attackoptions B3
-=== Attack Options for Soldier (Basic) at B3 ===
-Available targets (1):
-  1. C4 - Soldier (Basic) (Player 1, Health: 100)
-
-Use 'predict <unit> <target>' to see damage prediction.
-
-# Predict damage before attacking
-weewar[T1:P0]> predict B3 C4
-=== Damage Prediction: B3 attacking C4 ===
-Attacker: Soldier (Basic) at B3 (Player 0, Health: 100)
-Target: Soldier (Basic) at C4 (Player 1, Health: 100)
-
-Damage Range: 20-30 damage
-Expected Damage: 25.0
-Damage Probabilities:
-  20 damage: 33.3%
-  25 damage: 33.3%
-  30 damage: 33.3%
-
-Predicted Target Health: 75
+# Check unit status
+> units
+Player A units:
+  A1: Type 1 at (2,3) (HP: 100)
+Player B units:
+  B1: Type 1 at (3,3) (HP: 75)
 ```
 
 ## Advanced Features
 
-### Batch Processing
+### Move Recording
+```bash
+# Start recording your session
+> record start
+Recording started
+
+# Play some moves
+> move A1 3,4
+> attack 3,4 B1
+> end
+
+# View recorded moves
+> record show
+Recorded moves (3):
+  1. Turn 1, Player 0: move A1 3,4
+  2. Turn 1, Player 0: attack 3,4 B1  
+  3. Turn 1, Player 0: end
+
+# Export as JSON
+> replay
+Move list JSON:
+{"moves":[{"command":"move A1 3,4","timestamp":"1642781234","turn":1,"player":0},...]}
+```
+
+### Batch Commands via Pipe
 ```bash
 # Create command file
-echo "new
-move B2 B3
-attack B3 C4
-end
-status" > commands.txt
+echo -e "select A1\nmove A1 3,4\nend\nstatus" > moves.txt
 
-# Execute batch commands
-/tmp/weewar-cli -batch commands.txt
+# Pipe commands to CLI
+cat moves.txt | ./weewar-cli -world ./storage/maps/small-world -interactive
 ```
 
-### Save and Load Games
+### Game State Analysis
 ```bash
-# Save current game
-weewar[T1:P0]> save my_game.json
-✓ Game saved to my_game.json
+# Check current game state
+> status
+Turn: 3
+Current Player: 1
+Game Status: playing
+Player A: 2 units
+Player B: 1 units
 
-# Load saved game
-weewar> load my_game.json
-✓ Game loaded from my_game.json
+# Analyze specific player
+> player B
+Player B:
+  Units: 1
+  Status: Waiting
 
-# Start CLI with saved game
-/tmp/weewar-cli -load my_game.json -interactive
-```
-
-### PNG Rendering
-```bash
-# Render current game state
-weewar[T1:P0]> render game.png
-✓ Game rendered to game.png (800x600)
-
-# Render with custom size
-weewar[T1:P0]> render game_large.png 1200 900
-✓ Game rendered to game_large.png (1200x900)
-
-# Render from command line
-/tmp/weewar-cli -load game.json -render game.png
-```
-
-### Session Recording
-```bash
-# Start recording session
-/tmp/weewar-cli -record session.txt -interactive
-
-# All commands will be recorded to session.txt
-# Later replay with:
-/tmp/weewar-cli -batch session.txt
-```
-
-### Multiple CLI Modes
-```bash
-# Interactive mode
-/tmp/weewar-cli -new -interactive
-
-# Single commands
-/tmp/weewar-cli -new status map units
-
-# Batch with save
-/tmp/weewar-cli -new -batch commands.txt -save final_game.json
-
-# Load, render, and save
-/tmp/weewar-cli -load game.json -render game.png -save updated_game.json
+# See all units on the battlefield  
+> units
+Player A units:
+  A1: Type 1 at (3,4) (HP: 85)
+  A2: Type 1 at (1,3) (HP: 100)
+Player B units:
+  B1: Type 1 at (5,5) (HP: 60)
 ```
 
 ## Tips and Tricks
 
-### Efficient Gameplay
+### Efficient Workflow
 ```bash
-# Use shortcuts for common commands
-weewar[T1:P0]> s          # Quick status
-weewar[T1:P0]> r          # Refresh display
-weewar[T1:P0]> actions    # See available actions
+# Quick status check
+> status
 
-# Chain commands in command line
-/tmp/weewar-cli -new status map actions
-```
+# Select unit before moving to see options
+> select A1
+Selected A1 at (2,2)
+Can move to 4 positions: (1,2), (2,1), (2,3), (3,2)
 
-### Visual Debugging
-```bash
-# Render game state to see what's happening
-weewar[T1:P0]> render debug.png
-
-# Use verbose mode for detailed output
-weewar[T1:P0]> verbose
-weewar[T1:P0]> move B2 B3  # More detailed feedback
+# Use the information to make tactical decisions
+> move A1 2,3
 ```
 
 ### Strategic Planning
-```bash
-# Check turn information
-weewar[T1:P0]> turn
-=== Turn Information ===
-Turn Number: 1
-Current Player: 0
-Game Status: playing
-Can End Turn: true
-Your Units: 2
-Units with Movement: 2
+```bash  
+# Check what you can do this turn
+> units
+> select A1  # See movement options
+> select A2  # See attack options
 
-# Analyze available actions
-weewar[T1:P0]> actions
-=== Available Actions (Player 0) ===
-  Move unit at B2 (movement: 3)
-  Move unit at C2 (movement: 3)
-  No attack opportunities
-  End turn (use 'end' command)
+# Plan your moves
+> move A1 3,4
+> select A1  # Now check attack options from new position  
+> attack A1 B1
+> end
 ```
 
-### Error Recovery
+### Session Recording for Analysis
 ```bash
-# If you make a mistake, check the error message
-weewar[T1:P0]> move A1 Z9
-✗ Invalid to position: Z9
-  Error: Use format like A1, B2, etc.
-
-# Use help to understand commands
-weewar[T1:P0]> help move
-move <from> <to> - Move unit from one position to another (e.g., 'move A1 B2')
+# Record important games
+> record start
+> # ... play game ...
+> record show  # Review your moves
+> replay      # Get JSON for external analysis
 ```
 
-## Common Command Patterns
-
-### Start of Turn
+### Multiple Coordinate Systems
 ```bash
-weewar[T1:P0]> s          # Check status
-weewar[T1:P0]> actions    # See available actions
-weewar[T1:P0]> map        # View battlefield
+# Use whatever format is most convenient
+> move A1 3,4     # Unit to hex coordinate
+> attack r2,3 B1  # Row/col to unit  
+> move 4,5 2,2    # Hex to hex
 ```
 
-### During Turn
-```bash
-weewar[T1:P0]> move B2 B3  # Move units
-weewar[T1:P0]> actions     # Check for attacks
-weewar[T1:P0]> attack B3 C4 # Attack if possible
-```
+## Position Format Reference
 
-### End of Turn
-```bash
-weewar[T1:P0]> actions     # Verify no more actions
-weewar[T1:P0]> end         # End turn
-```
+### Unit ID Format: `[A-Z][1-99]`
+- **Player Letters**: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z
+- **Unit Numbers**: 1, 2, 3, ..., 99
+- **Examples**: `A1`, `B12`, `Z99`
 
-### Analysis
-```bash
-weewar[T1:P0]> units       # Review unit status
-weewar[T1:P0]> player 1    # Check opponent
-weewar[T1:P0]> render analysis.png # Save visual record
-```
+### Q/R Coordinate Format: `<q>,<r>`  
+- **Q Coordinate**: Column (can be negative)
+- **R Coordinate**: Row (can be negative)
+- **Examples**: `0,0`, `3,4`, `-1,2`
+
+### Row/Col Format: `r<row>,<col>`
+- **Prefix**: Always starts with `r`  
+- **Row/Col**: Traditional grid coordinates
+- **Examples**: `r0,0`, `r4,5`, `r10,15`
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Invalid Position Error**:
-```bash
-weewar[T1:P0]> move A1 Z9
-✗ Invalid to position: Z9
-```
-Solution: Use valid chess notation (A1-L8 for standard map)
-
 **Unit Not Found**:
 ```bash
-weewar[T1:P0]> move A1 B2
-✗ No unit found at position A1
+> move A5 3,4
+Invalid unit: unit A5 does not exist
 ```
-Solution: Check unit positions with `units` or `map` command
+Solution: Use `units` command to see available units
 
-**Wrong Player Turn**:
+**Invalid Coordinate**:  
 ```bash
-weewar[T1:P0]> move J7 J6
-✗ Unit at J7 belongs to player 1, but it's player 0's turn
+> move A1 invalid
+Invalid to position: invalid format: invalid (expected unit ID like A1 or coordinate like 3,4 or r4,5)
 ```
-Solution: Only move your own units during your turn
+Solution: Use valid position format (see Position System)
+
+**Move Failed**:
+```bash
+> move A1 10,10
+Move failed: no tile at destination
+```
+Solution: Use `select A1` to see valid movement options
 
 ### Getting Help
 ```bash
-# Show all commands
-weewar[T1:P0]> help
+# Show all commands and position formats
+> help
 
-# Show command-specific help
-weewar[T1:P0]> help move
+# Check what units you can move
+> units
 
-# Check available actions
-weewar[T1:P0]> actions
-
-# View current game state
-weewar[T1:P0]> status
+# See movement options for a specific unit
+> select A1
 ```
 
-## Command Reference
+## Command Line Options
 
-### Complete Command List
-```
-Game Management:
-  new [players]        - Start new game
-  load <file>         - Load saved game
-  save <file>         - Save current game
-  quit                - Exit
-
-Movement:
-  move <from> <to>    - Move unit
-  attack <from> <to>  - Attack unit
-  end                 - End turn
-
-Information:
-  status / s          - Game status
-  map                 - Display map
-  units               - Show units
-  player [id]         - Player info
-  turn                - Turn details
-  actions             - Available actions
-  help [command]      - Show help
-  refresh / r         - Refresh display
-
-Display:
-  verbose             - Toggle verbose mode
-  compact             - Set compact display
-
-Files:
-  render <file> [w] [h] - Render PNG
-```
-
-### Exit Codes
-- `0` - Success
-- `1` - General error
-- `2` - Invalid arguments
-- `3` - File operation failed
-
-## Examples
-
-### Complete Game Session
 ```bash
-# Start new game
-$ /tmp/weewar-cli -new -interactive
+# Start with world from storage
+./weewar-cli -world ./storage/maps/small-world -interactive
 
-# Game begins
-weewar[T1:P0]> actions
-=== Available Actions (Player 0) ===
-  Move unit at B2 (movement: 3)
-  Move unit at C2 (movement: 3)
+# Load saved game  
+./weewar-cli -load my_game.json -interactive
 
-weewar[T1:P0]> move B2 B3
-✓ Unit moved from B2 to B3
+# Execute commands and save
+./weewar-cli -world map1 move A1 3,4 end -save game.json
 
-weewar[T1:P0]> move C2 C3
-✓ Unit moved from C2 to C3
+# Record session
+./weewar-cli -world map1 -record session.txt -interactive
 
-weewar[T1:P0]> end
-✓ Turn ended. Now player 1's turn (Turn 1)
-
-weewar[T1:P1]> actions
-=== Available Actions (Player 1) ===
-  Move unit at J7 (movement: 3)
-  Move unit at K7 (movement: 3)
-
-weewar[T1:P1]> move J7 J6
-✓ Unit moved from J7 to J6
-
-weewar[T1:P1]> end
-✓ Turn ended. Now player 0's turn (Turn 2)
-
-weewar[T2:P0]> save game.json
-✓ Game saved to game.json
-
-weewar[T2:P0]> render game.png
-✓ Game rendered to game.png (800x600)
-
-weewar[T2:P0]> quit
-✓ Goodbye!
+# Render game to PNG (when implemented)
+./weewar-cli -load game.json -render game.png -width 1024 -height 768
 ```
 
-The WeeWar CLI provides a comprehensive, professional interface for playing turn-based strategy games. With its chess notation system, rich feedback, and powerful features, it offers an excellent command-line gaming experience.
+## Example: Complete Game Session
+
+```bash
+$ ./weewar-cli -world ./storage/maps/small-world -interactive
+Loading world from ./storage/maps/small-world...
+World loaded successfully
+WeeWar CLI - Interactive Mode
+Type 'help' for available commands, 'quit' to exit
+
+> record start
+Recording started
+
+> status
+Turn: 1
+Current Player: 0
+Game Status: playing
+Player A: 1 units
+
+> select A1
+Selected A1 at (1,2)
+Can move to 6 positions: (0,1), (0,2), (1,1), (1,3), (2,1), (2,2)
+No valid attacks available
+
+> move A1 2,2  
+Moved A1 from (1,2) to (2,2)
+
+> end
+Turn ended. Current player: 1
+
+> record show
+Recorded moves (3):
+  1. Turn 1, Player 0: record start
+  2. Turn 1, Player 0: move A1 2,2
+  3. Turn 1, Player 0: end
+
+> quit
+Goodbye!
+```
+
+The simplified WeeWar CLI provides a focused, efficient interface for turn-based strategy gaming with flexible position formats, move recording, and Unix-friendly batch processing capabilities.
 
 ---
 
 **For more information**:
 - [Developer Guide](../../DEVELOPER_GUIDE.md)
-- [Architecture Documentation](../../ARCHITECTURE.md)
+- [Architecture Documentation](../../ARCHITECTURE.md)  
 - [Project Summary](../../SUMMARY.md)

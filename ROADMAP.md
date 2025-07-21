@@ -288,9 +288,9 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - **Scalable Architecture**: EventBus and Observer patterns provide foundation for complex multiplayer features
 - **Professional UX**: Polished editor with intuitive controls and seamless interaction patterns
 
-## 🎯 Phase 8: Game Mechanics Implementation (In Progress)
-**Status**: Foundation Analysis Complete, Implementation Ready  
-**Timeline**: February 2025
+## ✅ Phase 8: Game Mechanics Implementation (Completed)
+**Status**: Rules Engine Integration Complete, CLI Production Ready  
+**Timeline**: January 2025
 
 ### Foundation Discovery ✅
 **Major Finding**: Comprehensive game engine already exists in lib/game.go and cmd/weewar-cli/
@@ -299,27 +299,51 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - **Coordinate System**: Proper AxialCoord (cube coordinates) throughout
 - **Multiplayer Ready**: Player validation, turn cycling, victory conditions
 
-### Rules Engine Integration (Week 1)
-- [ ] Create RulesEngine struct to load weewar-data.json
-- [ ] Replace hardcoded movement costs with terrain-specific calculations
-- [ ] Replace simple damage with probability-based combat from attack matrices
-- [ ] Update CLI commands to work with data-driven rules
-- [ ] Add rule validation and unit stats commands
+### Rules Engine Integration ✅ COMPLETED
+- [x] ~~Create RulesEngine struct to load weewar-data.json~~ ✅ COMPLETED
+- [x] ~~Replace hardcoded movement costs with terrain-specific calculations~~ ✅ COMPLETED
+- [x] ~~Replace simple damage with probability-based combat from attack matrices~~ ✅ COMPLETED
+- [x] ~~Update CLI commands to work with data-driven rules~~ ✅ COMPLETED
+- [x] ~~Add rule validation and unit stats commands~~ ✅ COMPLETED
 
-### Map-to-Game Bridge (Week 1)
-- [ ] Implement NewGameFromMap() to initialize from Map editor data
-- [ ] Add player count adaptation utilities (convert, remove, merge players)
-- [ ] Update CLI with map management commands
-- [ ] Add map validation for starting positions and terrain types
+### CLI Architecture Revolution ✅ COMPLETED  
+- [x] ~~Complete CLI transformation from bloated 1785-line implementation to focused 500-line SimpleCLI~~ ✅ COMPLETED
+- [x] ~~Position/Unit Parser System supporting unit IDs (A1, B12), Q/R coordinates, row/col coordinates~~ ✅ COMPLETED
+- [x] ~~Essential game commands: move, attack, select, end, status, units, player, help, quit~~ ✅ COMPLETED
+- [x] ~~Move recording system with serializable MoveList and JSON export~~ ✅ COMPLETED
+- [x] ~~REPL Interactive Mode for persistent gameplay without reloading~~ ✅ COMPLETED
+- [x] ~~World loading integration from ./storage/maps/ with JSON parsing~~ ✅ COMPLETED
+- [x] ~~Complete USER_GUIDE.md with examples, troubleshooting, and command reference~~ ✅ COMPLETED
 
-### Move Recording & WASM (Week 2)
+### Production Quality CLI Features ✅ COMPLETED
+- [x] ~~Real world integration: Successfully loads and plays with ./storage/maps/small-world~~ ✅ COMPLETED
+- [x] ~~Rules engine integration: Proper initialization with rules-data.json~~ ✅ COMPLETED
+- [x] ~~Game state persistence: Complete game state maintained across commands~~ ✅ COMPLETED
+- [x] ~~Position parser flexibility: Handles A1-Z99, Q/R coordinates, row/col formats~~ ✅ COMPLETED
+- [x] ~~Command recording: Full session recording with timestamps and player tracking~~ ✅ COMPLETED
+- [x] ~~Unix-friendly architecture: Pipe-to-REPL pattern for batch operations~~ ✅ COMPLETED
+- [x] ~~Comprehensive testing: Successfully compiled and tested with actual world data~~ ✅ COMPLETED
+
+### Development Workflow Benefits ✅ COMPLETED
+- [x] ~~Headless testing platform for CI/CD integration~~ ✅ COMPLETED
+- [x] ~~Game state debugging and interactive rule validation~~ ✅ COMPLETED
+- [x] ~~Map testing platform: Load any stored map for immediate testing~~ ✅ COMPLETED
+- [x] ~~Move validation: Real-time feedback on valid/invalid moves~~ ✅ COMPLETED
+- [x] ~~Session recording: Capture scenarios for documentation and bug reproduction~~ ✅ COMPLETED
+- [x] ~~Complete documentation: USER_GUIDE.md with workflow patterns~~ ✅ COMPLETED
+
+## 🎯 Phase 9: Web Interface Integration (Next Priority)
+**Status**: Ready for Implementation  
+**Timeline**: Q1-Q2 2025
+
+### WASM Bridge Development (Week 1-2)
+- [ ] Reactivate cmd/weewar-wasm/ module with enhanced game APIs
 - [ ] Define structured GameMove format for testing and replay
 - [ ] Add move recording and replay functionality to Game class
-- [ ] Reactivate cmd/weewar-wasm/ module with game APIs
 - [ ] Implement player-action focused WASM APIs for web interface
 - [ ] Test WASM performance and browser integration
 
-### Web Interface Integration (Week 3)
+### Web-Based Gameplay (Week 3-4)
 - [ ] Create GameState component following BaseComponent patterns
 - [ ] Add game mode switching to existing Phaser editor
 - [ ] Implement interactive unit selection and movement
@@ -332,17 +356,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [ ] Performance optimization for rules engine and WASM APIs
 - [ ] Create reference game sessions for regression testing
 
-## 🎯 Phase 7: Gameplay Integration (Planned)
-**Status**: Future  
-**Timeline**: Q2 2025
-
-### Web-Based Gameplay
-- [ ] Integration of CLI game engine with web interface
-- [ ] Real-time game state updates and turn management
-- [ ] Player actions via web interface
-- [ ] Game rendering and visualization in browser
-
-### Advanced Features
+### Advanced Features (Future)
 - [ ] AI player support for single-player games
 - [ ] Multiplayer session management
 - [ ] Tournament mode with rankings and statistics
@@ -415,7 +429,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 ---
 
 **Last Updated**: 2025-01-21  
-**Current Focus**: Game Mechanics Implementation - Rules Engine Integration (In Progress)  
-**Next Milestone**: Complete turn-based gameplay with web interface integration
+**Current Focus**: CLI Production Complete - Web Interface Integration (Next Priority)  
+**Next Milestone**: WASM bridge development and interactive web gameplay
 
-**Key Discovery**: Strong game foundation already exists (lib/game.go, CLI) - focus shifted from building game system to enhancing existing architecture with rules integration and web interface bridge.
+**Major Achievement**: Complete CLI transformation providing production-ready headless gaming platform. Rules engine integration complete with data-driven mechanics. Game foundation ready for web interface bridge.

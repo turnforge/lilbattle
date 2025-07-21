@@ -10,12 +10,14 @@ rules:
   - name: "backend"
     color: "blue"
     watch:
+      - action: "include"
+        patterns:
+          - "web/**/*.go"
       - action: "exclude"
         patterns:
           - "web/**"
       - action: "include"
         patterns:
-          - "web/**/*.go"
           - "**/*.go"
           - "go.mod"
           - "go.sum"
@@ -28,6 +30,21 @@ rules:
       - "pkill weewar || true"
       # - "kill -9 `ps -ef | grep weewar  | sed -e \"s/  */:/g\" | cut -d ':' -f 3`"
       - "/tmp/weewar serve"
+
+  - name: "cli"
+    color: "red"
+    watch:
+      - action: "include"
+        patterns:
+          - "lib/**/*.go"
+          - "cmd/**/*.go"
+          - "go.mod"
+          - "go.sum"
+    commands:
+      - "echo '🔧 Building WeeWar Binary...'"
+      - "make test"
+      - "make wasm"
+      - "make binlocal"
 
   # Frontend Development & Testing
   - name: "frontend"

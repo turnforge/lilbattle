@@ -14,6 +14,10 @@ vars:
 	echo GO_ROOT=${GO_ROOT}
 	echo WASM_EXEC_PATH=${WASM_EXEC_PATH}
 
+test:
+	cd lib && go test -v ./...
+	cd cmd/weewar-cli && go test -v ./...
+
 buf:
 	buf generate
 
