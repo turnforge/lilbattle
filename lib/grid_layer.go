@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"image/draw"
+	"log"
 )
 
 // =============================================================================
@@ -38,80 +39,27 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	// Clear buffer for full redraw (grid/coordinates are view-dependent)
 	gl.buffer.Clear()
 
-	// Get optimal starting coordinate and position from map bounds
-	mapBounds := world.Map.GetMapBounds(options.TileWidth, options.TileHeight, options.YIncrement)
-	minX := (options.TileWidth / 2) + mapBounds.MinX
-	minY := mapBounds.MinY
-	startingCoord := mapBounds.StartingCoord
-	startingX := mapBounds.StartingX
-
-	// Use viewport position as content offset
-	viewportX := float64(gl.x)
-	viewportY := float64(gl.y)
-	TW2 := (options.TileWidth / 2.0)
-	// startr, startc := HexToRowCol(startingCoord)
-	// fmt.Println("ViewportX,Y: ", viewportX, viewportY, "StartingCoord: ", startingCoord, ", StartingCoordRC: ", startr, startc)
-	startY := viewportY - minY // + (options.TileHeight / 2.0)
-	startX := viewportX - (minX + startingX) + TW2
-	startCoord := startingCoord
-	// go left till we are < 0
-	for startX > 0 {
-		startCoord = startCoord.Neighbor(LEFT)
-		startX -= options.TileWidth
-	}
-	// startr, startc = HexToRowCol(startCoord)
-	// fmt.Println("AfterMoving Left: StartingCoord: ", startingCoord, ", StartingCoordRC: ", startr, startc, options.TileWidth)
-
-	// Now go up till we are above y = 0
-	for i := 0; startY > 0; i++ {
-		if i%2 == 0 {
-			startCoord = startCoord.Neighbor(TOP_LEFT)
-			startX -= TW2
-		} else {
-			startCoord = startCoord.Neighbor(TOP_RIGHT)
-			startX += TW2
-		}
-		startY -= options.YIncrement
-	}
-
-	height, width := float64(gl.height), float64(gl.width)
-	// startr, startc = HexToRowCol(startCoord)
-	// fmt.Printf("2. Here...., StartX, StartY: %f, %f, StartCoord: %s, StartRC: (%d, %d)\n", startX, startY, startCoord, startr, startc)
-
-	// Now we can start drawing it
-	currY := startY
-	// fmt.Printf("w,h: ", width, height)
-	for i := 0; ; i++ {
-		// Draw a row first
-		currCoord := startCoord
-		currX := startX
-		for ; currX < width; currX += options.TileWidth {
-			// Draw grid lines if enabled
-			// r, c := HexToRowCol(currCoord)
-			// fmt.Printf("3. currXcurrY: (%f, %f), CurrCorrd: %s, RowCol: %d,%d, ShowGrid: %t\n", currX, currY, currCoord, r, c, options.ShowGrid)
+	// Simple - get top left r/c and render row by row
+	topLeftCoord := world.Map.XYToQR(float64(gl.x), float64(gl.y), options.TileWidth, options.TileHeight, options.YIncrement)
+	bottomRightCoord := world.Map.XYToQR(float64(gl.x+gl.width), float64(gl.y+gl.height), options.TileWidth, options.TileHeight, options.YIncrement)
+	tlrow, tlcol := HexToRowCol(topLeftCoord)
+	brrow, brcol := HexToRowCol(bottomRightCoord)
+	log.Println("TopLeft: ", topLeftCoord, tlrow, tlcol)
+	log.Println("BottomRight: ", bottomRightCoord, brrow, brcol)
+	for row := tlrow; row <= brrow; row++ {
+		for col := tlcol; col <= brcol; col++ {
+			coord := RowColToHex(row, col)
+			currX, currY := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			currX -= float64(gl.x)
+			currY -= float64(gl.y)
 			if options.ShowGrid {
 				gl.drawHexGrid(currX, currY, options)
 			}
 
 			// Draw coordinates if enabled
-			if options.ShowCoordinates {
-				gl.drawCoordinates(currCoord, currX, currY, options)
+			if true || options.ShowCoordinates {
+				gl.drawCoordinates(coord, currX, currY, options)
 			}
-			currCoord = currCoord.Neighbor(RIGHT)
-		}
-
-		if i%2 == 0 {
-			startCoord = startCoord.Neighbor(BOTTOM_LEFT)
-			startX -= TW2
-		} else {
-			startCoord = startCoord.Neighbor(BOTTOM_RIGHT)
-			startX += TW2
-		}
-
-		currY += options.YIncrement
-		if currY >= height {
-			// out of bounds so stop
-			break
 		}
 	}
 

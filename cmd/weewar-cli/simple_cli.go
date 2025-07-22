@@ -719,8 +719,8 @@ func (cli *SimpleCLI) renderGameWithOverlays(filename string, showCoords bool) e
 	}
 
 	// Calculate viewport offset to account for negative coordinates and starting position
-	viewportX := (tileWidth) + -mapBounds.StartingX // Xint(mapBounds.StartingX - mapBounds.MinX + tileWidth/2) // Use StartingX offset plus padding
-	viewportY := (tileHeight / 2) + -mapBounds.MinY // int(-mapBounds.MinY + tileHeight/2)                     // Offset by half tile for padding
+	viewportX := mapBounds.StartingX - (tileWidth) - 32
+	viewportY := mapBounds.MinY - (tileHeight / 2) - 32
 	log.Println("Map Bounds: ", mapBounds)
 	log.Println("Viewport x,y: ", viewportX, viewportY)
 
@@ -744,7 +744,7 @@ func (cli *SimpleCLI) renderGameWithOverlays(filename string, showCoords bool) e
 
 	// Set the world in the renderer
 	renderer.SetWorld(cli.game.World)
-	
+
 	// Configure coordinate display
 	renderer.SetShowCoordinates(showCoords)
 
