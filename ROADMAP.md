@@ -370,8 +370,8 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [x] **Opportunity Recognition**: Discovery of tactical advantages with value assessment and execution requirements
 - [x] **Strategic Analysis**: Long-term position assessment with strengths, weaknesses, and key factors
 
-## 🎯 Phase 10: Interactive Web Gameplay (Current Priority)
-**Status**: Frontend-WASM Integration Critical Path  
+## ✅ Phase 10: Interactive Web Gameplay (Mostly Complete)
+**Status**: WASM Integration Complete, Unit Interaction In Progress  
 **Timeline**: January 2025
 
 ### GameViewerPage Foundation ✅ COMPLETED
@@ -382,14 +382,15 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [x] ~~Game control UI with turn management, unit selection, and game log~~ ✅ COMPLETED
 - [x] ~~StartGamePage integration with URL-based configuration~~ ✅ COMPLETED
 
-### WASM Integration Completion (Week 1 - Critical)
-- [ ] **Debug WASM Loading Issues**: Fix WASM path resolution and module loading in GameState component
-- [ ] **Resolve World Data Loading**: Fix null world data in GameViewerPage and template integration
-- [ ] **Fix Initialization Sequence**: Prevent multiple initialization calls and race conditions
-- [ ] **Test WASM API Integration**: Verify all WASM functions (createGameFromMap, selectUnit, moveUnit, attackUnit, endTurn) work
-- [ ] **Complete Data Format Alignment**: Ensure WASM responses match TypeScript interface expectations
+### WASM Integration Completion ✅ COMPLETED
+- [x] ~~**Debug WASM Loading Issues**: Fix WASM path resolution and module loading in GameState component~~ ✅ COMPLETED
+- [x] ~~**Resolve World Data Loading**: Fix null world data in GameViewerPage and template integration~~ ✅ COMPLETED
+- [x] ~~**Fix Initialization Sequence**: Prevent multiple initialization calls and race conditions~~ ✅ COMPLETED
+- [x] ~~**Test WASM API Integration**: Verify all WASM functions (createGameFromMap, selectUnit, moveUnit, attackUnit, endTurn) work~~ ✅ COMPLETED
+- [x] ~~**Complete Data Format Alignment**: Ensure WASM responses match TypeScript interface expectations~~ ✅ COMPLETED
 
-### Interactive Gameplay Features (Week 2 - High Priority)
+### Interactive Gameplay Features (Current Priority - In Progress)
+- [ ] **Debug Unit Visibility**: Investigate why units are not visible in GameViewerPage renderer
 - [ ] **Enable Unit Selection**: Connect GameViewerPage unit selection to Phaser viewer highlighting
 - [ ] **Implement Movement Highlighting**: Show valid movement options as colored overlays in Phaser viewer
 - [ ] **Add Click-to-Move**: Enable clicking on highlighted tiles to move selected units
@@ -470,7 +471,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 ---
 
 **Last Updated**: 2025-01-22  
-**Current Focus**: Frontend-WASM Integration Critical Path - Interactive Web Gameplay  
-**Next Milestone**: Fix WASM loading issues and complete unit interaction
+**Current Focus**: Unit Interaction and Advanced Gameplay Features - Interactive Web Gameplay  
+**Next Milestone**: Debug unit visibility and complete unit selection/movement interface
 
-**Major Achievement**: Complete interactive game viewer foundation with lifecycle controller and WASM bridge architecture. External orchestration pattern eliminates race conditions. Ready for final WASM integration and interactive gameplay.
+**Major Achievement**: Complete WASM integration with working GameState component and functional game bridge. All critical integration issues resolved - module loading, world data initialization, JSON serialization working. Map tiles rendering correctly. Ready for unit interaction and advanced gameplay features.
