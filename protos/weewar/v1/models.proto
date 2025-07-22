@@ -71,20 +71,20 @@ message Game {
   string difficulty = 8;
 }
 
-message Map {
+message World {
   google.protobuf.Timestamp created_at = 1;
   google.protobuf.Timestamp updated_at = 2;
 
-  // Unique ID for the map
+  // Unique ID for the world
   string id = 3;
 
-  // User that created the map
+  // User that created the world
   string creator_id = 4;
 
   // Name if items have names
   string name = 5;
 
-  // Description if map has a description
+  // Description if world has a description
   string description = 6;
 
   // Some tags
@@ -97,13 +97,13 @@ message Map {
   string difficulty = 9;
 
   // JSON-fied tile data about what units and terrains are at each location
-  map<string, MapTile> tiles = 11;
+  map<string, Tile> tiles = 11;
 
-  // All units on the map and who they belong to
-  repeated MapUnit map_units = 12;
+  // All units on the world and who they belong to
+  repeated Unit units = 12;
 }
 
-message MapTile {
+message Tile {
   // Q and R in Cubed coordinates
   int32 q = 1;
   int32 r = 2;
@@ -113,7 +113,7 @@ message MapTile {
   int32 player = 4;
 }
 
-message MapUnit {
+message Unit {
   // Q and R in Cubed coordinates
   int32 q = 1;
   int32 r = 2;
