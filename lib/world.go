@@ -9,8 +9,9 @@ import "fmt"
 // World represents the pure game state without any rendering or UI concerns.
 // This is the single source of truth for all game data.
 type World struct {
-	Map           *Map      `json:"map"`   // The game map with terrain and tiles
-	UnitsByPlayer [][]*Unit `json:"units"` // All units in the game world by player ID
+	Map           *Map                 `json:"map"`   // The game map with terrain and tiles
+	UnitsByPlayer [][]*Unit            `json:"units"` // All units in the game world by player ID
+	UnitsByCoord  map[AxialCoord]*Unit `json:"-"`     // All units in the game world by player ID
 
 	// Observer pattern for state changes
 	WorldSubject `json:"-"`
@@ -62,6 +63,7 @@ func NewWorld(playerCount int, gameMap *Map) (*World, error) {
 	w := &World{
 		Map:           gameMap,
 		UnitsByPlayer: make([][]*Unit, 0),
+		UnitsByCoord:  make(map[AxialCoord]*Unit),
 		PlayerCount:   playerCount,
 	}
 
@@ -103,6 +105,10 @@ func (w *World) GetMapSizeRect() (rows, cols int) {
 	return w.Map.NumRows(), w.Map.NumCols()
 }
 
+func (w *World) UnitAt(coord AxialCoord) *Unit {
+	return w.UnitsByCoord[coord]
+}
+
 // GetTileAt returns the tile at the specified cube coordinates
 func (w *World) GetTileAt(coord AxialCoord) *Tile {
 	if w.Map == nil {
@@ -113,17 +119,11 @@ func (w *World) GetTileAt(coord AxialCoord) *Tile {
 
 // GetUnitsAt returns all units at the specified display coordinates
 func (w *World) GetUnitsAt(coord AxialCoord) []*Unit {
-	units := make([]*Unit, 0)
-	// TODO - Going through all units to search in a tile is expense
-	// Build a second index unitsByCoord along with units to handle this.
-	for _, units := range w.UnitsByPlayer {
-		for _, unit := range units {
-			if unit.Coord == coord {
-				units = append(units, unit)
-			}
-		}
+	// Use efficient O(1) lookup with UnitsByCoord
+	if unit := w.UnitsByCoord[coord]; unit != nil {
+		return []*Unit{unit}
 	}
-	return units
+	return []*Unit{}
 }
 
 // GetPlayerUnits returns all units belonging to the specified player
@@ -156,26 +156,62 @@ func (w *World) SetTileType(coord AxialCoord, terrainType int) bool {
 }
 
 // AddUnit adds a new unit to the world at the specified position
-func (w *World) AddUnit(unit *Unit) {
+func (w *World) AddUnit(unit *Unit) (oldunit *Unit, err error) {
+	if unit == nil {
+		return nil, fmt.Errorf("unit is nil")
+	}
+
+	playerID := unit.PlayerID
+	if playerID < 0 || playerID >= len(w.UnitsByPlayer) {
+		return nil, fmt.Errorf("invalid player ID: %d", playerID)
+	}
+
+	oldunit = w.UnitAt(unit.Coord)
+
+	// make sure to replace a unit here
 	w.UnitsByPlayer[unit.PlayerID] = append(w.UnitsByPlayer[unit.PlayerID], unit)
+	w.UnitsByCoord[unit.Coord] = unit
+	return
 }
 
 // RemoveUnit removes a unit from the world
-func (w *World) RemoveUnit(unit *Unit) bool {
+func (w *World) RemoveUnit(unit *Unit) error {
+	if unit == nil {
+		return fmt.Errorf("unit is nil")
+	}
+
+	tile := w.Map.TileAt(unit.Coord)
+	if tile == nil {
+		return fmt.Errorf("invalid tile")
+	}
 	p := unit.PlayerID
+	delete(w.UnitsByCoord, unit.Coord)
 	for i, u := range w.UnitsByPlayer[p] {
 		if u == unit {
 			// Remove unit from slice
 			w.UnitsByPlayer[p] = append(w.UnitsByPlayer[p][:i], w.UnitsByPlayer[p][i+1:]...)
-			return true
+			break
 		}
 	}
-	return false
+	return nil
 }
 
 // MoveUnit moves a unit to a new position
-func (w *World) MoveUnit(unit *Unit, newCoord AxialCoord) {
+func (w *World) MoveUnit(unit *Unit, newCoord AxialCoord) error {
+	if unit == nil {
+		return fmt.Errorf("unit is nil")
+	}
+
+	// Remove from old position
+	delete(w.UnitsByCoord, unit.Coord)
+
+	// Update unit position
 	unit.Coord = newCoord
+
+	// Add to new position
+	w.UnitsByCoord[newCoord] = unit
+
+	return nil
 }
 
 // =============================================================================

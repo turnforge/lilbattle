@@ -40,7 +40,7 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 
 	// Get optimal starting coordinate and position from map bounds
 	mapBounds := world.Map.GetMapBounds(options.TileWidth, options.TileHeight, options.YIncrement)
-	minX := mapBounds.MinX
+	minX := (options.TileWidth / 2) + mapBounds.MinX
 	minY := mapBounds.MinY
 	startingCoord := mapBounds.StartingCoord
 	startingX := mapBounds.StartingX
@@ -123,13 +123,13 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 // drawHexGrid draws hexagonal grid lines around a tile
 func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOptions) {
 	// Get hexagon vertices
-	vertices := gl.getHexVertices(centerX, centerY, options.TileWidth, options.TileHeight)
+	vertices := gl.GetHexVertices(centerX, centerY, options.TileWidth, options.TileHeight)
 
 	// Draw lines between vertices
 	gridColor := color.RGBA{R: 128, G: 128, B: 128, A: 255} // Dark gray
 	bufferImg := gl.buffer.GetImageData()
 
-	for i := 0; i < len(vertices); i++ {
+	for i := range len(vertices) {
 		x1, y1 := vertices[i][0], vertices[i][1]
 		x2, y2 := vertices[(i+1)%len(vertices)][0], vertices[(i+1)%len(vertices)][1]
 
@@ -157,28 +157,6 @@ func (gl *GridLayer) drawCoordinates(coord AxialCoord, centerX, centerY float64,
 
 	// Log the coordinate for debugging
 	// fmt.Printf("DEBUG: Drew coordinate text '%s' at (%.1f, %.1f)\n", text, centerX, centerY)
-}
-
-// getHexVertices returns the vertices of a hexagon centered at (centerX, centerY)
-func (gl *GridLayer) getHexVertices(centerX, centerY, tileWidth, tileHeight float64) [][2]float64 {
-	// Hexagon vertices (pointy-top orientation)
-	vertices := make([][2]float64, 6)
-
-	// Use actual tile dimensions for proper hexagon shape
-	size := tileHeight // tileWidth / SQRT3
-	radiusX := tileWidth / 2
-	radiusY := size / 2
-	h4 := size / 4
-
-	vertices[0][0], vertices[0][1] = centerX, centerY-radiusY
-	vertices[1][0], vertices[1][1] = centerX+radiusX, centerY-h4
-	vertices[2][0], vertices[2][1] = centerX+radiusX, centerY+h4
-	vertices[3][0], vertices[3][1] = centerX, centerY+radiusY
-	vertices[4][0], vertices[4][1] = centerX-radiusX, centerY+h4
-	vertices[5][0], vertices[5][1] = centerX-radiusX, centerY-h4
-	// fmt.Println("VERTS: ", centerX, centerY, vertices)
-
-	return vertices
 }
 
 // drawLine draws a line between two points using Bresenham's algorithm

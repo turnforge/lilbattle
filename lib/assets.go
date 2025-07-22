@@ -17,7 +17,7 @@ import (
 // AssetManager handles loading and caching of game assets
 type AssetManager struct {
 	dataPath   string
-	tileCache  map[int]image.Image
+	tileCache  map[string]image.Image // key: "tileType_playerID"
 	unitCache  map[string]image.Image // key: "unitId_playerColor"
 	gameData   *GameDataAssets
 	cacheMutex sync.RWMutex
@@ -34,31 +34,33 @@ type GameDataAssets struct {
 func NewAssetManager(dataPath string) *AssetManager {
 	return &AssetManager{
 		dataPath:   dataPath,
-		tileCache:  make(map[int]image.Image),
+		tileCache:  make(map[string]image.Image),
 		unitCache:  make(map[string]image.Image),
 		cacheMutex: sync.RWMutex{},
 	}
 }
 
-// GetTileImage returns the tile image for a given tile type
-func (am *AssetManager) GetTileImage(tileType int) (image.Image, error) {
+// GetTileImage returns the tile image for a given tile type and player ID
+func (am *AssetManager) GetTileImage(tileType int, playerID int) (image.Image, error) {
+	cacheKey := fmt.Sprintf("%d_%d", tileType, playerID)
+
 	am.cacheMutex.RLock()
-	if img, exists := am.tileCache[tileType]; exists {
+	if img, exists := am.tileCache[cacheKey]; exists {
 		am.cacheMutex.RUnlock()
 		return img, nil
 	}
 	am.cacheMutex.RUnlock()
 
 	// Load tile image
-	tilePath := filepath.Join(am.dataPath, "Tiles", fmt.Sprintf("%d_files", tileType), "0.png")
+	tilePath := filepath.Join(am.dataPath, "Tiles", fmt.Sprintf("%d_files", tileType), fmt.Sprintf("%d.png", playerID))
 	img, err := am.loadImageFile(tilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load tile image for type %d: %w", tileType, err)
+		return nil, fmt.Errorf("failed to load tile image for type %d, player %d: %w", tileType, playerID, err)
 	}
 
 	// Cache the image
 	am.cacheMutex.Lock()
-	am.tileCache[tileType] = img
+	am.tileCache[cacheKey] = img
 	am.cacheMutex.Unlock()
 
 	return img, nil
@@ -107,8 +109,8 @@ func (am *AssetManager) loadImageFile(path string) (image.Image, error) {
 }
 
 // HasTileAsset checks if a tile asset exists without loading it
-func (am *AssetManager) HasTileAsset(tileType int) bool {
-	tilePath := filepath.Join(am.dataPath, "Tiles", fmt.Sprintf("%d_files", tileType), "0.png")
+func (am *AssetManager) HasTileAsset(tileType int, playerID int) bool {
+	tilePath := filepath.Join(am.dataPath, "Tiles", fmt.Sprintf("%d_files", tileType), fmt.Sprintf("%d.png", playerID))
 	_, err := os.Stat(tilePath)
 	return err == nil
 }
@@ -122,12 +124,15 @@ func (am *AssetManager) HasUnitAsset(unitType int, playerColor int) bool {
 
 // PreloadCommonAssets preloads commonly used assets for better performance
 func (am *AssetManager) PreloadCommonAssets() error {
-	// Preload common tile types (1-26)
+	// Preload common tile types (1-26) with basic player colors (0-5)
 	for i := 1; i <= 26; i++ {
-		if am.HasTileAsset(i) {
-			_, err := am.GetTileImage(i)
-			if err != nil {
-				fmt.Printf("Warning: Could not preload tile %d: %v\n", i, err)
+		for playerID := 0; playerID <= 5; playerID++ {
+			if am.HasTileAsset(i, playerID) {
+				_, err := am.GetTileImage(i, playerID)
+				if err != nil {
+					// Continue on error - not all combinations exist
+					continue
+				}
 			}
 		}
 	}
@@ -153,7 +158,7 @@ func (am *AssetManager) ClearCache() {
 	am.cacheMutex.Lock()
 	defer am.cacheMutex.Unlock()
 
-	am.tileCache = make(map[int]image.Image)
+	am.tileCache = make(map[string]image.Image)
 	am.unitCache = make(map[string]image.Image)
 }
 

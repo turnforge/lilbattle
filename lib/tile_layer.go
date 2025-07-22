@@ -67,31 +67,64 @@ func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, opti
 	x += float64(tl.x)
 	y += float64(tl.y)
 
+	// Check if this is a player-owned tile (base, city, etc.)
+	playerID := tile.Player // -1 means neutral/no player
+
 	// Try to use real terrain sprite if available
-	// fmt.Println("3 - TLX/Y: ", x, y, tl.assetProvider)
-	if tl.assetProvider != nil && tl.assetProvider.HasTileAsset(tile.TileType) {
-		tl.renderTerrainSprite(tile.TileType, x, y, options)
+	// log.Println("Has Tile: ", tile.TileType, playerID, tl.assetProvider.HasTileAsset(tile.TileType, playerID))
+	if tl.assetProvider != nil && tl.assetProvider.HasTileAsset(tile.TileType, playerID) {
+		tl.renderTerrainSprite(tile.TileType, playerID, x, y, options)
 	} else {
 		// Fallback to colored hexagon
-		color := tl.getTerrainColor(tile.TileType)
+		color := tl.getTerrainColor(tile.TileType, playerID)
 		tl.drawSimpleHexToBuffer(x, y, color, options)
 	}
 }
 
+// isPlayerOwnedTerrain checks if a terrain type is player-owned (bases, cities, etc.)
+func (tl *TileLayer) isPlayerOwnedTerrain(tileType int) bool {
+	switch tileType {
+	case 1: // Land Base
+		return true
+	case 2: // Naval Base
+		return true
+	case 3: // Airport Base
+		return true
+	case 6: // Hospital
+		return true
+	case 16: // Missile Silo
+		return true
+	case 20: // Mines
+		return true
+	case 21: // City
+		return true
+	case 25: // Guard Tower
+		return true
+	default:
+		return false
+	}
+}
+
 // renderTerrainSprite renders a terrain sprite
-func (tl *TileLayer) renderTerrainSprite(tileType int, x, y float64, options LayerRenderOptions) {
+func (tl *TileLayer) renderTerrainSprite(tileType int, playerID int, x, y float64, options LayerRenderOptions) {
+	// Create cache key that includes player ID for player-owned terrain
+	cacheKey := tileType
+	if tl.isPlayerOwnedTerrain(tileType) {
+		cacheKey = tileType*1000 + playerID // Simple way to make unique key
+	}
+
 	// Check cache first
-	cachedSprite, exists := tl.terrainSprites[tileType]
+	cachedSprite, exists := tl.terrainSprites[cacheKey]
 	if !exists {
 		// Load and cache sprite
-		img, err := tl.assetProvider.GetTileImage(tileType)
+		img, err := tl.assetProvider.GetTileImage(tileType, playerID)
 		if err != nil {
 			// Fallback to colored hex
-			color := tl.getTerrainColor(tileType)
+			color := tl.getTerrainColor(tileType, playerID)
 			tl.drawSimpleHexToBuffer(x, y, color, options)
 			return
 		}
-		tl.terrainSprites[tileType] = img
+		tl.terrainSprites[cacheKey] = img
 		cachedSprite = img
 	}
 
@@ -100,7 +133,7 @@ func (tl *TileLayer) renderTerrainSprite(tileType int, x, y float64, options Lay
 }
 
 // getTerrainColor returns color for terrain type
-func (tl *TileLayer) getTerrainColor(terrainType int) Color {
+func (tl *TileLayer) getTerrainColor(terrainType int, playerID int) Color {
 	switch terrainType {
 	case 1: // Grass
 		return Color{R: 0x22, G: 0x8B, B: 0x22}

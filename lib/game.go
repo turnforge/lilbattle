@@ -124,8 +124,8 @@ func (g *Game) GetPlayersOnTeam(teamID int) []*PlayerInfo {
 
 // ArePlayersOnSameTeam checks if two players are on the same team
 func (g *Game) ArePlayersOnSameTeam(playerID1, playerID2 int) bool {
-	if playerID1 < 0 || playerID1 >= len(g.Players) || 
-	   playerID2 < 0 || playerID2 >= len(g.Players) {
+	if playerID1 < 0 || playerID1 >= len(g.Players) ||
+		playerID2 < 0 || playerID2 >= len(g.Players) {
 		return false
 	}
 	return g.Players[playerID1].TeamID == g.Players[playerID2].TeamID
@@ -150,7 +150,7 @@ func (g *Game) initializeStartingUnits() error {
 			if err != nil {
 				return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)
 			}
-			
+
 			// Initialize unit stats from rules data
 			unit.AvailableHealth = unitData.Health
 			unit.DistanceLeft = unitData.MovementPoints
@@ -177,7 +177,7 @@ func (g *Game) resetPlayerUnits(playerID int) error {
 		if err != nil {
 			return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)
 		}
-		
+
 		// Reset movement points from rules data
 		unit.DistanceLeft = unitData.MovementPoints
 		unit.TurnCounter = g.TurnCounter
@@ -431,11 +431,7 @@ func (g *Game) GetTileType(coord AxialCoord) int {
 
 // GetUnitAt returns unit at specific position using cube coordinates
 func (g *Game) GetUnitAt(coord AxialCoord) *Unit {
-	tile := g.World.Map.TileAt(coord)
-	if tile == nil {
-		return nil
-	}
-	return tile.Unit
+	return g.World.UnitAt(coord)
 }
 
 // GetUnitsForPlayer returns all units owned by player
@@ -495,6 +491,7 @@ func (g *Game) GetUnitHealth(unit *Unit) int {
 }
 
 // CreateUnit spawns new unit using cube coordinates
+/*
 func (g *Game) CreateUnit(unitType, playerID int, coord AxialCoord) (*Unit, error) {
 	// Validate parameters
 	if playerID < 0 || playerID >= g.World.PlayerCount {
@@ -505,10 +502,6 @@ func (g *Game) CreateUnit(unitType, playerID int, coord AxialCoord) (*Unit, erro
 	tile := g.World.Map.TileAt(coord)
 	if tile == nil {
 		return nil, fmt.Errorf("invalid position: %v", coord)
-	}
-
-	if tile.Unit != nil {
-		return nil, fmt.Errorf("position %v is occupied", coord)
 	}
 
 	// Create the unit
@@ -526,66 +519,22 @@ func (g *Game) CreateUnit(unitType, playerID int, coord AxialCoord) (*Unit, erro
 
 	return unit, nil
 }
+*/
 
 // RemoveUnit removes unit from game
 func (g *Game) RemoveUnit(unit *Unit) error {
-	if unit == nil {
-		return fmt.Errorf("unit is nil")
+	err := g.World.RemoveUnit(unit)
+	if err == nil {
+
+		// Emit events
+		g.eventManager.EmitUnitDestroyed(unit)
+		g.eventManager.EmitGameStateChanged(GameStateChangeUnitDestroyed, unit)
 	}
 
-	// Remove from tile using cube coordinates
-	tile := g.World.Map.TileAt(unit.Coord)
-	if tile != nil && tile.Unit == unit {
-		tile.Unit = nil
-	}
-
-	// Remove from player's unit list
-	if unit.PlayerID >= 0 && unit.PlayerID < len(g.World.UnitsByPlayer) {
-		playerUnits := g.World.UnitsByPlayer[unit.PlayerID]
-		for i, u := range playerUnits {
-			if u == unit {
-				// Remove from slice
-				g.World.UnitsByPlayer[unit.PlayerID] = append(playerUnits[:i], playerUnits[i+1:]...)
-				break
-			}
-		}
-	}
-
-	// Emit events
-	g.eventManager.EmitUnitDestroyed(unit)
-	g.eventManager.EmitGameStateChanged(GameStateChangeUnitDestroyed, unit)
-
-	return nil
+	return err
 }
 
 // AddUnit adds a unit to the game for the specified player
-func (g *Game) AddUnit(unit *Unit, playerID int) error {
-	if unit == nil {
-		return fmt.Errorf("unit is nil")
-	}
-
-	if playerID < 0 || playerID >= len(g.World.UnitsByPlayer) {
-		return fmt.Errorf("invalid player ID: %d", playerID)
-	}
-
-	// Set unit's player ID
-	unit.PlayerID = playerID
-
-	// Add to player's unit list
-	g.World.UnitsByPlayer[playerID] = append(g.World.UnitsByPlayer[playerID], unit)
-
-	// Place unit on the map if it has a valid position
-	if tile := g.World.Map.TileAt(unit.Coord); tile != nil {
-		tile.Unit = unit
-	}
-
-	return nil
-}
-
-// Helper math functions
-func minFloat(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
+func (g *Game) AddUnit(unit *Unit) (*Unit, error) {
+	return g.World.AddUnit(unit)
 }

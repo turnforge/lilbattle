@@ -18,7 +18,7 @@ var embeddedAssets embed.FS
 
 // EmbeddedAssetManager is a WASM-specific AssetManager that uses embedded files
 type EmbeddedAssetManager struct {
-	tileCache  map[int]image.Image
+	tileCache  map[string]image.Image // key: "tileType_playerID"
 	unitCache  map[string]image.Image // key: "unitId_playerColor"
 	cacheMutex sync.RWMutex
 	loaded     bool
@@ -27,31 +27,33 @@ type EmbeddedAssetManager struct {
 // NewEmbeddedAssetManager creates a new embedded asset manager for WASM
 func NewEmbeddedAssetManager() *EmbeddedAssetManager {
 	return &EmbeddedAssetManager{
-		tileCache:  make(map[int]image.Image),
+		tileCache:  make(map[string]image.Image),
 		unitCache:  make(map[string]image.Image),
 		cacheMutex: sync.RWMutex{},
 	}
 }
 
-// GetTileImage returns the tile image for a given tile type using embedded assets
-func (eam *EmbeddedAssetManager) GetTileImage(tileType int) (image.Image, error) {
+// GetTileImage returns the tile image for a given tile type and player ID using embedded assets
+func (eam *EmbeddedAssetManager) GetTileImage(tileType int, playerID int) (image.Image, error) {
+	cacheKey := fmt.Sprintf("%d_%d", tileType, playerID)
+
 	eam.cacheMutex.RLock()
-	if img, exists := eam.tileCache[tileType]; exists {
+	if img, exists := eam.tileCache[cacheKey]; exists {
 		eam.cacheMutex.RUnlock()
 		return img, nil
 	}
 	eam.cacheMutex.RUnlock()
 
 	// Load from embedded filesystem
-	tilePath := fmt.Sprintf("v1/Tiles/%d/0.png", tileType)
+	tilePath := fmt.Sprintf("v1/Tiles/%d/%d.png", tileType, playerID)
 	img, err := eam.loadEmbeddedImage(tilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load embedded tile image for type %d: %w", tileType, err)
+		return nil, fmt.Errorf("failed to load embedded tile image for type %d, player %d: %w", tileType, playerID, err)
 	}
 
 	// Cache the image
 	eam.cacheMutex.Lock()
-	eam.tileCache[tileType] = img
+	eam.tileCache[cacheKey] = img
 	eam.cacheMutex.Unlock()
 
 	return img, nil
@@ -100,8 +102,8 @@ func (eam *EmbeddedAssetManager) loadEmbeddedImage(path string) (image.Image, er
 }
 
 // HasTileAsset checks if a tile asset exists in embedded files
-func (eam *EmbeddedAssetManager) HasTileAsset(tileType int) bool {
-	tilePath := fmt.Sprintf("v1/Tiles/%d/0.png", tileType)
+func (eam *EmbeddedAssetManager) HasTileAsset(tileType int, playerID int) bool {
+	tilePath := fmt.Sprintf("v1/Tiles/%d/%d.png", tileType, playerID)
 	_, err := embeddedAssets.ReadFile(tilePath)
 	return err == nil
 }
@@ -115,12 +117,15 @@ func (eam *EmbeddedAssetManager) HasUnitAsset(unitType int, playerColor int) boo
 
 // PreloadCommonAssets preloads commonly used assets for better performance
 func (eam *EmbeddedAssetManager) PreloadCommonAssets() error {
-	// Preload common tile types (1-26)
+	// Preload common tile types (1-26) with basic player colors (0-5)
 	for i := 1; i <= 26; i++ {
-		if eam.HasTileAsset(i) {
-			_, err := eam.GetTileImage(i)
-			if err != nil {
-				fmt.Printf("Warning: Could not preload tile %d: %v\n", i, err)
+		for playerID := 0; playerID <= 5; playerID++ {
+			if eam.HasTileAsset(i, playerID) {
+				_, err := eam.GetTileImage(i, playerID)
+				if err != nil {
+					// Continue on error - not all combinations exist
+					continue
+				}
 			}
 		}
 	}
@@ -155,7 +160,7 @@ func (eam *EmbeddedAssetManager) ClearCache() {
 	eam.cacheMutex.Lock()
 	defer eam.cacheMutex.Unlock()
 
-	eam.tileCache = make(map[int]image.Image)
+	eam.tileCache = make(map[string]image.Image)
 	eam.unitCache = make(map[string]image.Image)
 }
 

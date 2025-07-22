@@ -97,3 +97,11 @@ func contains(slice []string, item string) bool {
 	}
 	return false
 }
+
+// Helper math functions
+func minFloat(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}

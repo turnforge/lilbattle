@@ -888,10 +888,129 @@ export class MapEditorPage extends BasePage implements MapObserver {
 ---
 
 **Last Updated**: 2025-01-21  
-**Architecture Version**: 8.0 (Game Mechanics Architecture Design)  
-**Status**: Production-ready UI framework with comprehensive game engine foundation discovered. Ready for rules integration and WASM activation.
+**Architecture Version**: 10.0 (Auto-Rendering & Visual System)  
+**Status**: Complete auto-rendering system with player-specific assets and consolidated movement API. Game mechanics fully operational with proper JSON deserialization.
 
-**Latest Achievement (v7.0)**: Comprehensive UI framework completion and game foundation:
+**Latest Achievement (v10.0)**: Auto-Rendering & Visual System with JSON Deserialization Fix:
+
+## Auto-Rendering & Visual System Architecture (v10.0) ✅ COMPLETED
+
+### CLI Auto-Rendering System ✅
+**Purpose**: Automated visual feedback system for game state changes with layered rendering
+- **LayeredRenderer Integration**: Uses existing LayeredRenderer system with custom HighlightLayer for overlays
+- **Auto-Render Triggers**: Automatically renders game state after each CLI command execution
+- **File Management**: Configurable renderDir with max-renders rotation to manage disk usage  
+- **Highlight Overlays**: Movement and attack options shown as semi-transparent overlays using ViewState
+- **Player-Specific Assets**: City tiles render with correct player colors using AssetProvider interface
+- **Viewport Auto-Sizing**: Dynamic canvas sizing based on map bounds instead of fixed dimensions
+
+```go
+// Auto-rendering configuration flags
+-autorender          // Enable auto-render after each command
+-maxrenders N        // Maximum rendered files to keep (rotation)
+-renderdir DIR       // Directory for auto-rendered files
+-width N / -height N // Canvas dimensions (auto-calculated if not specified)
+```
+
+### HighlightLayer Implementation ✅
+**Purpose**: Custom rendering layer for movement/attack overlays without reinventing coordinate calculations
+- **LayeredRenderer Integration**: Proper layer system using existing BaseLayer.GetHexVertices() method
+- **Semi-Transparent Overlays**: Green for movement options, red for attack options with alpha blending
+- **ViewState Integration**: Reads MovableTiles and AttackableTiles arrays for highlighting
+- **Efficient Rendering**: Only renders highlights when ViewState contains selection data
+
+```go
+type HighlightLayer struct {
+    *BaseLayer
+    MovableTiles   []AxialCoord // Green semi-transparent overlays
+    AttackableTiles []AxialCoord // Red semi-transparent overlays
+}
+```
+
+### Player-Specific Asset System ✅
+**Purpose**: Proper player-colored rendering for terrain and units using data-driven asset loading
+- **AssetProvider Interface Enhancement**: Updated GetTileImage() to include playerID parameter
+- **Asset Path Pattern**: Tiles/<tileType>_<playerID>.png for player-specific terrain assets
+- **TileLayer Integration**: City tiles automatically use player-specific sprites when tile.Player is set
+- **EmbeddedAssetManager**: Updated asset loading to support playerID-based terrain rendering
+
+```go
+// Enhanced AssetProvider interface
+type AssetProvider interface {
+    GetTileImage(tileType int, playerID int) (image.Image, error)
+    GetUnitImage(unitType int, playerID int) (image.Image, error)
+}
+```
+
+### World Unit Management Architecture ✅
+**Purpose**: Consolidated unit management without tile.Unit references using proper World methods
+- **UnitsByCoord Map**: Direct coordinate-to-unit lookup for O(1) unit access
+- **UnitsByPlayer Arrays**: Organized unit storage for efficient player-specific operations  
+- **World.UnitAt() Method**: Primary API for unit access replacing deprecated tile.Unit field
+- **World.MoveUnit() Method**: Proper unit movement with coordinate map updates and validation
+
+```go
+type World struct {
+    Map           *Map      `json:"map"`
+    UnitsByPlayer [][]*Unit `json:"units"`     // Units organized by player
+    UnitsByCoord  map[AxialCoord]*Unit `json:"-"` // Fast coordinate lookup
+    PlayerCount   int       `json:"playerCount"`
+}
+
+// Core unit management API
+func (w *World) UnitAt(coord AxialCoord) *Unit
+func (w *World) MoveUnit(unit *Unit, newCoord AxialCoord) error
+func (w *World) AddUnit(unit *Unit) error
+func (w *World) RemoveUnit(unit *Unit) error
+```
+
+### RulesEngine API Consolidation ✅
+**Purpose**: Unified movement cost API eliminating redundant Game wrapper methods
+- **GetMovementCost Consolidation**: Single method taking (world, unit, to) for all movement calculations
+- **Movement vs Attack Logic**: Proper separation where movement finds empty tiles, attacks find enemy units
+- **Unit Presence Rules**: Movement options exclude occupied tiles, attack options require enemy units
+- **Dijkstra Implementation**: Proper pathfinding algorithm for multi-tile movement cost calculation
+
+```go
+// Consolidated RulesEngine API
+func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) (float64, error)
+func (re *RulesEngine) GetMovementOptions(world *World, unit *Unit, remainingMovement int) ([]TileOption, error)  
+func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord, error)
+
+// Movement finds EMPTY tiles only
+func (re *RulesEngine) dijkstraMovement(world *World, unitType int, startCoord AxialCoord, maxMovement float64) ([]TileOption, error)
+
+// Attack finds ENEMY units only  
+func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord, error)
+```
+
+### JSON Deserialization Fix ✅
+**Purpose**: Critical fix for tile.Player field not being set during world loading from storage
+- **Root Cause**: loadWorldFromStorageJSON was creating tiles but not setting Player field from parsed data
+- **Fix Implementation**: Added `tile.Player = tileData.Player` assignment in tile creation loop
+- **Impact**: City tiles now render with correct player colors and ownership information
+- **Validation**: Fixed debugging output showing Player=0 instead of actual player ownership
+
+```go
+// Fixed JSON deserialization in loadWorldFromStorageJSON
+for _, tileData := range storageData.Tiles {
+    coord := weewar.AxialCoord{Q: tileData.Q, R: tileData.R}
+    tile := weewar.NewTile(coord, tileData.TileType)
+    tile.Player = tileData.Player // CRITICAL FIX: Set the player ownership
+    gameMap.AddTile(tile)
+}
+```
+
+### Architecture Benefits
+- **Visual Feedback**: Game state changes immediately visible through auto-rendering
+- **Efficient Rendering**: LayeredRenderer with proper dirty tracking and viewport management
+- **Player Distinction**: Visual differentiation between players through colored terrain assets
+- **Memory Efficiency**: Eliminated redundant unit references, consolidated to single coordinate map
+- **API Consistency**: Unified movement cost calculation through single RulesEngine method
+- **Data Integrity**: Fixed JSON deserialization ensures proper game state loading
+- **Scalability**: File rotation system manages disk usage for long gameplay sessions
+
+**Previous Achievement (v7.0)**: Comprehensive UI framework completion and game foundation:
 
 ## Game Mechanics Architecture (v8.0 Design)
 

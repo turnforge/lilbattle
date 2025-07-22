@@ -600,6 +600,52 @@ r4,5                # Row/col coordinates (prefixed with 'r')
 - **Move Validation** - Real-time feedback on valid/invalid moves with proper error messages
 - **Session Recording** - Capture interesting game scenarios for documentation and bug reproduction
 
-**Last Updated**: 2025-01-21  
-**Version**: 10.0 (CLI Transformation Complete)  
-**Status**: Production-ready game engine with simplified CLI interface. Complete rules integration, world loading, and interactive gameplay. Ready for advanced features and web interface development.
+## v10.0 Auto-Rendering & Visual System Complete (2025-01-22)
+
+### CLI Auto-Rendering Architecture ✅
+- **LayeredRenderer Integration** - Uses existing LayeredRenderer system with custom HighlightLayer for movement/attack overlays
+- **Auto-Render Configuration** - CLI flags: `-autorender`, `-maxrenders N`, `-renderdir DIR` with file rotation management
+- **Player-Specific Assets** - City tiles render with correct player colors using enhanced AssetProvider interface
+- **Viewport Auto-Sizing** - Dynamic canvas sizing based on map bounds instead of fixed dimensions with proper offset calculation
+- **Visual Feedback System** - Game state changes immediately visible through PNG files with timestamped naming
+- **HighlightLayer Implementation** - Semi-transparent overlays (green for movement, red for attacks) using ViewState integration
+
+### World Unit Management Consolidation ✅
+- **Eliminated tile.Unit References** - Replaced with World.UnitAt() method for cleaner architecture
+- **UnitsByCoord Map** - O(1) unit lookup with proper coordinate-based unit management
+- **UnitsByPlayer Arrays** - Organized unit storage for efficient player-specific operations
+- **World.MoveUnit() Method** - Proper unit movement with coordinate map updates and validation
+- **JSON Deserialization Fix** - Critical fix for tile.Player field not being set during world loading
+
+### RulesEngine API Consolidation ✅ 
+- **GetMovementCost Unification** - Single method taking (world, unit, to) eliminating redundant Game wrapper methods
+- **Movement vs Attack Logic** - Proper separation: movement finds empty tiles, attacks find enemy units
+- **Dijkstra Implementation** - Proper pathfinding algorithm for multi-tile movement cost calculation
+- **Unit Presence Rules** - Movement options exclude occupied tiles, attack options require enemy units
+- **Eliminated Game Wrappers** - Removed redundant Game methods in favor of direct RulesEngine API
+
+### Technical Architecture Improvements ✅
+- **Auto-Render Triggers** - Automatic rendering after each CLI command execution with configurable directory
+- **File Management System** - Max-renders rotation with cleanup to manage disk usage during long sessions
+- **Asset Path Enhancement** - Tiles/<tileType>_<playerID>.png pattern for player-specific terrain rendering
+- **Memory Efficiency** - Consolidated unit references, eliminated redundant tile.Unit field usage
+- **API Consistency** - Unified movement cost calculation through single RulesEngine method
+- **Data Integrity** - Fixed JSON deserialization ensures proper game state loading from storage
+
+### CLI Enhancement Features ✅
+- **Manual Render Command** - `render [filename]` for on-demand PNG generation with custom naming
+- **Auto-Render Integration** - Seamless integration with existing CLI workflow without performance impact
+- **File Naming Patterns** - renderDir/screenshot_<commandNumber>.png with latest.png generation
+- **Viewport Calculation** - Proper use of mapBounds.StartingX for accurate viewport offset calculation
+- **Player-Colored Rendering** - City bases show correct player ownership colors in generated images
+
+### Production Quality Achievements ✅
+- **Visual Game State** - Complete game state visualization with proper player differentiation
+- **Scalable File Management** - Rotation system prevents disk space issues during extended gameplay
+- **Efficient Rendering Pipeline** - LayeredRenderer with dirty tracking and viewport culling
+- **Architecture Cleanup** - Removed architectural inconsistencies with tile.Unit vs World unit management
+- **JSON Loading Reliability** - Fixed critical deserialization bug ensuring proper tile ownership
+
+**Last Updated**: 2025-01-22  
+**Version**: 10.0 (Auto-Rendering & Visual System Complete)  
+**Status**: Production-ready game engine with comprehensive auto-rendering system and consolidated API. Complete visual feedback, proper player-colored assets, and fixed JSON deserialization. Ready for advanced features and web interface development.

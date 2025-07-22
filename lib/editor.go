@@ -401,7 +401,7 @@ func (e *WorldEditor) RenderToFile(filename string, width, height int) error {
 		return fmt.Errorf("failed to create renderer: %w", err)
 	}
 
-	renderer.layers = []Layer{
+	renderer.Layers = []Layer{
 		NewTileLayer(width, height, renderer), // Terrain tiles (bottom layer)
 		NewUnitLayer(width, height, renderer), // Units (middle layer)
 	}
@@ -433,7 +433,7 @@ func (e *WorldEditor) SetDrawable(drawable Drawable, width, height int) error {
 	e.gridLayer = NewGridLayer(width, height, e.layeredRenderer)
 	e.tileLayer = NewTileLayer(width, height, e.layeredRenderer)
 	e.unitLayer = NewUnitLayer(width, height, e.layeredRenderer)
-	e.layeredRenderer.layers = []Layer{
+	e.layeredRenderer.Layers = []Layer{
 		e.gridLayer, // Grid layer renders first (background)
 		e.tileLayer, // Terrain tiles (middle layer)
 		e.unitLayer, // Units (top layer)

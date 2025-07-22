@@ -73,6 +73,28 @@ func NewBaseLayer(name string, width, height int, scheduler LayerScheduler) *Bas
 	}
 }
 
+// getHexVertices returns the vertices of a hexagon centered at (centerX, centerY)
+func (gl *BaseLayer) GetHexVertices(centerX, centerY, tileWidth, tileHeight float64) [][2]float64 {
+	// Hexagon vertices (pointy-top orientation)
+	vertices := make([][2]float64, 6)
+
+	// Use actual tile dimensions for proper hexagon shape
+	size := tileHeight // tileWidth / SQRT3
+	radiusX := tileWidth / 2
+	radiusY := size / 2
+	h4 := size / 4
+
+	vertices[0][0], vertices[0][1] = centerX, centerY-radiusY
+	vertices[1][0], vertices[1][1] = centerX+radiusX, centerY-h4
+	vertices[2][0], vertices[2][1] = centerX+radiusX, centerY+h4
+	vertices[3][0], vertices[3][1] = centerX, centerY+radiusY
+	vertices[4][0], vertices[4][1] = centerX-radiusX, centerY+h4
+	vertices[5][0], vertices[5][1] = centerX-radiusX, centerY-h4
+	// fmt.Println("VERTS: ", centerX, centerY, vertices)
+
+	return vertices
+}
+
 // Common BaseLayer methods
 func (bl *BaseLayer) GetName() string {
 	return bl.name
@@ -88,8 +110,8 @@ func (bl *BaseLayer) MarkDirty(coord AxialCoord) {
 func (bl *BaseLayer) MarkAllDirty() {
 	bl.allDirty = true
 	bl.dirtyCoords = make(map[AxialCoord]bool)
-	fmt.Println("Layer, Scheduler: ", bl.GetName(), bl.scheduler)
-	if true || bl.scheduler != nil {
+	// fmt.Println("Layer, Scheduler: ", bl.GetName(), bl.scheduler)
+	if bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
 	}
 }

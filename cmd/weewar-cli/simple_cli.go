@@ -3,11 +3,30 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/panyam/turnengine/games/weewar/assets"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
+
+var globalAssetProvider weewar.AssetProvider
+
+func init() {
+	globalAssetProvider = assets.NewEmbeddedAssetManager()
+	if globalAssetProvider == nil {
+		panic("Could not load assets")
+	}
+	err := globalAssetProvider.PreloadCommonAssets()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Assets preloaded successfully")
+}
 
 // MoveRecord represents a single recorded move
 type MoveRecord struct {
@@ -22,6 +41,77 @@ type MoveList struct {
 	Moves []MoveRecord `json:"moves"`
 }
 
+// HighlightLayer renders movement and attack option overlays
+type HighlightLayer struct {
+	*weewar.BaseLayer
+	movableCoords []weewar.AxialCoord
+	attackCoords  []weewar.AxialCoord
+	selectedUnit  *weewar.Unit
+}
+
+// NewHighlightLayer creates a new highlight layer
+func NewHighlightLayer(width, height int, scheduler weewar.LayerScheduler) *HighlightLayer {
+	return &HighlightLayer{
+		BaseLayer: weewar.NewBaseLayer("highlights", width, height, scheduler),
+	}
+}
+
+// SetHighlights updates the coordinates to highlight
+func (hl *HighlightLayer) SetHighlights(movable []weewar.AxialCoord, attack []weewar.AxialCoord, selected *weewar.Unit) {
+	hl.movableCoords = movable
+	hl.attackCoords = attack
+	hl.selectedUnit = selected
+	hl.MarkAllDirty()
+}
+
+// Render renders highlight overlays to the layer buffer
+func (hl *HighlightLayer) Render(world *weewar.World, options weewar.LayerRenderOptions) {
+	if world == nil || world.Map == nil {
+		return
+	}
+
+	// Clear buffer for fresh highlights
+	hl.BaseLayer.GetBuffer().Clear()
+
+	// Render movement highlights (green)
+	greenColor := weewar.Color{R: 0, G: 255, B: 0, A: 100} // Semi-transparent green
+	for _, coord := range hl.movableCoords {
+		hl.renderHighlightHex(world, coord, greenColor, options)
+	}
+
+	// Render attack highlights (red)
+	redColor := weewar.Color{R: 255, G: 0, B: 0, A: 100} // Semi-transparent red
+	for _, coord := range hl.attackCoords {
+		hl.renderHighlightHex(world, coord, redColor, options)
+	}
+
+	// Render selected unit highlight (yellow border)
+	if hl.selectedUnit != nil {
+		yellowColor := weewar.Color{R: 255, G: 255, B: 0, A: 180} // Semi-transparent yellow
+		hl.renderHighlightHex(world, hl.selectedUnit.Coord, yellowColor, options)
+	}
+
+	hl.ClearDirty()
+}
+
+// renderHighlightHex renders a highlight overlay for a hex coordinate
+func (hl *HighlightLayer) renderHighlightHex(world *weewar.World, coord weewar.AxialCoord, color weewar.Color, options weewar.LayerRenderOptions) {
+	// Get pixel position using Map's coordinate system
+	x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+
+	// Use BaseLayer's GetHexVertices method for proper hex shape
+	hexPoints := hl.GetHexVertices(x, y, options.TileWidth, options.TileHeight)
+
+	// Convert to Point slice for FillPath
+	points := make([]weewar.Point, len(hexPoints))
+	for i, vertex := range hexPoints {
+		points[i] = weewar.Point{X: vertex[0], Y: vertex[1] + options.YIncrement - options.TileHeight}
+	}
+
+	// Fill the hex with semi-transparent color
+	// hl.BaseLayer.GetBuffer().FillPath(points, color)
+}
+
 // SimpleCLI is a thin wrapper over Game methods with minimal logic
 type SimpleCLI struct {
 	game          *weewar.Game
@@ -30,6 +120,14 @@ type SimpleCLI struct {
 	attackCoords  []weewar.AxialCoord
 	recording     bool
 	moveList      *MoveList
+
+	// Auto-rendering configuration
+	autoRender    bool
+	renderDir     string
+	maxRenders    int
+	renderWidth   int
+	renderHeight  int
+	commandNumber int
 }
 
 // NewSimpleCLI creates a new simplified CLI
@@ -60,34 +158,45 @@ func (cli *SimpleCLI) ExecuteCommand(command string) string {
 	cmd := strings.ToLower(parts[0])
 	args := parts[1:]
 
+	var result string
+
 	switch cmd {
 	case "move":
-		return cli.handleMove(args)
+		result = cli.handleMove(args)
 	case "attack":
-		return cli.handleAttack(args)
+		result = cli.handleAttack(args)
 	case "select":
-		return cli.handleSelect(args)
+		result = cli.handleSelect(args)
 	case "end":
-		return cli.handleEndTurn()
+		result = cli.handleEndTurn()
 	case "status":
-		return cli.handleStatus()
+		result = cli.handleStatus()
 	case "map":
-		return cli.handleMap()
+		result = cli.handleMap()
 	case "units":
-		return cli.handleUnits()
+		result = cli.handleUnits()
 	case "player":
-		return cli.handlePlayer(args)
+		result = cli.handlePlayer(args)
 	case "record":
-		return cli.handleRecord(args)
+		result = cli.handleRecord(args)
 	case "replay":
-		return cli.handleReplay(args)
+		result = cli.handleReplay(args)
+	case "render":
+		result = cli.handleRender(args)
 	case "help":
-		return cli.handleHelp()
+		result = cli.handleHelp()
 	case "quit", "exit":
 		return "quit"
 	default:
-		return fmt.Sprintf("Unknown command: %s. Type 'help' for available commands.", cmd)
+		result = fmt.Sprintf("Unknown command: %s. Type 'help' for available commands.", cmd)
 	}
+
+	// Auto-render after command execution (unless it's quit)
+	if cli.autoRender && cli.game != nil {
+		cli.autoRenderGameState()
+	}
+
+	return result
 }
 
 // handleMove processes move command: move <from> <to>
@@ -351,6 +460,7 @@ func (cli *SimpleCLI) handleHelp() string {
   player [ID]          - Show player information (e.g. "player A")
   record <cmd>         - Recording commands (start/stop/clear/show)
   replay               - Show current move list as JSON
+  render               - Manually render game state to PNG files (auto-sized)
   help                 - Show this help
   quit                 - Exit game
 
@@ -364,7 +474,8 @@ Examples:
   attack r4,5 B2       # Attack unit B2 with unit at row/col 4,5
   select C1            # Select unit C1 and show movement/attack options
   record start         # Start recording moves
-  record show          # Show recorded moves`
+  record show          # Show recorded moves
+  render               # Render current game state (auto-sized based on map)`
 }
 
 // GetSelectedUnit returns currently selected unit (for rendering)
@@ -484,4 +595,184 @@ func (cli *SimpleCLI) StopRecording() {
 // GetGame returns the current game instance
 func (cli *SimpleCLI) GetGame() *weewar.Game {
 	return cli.game
+}
+
+// handleRender processes manual render command: render
+func (cli *SimpleCLI) handleRender(args []string) string {
+	if cli.game == nil {
+		return "No game loaded - cannot render"
+	}
+
+	// Use default render directory if auto-render is not configured
+	renderDir := cli.renderDir
+	if renderDir == "" {
+		renderDir = "/tmp/turnengine/renders"
+		if err := os.MkdirAll(renderDir, 0755); err != nil {
+			return fmt.Sprintf("Failed to create render directory %s: %v", renderDir, err)
+		}
+	}
+
+	// Generate timestamp filename
+	timestamp := time.Now().Unix()
+	timestampedFilename := fmt.Sprintf("render_T%d_P%d_%d.png",
+		cli.game.TurnCounter, cli.game.CurrentPlayer, timestamp)
+	timestampedPath := filepath.Join(renderDir, timestampedFilename)
+
+	// Always generate latest.png
+	latestPath := filepath.Join(renderDir, "latest.png")
+
+	// Render both files (width/height determined by map bounds)
+	if err := cli.renderGameWithOverlays(timestampedPath); err != nil {
+		return fmt.Sprintf("Failed to render game: %v", err)
+	}
+
+	if err := cli.renderGameWithOverlays(latestPath); err != nil {
+		return fmt.Sprintf("Rendered %s but failed to create latest.png: %v", timestampedFilename, err)
+	}
+
+	return fmt.Sprintf("Rendered game to %s and %s (auto-sized)", timestampedPath, latestPath)
+}
+
+// EnableAutoRender configures auto-rendering after each command
+func (cli *SimpleCLI) EnableAutoRender(renderDir string, maxRenders, width, height int) {
+	cli.autoRender = true
+	cli.renderDir = renderDir
+	cli.maxRenders = maxRenders
+	cli.renderWidth = width
+	cli.renderHeight = height
+	cli.commandNumber = 0
+
+	// Ensure render directory exists
+	if err := os.MkdirAll(renderDir, 0755); err != nil {
+		fmt.Printf("Warning: Failed to create render directory %s: %v\n", renderDir, err)
+		cli.autoRender = false
+	}
+}
+
+// autoRenderGameState renders the current game state with movement/attack overlays
+func (cli *SimpleCLI) autoRenderGameState() {
+	if !cli.autoRender || cli.game == nil {
+		return
+	}
+
+	cli.commandNumber++
+
+	// Generate timestamped filename
+	timestamp := time.Now().Unix()
+	timestampedFilename := fmt.Sprintf("game_T%d_P%d_C%d_%d.png",
+		cli.game.TurnCounter, cli.game.CurrentPlayer, cli.commandNumber, timestamp)
+	timestampedPath := filepath.Join(cli.renderDir, timestampedFilename)
+
+	// Always generate latest.png as well
+	latestPath := filepath.Join(cli.renderDir, "latest.png")
+
+	// Render timestamped file (auto-sized based on map bounds)
+	if err := cli.renderGameWithOverlays(timestampedPath); err != nil {
+		fmt.Printf("Warning: Auto-render failed: %v\n", err)
+		return
+	}
+
+	// Render latest.png (ignore errors to avoid spam)
+	cli.renderGameWithOverlays(latestPath)
+
+	// Clean up old files if maxRenders is set
+	if cli.maxRenders > 0 {
+		cli.cleanupOldRenders()
+	}
+}
+
+// renderGameWithOverlays renders the game with movement/attack option overlays using LayeredRenderer
+func (cli *SimpleCLI) renderGameWithOverlays(filename string) error {
+	// Use standard tile dimensions
+	tileWidth := 64.0
+	tileHeight := 64.0
+	yIncrement := 48.0
+
+	// Get map bounds to determine the actual size needed
+	mapBounds := cli.game.World.Map.GetMapBounds(tileWidth, tileHeight, yIncrement)
+
+	// Calculate canvas size based on map bounds (with some padding)
+	mapWidth := int(mapBounds.MaxX - mapBounds.MinX + tileWidth)   // Add one tile width padding
+	mapHeight := int(mapBounds.MaxY - mapBounds.MinY + tileHeight) // Add one tile height padding
+
+	// Create buffer for PNG rendering using map-determined size
+	buffer := weewar.NewBuffer(mapWidth, mapHeight)
+
+	renderer, err := weewar.NewLayeredRendererWithTileSize(buffer, mapWidth, mapHeight, tileWidth, tileHeight, yIncrement)
+	if err != nil {
+		return fmt.Errorf("failed to create layered renderer: %w", err)
+	}
+
+	// Calculate viewport offset to account for negative coordinates and starting position
+	viewportX := (tileWidth) + -mapBounds.StartingX // Xint(mapBounds.StartingX - mapBounds.MinX + tileWidth/2) // Use StartingX offset plus padding
+	viewportY := (tileHeight / 2) + -mapBounds.MinY // int(-mapBounds.MinY + tileHeight/2)                     // Offset by half tile for padding
+	log.Println("Map Bounds: ", mapBounds)
+	log.Println("Viewport x,y: ", viewportX, viewportY)
+
+	// Create layers (in rendering order: bottom to top)
+	tileLayer := weewar.NewTileLayer(mapWidth, mapHeight, renderer)
+	unitLayer := weewar.NewUnitLayer(mapWidth, mapHeight, renderer)
+	highlightLayer := NewHighlightLayer(mapWidth, mapHeight, renderer)
+	gridLayer := weewar.NewGridLayer(mapWidth, mapHeight, renderer)
+
+	// Set up the layers in the renderer
+	renderer.Layers = []weewar.Layer{
+		gridLayer,      // Grid lines (top)
+		tileLayer,      // Terrain (bottom)
+		unitLayer,      // Units (on top of highlights)
+		highlightLayer, // Highlights (overlays)
+	}
+	renderer.SetAssetProvider(globalAssetProvider)
+
+	// Apply viewport offset to handle negative coordinates
+	renderer.SetViewPort(int(viewportX), int(viewportY), mapWidth, mapHeight)
+
+	// Set the world in the renderer
+	renderer.SetWorld(cli.game.World)
+
+	// Update highlight layer with current selection
+	highlightLayer.SetHighlights(cli.movableCoords, cli.attackCoords, cli.selectedUnit)
+
+	// Force rendering of all layers - LayeredRenderer handles compositing automatically
+	renderer.ForceRender()
+
+	// Save the composited result to PNG file
+	return buffer.Save(filename)
+}
+
+// cleanupOldRenders removes old render files to maintain maxRenders limit
+func (cli *SimpleCLI) cleanupOldRenders() {
+	if cli.maxRenders <= 0 {
+		return
+	}
+
+	// Get all PNG files in render directory
+	pattern := filepath.Join(cli.renderDir, "*.png")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return
+	}
+
+	// If we're under the limit, no cleanup needed
+	if len(matches) <= cli.maxRenders {
+		return
+	}
+
+	// Sort files by modification time (oldest first)
+	sort.Slice(matches, func(i, j int) bool {
+		infoI, errI := os.Stat(matches[i])
+		infoJ, errJ := os.Stat(matches[j])
+		if errI != nil || errJ != nil {
+			return matches[i] < matches[j] // fallback to name sort
+		}
+		return infoI.ModTime().Before(infoJ.ModTime())
+	})
+
+	// Remove oldest files
+	filesToRemove := len(matches) - cli.maxRenders
+	for i := range filesToRemove {
+		if err := os.Remove(matches[i]); err != nil {
+			fmt.Printf("Warning: Failed to remove old render file %s: %v\n", matches[i], err)
+		}
+	}
 }

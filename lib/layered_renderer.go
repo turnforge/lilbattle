@@ -20,7 +20,7 @@ type LayeredRenderer struct {
 	height   int
 
 	// Rendering layers (in order)
-	layers []Layer
+	Layers []Layer
 
 	// Output buffer for compositing
 	outputBuffer *Buffer
@@ -71,14 +71,14 @@ func NewLayeredRendererWithTileSize(drawable Drawable, width, height int, tileWi
 func (r *LayeredRenderer) SetWorld(w *World) {
 	r.currentWorld = w
 	// Mark all layers as dirty when world changes
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		layer.MarkAllDirty()
 	}
 }
 
 // SetAssetProvider updates the asset provider for all layers
 func (r *LayeredRenderer) SetAssetProvider(provider AssetProvider) {
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		layer.SetAssetProvider(provider)
 	}
 }
@@ -90,7 +90,7 @@ func (r *LayeredRenderer) SetTileDimensions(tileWidth, tileHeight, yIncrement fl
 	r.renderOptions.YIncrement = yIncrement
 
 	// Mark all layers as dirty since dimensions changed
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		layer.MarkAllDirty()
 	}
 }
@@ -138,7 +138,7 @@ func (r *LayeredRenderer) ForceRender() {
 func (r *LayeredRenderer) performRender() {
 	// fmt.Printf("LayeredRenderer.performRender called\n")
 
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		if layer.IsDirty() {
 			layer.Render(r.currentWorld, r.renderOptions)
 		}
@@ -154,7 +154,7 @@ func (r *LayeredRenderer) composite() {
 	r.drawable.Clear()
 
 	// Draw each layer buffer to the main drawable
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		// Check if the layer has a GetBuffer method (all layers based on BaseLayer do)
 		baseLayer, ok := layer.(interface{ GetBuffer() *Buffer })
 		if ok {
@@ -186,7 +186,7 @@ func (r *LayeredRenderer) SetViewPort(x, y, width, height int) error {
 	r.height = height
 
 	// Recreate all layer buffers with new size
-	for _, layer := range r.layers {
+	for _, layer := range r.Layers {
 		// fmt.Printf("LayeredRenderer updating layer: %s\n", layer.GetName())
 		layer.SetViewPort(x, y, width, height)
 	}

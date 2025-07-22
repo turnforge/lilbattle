@@ -72,94 +72,29 @@ func (g *Game) CanEndTurn() bool {
 	return true
 }
 
-// FindPath calculates movement path between positions
-func (g *Game) FindPath(from, to Position) ([]Tile, error) {
-	if g.World.Map == nil {
-		return nil, fmt.Errorf("no map loaded")
-	}
-
-	// Check if start and end positions are valid
-	startTile := g.World.Map.TileAt(from)
-	endTile := g.World.Map.TileAt(to)
-
-	if startTile == nil {
-		return nil, fmt.Errorf("invalid start position: %s", from)
-	}
-	if endTile == nil {
-		return nil, fmt.Errorf("invalid end position: %s", to)
-	}
-
-	// For now, return a simple direct path
-	// TODO: Implement proper A* pathfinding
-	path := []Tile{*startTile, *endTile}
-	return path, nil
-}
-
 // IsValidMove checks if movement is legal using cube coordinates
 func (g *Game) IsValidMove(from, to AxialCoord) bool {
-	// Check if both positions are valid
-	startTile := g.World.Map.TileAt(from)
-	endTile := g.World.Map.TileAt(to)
-
-	if startTile == nil || endTile == nil {
-		return false
-	}
-
-	// Check if there's a unit at the start position
-	if startTile.Unit == nil {
+	// Get the unit at the starting position
+	unit := g.World.UnitAt(from)
+	if unit == nil {
 		return false
 	}
 
 	// Check if the unit belongs to the current player
-	if startTile.Unit.PlayerID != g.CurrentPlayer {
+	if unit.PlayerID != g.CurrentPlayer {
 		return false
 	}
 
-	// Check if destination is empty
-	if endTile.Unit != nil {
-		return false
-	}
-
-	// Check if unit has movement left
-	if startTile.Unit.DistanceLeft <= 0 {
-		return false
-	}
-
-	// Check if the unit can move on the target terrain
-	_, err := g.rulesEngine.GetTerrainMovementCost(startTile.Unit.UnitType, endTile.TileType)
+	// Create simple two-tile path and validate using RulesEngine
+	path := []AxialCoord{from, to}
+	valid, err := g.rulesEngine.IsValidPath(unit, path, g.World)
 	if err != nil {
-		return false // Cannot move on this terrain type
-	}
-
-	// Check if destination is within movement range using rules engine
-	cost, err := g.rulesEngine.GetMovementCost(g.World.Map, startTile.Unit.UnitType, from, to)
-	if err != nil || cost > float64(startTile.Unit.DistanceLeft) {
 		return false
 	}
 
-	return true
+	return valid
 }
 
-// GetMovementCost calculates movement points required using cube coordinates
-func (g *Game) GetMovementCost(from, to AxialCoord) int {
-	if from == to {
-		return 0
-	}
-
-	// Get the unit at the from position to determine unit type
-	fromTile := g.World.Map.TileAt(from)
-	if fromTile == nil || fromTile.Unit == nil {
-		return CubeDistance(from, to) // Fallback to distance if no unit
-	}
-
-	// Use rules engine for terrain-specific movement cost calculation
-	if cost, err := g.rulesEngine.GetMovementCost(g.World.Map, fromTile.Unit.UnitType, from, to); err == nil {
-		return int(cost + 0.5) // Round to nearest integer
-	}
-
-	// Fallback to simple distance calculation
-	return CubeDistance(from, to)
-}
 
 // GetUnitMovementLeft returns remaining movement points
 func (g *Game) GetUnitMovementLeft(unit *Unit) int {
@@ -209,8 +144,12 @@ func (g *Game) MoveUnit(unit *Unit, to AxialCoord) error {
 		return fmt.Errorf("invalid move from %v to %v", unit.Coord, to)
 	}
 
-	// Get movement cost
-	cost := g.GetMovementCost(unit.Coord, to)
+	// Get movement cost using RulesEngine
+	costFloat, err := g.rulesEngine.GetMovementCost(g.World, unit, to)
+	if err != nil {
+		return fmt.Errorf("failed to calculate movement cost: %w", err)
+	}
+	cost := int(costFloat + 0.5) // Round to nearest integer
 	if cost > unit.DistanceLeft {
 		return fmt.Errorf("insufficient movement points: need %d, have %d", cost, unit.DistanceLeft)
 	}
@@ -219,21 +158,14 @@ func (g *Game) MoveUnit(unit *Unit, to AxialCoord) error {
 	fromPos := unit.Coord
 	toPos := to
 
-	// Remove unit from current tile
-	currentTile := g.World.Map.TileAt(unit.Coord)
-	if currentTile != nil {
-		currentTile.Unit = nil
+	// Move unit using World unit management
+	err = g.World.MoveUnit(unit, to)
+	if err != nil {
+		return fmt.Errorf("failed to move unit: %w", err)
 	}
 
-	// Move unit to new position
-	unit.Coord = to
+	// Update unit stats
 	unit.DistanceLeft -= cost
-
-	// Place unit on new tile
-	newTile := g.World.Map.TileAt(to)
-	if newTile != nil {
-		newTile.Unit = unit
-	}
 
 	// Update timestamp
 	g.LastActionAt = time.Now()
@@ -268,13 +200,13 @@ func (g *Game) AttackUnit(attacker, defender *Unit) (*CombatResult, error) {
 	// Calculate damage using rules engine
 	attackerDamage := 0
 	defenderDamage := 0
-	
+
 	var err error
 	defenderDamage, err = g.rulesEngine.CalculateCombatDamage(attacker.UnitType, defender.UnitType, g.rng)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate combat damage: %w", err)
 	}
-	
+
 	// Check if defender can counter-attack
 	if canCounter, err := g.rulesEngine.CanUnitAttackTarget(defender, attacker); err == nil && canCounter {
 		attackerDamage, err = g.rulesEngine.CalculateCombatDamage(defender.UnitType, attacker.UnitType, g.rng)
@@ -289,7 +221,7 @@ func (g *Game) AttackUnit(attacker, defender *Unit) (*CombatResult, error) {
 	if defender.AvailableHealth < 0 {
 		defender.AvailableHealth = 0
 	}
-	
+
 	attacker.AvailableHealth -= attackerDamage
 	if attacker.AvailableHealth < 0 {
 		attacker.AvailableHealth = 0
@@ -372,12 +304,8 @@ func (g *Game) CanAttackUnit(attacker, defender *Unit) bool {
 
 // MoveUnitAt executes unit movement from one coordinate to another
 func (g *Game) MoveUnitAt(from, to AxialCoord) error {
-	// Find unit at from position
-	fromTile := g.World.Map.TileAt(from)
-	if fromTile == nil {
-		return fmt.Errorf("invalid from position: %v", from)
-	}
-	unit := fromTile.Unit
+	// Find unit at from position using World
+	unit := g.World.UnitAt(from)
 	if unit == nil {
 		return fmt.Errorf("no unit at position %v", from)
 	}
@@ -387,22 +315,14 @@ func (g *Game) MoveUnitAt(from, to AxialCoord) error {
 
 // AttackUnitAt executes combat between units at the given coordinates
 func (g *Game) AttackUnitAt(attackerPos, targetPos AxialCoord) (*CombatResult, error) {
-	// Find attacker unit
-	attackerTile := g.World.Map.TileAt(attackerPos)
-	if attackerTile == nil {
-		return nil, fmt.Errorf("invalid attacker position: %v", attackerPos)
-	}
-	attacker := attackerTile.Unit
+	// Find attacker unit using World
+	attacker := g.World.UnitAt(attackerPos)
 	if attacker == nil {
 		return nil, fmt.Errorf("no unit at attacker position %v", attackerPos)
 	}
 
-	// Find target unit
-	targetTile := g.World.Map.TileAt(targetPos)
-	if targetTile == nil {
-		return nil, fmt.Errorf("invalid target position: %v", targetPos)
-	}
-	target := targetTile.Unit
+	// Find target unit using World
+	target := g.World.UnitAt(targetPos)
 	if target == nil {
 		return nil, fmt.Errorf("no unit at target position %v", targetPos)
 	}
@@ -436,7 +356,6 @@ func (g *Game) CanMove(from, to Position) (bool, error) {
 	return g.CanMoveUnit(unit, to), nil
 }
 
-
 // calculateDistance calculates distance between two positions
 // Source: https://www.redblobgames.com/grids/hexagons-v1/#distances
 func (g *Game) calculateDistance(a, b AxialCoord) int {
@@ -450,14 +369,14 @@ func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
 		return nil, fmt.Errorf("unit is nil")
 	}
 
-	return g.rulesEngine.GetMovementOptions(g.World.Map, unit, unit.DistanceLeft)
+	return g.rulesEngine.GetMovementOptions(g.World, unit, unit.DistanceLeft)
 }
 
-// GetUnitAttackOptions returns all positions a unit can attack using rules engine  
+// GetUnitAttackOptions returns all positions a unit can attack using rules engine
 func (g *Game) GetUnitAttackOptions(unit *Unit) ([]AxialCoord, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
 
-	return g.rulesEngine.GetAttackOptions(g.World.Map, unit)
+	return g.rulesEngine.GetAttackOptions(g.World, unit)
 }

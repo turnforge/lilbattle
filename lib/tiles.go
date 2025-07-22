@@ -12,9 +12,9 @@ const (
 type TerrainData struct {
 	ID           int         `json:"id"`
 	Name         string      `json:"name"`
-	BaseMoveCost float64     `json:"baseMoveCost"`  // Base movement cost for this terrain
+	BaseMoveCost float64     `json:"baseMoveCost"` // Base movement cost for this terrain
 	DefenseBonus float64     `json:"defenseBonus"`
-	Type         TerrainType `json:"type"`         // Nature or Player terrain
+	Type         TerrainType `json:"type"` // Nature or Player terrain
 	Properties   []string    `json:"properties,omitempty"`
 	// Note: Unit-specific movement costs in RulesEngine can override base cost
 }
@@ -25,8 +25,8 @@ type Tile struct {
 
 	TileType int `json:"tileType"` // Reference to TerrainData by ID
 
-	// Optional: Unit occupying this tile
-	Unit *Unit `json:"unit"`
+	// Optional: Player this tile belongs to if it is a city tile
+	Player int `json:"player"`
 }
 
 // NewTile creates a new tile at the specified position
@@ -41,6 +41,6 @@ func (t *Tile) Clone() *Tile {
 	return &Tile{
 		Coord:    t.Coord,
 		TileType: t.TileType,
-		Unit:     nil, // Units are cloned separately
+		Player:   t.Player, // Units are cloned separately
 	}
 }

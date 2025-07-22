@@ -30,6 +30,9 @@ func main() {
 		height      = flag.Int("height", 600, "Render height in pixels")
 		batch       = flag.String("batch", "", "Execute commands from batch file")
 		record      = flag.String("record", "", "Record session to file")
+		autorender  = flag.Bool("autorender", false, "Auto-render game state after each command")
+		maxrenders  = flag.Int("maxrenders", 1, "Maximum number of auto-rendered files to keep (0 disables rotation)")
+		renderdir   = flag.String("renderdir", "/tmp/turnengine/autorenders", "Directory for auto-rendered files")
 		version     = flag.Bool("version", false, "Show version information")
 		help        = flag.Bool("help", false, "Show help information")
 	)
@@ -80,6 +83,11 @@ func main() {
 
 	// Create CLI
 	cli = NewSimpleCLI(game)
+
+	// Configure auto-rendering if enabled
+	if *autorender {
+		cli.EnableAutoRender(*renderdir, *maxrenders, *width, *height)
+	}
 
 	// Start recording if requested
 	if *record != "" {
@@ -135,53 +143,55 @@ func createGameFromWorld(worldPath string) (*weewar.Game, error) {
 	if _, err := os.Stat(worldPath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("world directory does not exist: %s", worldPath)
 	}
-	
+
 	// Load world data from data.json
 	dataPath := fmt.Sprintf("%s/data.json", worldPath)
 	worldData, err := os.ReadFile(dataPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read world data: %w", err)
 	}
-	
+
 	// Load metadata (optional, for display purposes)
 	metadataPath := fmt.Sprintf("%s/metadata.json", worldPath)
-	var metadata map[string]interface{}
+	var metadata map[string]any
 	if metadataBytes, err := os.ReadFile(metadataPath); err == nil {
 		if err := json.Unmarshal(metadataBytes, &metadata); err == nil {
 			// Metadata loaded successfully
 		}
 	}
-	
+
 	// Parse the world data and create a game
 	// The world data contains tiles in Q,R coordinate format
 	world, err := loadWorldFromStorageJSON(worldData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse world data: %w", err)
 	}
-	
+
+	log.Println("Found World Data: ", world.Map.TileAt(weewar.AxialCoord{-1, -3}))
+
 	// Create rules engine from data file
-	rulesEngine, err := weewar.LoadRulesEngineFromFile("./data/rules-data.json")
+	rulesEngine, err := weewar.LoadRulesEngineFromFile("../../data/rules-data.json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load rules engine: %w", err)
 	}
-	
+
 	// Create game with the loaded world and rules engine (using seed 0 for now)
 	game, err := weewar.NewGame(world, rulesEngine, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %w", err)
 	}
-	
+
 	if metadata != nil {
 		fmt.Printf("Loaded world: %v\n", metadata["name"])
 	}
-	
+
 	return game, nil
 }
 
 // loadWorldFromStorageJSON parses world data from storage JSON format
 func loadWorldFromStorageJSON(jsonData []byte) (*weewar.World, error) {
 	var storageData struct {
-		Tiles    map[string]struct {
+		Tiles map[string]struct {
 			Q        int `json:"q"`
 			R        int `json:"r"`
 			TileType int `json:"tile_type"`
@@ -208,8 +218,9 @@ func loadWorldFromStorageJSON(jsonData []byte) (*weewar.World, error) {
 	for _, tileData := range storageData.Tiles {
 		coord := weewar.AxialCoord{Q: tileData.Q, R: tileData.R}
 		tile := weewar.NewTile(coord, tileData.TileType)
+		tile.Player = tileData.Player // Set the player ownership
 		gameMap.AddTile(tile)
-		
+
 		if tileData.Player > maxPlayers {
 			maxPlayers = tileData.Player
 		}
@@ -273,8 +284,6 @@ func showHelp() {
 	fmt.Println("  -height N            Render height in pixels (default: 600)")
 	fmt.Println("  -batch FILE          Execute commands from batch file")
 	fmt.Println("  -record FILE         Record session to file")
-	fmt.Println("  -verbose             Enable verbose output")
-	fmt.Println("  -compact             Use compact display mode")
 	fmt.Println("  -autorender          Auto-render game state after each command")
 	fmt.Println("  -maxrenders N        Maximum number of auto-rendered files to keep (default: 10, 0 disables)")
 	fmt.Println("  -renderdir DIR       Directory for auto-rendered files (default: /tmp/turnengine/autorenders)")
@@ -335,35 +344,35 @@ func startInteractiveMode(cli *SimpleCLI) {
 	fmt.Println()
 
 	scanner := bufio.NewScanner(os.Stdin)
-	
+
 	for {
 		// Show prompt
 		fmt.Print("> ")
-		
+
 		// Read input
 		if !scanner.Scan() {
 			break // EOF or error
 		}
-		
+
 		command := strings.TrimSpace(scanner.Text())
 		if command == "" {
 			continue
 		}
-		
+
 		// Execute command
 		result := cli.ExecuteCommand(command)
-		
+
 		// Check for quit
 		if result == "quit" {
 			fmt.Println("Goodbye!")
 			break
 		}
-		
+
 		// Show result
 		fmt.Println(result)
 		fmt.Println()
 	}
-	
+
 	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
 		log.Printf("Error reading input: %v", err)
@@ -377,29 +386,29 @@ func executeBatchCommands(cli *SimpleCLI, filename string) error {
 		return fmt.Errorf("failed to open batch file: %w", err)
 	}
 	defer file.Close()
-	
+
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
-	
+
 	for scanner.Scan() {
 		lineNum++
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		
+
 		fmt.Printf("Executing line %d: %s\n", lineNum, line)
 		result := cli.ExecuteCommand(line)
-		
+
 		if result == "quit" {
 			break
 		}
-		
+
 		fmt.Printf("Result: %s\n", result)
 	}
-	
+
 	return scanner.Err()
 }
 
@@ -408,17 +417,17 @@ func saveGameToFile(game *weewar.Game, filename string) error {
 	if game == nil {
 		return fmt.Errorf("no game to save")
 	}
-	
+
 	saveData, err := game.SaveGame()
 	if err != nil {
 		return fmt.Errorf("failed to serialize game: %w", err)
 	}
-	
+
 	err = os.WriteFile(filename, saveData, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write save file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -427,8 +436,36 @@ func renderGameToFile(game *weewar.Game, filename string, width, height int) err
 	if game == nil {
 		return fmt.Errorf("no game to render")
 	}
-	
-	// For now, just return an error indicating this needs implementation
-	// The actual rendering would use the game's render functionality
-	return fmt.Errorf("rendering not yet implemented - would render %dx%d PNG to %s", width, height, filename)
+
+	// Create buffer for PNG rendering
+	buffer := weewar.NewBuffer(width, height)
+
+	// Create buffer renderer
+	renderer := weewar.NewBufferRenderer()
+
+	// Create ViewState (empty for basic rendering - will be enhanced with overlays)
+	viewState := &weewar.ViewState{
+		ShowGrid:        true,
+		ShowCoordinates: false,
+		ZoomLevel:       1.0,
+		CameraX:         0,
+		CameraY:         0,
+	}
+
+	// Configure rendering options
+	options := weewar.WorldRenderOptions{
+		CanvasWidth:  width,
+		CanvasHeight: height,
+		TileWidth:    64,
+		TileHeight:   64,
+		YIncrement:   48,
+		ShowGrid:     true,
+		ShowUI:       true,
+	}
+
+	// Render the world to the buffer
+	renderer.RenderWorld(game.World, viewState, buffer, options)
+
+	// Save to PNG file
+	return buffer.Save(filename)
 }

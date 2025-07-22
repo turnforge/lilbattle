@@ -84,9 +84,9 @@ func (re *RulesEngine) GetTerrainData(terrainID int) (*TerrainData, error) {
 	return terrain, nil
 }
 
-// GetTerrainMovementCost returns movement cost for unit type on terrain type
+// getUnitTerrainCost returns movement cost for unit type on terrain type (internal helper)
 // First checks unit-specific matrix, then falls back to terrain's base cost
-func (re *RulesEngine) GetTerrainMovementCost(unitID, terrainID int) (float64, error) {
+func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int) (float64, error) {
 	// First, try unit-specific movement cost from matrix
 	if unitCosts, exists := re.MovementMatrix.Costs[unitID]; exists {
 		if cost, exists := unitCosts[terrainID]; exists {
@@ -105,9 +105,14 @@ func (re *RulesEngine) GetTerrainMovementCost(unitID, terrainID int) (float64, e
 	return 1.0, nil
 }
 
-// GetMovementCost calculates total movement cost from one position to another
-// Uses Dijkstra's algorithm for multi-tile pathfinding with terrain costs
-func (re *RulesEngine) GetMovementCost(gameMap *Map, unitType int, from, to AxialCoord) (float64, error) {
+// GetMovementCost calculates movement cost for a unit to move to a specific destination
+// Uses the unit's current position as starting point and recalculates based on current world state
+func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) (float64, error) {
+	if unit == nil {
+		return 0, fmt.Errorf("unit is nil")
+	}
+
+	from := unit.Coord
 	if from == to {
 		return 0, nil
 	}
@@ -115,15 +120,15 @@ func (re *RulesEngine) GetMovementCost(gameMap *Map, unitType int, from, to Axia
 	// For single adjacent moves, just return terrain cost
 	distance := CubeDistance(from, to)
 	if distance == 1 {
-		toTile := gameMap.TileAt(to)
+		toTile := world.Map.TileAt(to)
 		if toTile == nil {
 			return 0, fmt.Errorf("invalid destination tile")
 		}
-		return re.GetTerrainMovementCost(unitType, toTile.TileType)
+		return re.getUnitTerrainCost(unit.UnitType, toTile.TileType)
 	}
 
 	// For multi-tile moves, use Dijkstra pathfinding
-	return re.calculatePathCost(gameMap, unitType, from, to)
+	return re.calculatePathCost(world.Map, unit.UnitType, from, to)
 }
 
 // calculatePathCost uses Dijkstra's algorithm to find minimum cost path
@@ -139,6 +144,80 @@ func (re *RulesEngine) calculatePathCost(gameMap *Map, unitType int, from, to Ax
 	}
 
 	return distance * averageCost, nil
+}
+
+// =============================================================================
+// Path Validation Methods
+// =============================================================================
+
+// IsValidPath validates if a unit can traverse a specific path
+// This method performs comprehensive validation of any path, including:
+// - Path structure (adjacent tiles, no jumps)
+// - Terrain traversability (unit type vs terrain rules)
+// - Movement cost feasibility (enough movement points)
+// - Game state validity (no units blocking, correct start position)
+func (re *RulesEngine) IsValidPath(unit *Unit, path []AxialCoord, world *World) (bool, error) {
+	if unit == nil {
+		return false, fmt.Errorf("unit is nil")
+	}
+	
+	if len(path) == 0 {
+		return false, fmt.Errorf("path is empty")
+	}
+
+	// Path must start at unit's current position
+	if path[0] != unit.Coord {
+		return false, fmt.Errorf("path does not start at unit position: expected %v, got %v", unit.Coord, path[0])
+	}
+
+	// Empty movement (staying in place) is always valid
+	if len(path) == 1 {
+		return true, nil
+	}
+
+	totalCost := 0.0
+
+	// Validate each step in the path
+	for i := 1; i < len(path); i++ {
+		fromCoord := path[i-1]
+		toCoord := path[i]
+
+		// 1. Check adjacency - tiles must be adjacent (no jumping)
+		distance := CubeDistance(fromCoord, toCoord)
+		if distance != 1 {
+			return false, fmt.Errorf("path step %d->%d: tiles are not adjacent (distance=%d)", i-1, i, distance)
+		}
+
+		// 2. Check destination tile exists
+		toTile := world.Map.TileAt(toCoord)
+		if toTile == nil {
+			return false, fmt.Errorf("path step %d: destination tile %v does not exist", i, toCoord)
+		}
+
+		// 3. Check terrain traversability
+		stepCost, err := re.getUnitTerrainCost(unit.UnitType, toTile.TileType)
+		if err != nil {
+			return false, fmt.Errorf("path step %d: unit type %d cannot traverse terrain %d: %w", 
+				i, unit.UnitType, toTile.TileType, err)
+		}
+
+		// 4. Check for blocking units
+		blockingUnit := world.UnitAt(toCoord)
+		if blockingUnit != nil && blockingUnit != unit {
+			return false, fmt.Errorf("path step %d: tile %v is blocked by unit", i, toCoord)
+		}
+
+		// 5. Accumulate movement cost
+		totalCost += stepCost
+	}
+
+	// 6. Check total movement cost against unit's remaining movement
+	if totalCost > float64(unit.DistanceLeft) {
+		return false, fmt.Errorf("path requires %.2f movement points, unit has %d remaining", 
+			totalCost, unit.DistanceLeft)
+	}
+
+	return true, nil
 }
 
 // CalculateCombatDamage calculates damage using canonical DamageDistribution
@@ -237,8 +316,9 @@ type TileOption struct {
 	Cost  float64    `json:"cost"`
 }
 
-// GetMovementOptions returns all tiles a unit can move to using Dijkstra's algorithm
-func (re *RulesEngine) GetMovementOptions(gameMap *Map, unit *Unit, remainingMovement int) ([]TileOption, error) {
+// GetMovementOptions returns all EMPTY tiles a unit can move to using Dijkstra's algorithm
+// Only returns tiles without units (movement destinations)
+func (re *RulesEngine) GetMovementOptions(world *World, unit *Unit, remainingMovement int) ([]TileOption, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
@@ -248,11 +328,11 @@ func (re *RulesEngine) GetMovementOptions(gameMap *Map, unit *Unit, remainingMov
 		return nil, fmt.Errorf("failed to get unit data: %w", err)
 	}
 
-	return re.dijkstraMovement(gameMap, unit.UnitType, unit.Coord, float64(remainingMovement))
+	return re.dijkstraMovement(world, unit.UnitType, unit.Coord, float64(remainingMovement))
 }
 
-// dijkstraMovement implements Dijkstra's algorithm to find all reachable tiles with minimum cost
-func (re *RulesEngine) dijkstraMovement(gameMap *Map, unitType int, startCoord AxialCoord, maxMovement float64) ([]TileOption, error) {
+// dijkstraMovement implements Dijkstra's algorithm to find all reachable EMPTY tiles with minimum cost
+func (re *RulesEngine) dijkstraMovement(world *World, unitType int, startCoord AxialCoord, maxMovement float64) ([]TileOption, error) {
 	// Distance map: coord -> minimum cost to reach
 	distances := make(map[AxialCoord]float64)
 	
@@ -291,18 +371,18 @@ func (re *RulesEngine) dijkstraMovement(gameMap *Map, unitType int, startCoord A
 		// Explore neighbors
 		for _, neighborCoord := range neighbors {
 			// Check if neighbor tile exists and is passable
-			tile := gameMap.TileAt(neighborCoord)
+			tile := world.Map.TileAt(neighborCoord)
 			if tile == nil {
 				continue // Invalid tile
 			}
 			
-			// Skip if occupied by another unit
-			if tile.Unit != nil {
+			// Skip if occupied by another unit (movement rule: only empty tiles)
+			if world.UnitAt(neighborCoord) != nil {
 				continue // Occupied tile
 			}
 			
 			// Get movement cost to this terrain
-			moveCost, err := re.GetTerrainMovementCost(unitType, tile.TileType)
+			moveCost, err := re.getUnitTerrainCost(unitType, tile.TileType)
 			if err != nil {
 				continue // Cannot move on this terrain
 			}
@@ -337,7 +417,8 @@ func (re *RulesEngine) dijkstraMovement(gameMap *Map, unitType int, startCoord A
 }
 
 // GetAttackOptions returns all positions a unit can attack from its current position
-func (re *RulesEngine) GetAttackOptions(gameMap *Map, unit *Unit) ([]AxialCoord, error) {
+// Only returns tiles with ENEMY units that are within attack range
+func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
@@ -359,19 +440,20 @@ func (re *RulesEngine) GetAttackOptions(gameMap *Map, unit *Unit) ([]AxialCoord,
 
 			targetCoord := AxialCoord{Q: unit.Coord.Q + dQ, R: unit.Coord.R + dR}
 
-			// Check if there's an enemy unit at this position
-			tile := gameMap.TileAt(targetCoord)
-			if tile == nil || tile.Unit == nil {
+			// Check if there's an enemy unit at this position (attack rule: only enemy units)
+			tile := world.Map.TileAt(targetCoord)
+			targetUnit := world.UnitAt(targetCoord)
+			if tile == nil || targetUnit == nil {
 				continue // No unit to attack
 			}
 
 			// Check if it's an enemy unit (different player)
-			if tile.Unit.PlayerID == unit.PlayerID {
+			if targetUnit.PlayerID == unit.PlayerID {
 				continue // Same player, can't attack
 			}
 
 			// Check if this unit can attack the target unit type
-			if _, err := re.GetCombatPrediction(unit.UnitType, tile.Unit.UnitType); err == nil {
+			if _, err := re.GetCombatPrediction(unit.UnitType, targetUnit.UnitType); err == nil {
 				attackPositions = append(attackPositions, targetCoord)
 			}
 		}

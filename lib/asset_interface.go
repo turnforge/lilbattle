@@ -14,11 +14,11 @@ import (
 // This allows switching between filesystem-based (CLI) and embedded (WASM) implementations
 type AssetProvider interface {
 	// Image loading
-	GetTileImage(tileType int) (image.Image, error)
+	GetTileImage(tileType int, playerID int) (image.Image, error)
 	GetUnitImage(unitType int, playerColor int) (image.Image, error)
 
 	// Asset existence checks
-	HasTileAsset(tileType int) bool
+	HasTileAsset(tileType int, playerID int) bool
 	HasUnitAsset(unitType int, playerColor int) bool
 
 	// Performance optimization
