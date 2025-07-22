@@ -46,7 +46,7 @@ type LayerScheduler interface {
 // BaseLayer provides common functionality for all layers
 type BaseLayer struct {
 	name                string
-	x, y, width, height int
+	X, Y, Width, Height int
 	buffer              *Buffer
 
 	// Dirty tracking
@@ -64,8 +64,8 @@ type BaseLayer struct {
 func NewBaseLayer(name string, width, height int, scheduler LayerScheduler) *BaseLayer {
 	return &BaseLayer{
 		name:        name,
-		width:       width,
-		height:      height,
+		Width:       width,
+		Height:      height,
 		buffer:      NewBuffer(int(width), int(height)),
 		dirtyCoords: make(map[AxialCoord]bool),
 		allDirty:    true, // Start with everything dirty
@@ -127,10 +127,10 @@ func (bl *BaseLayer) IsDirty() bool {
 
 func (bl *BaseLayer) SetViewPort(x, y, width, height int) {
 	// fmt.Printf("BaseLayer.SetViewPort called on layer '%s' with: x=%d, y=%d, width=%d, height=%d\n", bl.name, x, y, width, height)
-	bl.x = x
-	bl.y = y
-	bl.width = width
-	bl.height = height
+	bl.X = x
+	bl.Y = y
+	bl.Width = width
+	bl.Height = height
 	bl.buffer = NewBuffer(width, height)
 	bl.MarkAllDirty()
 }
@@ -164,7 +164,7 @@ func (tl *BaseLayer) drawSimpleHexToBuffer(x, y float64, hexColor Color, options
 	radiusX := int(options.TileWidth / 2)
 	radiusY := int(options.TileHeight / 2)
 	centerX, centerY := int(x), int(y)
-	width, height := int(tl.width), int(tl.height)
+	width, height := int(tl.Width), int(tl.Height)
 
 	for dy := -radiusY; dy <= radiusY; dy++ {
 		for dx := -radiusX; dx <= radiusX; dx++ {

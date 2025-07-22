@@ -98,6 +98,10 @@ func (hl *HighlightLayer) Render(world *weewar.World, options weewar.LayerRender
 func (hl *HighlightLayer) renderHighlightHex(world *weewar.World, coord weewar.AxialCoord, color weewar.Color, options weewar.LayerRenderOptions) {
 	// Get pixel position using Map's coordinate system
 	x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+	x -= float64(hl.X)
+	y -= float64(hl.Y)
+	y += (options.TileHeight - options.YIncrement)
+	log.Println("highlight layer coord, x, y: ", coord, x, y)
 
 	// Use BaseLayer's GetHexVertices method for proper hex shape
 	hexPoints := hl.GetHexVertices(x, y, options.TileWidth, options.TileHeight)
@@ -109,7 +113,7 @@ func (hl *HighlightLayer) renderHighlightHex(world *weewar.World, coord weewar.A
 	}
 
 	// Fill the hex with semi-transparent color
-	// hl.BaseLayer.GetBuffer().FillPath(points, color)
+	hl.BaseLayer.GetBuffer().FillPath(points, color)
 }
 
 // SimpleCLI is a thin wrapper over Game methods with minimal logic
@@ -277,6 +281,7 @@ func (cli *SimpleCLI) handleSelect(args []string) string {
 		return fmt.Sprintf("Invalid unit: %v", err)
 	}
 
+	log.Println("Target: ", target)
 	if !target.IsUnit {
 		return fmt.Sprintf("Select target must be a unit (like A1), got coordinate: %s", target.Raw)
 	}
@@ -734,8 +739,8 @@ func (cli *SimpleCLI) renderGameWithOverlays(filename string, showCoords bool) e
 	renderer.Layers = []weewar.Layer{
 		tileLayer,      // Terrain (bottom)
 		unitLayer,      // Units (on top of highlights)
-		highlightLayer, // Highlights (overlays)
 		gridLayer,      // Grid lines (top)
+		highlightLayer, // Highlights (overlays)
 	}
 	renderer.SetAssetProvider(globalAssetProvider)
 

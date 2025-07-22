@@ -64,8 +64,8 @@ func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, opti
 	x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
-	x -= float64(tl.x)
-	y -= float64(tl.y)
+	x -= float64(tl.X)
+	y -= float64(tl.Y)
 
 	// Check if this is a player-owned tile (base, city, etc.)
 	playerID := tile.Player // -1 means neutral/no player

@@ -72,8 +72,8 @@ func (ul *UnitLayer) renderUnit(world *World, unit *Unit, options LayerRenderOpt
 	x, y := world.Map.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
-	x -= float64(ul.x)
-	y -= float64(ul.y)
+	x -= float64(ul.X)
+	y -= float64(ul.Y)
 
 	// Try to use real unit sprite if available
 	if ul.assetProvider != nil && ul.assetProvider.HasUnitAsset(unit.UnitType, unit.PlayerID) {
@@ -133,7 +133,7 @@ func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int, options 
 		for dx := -radiusX; dx <= radiusX; dx++ {
 			if float64(dx*dx)/float64(radiusX*radiusX)+float64(dy*dy)/float64(radiusY*radiusY) <= 1.0 {
 				px, py := centerX+dx, centerY+dy
-				if px >= 0 && py >= 0 && px < ul.width && py < ul.height {
+				if px >= 0 && py >= 0 && px < ul.Width && py < ul.Height {
 					rgba := color.RGBA{R: unitColor.R, G: unitColor.G, B: unitColor.B, A: unitColor.A}
 					bufferImg.Set(px, py, rgba)
 				}

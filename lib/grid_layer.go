@@ -40,8 +40,8 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	gl.buffer.Clear()
 
 	// Simple - get top left r/c and render row by row
-	topLeftCoord := world.Map.XYToQR(float64(gl.x), float64(gl.y), options.TileWidth, options.TileHeight, options.YIncrement)
-	bottomRightCoord := world.Map.XYToQR(float64(gl.x+gl.width), float64(gl.y+gl.height), options.TileWidth, options.TileHeight, options.YIncrement)
+	topLeftCoord := world.Map.XYToQR(float64(gl.X), float64(gl.Y), options.TileWidth, options.TileHeight, options.YIncrement)
+	bottomRightCoord := world.Map.XYToQR(float64(gl.X+gl.Width), float64(gl.Y+gl.Height), options.TileWidth, options.TileHeight, options.YIncrement)
 	tlrow, tlcol := HexToRowCol(topLeftCoord)
 	brrow, brcol := HexToRowCol(bottomRightCoord)
 	log.Println("TopLeft: ", topLeftCoord, tlrow, tlcol)
@@ -50,8 +50,8 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 		for col := tlcol; col <= brcol; col++ {
 			coord := RowColToHex(row, col)
 			currX, currY := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
-			currX -= float64(gl.x)
-			currY -= float64(gl.y)
+			currX -= float64(gl.X)
+			currY -= float64(gl.Y)
 			if options.ShowGrid {
 				gl.drawHexGrid(currX, currY, options)
 			}
@@ -91,7 +91,7 @@ func (gl *GridLayer) drawCoordinates(coord AxialCoord, centerX, centerY float64,
 	text := fmt.Sprintf("%d,%d", coord.Q, coord.R)
 
 	// Only draw text if it's within the visible area
-	if centerX < 0 || centerY < 0 || centerX > float64(gl.width) || centerY > float64(gl.height) {
+	if centerX < 0 || centerY < 0 || centerX > float64(gl.Width) || centerY > float64(gl.Height) {
 		return // Skip off-screen text
 	}
 
@@ -130,7 +130,7 @@ func (gl *GridLayer) drawLine(img draw.Image, x1, y1, x2, y2 int, c color.RGBA) 
 	if dx > dy {
 		err = dx / 2
 		for x != x2 {
-			if x >= 0 && y >= 0 && x < gl.width && y < gl.height {
+			if x >= 0 && y >= 0 && x < gl.Width && y < gl.Height {
 				img.Set(x, y, c)
 			}
 			err -= dy
@@ -143,7 +143,7 @@ func (gl *GridLayer) drawLine(img draw.Image, x1, y1, x2, y2 int, c color.RGBA) 
 	} else {
 		err = dy / 2
 		for y != y2 {
-			if x >= 0 && y >= 0 && x < gl.width && y < gl.height {
+			if x >= 0 && y >= 0 && x < gl.Width && y < gl.Height {
 				img.Set(x, y, c)
 			}
 			err -= dx
@@ -152,28 +152,6 @@ func (gl *GridLayer) drawLine(img draw.Image, x1, y1, x2, y2 int, c color.RGBA) 
 				err += dy
 			}
 			y += yInc
-		}
-	}
-}
-
-// drawSimpleText draws simple text at the given position
-func (gl *GridLayer) drawSimpleText(text string, centerX, centerY float64) {
-	// For now, draw simple dots to represent coordinates
-	// This can be enhanced with proper text rendering later
-	bufferImg := gl.buffer.GetImageData()
-	textColor := color.RGBA{R: 255, G: 255, B: 255, A: 255} // White
-
-	x, y := int(centerX), int(centerY)
-
-	// Draw a small cross or dot to indicate coordinates
-	for i := -2; i <= 2; i++ {
-		for j := -2; j <= 2; j++ {
-			px, py := x+i, y+j
-			if px >= 0 && py >= 0 && px < gl.width && py < gl.height {
-				if (i == 0 && abs(j) <= 2) || (j == 0 && abs(i) <= 2) {
-					bufferImg.Set(px, py, textColor)
-				}
-			}
 		}
 	}
 }
