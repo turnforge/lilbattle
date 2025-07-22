@@ -9,6 +9,7 @@ import (
 	"syscall/js"
 	"time"
 
+	"github.com/panyam/turnengine/games/weewar/assets"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
@@ -18,16 +19,16 @@ var globalRulesEngine *weewar.RulesEngine
 
 func main() {
 	fmt.Println("WeeWar WASM module loading...")
-	
+
 	// Initialize rules engine from embedded data
 	var err error
-	globalRulesEngine, err = weewar.LoadRulesEngineFromFile(weewar.DevDataPath("data/rules-data.json"))
+	globalRulesEngine, err = weewar.LoadRulesEngineFromJSON(assets.RulesDataJSON)
 	if err != nil {
 		fmt.Printf("Failed to load rules engine: %v", err)
 		return
 	}
 	fmt.Println("Rules engine loaded successfully")
-	
+
 	// Register JavaScript functions
 	js.Global().Set("weewarCreateGameFromMap", js.FuncOf(createGameFromMap))
 	js.Global().Set("weewarGetGameState", js.FuncOf(getGameState))
@@ -35,9 +36,9 @@ func main() {
 	js.Global().Set("weewarMoveUnit", js.FuncOf(moveUnit))
 	js.Global().Set("weewarAttackUnit", js.FuncOf(attackUnit))
 	js.Global().Set("weewarEndTurn", js.FuncOf(endTurn))
-	
+
 	fmt.Println("WeeWar WASM module loaded successfully")
-	
+
 	// Keep the program running
 	c := make(chan struct{})
 	<-c
@@ -48,7 +49,7 @@ func main() {
 // =============================================================================
 
 // createGameFromMap creates a new game from web map data
-func createGameFromMap(this js.Value, args []js.Value) interface{} {
+func createGameFromMap(this js.Value, args []js.Value) any {
 	if len(args) < 2 {
 		return createJSResponse(false, "Missing mapData or playerCount arguments", nil)
 	}
@@ -83,7 +84,7 @@ func createGameFromMap(this js.Value, args []js.Value) interface{} {
 }
 
 // getGameState returns current game state for UI
-func getGameState(this js.Value, args []js.Value) interface{} {
+func getGameState(this js.Value, args []js.Value) any {
 	if globalGame == nil {
 		return createJSResponse(false, "No game loaded", nil)
 	}
@@ -93,7 +94,7 @@ func getGameState(this js.Value, args []js.Value) interface{} {
 }
 
 // selectUnit selects unit and returns movement/attack options
-func selectUnit(this js.Value, args []js.Value) interface{} {
+func selectUnit(this js.Value, args []js.Value) any {
 	if globalGame == nil {
 		return createJSResponse(false, "No game loaded", nil)
 	}
@@ -113,9 +114,9 @@ func selectUnit(this js.Value, args []js.Value) interface{} {
 	}
 
 	// Return data using existing types
-	data := map[string]interface{}{
-		"unit":            unit,       // *Unit (already JSON-tagged)
-		"movableCoords":   movable,    // []TileOption from RulesEngine
+	data := map[string]any{
+		"unit":             unit,       // *Unit (already JSON-tagged)
+		"movableCoords":    movable,    // []TileOption from RulesEngine
 		"attackableCoords": attackable, // []AxialCoord from RulesEngine
 	}
 
@@ -123,7 +124,7 @@ func selectUnit(this js.Value, args []js.Value) interface{} {
 }
 
 // moveUnit moves a unit from one position to another
-func moveUnit(this js.Value, args []js.Value) interface{} {
+func moveUnit(this js.Value, args []js.Value) any {
 	if globalGame == nil {
 		return createJSResponse(false, "No game loaded", nil)
 	}
@@ -148,13 +149,13 @@ func moveUnit(this js.Value, args []js.Value) interface{} {
 
 	// Return updated unit
 	unit := globalGame.GetUnitAt(to)
-	return createJSResponse(true, "Unit moved successfully", map[string]interface{}{
+	return createJSResponse(true, "Unit moved successfully", map[string]any{
 		"unit": unit,
 	})
 }
 
 // attackUnit performs combat between two units
-func attackUnit(this js.Value, args []js.Value) interface{} {
+func attackUnit(this js.Value, args []js.Value) any {
 	if globalGame == nil {
 		return createJSResponse(false, "No game loaded", nil)
 	}
@@ -182,7 +183,7 @@ func attackUnit(this js.Value, args []js.Value) interface{} {
 }
 
 // endTurn advances to next player's turn
-func endTurn(this js.Value, args []js.Value) interface{} {
+func endTurn(this js.Value, args []js.Value) any {
 	if globalGame == nil {
 		return createJSResponse(false, "No game loaded", nil)
 	}
@@ -203,15 +204,27 @@ func endTurn(this js.Value, args []js.Value) interface{} {
 // =============================================================================
 
 // createJSResponse creates a JavaScript-compatible response
-func createJSResponse(success bool, message string, data interface{}) interface{} {
-	response := map[string]interface{}{
+func createJSResponse(success bool, message string, data any) any {
+	response := map[string]any{
 		"success": success,
 		"message": message,
 		"data":    data,
 	}
 
 	// Convert to JS Value
-	responseBytes, _ := json.Marshal(response)
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		fmt.Printf("Failed to marshal JSON response: %v\n", err)
+		// Return a simple error response
+		errorResponse := map[string]any{
+			"success": false,
+			"message": fmt.Sprintf("JSON marshal error: %v", err),
+			"data":    nil,
+		}
+		errorBytes, _ := json.Marshal(errorResponse)
+		return js.Global().Get("JSON").Call("parse", string(errorBytes))
+	}
+
 	return js.Global().Get("JSON").Call("parse", string(responseBytes))
 }
 
@@ -243,7 +256,7 @@ func createTestWorld(playerCount int) (*weewar.World, error) {
 	unit1.SetPosition(weewar.AxialCoord{Q: 0, R: 0})
 	world.AddUnit(unit1)
 
-	unit2 := weewar.NewUnit(1, 1) // Infantry for player 1 
+	unit2 := weewar.NewUnit(1, 1) // Infantry for player 1
 	unit2.SetPosition(weewar.AxialCoord{Q: 1, R: -1})
 	world.AddUnit(unit2)
 

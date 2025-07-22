@@ -24,23 +24,15 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     // Game configuration from URL parameters
     private playerCount: number = 2;
     private maxTurns: number = 0;
-    private gameConfig: GameConfiguration = {
-        playerCount: 2,
-        maxTurns: 0,
-        unitRestrictions: {},
-        playerTypes: {},
-        playerTeams: {}
-    };
+    private gameConfig: GameConfiguration;
     
     // UI state
     private selectedUnit: any = null;
     private gameLog: string[] = [];
 
     constructor() {
-        console.log('GameViewerPage: Constructor starting...');
-        super();
-        console.log('GameViewerPage: super() completed, basic setup only');
-        this.loadGameConfiguration();
+        console.log('GameViewerPage: Constructor starting...'); 
+        super(); // BasePage will call initializeSpecificComponents() and bindSpecificEvents()
         console.log('GameViewerPage: Constructor completed - lifecycle will be managed externally');
     }
 
@@ -49,6 +41,15 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
      */
     private loadGameConfiguration(): void {
         // Get worldId from hidden input
+        
+        // Initialize gameConfig before calling super() to ensure it's available in initializeSpecificComponents()
+        this.gameConfig = this.gameConfig || {
+            playerCount: 2,
+            maxTurns: 0,
+            unitRestrictions: {},
+            playerTypes: {},
+            playerTeams: {}
+        };
         const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
         this.currentWorldId = worldIdInput?.value.trim() || null;
 
@@ -81,34 +82,13 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
 
     /**
      * Initialize page-specific components (required by BasePage)
-     * Follows State→Subscribe→Create→Bind pattern from UI_DESIGN_PRINCIPLES.md
+     * This method is called by BasePage constructor, but we're using external LifecycleController
+     * so we make this a no-op and handle initialization through ComponentLifecycle interface
      */
     protected initializeSpecificComponents(): void {
-        try {
-            console.log('GameViewerPage: initializeSpecificComponents() starting...');
-
-            // State: Load game configuration is already done in constructor
-            console.log('GameViewerPage: About to subscribe to events...');
-            
-            // Subscribe: Subscribe to events BEFORE creating components
-            this.subscribeToWorldViewerEvents();
-            console.log('GameViewerPage: Event subscriptions completed');
-            
-            // Create: Initialize child components  
-            console.log('GameViewerPage: About to create WorldViewer component...');
-            this.createWorldViewerComponent();
-            console.log('GameViewerPage: WorldViewer component created');
-            
-            // Initialize game UI state
-            console.log('GameViewerPage: Updating UI state...');
-            this.updateGameStatus('Game Loading...');
-            this.initializeGameLog();
-            console.log('GameViewerPage: UI state updated, initialization complete');
-
-        } catch (error) {
-            console.error('Failed to initialize GameViewerPage components:', error);
-            this.showToast('Error', 'Failed to initialize game interface', 'error');
-        }
+        console.log('GameViewerPage: initializeSpecificComponents() called by BasePage - doing minimal setup');
+        this.loadGameConfiguration(); // Load game config here since constructor calls this
+        console.log('GameViewerPage: Actual component initialization will be handled by LifecycleController');
     }
 
     /**
@@ -162,21 +142,14 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
      * Create WorldViewer and GameState component instances
      */
     private createWorldViewerComponent(): void {
-        console.log('GameViewerPage: Looking for phaser-viewer-container...');
         const worldViewerContainer = document.getElementById('phaser-viewer-container');
-        console.log('GameViewerPage: Found container element:', worldViewerContainer);
-        
-        if (worldViewerContainer) {
-            console.log('GameViewerPage: Creating WorldViewer with container...');
-            // Pass element directly (not string ID) as per UI_DESIGN_PRINCIPLES.md
-            this.worldViewer = new WorldViewer(worldViewerContainer, this.eventBus, true);
-            console.log('GameViewerPage: WorldViewer created:', this.worldViewer);
-        } else {
-            console.warn('GameViewerPage: phaser-viewer-container not found');
+        if (!worldViewerContainer) {
+            throw new Error('GameViewerPage: phaser-viewer-container not found');
         }
+        // Pass element directly (not string ID) as per UI_DESIGN_PRINCIPLES.md
+        this.worldViewer = new WorldViewer(worldViewerContainer, this.eventBus, true);
 
         // Create GameState component (no specific container needed)
-        console.log('GameViewerPage: Creating GameState component...');
         const gameStateContainer = document.createElement('div');
         gameStateContainer.style.display = 'none'; // Hidden data component
         document.body.appendChild(gameStateContainer);
@@ -255,8 +228,17 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
 
     /**
      * Bind page-specific events (required by BasePage)
+     * This method is called by BasePage constructor, but we're using external LifecycleController
+     * so we make this a no-op and handle event binding in ComponentLifecycle.activate()
      */
     protected bindSpecificEvents(): void {
+        console.log('GameViewerPage: bindSpecificEvents() called by BasePage - deferred to activate() phase');
+    }
+
+    /**
+     * Internal method to bind game-specific events (called from activate() phase)
+     */
+    private bindGameSpecificEvents(): void {
         // End Turn button
         const endTurnBtn = document.getElementById('end-turn-btn');
         if (endTurnBtn) {
@@ -298,13 +280,25 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     private loadWorldDataFromElement(): any {
         try {
             const worldDataElement = document.getElementById('world-data-json');
-            if (worldDataElement && worldDataElement.textContent) {
-                const worldData = JSON.parse(worldDataElement.textContent);
-                return worldData && worldData !== null ? worldData : null;
+            console.log('GameViewerPage: Found world-data-json element:', !!worldDataElement);
+            
+            if (worldDataElement) {
+                const rawContent = worldDataElement.textContent;
+                console.log('GameViewerPage: Raw world data content:', rawContent ? rawContent.substring(0, 200) + '...' : 'null/empty');
+                
+                if (rawContent && rawContent.trim() !== '' && rawContent.trim() !== 'null') {
+                    const worldData = JSON.parse(rawContent);
+                    console.log('GameViewerPage: Parsed world data successfully:', !!worldData);
+                    return worldData && worldData !== null ? worldData : null;
+                } else {
+                    console.warn('GameViewerPage: World data element is empty or contains null');
+                }
+            } else {
+                console.error('GameViewerPage: world-data-json element not found in DOM');
             }
             return null;
         } catch (error) {
-            console.error('Error parsing world data:', error);
+            console.error('GameViewerPage: Error parsing world data:', error);
             return null;
         }
     }
@@ -598,7 +592,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         console.log('GameViewerPage: activate() - Phase 3');
         
         // Bind events now that all components are ready
-        this.bindSpecificEvents();
+        this.bindGameSpecificEvents();
         
         // Wait for world viewer to be ready, then load world and initialize game
         if (this.currentWorldId) {

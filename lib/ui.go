@@ -44,13 +44,21 @@ func (g *Game) SelectUnit(coord AxialCoord) (unit *Unit, movable []TileOption, a
 // Uses existing Game fields and methods - all already JSON-tagged
 // Provides everything needed for UI state management and display
 func (g *Game) GetGameStateForUI() map[string]interface{} {
+	// Convert UnitsByCoord to JSON-serializable format
+	// Since JSON object keys must be strings, we'll convert AxialCoord to string format
+	allUnitsMap := make(map[string]*Unit)
+	for coord, unit := range g.World.UnitsByCoord {
+		coordKey := fmt.Sprintf("%d,%d", coord.Q, coord.R) // e.g., "0,1" for Q=0, R=1
+		allUnitsMap[coordKey] = unit
+	}
+
 	return map[string]interface{}{
-		"currentPlayer": g.CurrentPlayer,      // Current player's turn
-		"turnCounter":   g.TurnCounter,        // Turn number
-		"status":        g.Status,             // GameStatus (playing/ended/paused)
-		"allUnits":      g.World.UnitsByCoord, // All units on map
-		"players":       g.Players,            // Player information
-		"teams":         g.Teams,              // Team information
+		"currentPlayer": g.CurrentPlayer,    // Current player's turn
+		"turnCounter":   g.TurnCounter,      // Turn number
+		"status":        g.Status,           // GameStatus (playing/ended/paused)
+		"allUnits":      allUnitsMap,        // All units on map (coord string -> unit)
+		"players":       g.Players,          // Player information
+		"teams":         g.Teams,            // Team information
 		"mapSize": map[string]int{ // Map dimensions
 			"rows": g.World.Map.NumRows(),
 			"cols": g.World.Map.NumCols(),
