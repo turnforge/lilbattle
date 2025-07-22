@@ -18,13 +18,15 @@ const (
 	Build   = "dev"
 )
 
+var exampleMapPath = weewar.DevDataPath("storage/maps/map123")
+
 func main() {
 	// Command line flags
 	var (
 		interactive = flag.Bool("interactive", false, "Start in interactive mode")
 		loadFile    = flag.String("load", "", "Load game from file")
 		saveFile    = flag.String("save", "", "Save game to file after commands")
-		worldPath   = flag.String("world", "", "Load world from storage directory (e.g., ./storage/maps/map123)")
+		worldPath   = flag.String("world", "", fmt.Sprintf("Load world from storage directory (e.g., %s)", exampleMapPath))
 		renderFile  = flag.String("render", "", "Render game to PNG file")
 		width       = flag.Int("width", 800, "Render width in pixels")
 		height      = flag.Int("height", 600, "Render height in pixels")
@@ -167,10 +169,10 @@ func createGameFromWorld(worldPath string) (*weewar.Game, error) {
 		return nil, fmt.Errorf("failed to parse world data: %w", err)
 	}
 
-	log.Println("Found World Data: ", world.Map.TileAt(weewar.AxialCoord{-1, -3}))
+	log.Println("Found World Data: ", world.Map.TileAt(weewar.AxialCoord{Q: -1, R: -3}))
 
 	// Create rules engine from data file
-	rulesEngine, err := weewar.LoadRulesEngineFromFile("../../data/rules-data.json")
+	rulesEngine, err := weewar.LoadRulesEngineFromFile(weewar.DevDataPath("data/rules-data.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load rules engine: %w", err)
 	}
@@ -276,7 +278,7 @@ func showHelp() {
 
 	fmt.Println("OPTIONS:")
 	fmt.Println("  -interactive         Start in interactive mode")
-	fmt.Println("  -world PATH          Load world from storage directory (e.g., ./storage/maps/map123)")
+	fmt.Printf("  -world PATH          Load world from storage directory (e.g., %s)", exampleMapPath)
 	fmt.Println("  -load FILE           Load saved game from file")
 	fmt.Println("  -save FILE           Save game to file after commands")
 	fmt.Println("  -render FILE         Render game to PNG file")
@@ -305,13 +307,13 @@ func showHelp() {
 
 	fmt.Println("EXAMPLES:")
 	fmt.Println("  # Load world and start interactive session")
-	fmt.Println("  weewar-cli -world ./storage/maps/map123 -interactive")
+	fmt.Printf("  weewar-cli -world %s -interactive", exampleMapPath)
 	fmt.Println()
 	fmt.Println("  # Load saved game and show status")
 	fmt.Println("  weewar-cli -load mygame.json status")
 	fmt.Println()
 	fmt.Println("  # Load world, make moves, and save")
-	fmt.Println("  weewar-cli -world ./storage/maps/map123 'move A1 B2' 'end' -save mygame.json")
+	fmt.Printf("  weewar-cli -world %s 'move A1 B2' 'end' -save mygame.json", exampleMapPath)
 	fmt.Println()
 	fmt.Println("  # Render game to PNG")
 	fmt.Println("  weewar-cli -load mygame.json -render game.png")

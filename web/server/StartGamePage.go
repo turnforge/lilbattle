@@ -14,7 +14,8 @@ var DefaultRulesEngine *weewar.RulesEngine
 
 func init() {
 	var err error
-	DefaultRulesEngine, err = weewar.LoadRulesEngineFromFile("./data/rules-data.json")
+	// TODO - only for dev
+	DefaultRulesEngine, err = weewar.LoadRulesEngineFromFile(weewar.DevDataPath("data/rules-data.json"))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load rules engine: %v", err))
 	}

@@ -326,7 +326,7 @@
 - **Essential Game Commands**: Core functionality - move, attack, select, end, status, units, player, help, quit
 - **Move Recording System**: Serializable MoveList with JSON export for game replay and debugging sessions
 - **REPL Interactive Mode**: Professional Read-Eval-Print Loop for persistent gameplay without reloading
-- **World Loading Integration**: Complete world loading from ./storage/maps/ with JSON parsing and rules engine integration
+- **World Loading Integration**: Complete world loading from $WEEWAR_DATA_ROOT/storage/maps/ with JSON parsing and rules engine integration
 - **Session Documentation**: Complete user guide with examples, position formats, and troubleshooting
 
 **Technical Improvements**:
@@ -338,7 +338,7 @@
 - **Comprehensive Testing**: Successfully tested with actual world data and compiled successfully
 
 **Production Quality Features**:
-- **Real World Integration**: Successfully loads and plays with actual map data from ./storage/maps/small-world
+- **Real World Integration**: Successfully loads and plays with actual map data from $WEEWAR_DATA_ROOT/storage/maps/small-world
 - **Rules Engine Integration**: Proper initialization with rules-data.json for authentic game mechanics
 - **Game State Persistence**: Complete game state maintained across commands with proper turn and player tracking
 - **Position Parser Flexibility**: Handles player units (A1-Z99), hex coordinates (Q,R), and legacy row/col formats

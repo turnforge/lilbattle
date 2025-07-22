@@ -82,7 +82,7 @@ Options:
 
 ### Analyze a Map
 ```bash
-python grid_analyzer.py --image ../data/Maps/1_files/map-og.png --debug
+python grid_analyzer.py --image ~/dev-app-data/weewar/data/Maps/1_files/map-og.png --debug
 ```
 Output:
 ```

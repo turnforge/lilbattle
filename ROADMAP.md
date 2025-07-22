@@ -28,7 +28,7 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 
 ### Backend Infrastructure ✅
 - [x] Complete gRPC service architecture (MapsService, GamesService, UsersService)
-- [x] File-based storage system with `./storage/maps/<mapId>/` structure
+- [x] File-based storage system with `<WEEWAR_DATA_ROOT>/storage/maps/<mapId>/` structure
 - [x] Enhanced protobuf models with hex coordinates (MapTile, MapUnit)
 - [x] Full CRUD operations for maps with metadata and game data separation
 - [x] Connect bindings for web API integration
@@ -312,11 +312,11 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [x] ~~Essential game commands: move, attack, select, end, status, units, player, help, quit~~ ✅ COMPLETED
 - [x] ~~Move recording system with serializable MoveList and JSON export~~ ✅ COMPLETED
 - [x] ~~REPL Interactive Mode for persistent gameplay without reloading~~ ✅ COMPLETED
-- [x] ~~World loading integration from ./storage/maps/ with JSON parsing~~ ✅ COMPLETED
+- [x] ~~World loading integration from <WEEWAR_DATA_ROOT>/storage/maps/ with JSON parsing~~ ✅ COMPLETED
 - [x] ~~Complete USER_GUIDE.md with examples, troubleshooting, and command reference~~ ✅ COMPLETED
 
 ### Production Quality CLI Features ✅ COMPLETED
-- [x] ~~Real world integration: Successfully loads and plays with ./storage/maps/small-world~~ ✅ COMPLETED
+- [x] ~~Real world integration: Successfully loads and plays with <WEEWAR_DATA_ROOT>/storage/maps/small-world~~ ✅ COMPLETED
 - [x] ~~Rules engine integration: Proper initialization with rules-data.json~~ ✅ COMPLETED
 - [x] ~~Game state persistence: Complete game state maintained across commands~~ ✅ COMPLETED
 - [x] ~~Position parser flexibility: Handles A1-Z99, Q/R coordinates, row/col formats~~ ✅ COMPLETED

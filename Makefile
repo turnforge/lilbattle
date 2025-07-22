@@ -22,7 +22,9 @@ buf:
 	buf generate
 
 cli:
-	cd cmd/weewar-cli && go build .
+	mkdir -p bin
+	go build  -o ./bin/weewar-cli cmd/weewar-cli/*.go
+	go build  -o ./bin/weewar-convert cmd/weewar-convert/*.go
 
 wasm:
 	echo "Building WeeWar WASM modules..."

@@ -78,13 +78,13 @@ func TestMapTileOperations(t *testing.T) {
 func TestGameCreationAndBasicOperations(t *testing.T) {
 	// Create a test world with map
 	gameMap := NewMapRect(3, 3)
-	
+
 	// Add some tiles with different types
 	coords := []AxialCoord{
 		{Q: 0, R: 0}, {Q: 0, R: 1}, {Q: 1, R: 0},
 		{Q: 1, R: 1}, {Q: 2, R: 0}, {Q: 2, R: 1},
 	}
-	
+
 	tileTypes := []int{1, 2, 3, 1, 4, 5} // Grass, Desert, Water, Grass, Mountain, Rock
 
 	for i, coord := range coords {
@@ -98,7 +98,7 @@ func TestGameCreationAndBasicOperations(t *testing.T) {
 	}
 
 	// Load rules engine first
-	rulesEngine, err := LoadRulesEngineFromFile("../data/rules-data.json")
+	rulesEngine, err := LoadRulesEngineFromFile(DevDataPath("data/rules-data.json"))
 	if err != nil {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestGameMovementAndCombat(t *testing.T) {
 		{Q: 1, R: 0}, {Q: 1, R: 1}, {Q: 1, R: 2},
 		{Q: 2, R: 0}, {Q: 2, R: 1}, {Q: 2, R: 2},
 	}
-	
+
 	tileTypes := []int{1, 2, 3, 2, 3, 4, 3, 4, 5}
 
 	for i, coord := range coords {
@@ -267,7 +267,7 @@ func TestGameMovementAndCombat(t *testing.T) {
 	}
 
 	// Load rules engine for movement/combat
-	rulesEngine, err := LoadRulesEngineFromFile("../data/rules-data.json")
+	rulesEngine, err := LoadRulesEngineFromFile(DevDataPath("data/rules-data.json"))
 	if err != nil {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}

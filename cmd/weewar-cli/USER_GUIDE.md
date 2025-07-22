@@ -25,13 +25,13 @@ chmod +x weewar-cli
 ### Quick Start
 ```bash
 # Start interactive game with a world from storage
-./weewar-cli -world ./storage/maps/small-world -interactive
+./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world -interactive
 
 # Load a saved game
 ./weewar-cli -load my_game.json -interactive
 
 # Execute single commands
-./weewar-cli -world ./storage/maps/small-world status units quit
+./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world status units quit
 ```
 
 ## REPL Interface
@@ -114,8 +114,8 @@ WeeWar CLI supports three position formats:
 ### Starting a Game
 ```bash
 # Start with a world from storage
-$ ./weewar-cli -world ./storage/maps/small-world -interactive
-Loading world from ./storage/maps/small-world...
+$ ./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world -interactive
+Loading world from $WEEWAR_DATA_ROOT/storage/maps/small-world...
 Loaded world: Small World
 World loaded successfully
 WeeWar CLI - Interactive Mode
@@ -207,7 +207,7 @@ Move list JSON:
 echo -e "select A1\nmove A1 3,4\nend\nstatus" > moves.txt
 
 # Pipe commands to CLI
-cat moves.txt | ./weewar-cli -world ./storage/maps/small-world -interactive
+cat moves.txt | ./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world -interactive
 ```
 
 ### Game State Analysis
@@ -340,7 +340,7 @@ Solution: Use `select A1` to see valid movement options
 
 ```bash
 # Start with world from storage
-./weewar-cli -world ./storage/maps/small-world -interactive
+./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world -interactive
 
 # Load saved game  
 ./weewar-cli -load my_game.json -interactive
@@ -358,8 +358,8 @@ Solution: Use `select A1` to see valid movement options
 ## Example: Complete Game Session
 
 ```bash
-$ ./weewar-cli -world ./storage/maps/small-world -interactive
-Loading world from ./storage/maps/small-world...
+$ ./weewar-cli -world $WEEWAR_DATA_ROOT/storage/maps/small-world -interactive
+Loading world from $WEEWAR_DATA_ROOT/storage/maps/small-world...
 World loaded successfully
 WeeWar CLI - Interactive Mode
 Type 'help' for available commands, 'quit' to exit

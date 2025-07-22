@@ -351,7 +351,7 @@ The architecture successfully supports authentic WeeWar gameplay with real data 
 - **Component Encapsulation** - Each component owns its DOM elements with proper lifecycle management
 
 ### Maps Management System ✅
-- **Complete file-based storage** - `./storage/maps/<mapId>/` structure with `metadata.json` and `data.json`
+- **Complete file-based storage** - `$WEEWAR_DATA_ROOT/storage/maps/<mapId>/` structure with `metadata.json` and `data.json`
 - **Full CRUD operations** - Create, Read, Update, Delete maps via gRPC service
 - **Hex coordinate support** - Native support for hex tiles (q,r coordinates) and map units
 - **Web interface foundation** - Professional maps listing page with grid layout
@@ -547,7 +547,7 @@ The architecture successfully supports authentic WeeWar gameplay with real data 
 - **Essential Game Commands** - Core commands: move, attack, select, end, status, units, player, help, quit
 - **Move Recording System** - Serializable MoveList with JSON export for game replay and debugging sessions
 - **REPL Interactive Mode** - Professional Read-Eval-Print Loop for persistent gameplay without reloading
-- **World Loading Integration** - Loads maps from ./storage/maps/ with proper JSON parsing and rules engine integration
+- **World Loading Integration** - Loads maps from $WEEWAR_DATA_ROOT/storage/maps/ with proper JSON parsing and rules engine integration
 
 ### Technical Architecture Improvements ✅
 - **Thin Wrapper Design** - CLI acts as minimal interface layer calling Game methods directly without validation overhead
@@ -564,7 +564,7 @@ The architecture successfully supports authentic WeeWar gameplay with real data 
 - **Help System Integration** - Comprehensive help with examples for all coordinate formats and command usage
 
 ### Production Quality Features ✅
-- **Real World Integration** - Successfully loads and plays with actual map data from ./storage/maps/small-world
+- **Real World Integration** - Successfully loads and plays with actual map data from $WEEWAR_DATA_ROOT/storage/maps/small-world
 - **Rules Engine Integration** - Proper initialization with rules-data.json for authentic game mechanics
 - **Game State Persistence** - Complete game state maintained across commands with proper turn and player tracking
 - **Position Parser Flexibility** - Handles player units (A1-Z99), hex coordinates (Q,R), and legacy row/col formats

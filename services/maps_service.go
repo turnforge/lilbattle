@@ -12,10 +12,11 @@ import (
 	"time"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const MAPS_STORAGE_DIR = "./storage/maps"
+var MAPS_STORAGE_DIR = weewar.DevDataPath("storage/maps")
 
 // MapsServiceImpl implements the MapsService gRPC interface
 type MapsServiceImpl struct {
@@ -28,12 +29,12 @@ func NewMapsService() *MapsServiceImpl {
 	service := &MapsServiceImpl{
 		storageDir: MAPS_STORAGE_DIR,
 	}
-	
+
 	// Ensure storage directory exists
 	if err := os.MkdirAll(service.storageDir, 0755); err != nil {
 		log.Printf("Failed to create maps storage directory: %v", err)
 	}
-	
+
 	return service
 }
 
@@ -95,12 +96,12 @@ func (s *MapsServiceImpl) loadMapMetadata(mapID string) (*MapMetadata, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read metadata for map %s: %w", mapID, err)
 	}
-	
+
 	var metadata MapMetadata
 	if err := json.Unmarshal(data, &metadata); err != nil {
 		return nil, fmt.Errorf("failed to parse metadata for map %s: %w", mapID, err)
 	}
-	
+
 	return &metadata, nil
 }
 
@@ -111,12 +112,12 @@ func (s *MapsServiceImpl) loadMapData(mapID string) (*MapData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read map data for map %s: %w", mapID, err)
 	}
-	
+
 	var mapData MapData
 	if err := json.Unmarshal(data, &mapData); err != nil {
 		return nil, fmt.Errorf("failed to parse map data for map %s: %w", mapID, err)
 	}
-	
+
 	return &mapData, nil
 }
 
@@ -126,17 +127,17 @@ func (s *MapsServiceImpl) saveMapMetadata(mapID string, metadata *MapMetadata) e
 	if err := os.MkdirAll(mapDir, 0755); err != nil {
 		return fmt.Errorf("failed to create map directory %s: %w", mapDir, err)
 	}
-	
+
 	data, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal metadata for map %s: %w", mapID, err)
 	}
-	
+
 	metadataPath := s.getMetadataPath(mapID)
 	if err := os.WriteFile(metadataPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write metadata for map %s: %w", mapID, err)
 	}
-	
+
 	return nil
 }
 
@@ -146,12 +147,12 @@ func (s *MapsServiceImpl) saveMapData(mapID string, mapData *MapData) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal map data for map %s: %w", mapID, err)
 	}
-	
+
 	dataPath := s.getDataPath(mapID)
 	if err := os.WriteFile(dataPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write map data for map %s: %w", mapID, err)
 	}
-	
+
 	return nil
 }
 
@@ -174,41 +175,41 @@ func (s *MapsServiceImpl) checkMapId(mapID string) (bool, error) {
 // newMapId generates a new unique map ID of specified length (default 8 chars)
 func (s *MapsServiceImpl) newMapId(numChars ...int) (string, error) {
 	const maxRetries = 10
-	
+
 	// Default to 8 characters if not specified
 	length := 8
 	if len(numChars) > 0 && numChars[0] > 0 {
 		length = numChars[0]
 	}
-	
+
 	// Calculate number of bytes needed (2 hex chars per byte)
 	numBytes := (length + 1) / 2
-	
-	for attempt := 0; attempt < maxRetries; attempt++ {
+
+	for attempt := range maxRetries {
 		// Generate random bytes
 		bytes := make([]byte, numBytes)
 		if _, err := rand.Read(bytes); err != nil {
 			return "", fmt.Errorf("failed to generate random bytes: %w", err)
 		}
-		
+
 		// Convert to hex string and truncate to exact length
 		mapID := hex.EncodeToString(bytes)[:length]
-		
+
 		// Check if this ID is already taken
 		exists, err := s.checkMapId(mapID)
 		if err != nil {
 			return "", fmt.Errorf("failed to check map ID uniqueness: %w", err)
 		}
-		
+
 		if !exists {
 			// Found a unique ID
 			return mapID, nil
 		}
-		
+
 		// ID collision, try again
 		log.Printf("Map ID collision detected (attempt %d/%d): %s", attempt+1, maxRetries, mapID)
 	}
-	
+
 	return "", fmt.Errorf("failed to generate unique map ID after %d attempts", maxRetries)
 }
 
@@ -300,7 +301,7 @@ func (s *MapsServiceImpl) ListMaps(ctx context.Context, req *v1.ListMapsRequest)
 			TotalResults: 0,
 		},
 	}
-	
+
 	// Read all map directories
 	entries, err := os.ReadDir(s.storageDir)
 	if err != nil {
@@ -310,32 +311,32 @@ func (s *MapsServiceImpl) ListMaps(ctx context.Context, req *v1.ListMapsRequest)
 		}
 		return nil, fmt.Errorf("failed to read maps storage directory: %w", err)
 	}
-	
+
 	var maps []*v1.Map
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		
+
 		mapID := entry.Name()
 		metadata, err := s.loadMapMetadata(mapID)
 		if err != nil {
 			log.Printf("Failed to load metadata for map %s: %v", mapID, err)
 			continue
 		}
-		
+
 		// Filter by owner if specified
 		if req.OwnerId != "" && metadata.CreatorID != req.OwnerId {
 			continue
 		}
-		
+
 		// Only return metadata for listing (not full map data)
 		maps = append(maps, s.convertMetadataToProto(metadata))
 	}
-	
+
 	resp.Items = maps
 	resp.Pagination.TotalResults = int32(len(maps))
-	
+
 	return resp, nil
 }
 
@@ -344,12 +345,12 @@ func (s *MapsServiceImpl) GetMap(ctx context.Context, req *v1.GetMapRequest) (re
 	if req.Id == "" {
 		return nil, fmt.Errorf("map ID is required")
 	}
-	
+
 	metadata, err := s.loadMapMetadata(req.Id)
 	if err != nil {
 		return nil, fmt.Errorf("map not found: %w", err)
 	}
-	
+
 	mapData, err := s.loadMapData(req.Id)
 	if err != nil {
 		// If data.json doesn't exist, create empty map data
@@ -359,11 +360,11 @@ func (s *MapsServiceImpl) GetMap(ctx context.Context, req *v1.GetMapRequest) (re
 			MapUnits: []*MapUnitData{},
 		}
 	}
-	
+
 	resp = &v1.GetMapResponse{
 		Map: s.convertToFullProto(metadata, mapData),
 	}
-	
+
 	return resp, nil
 }
 
@@ -372,9 +373,9 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 	if req.Map == nil {
 		return nil, fmt.Errorf("map data is required")
 	}
-	
+
 	var mapID string
-	
+
 	// Determine which map ID to use
 	if req.Map.Id != "" {
 		// Map ID provided - check if it's available
@@ -382,7 +383,7 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 		if err != nil {
 			return nil, fmt.Errorf("failed to check map ID: %w", err)
 		}
-		
+
 		if exists {
 			// Map ID is taken, generate a new one
 			mapID, err = s.newMapId()
@@ -400,7 +401,7 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 			return nil, fmt.Errorf("failed to generate map ID: %w", err)
 		}
 	}
-	
+
 	now := time.Now()
 	metadata := &MapMetadata{
 		ID:          mapID,
@@ -412,17 +413,17 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	
+
 	if err := s.saveMapMetadata(mapID, metadata); err != nil {
 		return nil, fmt.Errorf("failed to create map: %w", err)
 	}
-	
+
 	// Create map data with tiles and units from request
 	mapData := &MapData{
 		Tiles:    s.convertFromProtoTiles(req.Map.Tiles),
 		MapUnits: s.convertFromProtoUnits(req.Map.MapUnits),
 	}
-	
+
 	// Initialize empty if no data provided
 	if mapData.Tiles == nil {
 		mapData.Tiles = make(map[string]*MapTileData)
@@ -430,15 +431,15 @@ func (s *MapsServiceImpl) CreateMap(ctx context.Context, req *v1.CreateMapReques
 	if mapData.MapUnits == nil {
 		mapData.MapUnits = []*MapUnitData{}
 	}
-	
+
 	if err := s.saveMapData(mapID, mapData); err != nil {
 		log.Printf("Failed to create data.json for map %s: %v", mapID, err)
 	}
-	
+
 	resp = &v1.CreateMapResponse{
 		Map: s.convertToFullProto(metadata, mapData),
 	}
-	
+
 	return resp, nil
 }
 
@@ -447,13 +448,13 @@ func (s *MapsServiceImpl) UpdateMap(ctx context.Context, req *v1.UpdateMapReques
 	if req.Map == nil || req.Map.Id == "" {
 		return nil, fmt.Errorf("map ID is required")
 	}
-	
+
 	// Load existing metadata
 	metadata, err := s.loadMapMetadata(req.Map.Id)
 	if err != nil {
 		return nil, fmt.Errorf("map not found: %w", err)
 	}
-	
+
 	// Update metadata fields
 	if req.Map.Name != "" {
 		metadata.Name = req.Map.Name
@@ -468,22 +469,22 @@ func (s *MapsServiceImpl) UpdateMap(ctx context.Context, req *v1.UpdateMapReques
 		metadata.Difficulty = req.Map.Difficulty
 	}
 	metadata.UpdatedAt = time.Now()
-	
+
 	if err := s.saveMapMetadata(req.Map.Id, metadata); err != nil {
 		return nil, fmt.Errorf("failed to update map metadata: %w", err)
 	}
-	
+
 	// Update map data if provided
 	if req.Map.Tiles != nil || req.Map.MapUnits != nil {
 		mapData := &MapData{
 			Tiles:    s.convertFromProtoTiles(req.Map.Tiles),
 			MapUnits: s.convertFromProtoUnits(req.Map.MapUnits),
 		}
-		
+
 		if err := s.saveMapData(req.Map.Id, mapData); err != nil {
 			return nil, fmt.Errorf("failed to update map data: %w", err)
 		}
-		
+
 		resp = &v1.UpdateMapResponse{
 			Map: s.convertToFullProto(metadata, mapData),
 		}
@@ -492,7 +493,7 @@ func (s *MapsServiceImpl) UpdateMap(ctx context.Context, req *v1.UpdateMapReques
 			Map: s.convertMetadataToProto(metadata),
 		}
 	}
-	
+
 	return resp, nil
 }
 
@@ -501,12 +502,12 @@ func (s *MapsServiceImpl) DeleteMap(ctx context.Context, req *v1.DeleteMapReques
 	if req.Id == "" {
 		return nil, fmt.Errorf("map ID is required")
 	}
-	
+
 	mapPath := s.getMapPath(req.Id)
 	if err := os.RemoveAll(mapPath); err != nil {
 		return nil, fmt.Errorf("failed to delete map: %w", err)
 	}
-	
+
 	resp = &v1.DeleteMapResponse{}
 	return resp, nil
 }

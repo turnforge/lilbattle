@@ -1988,7 +1988,7 @@ def main():
     if args.image:
         image_path = args.image
     else:
-        image_path = "../data/Maps/1_files/map-og.png"
+        image_path = "~/dev-app-data/weewar/data/Maps/1_files/map-og.png"
         print(f"No image specified, using default: {image_path}")
     
     # Load image
