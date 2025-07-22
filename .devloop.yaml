@@ -45,6 +45,7 @@ rules:
       - "make test"
       - "make wasm"
       - "make binlocal"
+      - "make cli"
 
   # Frontend Development & Testing
   - name: "frontend"
