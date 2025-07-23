@@ -198,7 +198,7 @@ export class ComponentIsolationTest {
             const mockWorldData = {
                 id: 'test-world',
                 tiles: { '0,0': { tileType: 1, playerId: 0 } },
-                world_units: []
+                units: []
             };
             
             // This should trigger events that stats panel can receive

@@ -250,7 +250,7 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 	}
 
 	// Create a simple test map
-	gameMap := NewMapRect(5, 5)
+	gameMap := NewWorld("test", 3)
 
 	// Fill with grass terrain (terrain ID 1 - should have reasonable movement cost)
 	for q := range 5 {
@@ -262,17 +262,14 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 	}
 
 	// Create a world for the test
-	world, err := NewWorld(2, gameMap)
-	if err != nil {
-		t.Fatalf("Failed to create world: %v", err)
-	}
+	world := NewWorld("test", 2)
 
 	// Create a test unit (Soldier - unit type 1)
 	startCoord := AxialCoord{Q: 2, R: 2} // Center of map
 	unit := &Unit{
 		UnitType: 1,
 		Coord:    startCoord,
-		PlayerID: 0,
+		Player:   0,
 	}
 
 	// Test movement options with different movement budgets
@@ -326,11 +323,11 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 	}
 
 	// Create a map with different terrain costs
-	gameMap := NewMapRect(3, 3)
+	gameMap := NewWorld("test", 1)
 
 	// Set up terrain: expensive terrain in middle, cheap around edges
-	for q := 0; q < 3; q++ {
-		for r := 0; r < 3; r++ {
+	for q := range 3 {
+		for r := range 3 {
 			coord := AxialCoord{Q: q, R: r}
 			terrainID := 1 // Default grass
 
@@ -353,16 +350,13 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 	}
 
 	// Create a world for the test
-	world, err := NewWorld(2, gameMap)
-	if err != nil {
-		t.Fatalf("Failed to create world: %v", err)
-	}
+	world := NewWorld("test", 2)
 
 	// Test unit at corner
 	unit := &Unit{
 		UnitType: 1, // Soldier
 		Coord:    AxialCoord{Q: 0, R: 0},
-		PlayerID: 0,
+		Player:   0,
 	}
 
 	options, err := rulesEngine.GetMovementOptions(world, unit, 3)

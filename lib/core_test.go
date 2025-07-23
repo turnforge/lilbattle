@@ -26,15 +26,8 @@ func getTestOutputPath(testName, filename string) string {
 	return filepath.Join(testDir, filename)
 }
 
-func TestNewMap(t *testing.T) {
-	m := NewMapRect(10, 15)
-	if m.Tiles == nil {
-		t.Errorf("Expected Tiles map to be initialized")
-	}
-}
-
-func TestMapTileOperations(t *testing.T) {
-	m := NewMapRect(5, 5)
+func TestWorldTileOperations(t *testing.T) {
+	m := NewWorld("test", 10)
 
 	// Test TileAt with no tiles
 	coord := AxialCoord{Q: 2, R: 3}
@@ -77,7 +70,7 @@ func TestMapTileOperations(t *testing.T) {
 
 func TestGameCreationAndBasicOperations(t *testing.T) {
 	// Create a test world with map
-	gameMap := NewMapRect(3, 3)
+	gameWorld := NewWorld("test", 10)
 
 	// Add some tiles with different types
 	coords := []AxialCoord{
@@ -89,13 +82,10 @@ func TestGameCreationAndBasicOperations(t *testing.T) {
 
 	for i, coord := range coords {
 		tile := NewTile(coord, tileTypes[i])
-		gameMap.AddTile(tile)
+		gameWorld.AddTile(tile)
 	}
 
-	world, err := NewWorld(2, gameMap)
-	if err != nil {
-		t.Fatalf("Failed to create world: %v", err)
-	}
+	world := NewWorld("test", 2)
 
 	// Load rules engine first
 	rulesEngine, err := LoadRulesEngineFromFile(DevDataPath("data/rules-data.json"))
@@ -148,7 +138,7 @@ func TestGameCreationAndBasicOperations(t *testing.T) {
 	}
 
 	// Test unit retrieval
-	retrievedUnit := game.GetUnitAt(AxialCoord{Q: 0, R: 0})
+	retrievedUnit := game.World.UnitAt(AxialCoord{Q: 0, R: 0})
 	if retrievedUnit == nil {
 		t.Error("Failed to retrieve unit at (0,0)")
 	} else if retrievedUnit.UnitType != 1 {
@@ -246,11 +236,7 @@ func TestBufferComposition(t *testing.T) {
 
 func TestGameMovementAndCombat(t *testing.T) {
 	// Create a world with map and units
-	gameMap := NewMapRect(3, 3)
-	world, err := NewWorld(2, gameMap)
-	if err != nil {
-		t.Fatalf("Failed to create world: %v", err)
-	}
+	world := NewWorld("test", 2)
 
 	// Add some tiles in a 3x3 pattern
 	coords := []AxialCoord{
@@ -263,7 +249,7 @@ func TestGameMovementAndCombat(t *testing.T) {
 
 	for i, coord := range coords {
 		tile := NewTile(coord, tileTypes[i])
-		world.Map.AddTile(tile)
+		world.AddTile(tile)
 	}
 
 	// Load rules engine for movement/combat
@@ -315,7 +301,7 @@ func TestGameMovementAndCombat(t *testing.T) {
 	}
 
 	// Verify unit moved
-	movedUnit := game.GetUnitAt(AxialCoord{Q: 0, R: 1})
+	movedUnit := game.World.UnitAt(AxialCoord{Q: 0, R: 1})
 	if movedUnit == nil {
 		t.Error("Unit not found at new position")
 	}

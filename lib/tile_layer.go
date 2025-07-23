@@ -25,17 +25,17 @@ func NewTileLayer(width, height int, scheduler LayerScheduler) *TileLayer {
 
 // Render renders terrain tiles to the layer buffer
 func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
-	if world == nil || world.Map == nil {
+	if world == nil {
 		return
 	}
 
-	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.Map.Tiles)
+	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.tilesByCoord)
 	// Clear buffer if full rebuild needed
 	if tl.allDirty {
 		tl.buffer.Clear()
 
 		// Render all tiles
-		for coord, tile := range world.Map.Tiles {
+		for coord, tile := range world.tilesByCoord {
 			if tile != nil {
 				tl.renderTile(world, coord, tile, options)
 			}
@@ -45,7 +45,7 @@ func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
 	} else {
 		// Render only dirty tiles
 		for coord := range tl.dirtyCoords {
-			tile := world.Map.TileAt(coord)
+			tile := world.TileAt(coord)
 			tl.renderTile(world, coord, tile, options)
 		}
 	}
@@ -60,8 +60,8 @@ func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, opti
 		return
 	}
 
-	// Get pixel position using Map's coordinate system
-	x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+	// Get pixel position using privateMap's coordinate system
+	x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
 	x -= float64(tl.X)

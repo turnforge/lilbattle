@@ -113,7 +113,7 @@ func (br *BaseRenderer) createHexagonPath(centerX, centerY, tileWidth, tileHeigh
 
 // CalculateRenderOptions creates appropriate render options based on canvas size and map dimensions
 func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, world *World) WorldRenderOptions {
-	if world == nil || world.Map == nil {
+	if world == nil {
 		// Default options for empty world
 		return WorldRenderOptions{
 			CanvasWidth:  canvasWidth,
@@ -130,8 +130,8 @@ func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, wo
 	baseTileHeight := DefaultTileHeight
 	baseYIncrement := DefaultYIncrement
 
-	// Calculate actual map bounds using the Map's proper hex geometry
-	// minX, minY, maxX, maxY := world.Map.getMapBounds(baseTileWidth, baseTileHeight, baseYIncrement)
+	// Calculate actual map bounds using the privateMap's proper hex geometry
+	// minX, minY, maxX, maxY := world.privateMap.getprivateMapBounds(baseTileWidth, baseTileHeight, baseYIncrement)
 
 	// Calculate the actual dimensions needed for the map
 	// mapPixelWidth := maxX - minX

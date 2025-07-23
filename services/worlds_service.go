@@ -53,9 +53,9 @@ type WorldMetadata struct {
 // WorldData represents the complete world data stored in data.json
 type WorldData struct {
 	// World tiles with hex coordinates as keys "q,r"
-	Tiles map[string]*TileData `json:"tiles"`
+	Tiles []*TileData `json:"tiles"`
 	// All units on the world
-	Units []*UnitData `json:"world_units"`
+	Units []*UnitData `json:"units"`
 }
 
 // TileData represents tile data for storage
@@ -214,17 +214,16 @@ func (s *WorldsServiceImpl) newWorldId(numChars ...int) (string, error) {
 }
 
 // convertToProtoTiles converts storage tiles to protobuf format
-func (s *WorldsServiceImpl) convertToProtoTiles(tiles map[string]*TileData) map[string]*v1.Tile {
-	result := make(map[string]*v1.Tile)
-	for key, tile := range tiles {
-		result[key] = &v1.Tile{
+func (s *WorldsServiceImpl) convertToProtoTiles(tiles []*TileData) (results []*v1.Tile) {
+	for _, tile := range tiles {
+		results = append(results, &v1.Tile{
 			Q:        tile.Q,
 			R:        tile.R,
 			TileType: tile.TileType,
 			Player:   tile.Player,
-		}
+		})
 	}
-	return result
+	return
 }
 
 // convertToProtoUnits converts storage units to protobuf format
@@ -242,17 +241,17 @@ func (s *WorldsServiceImpl) convertToProtoUnits(units []*UnitData) []*v1.Unit {
 }
 
 // convertFromProtoTiles converts protobuf tiles to storage format
-func (s *WorldsServiceImpl) convertFromProtoTiles(tiles map[string]*v1.Tile) map[string]*TileData {
-	result := make(map[string]*TileData)
-	for key, tile := range tiles {
-		result[key] = &TileData{
+func (s *WorldsServiceImpl) convertFromProtoTiles(tiles []*v1.Tile) (results []*TileData) {
+	for _, tile := range tiles {
+		// parts := strings.Split(key, ",")
+		results = append(results, &TileData{
 			Q:        tile.Q,
 			R:        tile.R,
 			TileType: tile.TileType,
 			Player:   tile.Player,
-		}
+		})
 	}
-	return result
+	return
 }
 
 // convertFromProtoUnits converts protobuf units to storage format
@@ -356,7 +355,7 @@ func (s *WorldsServiceImpl) GetWorld(ctx context.Context, req *v1.GetWorldReques
 		// If data.json doesn't exist, create empty world data
 		log.Printf("World data not found for %s, creating empty data: %v", req.Id, err)
 		worldData = &WorldData{
-			Tiles: make(map[string]*TileData),
+			Tiles: []*TileData{},
 			Units: []*UnitData{},
 		}
 	}
@@ -426,7 +425,7 @@ func (s *WorldsServiceImpl) CreateWorld(ctx context.Context, req *v1.CreateWorld
 
 	// Initialize empty if no data provided
 	if worldData.Tiles == nil {
-		worldData.Tiles = make(map[string]*TileData)
+		worldData.Tiles = []*TileData{}
 	}
 	if worldData.Units == nil {
 		worldData.Units = []*UnitData{}

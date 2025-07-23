@@ -105,3 +105,13 @@ func minFloat(a, b float64) float64 {
 	}
 	return b
 }
+
+func approximateCos(angle float64) float64 {
+	// Simple approximation - in a real implementation, use math.Cos
+	return 1.0 - angle*angle/2.0 + angle*angle*angle*angle/24.0
+}
+
+func approximateSin(angle float64) float64 {
+	// Simple approximation - in a real implementation, use math.Sin
+	return angle - angle*angle*angle/6.0 + angle*angle*angle*angle*angle/120.0
+}

@@ -54,18 +54,17 @@ func createGameFromMap(this js.Value, args []js.Value) any {
 		return createJSResponse(false, "Missing mapData or playerCount arguments", nil)
 	}
 
-	// mapDataStr := args[0].String() // TODO: Use this when implementing real map parsing
+	mapDataStr := args[0].String()
 	playerCount := args[1].Int()
 
 	if playerCount < 2 || playerCount > 6 {
 		return createJSResponse(false, fmt.Sprintf("Invalid player count: %d", playerCount), nil)
 	}
 
-	// For now, create a simple test world
-	// TODO: Parse mapDataStr and create World from it
-	world, err := createTestWorld(playerCount)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to create test world: %v", err), nil)
+	// Create world using unified JSON format from frontend
+	world := &weewar.World{}
+	if err := world.UnmarshalJSON([]byte(mapDataStr)); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to unmarshal world data: %v", err), nil)
 	}
 
 	// Create game using existing NewGame method
@@ -148,7 +147,7 @@ func moveUnit(this js.Value, args []js.Value) any {
 	}
 
 	// Return updated unit
-	unit := globalGame.GetUnitAt(to)
+	unit := globalGame.World.UnitAt(to)
 	return createJSResponse(true, "Unit moved successfully", map[string]any{
 		"unit": unit,
 	})
@@ -232,7 +231,7 @@ func createJSResponse(success bool, message string, data any) any {
 // TODO: Replace with proper map data parsing
 func createTestWorld(playerCount int) (*weewar.World, error) {
 	// Create a simple 6x6 hex map for testing
-	gameMap := weewar.NewMapRect(6, 6)
+	gameMap := weewar.NewWorld("test", playerCount)
 
 	// Add some test tiles
 	for q := -2; q <= 2; q++ {
@@ -246,10 +245,7 @@ func createTestWorld(playerCount int) (*weewar.World, error) {
 	}
 
 	// Create world with playerCount and map
-	world, err := weewar.NewWorld(playerCount, gameMap)
-	if err != nil {
-		return nil, err
-	}
+	world := weewar.NewWorld("test", playerCount)
 
 	// Add some test units
 	unit1 := weewar.NewUnit(1, 0) // Infantry for player 0

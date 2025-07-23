@@ -464,7 +464,7 @@ export class World {
                     difficulty: 'medium',
                     creator_id: 'editor-user',
                     tiles: tiles,
-                    world_units: worldUnits
+                    units: worldUnits
                 }
             };
 
@@ -555,16 +555,20 @@ export class World {
         this.tiles = {};
         this.units = {};
         
-        // Load metadata
+        // Load metadata - handle both old and new formats
         if (data.name) this.metadata.name = data.name;
+        if (data.Name) this.metadata.name = data.Name; // Backend format
         if (data.width) this.metadata.width = data.width;
         if (data.height) this.metadata.height = data.height;
         
-        // Batch load tiles
+        // Batch load tiles - handle both array and map formats
         const tileChanges: TileChange[] = [];
         if (data.tiles) {
-            Object.entries(data.tiles).forEach(([key, tileData]: [string, any]) => {
-                const [q, r] = key.split(',').map(Number);
+            // Old map format for backward compatibility
+            data.tiles.forEach((tileData: any) => {
+                const q = tileData.q || 0
+                const r = tileData.r || 0
+                const key = q + "," + r;
                 let tileType: number;
                 let playerId: number | undefined;
                 
@@ -584,11 +588,14 @@ export class World {
             });
         }
         
-        // Batch load units
+        // Batch load units - handle both array and map formats
         const unitChanges: UnitChange[] = [];
         if (data.units) {
-            Object.entries(data.units).forEach(([key, unitData]: [string, any]) => {
-                const [q, r] = key.split(',').map(Number);
+            // Old map format for backward compatibility
+            data.units.forEach((unitData: any) => {
+                const q = unitData.q || 0
+                const r = unitData.r || 0
+                const key = q + "," + r;
                 let unitType: number, playerId: number;
                 
                 if (unitData.unitType !== undefined && unitData.playerId !== undefined) {
@@ -604,21 +611,6 @@ export class World {
                 const unit: UnitData = { unitType, playerId };
                 this.units[key] = unit;
                 unitChanges.push({ q, r, unit });
-            });
-        }
-        
-        // Handle world_units array format (from server)
-        if (data.world_units && Array.isArray(data.world_units)) {
-            data.world_units.forEach((unit: any) => {
-                if (unit.q !== undefined && unit.r !== undefined && unit.unit_type !== undefined) {
-                    const key = `${unit.q},${unit.r}`;
-                    const unitData: UnitData = {
-                        unitType: unit.unit_type,
-                        playerId: unit.player || 1
-                    };
-                    this.units[key] = unitData;
-                    unitChanges.push({ q: unit.q, r: unit.r, unit: unitData });
-                }
             });
         }
         
@@ -640,20 +632,39 @@ export class World {
         this.hasUnsavedChanges = false;
     }
     
-    // Serialization methods
+    // Serialization methods - now matches backend array format
     public serialize(): {
-        name: string;
-        width: number;
-        height: number;
-        tiles: { [key: string]: { tileType: number; playerId?: number } };
-        units: { [key: string]: { unitType: number; playerId: number } };
+        Name: string;
+        PlayerCount: number;
+        Tiles: Array<{ q: number; r: number ; tileType: number; player: number }>;
+        Units: Array<{ q: number; r: number ; UnitType: number; Player: number }>;
     } {
+        // Convert map format to array format matching backend
+        const tilesArray = Object.entries(this.tiles).map(([coordKey, tileData]) => {
+            const [q, r] = coordKey.split(',').map(Number);
+            return {
+                q: q,
+                r: r,
+                tileType: tileData.tileType,
+                player: tileData.playerId || 0
+            };
+        });
+
+        const unitsArray = Object.entries(this.units).map(([coordKey, unitData]) => {
+            const [q, r] = coordKey.split(',').map(Number);
+            return {
+                q: q,
+                r: r,
+                UnitType: unitData.unitType,
+                Player: unitData.playerId
+            };
+        });
+
         return {
-            name: this.metadata.name,
-            width: this.metadata.width,
-            height: this.metadata.height,
-            tiles: { ...this.tiles },
-            units: { ...this.units }
+            Name: this.metadata.name,
+            PlayerCount: 2, // TODO: Track actual player count
+            Tiles: tilesArray,
+            Units: unitsArray
         };
     }
     

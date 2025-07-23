@@ -136,7 +136,21 @@ export class PhaserWorldScene extends Phaser.Scene {
             }
         });
         
-        console.log(`[PhaserWorldScene] Loading unit assets: ${unitTypes.join(', ')} (with colors)`);
+        console.log(`[PhaserWorldScene] Loading unit assets: ${unitTypes.join(', ')} (with colors 0-12)`);
+        
+        // Add completion handlers to track loading progress
+        this.load.on('filecomplete-image', (key: string, type: string, data: any) => {
+            if (key.startsWith('unit_')) {
+                console.log(`[PhaserWorldScene] Unit texture loaded: ${key}`);
+            }
+        });
+        
+        this.load.on('complete', () => {
+            console.log('[PhaserWorldScene] All asset loading complete');
+            // List first few unit textures to verify they're loaded
+            const unitKeys = this.textures.getTextureKeys().filter(key => key.startsWith('unit_')).slice(0, 10);
+            console.log('[PhaserWorldScene] Sample loaded unit textures:', unitKeys);
+        });
     }
     
     private setupCameraControls() {
@@ -378,6 +392,8 @@ export class PhaserWorldScene extends Phaser.Scene {
         const key = `${q},${r}`;
         const position = hexToPixel(q, r);
         
+        console.log(`[PhaserWorldScene] setUnit called: q=${q}, r=${r}, unitType=${unitType}, color=${color}`);
+        
         // Remove existing unit if it exists
         if (this.units.has(key)) {
             this.units.get(key)?.destroy();
@@ -385,6 +401,8 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Create new unit sprite
         const textureKey = `unit_${unitType}_${color}`;
+        console.log(`[PhaserWorldScene] Looking for texture: ${textureKey}`);
+        console.log(`[PhaserWorldScene] Texture exists: ${this.textures.exists(textureKey)}`);
         
         if (this.textures.exists(textureKey)) {
             const unitSprite = this.add.sprite(position.x, position.y, textureKey);

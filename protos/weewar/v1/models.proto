@@ -97,7 +97,7 @@ message World {
   string difficulty = 9;
 
   // JSON-fied tile data about what units and terrains are at each location
-  map<string, Tile> tiles = 11;
+  repeated Tile tiles = 11;
 
   // All units on the world and who they belong to
   repeated Unit units = 12;

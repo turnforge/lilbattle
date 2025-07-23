@@ -35,7 +35,7 @@ type EvaluationWeights struct {
 	IncomeControl float64 `json:"incomeControl"` // 0.15 - Economic advantage
 
 	// Strategic evaluation weights (15% total)
-	TerritoryControl float64 `json:"territoryControl"` // 0.05 - Map control
+	TerritoryControl float64 `json:"territoryControl"` // 0.05 - privateMap control
 	ThreatLevel      float64 `json:"threatLevel"`      // 0.05 - Defensive concerns
 	AttackOptions    float64 `json:"attackOptions"`    // 0.05 - Offensive potential
 
@@ -182,7 +182,7 @@ func (pe *PositionEvaluator) evaluateUnitValue(game *weewar.Game, playerID int) 
 	totalValue := 0.0
 
 	// Calculate total unit values for all players
-	for pid := 0; pid < game.PlayerCount(); pid++ {
+	for pid := range game.World.PlayerCount {
 		units := game.GetUnitsForPlayer(pid)
 		for _, unit := range units {
 			unitCost := pe.getUnitCost(unit.UnitType)
@@ -261,8 +261,8 @@ func (pe *PositionEvaluator) evaluateBaseControl(game *weewar.Game, playerID int
 	totalBases := 0.0
 
 	// Iterate through all terrain tiles to find bases
-	if game.World != nil && game.World.Map != nil {
-		for _, terrain := range game.World.Map.Tiles {
+	if game.World != nil {
+		for _, terrain := range game.World.TilesByCoord() {
 			if pe.isProductionBase(terrain.TileType) {
 				totalBases++
 				if pe.isControlledByPlayer(terrain.Coord, playerID, game) {
@@ -283,8 +283,8 @@ func (pe *PositionEvaluator) evaluateIncomeControl(game *weewar.Game, playerID i
 	controlledCities := 0.0
 	totalCities := 0.0
 
-	if game.World != nil && game.World.Map != nil {
-		for _, terrain := range game.World.Map.Tiles {
+	if game.World != nil {
+		for _, terrain := range game.World.TilesByCoord() {
 			if pe.isIncomeBuilding(terrain.TileType) {
 				totalCities++
 				if pe.isControlledByPlayer(terrain.Coord, playerID, game) {
@@ -354,7 +354,7 @@ func (pe *PositionEvaluator) evaluateAttackOptions(game *weewar.Game, playerID i
 
 	// Normalize by enemy total unit value
 	enemyValue := 0.0
-	for pid := 0; pid < game.PlayerCount(); pid++ {
+	for pid := range game.World.PlayerCount {
 		if pid != playerID {
 			enemyValue += pe.getTotalUnitValue(game, pid)
 		}
@@ -518,7 +518,7 @@ func (pe *PositionEvaluator) isControlledByPlayer(pos weewar.AxialCoord, playerI
 	// Check if there's a friendly unit on this position
 	if game.World != nil {
 		if unit := game.World.UnitAt(pos); unit != nil {
-			return unit.PlayerID == playerID
+			return unit.Player == playerID
 		}
 	}
 

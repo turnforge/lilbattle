@@ -17,7 +17,7 @@ func (g *Game) NextTurn() error {
 	}
 
 	// Advance to next player
-	g.CurrentPlayer = (g.CurrentPlayer + 1) % g.PlayerCount()
+	g.CurrentPlayer = (g.CurrentPlayer + 1) % g.World.PlayerCount
 
 	// If we've cycled back to player 0, increment turn counter
 	if g.CurrentPlayer == 0 {
@@ -81,7 +81,7 @@ func (g *Game) IsValidMove(from, to AxialCoord) bool {
 	}
 
 	// Check if the unit belongs to the current player
-	if unit.PlayerID != g.CurrentPlayer {
+	if unit.Player != g.CurrentPlayer {
 		return false
 	}
 
@@ -94,7 +94,6 @@ func (g *Game) IsValidMove(from, to AxialCoord) bool {
 
 	return valid
 }
-
 
 // GetUnitMovementLeft returns remaining movement points
 func (g *Game) GetUnitMovementLeft(unit *Unit) int {
@@ -135,8 +134,8 @@ func (g *Game) MoveUnit(unit *Unit, to AxialCoord) error {
 	}
 
 	// Check if it's the correct player's turn
-	if unit.PlayerID != g.CurrentPlayer {
-		return fmt.Errorf("not player %d's turn", unit.PlayerID)
+	if unit.Player != g.CurrentPlayer {
+		return fmt.Errorf("not player %d's turn", unit.Player)
 	}
 
 	// Check if move is valid
@@ -188,8 +187,8 @@ func (g *Game) AttackUnit(attacker, defender *Unit) (*CombatResult, error) {
 	}
 
 	// Check if it's the correct player's turn
-	if attacker.PlayerID != g.CurrentPlayer {
-		return nil, fmt.Errorf("not player %d's turn", attacker.PlayerID)
+	if attacker.Player != g.CurrentPlayer {
+		return nil, fmt.Errorf("not player %d's turn", attacker.Player)
 	}
 
 	// Check if units can attack each other
@@ -270,7 +269,7 @@ func (g *Game) CanMoveUnit(unit *Unit, to AxialCoord) bool {
 	}
 
 	// Check if it's the correct player's turn
-	if unit.PlayerID != g.CurrentPlayer {
+	if unit.Player != g.CurrentPlayer {
 		return false
 	}
 
@@ -285,12 +284,12 @@ func (g *Game) CanAttackUnit(attacker, defender *Unit) bool {
 	}
 
 	// Check if it's the correct player's turn
-	if attacker.PlayerID != g.CurrentPlayer {
+	if attacker.Player != g.CurrentPlayer {
 		return false
 	}
 
 	// Check if units are enemies
-	if attacker.PlayerID == defender.PlayerID {
+	if attacker.Player == defender.Player {
 		return false
 	}
 
@@ -333,12 +332,12 @@ func (g *Game) AttackUnitAt(attackerPos, targetPos AxialCoord) (*CombatResult, e
 
 // CanAttack validates potential attack using position coordinates
 func (g *Game) CanAttack(from, to AxialCoord) (bool, error) {
-	attacker := g.GetUnitAt(from)
+	attacker := g.World.UnitAt(from)
 	if attacker == nil {
 		return false, fmt.Errorf("no unit at attacker position (%d, %d)", from.Q, from.R)
 	}
 
-	defender := g.GetUnitAt(to)
+	defender := g.World.UnitAt(to)
 	if defender == nil {
 		return false, fmt.Errorf("no unit at target position (%d, %d)", to.Q, to.R)
 	}
@@ -348,7 +347,7 @@ func (g *Game) CanAttack(from, to AxialCoord) (bool, error) {
 
 // CanMove validates potential movement using position coordinates
 func (g *Game) CanMove(from, to Position) (bool, error) {
-	unit := g.GetUnitAt(from)
+	unit := g.World.UnitAt(from)
 	if unit == nil {
 		return false, fmt.Errorf("no unit at position (%d, %d)", from.Q, from.R)
 	}

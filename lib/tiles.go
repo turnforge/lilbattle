@@ -1,5 +1,9 @@
 package weewar
 
+import (
+	"encoding/json"
+)
+
 // TerrainType represents whether terrain is nature or player-controllable
 type TerrainType int
 
@@ -43,4 +47,38 @@ func (t *Tile) Clone() *Tile {
 		TileType: t.TileType,
 		Player:   t.Player, // Units are cloned separately
 	}
+}
+
+// MarshalJSON implements custom JSON marshaling for Tile
+func (t *Tile) MarshalJSON() ([]byte, error) {
+	// Convert cube map to tile list for JSON
+	out := map[string]any{
+		"q":         t.Coord.Q,
+		"r":         t.Coord.R,
+		"tile_type": t.TileType,
+		"player":    t.Player,
+	}
+	return json.Marshal(out)
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for Tiile
+func (t *Tile) UnmarshalJSON(data []byte) error {
+	// First try to unmarshal with new bounds format
+	type mapJSON struct {
+		Q        int `json:"q"`
+		R        int `json:"r"`
+		TileType int `json:"tile_type"`
+		Player   int `json:"player"`
+	}
+
+	var dict mapJSON
+
+	if err := json.Unmarshal(data, &dict); err != nil {
+		return err
+	}
+
+	t.Coord = AxialCoord{dict.Q, dict.R}
+	t.TileType = dict.TileType
+	t.Player = dict.Player
+	return nil
 }

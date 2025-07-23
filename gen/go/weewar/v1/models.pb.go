@@ -294,7 +294,7 @@ type World struct {
 	// Difficulty - example attribute
 	Difficulty string `protobuf:"bytes,9,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// JSON-fied tile data about what units and terrains are at each location
-	Tiles map[string]*Tile `protobuf:"bytes,11,rep,name=tiles,proto3" json:"tiles,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Tiles []*Tile `protobuf:"bytes,11,rep,name=tiles,proto3" json:"tiles,omitempty"`
 	// All units on the world and who they belong to
 	Units         []*Unit `protobuf:"bytes,12,rep,name=units,proto3" json:"units,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -394,7 +394,7 @@ func (x *World) GetDifficulty() string {
 	return ""
 }
 
-func (x *World) GetTiles() map[string]*Tile {
+func (x *World) GetTiles() []*Tile {
 	if x != nil {
 		return x.Tiles
 	}
@@ -681,7 +681,7 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\timage_url\x18\a \x01(\tR\bimageUrl\x12\x1e\n" +
 	"\n" +
 	"difficulty\x18\b \x01(\tR\n" +
-	"difficulty\"\xd8\x03\n" +
+	"difficulty\"\x81\x03\n" +
 	"\x05World\x129\n" +
 	"\n" +
 	"created_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
@@ -696,13 +696,9 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\timage_url\x18\b \x01(\tR\bimageUrl\x12\x1e\n" +
 	"\n" +
 	"difficulty\x18\t \x01(\tR\n" +
-	"difficulty\x121\n" +
-	"\x05tiles\x18\v \x03(\v2\x1b.weewar.v1.World.TilesEntryR\x05tiles\x12%\n" +
-	"\x05units\x18\f \x03(\v2\x0f.weewar.v1.UnitR\x05units\x1aI\n" +
-	"\n" +
-	"TilesEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
-	"\x05value\x18\x02 \x01(\v2\x0f.weewar.v1.TileR\x05value:\x028\x01\"W\n" +
+	"difficulty\x12%\n" +
+	"\x05tiles\x18\v \x03(\v2\x0f.weewar.v1.TileR\x05tiles\x12%\n" +
+	"\x05units\x18\f \x03(\v2\x0f.weewar.v1.UnitR\x05units\"W\n" +
 	"\x04Tile\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +
@@ -741,7 +737,7 @@ func file_weewar_v1_models_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_models_proto_rawDescData
 }
 
-var file_weewar_v1_models_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_weewar_v1_models_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_weewar_v1_models_proto_goTypes = []any{
 	(*Pagination)(nil),            // 0: weewar.v1.Pagination
 	(*PaginationResponse)(nil),    // 1: weewar.v1.PaginationResponse
@@ -750,24 +746,22 @@ var file_weewar_v1_models_proto_goTypes = []any{
 	(*Tile)(nil),                  // 4: weewar.v1.Tile
 	(*Unit)(nil),                  // 5: weewar.v1.Unit
 	(*User)(nil),                  // 6: weewar.v1.User
-	nil,                           // 7: weewar.v1.World.TilesEntry
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
 }
 var file_weewar_v1_models_proto_depIdxs = []int32{
-	8, // 0: weewar.v1.Game.created_at:type_name -> google.protobuf.Timestamp
-	8, // 1: weewar.v1.Game.updated_at:type_name -> google.protobuf.Timestamp
-	8, // 2: weewar.v1.World.created_at:type_name -> google.protobuf.Timestamp
-	8, // 3: weewar.v1.World.updated_at:type_name -> google.protobuf.Timestamp
-	7, // 4: weewar.v1.World.tiles:type_name -> weewar.v1.World.TilesEntry
+	7, // 0: weewar.v1.Game.created_at:type_name -> google.protobuf.Timestamp
+	7, // 1: weewar.v1.Game.updated_at:type_name -> google.protobuf.Timestamp
+	7, // 2: weewar.v1.World.created_at:type_name -> google.protobuf.Timestamp
+	7, // 3: weewar.v1.World.updated_at:type_name -> google.protobuf.Timestamp
+	4, // 4: weewar.v1.World.tiles:type_name -> weewar.v1.Tile
 	5, // 5: weewar.v1.World.units:type_name -> weewar.v1.Unit
-	8, // 6: weewar.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	8, // 7: weewar.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	4, // 8: weewar.v1.World.TilesEntry.value:type_name -> weewar.v1.Tile
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	7, // 6: weewar.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	7, // 7: weewar.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_proto_init() }
@@ -781,7 +775,7 @@ func file_weewar_v1_models_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_models_proto_rawDesc), len(file_weewar_v1_models_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

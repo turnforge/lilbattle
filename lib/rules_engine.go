@@ -11,7 +11,7 @@ import (
 
 // RulesEngine provides data-driven game rules working with existing types
 type RulesEngine struct {
-	// Core data maps (extends existing unitDataMap pattern)
+	// Core data maps (extends existing unitDataprivateMap pattern)
 	Units    map[int]*UnitData    `json:"units"`
 	Terrains map[int]*TerrainData `json:"terrains"`
 
@@ -120,7 +120,7 @@ func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) 
 	// For single adjacent moves, just return terrain cost
 	distance := CubeDistance(from, to)
 	if distance == 1 {
-		toTile := world.Map.TileAt(to)
+		toTile := world.TileAt(to)
 		if toTile == nil {
 			return 0, fmt.Errorf("invalid destination tile")
 		}
@@ -128,11 +128,11 @@ func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) 
 	}
 
 	// For multi-tile moves, use Dijkstra pathfinding
-	return re.calculatePathCost(world.Map, unit.UnitType, from, to)
+	return re.calculatePathCost(world, unit.UnitType, from, to)
 }
 
 // calculatePathCost uses Dijkstra's algorithm to find minimum cost path
-func (re *RulesEngine) calculatePathCost(gameMap *Map, unitType int, from, to AxialCoord) (float64, error) {
+func (re *RulesEngine) calculatePathCost(world *World, unitType int, from, to AxialCoord) (float64, error) {
 	// Simple implementation - for now return distance * average terrain cost
 	// TODO: Implement full Dijkstra's algorithm
 	distance := float64(CubeDistance(from, to))
@@ -189,7 +189,7 @@ func (re *RulesEngine) IsValidPath(unit *Unit, path []AxialCoord, world *World) 
 		}
 
 		// 2. Check destination tile exists
-		toTile := world.Map.TileAt(toCoord)
+		toTile := world.TileAt(toCoord)
 		if toTile == nil {
 			return false, fmt.Errorf("path step %d: destination tile %v does not exist", i, toCoord)
 		}
@@ -371,7 +371,7 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int, startCoord A
 		// Explore neighbors
 		for _, neighborCoord := range neighbors {
 			// Check if neighbor tile exists and is passable
-			tile := world.Map.TileAt(neighborCoord)
+			tile := world.TileAt(neighborCoord)
 			if tile == nil {
 				continue // Invalid tile
 			}
@@ -441,14 +441,14 @@ func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord,
 			targetCoord := AxialCoord{Q: unit.Coord.Q + dQ, R: unit.Coord.R + dR}
 
 			// Check if there's an enemy unit at this position (attack rule: only enemy units)
-			tile := world.Map.TileAt(targetCoord)
+			tile := world.TileAt(targetCoord)
 			targetUnit := world.UnitAt(targetCoord)
 			if tile == nil || targetUnit == nil {
 				continue // No unit to attack
 			}
 
 			// Check if it's an enemy unit (different player)
-			if targetUnit.PlayerID == unit.PlayerID {
+			if targetUnit.Player == unit.Player {
 				continue // Same player, can't attack
 			}
 
@@ -469,7 +469,7 @@ func (re *RulesEngine) CanUnitAttackTarget(attacker *Unit, target *Unit) (bool, 
 	}
 
 	// Check if units are enemies
-	if attacker.PlayerID == target.PlayerID {
+	if attacker.Player == target.Player {
 		return false, nil // Same team
 	}
 

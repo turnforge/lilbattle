@@ -802,8 +802,9 @@
                       "title": "Difficulty - example attribute"
                     },
                     "tiles": {
-                      "type": "object",
-                      "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
                         "$ref": "#/definitions/v1Tile"
                       },
                       "title": "JSON-fied tile data about what units and terrains are at each location"
@@ -1341,8 +1342,9 @@
           "title": "Difficulty - example attribute"
         },
         "tiles": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Tile"
           },
           "title": "JSON-fied tile data about what units and terrains are at each location"

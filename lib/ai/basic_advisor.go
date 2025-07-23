@@ -239,7 +239,7 @@ func (ba *BasicAIAdvisor) findEnemyThreats(game *weewar.Game, targetUnit *weewar
 	threats := make([]Threat, 0)
 
 	// Check all enemy players
-	for pid := 0; pid < game.PlayerCount(); pid++ {
+	for pid := 0; pid < game.World.PlayerCount; pid++ {
 		if pid == playerID {
 			continue // Skip own units
 		}
@@ -292,7 +292,7 @@ func (ba *BasicAIAdvisor) findAttackOpportunities(game *weewar.Game, attackerUni
 	opportunities := make([]Opportunity, 0)
 
 	// Check all enemy players
-	for pid := 0; pid < game.PlayerCount(); pid++ {
+	for pid := 0; pid < game.World.PlayerCount; pid++ {
 		if pid == playerID {
 			continue
 		}

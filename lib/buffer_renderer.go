@@ -37,18 +37,18 @@ func (br *BufferRenderer) RenderWorld(world *World, viewState *ViewState, drawab
 
 // RenderTerrain renders the terrain layer directly using World data
 func (br *BufferRenderer) RenderTerrain(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
-	if world == nil || world.Map == nil {
+	if world == nil {
 		return
 	}
 
-	// Render each terrain tile directly using Map's coordinate system
-	for coord, tile := range world.Map.Tiles {
+	// Render each terrain tile directly using s coordinate system
+	for coord, tile := range world.tilesByCoord {
 		if tile == nil {
 			continue
 		}
 
-		// Use Map's CenterXYForTile method (Map handles origin internally)
-		x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+		// Use s CenterXYForTile method (handles origin internally)
+		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Get terrain color based on tile type
 		terrainColor := br.GetTerrainColor(tile.TileType)
@@ -80,18 +80,18 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 	}
 
 	// Render units for each player
-	for _, playerUnits := range world.UnitsByPlayer {
+	for _, playerUnits := range world.unitsByPlayer {
 		for _, unit := range playerUnits {
 			if unit == nil {
 				continue
 			}
 
-			// Use Map's CenterXYForTile method with the Map's origin
-			x, y := world.Map.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			// Use s CenterXYForTile method with the s origin
+			x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 			// Try to load real unit asset first if AssetProvider is available
-			if assetProvider != nil && assetProvider.HasUnitAsset(unit.UnitType, unit.PlayerID) {
-				if unitImg, err := assetProvider.GetUnitImage(unit.UnitType, unit.PlayerID); err == nil {
+			if assetProvider != nil && assetProvider.HasUnitAsset(unit.UnitType, unit.Player) {
+				if unitImg, err := assetProvider.GetUnitImage(unit.UnitType, unit.Player); err == nil {
 					// Render real unit sprite (CenterXYForTile already returns centered coordinates)
 					drawable.DrawImage(x-options.TileWidth/2, y-options.TileHeight/2, options.TileWidth, options.TileHeight, unitImg)
 
@@ -104,7 +104,7 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 			}
 
 			// Fallback to simple colored circle if no asset available
-			unitColor := br.GetPlayerColor(unit.PlayerID)
+			unitColor := br.GetPlayerColor(unit.Player)
 
 			// Draw unit as a circle centered at the tile position
 			radius := (options.TileWidth + options.TileHeight) / 8 // Smaller than hex
@@ -128,14 +128,14 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 
 // RenderHighlights renders selection highlights and movement indicators directly using World data
 func (br *BufferRenderer) RenderHighlights(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
-	if viewState == nil || world == nil || world.Map == nil {
+	if viewState == nil || world == nil {
 		return
 	}
 
 	// Highlight movable tiles (green overlay)
 	for _, coord := range viewState.MovableTiles {
-		// Use Map's CenterXYForTile method (Map handles origin internally)
-		x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+		// Use s CenterXYForTile method (handles origin internally)
+		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Create hex shape for highlighting
 		hexPath := br.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
@@ -145,8 +145,8 @@ func (br *BufferRenderer) RenderHighlights(world *World, viewState *ViewState, d
 
 	// Highlight attackable tiles (red overlay)
 	for _, coord := range viewState.AttackableTiles {
-		// Use Map's CenterXYForTile method (Map handles origin internally)
-		x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+		// Use s CenterXYForTile method (handles origin internally)
+		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Create hex shape for highlighting
 		hexPath := br.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
@@ -162,17 +162,17 @@ func (br *BufferRenderer) RenderUI(world *World, viewState *ViewState, drawable 
 	}
 
 	// Render coordinate labels if enabled
-	if options.ShowCoordinates && world.Map != nil {
+	if options.ShowCoordinates {
 		textColor := Color{R: 255, G: 255, B: 255, A: 255}
 		backgroundColor := Color{R: 0, G: 0, B: 0, A: 128}
 
-		for coord, tile := range world.Map.Tiles {
+		for coord, tile := range world.tilesByCoord {
 			if tile == nil {
 				continue
 			}
 
-			// Use Map's CenterXYForTile method with the Map's origin
-			x, y := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			// Use s CenterXYForTile method with the s origin
+			x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 			// Draw coordinate text
 			coordText := formatCoordinate(coord)

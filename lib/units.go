@@ -1,5 +1,7 @@
 package weewar
 
+import "encoding/json"
+
 type UnitStats struct {
 	Cost       int  `json:"cost"`
 	Health     int  `json:"health"`
@@ -48,7 +50,41 @@ type Unit struct {
 	Coord AxialCoord `json:"coord"` // Cube coordinate position
 
 	// Player ownership
-	PlayerID int
+	Player int
+}
+
+// MarshalJSON implements custom JSON marshaling for Unit
+func (t *Unit) MarshalJSON() ([]byte, error) {
+	// Convert cube map to tile list for JSON
+	out := map[string]any{
+		"q":         t.Coord.Q,
+		"r":         t.Coord.R,
+		"tile_type": t.UnitType,
+		"player":    t.Player,
+	}
+	return json.Marshal(out)
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for Tiile
+func (t *Unit) UnmarshalJSON(data []byte) error {
+	// First try to unmarshal with new bounds format
+	type mapJSON struct {
+		Q        int `json:"q"`
+		R        int `json:"r"`
+		UnitType int `json:"tile_type"`
+		Player   int `json:"player"`
+	}
+
+	var dict mapJSON
+
+	if err := json.Unmarshal(data, &dict); err != nil {
+		return err
+	}
+
+	t.Coord = AxialCoord{dict.Q, dict.R}
+	t.UnitType = dict.UnitType
+	t.Player = dict.Player
+	return nil
 }
 
 // GetPosition returns the unit's cube coordinate position
@@ -65,7 +101,7 @@ func (u *Unit) SetPosition(coord AxialCoord) {
 func NewUnit(unitType, playerID int) *Unit {
 	return &Unit{
 		UnitType:        unitType,
-		PlayerID:        playerID,
+		Player:          playerID,
 		DistanceLeft:    0, // Will be set based on UnitData
 		AvailableHealth: 0, // Will be set based on UnitData
 		TurnCounter:     0,
@@ -79,7 +115,7 @@ func (u *Unit) Clone() *Unit {
 		AvailableHealth: u.AvailableHealth,
 		TurnCounter:     u.TurnCounter,
 		Coord:           u.Coord,
-		PlayerID:        u.PlayerID,
+		Player:          u.Player,
 	}
 }
 

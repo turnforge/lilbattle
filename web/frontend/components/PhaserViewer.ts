@@ -22,36 +22,28 @@ export class PhaserViewer {
     /**
      * Initialize the Phaser viewer with a container element
      */
-    public initialize(containerId: string): boolean {
-        try {
-            this.containerElement = document.getElementById(containerId);
-            if (!this.containerElement) {
-                throw new Error(`Container element with ID '${containerId}' not found`);
-            }
-            
-            // Create the scene ready promise immediately
-            this.sceneReadyPromise = new Promise<PhaserWorldScene>((resolve) => {
-                this.sceneReadyResolver = resolve;
-            });
-            
-            // Ensure container has proper styling for Phaser
-            this.containerElement.style.width = '100%';
-            this.containerElement.style.height = '100%';
-            this.containerElement.style.minWidth = '600px';
-            this.containerElement.style.minHeight = '400px';
-            
-            // Initialize Phaser with readonly scene
-            this.createPhaserGame();
-            
-            this.isInitialized = true;
-            this.log('Phaser viewer initialized successfully');
-            
-            return true;
-            
-        } catch (error) {
-            this.log(`Failed to initialize Phaser viewer: ${error}`);
-            return false;
+    public initialize(containerId: string) {
+        this.containerElement = document.getElementById(containerId);
+        if (!this.containerElement) {
+            throw new Error(`Container element with ID '${containerId}' not found`);
         }
+        
+        // Create the scene ready promise immediately
+        this.sceneReadyPromise = new Promise<PhaserWorldScene>((resolve) => {
+            this.sceneReadyResolver = resolve;
+        });
+        
+        // Ensure container has proper styling for Phaser
+        this.containerElement.style.width = '100%';
+        this.containerElement.style.height = '100%';
+        this.containerElement.style.minWidth = '600px';
+        this.containerElement.style.minHeight = '400px';
+        
+        // Initialize Phaser with readonly scene
+        this.createPhaserGame();
+        
+        this.isInitialized = true;
+        this.log('Phaser viewer initialized successfully');
     }
     
     private createPhaserGame(): void {

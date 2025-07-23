@@ -7,7 +7,7 @@ package weewar
 // =============================================================================
 
 // NumRows returns the number of rows in the map (calculated from bounds)
-func (m *Map) NumRows() int {
+func (m *World) NumRows() int {
 	if m.minR > m.maxR {
 		return 0 // Empty map
 	}
@@ -15,7 +15,7 @@ func (m *Map) NumRows() int {
 }
 
 // NumCols returns the number of columns in the map (calculated from bounds)
-func (m *Map) NumCols() int {
+func (m *World) NumCols() int {
 	if m.minQ > m.maxQ {
 		return 0 // Empty map
 	}

@@ -40,7 +40,7 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 		ul.buffer.Clear()
 
 		// Render all units from all players
-		for _, playerUnits := range world.UnitsByPlayer {
+		for _, playerUnits := range world.unitsByPlayer {
 			for _, unit := range playerUnits {
 				if unit != nil {
 					ul.renderUnit(world, unit, options)
@@ -68,19 +68,19 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 
 // renderUnit renders a single unit
 func (ul *UnitLayer) renderUnit(world *World, unit *Unit, options LayerRenderOptions) {
-	// Get pixel position using Map's coordinate system
-	x, y := world.Map.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+	// Get pixel position using privateMap's coordinate system
+	x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
 	x -= float64(ul.X)
 	y -= float64(ul.Y)
 
 	// Try to use real unit sprite if available
-	if ul.assetProvider != nil && ul.assetProvider.HasUnitAsset(unit.UnitType, unit.PlayerID) {
-		ul.renderUnitSprite(unit.UnitType, unit.PlayerID, x, y, options)
+	if ul.assetProvider != nil && ul.assetProvider.HasUnitAsset(unit.UnitType, unit.Player) {
+		ul.renderUnitSprite(unit.UnitType, unit.Player, x, y, options)
 	} else {
 		// Fallback to colored circle
-		ul.drawSimpleUnitToBuffer(x, y, unit.PlayerID, options)
+		ul.drawSimpleUnitToBuffer(x, y, unit.Player, options)
 	}
 }
 
@@ -150,7 +150,7 @@ func (ul *UnitLayer) clearHexArea(coord AxialCoord, options LayerRenderOptions) 
 
 // findUnitAt finds a unit at the given coordinate
 func (ul *UnitLayer) findUnitAt(world *World, coord AxialCoord) *Unit {
-	for _, playerUnits := range world.UnitsByPlayer {
+	for _, playerUnits := range world.unitsByPlayer {
 		for _, unit := range playerUnits {
 			if unit != nil && unit.Coord == coord {
 				return unit

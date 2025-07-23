@@ -13,7 +13,7 @@ import (
 
 // PlayerInfo contains game-specific information about a player
 type PlayerInfo struct {
-	PlayerID int    `json:"playerID"` // 0-based player index
+	Player   int    `json:"playerID"` // 0-based player index
 	Name     string `json:"name"`     // Player display name
 	TeamID   int    `json:"teamID"`   // Which team this player belongs to
 	IsActive bool   `json:"isActive"` // Whether player is still in the game
@@ -71,30 +71,6 @@ type Game struct {
 // Convenience methods to access World fields
 // =============================================================================
 
-// Map returns the game map
-func (g *Game) Map() *Map {
-	if g.World == nil {
-		return nil
-	}
-	return g.World.Map
-}
-
-// Units returns all units in the world
-func (g *Game) UnitsByPlayer() [][]*Unit {
-	if g.World == nil {
-		return nil
-	}
-	return g.World.UnitsByPlayer
-}
-
-// PlayerCount returns the number of players
-func (g *Game) PlayerCount() int {
-	if g.World == nil {
-		return 0
-	}
-	return g.World.PlayerCount
-}
-
 // GetPlayerInfo returns information about a specific player
 func (g *Game) GetPlayerInfo(playerID int) (*PlayerInfo, error) {
 	if playerID < 0 || playerID >= len(g.Players) {
@@ -144,7 +120,7 @@ func (g *Game) initializeStartingUnits() error {
 
 	// Initialize stats for existing units in the world
 	for playerID := 0; playerID < g.World.PlayerCount; playerID++ {
-		for _, unit := range g.World.UnitsByPlayer[playerID] {
+		for _, unit := range g.World.unitsByPlayer[playerID] {
 			// Get unit data from rules engine
 			unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
 			if err != nil {
@@ -163,7 +139,7 @@ func (g *Game) initializeStartingUnits() error {
 
 // resetPlayerUnits resets movement and actions for a player's units
 func (g *Game) resetPlayerUnits(playerID int) error {
-	if playerID < 0 || playerID >= len(g.World.UnitsByPlayer) {
+	if playerID < 0 || playerID >= len(g.World.unitsByPlayer) {
 		return fmt.Errorf("invalid player ID: %d", playerID)
 	}
 
@@ -171,7 +147,7 @@ func (g *Game) resetPlayerUnits(playerID int) error {
 		return fmt.Errorf("rules engine not set - required for unit reset")
 	}
 
-	for _, unit := range g.World.UnitsByPlayer[playerID] {
+	for _, unit := range g.World.unitsByPlayer[playerID] {
 		// Get unit data from rules engine
 		unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
 		if err != nil {
@@ -193,7 +169,7 @@ func (g *Game) checkVictoryConditions() (winner int, hasWinner bool) {
 	lastPlayerWithUnits := -1
 
 	for playerID := 0; playerID < g.World.PlayerCount; playerID++ {
-		if len(g.World.UnitsByPlayer[playerID]) > 0 {
+		if len(g.World.unitsByPlayer[playerID]) > 0 {
 			playersWithUnits++
 			lastPlayerWithUnits = playerID
 		}
@@ -208,8 +184,8 @@ func (g *Game) checkVictoryConditions() (winner int, hasWinner bool) {
 
 // validateGameState validates the current game state
 func (g *Game) validateGameState() error {
-	if g.World.Map == nil {
-		return fmt.Errorf("game has no map")
+	if g.World == nil {
+		return fmt.Errorf("game has no world")
 	}
 
 	if g.World.PlayerCount < 2 || g.World.PlayerCount > 6 {
@@ -224,8 +200,8 @@ func (g *Game) validateGameState() error {
 		return fmt.Errorf("invalid turn counter: %d", g.TurnCounter)
 	}
 
-	if len(g.World.UnitsByPlayer) != g.World.PlayerCount {
-		return fmt.Errorf("units array length (%d) doesn't match player count (%d)", len(g.World.UnitsByPlayer), g.World.PlayerCount)
+	if len(g.World.unitsByPlayer) != g.World.PlayerCount {
+		return fmt.Errorf("units array length (%d) doesn't match player count (%d)", len(g.World.unitsByPlayer), g.World.PlayerCount)
 	}
 
 	return nil
@@ -239,13 +215,13 @@ func (g *Game) GetUnitID(unit *Unit) string {
 	}
 
 	// Convert player ID to letter (0=A, 1=B, etc.)
-	playerLetter := string(rune('A' + unit.PlayerID))
+	playerLetter := string(rune('A' + unit.Player))
 
 	// Count units for this player to determine unit number
 	unitNumber := 0
-	for _, playerUnits := range g.World.UnitsByPlayer {
+	for _, playerUnits := range g.World.unitsByPlayer {
 		for _, playerUnit := range playerUnits {
-			if playerUnit.PlayerID == unit.PlayerID {
+			if playerUnit.Player == unit.Player {
 				unitNumber++
 				if playerUnit == unit {
 					// Found our unit, return the ID
@@ -319,7 +295,7 @@ func NewGame(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) 
 
 	// Initialize units storage for compatibility (will be migrated)
 
-	// Map is already assigned in the struct initialization above
+	// privateMap is already assigned in the struct initialization above
 
 	// Initialize starting units (simplified for now)
 	// TODO: Replace with actual unit placement from map data
@@ -400,69 +376,19 @@ func (g *Game) GetWinner() (int, bool) {
 }
 
 // =============================================================================
-// MapInterface Interface Implementation
-// =============================================================================
-
-// GetMapSize returns map dimensions
-func (g *Game) GetMapSize() (rows, cols int) {
-	if g.World.Map == nil {
-		return 0, 0
-	}
-	return g.World.Map.NumRows(), g.World.Map.NumCols()
-}
-
-// GetMapName returns loaded map name
-func (g *Game) GetMapName() string {
-	return "DefaultMap" // For now, since we're using map instances directly
-}
-
-// GetTileType returns terrain type at position using cube coordinates
-func (g *Game) GetTileType(coord AxialCoord) int {
-	tile := g.World.Map.TileAt(coord)
-	if tile == nil {
-		return 0 // Default/unknown terrain
-	}
-	return tile.TileType
-}
-
-// =============================================================================
 // UnitInterface Interface Implementation
 // =============================================================================
 
-// GetUnitAt returns unit at specific position using cube coordinates
-func (g *Game) GetUnitAt(coord AxialCoord) *Unit {
-	return g.World.UnitAt(coord)
-}
-
 // GetUnitsForPlayer returns all units owned by player
 func (g *Game) GetUnitsForPlayer(playerID int) []*Unit {
-	if playerID < 0 || playerID >= len(g.World.UnitsByPlayer) {
+	if playerID < 0 || playerID >= len(g.World.unitsByPlayer) {
 		return nil
 	}
 
 	// Return a copy to prevent external modification
-	units := make([]*Unit, len(g.World.UnitsByPlayer[playerID]))
-	copy(units, g.World.UnitsByPlayer[playerID])
+	units := make([]*Unit, len(g.World.unitsByPlayer[playerID]))
+	copy(units, g.World.unitsByPlayer[playerID])
 	return units
-}
-
-// GetAllUnits returns every unit on the map
-func (g *Game) GetAllUnits() []*Unit {
-	var allUnits []*Unit
-
-	for _, playerUnits := range g.World.UnitsByPlayer {
-		allUnits = append(allUnits, playerUnits...)
-	}
-
-	return allUnits
-}
-
-// GetUnitType returns unit type identifier
-func (g *Game) GetUnitType(unit *Unit) int {
-	if unit == nil {
-		return 0
-	}
-	return unit.UnitType
 }
 
 // GetUnitTypeName returns the display name for a unit type
@@ -499,7 +425,7 @@ func (g *Game) CreateUnit(unitType, playerID int, coord AxialCoord) (*Unit, erro
 	}
 
 	// Check if position is valid and empty
-	tile := g.World.Map.TileAt(coord)
+	tile := g.World.privateMap.TileAt(coord)
 	if tile == nil {
 		return nil, fmt.Errorf("invalid position: %v", coord)
 	}

@@ -20,7 +20,7 @@ func NewGridLayer(width, height int, scheduler LayerScheduler) *GridLayer {
 
 // Render renders hex grid lines and coordinates
 func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
-	if world == nil || world.Map == nil {
+	if world == nil {
 		return
 	}
 
@@ -40,8 +40,8 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	gl.buffer.Clear()
 
 	// Simple - get top left r/c and render row by row
-	topLeftCoord := world.Map.XYToQR(float64(gl.X), float64(gl.Y), options.TileWidth, options.TileHeight, options.YIncrement)
-	bottomRightCoord := world.Map.XYToQR(float64(gl.X+gl.Width), float64(gl.Y+gl.Height), options.TileWidth, options.TileHeight, options.YIncrement)
+	topLeftCoord := world.XYToQR(float64(gl.X), float64(gl.Y), options.TileWidth, options.TileHeight, options.YIncrement)
+	bottomRightCoord := world.XYToQR(float64(gl.X+gl.Width), float64(gl.Y+gl.Height), options.TileWidth, options.TileHeight, options.YIncrement)
 	tlrow, tlcol := HexToRowCol(topLeftCoord)
 	brrow, brcol := HexToRowCol(bottomRightCoord)
 	log.Println("TopLeft: ", topLeftCoord, tlrow, tlcol)
@@ -49,7 +49,7 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	for row := tlrow; row <= brrow; row++ {
 		for col := tlcol; col <= brcol; col++ {
 			coord := RowColToHex(row, col)
-			currX, currY := world.Map.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			currX, currY := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 			currX -= float64(gl.X)
 			currY -= float64(gl.Y)
 			if options.ShowGrid {
