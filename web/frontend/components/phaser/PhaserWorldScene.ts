@@ -228,6 +228,7 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Mark as initialized and resolve promise
         this.isInitialized = true;
+        console.log('[PhaserWorldScene] isInitialized set to true');
         if (this.initializeResolver) {
             this.initializeResolver();
             this.initializeResolver = null;
@@ -680,7 +681,7 @@ export class PhaserWorldScene extends Phaser.Scene {
         }
     }
     
-    private drawHexagon(q: number, r: number) {
+    protected drawHexagon(q: number, r: number) {
         if (!this.gridGraphics) return;
         
         const position = hexToPixel(q, r);
@@ -706,6 +707,23 @@ export class PhaserWorldScene extends Phaser.Scene {
         }
         this.gridGraphics.closePath();
         this.gridGraphics.strokePath();
+    }
+
+    /**
+     * Draw hexagon shape at given position
+     */
+    protected drawHexagonShape(graphics: Phaser.GameObjects.Graphics, x: number, y: number, size: number): void {
+        const points: number[] = [];
+        
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const hexX = x + size * Math.cos(angle);
+            const hexY = y + size * Math.sin(angle);
+            points.push(hexX, hexY);
+        }
+        
+        graphics.fillPoints(points, true);
+        graphics.strokePoints(points, true);
     }
     
     private updateCoordinateText(q: number, r: number) {
