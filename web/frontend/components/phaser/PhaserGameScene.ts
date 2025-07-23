@@ -51,15 +51,12 @@ export class PhaserGameScene extends PhaserWorldScene {
     
     constructor(config?: string | Phaser.Types.Scenes.SettingsConfig) {
         super(config || { key: 'PhaserGameScene' });
-        console.log('[PhaserGameScene] Constructor called with config:', config);
     }
 
     /**
      * Override create to add game-specific initialization
      */
     create() {
-        console.log('[PhaserGameScene] create() method called - initializing game scene');
-        
         // Call parent create first
         super.create();
         

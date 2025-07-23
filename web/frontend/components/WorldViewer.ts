@@ -124,11 +124,9 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         if (this.isGameMode) {
             this.log('Creating self-contained PhaserGameScene for interactive gameplay');
             this.scene = new PhaserGameScene();
-            console.log('[WorldViewer] PhaserGameScene created:', this.scene);
         } else {
             this.log('Creating self-contained PhaserWorldScene for basic viewing');
             this.scene = new PhaserWorldScene();
-            console.log('[WorldViewer] PhaserWorldScene created:', this.scene);
         }
         
         // Initialize it with the container

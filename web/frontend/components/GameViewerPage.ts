@@ -150,7 +150,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             throw new Error('GameViewerPage: phaser-viewer-container not found');
         }
         // Pass element directly (not string ID) as per UI_DESIGN_PRINCIPLES.md
-        this.worldViewer = new WorldViewer(worldViewerContainer, this.eventBus, true, false);
+        this.worldViewer = new WorldViewer(worldViewerContainer, this.eventBus, true, true);
 
         // Create GameState component (no specific container needed)
         const gameStateContainer = document.createElement('div');
