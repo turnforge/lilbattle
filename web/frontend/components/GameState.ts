@@ -50,9 +50,9 @@ export interface UnitSelectionData {
  * and state synchronization, delegating all game logic to the WASM module.
  */
 export class GameState extends BaseComponent {
-    private wasm: any = null;
+    private wasm: any;
     private gameData: GameStateData;
-    private wasmLoadPromise: Promise<void> | null = null;
+    private wasmLoadPromise: Promise<void> | null;
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('game-state', rootElement, eventBus, debugMode);
