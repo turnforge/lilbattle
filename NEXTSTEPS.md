@@ -456,27 +456,35 @@
 - **Visual Consistency**: Turn indicators, unit displays, and terrain rendering use unified color scheme
 - **Maintainability**: Single source of truth for all UI colors reduces maintenance burden
 
-### Phase 10: Interactive Web Gameplay ⚡ IN PROGRESS
-**Current Phase**: Interactive Terrain/Unit Selection System Implementation
-**Status**: Foundation complete, implementing click-to-interact features for GameViewerPage
-**Achievement**: TerrainStatsPanel architecture complete, PhaserWorldScene refactored for inheritance
-**Next Priority**: Complete PhaserGameScene and integrate terrain clicking functionality
+### Phase 10: Interactive Web Gameplay ✅ INTERACTIVE FOUNDATION COMPLETE
+**Current Phase**: Scene Architecture Complete - Ready for Game-Specific Features
+**Status**: Editor/Viewer separation complete, terrain selection working, world centering implemented
+**Achievement**: PhaserEditorScene created, terrain selection wiring fixed, interactive terrain stats working
+**Next Priority**: Implement PhaserGameScene with unit selection, movement highlighting, and combat interface
 
-#### Interactive Terrain System ✅ FOUNDATION COMPLETE
+#### Editor Scene Architecture ✅ COMPLETE
+- ✅ **PhaserEditorScene Creation**: Extends PhaserWorldScene with editor-specific painting, reference images, brush controls
+- ✅ **Architecture Separation**: Editor concepts moved from WorldScene to EditorScene, WorldScene remains clean for inheritance
+- ✅ **Terrain Selection Fix**: Fixed communication chain PageState → PhaserEditorComponent → PhaserWorldEditor → PhaserEditorScene
+- ✅ **Player Selection**: Fixed player assignment for painted tiles and units via async scene ready handling
+- ✅ **World Centering**: Automatic camera centering on world load for both viewer and editor
+- ✅ **Double-Click Fix**: Eliminated conflicting parent callback calls that caused terrain flickering
+
+#### Interactive Terrain System ✅ COMPLETE
 - ✅ **TerrainStatsPanel Component**: Complete component with template binding and rules engine data integration
 - ✅ **Backend Rules Integration**: GameViewerPage.go provides terrain/unit data from rules engine as JSON
 - ✅ **UI Controller Layer**: lib/ui.go enhanced with GetTerrainStatsAt, CanSelectUnit, GetTileInfo functions
 - ✅ **WASM Interface Extension**: GameState.ts updated with terrain stats methods for WASM bridge
-- ✅ **PhaserWorldScene Refactor**: Transformed to use World as single source of truth with protected properties for inheritance
-- ✅ **Architecture Clean-up**: Separated visual sprites from game data, maintained authoritative hexUtils coordinate conversion
+- ✅ **PhaserWorldScene Refactor**: Self-contained with own Phaser.Game instance, callback system for game interaction
+- ✅ **Click Integration**: Terrain clicks in GameViewerPage display stats in TerrainStatsPanel below game log
 
-#### Current Development (Week 1) - Interactive Features  
-- 🔄 **PhaserGameScene Creation**: Extending PhaserWorldScene with game-specific click handling and highlighting
-- [ ] **Click Handler Integration**: Connect Phaser clicks to GameViewerPage callbacks for terrain/unit selection
-- [ ] **Terrain Info Display**: Wire tile clicks to TerrainStatsPanel updates via ui.go data
-- [ ] **Console Logging**: Implement click event logging to verify data flow pipeline
-- [ ] **Unit Selection Foundation**: Basic unit selection with highlighting preparation
-- [ ] **Integration Testing**: End-to-end terrain click → stats display → console verification
+#### Next Development (Week 2) - Game-Specific Features
+- [ ] **PhaserGameScene**: Extend PhaserWorldScene with unit selection highlighting, movement preview, combat targeting
+- [ ] **Unit Selection System**: Click units to select, show movement range, attack targets with visual indicators
+- [ ] **Movement Interface**: Click-to-move with path preview and movement point validation
+- [ ] **Combat Interface**: Attack targeting with damage preview and combat resolution animations
+- [ ] **Turn Management**: End turn integration with UI updates and player transitions
+- [ ] **Game State Persistence**: Maintain selections and highlights across game state changes
 
 #### WASM Real Unit Data Integration ✅ COMPLETED
 - ✅ **WASM Real Unit Integration**: Updated GameViewerPage WASM to parse actual map units using unified JSON format
