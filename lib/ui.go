@@ -40,6 +40,103 @@ func (g *Game) SelectUnit(coord AxialCoord) (unit *Unit, movable []TileOption, a
 	return unit, movable, attackable, nil
 }
 
+// GetTerrainStatsAt returns detailed terrain information for UI display
+// Combines terrain data from rules engine with world-specific context
+func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
+	coord := AxialCoord{Q: q, R: r}
+	
+	// Get tile at position
+	tile := g.World.TileAt(coord)
+	if tile == nil {
+		return nil, fmt.Errorf("no tile at position (%d,%d)", q, r)
+	}
+
+	// Get terrain data from rules engine
+	rulesEngine := GetRulesEngine()
+	terrainData, err := rulesEngine.GetTerrainData(tile.TileType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get terrain data for type %d: %w", tile.TileType, err)
+	}
+
+	// Get unit at this position (if any)
+	unit := g.World.UnitAt(coord)
+
+	// Calculate movement cost for default unit type (Infantry = 1)
+	movementCost, err := rulesEngine.getUnitTerrainCost(1, tile.TileType)
+	if err != nil {
+		movementCost = terrainData.BaseMoveCost // fallback to base cost
+	}
+
+	result := map[string]any{
+		"q":           q,
+		"r":           r,
+		"tileType":    tile.TileType,
+		"name":        terrainData.Name,
+		"description": fmt.Sprintf("%s terrain", terrainData.Name),
+		"movementCost": movementCost,
+		"defenseBonus": terrainData.DefenseBonus,
+		"player":      tile.Player,
+	}
+
+	// Add unit information if present
+	if unit != nil {
+		result["hasUnit"] = true
+		result["unitType"] = unit.UnitType
+		result["unitPlayer"] = unit.Player
+	} else {
+		result["hasUnit"] = false
+	}
+
+	return result, nil
+}
+
+// CanSelectUnit checks if a unit at the given position can be selected by current player
+func (g *Game) CanSelectUnit(q, r int) bool {
+	coord := AxialCoord{Q: q, R: r}
+	unit := g.World.UnitAt(coord)
+	
+	// Must have a unit and it must belong to current player
+	return unit != nil && unit.Player == g.CurrentPlayer
+}
+
+// GetTileInfo returns basic tile information for UI
+func (g *Game) GetTileInfo(q, r int) (map[string]any, error) {
+	coord := AxialCoord{Q: q, R: r}
+	
+	// Get tile at position
+	tile := g.World.TileAt(coord)
+	if tile == nil {
+		return nil, fmt.Errorf("no tile at position (%d,%d)", q, r)
+	}
+
+	// Get basic terrain name from rules engine
+	rulesEngine := GetRulesEngine()
+	terrainData, err := rulesEngine.GetTerrainData(tile.TileType)
+	terrainName := "Unknown"
+	if err == nil {
+		terrainName = terrainData.Name
+	}
+
+	// Check for unit at this position
+	unit := g.World.UnitAt(coord)
+
+	result := map[string]any{
+		"q":           q,
+		"r":           r,
+		"tileType":    tile.TileType,
+		"terrainName": terrainName,
+		"player":      tile.Player,
+		"hasUnit":     unit != nil,
+	}
+
+	if unit != nil {
+		result["unitType"] = unit.UnitType
+		result["unitPlayer"] = unit.Player
+	}
+
+	return result, nil
+}
+
 // GetGameStateForUI returns complete game state for web UI consumption
 // Uses existing Game fields and methods - all already JSON-tagged
 // Provides everything needed for UI state management and display

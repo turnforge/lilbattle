@@ -1,14 +1,14 @@
 import * as Phaser from 'phaser';
-import { EditablePhaserWorldScene } from './EditablePhaserWorldScene';
+import { PhaserEditorScene } from './PhaserEditorScene';
 import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 import { Unit, Tile } from "../World"
 
 export class PhaserWorldEditor {
     private game: Phaser.Game | null = null;
-    private scene: EditablePhaserWorldScene | null = null;
+    private scene: PhaserEditorScene | null = null;
     private containerElement: HTMLElement | null = null;
-    private sceneReadyPromise: Promise<EditablePhaserWorldScene> | null = null;
-    private sceneReadyResolver: ((scene: EditablePhaserWorldScene) => void) | null = null;
+    private sceneReadyPromise: Promise<PhaserEditorScene> | null = null;
+    private sceneReadyResolver: ((scene: PhaserEditorScene) => void) | null = null;
     
     private currentTerrain: number = 1;
     private currentColor: number = 0;
@@ -37,7 +37,7 @@ export class PhaserWorldEditor {
     
     private initialize() {
         // Create the scene ready promise immediately
-        this.sceneReadyPromise = new Promise<EditablePhaserWorldScene>((resolve) => {
+        this.sceneReadyPromise = new Promise<PhaserEditorScene>((resolve) => {
             this.sceneReadyResolver = resolve;
         });
         
@@ -47,7 +47,7 @@ export class PhaserWorldEditor {
             width: '100%',
             height: '100%',
             backgroundColor: '#2c3e50',
-            scene: EditablePhaserWorldScene,
+            scene: PhaserEditorScene,
             scale: {
                 mode: Phaser.Scale.RESIZE,
                 width: '100%',
@@ -73,7 +73,7 @@ export class PhaserWorldEditor {
         
         // Get reference to the scene once it's created
         this.game.events.once('ready', () => {
-            this.scene = this.game!.scene.getScene('EditablePhaserWorldScene') as EditablePhaserWorldScene;
+            this.scene = this.game!.scene.getScene('PhaserEditorScene') as PhaserEditorScene;
             
             // Set up event listeners
             this.setupEventListeners();
@@ -116,7 +116,7 @@ export class PhaserWorldEditor {
     /**
      * Wait for scene to be ready - this should be used by all methods that need the scene
      */
-    public async waitForSceneReady(): Promise<EditablePhaserWorldScene> {
+    public async waitForSceneReady(): Promise<PhaserEditorScene> {
         if (this.scene) {
             return this.scene;
         }
@@ -129,19 +129,32 @@ export class PhaserWorldEditor {
         return this.sceneReadyPromise;
     }
 
-    // Public API methods
-    public setTerrain(terrain: number) {
+    // Public API methods - delegate to PhaserEditorScene
+    public async setTerrain(terrain: number) {
         this.currentTerrain = terrain;
-        console.log(`[PhaserWorldEditor] Current terrain set to: ${terrain}`);
+        
+        try {
+            const scene = await this.waitForSceneReady();
+            scene.setCurrentTerrain(terrain);
+        } catch (error) {
+            console.error('[PhaserWorldEditor] Failed to set terrain:', error);
+        }
     }
     
-    public setColor(color: number) {
+    public async setColor(color: number) {
         this.currentColor = color;
-        console.log(`[PhaserWorldEditor] Current color set to: ${color}`);
+        
+        try {
+            const scene = await this.waitForSceneReady();
+            scene.setCurrentPlayer(color);
+        } catch (error) {
+            console.error('[PhaserWorldEditor] Failed to set color:', error);
+        }
     }
     
     public setBrushSize(size: number) {
         this.brushSize = size;
+        this.scene?.setBrushSize(size);
         console.log(`[PhaserWorldEditor] Brush size set to: ${size}`);
     }
     

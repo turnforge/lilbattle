@@ -456,11 +456,27 @@
 - **Visual Consistency**: Turn indicators, unit displays, and terrain rendering use unified color scheme
 - **Maintainability**: Single source of truth for all UI colors reduces maintenance burden
 
-### Phase 10: Interactive Web Gameplay ✅ FOUNDATION COMPLETE
-**Current Phase**: Real Unit Data Integration Complete - Ready for Interactive Features
-**Status**: WASM now uses real world data, ComponentLifecycle architecture complete, unified JSON format established
-**Achievement**: GameViewerPage successfully displays real map units instead of mock test data
-**Next Priority**: Interactive unit selection, movement, and combat UI implementation
+### Phase 10: Interactive Web Gameplay ⚡ IN PROGRESS
+**Current Phase**: Interactive Terrain/Unit Selection System Implementation
+**Status**: Foundation complete, implementing click-to-interact features for GameViewerPage
+**Achievement**: TerrainStatsPanel architecture complete, PhaserWorldScene refactored for inheritance
+**Next Priority**: Complete PhaserGameScene and integrate terrain clicking functionality
+
+#### Interactive Terrain System ✅ FOUNDATION COMPLETE
+- ✅ **TerrainStatsPanel Component**: Complete component with template binding and rules engine data integration
+- ✅ **Backend Rules Integration**: GameViewerPage.go provides terrain/unit data from rules engine as JSON
+- ✅ **UI Controller Layer**: lib/ui.go enhanced with GetTerrainStatsAt, CanSelectUnit, GetTileInfo functions
+- ✅ **WASM Interface Extension**: GameState.ts updated with terrain stats methods for WASM bridge
+- ✅ **PhaserWorldScene Refactor**: Transformed to use World as single source of truth with protected properties for inheritance
+- ✅ **Architecture Clean-up**: Separated visual sprites from game data, maintained authoritative hexUtils coordinate conversion
+
+#### Current Development (Week 1) - Interactive Features  
+- 🔄 **PhaserGameScene Creation**: Extending PhaserWorldScene with game-specific click handling and highlighting
+- [ ] **Click Handler Integration**: Connect Phaser clicks to GameViewerPage callbacks for terrain/unit selection
+- [ ] **Terrain Info Display**: Wire tile clicks to TerrainStatsPanel updates via ui.go data
+- [ ] **Console Logging**: Implement click event logging to verify data flow pipeline
+- [ ] **Unit Selection Foundation**: Basic unit selection with highlighting preparation
+- [ ] **Integration Testing**: End-to-end terrain click → stats display → console verification
 
 #### WASM Real Unit Data Integration ✅ COMPLETED
 - ✅ **WASM Real Unit Integration**: Updated GameViewerPage WASM to parse actual map units using unified JSON format
@@ -469,14 +485,6 @@
 - ✅ **Architecture Simplification**: Direct world.UnmarshalJSON() call without format conversion complexity
 - ✅ **Code Consolidation**: Centralized world loading logic in World class, eliminated duplicate CLI functions
 - ✅ **End-to-End Testing**: Confirmed real map data flows correctly: Frontend → WASM → Game creation
-
-#### Immediate Next Steps (Week 1) - Interactive Features
-- [ ] **Enable Unit Selection**: Connect GameState selectUnit to Phaser viewer highlighting system
-- [ ] **Implement Movement UI**: Show movement options and enable click-to-move functionality  
-- [ ] **Add Attack Interface**: Show attack targets and enable click-to-attack
-- [ ] **Complete Turn Cycle**: Test full game loop (select, move, attack, end turn)
-- [ ] **Unit Information Display**: Show unit stats, health, and movement points on selection
-- [ ] **Game State Persistence**: Maintain game state across player actions and turn changes
 
 #### A. Coordinate System Accuracy ✅ COMPLETED
 **Goal**: Perfect coordinate mapping between frontend and backend  

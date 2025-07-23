@@ -131,7 +131,10 @@ export class GameState extends BaseComponent {
                 selectUnit: (window as any).weewarSelectUnit,
                 moveUnit: (window as any).weewarMoveUnit,
                 attackUnit: (window as any).weewarAttackUnit,
-                endTurn: (window as any).weewarEndTurn
+                endTurn: (window as any).weewarEndTurn,
+                getTerrainStatsAt: (window as any).weewarGetTerrainStatsAt,
+                canSelectUnit: (window as any).weewarCanSelectUnit,
+                getTileInfo: (window as any).weewarGetTileInfo
             };
 
             this.gameData.wasmLoaded = true;
@@ -282,6 +285,55 @@ export class GameState extends BaseComponent {
         this.emit('turn-ended', gameData);
         
         return gameData;
+    }
+
+    /**
+     * Get detailed terrain stats for a specific tile (synchronous)
+     */
+    public getTerrainStatsAt(q: number, r: number): any {
+        this.ensureWASMLoadedSync();
+
+        const response: WASMResponse = this.wasm.getTerrainStatsAt(q, r);
+        
+        if (!response.success) {
+            throw new Error(`Get terrain stats failed: ${response.message}`);
+        }
+
+        this.log('Retrieved terrain stats for', { q, r, data: response.data });
+        return response.data;
+    }
+
+    /**
+     * Check if a unit at the given position can be selected by current player (synchronous)
+     */
+    public canSelectUnit(q: number, r: number): boolean {
+        this.ensureWASMLoadedSync();
+
+        const response: WASMResponse = this.wasm.canSelectUnit(q, r);
+        
+        if (!response.success) {
+            // For boolean checks, return false on error rather than throwing
+            this.log('CanSelectUnit check failed:', response.message);
+            return false;
+        }
+
+        return response.data;
+    }
+
+    /**
+     * Get basic tile information (synchronous)
+     */
+    public getTileInfo(q: number, r: number): any {
+        this.ensureWASMLoadedSync();
+
+        const response: WASMResponse = this.wasm.getTileInfo(q, r);
+        
+        if (!response.success) {
+            throw new Error(`Get tile info failed: ${response.message}`);
+        }
+
+        this.log('Retrieved tile info for', { q, r, data: response.data });
+        return response.data;
     }
 
     /**

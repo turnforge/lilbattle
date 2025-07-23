@@ -118,7 +118,9 @@ export class PhaserPanel {
             return;
         }
         
-        this.phaserEditor.setTerrain(terrain);
+        this.phaserEditor.setTerrain(terrain).catch(error => {
+            console.error('[PhaserPanel] Failed to set terrain:', error);
+        });
         this.log(`Terrain set to: ${terrain}`);
     }
     

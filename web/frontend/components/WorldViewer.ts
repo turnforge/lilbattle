@@ -1,6 +1,6 @@
 import { BaseComponent, DOMValidation } from './Component';
 import { EventBus, EventPayload, EventTypes, WorldDataLoadedPayload } from './EventBus';
-import { PhaserViewer } from './PhaserViewer';
+import { PhaserWorldScene } from './phaser/PhaserWorldScene';
 import { Unit, Tile, World } from './World';
 import { ComponentLifecycle } from './ComponentLifecycle';
 
@@ -15,7 +15,7 @@ import { ComponentLifecycle } from './ComponentLifecycle';
  * Layout and styling are handled by parent container and CSS classes.
  */
 export class WorldViewer extends BaseComponent implements ComponentLifecycle {
-    private phaserViewer: PhaserViewer | null;
+    private scene: PhaserWorldScene | null = null;
     private loadedWorldData: WorldDataLoadedPayload | null;
     private viewerContainer: HTMLElement | null;
     
@@ -71,10 +71,10 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
     protected destroyComponent(): void {
         this.log('Destroying WorldViewer component');
         
-        // Clean up Phaser viewer
-        if (this.phaserViewer) {
-            this.phaserViewer.destroy();
-            this.phaserViewer = null;
+        // Clean up Phaser scene (it manages its own game instance)
+        if (this.scene) {
+            this.scene.destroy();
+            this.scene = null;
         }
         
         this.loadedWorldData = null;
@@ -101,14 +101,14 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
     }
     
     /**
-     * Initialize the Phaser viewer
+     * Initialize the self-contained PhaserWorldScene
      */
-    private initializePhaserViewer(): void {
-        console.log('WorldViewer: initializePhaserViewer() called');
+    private async initializePhaserScene(): Promise<void> {
+        console.log('WorldViewer: initializePhaserScene() called');
         
         // Guard against multiple initialization
-        if (this.phaserViewer) {
-            console.log('WorldViewer: PhaserViewer already initialized, skipping');
+        if (this.scene) {
+            console.log('WorldViewer: PhaserWorldScene already initialized, skipping');
             return;
         }
         
@@ -116,19 +116,16 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
             throw new Error('Viewer container not available');
         }
         
-        this.log('Initializing Phaser viewer');
+        this.log('Creating self-contained PhaserWorldScene');
         console.log('WorldViewer: viewerContainer is:', this.viewerContainer);
         
-        // Create new PhaserViewer instance
-        this.phaserViewer = new PhaserViewer();
+        // Create new PhaserWorldScene instance
+        this.scene = new PhaserWorldScene();
         
-        // Set up logging
-        this.phaserViewer.onLog((message: string) => {
-            this.log(`PhaserViewer: ${message}`);
-        });
+        // Initialize it with the container
+        await this.scene.initialize(this.viewerContainer.id);
         
-        // Initialize with container ID - Phaser will adapt to whatever size the parent provides
-        this.phaserViewer.initialize(this.viewerContainer.id);
+        this.log('PhaserWorldScene initialized successfully');
         
         // Emit ready event
         console.log('WorldViewer: Emitting WORLD_VIEWER_READY event');
@@ -140,7 +137,7 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         
         // Load world data if we have it
         if (this.loadedWorldData) {
-            this.loadWorldIntoViewer(this.loadedWorldData);
+            await this.loadWorldIntoScene();
         }
     }
     
@@ -151,44 +148,32 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         this.log(`Received world data for world: ${payload.data.worldId}`);
         this.loadedWorldData = payload.data;
         
-        // Load into Phaser if viewer is ready
-        if (this.phaserViewer && this.phaserViewer.getIsInitialized()) {
-            this.loadWorldIntoViewer(payload.data);
+        // Load into Phaser if scene is ready
+        if (this.scene && this.scene.getIsInitialized()) {
+            this.loadWorldIntoScene();
         }
     }
     
     /**
-     * Load world data into the Phaser viewer
+     * Load world data into the PhaserWorldScene
      */
-    private async loadWorldIntoViewer(worldData: WorldDataLoadedPayload): Promise<void> {
-        if (!this.phaserViewer || !this.phaserViewer.getIsInitialized()) {
-            this.log('Phaser viewer not ready, deferring world load');
+    private async loadWorldIntoScene(): Promise<void> {
+        if (!this.scene || !this.scene.getIsInitialized()) {
+            this.log('Phaser scene not ready, deferring world load');
             return;
         }
-        this.log('Loading world data into Phaser viewer');
         
-        // Convert world data to Phaser format
-        const tilesArray: Array<Tile> = []
-        const unitsArray: Array<Unit> = []
-        
-        // Process tiles from bounds
-        if (worldData.bounds) {
-            for (let q = worldData.bounds.minQ; q <= worldData.bounds.maxQ; q++) {
-                for (let r = worldData.bounds.minR; r <= worldData.bounds.maxR; r++) {
-                    // This would need to be coordinated with the world data structure
-                    // For now, create placeholder logic
-                    tilesArray.push({
-                        q: q,
-                        r: r,
-                        tileType: 1, // Default grass
-                        player: 0
-                    });
-                }
-            }
+        if (!this.loadedWorldData) {
+            this.log('No world data available to load');
+            return;
         }
         
-        // Load into Phaser viewer
-        await this.phaserViewer.loadWorldData(tilesArray, unitsArray);
+        this.log('Loading world data into Phaser scene');
+        
+        // This method will be called after loadWorld() sets up the world data properly
+        // For now, we need to reconstruct the World from loadedWorldData
+        // TODO: This is a bit awkward - we should refactor to avoid this conversion
+        console.log('WorldViewer: loadWorldIntoScene called but needs world instance');
     }
     
     /**
@@ -224,8 +209,8 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         };
         
         // Load into Phaser if ready
-        if (this.phaserViewer && this.phaserViewer.getIsInitialized()) {
-            await this.phaserViewer.loadWorldData(allTiles, allUnits);
+        if (this.scene && this.scene.getIsInitialized()) {
+            await this.scene.loadWorldData(world);
         }
         
         // Emit data loaded event for other components
@@ -249,20 +234,20 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
      * Set display options
      */
     public setShowGrid(show: boolean): void {
-        if (this.phaserViewer) {
-            this.phaserViewer.setShowGrid(show);
+        if (this.scene) {
+            this.scene.setShowGrid(show);
         }
     }
     
     public setShowCoordinates(show: boolean): void {
-        if (this.phaserViewer) {
-            this.phaserViewer.setShowCoordinates(show);
+        if (this.scene) {
+            this.scene.setShowCoordinates(show);
         }
     }
     
     public setTheme(isDark: boolean): void {
-        if (this.phaserViewer) {
-            this.phaserViewer.setTheme(isDark);
+        if (this.scene) {
+            this.scene.setTheme(isDark);
         }
     }
     
@@ -270,12 +255,12 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
      * Camera controls
      */
     public getZoom(): number {
-        return this.phaserViewer?.getZoom() || 1;
+        return this.scene?.getZoom() || 1;
     }
     
     public setZoom(zoom: number): void {
-        if (this.phaserViewer) {
-            this.phaserViewer.setZoom(zoom);
+        if (this.scene) {
+            this.scene.setZoom(zoom);
         }
     }
     
@@ -283,10 +268,10 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
      * Resize the viewer
      */
     public resize(width?: number, height?: number): void {
-        if (this.phaserViewer && this.viewerContainer) {
+        if (this.scene && this.viewerContainer) {
             const w = width || this.viewerContainer.clientWidth;
             const h = height || this.viewerContainer.clientHeight;
-            this.phaserViewer.resize(w, h);
+            this.scene.resize(w, h);
         }
     }
     
@@ -294,7 +279,19 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
      * Check if viewer is ready
      */
     public isPhaserReady(): boolean {
-        return this.phaserViewer?.getIsInitialized() || false;
+        return this.scene?.getIsInitialized() || false;
+    }
+
+    /**
+     * Set interaction callbacks for game-specific functionality
+     */
+    public setInteractionCallbacks(
+        tileCallback?: (q: number, r: number) => boolean,
+        unitCallback?: (q: number, r: number) => boolean
+    ): void {
+        if (this.scene) {
+            this.scene.setInteractionCallbacks(tileCallback, unitCallback);
+        }
     }
 
     // =============================================================================
@@ -325,8 +322,8 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
     async activate(): Promise<void> {
         console.log('WorldViewer: activate() - Phase 3 - Initializing Phaser');
         
-        // Now initialize Phaser in the proper lifecycle phase
-        this.initializePhaserViewer();
+        // Now initialize PhaserWorldScene in the proper lifecycle phase
+        await this.initializePhaserScene();
         
         console.log('WorldViewer: activation complete');
     }

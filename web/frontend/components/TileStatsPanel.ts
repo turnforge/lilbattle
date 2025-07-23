@@ -414,19 +414,10 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
             terrainCounts[tile.tileType] = (terrainCounts[tile.tileType] || 0) + 1;
         });
         
-        // Use same terrain names worldping
-        const terrainNames: { [key: number]: { name: string, icon: string, color: string } } = {
-            1: { name: 'Grass', icon: '🌱', color: 'text-green-600 dark:text-green-400' },
-            2: { name: 'Desert', icon: '🏜️', color: 'text-yellow-600 dark:text-yellow-400' },
-            3: { name: 'Water', icon: '🌊', color: 'text-blue-600 dark:text-blue-400' },
-            4: { name: 'Mountain', icon: '⛰️', color: 'text-gray-600 dark:text-gray-400' },
-            5: { name: 'Rock', icon: '🪨', color: 'text-gray-700 dark:text-gray-300' },
-        };
-        
         // Generate HTML for terrain stats
         let terrainHTML = '';
         Object.entries(terrainCounts).forEach(([terrainType, count]) => {
-            const terrain = terrainNames[parseInt(terrainType)];
+            const terrain = TERRAIN_NAMES[parseInt(terrainType)];
             if (terrain) {
                 terrainHTML += `
                     <div class="flex justify-between items-center py-1">

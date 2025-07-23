@@ -2,11 +2,13 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
 	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 type GameViewerPage struct {
@@ -95,6 +97,39 @@ func (p *GameViewerPage) parseGameParameters(r *http.Request) {
 			p.UnitRestrictions[key] = values[0]
 		}
 	}
+}
+
+// GetTerrainDataJSON returns terrain data from rules engine as JSON string
+func (p *GameViewerPage) GetTerrainDataJSON() string {
+	rulesEngine := weewar.GetRulesEngine()
+	terrainData, err := json.Marshal(rulesEngine.Terrains)
+	if err != nil {
+		log.Printf("Error marshaling terrain data: %v", err)
+		return "{}"
+	}
+	return string(terrainData)
+}
+
+// GetUnitDataJSON returns unit data from rules engine as JSON string
+func (p *GameViewerPage) GetUnitDataJSON() string {
+	rulesEngine := weewar.GetRulesEngine()
+	unitData, err := json.Marshal(rulesEngine.Units)
+	if err != nil {
+		log.Printf("Error marshaling unit data: %v", err)
+		return "{}"
+	}
+	return string(unitData)
+}
+
+// GetMovementMatrixJSON returns movement cost matrix as JSON string
+func (p *GameViewerPage) GetMovementMatrixJSON() string {
+	rulesEngine := weewar.GetRulesEngine()
+	movementData, err := json.Marshal(rulesEngine.MovementMatrix)
+	if err != nil {
+		log.Printf("Error marshaling movement matrix: %v", err)
+		return "{}"
+	}
+	return string(movementData)
 }
 
 func (p *GameViewerPage) Copy() View {

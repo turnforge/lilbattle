@@ -11,8 +11,7 @@ import { EditorToolsPanel } from './EditorToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
 import { ComponentLifecycle } from './ComponentLifecycle';
 import { LifecycleController } from './LifecycleController';
-
-const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
+import { BRUSH_SIZE_NAMES , TERRAIN_NAMES } from "./ColorsAndNames"
 
 /**
  * World Editor page with unified World architecture and centralized page state
@@ -1165,10 +1164,9 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     private updateBrushInfo(): void {
         const brushInfo = document.getElementById('brush-info');
         if (brushInfo) {
-            const terrainNames = ['Unknown', 'Grass', 'Desert', 'Water', 'Mountain', 'Rock'];
             const currentTerrain = this.pageState?.getToolState().selectedTerrain || 1;
             const currentBrushSize = this.pageState?.getToolState().brushSize || 0;
-            brushInfo.textContent = `Current: ${terrainNames[currentTerrain]}, ${BRUSH_SIZE_NAMES[currentBrushSize]}`;
+            brushInfo.textContent = `Current: ${TERRAIN_NAMES[currentTerrain]}, ${BRUSH_SIZE_NAMES[currentBrushSize]}`;
         }
     }
 

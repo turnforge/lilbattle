@@ -129,8 +129,8 @@ func TestGameCreationAndBasicOperations(t *testing.T) {
 	}
 
 	// Test basic game operations
-	if game.CurrentPlayer != 0 {
-		t.Errorf("Expected current player 0, got %d", game.CurrentPlayer)
+	if game.CurrentPlayer != 1 {
+		t.Errorf("Expected current player 1, got %d", game.CurrentPlayer)
 	}
 
 	if game.TurnCounter != 1 {

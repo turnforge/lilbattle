@@ -345,15 +345,27 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     /**
      * Handle tool state changes from PageState
      */
-    private handleToolStateChanged(toolState: any): void {
+    private handleToolStateChanged(eventData: any): void {
         if (!this.phaserEditor || !this.isInitialized) {
             return;
         }
         
+        // Extract the new tool state from the event data
+        const toolState = eventData.newState;
+        
         // Update Phaser editor settings based on tool state
         if (toolState.selectedTerrain !== undefined) {
-            this.phaserEditor.setTerrain(toolState.selectedTerrain);
+            this.phaserEditor.setTerrain(toolState.selectedTerrain).catch(error => {
+                console.error('[PhaserEditorComponent] Failed to set terrain:', error);
+            });
             this.log(`Updated Phaser terrain to: ${toolState.selectedTerrain}`);
+        }
+        
+        if (toolState.selectedPlayer !== undefined) {
+            this.phaserEditor.setColor(toolState.selectedPlayer).catch(error => {
+                console.error('[PhaserEditorComponent] Failed to set player:', error);
+            });
+            this.log(`Updated Phaser player to: ${toolState.selectedPlayer}`);
         }
         
         if (toolState.brushSize !== undefined) {

@@ -6,6 +6,7 @@ import { GameState, GameCreateData, UnitSelectionData } from './GameState';
 import { ComponentLifecycle } from './ComponentLifecycle';
 import { LifecycleController } from './LifecycleController';
 import { PLAYER_BG_COLORS } from './ColorsAndNames';
+import { TerrainStatsPanel } from './TerrainStatsPanel';
 
 /**
  * Game Viewer Page - Interactive game play interface
@@ -21,6 +22,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     private world: World | null = null;
     private worldViewer: WorldViewer | null = null;
     private gameState: GameState | null = null;
+    private terrainStatsPanel: TerrainStatsPanel | null = null;
     
     // Game configuration from URL parameters
     private playerCount: number = 2;
@@ -156,6 +158,14 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         document.body.appendChild(gameStateContainer);
         this.gameState = new GameState(gameStateContainer, this.eventBus, true);
         console.log('GameViewerPage: GameState created:', this.gameState);
+
+        // Create TerrainStatsPanel component
+        const terrainStatsContainer = document.getElementById('terrain-stats-panel');
+        if (!terrainStatsContainer) {
+            throw new Error('GameViewerPage: terrain-stats-panel container not found');
+        }
+        this.terrainStatsPanel = new TerrainStatsPanel(terrainStatsContainer, this.eventBus, true);
+        console.log('GameViewerPage: TerrainStatsPanel created:', this.terrainStatsPanel);
     }
 
     /**
@@ -571,6 +581,94 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     }
 
     /**
+     * Callback methods for Phaser scene interactions
+     */
+
+    /**
+     * Handle tile click from PhaserWorldScene - show terrain info in TerrainStatsPanel
+     * @returns false to suppress event emission (we handle it completely)
+     */
+    private onTileClicked = (q: number, r: number): boolean => {
+        console.log(`[GameViewerPage] Tile clicked callback: Q=${q}, R=${r}`);
+
+        if (!this.gameState?.isReady()) {
+            console.warn('[GameViewerPage] Game not ready for tile clicks');
+            return false; // Suppress event emission
+        }
+
+        if (!this.terrainStatsPanel) {
+            console.warn('[GameViewerPage] TerrainStatsPanel not available');
+            return false; // Suppress event emission
+        }
+
+        try {
+            // Get terrain info from WASM via ui.go
+            const terrainStats = this.gameState.getTerrainStatsAt(q, r);
+            
+            console.log('[GameViewerPage] Retrieved terrain stats:', terrainStats);
+            
+            // Update terrain stats panel with the data
+            this.terrainStatsPanel.updateTerrainInfo({
+                name: terrainStats.name || 'Unknown Terrain',
+                tileType: terrainStats.tileType || 0,
+                movementCost: terrainStats.movementCost || 1.0,
+                defenseBonus: terrainStats.defenseBonus || 0.0,
+                description: terrainStats.description || 'No description available',
+                q: q,
+                r: r,
+                player: terrainStats.player
+            });
+
+            return false; // We handled it completely, suppress event emission
+
+        } catch (error) {
+            console.error('[GameViewerPage] Failed to get terrain stats:', error);
+            // Clear terrain panel on error
+            this.terrainStatsPanel.clearTerrainInfo();
+            return false; // Suppress event emission on error
+        }
+    };
+
+    /**
+     * Handle unit click from PhaserWorldScene - select unit or show unit info
+     * @returns false to suppress event emission (we handle it completely)
+     */
+    private onUnitClicked = (q: number, r: number): boolean => {
+        console.log(`[GameViewerPage] Unit clicked callback: Q=${q}, R=${r}`);
+
+        if (!this.gameState?.isReady()) {
+            console.warn('[GameViewerPage] Game not ready for unit clicks');
+            return false; // Suppress event emission
+        }
+
+        try {
+            // Check if this unit can be selected by current player
+            const canSelect = this.gameState.canSelectUnit(q, r);
+            
+            if (canSelect) {
+                // This is a selectable unit - use existing selection logic
+                this.selectUnitAt(q, r);
+            } else {
+                // This is an enemy or non-selectable unit - just show info
+                console.log(`[GameViewerPage] Non-selectable unit at Q=${q}, R=${r}`);
+                
+                // Get basic tile info to show enemy unit details
+                const tileInfo = this.gameState.getTileInfo(q, r);
+                console.log('[GameViewerPage] Enemy unit tile info:', tileInfo);
+                
+                // For now, just show a message - could extend to show unit details panel later
+                this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
+            }
+
+            return false; // We handled it completely, suppress event emission
+
+        } catch (error) {
+            console.error('[GameViewerPage] Failed to handle unit click:', error);
+            return false; // Suppress event emission on error
+        }
+    };
+
+    /**
      * UI update functions
      */
     private updateGameStatus(status: string, currentPlayer?: number): void {
@@ -663,6 +761,9 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         if (this.gameState) {
             childComponents.push(this.gameState);
         }
+        if (this.terrainStatsPanel) {
+            childComponents.push(this.terrainStatsPanel);
+        }
         return childComponents;
     }
 
@@ -682,6 +783,15 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         
         // Bind events now that all components are ready
         this.bindGameSpecificEvents();
+
+        // Set up interaction callbacks for terrain and unit clicks
+        if (this.worldViewer) {
+            this.worldViewer.setInteractionCallbacks(
+                this.onTileClicked,
+                this.onUnitClicked
+            );
+            console.log('GameViewerPage: Interaction callbacks set on WorldViewer');
+        }
         
         // Wait for world viewer to be ready, then load world and initialize game
         if (this.currentWorldId) {
@@ -714,6 +824,11 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         if (this.gameState) {
             this.gameState.destroy();
             this.gameState = null;
+        }
+
+        if (this.terrainStatsPanel) {
+            this.terrainStatsPanel.destroy();
+            this.terrainStatsPanel = null;
         }
         
         this.world = null;

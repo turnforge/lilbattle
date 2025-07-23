@@ -1,35 +1,48 @@
 import * as Phaser from 'phaser';
 import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
-import { Unit, Tile } from '../World';
+import { Unit, Tile, World } from '../World';
 
 export class PhaserWorldScene extends Phaser.Scene {
-    private tileWidth: number = 64;
-    private tileHeight: number = 64;
-    private yIncrement: number = 48; // 3/4 * tileHeight for pointy-topped hexes
+    // Phaser game instance (self-contained) - renamed to avoid conflict with Phaser's game property
+    private phaserGame: Phaser.Game | null = null;
+    private containerElement: HTMLElement | null = null;
+    private isInitialized: boolean = false;
+    private initializePromise: Promise<void> | null = null;
+    private initializeResolver: (() => void) | null = null;
+
+    protected tileWidth: number = 64;
+    protected tileHeight: number = 64;
+    protected yIncrement: number = 48; // 3/4 * tileHeight for pointy-topped hexes
     
-    private tiles: Map<string, Phaser.GameObjects.Sprite> = new Map();
-    private units: Map<string, Phaser.GameObjects.Sprite> = new Map();
-    private gridGraphics: Phaser.GameObjects.Graphics | null = null;
-    private coordinateTexts: Map<string, Phaser.GameObjects.Text> = new Map();
+    // World as single source of truth for game data
+    protected world: World | null = null;
     
-    private showGrid: boolean = false;
-    private showCoordinates: boolean = false;
+    // Visual sprite maps (for rendering only, not game data)
+    protected tileSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
+    protected unitSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
+    protected gridGraphics: Phaser.GameObjects.Graphics | null = null;
+    protected coordinateTexts: Map<string, Phaser.GameObjects.Text> = new Map();
+    
+    protected showGrid: boolean = false;
+    protected showCoordinates: boolean = false;
     
     // Theme management - initialize with current theme state
-    private isDarkTheme: boolean = document.documentElement.classList.contains('dark');
+    protected isDarkTheme: boolean = document.documentElement.classList.contains('dark');
     
     // Camera controls
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
-    private wasdKeys: any = null;
-    private zoomSpeed: number = 0.01;
-    private panSpeed: number = 100;
+    protected cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
+    protected wasdKeys: any = null;
+    protected zoomSpeed: number = 0.01;
+    protected panSpeed: number = 100;
+
+    // Game interaction callbacks (optional, only used by GameViewerPage)
+    protected tileClickCallback: ((q: number, r: number) => boolean) | null = null;
+    protected unitClickCallback: ((q: number, r: number) => boolean) | null = null;
     
     // Mouse interaction
-    private isMouseDown: boolean = false;
-    private lastPointerPosition: { x: number; y: number } | null = null;
-    private isPaintMode: boolean = false;
-    private hasDragged: boolean = false;
-    private paintModeStartPosition: { x: number; y: number } | null = null;
+    protected isMouseDown: boolean = false;
+    protected lastPointerPosition: { x: number; y: number } | null = null;
+    protected hasDragged: boolean = false;
     
     // Asset loading
     private terrainsLoaded: boolean = false;
@@ -41,6 +54,132 @@ export class PhaserWorldScene extends Phaser.Scene {
     constructor(config?: string | Phaser.Types.Scenes.SettingsConfig) {
         super(config || { key: 'PhaserWorldScene' });
     }
+
+    /**
+     * Initialize the scene with its own Phaser.Game instance
+     * @param containerId - ID of the HTML element to render into
+     */
+    public async initialize(containerId: string): Promise<void> {
+        if (this.isInitialized) {
+            console.log('[PhaserWorldScene] Already initialized');
+            return;
+        }
+
+        if (this.initializePromise) {
+            return this.initializePromise;
+        }
+
+        this.initializePromise = new Promise<void>((resolve) => {
+            this.initializeResolver = resolve;
+        });
+
+        this.containerElement = document.getElementById(containerId);
+        if (!this.containerElement) {
+            throw new Error(`Container element with ID '${containerId}' not found`);
+        }
+
+        // Ensure container has proper styling for Phaser
+        this.containerElement.style.width = '100%';
+        this.containerElement.style.height = '100%';
+        this.containerElement.style.minWidth = '600px';
+        this.containerElement.style.minHeight = '400px';
+
+        // Get container dimensions
+        const containerWidth = this.containerElement.clientWidth || 800;
+        const containerHeight = this.containerElement.clientHeight || 600;
+        const width = Math.max(containerWidth, 400);
+        const height = Math.max(containerHeight, 300);
+
+        const config: Phaser.Types.Core.GameConfig = {
+            type: Phaser.AUTO,
+            parent: this.containerElement,
+            width: width,
+            height: height,
+            backgroundColor: '#2c3e50',
+            scene: this, // Use this scene instance directly
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                width: width,
+                height: height
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    debug: false
+                }
+            },
+            input: {
+                keyboard: true,
+                mouse: true
+            },
+            render: {
+                pixelArt: true,
+                antialias: false
+            }
+        };
+
+        try {
+            this.phaserGame = new Phaser.Game(config);
+            
+            // Scene will automatically call create() when ready
+            // We'll mark as initialized in the create() method
+
+        } catch (error) {
+            console.error('[PhaserWorldScene] Failed to create Phaser game:', error);
+            throw error;
+        }
+
+        return this.initializePromise;
+    }
+
+    /**
+     * Check if the scene is initialized and ready
+     */
+    public getIsInitialized(): boolean {
+        return this.isInitialized;
+    }
+
+    /**
+     * Destroy the scene and its Phaser.Game instance
+     */
+    public destroy(): void {
+        if (this.phaserGame) {
+            this.phaserGame.destroy(true);
+            this.phaserGame = null;
+        }
+        
+        this.containerElement = null;
+        this.isInitialized = false;
+        this.initializePromise = null;
+        this.initializeResolver = null;
+        this.world = null;
+    }
+
+    /**
+     * Set the World instance as the single source of truth for game data
+     */
+    public setWorld(world: World): void {
+        this.world = world;
+        console.log('[PhaserWorldScene] World set as source of truth');
+    }
+
+    /**
+     * Set interaction callbacks for game-specific functionality
+     * @param tileCallback - Called when tile is clicked, return true to emit event, false to suppress
+     * @param unitCallback - Called when unit is clicked, return true to emit event, false to suppress
+     */
+    public setInteractionCallbacks(
+        tileCallback?: (q: number, r: number) => boolean,
+        unitCallback?: (q: number, r: number) => boolean
+    ): void {
+        this.tileClickCallback = tileCallback || null;
+        this.unitClickCallback = unitCallback || null;
+        console.log('[PhaserWorldScene] Interaction callbacks set:', {
+            tileCallback: !!tileCallback,
+            unitCallback: !!unitCallback
+        });
+    }
+
     
     preload() {
         // Set up assets ready promise
@@ -86,6 +225,13 @@ export class PhaserWorldScene extends Phaser.Scene {
         this.updateTheme();
         
         console.log('[PhaserWorldScene] Scene created successfully');
+        
+        // Mark as initialized and resolve promise
+        this.isInitialized = true;
+        if (this.initializeResolver) {
+            this.initializeResolver();
+            this.initializeResolver = null;
+        }
         
         // Trigger scene ready callback if set
         if (this.sceneReadyCallback) {
@@ -205,24 +351,13 @@ export class PhaserWorldScene extends Phaser.Scene {
                 this.isMouseDown = true;
                 this.hasDragged = false;
                 this.lastPointerPosition = { x: pointer.x, y: pointer.y };
-                this.paintModeStartPosition = { x: pointer.x, y: pointer.y };
-                
-                // Check for paint mode (Alt or Cmd key)
-                this.isPaintMode = pointer.event.altKey || pointer.event.metaKey || pointer.event.ctrlKey;
-                
-                // If in paint mode, immediately paint at start position
-                if (this.isPaintMode) {
-                    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
-                    this.onTileClick(hexCoords.q, hexCoords.r);
-                }
             }
         });
         
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
             if (pointer.button === 0) { // Left click only
-                // Only paint on mouse up if we didn't drag and weren't in paint mode
-                if (!this.hasDragged && !this.isPaintMode) {
+                // Only handle click if we didn't drag
+                if (!this.hasDragged) {
                     const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
                     const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
                     this.onTileClick(hexCoords.q, hexCoords.r);
@@ -231,9 +366,7 @@ export class PhaserWorldScene extends Phaser.Scene {
                 // Reset state
                 this.isMouseDown = false;
                 this.lastPointerPosition = null;
-                this.isPaintMode = false;
                 this.hasDragged = false;
-                this.paintModeStartPosition = null;
             }
         });
         
@@ -248,16 +381,9 @@ export class PhaserWorldScene extends Phaser.Scene {
                     this.hasDragged = true;
                 }
                 
-                if (this.isPaintMode) {
-                    // Paint mode: paint at current position
-                    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
-                    this.onTileClick(hexCoords.q, hexCoords.r);
-                } else {
-                    // Pan mode: move camera
-                    this.cameras.main.scrollX -= deltaX / this.cameras.main.zoom;
-                    this.cameras.main.scrollY -= deltaY / this.cameras.main.zoom;
-                }
+                // Pan camera
+                this.cameras.main.scrollX -= deltaX / this.cameras.main.zoom;
+                this.cameras.main.scrollY -= deltaY / this.cameras.main.zoom;
                 
                 this.lastPointerPosition = { x: pointer.x, y: pointer.y };
             }
@@ -336,8 +462,8 @@ export class PhaserWorldScene extends Phaser.Scene {
         const position = hexToPixel(q, r);
         
         // Remove existing tile if it exists
-        if (this.tiles.has(key)) {
-            this.tiles.get(key)?.destroy();
+        if (this.tileSprites.has(key)) {
+            this.tileSprites.get(key)?.destroy();
         }
         
         // Create new tile sprite
@@ -346,7 +472,7 @@ export class PhaserWorldScene extends Phaser.Scene {
         if (this.textures.exists(textureKey)) {
             const tileSprite = this.add.sprite(position.x, position.y, textureKey);
             tileSprite.setOrigin(0.5, 0.5);
-            this.tiles.set(key, tileSprite);
+            this.tileSprites.set(key, tileSprite);
         } else {
             console.warn(`[PhaserWorldScene] Texture not found: ${textureKey}`);
             console.warn(`[PhaserWorldScene] Available textures:`, this.textures.list);
@@ -357,7 +483,7 @@ export class PhaserWorldScene extends Phaser.Scene {
                 console.log(`[PhaserWorldScene] Using fallback texture: ${fallbackKey}`);
                 const tileSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 tileSprite.setOrigin(0.5, 0.5);
-                this.tiles.set(key, tileSprite);
+                this.tileSprites.set(key, tileSprite);
             } else {
                 console.error(`[PhaserWorldScene] Fallback texture also not found: ${fallbackKey}`);
             }
@@ -372,9 +498,9 @@ export class PhaserWorldScene extends Phaser.Scene {
     public removeTile(q: number, r: number) {
         const key = `${q},${r}`;
         
-        if (this.tiles.has(key)) {
-            this.tiles.get(key)?.destroy();
-            this.tiles.delete(key);
+        if (this.tileSprites.has(key)) {
+            this.tileSprites.get(key)?.destroy();
+            this.tileSprites.delete(key);
         }
         
         // Remove coordinate text
@@ -385,8 +511,8 @@ export class PhaserWorldScene extends Phaser.Scene {
     }
     
     public clearAllTiles() {
-        this.tiles.forEach(tile => tile.destroy());
-        this.tiles.clear();
+        this.tileSprites.forEach(tile => tile.destroy());
+        this.tileSprites.clear();
         
         this.coordinateTexts.forEach(text => text.destroy());
         this.coordinateTexts.clear();
@@ -404,8 +530,8 @@ export class PhaserWorldScene extends Phaser.Scene {
         console.log(`[PhaserWorldScene] setUnit called: q=${q}, r=${r}, unitType=${unitType}, color=${color}`);
         
         // Remove existing unit if it exists
-        if (this.units.has(key)) {
-            this.units.get(key)?.destroy();
+        if (this.unitSprites.has(key)) {
+            this.unitSprites.get(key)?.destroy();
         }
         
         // Create new unit sprite
@@ -417,7 +543,7 @@ export class PhaserWorldScene extends Phaser.Scene {
             const unitSprite = this.add.sprite(position.x, position.y, textureKey);
             unitSprite.setOrigin(0.5, 0.5);
             unitSprite.setDepth(10); // Units render above tiles
-            this.units.set(key, unitSprite);
+            this.unitSprites.set(key, unitSprite);
         } else {
             console.warn(`[PhaserWorldScene] Unit texture not found: ${textureKey}`);
             
@@ -428,7 +554,7 @@ export class PhaserWorldScene extends Phaser.Scene {
                 const unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 unitSprite.setOrigin(0.5, 0.5);
                 unitSprite.setDepth(10);
-                this.units.set(key, unitSprite);
+                this.unitSprites.set(key, unitSprite);
             } else {
                 console.error(`[PhaserWorldScene] Fallback unit texture also not found: ${fallbackKey}`);
             }
@@ -438,15 +564,15 @@ export class PhaserWorldScene extends Phaser.Scene {
     public removeUnit(q: number, r: number) {
         const key = `${q},${r}`;
         
-        if (this.units.has(key)) {
-            this.units.get(key)?.destroy();
-            this.units.delete(key);
+        if (this.unitSprites.has(key)) {
+            this.unitSprites.get(key)?.destroy();
+            this.unitSprites.delete(key);
         }
     }
     
     public clearAllUnits() {
-        this.units.forEach(unit => unit.destroy());
-        this.units.clear();
+        this.unitSprites.forEach(unit => unit.destroy());
+        this.unitSprites.clear();
     }
     
     public setShowGrid(show: boolean) {
@@ -637,95 +763,148 @@ export class PhaserWorldScene extends Phaser.Scene {
         console.log('[PhaserWorldScene] Test pattern created with negative coordinates support');
     }
     
-    // Callback for tile clicks (to be overridden by parent)
-    private onTileClick(q: number, r: number) {
+    // Callback for tile clicks (handles both game interaction and editor events)
+    protected onTileClick(q: number, r: number) {
         console.log(`[PhaserWorldScene] Tile clicked: Q=${q}, R=${r}`);
         
-        // DISABLED: Old terrain painting logic - now handled by WorldEditorPage
-        // The WorldEditorPage will handle all placement logic based on the current mode
+        // Check if there's a unit at this position first for game interaction
+        if (this.world) {
+            const unit = this.world.getUnitAt(q, r);
+            if (unit && this.unitClickCallback) {
+                const shouldEmit = this.unitClickCallback(q, r);
+                if (!shouldEmit) {
+                    return; // Unit callback handled it and suppressed event
+                }
+            }
+        }
         
-        // Just emit the tile click event for the WorldEditorPage to handle
+        // Call tile callback if set
+        if (this.tileClickCallback) {
+            const shouldEmit = this.tileClickCallback(q, r);
+            if (!shouldEmit) {
+                return; // Tile callback handled it and suppressed event
+            }
+        }
+        
+        // Default behavior: emit the tile click event for WorldEditorPage or other listeners
         this.events.emit('tileClicked', { q, r });
     }
     
-    private getCurrentTerrainSelection(): { terrain: number; color: number } {
-        // Find selected terrain button
-        const selectedButton = document.querySelector('.terrain-button.bg-blue-100, .terrain-button.bg-blue-900') as HTMLElement;
-        if (selectedButton) {
-            const terrain = parseInt(selectedButton.getAttribute('data-terrain') || '5');
-            const hasColors = selectedButton.getAttribute('data-has-colors') === 'true';
-            
-            // If it's a city terrain, get the selected player color
-            if (hasColors) {
-                const playerColorSelect = document.getElementById('player-color') as HTMLSelectElement;
-                const color = playerColorSelect ? parseInt(playerColorSelect.value) : 0;
-                return { terrain, color };
-            } else {
-                // Nature terrain always uses color 0
-                return { terrain, color: 0 };
-            }
+    
+    /**
+     * Load world data into the scene
+     */
+    public async loadWorldData(world: World): Promise<void> {
+        if (!this.isInitialized) {
+            throw new Error('[PhaserWorldScene] Scene not initialized. Call initialize() first.');
         }
-        return { terrain: 5, color: 0 }; // Default to grass
+
+        // Set world as source of truth
+        this.setWorld(world);
+
+        // Wait for assets to be ready before placing tiles/units
+        await this.waitForAssetsReady();
+        console.log('[PhaserWorldScene] Assets ready, loading world data');
+        
+        // Clear existing content
+        this.clearAllTiles();
+        this.clearAllUnits();
+        
+        // Load tiles from World
+        const tiles = world.getAllTiles();
+        if (tiles.length > 0) {
+            tiles.forEach(tile => {
+                this.setTile(tile);
+            });
+            console.log(`[PhaserWorldScene] Loaded ${tiles.length} tiles`);
+        }
+        
+        // Load units from World
+        const units = world.getAllUnits();
+        if (units.length > 0) {
+            units.forEach(unit => {
+                this.setUnit(unit);
+            });
+            console.log(`[PhaserWorldScene] Loaded ${units.length} units`);
+        }
+        
+        // Center camera on the loaded world
+        this.centerCameraOnWorld();
     }
-    
-    private getCurrentBrushSize(): number {
-        const brushSelect = document.getElementById('brush-size') as HTMLSelectElement;
-        return brushSelect ? parseInt(brushSelect.value) : 0;
-    }
-    
-    private paintTileArea(tile: Tile, brushSize: number) {
-        if (brushSize === 0) {
-            // Single tile
-            this.setTile(tile)
-        } else {
-            const [centerQ, centerR, terrain, color] = [tile.q, tile.r, tile.tileType, tile.player];
-            // Multiple tiles in radius
-            const radius = this.getBrushRadius(brushSize);
-            for (let q = centerQ - radius; q <= centerQ + radius; q++) {
-                for (let r = centerR - radius; r <= centerR + radius; r++) {
-                    // Use cube distance to determine if tile is within brush radius
-                    const distance = Math.abs(q - centerQ) + Math.abs(r - centerR) + Math.abs(-q - r - (-centerQ - centerR));
-                    if (distance <= radius * 2) { // Hex distance formula
-                        this.setTile({q, r, tileType: terrain, player: color})
-                    }
-                }
-            }
+
+    /**
+     * Center the camera on the loaded world by calculating bounds and focusing on center
+     */
+    public centerCameraOnWorld(): void {
+        if (!this.world) {
+            console.log('[PhaserWorldScene] Cannot center camera - no world loaded');
+            return;
+        }
+        
+        const allTiles = this.world.getAllTiles();
+        if (allTiles.length === 0) {
+            console.log('[PhaserWorldScene] No tiles to center camera on');
+            return;
+        }
+        
+        // Calculate bounds of all tiles
+        let minQ = allTiles[0].q;
+        let maxQ = allTiles[0].q;
+        let minR = allTiles[0].r;
+        let maxR = allTiles[0].r;
+        
+        allTiles.forEach(tile => {
+            minQ = Math.min(minQ, tile.q);
+            maxQ = Math.max(maxQ, tile.q);
+            minR = Math.min(minR, tile.r);
+            maxR = Math.max(maxR, tile.r);
+        });
+        
+        // Calculate center point
+        const centerQ = Math.floor((minQ + maxQ) / 2);
+        const centerR = Math.floor((minR + maxR) / 2);
+        
+        console.log(`[PhaserWorldScene] Centering camera on Q=${centerQ}, R=${centerR} (bounds: Q=${minQ}-${maxQ}, R=${minR}-${maxR})`);
+        
+        // Convert hex coordinates to pixel coordinates
+        const centerPixel = hexToPixel(centerQ, centerR);
+        
+        // Center camera on position
+        if (this.cameras?.main) {
+            this.cameras.main.centerOn(centerPixel.x, centerPixel.y);
         }
     }
-    
-    private clearTileArea(centerQ: number, centerR: number, brushSize: number) {
-        if (brushSize === 0) {
-            // Single tile
-            this.removeTile(centerQ, centerR);
-        } else {
-            // Multiple tiles in radius
-            const radius = this.getBrushRadius(brushSize);
-            for (let q = centerQ - radius; q <= centerQ + radius; q++) {
-                for (let r = centerR - radius; r <= centerR + radius; r++) {
-                    // Use cube distance to determine if tile is within brush radius
-                    const distance = Math.abs(q - centerQ) + Math.abs(r - centerR) + Math.abs(-q - r - (-centerQ - centerR));
-                    if (distance <= radius * 2) { // Hex distance formula
-                        this.removeTile(q, r);
-                    }
-                }
-            }
+
+    /**
+     * Get current zoom level
+     */
+    public getZoom(): number {
+        return this.cameras?.main?.zoom || 1;
+    }
+
+    /**
+     * Set zoom level
+     */
+    public setZoom(zoom: number): void {
+        if (this.cameras?.main) {
+            this.cameras.main.setZoom(zoom);
         }
     }
-    
-    private getBrushRadius(brushSize: number): number {
-        switch (brushSize) {
-            case 1: return 1;   // Small (3 hexes)
-            case 3: return 2;   // Medium (5 hexes) 
-            case 5: return 3;   // Large (9 hexes)
-            case 10: return 4;  // X-Large (15 hexes)
-            case 15: return 5;  // XX-Large (21 hexes)
-            default: return 0;  // Single hex
+
+    /**
+     * Resize the scene
+     */
+    public resize(width?: number, height?: number): void {
+        if (this.phaserGame && this.containerElement) {
+            const w = width || this.containerElement.clientWidth;
+            const h = height || this.containerElement.clientHeight;
+            this.phaserGame.scale.resize(w, h);
         }
     }
-    
+
     // Scene ready callback
     public onSceneReady(callback: () => void): void {
-        if (this.sceneReadyCallback) {
+        if (this.isInitialized) {
             // Scene is already ready, call immediately
             callback();
         } else {
@@ -751,7 +930,7 @@ export class PhaserWorldScene extends Phaser.Scene {
     public getTilesData(): Array<Tile> {
         const tilesData: Array<Tile> = [];
         
-        this.tiles.forEach((tile, key) => {
+        this.tileSprites.forEach((tile, key) => {
             const [q, r] = key.split(',').map(Number);
             // Extract terrain and color from texture key
             const textureKey = tile.texture.key;
@@ -774,7 +953,7 @@ export class PhaserWorldScene extends Phaser.Scene {
     public getUnitsData(): Array<Unit> {
         const unitsData: Array<Unit> = [];
         
-        this.units.forEach((unit, key) => {
+        this.unitSprites.forEach((unit, key) => {
             const [q, r] = key.split(',').map(Number);
             // Extract unitType and playerId from texture key
             const textureKey = unit.texture.key;
