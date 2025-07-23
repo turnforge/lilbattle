@@ -417,27 +417,47 @@
 - [x] **Extension Framework**: Clear guidelines for adding new AI personalities and evaluation metrics
 - [x] **Integration Examples**: AI vs AI games, human assistance, and multiple AI analysis patterns
 
-### Phase 10: Interactive Web Gameplay 🚧 CURRENT PRIORITY  
-**Current Phase**: Unit Interaction and Advanced Gameplay Features
-**Status**: ComponentLifecycle architecture complete, WASM integration functional, clean component separation
-**Focus**: Update GameViewerPage WASM to use real unit data instead of mock units, then complete interactive gameplay
-**Foundation**: External orchestration, working WASM bridge, and proper component lifecycle management
+### 29. WASM Real Unit Data Integration (v10.5) ✅ COMPLETED
+**Completed**: Complete WASM integration with real world data instead of mock units
+**Key Achievements**:
+- **Unified JSON Architecture**: Frontend and backend now use consistent array-based serialization format
+- **Frontend Serialization Update**: World.serialize() now returns `{Name, PlayerCount, Tiles: [], Units: []}` format matching backend
+- **Backend Array Format**: World.UnmarshalJSON() handles array format with proper coordinate mapping from frontend
+- **WASM Integration Simplified**: Direct `world.UnmarshalJSON()` call eliminating complex format conversion functions
+- **Code Consolidation**: Moved CLI logic to centralized World.LoadFromStorageJSON method, updated CLI to use new approach
+- **End-to-End Success**: GameViewerPage now displays real map data and units instead of mock createTestWorld() data
 
-#### Current Tasks: WASM Real Unit Data and Interactive Gameplay 🔄 IN PROGRESS
-- 🔄 **WASM Real Unit Integration**: Update GameViewerPage WASM to parse actual map units instead of creating mock test units
-- 🔄 **Unit Visibility**: Ensure real units from map data are properly rendered in PhaserViewer
-- 🔄 **Unit Selection**: Connect unit selection to Phaser viewer highlighting system
-- 🔄 **Movement Highlighting**: Show valid movement options as colored overlays
-- 🔄 **Click-to-Move**: Enable clicking on highlighted tiles to move selected units
-- 🔄 **Attack Targeting**: Implement attack option highlighting and click-to-attack
+### 30. JSON Format Unification (v10.5) ✅ COMPLETED
+**Completed**: Consistent JSON handling across frontend, WASM, and backend components
+**Technical Improvements**:
+- **Consistent Data Flow**: Frontend World.serialize() → WASM UnmarshalJSON → Game creation without format conversion
+- **Backward Compatibility**: Frontend loadFromData() handles both old map format and new array format seamlessly  
+- **Architecture Cleanup**: Removed duplicate parsing logic, centralized world loading in World class methods
+- **CLI Modernization**: Updated cmd/weewar-cli to use World.LoadFromStorageJSON, removed redundant loadWorldFromStorageJSON function
+- **Performance Enhancement**: Direct JSON unmarshaling without intermediate conversion steps
+- **Type Safety**: Unified coordinate handling with proper AxialCoord mapping throughout the stack
 
-#### Immediate Next Steps (Week 1)
-- [ ] **Update WASM Mock Units**: Replace createTestWorld() with actual map data parsing in GameViewerPage WASM
-- [ ] **Debug Real Unit Rendering**: Ensure actual map units are visible and rendering correctly
-- [ ] **Enable Unit Selection**: Connect GameState selectUnit to Phaser viewer highlighting
+### Phase 10: Interactive Web Gameplay ✅ FOUNDATION COMPLETE
+**Current Phase**: Real Unit Data Integration Complete - Ready for Interactive Features
+**Status**: WASM now uses real world data, ComponentLifecycle architecture complete, unified JSON format established
+**Achievement**: GameViewerPage successfully displays real map units instead of mock test data
+**Next Priority**: Interactive unit selection, movement, and combat UI implementation
+
+#### WASM Real Unit Data Integration ✅ COMPLETED
+- ✅ **WASM Real Unit Integration**: Updated GameViewerPage WASM to parse actual map units using unified JSON format
+- ✅ **Unit Visibility**: Real units from map data now properly rendered in GameViewerPage  
+- ✅ **JSON Format Consistency**: Frontend and backend use identical array-based serialization format
+- ✅ **Architecture Simplification**: Direct world.UnmarshalJSON() call without format conversion complexity
+- ✅ **Code Consolidation**: Centralized world loading logic in World class, eliminated duplicate CLI functions
+- ✅ **End-to-End Testing**: Confirmed real map data flows correctly: Frontend → WASM → Game creation
+
+#### Immediate Next Steps (Week 1) - Interactive Features
+- [ ] **Enable Unit Selection**: Connect GameState selectUnit to Phaser viewer highlighting system
 - [ ] **Implement Movement UI**: Show movement options and enable click-to-move functionality  
 - [ ] **Add Attack Interface**: Show attack targets and enable click-to-attack
 - [ ] **Complete Turn Cycle**: Test full game loop (select, move, attack, end turn)
+- [ ] **Unit Information Display**: Show unit stats, health, and movement points on selection
+- [ ] **Game State Persistence**: Maintain game state across player actions and turn changes
 
 #### A. Coordinate System Accuracy ✅ COMPLETED
 **Goal**: Perfect coordinate mapping between frontend and backend  

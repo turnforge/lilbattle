@@ -158,9 +158,14 @@ func (w *World) AddUnit(unit *Unit) (oldunit *Unit, err error) {
 	}
 
 	playerID := unit.Player
-	if playerID < 0 || playerID >= len(w.unitsByPlayer) {
+	if playerID < 0 {
 		return nil, fmt.Errorf("invalid player ID: %d", playerID)
 	}
+	for playerID >= len(w.unitsByPlayer) {
+		w.unitsByPlayer = append(w.unitsByPlayer, nil)
+	}
+
+	fmt.Println("Adding Unit: ", unit)
 
 	oldunit = w.UnitAt(unit.Coord)
 
@@ -330,7 +335,9 @@ func (w *World) UnmarshalJSON(data []byte) error {
 	for _, tile := range dict.Tiles {
 		w.AddTile(tile)
 	}
+
 	for _, unit := range dict.Units {
+		fmt.Println("Adding Unit: ", unit)
 		w.AddUnit(unit)
 	}
 	w.boundsChanged = true

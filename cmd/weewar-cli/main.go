@@ -164,8 +164,8 @@ func createGameFromWorld(worldPath string) (*weewar.Game, error) {
 
 	// Parse the world data and create a game
 	// The world data contains tiles in Q,R coordinate format
-	world, err := loadWorldFromStorageJSON(worldData)
-	if err != nil {
+	world := &weewar.World{}
+	if err := world.LoadFromStorageJSON(worldData); err != nil {
 		return nil, fmt.Errorf("failed to parse world data: %w", err)
 	}
 
@@ -190,67 +190,6 @@ func createGameFromWorld(worldPath string) (*weewar.Game, error) {
 	return game, nil
 }
 
-// loadWorldFromStorageJSON parses world data from storage JSON format
-func loadWorldFromStorageJSON(jsonData []byte) (*weewar.World, error) {
-	var storageData struct {
-		Tiles map[string]struct {
-			Q        int `json:"q"`
-			R        int `json:"r"`
-			TileType int `json:"tile_type"`
-			Player   int `json:"player"`
-		} `json:"tiles"`
-		MapUnits []struct {
-			Q        int `json:"q"`
-			R        int `json:"r"`
-			Player   int `json:"player"`
-			UnitType int `json:"unit_type"`
-		} `json:"map_units"`
-	}
-
-	// Parse JSON
-	if err := json.Unmarshal(jsonData, &storageData); err != nil {
-		return nil, fmt.Errorf("failed to parse storage JSON: %w", err)
-	}
-
-	// Create map from tiles
-	gameMap := weewar.NewMapRect(10, 10) // Initial size, will expand as needed
-	maxPlayers := 0
-
-	// Add tiles
-	for _, tileData := range storageData.Tiles {
-		coord := weewar.AxialCoord{Q: tileData.Q, R: tileData.R}
-		tile := weewar.NewTile(coord, tileData.TileType)
-		tile.Player = tileData.Player // Set the player ownership
-		gameMap.AddTile(tile)
-
-		if tileData.Player > maxPlayers {
-			maxPlayers = tileData.Player
-		}
-	}
-
-	// Determine number of players (add 1 since player IDs are 0-based)
-	if maxPlayers == 0 {
-		maxPlayers = 2 // Default to 2 players
-	} else {
-		maxPlayers++
-	}
-
-	// Create world
-	world, err := weewar.NewWorld(maxPlayers, gameMap)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create world: %w", err)
-	}
-
-	// Add units
-	for _, unitData := range storageData.MapUnits {
-		coord := weewar.AxialCoord{Q: unitData.Q, R: unitData.R}
-		unit := weewar.NewUnit(unitData.UnitType, unitData.Player)
-		unit.SetPosition(coord)
-		world.AddUnit(unit)
-	}
-
-	return world, nil
-}
 
 // loadGameFromFile loads a game from a file
 func loadGameFromFile(filename string, game **weewar.Game) error {

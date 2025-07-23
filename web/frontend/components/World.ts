@@ -574,7 +574,7 @@ export class World {
                 
                 if (tileData.tileType !== undefined) {
                     tileType = tileData.tileType;
-                    playerId = tileData.playerId;
+                    playerId = tileData.player;
                 } else if (tileData.tile_type !== undefined) {
                     tileType = tileData.tile_type;
                     playerId = tileData.player || 0;
@@ -598,9 +598,9 @@ export class World {
                 const key = q + "," + r;
                 let unitType: number, playerId: number;
                 
-                if (unitData.unitType !== undefined && unitData.playerId !== undefined) {
+                if (unitData.unitType !== undefined && unitData.player !== undefined) {
                     unitType = unitData.unitType;
-                    playerId = unitData.playerId;
+                    playerId = unitData.player;
                 } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
                     unitType = unitData.unit_type;
                     playerId = unitData.player;
