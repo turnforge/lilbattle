@@ -1,7 +1,7 @@
 import { BasePage } from './BasePage';
 import { EventBus, EventTypes } from './EventBus';
 import { WorldViewer } from './WorldViewer';
-import { World } from './World';
+import { Unit, Tile, World } from './World';
 import { GameState, GameCreateData, UnitSelectionData } from './GameState';
 import { ComponentLifecycle } from './ComponentLifecycle';
 import { LifecycleController } from './LifecycleController';
@@ -206,52 +206,43 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             throw new Error('GameState component not initialized');
         }
 
-        try {
-            // Wait for WASM to be ready (only async part)
-            await this.gameState.waitUntilReady();
-            
-            // Create game from world data via WASM (synchronous once WASM loaded)
-            const worldDataStr = JSON.stringify(this.loadWorldDataFromElement());
-            const gameData = await this.gameState.createGameFromMap(worldDataStr, this.gameConfig.playerCount);
-            
-            // Debug: Log the game data returned by WASM
-            console.log('WASM Game Creation Result:', gameData);
-            console.log('WASM gameData type:', typeof gameData);
-            console.log('WASM allUnits:', gameData?.allUnits);
-            console.log('WASM allUnits type:', typeof gameData?.allUnits);
-            console.log('WASM allUnits keys:', gameData?.allUnits ? Object.keys(gameData.allUnits) : 'none');
-            console.log('WASM allUnits length:', gameData?.allUnits ? Object.keys(gameData.allUnits).length : 0);
-            
-            // Check all properties of gameData
-            if (gameData) {
-                console.log('WASM gameData properties:', Object.keys(gameData));
-                for (const [key, value] of Object.entries(gameData)) {
-                    console.log(`WASM gameData.${key}:`, value);
-                }
+        // Wait for WASM to be ready (only async part)
+        await this.gameState.waitUntilReady();
+        
+        // Create game from world data via WASM (synchronous once WASM loaded)
+        const worldDataStr = JSON.stringify(this.loadWorldDataFromElement());
+        const gameData = await this.gameState.createGameFromMap(worldDataStr, this.gameConfig.playerCount);
+        
+        // Debug: Log the game data returned by WASM
+        console.log('WASM Game Creation Result:', gameData);
+        console.log('WASM gameData type:', typeof gameData);
+        console.log('WASM allUnits:', gameData?.allUnits);
+        console.log('WASM allUnits type:', typeof gameData?.allUnits);
+        console.log('WASM allUnits keys:', gameData?.allUnits ? Object.keys(gameData.allUnits) : 'none');
+        console.log('WASM allUnits length:', gameData?.allUnits ? Object.keys(gameData.allUnits).length : 0);
+        
+        // Check all properties of gameData
+        if (gameData) {
+            console.log('WASM gameData properties:', Object.keys(gameData));
+            for (const [key, value] of Object.entries(gameData)) {
+                console.log(`WASM gameData.${key}:`, value);
             }
-            
-            // Update WorldViewer with WASM-generated units
-            if (gameData?.allUnits && this.worldViewer) {
-                console.log('✅ Condition met: calling updateWorldViewerWithUnits...');
-                console.log('🚀 About to call updateWorldViewerWithUnits with:', gameData.allUnits);
-                await this.updateWorldViewerWithUnits(gameData.allUnits);
-                console.log('✅ updateWorldViewerWithUnits completed successfully');
-            } else {
-                console.log('❌ updateWorldViewerWithUnits NOT called because:');
-                console.log('  - gameData?.allUnits:', !!gameData?.allUnits);
-                console.log('  - this.worldViewer:', !!this.worldViewer);
-            }
-            
-            // Update UI synchronously
-            this.updateGameUIFromState(gameData);
-            this.logGameEvent(`Game started with ${this.gameConfig.playerCount} players`);
-            console.log('Game initialized with WASM engine');
-            
-        } catch (error) {
-            console.error('Failed to initialize game with WASM:', error);
-            this.showToast('Error', 'Failed to initialize game engine', 'error');
-            throw error;
         }
+        
+        // Update WorldViewer with WASM-generated units
+        if (gameData?.allUnits && this.worldViewer) {
+            console.log('🚀 About to call updateWorldViewerWithUnits with:', gameData.allUnits);
+            await this.updateWorldViewerWithUnits(gameData.allUnits);
+        } else {
+            console.log('❌ updateWorldViewerWithUnits NOT called because:');
+            console.log('  - gameData?.allUnits:', !!gameData?.allUnits);
+            console.log('  - this.worldViewer:', !!this.worldViewer);
+        }
+        
+        // Update UI synchronously
+        this.updateGameUIFromState(gameData);
+        this.logGameEvent(`Game started with ${this.gameConfig.playerCount} players`);
+        console.log('Game initialized with WASM engine');
     }
 
     /**
@@ -312,7 +303,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             
             if (worldDataElement) {
                 const rawContent = worldDataElement.textContent;
-                console.log('GameViewerPage: Raw world data content:', rawContent ? rawContent.substring(0, 200) + '...' : 'null/empty');
+                console.log('GameViewerPage: Raw world data content:', JSON.parse(rawContent || "{}")) //  ? rawContent.substring(0, 200) + '...' : 'null/empty');
                 
                 if (rawContent && rawContent.trim() !== '' && rawContent.trim() !== 'null') {
                     const worldData = JSON.parse(rawContent);
@@ -343,7 +334,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         console.assert(wasmUnits, 'WASM units data must be provided');
 
         // Convert WASM units format to Phaser format
-        const unitsArray: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
+        const unitsArray: Array<Unit> = [];
         
         for (const [coordKey, unit] of Object.entries(wasmUnits)) {
             // Parse coordinate key like "0,1" back to Q,R
@@ -360,8 +351,8 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             const unitData = {
                 q: q,
                 r: r,
-                unitType: unit.UnitType || 1, // Use correct Go field name
-                playerId: unit.PlayerID || 0  // Use correct Go field name
+                unitType: unit.unit_type || 1, // Use correct Go field name
+                player: unit.player || 1,
             };
             console.log(`Converting unit at ${coordKey}:`, unit, '→', unitData);
             unitsArray.push(unitData);
@@ -378,13 +369,13 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         const allTiles = world.getAllTiles();
         
         // Convert tiles to Phaser format
-        const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
+        const tilesArray: Array<Tile> = [];
         allTiles.forEach(tile => {
             tilesArray.push({
                 q: tile.q,
                 r: tile.r,
-                terrain: tile.tileType,
-                color: tile.playerId || 0
+                tileType: tile.tileType,
+                player: tile.player,
             });
         });
 

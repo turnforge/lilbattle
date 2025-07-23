@@ -119,9 +119,10 @@ func (g *Game) initializeStartingUnits() error {
 	}
 
 	// Initialize stats for existing units in the world
-	for playerID := 0; playerID < g.World.PlayerCount; playerID++ {
+	for playerID := range g.World.PlayerCount() {
 		for _, unit := range g.World.unitsByPlayer[playerID] {
 			// Get unit data from rules engine
+			fmt.Println("Player ID, Unit: ", playerID, unit)
 			unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
 			if err != nil {
 				return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)
@@ -168,7 +169,7 @@ func (g *Game) checkVictoryConditions() (winner int, hasWinner bool) {
 	playersWithUnits := 0
 	lastPlayerWithUnits := -1
 
-	for playerID := 0; playerID < g.World.PlayerCount; playerID++ {
+	for playerID := range g.World.PlayerCount() {
 		if len(g.World.unitsByPlayer[playerID]) > 0 {
 			playersWithUnits++
 			lastPlayerWithUnits = playerID
@@ -188,11 +189,7 @@ func (g *Game) validateGameState() error {
 		return fmt.Errorf("game has no world")
 	}
 
-	if g.World.PlayerCount < 2 || g.World.PlayerCount > 6 {
-		return fmt.Errorf("invalid player count: %d", g.World.PlayerCount)
-	}
-
-	if g.CurrentPlayer < 0 || g.CurrentPlayer >= g.World.PlayerCount {
+	if g.CurrentPlayer < 0 || g.CurrentPlayer >= g.World.PlayerCount() {
 		return fmt.Errorf("invalid current player: %d", g.CurrentPlayer)
 	}
 
@@ -200,8 +197,8 @@ func (g *Game) validateGameState() error {
 		return fmt.Errorf("invalid turn counter: %d", g.TurnCounter)
 	}
 
-	if len(g.World.unitsByPlayer) != g.World.PlayerCount {
-		return fmt.Errorf("units array length (%d) doesn't match player count (%d)", len(g.World.unitsByPlayer), g.World.PlayerCount)
+	if len(g.World.unitsByPlayer) != g.World.PlayerCount() {
+		return fmt.Errorf("units array length (%d) doesn't match player count (%d)", len(g.World.unitsByPlayer), g.World.PlayerCount())
 	}
 
 	return nil

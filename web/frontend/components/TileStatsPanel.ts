@@ -1,7 +1,40 @@
-import { World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { BaseComponent } from './Component';
 import { EventBus } from './EventBus';
 import { ComponentLifecycle } from './ComponentLifecycle';
+
+// Terrain type names mapping
+const TERRAIN_NAMES: { [key: number]: { name: string, icon: string, color: string } } = {
+    1: { name: 'Grass', icon: '🌱', color: 'text-green-600 dark:text-green-400' },
+    2: { name: 'Desert', icon: '🏜️', color: 'text-yellow-600 dark:text-yellow-400' },
+    3: { name: 'Water', icon: '🌊', color: 'text-blue-600 dark:text-blue-400' },
+    4: { name: 'Mountain', icon: '⛰️', color: 'text-gray-600 dark:text-gray-400' },
+    5: { name: 'Rock', icon: '🪨', color: 'text-gray-700 dark:text-gray-300' },
+    16: { name: 'Missile Silo', icon: '🚀', color: 'text-red-600 dark:text-red-400' },
+    20: { name: 'Mines', icon: '⛏️', color: 'text-orange-600 dark:text-orange-400' }
+};
+
+// Player colors
+const PLAYER_COLORS: { [key: number]: string } = {
+    1: 'text-red-600 dark:text-red-400',
+    2: 'text-blue-600 dark:text-blue-400',
+    3: 'text-green-600 dark:text-green-400',
+    4: 'text-yellow-600 dark:text-yellow-400',
+    5: 'text-orange-600 dark:text-orange-400',
+    6: 'text-purple-600 dark:text-purple-400',
+    7: 'text-pink-600 dark:text-pink-400',
+    8: 'text-cyan-600 dark:text-cyan-400'
+};
+
+// Unit type names worldping (basic set)
+const UNIT_NAMES: { [key: number]: { name: string, icon: string } } = {
+    1: { name: 'Infantry', icon: '🪖' },
+    2: { name: 'Tank', icon: '🛡️' },
+    3: { name: 'Artillery', icon: '💥' },
+    4: { name: 'Scout', icon: '🔍' },
+    5: { name: 'Anti-Air', icon: '🎯' },
+    19: { name: 'Rocket Launcher', icon: '🚀' }
+};
 
 /**
  * TileStatsPanel displays statistics about tiles and units on the world
@@ -270,7 +303,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update the stats display with current world data (legacy method for backward compatibility)
      */
-    public updateStats(tilesData: Array<{ q: number; r: number; terrain: number; color: number }>, unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
+    public updateStats(tilesData: Array<Tile>, unitsData: Array<Unit>): void {
         this.executeWhenReady(() => {
             this.updateTerrainStats(tilesData);
             this.updateUnitStats(unitsData);
@@ -281,7 +314,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update terrain statistics
      */
-    private updateTerrainStats(tilesData: Array<{ q: number; r: number; terrain: number; color: number }>): void {
+    private updateTerrainStats(tilesData: Array<Tile>): void {
         const terrainContainer = this.findElement('#terrain-stats');
         const totalTilesElement = this.findElement('#total-tiles');
         
@@ -290,25 +323,14 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
         // Count terrain types
         const terrainCounts: { [key: number]: number } = {};
         tilesData.forEach(tile => {
-            terrainCounts[tile.terrain] = (terrainCounts[tile.terrain] || 0) + 1;
+            terrainCounts[tile.tileType] = (terrainCounts[tile.tileType] || 0) + 1;
         });
-        
-        // Terrain type names worldping
-        const terrainNames: { [key: number]: { name: string, icon: string, color: string } } = {
-            1: { name: 'Grass', icon: '🌱', color: 'text-green-600 dark:text-green-400' },
-            2: { name: 'Desert', icon: '🏜️', color: 'text-yellow-600 dark:text-yellow-400' },
-            3: { name: 'Water', icon: '🌊', color: 'text-blue-600 dark:text-blue-400' },
-            4: { name: 'Mountain', icon: '⛰️', color: 'text-gray-600 dark:text-gray-400' },
-            5: { name: 'Rock', icon: '🪨', color: 'text-gray-700 dark:text-gray-300' },
-            16: { name: 'Missile Silo', icon: '🚀', color: 'text-red-600 dark:text-red-400' },
-            20: { name: 'Mines', icon: '⛏️', color: 'text-orange-600 dark:text-orange-400' }
-        };
         
         // Generate terrain stats HTML
         let terrainHTML = '';
         Object.entries(terrainCounts).forEach(([terrain, count]) => {
             const terrainNum = parseInt(terrain);
-            const terrainInfo = terrainNames[terrainNum] || { name: `Terrain ${terrain}`, icon: '🎨', color: 'text-gray-600 dark:text-gray-400' };
+            const terrainInfo = TERRAIN_NAMES[terrainNum] || { name: `Terrain ${terrain}`, icon: '🎨', color: 'text-gray-600 dark:text-gray-400' };
             
             terrainHTML += `
                 <div class="flex justify-between items-center py-1">
@@ -327,7 +349,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update unit statistics
      */
-    private updateUnitStats(unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
+    private updateUnitStats(unitsData: Array<Unit>) {
         const unitContainer = this.findElement('#unit-stats');
         const totalUnitsElement = this.findElement('#total-units');
         
@@ -339,21 +361,11 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
             unitCounts[unit.unitType] = (unitCounts[unit.unitType] || 0) + 1;
         });
         
-        // Unit type names worldping (basic set)
-        const unitNames: { [key: number]: { name: string, icon: string } } = {
-            1: { name: 'Infantry', icon: '🪖' },
-            2: { name: 'Tank', icon: '🛡️' },
-            3: { name: 'Artillery', icon: '💥' },
-            4: { name: 'Scout', icon: '🔍' },
-            5: { name: 'Anti-Air', icon: '🎯' },
-            19: { name: 'Rocket Launcher', icon: '🚀' }
-        };
-        
         // Generate unit stats HTML
         let unitHTML = '';
         Object.entries(unitCounts).forEach(([unitType, count]) => {
             const unitNum = parseInt(unitType);
-            const unitInfo = unitNames[unitNum] || { name: `Unit ${unitType}`, icon: '🪖' };
+            const unitInfo = UNIT_NAMES[unitNum] || { name: `Unit ${unitType}`, icon: '🪖' };
             
             unitHTML += `
                 <div class="flex justify-between items-center py-1">
@@ -372,7 +384,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update player statistics
      */
-    private updatePlayerStats(unitsData: { [key: string]: { unitType: number, playerId: number } }): void {
+    private updatePlayerStats(unitsData: Array<Unit>): void {
         const playerContainer = this.findElement('#player-stats');
         
         if (!playerContainer) return;
@@ -380,26 +392,14 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
         // Count units per player
         const playerCounts: { [key: number]: number } = {};
         Object.values(unitsData).forEach(unit => {
-            playerCounts[unit.playerId] = (playerCounts[unit.playerId] || 0) + 1;
+            playerCounts[unit.player] = (playerCounts[unit.player] || 0) + 1;
         });
-        
-        // Player colors
-        const playerColors: { [key: number]: string } = {
-            1: 'text-red-600 dark:text-red-400',
-            2: 'text-blue-600 dark:text-blue-400',
-            3: 'text-green-600 dark:text-green-400',
-            4: 'text-yellow-600 dark:text-yellow-400',
-            5: 'text-orange-600 dark:text-orange-400',
-            6: 'text-purple-600 dark:text-purple-400',
-            7: 'text-pink-600 dark:text-pink-400',
-            8: 'text-cyan-600 dark:text-cyan-400'
-        };
         
         // Generate player stats HTML
         let playerHTML = '';
         Object.entries(playerCounts).forEach(([playerId, count]) => {
             const playerNum = parseInt(playerId);
-            const colorClass = playerColors[playerNum] || 'text-gray-600 dark:text-gray-400';
+            const colorClass = PLAYER_COLORS[playerNum] || 'text-gray-600 dark:text-gray-400';
             
             playerHTML += `
                 <div class="flex justify-between items-center py-1">
@@ -434,7 +434,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update terrain statistics from World format data
      */
-    private updateTerrainStatsFromWorld(tilesData: Array<{ q: number; r: number; tileType: number; playerId?: number }>): void {
+    private updateTerrainStatsFromWorld(tilesData: Array<Tile>): void {
         const terrainContainer = this.findElement('#terrain-stats');
         const totalTilesElement = this.findElement('#total-tiles');
         
@@ -478,7 +478,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update unit statistics from World format data
      */
-    private updateUnitStatsFromWorld(unitsData: Array<{ q: number; r: number; unitType: number; playerId: number }>): void {
+    private updateUnitStatsFromWorld(unitsData: Array<Unit>): void {
         const unitContainer = this.findElement('#unit-stats');
         const totalUnitsElement = this.findElement('#total-units');
         
@@ -490,25 +490,16 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
             unitCounts[unit.unitType] = (unitCounts[unit.unitType] || 0) + 1;
         });
         
-        // Unit type names (simplified worldping)
-        const unitNames: { [key: number]: { name: string, icon: string, color: string } } = {
-            1: { name: 'Infantry', icon: '🚶', color: 'text-blue-600 dark:text-blue-400' },
-            2: { name: 'Tank', icon: '🚗', color: 'text-red-600 dark:text-red-400' },
-            3: { name: 'Artillery', icon: '💥', color: 'text-orange-600 dark:text-orange-400' },
-            4: { name: 'Air Unit', icon: '✈️', color: 'text-sky-600 dark:text-sky-400' },
-            5: { name: 'Naval Unit', icon: '🚢', color: 'text-cyan-600 dark:text-cyan-400' },
-        };
-        
         // Generate HTML for unit stats
         let unitHTML = '';
         Object.entries(unitCounts).forEach(([unitType, count]) => {
-            const unit = unitNames[parseInt(unitType)] || { name: `Unit ${unitType}`, icon: '🪖', color: 'text-gray-600 dark:text-gray-400' };
+            const unit = UNIT_NAMES[parseInt(unitType)] || { name: `Unit ${unitType}`, icon: '🪖', color: 'text-gray-600 dark:text-gray-400' };
             unitHTML += `
                 <div class="flex justify-between items-center py-1">
                     <span class="text-sm text-gray-700 dark:text-gray-300">
                         ${unit.icon} ${unit.name}
                     </span>
-                    <span class="text-sm font-medium ${unit.color}">${count} units</span>
+                    <span class="text-sm font-medium ${unitType}">${count} units</span>
                 </div>
             `;
         });
@@ -520,29 +511,21 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     /**
      * Update player statistics from World format data
      */
-    private updatePlayerStatsFromWorld(unitsData: Array<{ q: number; r: number; unitType: number; playerId: number }>): void {
+    private updatePlayerStatsFromWorld(unitsData: Array<Unit>): void {
         const playerContainer = this.findElement('#player-stats');
         if (!playerContainer) return;
         
         // Count units by player
         const playerCounts: { [key: number]: number } = {};
         unitsData.forEach(unit => {
-            playerCounts[unit.playerId] = (playerCounts[unit.playerId] || 0) + 1;
+            playerCounts[unit.player] = (playerCounts[unit.player] || 0) + 1;
         });
-        
-        // Player color worldping
-        const playerColors: { [key: number]: string } = {
-            1: 'text-blue-600 dark:text-blue-400',
-            2: 'text-red-600 dark:text-red-400',
-            3: 'text-green-600 dark:text-green-400',
-            4: 'text-yellow-600 dark:text-yellow-400',
-        };
         
         // Generate HTML for player stats
         let playerHTML = '';
         Object.entries(playerCounts).forEach(([playerId, count]) => {
             const playerNum = parseInt(playerId);
-            const colorClass = playerColors[playerNum] || 'text-gray-600 dark:text-gray-400';
+            const colorClass = PLAYER_COLORS[playerNum] || 'text-gray-600 dark:text-gray-400';
             
             playerHTML += `
                 <div class="flex justify-between items-center py-1">

@@ -15,8 +15,8 @@ vars:
 	echo WASM_EXEC_PATH=${WASM_EXEC_PATH}
 
 test:
-	cd lib && go test -v ./...
-	cd cmd/weewar-cli && go test -v ./...
+	cd lib && go test ./...
+	cd cmd/weewar-cli && go test ./...
 
 buf:
 	buf generate
@@ -31,8 +31,6 @@ wasm:
 	mkdir -p web/static/wasm
 	echo "Building weewar-cli WASM..."
 	GOOS=js GOARCH=wasm go build -o web/static/wasm/weewar-cli.wasm cmd/weewar-wasm/*.go
-	# echo "Building map editor WASM..."
-	# GOOS=js GOARCH=wasm go build -o web/static/wasm/editor.wasm cmd/editor-wasm/*.go
 	echo "Copying wasm_exec.js..."
 
 wasmexecjs:

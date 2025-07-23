@@ -1,4 +1,5 @@
 import { PhaserWorldScene } from './phaser/PhaserWorldScene';
+import { Unit, Tile } from './World';
 
 /**
  * PhaserViewer handles readonly display of worlds using Phaser.js
@@ -127,8 +128,7 @@ export class PhaserViewer {
     /**
      * Load world data into the viewer
      */
-    public async loadWorldData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>, 
-                            units?: Array<{ q: number; r: number; unitType: number; playerId: number }>): Promise<void> {
+    public async loadWorldData(tiles: Array<Tile>, units?: Array<Unit>): Promise<void> {
         try {
             const scene = await this.waitForSceneReady();
             
@@ -143,7 +143,7 @@ export class PhaserViewer {
             // Load tiles
             if (tiles && tiles.length > 0) {
                 tiles.forEach(tile => {
-                    scene.setTile(tile.q, tile.r, tile.terrain, tile.color);
+                    scene.setTile(tile);
                 });
                 this.log(`Loaded ${tiles.length} tiles`);
             }
@@ -151,7 +151,7 @@ export class PhaserViewer {
             // Load units if provided
             if (units && units.length > 0) {
                 units.forEach(unit => {
-                    scene.setUnit(unit.q, unit.r, unit.unitType, unit.playerId);
+                    scene.setUnit(unit)
                 });
                 this.log(`Loaded ${units.length} units`);
             }
@@ -168,7 +168,7 @@ export class PhaserViewer {
     /**
      * Center camera on the loaded world
      */
-    private centerOnWorld(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): void {
+    private centerOnWorld(tiles: Array<Tile>): void {
         if (!this.scene || !tiles || tiles.length === 0) return;
         
         // Find bounds of the world

@@ -250,7 +250,7 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 	}
 
 	// Create a simple test map
-	gameMap := NewWorld("test", 3)
+	gameMap := NewWorld("test")
 
 	// Fill with grass terrain (terrain ID 1 - should have reasonable movement cost)
 	for q := range 5 {
@@ -262,7 +262,7 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 	}
 
 	// Create a world for the test
-	world := NewWorld("test", 2)
+	world := NewWorld("test")
 
 	// Create a test unit (Soldier - unit type 1)
 	startCoord := AxialCoord{Q: 2, R: 2} // Center of map
@@ -323,7 +323,7 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 	}
 
 	// Create a map with different terrain costs
-	gameMap := NewWorld("test", 1)
+	gameMap := NewWorld("test")
 
 	// Set up terrain: expensive terrain in middle, cheap around edges
 	for q := range 3 {
@@ -350,7 +350,7 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 	}
 
 	// Create a world for the test
-	world := NewWorld("test", 2)
+	world := NewWorld("test")
 
 	// Test unit at corner
 	unit := &Unit{

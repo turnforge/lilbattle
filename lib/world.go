@@ -26,8 +26,8 @@ type WorldBounds struct {
 // This is the single source of truth for all game data.
 type World struct {
 	// JSON-friendly representation
-	Name        string
-	PlayerCount int `json:"playerCount"` // Number of players in the game
+	Name string
+	// PlayerCount int `json:"playerCount"` // Number of players in the game
 
 	// Ways to identify various kinds of units and tiles
 	unitsByPlayer [][]*Unit            `json:"-"` // All units in the game world by player ID
@@ -54,25 +54,11 @@ type World struct {
 // =============================================================================
 
 // NewWorld creates a new game world with the specified parameters
-func NewWorld(name string, playerCount int) *World {
-	if playerCount < 2 {
-		playerCount = 2
-	}
-	if playerCount > MaxUnits {
-		playerCount = MaxUnits
-	}
-
+func NewWorld(name string) *World {
 	w := &World{
-		Name:          name,
-		tilesByCoord:  make(map[AxialCoord]*Tile),
-		unitsByCoord:  make(map[AxialCoord]*Unit),
-		unitsByPlayer: make([][]*Unit, 0),
-		PlayerCount:   playerCount,
-	}
-
-	w.unitsByPlayer = make([][]*Unit, playerCount)
-	for i := range playerCount {
-		w.unitsByPlayer[i] = nil
+		Name:         name,
+		tilesByCoord: map[AxialCoord]*Tile{},
+		unitsByCoord: map[AxialCoord]*Unit{},
 	}
 
 	return w
@@ -81,6 +67,10 @@ func NewWorld(name string, playerCount int) *World {
 // =============================================================================
 // World State Access Methods
 // =============================================================================
+
+func (w *World) PlayerCount() int {
+	return len(w.unitsByPlayer)
+}
 
 func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *Tile] {
 	return func(yield func(AxialCoord, *Tile) bool) {
@@ -165,8 +155,6 @@ func (w *World) AddUnit(unit *Unit) (oldunit *Unit, err error) {
 		w.unitsByPlayer = append(w.unitsByPlayer, nil)
 	}
 
-	fmt.Println("Adding Unit: ", unit)
-
 	oldunit = w.UnitAt(unit.Coord)
 
 	// make sure to replace a unit here
@@ -225,7 +213,7 @@ func (w *World) Clone() *World {
 		return nil
 	}
 
-	out := NewWorld(w.Name, w.PlayerCount)
+	out := NewWorld(w.Name)
 	// Clone map
 	for _, tile := range w.tilesByCoord {
 		if tile != nil {
@@ -306,10 +294,9 @@ func NewViewState() *ViewState {
 func (w *World) MarshalJSON() ([]byte, error) {
 	// Convert cube map to tile list for JSON
 	out := map[string]any{
-		"Name":        w.Name,
-		"Tiles":       slices.Collect(maps.Values(w.tilesByCoord)),
-		"Units":       slices.Collect(maps.Values(w.unitsByCoord)),
-		"PlayerCount": w.PlayerCount,
+		"Name":  w.Name,
+		"Tiles": slices.Collect(maps.Values(w.tilesByCoord)),
+		"Units": slices.Collect(maps.Values(w.unitsByCoord)),
 	}
 	return json.Marshal(out)
 }
@@ -318,10 +305,9 @@ func (w *World) MarshalJSON() ([]byte, error) {
 func (w *World) UnmarshalJSON(data []byte) error {
 	// First try to unmarshal with new bounds format
 	type mapJSON struct {
-		Name        string
-		Tiles       []*Tile
-		Units       []*Unit
-		PlayerCount int
+		Name  string
+		Tiles []*Tile
+		Units []*Unit
 	}
 
 	var dict mapJSON
@@ -331,13 +317,12 @@ func (w *World) UnmarshalJSON(data []byte) error {
 	}
 
 	w.Name = dict.Name
-	w.PlayerCount = dict.PlayerCount
+	// w.PlayerCount = dict.PlayerCount
 	for _, tile := range dict.Tiles {
 		w.AddTile(tile)
 	}
 
 	for _, unit := range dict.Units {
-		fmt.Println("Adding Unit: ", unit)
 		w.AddUnit(unit)
 	}
 	w.boundsChanged = true

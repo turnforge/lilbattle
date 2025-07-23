@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
+import { Unit, Tile } from '../World';
 
 export class PhaserWorldScene extends Phaser.Scene {
     private tileWidth: number = 64;
@@ -326,8 +327,12 @@ export class PhaserWorldScene extends Phaser.Scene {
     
     
     // Public methods for world manipulation
-    public setTile(q: number, r: number, terrainType: number, color: number = 0) {
+    public setTile(tile: Tile) {
+        const q = tile.q;
+        const r = tile.r;
         const key = `${q},${r}`;
+        const terrainType = tile.tileType;
+        const color = tile.player;
         const position = hexToPixel(q, r);
         
         // Remove existing tile if it exists
@@ -388,7 +393,11 @@ export class PhaserWorldScene extends Phaser.Scene {
     }
     
     // Unit management methods
-    public setUnit(q: number, r: number, unitType: number, color: number = 1) {
+    public setUnit(unit: Unit) {
+        const q = unit.q;
+        const r = unit.r;
+        const unitType = unit.unitType;
+        const color = unit.player;
         const key = `${q},${r}`;
         const position = hexToPixel(q, r);
         
@@ -611,18 +620,16 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Create a simple pattern with different terrain types
         const patterns = [
-            { q: 0, r: 0, terrain: 1, color: 0 },   // Grass
-            { q: 1, r: 0, terrain: 2, color: 0 },   // Desert
-            { q: -1, r: 0, terrain: 3, color: 0 },  // Water
-            { q: 0, r: 1, terrain: 16, color: 0 },  // Mountain
-            { q: 0, r: -1, terrain: 20, color: 0 }, // Rock
-            { q: 1, r: -1, terrain: 1, color: 1 },  // Grass (different color)
-            { q: -1, r: 1, terrain: 2, color: 2 },  // Desert (different color)
+            { q: 0, r: 0, tileType: 1, player: 0 },   // Grass
+            { q: 1, r: 0, tileType: 2, player: 0 },   // Desert
+            { q: -1, r: 0, tileType: 3, player: 0 },  // Water
+            { q: 0, r: 1, tileType: 16, player: 0 },  // Mountain
+            { q: 0, r: -1, tileType: 20, player: 0 }, // Rock
+            { q: 1, r: -1, tileType: 1, player: 1 },  // Grass (different player)
+            { q: -1, r: 1, tileType: 2, player: 2 },  // Desert (different player)
         ];
         
-        patterns.forEach(pattern => {
-            this.setTile(pattern.q, pattern.r, pattern.terrain, pattern.color);
-        });
+        patterns.forEach(pattern => { this.setTile(pattern); });
         
         // Update grid display
         this.updateGridDisplay();
@@ -666,11 +673,12 @@ export class PhaserWorldScene extends Phaser.Scene {
         return brushSelect ? parseInt(brushSelect.value) : 0;
     }
     
-    private paintTileArea(centerQ: number, centerR: number, terrain: number, color: number, brushSize: number) {
+    private paintTileArea(tile: Tile, brushSize: number) {
         if (brushSize === 0) {
             // Single tile
-            this.setTile(centerQ, centerR, terrain, color);
+            this.setTile(tile)
         } else {
+            const [centerQ, centerR, terrain, color] = [tile.q, tile.r, tile.tileType, tile.player];
             // Multiple tiles in radius
             const radius = this.getBrushRadius(brushSize);
             for (let q = centerQ - radius; q <= centerQ + radius; q++) {
@@ -678,7 +686,7 @@ export class PhaserWorldScene extends Phaser.Scene {
                     // Use cube distance to determine if tile is within brush radius
                     const distance = Math.abs(q - centerQ) + Math.abs(r - centerR) + Math.abs(-q - r - (-centerQ - centerR));
                     if (distance <= radius * 2) { // Hex distance formula
-                        this.setTile(q, r, terrain, color);
+                        this.setTile({q, r, tileType: terrain, player: color})
                     }
                 }
             }
@@ -740,8 +748,8 @@ export class PhaserWorldScene extends Phaser.Scene {
     }
     
     // Get all tiles data (for integration with WASM)
-    public getTilesData(): Array<{ q: number; r: number; terrain: number; color: number }> {
-        const tilesData: Array<{ q: number; r: number; terrain: number; color: number }> = [];
+    public getTilesData(): Array<Tile> {
+        const tilesData: Array<Tile> = [];
         
         this.tiles.forEach((tile, key) => {
             const [q, r] = key.split(',').map(Number);
@@ -753,8 +761,8 @@ export class PhaserWorldScene extends Phaser.Scene {
                 tilesData.push({
                     q,
                     r,
-                    terrain: parseInt(match[1]),
-                    color: parseInt(match[2])
+                    tileType: parseInt(match[1]),
+                    player: parseInt(match[2])
                 });
             }
         });
@@ -763,8 +771,8 @@ export class PhaserWorldScene extends Phaser.Scene {
     }
     
     // Get all units data (for integration with WASM)
-    public getUnitsData(): Array<{ q: number; r: number; unitType: number; playerId: number }> {
-        const unitsData: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
+    public getUnitsData(): Array<Unit> {
+        const unitsData: Array<Unit> = [];
         
         this.units.forEach((unit, key) => {
             const [q, r] = key.split(',').map(Number);
@@ -777,7 +785,7 @@ export class PhaserWorldScene extends Phaser.Scene {
                     q,
                     r,
                     unitType: parseInt(match[1]),
-                    playerId: parseInt(match[2])
+                    player: parseInt(match[2])
                 });
             }
         });

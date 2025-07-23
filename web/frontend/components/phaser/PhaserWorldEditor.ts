@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { EditablePhaserWorldScene } from './EditablePhaserWorldScene';
 import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
+import { Unit, Tile } from "../World"
 
 export class PhaserWorldEditor {
     private game: Phaser.Game | null = null;
@@ -156,12 +157,12 @@ export class PhaserWorldEditor {
         this.scene?.setTheme(isDark);
     }
     
-    public paintTile(q: number, r: number, terrain: number, color: number = 0, brushSize: number = 0) {
+    public setTile(tile: Tile, brushSize: number = 0) {
         if (!this.scene) return;
         
         if (brushSize === 0) {
             // Single tile
-            this.scene.setTile(q, r, terrain, color);
+            this.scene.setTile(tile);
         } else {
             // Multi-tile brush (simplified implementation)
             const radius = this.getBrushRadius(brushSize);
@@ -169,7 +170,8 @@ export class PhaserWorldEditor {
             for (let dq = -radius; dq <= radius; dq++) {
                 for (let dr = -radius; dr <= radius; dr++) {
                     if (Math.abs(dq) + Math.abs(dr) + Math.abs(-dq - dr) <= radius * 2) {
-                        this.scene.setTile(q + dq, r + dr, terrain, color);
+                        const t = {q: tile.q + dq, r: tile.r + dr, tileType: tile.tileType, player: tile.player}
+                        this.scene.setTile(t);
                     }
                 }
             }
@@ -214,15 +216,15 @@ export class PhaserWorldEditor {
         }
     }
     
-    public getTilesData(): Array<{ q: number; r: number; terrain: number; color: number }> {
+    public getTilesData(): Array<Tile> {
         return this.scene?.getTilesData() || [];
     }
     
-    public getUnitsData(): Array<{ q: number; r: number; unitType: number; playerId: number }> {
+    public getUnitsData(): Array<Unit> {
         return this.scene?.getUnitsData() || [];
     }
     
-    public async setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>) {
+    public async setTilesData(tiles: Array<Tile>) {
         try {
             const scene = await this.waitForSceneReady();
             console.log(`[PhaserWorldEditor] Setting tiles data: ${tiles.length} tiles`);
@@ -234,7 +236,7 @@ export class PhaserWorldEditor {
             scene.clearAllTiles();
             
             tiles.forEach(tile => {
-                scene.setTile(tile.q, tile.r, tile.terrain, tile.color);
+                scene.setTile(tile);
             });
             
             console.log(`[PhaserWorldEditor] Successfully loaded ${tiles.length} tiles`);
@@ -315,7 +317,8 @@ export class PhaserWorldEditor {
         
         const tiles = this.scene.getTilesData();
         tiles.forEach(tile => {
-            this.scene!.setTile(tile.q, tile.r, terrain, color);
+            const t = {q: tile.q, r: tile.r, tileType: terrain, player: color}
+            this.scene!.setTile(t);
         });
         
         if (this.onWorldChangeCallback) {
@@ -333,7 +336,8 @@ export class PhaserWorldEditor {
         tiles.forEach(tile => {
             const randomTerrain = terrains[Math.floor(Math.random() * terrains.length)];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            this.scene!.setTile(tile.q, tile.r, randomTerrain, randomColor);
+            const t = {q: tile.q, r:tile.r, tileType: randomTerrain, player:randomColor}
+            this.scene!.setTile(t);
         });
         
         if (this.onWorldChangeCallback) {
@@ -367,7 +371,8 @@ export class PhaserWorldEditor {
                         terrain = 3; // Water around edge
                     }
                     
-                    this.scene.setTile(actualQ, actualR, terrain, color);
+                    const t = {q: actualQ, r: actualR, tileType: terrain, player: color}
+                    this.scene.setTile(t);
                 }
             }
         }
@@ -380,18 +385,16 @@ export class PhaserWorldEditor {
     /**
      * Paint a unit at the specified coordinates
      */
-    public paintUnit(q: number, r: number, unitType: number, playerId: number) {
+    public setUnit(unit: Unit) {
         if (!this.scene) return;
         
         // For now, we'll use the scene's setTile method to represent units
         // In the future, this should be replaced with actual unit sprites
-        this.scene.setUnit(q, r, unitType, playerId);
+        this.scene.setUnit(unit);
         
         if (this.onWorldChangeCallback) {
             this.onWorldChangeCallback();
         }
-        
-        console.log(`[PhaserWorldEditor] Painted unit ${unitType} (player ${playerId}) at Q=${q}, R=${r}`);
     }
     
     /**

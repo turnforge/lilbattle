@@ -19,17 +19,31 @@ export enum WorldEventType {
     WORLD_METADATA_CHANGED = 'world-metadata-changed'
 }
 
+export class Tile {
+  q: number;
+  r: number;
+  tileType: number;
+  player: number;
+}
+
+export class Unit {
+  q: number;
+  r: number;
+  unitType: number;
+  player: number;
+}
+
 // Batch event data types
 export interface TileChange {
     q: number;
     r: number;
-    tile: TileData | null;  // null means tile was removed
+    tile: Tile | null;  // null means tile was removed
 }
 
 export interface UnitChange {
     q: number;
     r: number;
-    unit: UnitData | null;  // null means unit was removed
+    unit: Unit| null;  // null means unit was removed
 }
 
 export interface TilesChangedEventData {
@@ -70,16 +84,6 @@ class WorldBounds {
   MaxYCoord: {Q: number, R: number};
 }
 
-export interface TileData {
-    tileType: number;
-    playerId?: number; // Player ID for city terrains that support ownership
-}
-
-export interface UnitData {
-    unitType: number;
-    playerId: number;
-}
-
 export interface WorldMetadata {
     name: string;
     width: number;
@@ -93,8 +97,8 @@ export interface WorldMetadata {
 export class World {
     // Core data
     private metadata: WorldMetadata;
-    private tiles: { [key: string]: TileData } = {};
-    private units: { [key: string]: UnitData } = {};
+    private tiles: { [key: string]: Tile} = {};
+    private units: { [key: string]: Unit} = {};
     
     // Persistence state
     private worldId: string | null = null;
@@ -166,13 +170,13 @@ export class World {
         this.batchTimeout = null;
     }
     
-    private addTileChange(q: number, r: number, tile: TileData | null): void {
+    private addTileChange(q: number, r: number, tile: Tile | null): void {
         this.pendingTileChanges.push({ q, r, tile });
         this.hasUnsavedChanges = true;
         this.scheduleBatchEmit();
     }
     
-    private addUnitChange(q: number, r: number, unit: UnitData | null): void {
+    private addUnitChange(q: number, r: number, unit: Unit | null): void {
         this.pendingUnitChanges.push({ q, r, unit });
         this.hasUnsavedChanges = true;
         this.scheduleBatchEmit();
@@ -242,14 +246,14 @@ export class World {
         return key in this.tiles;
     }
     
-    public getTileAt(q: number, r: number): TileData | null {
+    public getTileAt(q: number, r: number): Tile | null {
         const key = `${q},${r}`;
         return this.tiles[key] || null;
     }
     
-    public setTileAt(q: number, r: number, tileType: number, playerId?: number): void {
+    public setTileAt(q: number, r: number, tileType: number, player: number): void {
         const key = `${q},${r}`;
-        const tile: TileData = { tileType, playerId };
+        const tile: Tile = { q, r, tileType, player };
         this.tiles[key] = tile;
         this.addTileChange(q, r, tile);
     }
@@ -264,8 +268,8 @@ export class World {
         return false;
     }
     
-    public getAllTiles(): Array<{ q: number; r: number; tileType: number; playerId?: number }> {
-        const result: Array<{ q: number; r: number; tileType: number; playerId?: number }> = [];
+    public getAllTiles(): Array<Tile> {
+        const result: Array<Tile> = [];
         
         Object.entries(this.tiles).forEach(([key, tileData]) => {
             const [q, r] = key.split(',').map(Number);
@@ -273,7 +277,7 @@ export class World {
                 q,
                 r,
                 tileType: tileData.tileType,
-                playerId: tileData.playerId
+                player: tileData.player
             });
         });
         
@@ -297,12 +301,12 @@ export class World {
         return key in this.units;
     }
     
-    public getUnitAt(q: number, r: number): UnitData | null {
+    public getUnitAt(q: number, r: number): Unit | null {
         const key = `${q},${r}`;
         return this.units[key] || null;
     }
     
-    public setUnitAt(q: number, r: number, unitType: number, playerId: number): void {
+    public setUnitAt(q: number, r: number, unitType: number, player: number): void {
         // Ensure there's a tile at this location - auto-place grass if none exists
         if (!this.tileExistsAt(q, r)) {
             this.setTileAt(q, r, 1, 0); // Terrain type 1 = Grass, no player ownership
@@ -310,7 +314,7 @@ export class World {
         
         // Check if same unit type and player already exists - if so, remove it (toggle behavior)
         const existingUnit = this.getUnitAt(q, r);
-        if (existingUnit && existingUnit.unitType === unitType && existingUnit.playerId === playerId) {
+        if (existingUnit && existingUnit.unitType === unitType && existingUnit.player === player) {
             // Same unit type and player - remove the unit (toggle off)
             this.removeUnitAt(q, r);
             return;
@@ -318,7 +322,7 @@ export class World {
         
         // Different unit type/player or no existing unit - place/replace the unit
         const key = `${q},${r}`;
-        const unit: UnitData = { unitType, playerId };
+        const unit: Unit = { q, r, unitType, player };
         this.units[key] = unit;
         this.addUnitChange(q, r, unit);
     }
@@ -333,8 +337,8 @@ export class World {
         return false;
     }
     
-    public getAllUnits(): Array<{ q: number; r: number; unitType: number; playerId: number }> {
-        const result: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
+    public getAllUnits(): Array<Unit> {
+        const result: Array<Unit> = [];
         
         Object.entries(this.units).forEach(([key, unitData]) => {
             const [q, r] = key.split(',').map(Number);
@@ -342,7 +346,7 @@ export class World {
                 q,
                 r,
                 unitType: unitData.unitType,
-                playerId: unitData.playerId
+                player: unitData.player
             });
         });
         
@@ -371,12 +375,12 @@ export class World {
         });
     }
     
-    public fillAllTerrain(tileType: number, playerId: number, viewport?: { minQ: number, maxQ: number, minR: number, maxR: number }): void {
+    public fillAllTerrain(tileType: number, player: number, viewport?: { minQ: number, maxQ: number, minR: number, maxR: number }): void {
         // If viewport is provided, only fill visible area, otherwise fill entire world bounds
         if (viewport) {
             for (let q = viewport.minQ; q <= viewport.maxQ; q++) {
                 for (let r = viewport.minR; r <= viewport.maxR; r++) {
-                    this.setTileAt(q, r, tileType, playerId);
+                    this.setTileAt(q, r, tileType, player);
                 }
             }
         } else {
@@ -389,7 +393,7 @@ export class World {
             
             for (let q = minQ; q <= maxQ; q++) {
                 for (let r = minR; r <= maxR; r++) {
-                    this.setTileAt(q, r, tileType, playerId);
+                    this.setTileAt(q, r, tileType, player);
                 }
             }
         }
@@ -439,7 +443,7 @@ export class World {
                     q,
                     r,
                     tile_type: tile.tileType,
-                    player: tile.playerId || 0
+                    player: tile.player || 0
                 };
             });
 
@@ -449,7 +453,7 @@ export class World {
                 worldUnits.push({
                     q,
                     r,
-                    player: unit.playerId,
+                    player: unit.player,
                     unit_type: unit.unitType
                 });
             });
@@ -570,19 +574,19 @@ export class World {
                 const r = tileData.r || 0
                 const key = q + "," + r;
                 let tileType: number;
-                let playerId: number | undefined;
+                let player = 0
                 
                 if (tileData.tileType !== undefined) {
                     tileType = tileData.tileType;
-                    playerId = tileData.player;
+                    player = tileData.player;
                 } else if (tileData.tile_type !== undefined) {
                     tileType = tileData.tile_type;
-                    playerId = tileData.player || 0;
+                    player = tileData.player || 0;
                 } else {
                     return; // Skip invalid tile
                 }
                 
-                const tile: TileData = { tileType, playerId };
+                const tile: Tile = { q, r, tileType, player };
                 this.tiles[key] = tile;
                 tileChanges.push({ q, r, tile });
             });
@@ -596,19 +600,19 @@ export class World {
                 const q = unitData.q || 0
                 const r = unitData.r || 0
                 const key = q + "," + r;
-                let unitType: number, playerId: number;
+                let unitType: number, player: number;
                 
                 if (unitData.unitType !== undefined && unitData.player !== undefined) {
                     unitType = unitData.unitType;
-                    playerId = unitData.player;
+                    player = unitData.player;
                 } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
                     unitType = unitData.unit_type;
-                    playerId = unitData.player;
+                    player = unitData.player;
                 } else {
                     return; // Skip invalid unit
                 }
                 
-                const unit: UnitData = { unitType, playerId };
+                const unit: Unit = { q, r, unitType, player };
                 this.units[key] = unit;
                 unitChanges.push({ q, r, unit });
             });
@@ -646,7 +650,7 @@ export class World {
                 q: q,
                 r: r,
                 tileType: tileData.tileType,
-                player: tileData.playerId || 0
+                player: tileData.player || 0
             };
         });
 
@@ -656,7 +660,7 @@ export class World {
                 q: q,
                 r: r,
                 UnitType: unitData.unitType,
-                Player: unitData.playerId
+                Player: unitData.player
             };
         });
 
@@ -707,8 +711,8 @@ export class World {
             if (unitData.unitType < 0) {
                 errors.push(`Invalid unit type at ${key}: ${unitData.unitType}`);
             }
-            if (unitData.playerId < 0 || unitData.playerId > 12) {
-                errors.push(`Invalid player ID at ${key}: ${unitData.playerId}`);
+            if (unitData.player < 0 || unitData.player > 12) {
+                errors.push(`Invalid player ID at ${key}: ${unitData.player}`);
             }
         });
         

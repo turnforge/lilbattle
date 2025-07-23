@@ -4,7 +4,7 @@ import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './KeyboardShortcutManager';
 import { shouldIgnoreShortcut } from './DOMUtils';
-import { World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { WorldEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
 import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './EventBus';
 import { EditorToolsPanel } from './EditorToolsPanel';
@@ -813,21 +813,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         try {
             // Load tiles first using setTilesData for better performance
             const allTiles = this.world.getAllTiles();
-            if (allTiles.length > 0) {
-                const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
-                allTiles.forEach(tile => {
-                    tilesArray.push({
-                        q: tile.q,
-                        r: tile.r,
-                        terrain: tile.tileType,
-                        color: tile.playerId || 0 // Use the player ID from the tile data
-                    });
-                });
-                
-                if (tilesArray.length > 0) {
-                    await this.phaserEditorComponent.setTilesData(tilesArray);
-                }
-            }
+            await this.phaserEditorComponent.setTilesData(allTiles);
             
             // Load units AFTER tiles are loaded - ensure proper rendering order
             const allUnits = this.world.getAllUnits();
@@ -839,7 +825,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
                     allUnits.forEach((unit) => {
                         
                         // Paint unit in Phaser (units render above tiles due to depth=10)
-                        const success = this.phaserEditorComponent!.paintUnit(unit.q, unit.r, unit.unitType, unit.playerId);
+                        const success = this.phaserEditorComponent!.setUnit(unit);
                         if (success) {
                             unitsLoaded++;
                         } else {
@@ -988,8 +974,9 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
 
     public showTerrainStats(): void {
         
+      /*
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
-            const tiles = this.phaserEditorComponent.getTilesData();
+            const tiles = this.world?.getAllTiles();
             const stats = {
                 grass: 0,
                 desert: 0,
@@ -1015,6 +1002,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             this.logToConsole(`Total tiles: ${tiles.length}`);
         } else {
         }
+       */
     }
 
     public randomizeTerrain(): void {
@@ -1514,37 +1502,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     
     // Phaser panel methods
     // OLD METHOD REMOVED: initializePhaserPanel - now handled by PhaserEditorComponent
-    
-    
-    
-    
-    
-    
-
-    
-    
-    /**
-     * Get unit data at the given coordinates (returns null if no unit exists)
-     */
-    private getUnitAt(q: number, r: number): { unitType: number; playerId: number } | null {
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized()) {
-            return null;
-        }
-        
-        const unitsData = this.phaserEditorComponent.getUnitsData();
-        const unit = unitsData.find(unit => unit.q === q && unit.r === r);
-        return unit ? { unitType: unit.unitType, playerId: unit.playerId } : null;
-    }
-    
-    /**
-     * Set unit at the given coordinates - Observer pattern handles Phaser updates
-     */
-    private setUnitAt(q: number, r: number, unitType: number, playerId: number): void {
-        // Update world data - Observer pattern will handle Phaser updates
-        if (this.world) {
-            this.world.setUnitAt(q, r, unitType, playerId);
-        }
-    }
     
     
     // EditorToolsPanel methods

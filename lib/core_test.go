@@ -27,7 +27,7 @@ func getTestOutputPath(testName, filename string) string {
 }
 
 func TestWorldTileOperations(t *testing.T) {
-	m := NewWorld("test", 10)
+	m := NewWorld("test")
 
 	// Test TileAt with no tiles
 	coord := AxialCoord{Q: 2, R: 3}
@@ -70,7 +70,7 @@ func TestWorldTileOperations(t *testing.T) {
 
 func TestGameCreationAndBasicOperations(t *testing.T) {
 	// Create a test world with map
-	gameWorld := NewWorld("test", 10)
+	gameWorld := NewWorld("test")
 
 	// Add some tiles with different types
 	coords := []AxialCoord{
@@ -85,7 +85,7 @@ func TestGameCreationAndBasicOperations(t *testing.T) {
 		gameWorld.AddTile(tile)
 	}
 
-	world := NewWorld("test", 2)
+	world := NewWorld("test")
 
 	// Load rules engine first
 	rulesEngine, err := LoadRulesEngineFromFile(DevDataPath("data/rules-data.json"))
@@ -236,7 +236,7 @@ func TestBufferComposition(t *testing.T) {
 
 func TestGameMovementAndCombat(t *testing.T) {
 	// Create a world with map and units
-	world := NewWorld("test", 2)
+	world := NewWorld("test")
 
 	// Add some tiles in a 3x3 pattern
 	coords := []AxialCoord{

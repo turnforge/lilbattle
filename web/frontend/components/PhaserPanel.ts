@@ -1,4 +1,5 @@
 import { PhaserWorldEditor } from './phaser/PhaserWorldEditor';
+import { Unit, Tile } from "./World"
 
 /**
  * PhaserPanel handles the Phaser.js-based world editor interface
@@ -92,15 +93,15 @@ export class PhaserPanel {
     /**
      * Paint a tile at the specified coordinates
      */
-    public paintTile(q: number, r: number, terrain: number, color: number = 0, brushSize: number = 0): boolean {
+    public setTile(tile: Tile, brushSize: number = 0): boolean {
         if (!this.isInitialized || !this.phaserEditor) {
             this.log('Phaser panel not initialized - cannot paint tile');
             return false;
         }
         
         try {
-            this.phaserEditor.paintTile(q, r, terrain, color, brushSize);
-            this.log(`Painted terrain ${terrain} at Q=${q}, R=${r} with brush size ${brushSize}`);
+            this.phaserEditor.setTile(tile, brushSize);
+            this.log(`Painted terrain ${tile.tileType} at Q=${tile.q}, R=${tile.r} with brush size ${brushSize}`);
             return true;
         } catch (error) {
             this.log(`Failed to paint tile: ${error}`);
@@ -189,20 +190,14 @@ export class PhaserPanel {
     /**
      * Paint a unit at the specified coordinates
      */
-    public paintUnit(q: number, r: number, unitType: number, playerId: number): boolean {
+    public setUnit(unit: Unit): boolean {
         if (!this.isInitialized || !this.phaserEditor) {
             this.log('Phaser panel not initialized - cannot paint unit');
             return false;
         }
         
-        try {
-            this.phaserEditor.paintUnit(q, r, unitType, playerId);
-            this.log(`Painted unit ${unitType} (player ${playerId}) at Q=${q}, R=${r}`);
-            return true;
-        } catch (error) {
-            this.log(`Failed to paint unit: ${error}`);
-            return false;
-        }
+        this.phaserEditor.setUnit(unit)
+        return true;
     }
     
     /**
@@ -214,12 +209,8 @@ export class PhaserPanel {
             return;
         }
         
-        try {
-            this.phaserEditor.removeUnit(q, r);
-            this.log(`Removed unit at Q=${q}, R=${r}`);
-        } catch (error) {
-            this.log(`Failed to remove unit: ${error}`);
-        }
+        this.phaserEditor.removeUnit(q, r);
+        this.log(`Removed unit at Q=${q}, R=${r}`);
     }
     
     /**
@@ -301,7 +292,7 @@ export class PhaserPanel {
     /**
      * Get current tiles data
      */
-    public getTilesData(): Array<{ q: number; r: number; terrain: number; color: number }> {
+    public getTilesData(): Array<Tile> {
         if (!this.isInitialized || !this.phaserEditor) {
             return [];
         }
@@ -309,7 +300,7 @@ export class PhaserPanel {
         return this.phaserEditor.getTilesData();
     }
     
-    public getUnitsData(): Array<{ q: number; r: number; unitType: number; playerId: number }> {
+    public getUnitsData(): Array<Unit> {
         if (!this.isInitialized || !this.phaserEditor) {
             return [];
         }
@@ -331,7 +322,7 @@ export class PhaserPanel {
     /**
      * Set tiles data (load a world)
      */
-    public async setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): Promise<void> {
+    public async setTilesData(tiles: Array<Tile>): Promise<void> {
         if (!this.isInitialized || !this.phaserEditor) {
             this.log('Phaser panel not initialized - cannot set tiles data');
             return;

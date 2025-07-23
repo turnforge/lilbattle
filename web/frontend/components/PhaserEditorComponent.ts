@@ -2,7 +2,7 @@ import { BaseComponent } from './Component';
 import { EventBus, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './EventBus';
 import { PhaserWorldEditor } from './phaser/PhaserWorldEditor';
 import { WorldEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType } from './WorldEditorPageState';
-import { World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 
 /**
  * PhaserEditorComponent - Manages the Phaser.js-based world editor interface using BaseComponent architecture
@@ -154,25 +154,20 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     }
     
     protected bindToDOM(): void {
-        try {
-            this.log('Binding PhaserEditorComponent to DOM');
-            
-            // Set up Phaser container within our root element
-            this.setupPhaserContainer();
-            
-            // Bind toolbar event handlers
-            this.bindToolbarEvents();
-            
-            this.log('Phaser container setup complete');
-            
-            // Now initialize Phaser editor with the properly set up container
-            this.initializePhaserEditor();
-            
-            this.log('PhaserEditorComponent bound to DOM');
-            
-        } catch (error) {
-            this.handleError('Failed to bind PhaserEditorComponent to DOM', error);
-        }
+        this.log('Binding PhaserEditorComponent to DOM');
+        
+        // Set up Phaser container within our root element
+        this.setupPhaserContainer();
+        
+        // Bind toolbar event handlers
+        this.bindToolbarEvents();
+        
+        this.log('Phaser container setup complete');
+        
+        // Now initialize Phaser editor with the properly set up container
+        this.initializePhaserEditor();
+        
+        this.log('PhaserEditorComponent bound to DOM');
     }
     
     protected destroyComponent(): void {
@@ -280,43 +275,38 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
      * Initialize the Phaser editor
      */
     private initializePhaserEditor(): void {
-        try {
-            this.log('Initializing Phaser editor...');
-            
-            // Find the container element that we just set up
-            const containerElement = this.findElement('#phaser-container');
-            if (!containerElement) {
-                throw new Error('Phaser container element not found after setup');
-            }
-            
-            // Wait for container to have dimensions before initializing Phaser
-            const rect = containerElement.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) {
-                this.waitForContainerVisible(containerElement);
-                return;
-            }
-            
-            // Create Phaser editor instance with the element directly
-            this.phaserEditor = new PhaserWorldEditor(containerElement);
-            
-            // Set up event handlers
-            this.setupPhaserEventHandlers();
-            
-            // Apply current theme
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            this.phaserEditor.setTheme(isDarkMode);
-            
-            this.isInitialized = true;
-            this.log('Phaser editor initialized successfully');
-            
-            // Emit ready event for other components (async to allow parent assignment to complete)
-            setTimeout(() => {
-                this.emit(EditorEventTypes.PHASER_READY, {});
-            }, 0);
-            
-        } catch (error) {
-            this.handleError('Failed to initialize Phaser editor', error);
+        this.log('Initializing Phaser editor...');
+        
+        // Find the container element that we just set up
+        const containerElement = this.findElement('#phaser-container');
+        if (!containerElement) {
+            throw new Error('Phaser container element not found after setup');
         }
+        
+        // Wait for container to have dimensions before initializing Phaser
+        const rect = containerElement.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            this.waitForContainerVisible(containerElement);
+            return;
+        }
+        
+        // Create Phaser editor instance with the element directly
+        this.phaserEditor = new PhaserWorldEditor(containerElement);
+        
+        // Set up event handlers
+        this.setupPhaserEventHandlers();
+        
+        // Apply current theme
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        this.phaserEditor.setTheme(isDarkMode);
+        
+        this.isInitialized = true;
+        this.log('Phaser editor initialized successfully');
+        
+        // Emit ready event for other components (async to allow parent assignment to complete)
+        setTimeout(() => {
+            this.emit(EditorEventTypes.PHASER_READY, {});
+        }, 0);
     }
     
     /**
@@ -380,15 +370,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         
         // Load tile data from World into Phaser
         if (this.world) {
-            const worldTiles = this.world.getAllTiles();
-            // Transform World format to Phaser format
-            const phaserTilesData = worldTiles.map(tile => ({
-                q: tile.q,
-                r: tile.r,
-                terrain: tile.tileType,
-                color: tile.playerId || 0
-            }));
-            this.phaserEditor?.setTilesData(phaserTilesData);
+            this.phaserEditor?.setTilesData(this.world.getAllTiles());
             
             const unitsData = this.world.getAllUnits();
             // Load units into Phaser (if we add this method later)
@@ -402,13 +384,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         // Update individual tiles in Phaser based on World changes
         for (const change of data.changes) {
             if (change.tile) {
-                this.phaserEditor?.paintTile(
-                    change.q, 
-                    change.r, 
-                    change.tile.tileType, 
-                    change.tile.playerId || 0, 
-                    0 // No brush size for individual updates
-                );
+                this.phaserEditor?.setTile(change.tile, 0); // No brush size for individual updates
             } else {
                 // Tile was removed
                 this.phaserEditor?.removeTile(change.q, change.r);
@@ -422,12 +398,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         // Update individual units in Phaser based on World changes
         for (const change of data.changes) {
             if (change.unit) {
-                this.phaserEditor?.paintUnit(
-                    change.q,
-                    change.r,
-                    change.unit.unitType,
-                    change.unit.playerId
-                );
+                this.phaserEditor?.setUnit(change.unit)
             } else {
                 // Unit was removed
                 this.phaserEditor?.removeUnit(change.q, change.r);
@@ -569,72 +540,68 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             return;
         }
         
-        try {
-            // Get current tool state from pageState
-            const toolState = this.pageState?.getToolState();
-            if (!toolState) {
-                this.log('No tool state available for tile click');
-                return;
-            }
-            
-            switch (toolState.placementMode) {
-                case 'terrain':
-                    // Update World data (single source of truth)
-                    let playerId = 0;
-                    if (this.world) {
-                        // Determine player ownership for the terrain
-                        playerId = this.getPlayerIdForTerrain(toolState.selectedTerrain, toolState);
-                        this.world.setTileAt(q, r, toolState.selectedTerrain, playerId);
-                        // World will emit TILES_CHANGED event, which will update Phaser via onWorldEvent
-                    }
-                    
-                    this.log(`Painted terrain ${toolState.selectedTerrain} (player ${playerId}) at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
-                    
-                    // Emit tile painted event for backward compatibility (for components not yet using World events)
-                    this.emit<TilePaintedPayload>(EditorEventTypes.TILE_PAINTED, {
-                        q: q,
-                        r: r,
-                        terrainType: toolState.selectedTerrain,
-                        playerColor: playerId,
-                        brushSize: toolState.brushSize
-                    });
-                    break;
-                    
-                case 'unit':
-                    // Update World data (single source of truth)
-                    if (this.world) {
-                        this.world.setUnitAt(q, r, toolState.selectedUnit, toolState.selectedPlayer);
-                        // World will emit UNITS_CHANGED event, which will update Phaser via onWorldEvent
-                    }
-                    
-                    this.log(`Painted unit ${toolState.selectedUnit} (player ${toolState.selectedPlayer}) at Q=${q}, R=${r}`);
-                    
-                    // Emit unit placed event for backward compatibility
-                    this.emit<UnitPlacedPayload>(EditorEventTypes.UNIT_PLACED, {
-                        q: q,
-                        r: r,
-                        unitType: toolState.selectedUnit,
-                        playerId: toolState.selectedPlayer
-                    });
-                    break;
-                    
-                case 'clear':
-                    // Update World data (single source of truth)
-                    if (this.world) {
-                        this.world.removeTileAt(q, r);
-                        this.world.removeUnitAt(q, r);
-                        // World will emit events, which will update Phaser via onWorldEvent
-                    }
-                    
-                    this.log(`Cleared tile and unit at Q=${q}, R=${r}`);
-                    
-                    // Emit separate events for backward compatibility
-                    this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r });
-                    this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r });
-                    break;
-            }
-        } catch (error) {
-            this.handleError(`Failed to handle tile click at Q=${q}, R=${r}`, error);
+        // Get current tool state from pageState
+        const toolState = this.pageState?.getToolState();
+        if (!toolState) {
+            this.log('No tool state available for tile click');
+            return;
+        }
+        
+        switch (toolState.placementMode) {
+            case 'terrain':
+                // Update World data (single source of truth)
+                let playerId = 0;
+                if (this.world) {
+                    // Determine player ownership for the terrain
+                    playerId = this.getPlayerIdForTerrain(toolState.selectedTerrain, toolState);
+                    this.world.setTileAt(q, r, toolState.selectedTerrain, playerId);
+                    // World will emit TILES_CHANGED event, which will update Phaser via onWorldEvent
+                }
+                
+                this.log(`Painted terrain ${toolState.selectedTerrain} (player ${playerId}) at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
+                
+                // Emit tile painted event for backward compatibility (for components not yet using World events)
+                this.emit<TilePaintedPayload>(EditorEventTypes.TILE_PAINTED, {
+                    q: q,
+                    r: r,
+                    terrainType: toolState.selectedTerrain,
+                    playerColor: playerId,
+                    brushSize: toolState.brushSize
+                });
+                break;
+                
+            case 'unit':
+                // Update World data (single source of truth)
+                if (this.world) {
+                    this.world.setUnitAt(q, r, toolState.selectedUnit, toolState.selectedPlayer);
+                    // World will emit UNITS_CHANGED event, which will update Phaser via onWorldEvent
+                }
+                
+                this.log(`Painted unit ${toolState.selectedUnit} (player ${toolState.selectedPlayer}) at Q=${q}, R=${r}`);
+                
+                // Emit unit placed event for backward compatibility
+                this.emit<UnitPlacedPayload>(EditorEventTypes.UNIT_PLACED, {
+                    q: q,
+                    r: r,
+                    unitType: toolState.selectedUnit,
+                    playerId: toolState.selectedPlayer
+                });
+                break;
+                
+            case 'clear':
+                // Update World data (single source of truth)
+                if (this.world) {
+                    this.world.removeTileAt(q, r);
+                    this.world.removeUnitAt(q, r);
+                    // World will emit events, which will update Phaser via onWorldEvent
+                }
+                
+                this.log(`Cleared tile and unit at Q=${q}, R=${r}`);
+                
+                // Emit separate events for backward compatibility
+                this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r });
+                this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r });
+                break;
         }
     }
     
@@ -699,52 +666,23 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     /**
      * Load world tiles data
      */
-    public async setTilesData(tiles: Array<{ q: number; r: number; terrain: number; color: number }>): Promise<void> {
+    public async setTilesData(tiles: Array<Tile>): Promise<void> {
         if (this.phaserEditor && this.isInitialized) {
-            try {
-                await this.phaserEditor.setTilesData(tiles);
-                this.log(`Loaded ${tiles.length} tiles into Phaser`);
-            } catch (error) {
-                this.handleError('Failed to load tiles data', error);
-            }
+            await this.phaserEditor.setTilesData(tiles);
+            this.log(`Loaded ${tiles.length} tiles into Phaser`);
         }
     }
     
     /**
      * Paint a unit at specific coordinates
      */
-    public paintUnit(q: number, r: number, unitType: number, playerId: number): boolean {
+    public setUnit(unit: Unit): boolean {
         if (this.phaserEditor && this.isInitialized) {
-            try {
-                this.phaserEditor.paintUnit(q, r, unitType, playerId);
-                this.log(`Painted unit ${unitType} (player ${playerId}) at Q=${q}, R=${r}`);
-                return true;
-            } catch (error) {
-                this.handleError(`Failed to paint unit at Q=${q}, R=${r}`, error);
-                return false;
-            }
+              this.phaserEditor.setUnit(unit);
+              this.log(`Painted unit ${unit.unitType} (player ${unit.player}) at Q=${unit.q}, R=${unit.r}`);
+              return true;
         }
         return false;
-    }
-    
-    /**
-     * Get current tiles data
-     */
-    public getTilesData(): Array<{ q: number; r: number; terrain: number; color: number }> {
-        if (this.phaserEditor && this.isInitialized) {
-            return this.phaserEditor.getTilesData();
-        }
-        return [];
-    }
-    
-    /**
-     * Get current units data
-     */
-    public getUnitsData(): Array<{ q: number; r: number; unitType: number; playerId: number }> {
-        if (this.phaserEditor && this.isInitialized) {
-            return this.phaserEditor.getUnitsData();
-        }
-        return [];
     }
     
     /**
@@ -805,9 +743,9 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         }
     }
     
-    public paintTile(q: number, r: number, terrain: number, color: number, brushSize: number = 0): void {
+    public setTile(tile: Tile, brushSize: number = 0): void {
         if (this.phaserEditor && this.isInitialized) {
-            this.phaserEditor.paintTile(q, r, terrain, color, brushSize);
+            this.phaserEditor.setTile(tile, brushSize);
         }
     }
     
@@ -828,28 +766,18 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
         if (this.phaserEditor && this.isInitialized) {
-            try {
-                const result = await this.phaserEditor.loadReferenceFromClipboard();
-                this.log(result ? 'Reference image loaded from clipboard' : 'No image found in clipboard');
-                return result;
-            } catch (error) {
-                this.handleError('Failed to load reference image from clipboard', error);
-                return false;
-            }
+            const result = await this.phaserEditor.loadReferenceFromClipboard();
+            this.log(result ? 'Reference image loaded from clipboard' : 'No image found in clipboard');
+            return result;
         }
         return false;
     }
     
     public async loadReferenceFromFile(file: File): Promise<boolean> {
         if (this.phaserEditor && this.isInitialized) {
-            try {
-                const result = await this.phaserEditor.loadReferenceFromFile(file);
-                this.log(result ? `Reference image loaded from file: ${file.name}` : 'Failed to load file');
-                return result;
-            } catch (error) {
-                this.handleError(`Failed to load reference image from file: ${file.name}`, error);
-                return false;
-            }
+            const result = await this.phaserEditor.loadReferenceFromFile(file);
+            this.log(result ? `Reference image loaded from file: ${file.name}` : 'Failed to load file');
+            return result;
         }
         return false;
     }

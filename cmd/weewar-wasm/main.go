@@ -50,19 +50,15 @@ func main() {
 
 // createGameFromMap creates a new game from web map data
 func createGameFromMap(this js.Value, args []js.Value) any {
-	if len(args) < 2 {
-		return createJSResponse(false, "Missing mapData or playerCount arguments", nil)
+	if len(args) < 1 {
+		return createJSResponse(false, "Missing mapData", nil)
 	}
 
 	mapDataStr := args[0].String()
-	playerCount := args[1].Int()
-
-	if playerCount < 2 || playerCount > 6 {
-		return createJSResponse(false, fmt.Sprintf("Invalid player count: %d", playerCount), nil)
-	}
 
 	// Create world using unified JSON format from frontend
-	world := &weewar.World{}
+	world := weewar.NewWorld("test") // &weewar.World{}
+	// world := &weewar.World{}
 	if err := world.UnmarshalJSON([]byte(mapDataStr)); err != nil {
 		return createJSResponse(false, fmt.Sprintf("Failed to unmarshal world data: %v", err), nil)
 	}
@@ -225,36 +221,4 @@ func createJSResponse(success bool, message string, data any) any {
 	}
 
 	return js.Global().Get("JSON").Call("parse", string(responseBytes))
-}
-
-// createTestWorld creates a simple test world for now
-// TODO: Replace with proper map data parsing
-func createTestWorld(playerCount int) (*weewar.World, error) {
-	// Create a simple 6x6 hex map for testing
-	gameMap := weewar.NewWorld("test", playerCount)
-
-	// Add some test tiles
-	for q := -2; q <= 2; q++ {
-		for r := -2; r <= 2; r++ {
-			if q+r >= -2 && q+r <= 2 { // Valid hex coordinates
-				coord := weewar.AxialCoord{Q: q, R: r}
-				tile := weewar.NewTile(coord, 1) // Grass terrain
-				gameMap.AddTile(tile)
-			}
-		}
-	}
-
-	// Create world with playerCount and map
-	world := weewar.NewWorld("test", playerCount)
-
-	// Add some test units
-	unit1 := weewar.NewUnit(1, 0) // Infantry for player 0
-	unit1.SetPosition(weewar.AxialCoord{Q: 0, R: 0})
-	world.AddUnit(unit1)
-
-	unit2 := weewar.NewUnit(1, 1) // Infantry for player 1
-	unit2.SetPosition(weewar.AxialCoord{Q: 1, R: -1})
-	world.AddUnit(unit2)
-
-	return world, nil
 }

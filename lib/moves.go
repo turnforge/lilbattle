@@ -17,7 +17,7 @@ func (g *Game) NextTurn() error {
 	}
 
 	// Advance to next player
-	g.CurrentPlayer = (g.CurrentPlayer + 1) % g.World.PlayerCount
+	g.CurrentPlayer = (g.CurrentPlayer + 1) % g.World.PlayerCount()
 
 	// If we've cycled back to player 0, increment turn counter
 	if g.CurrentPlayer == 0 {

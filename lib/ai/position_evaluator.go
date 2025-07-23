@@ -182,7 +182,7 @@ func (pe *PositionEvaluator) evaluateUnitValue(game *weewar.Game, playerID int) 
 	totalValue := 0.0
 
 	// Calculate total unit values for all players
-	for pid := range game.World.PlayerCount {
+	for pid := range game.World.PlayerCount() {
 		units := game.GetUnitsForPlayer(pid)
 		for _, unit := range units {
 			unitCost := pe.getUnitCost(unit.UnitType)
@@ -354,7 +354,7 @@ func (pe *PositionEvaluator) evaluateAttackOptions(game *weewar.Game, playerID i
 
 	// Normalize by enemy total unit value
 	enemyValue := 0.0
-	for pid := range game.World.PlayerCount {
+	for pid := range game.World.PlayerCount() {
 		if pid != playerID {
 			enemyValue += pe.getTotalUnitValue(game, pid)
 		}

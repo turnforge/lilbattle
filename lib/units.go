@@ -59,7 +59,7 @@ func (t *Unit) MarshalJSON() ([]byte, error) {
 	out := map[string]any{
 		"q":         t.Coord.Q,
 		"r":         t.Coord.R,
-		"tile_type": t.UnitType,
+		"unit_type": t.UnitType,
 		"player":    t.Player,
 	}
 	return json.Marshal(out)
@@ -71,7 +71,7 @@ func (t *Unit) UnmarshalJSON(data []byte) error {
 	type mapJSON struct {
 		Q        int `json:"q"`
 		R        int `json:"r"`
-		UnitType int `json:"tile_type"`
+		UnitType int `json:"unit_type"`
 		Player   int `json:"player"`
 	}
 

@@ -1,7 +1,7 @@
 import { BaseComponent, DOMValidation } from './Component';
 import { EventBus, EventPayload, EventTypes, WorldDataLoadedPayload } from './EventBus';
 import { PhaserViewer } from './PhaserViewer';
-import { World } from './World';
+import { Unit, Tile, World } from './World';
 import { ComponentLifecycle } from './ComponentLifecycle';
 
 /**
@@ -168,8 +168,8 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         this.log('Loading world data into Phaser viewer');
         
         // Convert world data to Phaser format
-        const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
-        const unitsArray: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
+        const tilesArray: Array<Tile> = []
+        const unitsArray: Array<Unit> = []
         
         // Process tiles from bounds
         if (worldData.bounds) {
@@ -180,8 +180,8 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
                     tilesArray.push({
                         q: q,
                         r: r,
-                        terrain: 1, // Default grass
-                        color: 0
+                        tileType: 1, // Default grass
+                        player: 0
                     });
                 }
             }
@@ -206,28 +206,6 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         const allTiles = world.getAllTiles();
         const allUnits = world.getAllUnits();
         
-        // Convert to arrays
-        const tilesArray: Array<{ q: number; r: number; terrain: number; color: number }> = [];
-        const unitsArray: Array<{ q: number; r: number; unitType: number; playerId: number }> = [];
-        
-        allTiles.forEach(tile => {
-            tilesArray.push({
-                q: tile.q,
-                r: tile.r,
-                terrain: tile.tileType,
-                color: tile.playerId || 0
-            });
-        });
-        
-        allUnits.forEach(unit => {
-            unitsArray.push({
-                q: unit.q,
-                r: unit.r,
-                unitType: unit.unitType,
-                playerId: unit.playerId
-            });
-        });
-        
         // Calculate bounds and stats
         const bounds = world.getBounds();
         
@@ -247,7 +225,7 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         
         // Load into Phaser if ready
         if (this.phaserViewer && this.phaserViewer.getIsInitialized()) {
-            await this.phaserViewer.loadWorldData(tilesArray, unitsArray);
+            await this.phaserViewer.loadWorldData(allTiles, allUnits);
         }
         
         // Emit data loaded event for other components
