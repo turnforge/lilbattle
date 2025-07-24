@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
+import { hexToRowCol, hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 import { Unit, Tile, World } from '../World';
 
 export class PhaserWorldScene extends Phaser.Scene {
@@ -437,26 +437,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         );
     }
 
-    // Helper functions for coordinate conversion (matching lib/hex_coords.go)
-    private hexToRowCol(q: number, r: number): { row: number; col: number } {
-        // HexToRowCol: cube_to_oddr conversion
-        const x = q;
-        const z = r;
-        const col = x + Math.floor((z - (z & 1)) / 2);
-        const row = z;
-        return { row, col };
-    }
-    
-    private rowColToHex(row: number, col: number): { q: number; r: number } {
-        // RowColToHex: oddr_to_cube conversion
-        const x = col - Math.floor((row - (row & 1)) / 2);
-        const z = row;
-        const q = x;
-        const r = z;
-        return { q, r };
-    }
-    
-    
     // Public methods for world manipulation
     public setTile(tile: Tile) {
         const q = tile.q;
@@ -742,7 +722,7 @@ export class PhaserWorldScene extends Phaser.Scene {
         }
         
         // Create coordinate text with both Q/R and row/col using proper conversion
-        const { row, col } = this.hexToRowCol(q, r);
+        const { row, col } = hexToRowCol(q, r);
         
         const coordText = `QR:${q}, ${r}\nRC:${row}, ${col}`;
         
