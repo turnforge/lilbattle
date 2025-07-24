@@ -61,19 +61,11 @@ type GameSession struct {
 // SaveHandler Interface for Pluggable Storage
 // =============================================================================
 
-// SaveHandler defines the interface for saving and loading game sessions
+// SaveHandler defines the interface for saving game sessions
+// Load functionality is handled by the UI passing data directly to WASM
 type SaveHandler interface {
-	// Save stores a game session
+	// Save stores the current game session
 	Save(sessionData []byte) error
-	
-	// Load retrieves a game session by ID
-	Load(sessionID string) ([]byte, error)
-	
-	// List returns all available session IDs
-	List() ([]string, error)
-	
-	// Delete removes a session
-	Delete(sessionID string) error
 }
 
 // =============================================================================

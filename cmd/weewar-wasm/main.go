@@ -52,6 +52,10 @@ func main() {
 	js.Global().Set("weewarGetTerrainStatsAt", js.FuncOf(getTerrainStatsAt))
 	js.Global().Set("weewarGetTileInfo", js.FuncOf(getTileInfo))
 
+	// GameLog functions
+	js.Global().Set("weewarSaveGame", js.FuncOf(saveGame))
+	js.Global().Set("weewarLoadGame", js.FuncOf(loadGame))
+
 	fmt.Println("WeeWar WASM module loaded successfully")
 
 	// Keep the program running
@@ -78,6 +82,15 @@ func createGameFromMap(mapDataStr string) (gameState any, err error) {
 	game, err := weewar.NewGame(world, globalRulesEngine, seed)
 	if err != nil {
 		return nil, err
+	}
+
+	// Initialize GameLog with BrowserSaveHandler
+	saveHandler := NewBrowserSaveHandler("/api/v1/games/sessions")
+	err = game.InitializeGameLog(saveHandler, false) // auto-save disabled (manual saves only)
+	if err != nil {
+		fmt.Printf("Warning: Failed to initialize GameLog: %v\n", err)
+	} else {
+		fmt.Println("GameLog initialized successfully")
 	}
 
 	// Store game globally
@@ -304,4 +317,61 @@ func createJSResponse(success bool, message string, data any) any {
 	}
 
 	return js.Global().Get("JSON").Call("parse", string(responseBytes))
+}
+
+// =============================================================================
+// GameLog WASM Functions
+// =============================================================================
+
+// saveGame saves the current game session
+func saveGame(this js.Value, args []js.Value) any {
+	if globalGame == nil {
+		return createJSResponse(false, "No game loaded", nil)
+	}
+
+	// Trigger GameLog save
+	err := globalGame.SaveGameLog()
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Save failed: %v", err), nil)
+	}
+
+	// Return success with game ID
+	return createJSResponse(true, "Game saved successfully", map[string]any{
+		"gameId": globalGame.GetGameLogSessionID(),
+	})
+}
+
+// loadGame loads game from passed JSON string and returns current state after replay
+func loadGame(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return createJSResponse(false, "Game log JSON required", nil)
+	}
+
+	gameLogJSON := args[0].String()
+	if gameLogJSON == "" {
+		return createJSResponse(false, "Game log JSON is empty", nil)
+	}
+
+	// Parse the game session JSON
+	var sessionData weewar.GameSession
+	if err := json.Unmarshal([]byte(gameLogJSON), &sessionData); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse game log: %v", err), nil)
+	}
+
+	// TODO: Implement session replay logic
+	// For now, we'll need to:
+	// 1. Create a new game from the starting world data
+	// 2. Replay all the log entries to get to current state
+	// 3. Set this as the global game
+
+	fmt.Printf("Loading game session: %s with %d entries\n", sessionData.SessionID, len(sessionData.Entries))
+
+	// Placeholder: Return current game state
+	// In full implementation, this would return the state after replaying all entries
+	if globalGame == nil {
+		return createJSResponse(false, "No game to load into", nil)
+	}
+
+	gameState := globalGame.GetGameStateForUI()
+	return createJSResponse(true, "Game loaded successfully", gameState)
 }

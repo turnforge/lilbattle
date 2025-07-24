@@ -255,20 +255,26 @@ Recorded GameLogs can be used to train AI players:
 
 ### ✅ Completed (January 2025)
 - **Core GameLog System**: GameAction, WorldChange, GameLogEntry, GameSession data structures
-- **SaveHandler Interface**: Memory, File, and Browser storage implementations  
+- **Simplified SaveHandler Interface**: Only Save() method needed - UI handles loading directly
 - **Game Integration**: GameLog integrated into Game struct with automatic recording
 - **Action Recording**: MoveUnit, AttackUnit, NextTurn all automatically logged
 - **Go-Centric Architecture**: All GameLog logic in Go engine, frontend agnostic
-
-### 🚧 In Progress  
-- **WASM Integration**: Adding save/load functions to WASM interface
-- **Simplified Architecture**: gameId = sessionId, DOM-based loading
-- **Frontend Integration**: GameState.ts save/load methods
+- **WASM Integration**: saveGame() and loadGame() functions exposed to frontend
+- **Simplified Architecture**: Each game is a single session, no complex session management
+- **Frontend Integration**: GameState.ts save/load methods with JavaScript bridge functions
+- **BrowserSaveHandler**: Moved to WASM package, directly instantiated by game creators
 
 ### ⏳ Next Steps
-- **Backend Integration**: GameViewerPage handler with embedded log data
+- **Backend API**: Implement /api/v1/games/sessions endpoint for save operations
+- **GameViewerPage UI**: Add save/load buttons and DOM-based loading
+- **Session Replay Logic**: Complete loadGame implementation with action replay
 - **Testing Validation**: Use GameLog for automated replay testing
-- **UI Polish**: Save/load buttons in GameViewerPage
+
+### 🔧 Architecture Simplifications Made
+- **Removed Load/List/Delete**: SaveHandler only needs Save() - UI passes data directly to WASM
+- **Removed Factory Pattern**: Game creators directly set SaveHandler instances instead of config-based factory
+- **Single Session Model**: gameId = sessionId, no complex session management needed
+- **WASM-Owned BrowserSaveHandler**: Moved from lib to wasm package where it belongs
 
 ---
 

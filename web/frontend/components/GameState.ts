@@ -117,7 +117,9 @@ export class GameState extends BaseComponent {
                 canSelectUnit: (window as any).weewarCanSelectUnit,
                 getTileInfo: (window as any).weewarGetTileInfo,
                 getMovementOptions: (window as any).weewarGetMovementOptions,
-                getAttackOptions: (window as any).weewarGetAttackOptions
+                getAttackOptions: (window as any).weewarGetAttackOptions,
+                saveGame: (window as any).weewarSaveGame,
+                loadGame: (window as any).weewarLoadGame
             };
 
             this.gameData.wasmLoaded = true;
@@ -166,7 +168,9 @@ export class GameState extends BaseComponent {
             canSelectUnit: (window as any).weewarCanSelectUnit,
             getTileInfo: (window as any).weewarGetTileInfo,
             getMovementOptions: (window as any).weewarGetMovementOptions,
-            getAttackOptions: (window as any).weewarGetAttackOptions
+            getAttackOptions: (window as any).weewarGetAttackOptions,
+            saveGame: (window as any).weewarSaveGame,
+            loadGame: (window as any).weewarLoadGame
         };
 
         this.gameData.wasmLoaded = true;
@@ -378,6 +382,80 @@ export class GameState extends BaseComponent {
      */
     public getAttackOptions(q: number, r: number): WASMResponse {
         return this.ensureWASMLoadedSync().getAttackOptions(q, r);
+    }
+
+    /**
+     * Save current game session (synchronous)
+     */
+    public saveGame(): any {
+        this.ensureWASMLoadedSync();
+
+        const response: WASMResponse = this.wasm.saveGame();
+        
+        if (!response.success) {
+            throw new Error(`Save failed: ${response.message}`);
+        }
+
+        this.log('Game saved successfully', response.data);
+        
+        // Emit notification event
+        this.emit('game-saved', response.data);
+        
+        return response.data;
+    }
+
+    /**
+     * Load game from JSON string and update game state (synchronous)
+     */
+    public loadGame(gameLogJSON: string): GameCreateData {
+        this.ensureWASMLoadedSync();
+
+        const response: WASMResponse = this.wasm.loadGame(gameLogJSON);
+        
+        if (!response.success) {
+            throw new Error(`Load failed: ${response.message}`);
+        }
+
+        // Update internal game state from loaded data
+        const gameData: GameCreateData = response.data;
+        this.updateGameState(gameData);
+
+        this.log('Game loaded successfully', gameData);
+        
+        // Emit notification event
+        this.emit('game-loaded', gameData);
+        
+        return gameData;
+    }
+
+    /**
+     * Initialize game save/load bridge functions for WASM BrowserSaveHandler
+     * These functions are called by the Go BrowserSaveHandler implementation
+     */
+    public static initializeSaveBridge(): void {
+        // Set up bridge functions that WASM BrowserSaveHandler expects
+        (window as any).gameSaveHandler = async (sessionData: string): Promise<string> => {
+            try {
+                const response = await fetch('/api/v1/games/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: sessionData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Save failed: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                return JSON.stringify({ success: true, sessionId: result.sessionId });
+            } catch (error) {
+                return JSON.stringify({ success: false, error: error.message });
+            }
+        };
+        
+        console.log('Game save/load bridge functions initialized');
     }
 
     /**
