@@ -4,7 +4,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"syscall/js"
 
@@ -19,72 +18,6 @@ import (
 var globalEditor *weewar.WorldEditor
 var globalWorld *weewar.World
 var globalAssetProvider weewar.AssetProvider
-
-// =============================================================================
-// Response Types
-// =============================================================================
-
-// WASMResponse represents a standardized JavaScript-friendly response
-type WASMResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Error   string `json:"error,omitempty"`
-	Data    any    `json:"data,omitempty"`
-}
-
-// =============================================================================
-// Generic Wrapper Infrastructure
-// =============================================================================
-
-// WASMFunction represents a function that takes js.Value args and returns (data, error)
-type WASMFunction func(args []js.Value) (any, error)
-
-// createWrapper creates a generic wrapper for WASM functions with validation and error handling
-func createWrapper(minArgs, maxArgs int, fn WASMFunction) js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		// Validate argument count
-		if len(args) < minArgs {
-			return createErrorResponse(fmt.Sprintf("Expected at least %d arguments, got %d", minArgs, len(args)))
-		}
-		if maxArgs >= 0 && len(args) > maxArgs {
-			return createErrorResponse(fmt.Sprintf("Expected at most %d arguments, got %d", maxArgs, len(args)))
-		}
-
-		// Call the function and handle response
-		result, err := fn(args)
-		if err != nil {
-			return createErrorResponse(err.Error())
-		}
-
-		return createSuccessResponse(result)
-	})
-}
-
-// =============================================================================
-// Response Helpers
-// =============================================================================
-
-func createSuccessResponse(data any) js.Value {
-	response := WASMResponse{
-		Success: true,
-		Message: "Operation completed successfully",
-		Data:    data,
-	}
-	return marshalToJS(response)
-}
-
-func createErrorResponse(error string) js.Value {
-	response := WASMResponse{
-		Success: false,
-		Error:   error,
-	}
-	return marshalToJS(response)
-}
-
-func marshalToJS(obj any) js.Value {
-	bytes, _ := json.Marshal(obj)
-	return js.Global().Get("JSON").Call("parse", string(bytes))
-}
 
 // =============================================================================
 // Main Function - Initialize Everything

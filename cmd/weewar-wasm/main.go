@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/panyam/turnengine/games/weewar/assets"
+	"github.com/panyam/turnengine/games/weewar/cmd/wasmutils"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
@@ -30,7 +31,16 @@ func main() {
 	fmt.Println("Rules engine loaded successfully")
 
 	// Register JavaScript functions
-	js.Global().Set("weewarCreateGameFromMap", js.FuncOf(createGameFromMap))
+	js.Global().Set("weewarCreateGameFromMap", wasmutils.CreateWrapper(1, 1, func(args []js.Value) (any, error) {
+		return createGameFromMap(args[0].String())
+	}))
+	js.Global().Set("weewarGetMovementOptions", wasmutils.CreateWrapper(2, 2, func(args []js.Value) (any, error) {
+		return getMovementOptions(args[0].Int(), args[1].Int())
+	}))
+	js.Global().Set("weewarGetAttackOptions", wasmutils.CreateWrapper(2, 2, func(args []js.Value) (any, error) {
+		return getAttackOptions(args[0].Int(), args[1].Int())
+	}))
+
 	js.Global().Set("weewarGetGameState", js.FuncOf(getGameState))
 	js.Global().Set("weewarSelectUnit", js.FuncOf(selectUnit))
 	js.Global().Set("weewarMoveUnit", js.FuncOf(moveUnit))
@@ -52,33 +62,26 @@ func main() {
 // =============================================================================
 
 // createGameFromMap creates a new game from web map data
-func createGameFromMap(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		return createJSResponse(false, "Missing mapData", nil)
-	}
-
-	mapDataStr := args[0].String()
-
+func createGameFromMap(mapDataStr string) (gameState any, err error) {
 	// Create world using unified JSON format from frontend
 	world := weewar.NewWorld("test") // &weewar.World{}
 	// world := &weewar.World{}
-	if err := world.UnmarshalJSON([]byte(mapDataStr)); err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to unmarshal world data: %v", err), nil)
+	if err = world.UnmarshalJSON([]byte(mapDataStr)); err != nil {
+		return
 	}
 
 	// Create game using existing NewGame method
 	seed := time.Now().UnixNano()
 	game, err := weewar.NewGame(world, globalRulesEngine, seed)
 	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to create game: %v", err), nil)
+		return nil, err
 	}
 
 	// Store game globally
 	globalGame = game
 
 	// Return game state using new UI method
-	gameState := game.GetGameStateForUI()
-	return createJSResponse(true, "Game created successfully", gameState)
+	return game.GetGameStateForUI(), nil
 }
 
 // getGameState returns current game state for UI
@@ -257,6 +260,26 @@ func getTileInfo(this js.Value, args []js.Value) any {
 	}
 
 	return createJSResponse(true, "Tile info retrieved", info)
+}
+
+// getMovementOptions returns valid movement positions for a unit
+func getMovementOptions(q, r int) (any, error) {
+	if globalGame == nil {
+		return nil, fmt.Errorf("No game loaded")
+	}
+
+	// Use game engine method that handles all validation
+	return globalGame.GetUnitMovementOptionsFrom(q, r)
+}
+
+// getAttackOptions returns valid attack targets for a unit
+func getAttackOptions(q, r int) (any, error) {
+	if globalGame == nil {
+		return nil, fmt.Errorf("No game loaded")
+	}
+
+	// Use game engine method that handles all validation
+	return globalGame.GetUnitAttackOptionsFrom(q, r)
 }
 
 // =============================================================================
