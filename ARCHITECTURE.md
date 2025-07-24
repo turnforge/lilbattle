@@ -1,6 +1,6 @@
 # WeeWar Architecture Overview
 
-## Current Architecture (Phaser-First v4.0)
+## Current Architecture (Phaser-First v4.0 + Layer System v10.7)
 
 ### Major Architectural Transformation (January 2025)
 - **Phaser.js Editor Integration**: Complete migration from canvas-based to Phaser.js-based map editor
@@ -20,7 +20,67 @@
 - **Test System Migration**: All tests updated to AxialCoord system with proper unit initialization
 - **API Consistency**: Unified pattern where game mechanics go through rules engine first with fallbacks
 
+### Layered Overlay System (January 2025) ✅
+- **Multi-Coordinate Architecture**: Single system supporting screen, world, and hex coordinate spaces
+- **Event Bubbling System**: TRANSPARENT/BLOCK/CONSUME pattern for proper z-order event handling
+- **Layer Manager**: Centralized layer management with automatic coordinate conversion
+- **Reusable Layer Types**: HexHighlightLayer for game highlights, ReferenceImageLayer for editor images
+- **Clean Event Handling**: ClickContext provides all coordinate spaces pre-computed for efficiency
+- **Cross-Scene Compatibility**: Same layer system works in Editor and Game scenes with different configs
+
 ### Core Components
+
+#### 0. Layered Overlay System (`web/frontend/components/phaser/LayerSystem.ts`) ✅ COMPLETED
+**Purpose**: Unified overlay management for Phaser scenes with multi-coordinate space support
+- **LayerManager**: Centralized layer management with z-order based event dispatch
+- **Multi-Coordinate ClickContext**: Automatic conversion between screen, world, and hex coordinates
+- **Event Bubbling**: TRANSPARENT/BLOCK/CONSUME pattern for proper layer interaction
+- **Coordinate Space Isolation**: Layers work in their native coordinate space (hex for game, world for images)
+- **Reusable Architecture**: Same system supports Editor reference images and Game highlights
+
+```typescript
+interface ClickContext {
+  screenX: number; screenY: number;  // Raw pointer coordinates
+  worldX: number; worldY: number;    // Camera-adjusted world coordinates  
+  hexQ: number; hexR: number;        // Game logic coordinates
+  tile?: Tile | null;                // Pre-computed game context
+  unit?: Unit | null;
+  timestamp: number; button: number;
+}
+
+enum LayerHitResult {
+  TRANSPARENT = 'transparent',  // Pass through to layers below
+  BLOCK = 'block',             // Block event but don't handle
+  CONSUME = 'consume'          // Handle event and stop propagation
+}
+
+interface Layer {
+  readonly coordinateSpace: CoordinateSpace; // 'screen' | 'world' | 'hex'
+  hitTest(context: ClickContext): LayerHitResult | null;
+  handleClick?(context: ClickContext): boolean;
+  show(): void; hide(): void;
+  setDepth(depth: number): void;
+}
+
+class LayerManager {
+  handleClick(pointer: Phaser.Input.Pointer): boolean;
+  addLayer(layer: Layer): void;
+  removeLayer(name: string): boolean;
+  getSortedLayers(): Layer[]; // By depth, highest first
+}
+```
+
+**Layer Implementations**:
+- **HexHighlightLayer**: SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer for game interactions
+- **ReferenceImageLayer**: Editor reference images with drag/scale/alpha controls in world space
+- **BaseMapLayer**: Fallback layer for default tile/unit clicks in hex space
+
+**Architecture Benefits**:
+- **Coordinate Transparency**: Layers work in their natural coordinate space, manager handles conversion
+- **Event Isolation**: Clean separation between different types of interactions
+- **Reusability**: Same layer types work across Editor and Game scenes
+- **Performance**: Hit testing only on visible, interactive layers
+- **Maintainability**: Adding new layer types requires no changes to core scene code
 
 #### 1. KeyboardShortcutManager (`web/frontend/components/KeyboardShortcutManager.ts`) ✅ COMPLETED
 **Purpose**: Reusable keyboard shortcut system for all pages
