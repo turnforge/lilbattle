@@ -436,27 +436,8 @@ export class World {
     public async save(): Promise<SaveResult> {
         try {
             // Build save data format
-            const tiles: { [key: string]: any } = {};
-            Object.entries(this.tiles).forEach(([key, tile]) => {
-                const [q, r] = key.split(',').map(Number);
-                tiles[key] = {
-                    q,
-                    r,
-                    tile_type: tile.tileType,
-                    player: tile.player || 0
-                };
-            });
-
-            const worldUnits: any[] = [];
-            Object.entries(this.units).forEach(([key, unit]) => {
-                const [q, r] = key.split(',').map(Number);
-                worldUnits.push({
-                    q,
-                    r,
-                    player: unit.player,
-                    unit_type: unit.unitType
-                });
-            });
+            const tiles: Array<Tile> = Object.values(this.tiles)
+            const units: Array<Unit> = Object.values(this.units)
 
             // Build request
             const createWorldRequest = {
@@ -468,7 +449,7 @@ export class World {
                     difficulty: 'medium',
                     creator_id: 'editor-user',
                     tiles: tiles,
-                    units: worldUnits
+                    units: units, 
                 }
             };
 

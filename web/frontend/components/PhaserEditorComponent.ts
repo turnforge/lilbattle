@@ -249,7 +249,9 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             if (rect.width > 0 && rect.height > 0) {
                 // Continue with Phaser initialization
                 this.phaserEditor = new PhaserWorldEditor(containerElement);
-                this.setupPhaserEventHandlers();
+                this.setupPhaserEventHandlers().catch(error => {
+                    console.error('[PhaserEditorComponent] Failed to setup event handlers:', error);
+                });
                 
                 const isDarkMode = document.documentElement.classList.contains('dark');
                 this.phaserEditor.setTheme(isDarkMode);
@@ -293,8 +295,10 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         // Create Phaser editor instance with the element directly
         this.phaserEditor = new PhaserWorldEditor(containerElement);
         
-        // Set up event handlers
-        this.setupPhaserEventHandlers();
+        // Set up event handlers (async)
+        this.setupPhaserEventHandlers().catch(error => {
+            console.error('[PhaserEditorComponent] Failed to setup event handlers:', error);
+        });
         
         // Apply current theme
         const isDarkMode = document.documentElement.classList.contains('dark');
@@ -312,21 +316,45 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     /**
      * Set up event handlers for Phaser editor
      */
-    private setupPhaserEventHandlers(): void {
+    private async setupPhaserEventHandlers(): Promise<void> {
         if (!this.phaserEditor) return;
         
-        // Handle tile clicks - emit to EventBus for other components
-        this.phaserEditor.onTileClick((q, r) => {
-            this.log(`Tile clicked: Q=${q}, R=${r}`);
+        // Wait for the scene to be ready and set up layer callbacks
+        try {
+            const scene = await this.phaserEditor.waitForSceneReady();
             
-            this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
-                q: q,
-                r: r
-            });
+            // Set up BaseMapLayer callbacks for editor functionality
+            scene.setInteractionCallbacks(
+                (q: number, r: number) => {
+                    this.log(`Tile clicked: Q=${q}, R=${r}`);
+                    
+                    this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
+                        q: q,
+                        r: r
+                    });
+                    
+                    // Handle painting based on current mode
+                    this.handleTileClick(q, r);
+                    return false; // Don't emit additional events from scene
+                },
+                (q: number, r: number) => {
+                    // Handle unit clicks the same as tile clicks in editor
+                    this.log(`Unit clicked: Q=${q}, R=${r}`);
+                    
+                    this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
+                        q: q,
+                        r: r
+                    });
+                    
+                    this.handleTileClick(q, r);
+                    return false; // Don't emit additional events from scene
+                }
+            );
             
-            // Handle painting based on current mode
-            this.handleTileClick(q, r);
-        });
+            console.log('[PhaserEditorComponent] Layer callbacks set up successfully');
+        } catch (error) {
+            console.error('[PhaserEditorComponent] Failed to set up layer callbacks:', error);
+        }
         
         // Handle world changes
         this.phaserEditor.onWorldChange(() => {

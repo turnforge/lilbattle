@@ -43,126 +43,12 @@ export class PhaserEditorScene extends PhaserWorldScene {
         // Call parent create first to set up layer system
         super.create();
         
-        // Set up BaseMapLayer callbacks for editor functionality
-        this.setInteractionCallbacks(
-            (q: number, r: number) => {
-                // Handle tile clicks through the layer system
-                this.onTileClick(q, r);
-                return false; // Don't emit events - editor handles directly
-            },
-            (q: number, r: number) => {
-                // Handle unit clicks the same as tile clicks in editor
-                this.onTileClick(q, r);
-                return false; // Don't emit events - editor handles directly
-            }
-        );
+        // Note: BaseMapLayer callbacks will be set by PhaserEditorComponent
+        // The component will handle the painting logic and world updates
         
-        console.log('[PhaserEditorScene] Editor scene created with layer callbacks');
+        console.log('[PhaserEditorScene] Editor scene created');
     }
 
-    /**
-     * Override the tile click handler for editor functionality
-     */
-    protected onTileClick(q: number, r: number) {
-        // Handle editor-specific painting
-        switch (this.editorMode) {
-            case 'terrain':
-                this.paintTerrain(q, r);
-                break;
-            case 'unit':
-                this.paintUnit(q, r);
-                break;
-            case 'erase':
-                this.eraseTile(q, r);
-                break;
-        }
-
-        // Note: We don't call super.onTileClick(q, r) for the editor since
-        // that would trigger viewer callbacks which are not needed in editor mode.
-        // The editor handles its own tile modifications directly through painting.
-    }
-
-    /**
-     * Paint terrain at the specified coordinates
-     */
-    private paintTerrain(q: number, r: number): void {
-        if (this.brushSize === 0) {
-            // Single tile
-            this.setTile({
-                q: q,
-                r: r,
-                tileType: this.currentTerrain,
-                player: this.currentPlayer
-            });
-        } else {
-            // Multiple tiles in radius
-            const radius = this.getBrushRadius(this.brushSize);
-            for (let bq = q - radius; bq <= q + radius; bq++) {
-                for (let br = r - radius; br <= r + radius; br++) {
-                    // Use cube distance to determine if tile is within brush radius
-                    const distance = Math.abs(bq - q) + Math.abs(br - r) + Math.abs(-bq - br - (-q - r));
-                    if (distance <= radius * 2) { // Hex distance formula
-                        this.setTile({
-                            q: bq,
-                            r: br,
-                            tileType: this.currentTerrain,
-                            player: this.currentPlayer
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Paint unit at the specified coordinates
-     */
-    private paintUnit(q: number, r: number): void {
-        // Only paint single units (no brush for units)
-        this.setUnit({
-            q: q,
-            r: r,
-            unitType: this.currentUnit,
-            player: this.currentPlayer
-        });
-    }
-
-    /**
-     * Erase tile/unit at the specified coordinates
-     */
-    private eraseTile(q: number, r: number): void {
-        if (this.brushSize === 0) {
-            // Single tile
-            this.removeTile(q, r);
-            this.removeUnit(q, r);
-        } else {
-            // Multiple tiles in radius
-            const radius = this.getBrushRadius(this.brushSize);
-            for (let bq = q - radius; bq <= q + radius; bq++) {
-                for (let br = r - radius; br <= r + radius; br++) {
-                    const distance = Math.abs(bq - q) + Math.abs(br - r) + Math.abs(-bq - br - (-q - r));
-                    if (distance <= radius * 2) {
-                        this.removeTile(bq, br);
-                        this.removeUnit(bq, br);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Get brush radius from brush size
-     */
-    private getBrushRadius(brushSize: number): number {
-        switch (brushSize) {
-            case 1: return 1;   // Small (3 hexes)
-            case 3: return 2;   // Medium (5 hexes) 
-            case 5: return 3;   // Large (9 hexes)
-            case 10: return 4;  // X-Large (15 hexes)
-            case 15: return 5;  // XX-Large (21 hexes)
-            default: return 0;  // Single hex
-        }
-    }
 
     /**
      * Set current terrain type for painting
