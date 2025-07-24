@@ -573,6 +573,20 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     }
     
     /**
+     * Get brush radius from brush size
+     */
+    private getBrushRadius(brushSize: number): number {
+        switch (brushSize) {
+            case 1: return 1;   // Small (3 hexes)
+            case 3: return 2;   // Medium (5 hexes) 
+            case 5: return 3;   // Large (9 hexes)
+            case 10: return 4;  // X-Large (15 hexes)
+            case 15: return 5;  // XX-Large (21 hexes)
+            default: return 0;  // Single hex
+        }
+    }
+    
+    /**
      * Handle tile clicks for painting
      */
     private handleTileClick(q: number, r: number): void {
@@ -589,12 +603,27 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         
         switch (toolState.placementMode) {
             case 'terrain':
-                // Update World data (single source of truth)
+                // Update World data (single source of truth) with brush size support
                 let playerId = 0;
                 if (this.world) {
-                    // Determine player ownership for the terrain
                     playerId = this.getPlayerIdForTerrain(toolState.selectedTerrain, toolState);
-                    this.world.setTileAt(q, r, toolState.selectedTerrain, playerId);
+                    
+                    if (toolState.brushSize === 0) {
+                        // Single tile
+                        this.world.setTileAt(q, r, toolState.selectedTerrain, playerId);
+                    } else {
+                        // Multiple tiles in radius
+                        const radius = this.getBrushRadius(toolState.brushSize);
+                        for (let bq = q - radius; bq <= q + radius; bq++) {
+                            for (let br = r - radius; br <= r + radius; br++) {
+                                // Use cube distance to determine if tile is within brush radius
+                                const distance = Math.abs(bq - q) + Math.abs(br - r) + Math.abs(-bq - br - (-q - r));
+                                if (distance <= radius * 2) { // Hex distance formula
+                                    this.world.setTileAt(bq, br, toolState.selectedTerrain, playerId);
+                                }
+                            }
+                        }
+                    }
                     // World will emit TILES_CHANGED event, which will update Phaser via onWorldEvent
                 }
                 
@@ -629,14 +658,30 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
                 break;
                 
             case 'clear':
-                // Update World data (single source of truth)
+                // Update World data (single source of truth) with brush size support
                 if (this.world) {
-                    this.world.removeTileAt(q, r);
-                    this.world.removeUnitAt(q, r);
+                    if (toolState.brushSize === 0) {
+                        // Single tile
+                        this.world.removeTileAt(q, r);
+                        this.world.removeUnitAt(q, r);
+                    } else {
+                        // Multiple tiles in radius
+                        const radius = this.getBrushRadius(toolState.brushSize);
+                        for (let bq = q - radius; bq <= q + radius; bq++) {
+                            for (let br = r - radius; br <= r + radius; br++) {
+                                // Use cube distance to determine if tile is within brush radius
+                                const distance = Math.abs(bq - q) + Math.abs(br - r) + Math.abs(-bq - br - (-q - r));
+                                if (distance <= radius * 2) { // Hex distance formula
+                                    this.world.removeTileAt(bq, br);
+                                    this.world.removeUnitAt(bq, br);
+                                }
+                            }
+                        }
+                    }
                     // World will emit events, which will update Phaser via onWorldEvent
                 }
                 
-                this.log(`Cleared tile and unit at Q=${q}, R=${r}`);
+                this.log(`Cleared tile and unit at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
                 
                 // Emit separate events for backward compatibility
                 this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r });

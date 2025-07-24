@@ -515,7 +515,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
                 player: terrainStats.player
             });
 
-            return false; // We handled it completely, suppress event emission
+            return true; // We handled it completely, suppress event emission
 
         } catch (error) {
             console.error('[GameViewerPage] Failed to get terrain stats:', error);
@@ -556,7 +556,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
                 this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
             }
 
-            return false; // We handled it completely, suppress event emission
+            return true; // We handled it completely, suppress event emission
 
         } catch (error) {
             console.error('[GameViewerPage] Failed to handle unit click:', error);

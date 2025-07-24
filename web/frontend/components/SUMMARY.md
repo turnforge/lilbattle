@@ -56,6 +56,22 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 *   **Toast/Modal Systems**: User feedback and interaction patterns
 *   **Theme Management**: Coordinated theming across component boundaries
 
+## Recent Session Work (2025-01-24)
+
+### Layer System Architecture Complete ✅
+*   **Generic WorldViewer**: `WorldViewer<TScene>` with template parameter for proper typing
+*   **GameViewer Specialization**: `GameViewer extends WorldViewer<PhaserGameScene>` with game-specific layer access
+*   **Layer-Based Interaction**: Direct layer manipulation (`getSelectionHighlightLayer()`, `getMovementHighlightLayer()`, etc.)
+*   **Editor Integration**: PhaserEditorComponent uses layer callbacks for painting logic
+*   **Callback Architecture**: Click handling through BaseMapLayer callbacks with validation in components
+*   **Brush Size Support**: Multi-tile painting with hex distance calculations in component layer
+
+### Architecture Improvements ✅
+*   **Scene Separation**: PhaserWorldScene for rendering, components for business logic
+*   **Single Source of Truth**: World model updates trigger observer pattern for visual updates
+*   **Type Safety**: Proper TypeScript generics eliminate casting and improve developer experience
+*   **Clean Separation**: UI logic in components, rendering logic in scenes, interaction through layers
+
 ## Recent Session Work (2025-01-22)
 
 ### Interactive Game Viewer Foundation ✅
