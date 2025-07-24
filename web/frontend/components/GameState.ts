@@ -134,7 +134,9 @@ export class GameState extends BaseComponent {
                 endTurn: (window as any).weewarEndTurn,
                 getTerrainStatsAt: (window as any).weewarGetTerrainStatsAt,
                 canSelectUnit: (window as any).weewarCanSelectUnit,
-                getTileInfo: (window as any).weewarGetTileInfo
+                getTileInfo: (window as any).weewarGetTileInfo,
+                getMovementOptions: (window as any).weewarGetMovementOptions,
+                getAttackOptions: (window as any).weewarGetAttackOptions
             };
 
             this.gameData.wasmLoaded = true;
@@ -334,6 +336,40 @@ export class GameState extends BaseComponent {
 
         this.log('Retrieved tile info for', { q, r, data: response.data });
         return response.data;
+    }
+
+    /**
+     * Get movement options for unit at position (synchronous)
+     */
+    public getMovementOptions(q: number, r: number): WASMResponse {
+        this.ensureWASMLoadedSync();
+
+        try {
+            const result = this.wasm.getMovementOptions(q, r);
+            this.log('Retrieved movement options for', { q, r, result });
+            return { success: true, message: 'Movement options retrieved', data: result };
+        } catch (error: any) {
+            const errorMsg = error.message || String(error);
+            this.log('Failed to get movement options:', errorMsg);
+            return { success: false, message: errorMsg, data: null };
+        }
+    }
+
+    /**
+     * Get attack options for unit at position (synchronous)
+     */
+    public getAttackOptions(q: number, r: number): WASMResponse {
+        this.ensureWASMLoadedSync();
+
+        try {
+            const result = this.wasm.getAttackOptions(q, r);
+            this.log('Retrieved attack options for', { q, r, result });
+            return { success: true, message: 'Attack options retrieved', data: result };
+        } catch (error: any) {
+            const errorMsg = error.message || String(error);
+            this.log('Failed to get attack options:', errorMsg);
+            return { success: false, message: errorMsg, data: null };
+        }
     }
 
     /**

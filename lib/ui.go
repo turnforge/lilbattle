@@ -44,7 +44,7 @@ func (g *Game) SelectUnit(coord AxialCoord) (unit *Unit, movable []TileOption, a
 // Combines terrain data from rules engine with world-specific context
 func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
 	coord := AxialCoord{Q: q, R: r}
-	
+
 	// Get tile at position
 	tile := g.World.TileAt(coord)
 	if tile == nil {
@@ -67,14 +67,14 @@ func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
 	}
 
 	result := map[string]any{
-		"q":           q,
-		"r":           r,
-		"tileType":    tile.TileType,
-		"name":        terrainData.Name,
-		"description": fmt.Sprintf("%s terrain", terrainData.Name),
+		"q":            q,
+		"r":            r,
+		"tileType":     tile.TileType,
+		"name":         terrainData.Name,
+		"description":  fmt.Sprintf("%s terrain", terrainData.Name),
 		"movementCost": movementCost,
 		"defenseBonus": terrainData.DefenseBonus,
-		"player":      tile.Player,
+		"player":       tile.Player,
 	}
 
 	// Add unit information if present
@@ -93,7 +93,7 @@ func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
 func (g *Game) CanSelectUnit(q, r int) bool {
 	coord := AxialCoord{Q: q, R: r}
 	unit := g.World.UnitAt(coord)
-	
+
 	// Must have a unit and it must belong to current player
 	return unit != nil && unit.Player == g.CurrentPlayer
 }
@@ -101,7 +101,7 @@ func (g *Game) CanSelectUnit(q, r int) bool {
 // GetTileInfo returns basic tile information for UI
 func (g *Game) GetTileInfo(q, r int) (map[string]any, error) {
 	coord := AxialCoord{Q: q, R: r}
-	
+
 	// Get tile at position
 	tile := g.World.TileAt(coord)
 	if tile == nil {

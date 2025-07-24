@@ -58,29 +58,23 @@ export class LifecycleController {
         rootComponent: ComponentLifecycle, 
         rootName: string = 'RootComponent'
     ): Promise<void> {
-        try {
-            this.log('Starting component tree initialization');
-            
-            // Phase 0: Discovery - Find all components in the tree
-            await this.discoverComponents(rootComponent, rootName);
-            this.log(`Discovered ${this.allComponents.size} components`);
-            
-            // Phase 1: DOM Initialization - All components initialize DOM
-            await this.executePhase('initializeDOM', 'dom-bound');
-            
-            // Phase 2: Dependency Injection - All components receive dependencies
-            await this.executeDependencyInjectionPhase();
-            
-            // Phase 3: Activation - All components complete initialization
-            await this.executePhase('activate', 'activated');
-            
-            this.log('Component tree initialization complete');
-            this.emitEvent('component-ready', 'activated', 'All Components');
-            
-        } catch (error) {
-            this.logError('Component tree initialization failed', error);
-            throw error;
-        }
+        this.log('Starting component tree initialization');
+        
+        // Phase 0: Discovery - Find all components in the tree
+        await this.discoverComponents(rootComponent, rootName);
+        this.log(`Discovered ${this.allComponents.size} components`);
+        
+        // Phase 1: DOM Initialization - All components initialize DOM
+        await this.executePhase('initializeDOM', 'dom-bound');
+        
+        // Phase 2: Dependency Injection - All components receive dependencies
+        await this.executeDependencyInjectionPhase();
+        
+        // Phase 3: Activation - All components complete initialization
+        await this.executePhase('activate', 'activated');
+        
+        this.log('Component tree initialization complete');
+        this.emitEvent('component-ready', 'activated', 'All Components');
     }
     
     /**

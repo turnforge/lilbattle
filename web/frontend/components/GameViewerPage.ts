@@ -398,29 +398,6 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         this.showToast('Info', 'Centering view', 'info');
     }
 
-    /**
-     * Unit selection management
-     */
-    private selectUnitAt(q: number, r: number): void {
-        if (!this.gameState?.isReady()) {
-            this.showToast('Error', 'Game not ready', 'error');
-            return;
-        }
-
-        try {
-            // Synchronous WASM call
-            const selectionData = this.gameState.selectUnit(q, r);
-            
-            // Immediate UI update
-            this.handleUnitSelection(selectionData);
-            
-        } catch (error) {
-            console.error('Failed to select unit:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Unable to select unit';
-            this.showToast('Warning', errorMessage, 'warning');
-        }
-    }
-
     private handleUnitSelection(selectionData: UnitSelectionData): void {
         this.selectedUnit = selectionData.unit;
         console.log('Unit selected:', selectionData);
@@ -586,6 +563,62 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             return false; // Suppress event emission on error
         }
     };
+
+    /**
+     * Select unit and show movement/attack highlights
+     */
+    private selectUnitAt(q: number, r: number): void {
+        console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r}`);
+        
+        if (!this.gameState?.isReady()) {
+            console.warn('[GameViewerPage] Game not ready for unit selection');
+            return;
+        }
+
+        try {
+            // Get movement options from WASM
+            const movementResult = this.gameState.getMovementOptions(q, r);
+            console.log('[GameViewerPage] Movement options:', movementResult);
+            
+            // Get attack options from WASM  
+            const attackResult = this.gameState.getAttackOptions(q, r);
+            console.log('[GameViewerPage] Attack options:', attackResult);
+            
+            // Get unit info
+            const unitInfo = this.gameState.getTileInfo(q, r);
+            console.log('[GameViewerPage] Unit info:', unitInfo);
+            
+            // Convert WASM results to coordinate arrays
+            const movableCoords = movementResult.success && movementResult.data ? 
+                movementResult.data.map((pos: any) => ({ q: pos.q, r: pos.r })) : [];
+            
+            const attackableCoords = attackResult.success && attackResult.data ?
+                attackResult.data.map((pos: any) => ({ q: pos.q, r: pos.r })) : [];
+            
+            console.log(`[GameViewerPage] Unit selection: ${movableCoords.length} movement options, ${attackableCoords.length} attack options`);
+            
+            // Update WorldViewer to show highlights
+            if (this.worldViewer) {
+                const scene = this.worldViewer.getScene();
+                if (scene && 'selectUnit' in scene) {
+                    (scene as any).selectUnit(q, r, movableCoords, attackableCoords);
+                    console.log('[GameViewerPage] Highlights sent to PhaserGameScene');
+                }
+            }
+            
+            // Update UI with unit info
+            if (unitInfo.success && unitInfo.data) {
+                this.updateSelectedUnitInfo(unitInfo.data);
+            }
+            
+            // Add to game log
+            console.log(`Unit selected at (${q}, ${r}) - ${movableCoords.length} moves, ${attackableCoords.length} attacks available`);
+            
+        } catch (error) {
+            console.error('[GameViewerPage] Failed to select unit:', error);
+            this.showToast('Error', 'Failed to select unit', 'error');
+        }
+    }
 
     /**
      * UI update functions

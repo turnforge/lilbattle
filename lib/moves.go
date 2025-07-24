@@ -348,10 +348,6 @@ func (g *Game) CanAttack(from, to AxialCoord) (bool, error) {
 // CanMove validates potential movement using position coordinates
 func (g *Game) CanMove(from, to Position) (bool, error) {
 	unit := g.World.UnitAt(from)
-	if unit == nil {
-		return false, fmt.Errorf("no unit at position (%d, %d)", from.Q, from.R)
-	}
-
 	return g.CanMoveUnit(unit, to), nil
 }
 
@@ -363,19 +359,19 @@ func (g *Game) calculateDistance(a, b AxialCoord) int {
 }
 
 // GetUnitMovementOptions returns all tiles a unit can move to using rules engine
-func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
-	if unit == nil {
-		return nil, fmt.Errorf("unit is nil")
-	}
+func (g *Game) GetUnitMovementOptionsFrom(q, r int) ([]TileOption, error) {
+	return g.GetUnitMovementOptions(g.World.UnitAt(AxialCoord{q, r}))
+}
 
+// GetUnitMovementOptions returns all tiles a unit can move to using rules engine
+func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
 	return g.rulesEngine.GetMovementOptions(g.World, unit, unit.DistanceLeft)
 }
 
 // GetUnitAttackOptions returns all positions a unit can attack using rules engine
+func (g *Game) GetUnitAttackOptionsFrom(q, r int) ([]AxialCoord, error) {
+	return g.GetUnitAttackOptions(g.World.UnitAt(AxialCoord{q, r}))
+}
 func (g *Game) GetUnitAttackOptions(unit *Unit) ([]AxialCoord, error) {
-	if unit == nil {
-		return nil, fmt.Errorf("unit is nil")
-	}
-
 	return g.rulesEngine.GetAttackOptions(g.World, unit)
 }
