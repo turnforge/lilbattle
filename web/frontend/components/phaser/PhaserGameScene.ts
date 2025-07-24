@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { PhaserWorldScene } from './PhaserWorldScene';
 import { hexToPixel } from './hexUtils';
 import { World } from '../World';
+import { SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer } from './layers/HexHighlightLayer';
 
 /**
  * Callback interfaces for game-specific interactions
@@ -39,10 +40,12 @@ export class PhaserGameScene extends PhaserWorldScene {
     private currentPlayer: number = 1;
     private isPlayerTurn: boolean = true;
     
-    // Visual highlight groups
-    private selectionHighlight: Phaser.GameObjects.Graphics | null = null;
-    private movementHighlights: Phaser.GameObjects.Graphics[] = [];
-    private attackHighlights: Phaser.GameObjects.Graphics[] = [];
+    // Layer-based highlight system
+    private selectionHighlightLayer: SelectionHighlightLayer | null = null;
+    private movementHighlightLayer: MovementHighlightLayer | null = null;
+    private attackHighlightLayer: AttackHighlightLayer | null = null;
+    
+    // Path preview graphics for movement/attack visualization
     private pathPreview: Phaser.GameObjects.Graphics | null = null;
     
     // Interaction data from game engine
@@ -60,7 +63,62 @@ export class PhaserGameScene extends PhaserWorldScene {
         // Call parent create first
         super.create();
         
+        // Set up game-specific layers
+        this.setupGameLayers();
+        
         console.log('[PhaserGameScene] Game scene created successfully');
+    }
+    
+    /**
+     * Set up game-specific highlight layers
+     */
+    private setupGameLayers(): void {
+        console.log('[PhaserGameScene] Setting up game layers');
+        
+        const layerManager = this.getLayerManager();
+        if (!layerManager) {
+            console.error('[PhaserGameScene] No LayerManager available');
+            return;
+        }
+        
+        // Create selection highlight layer
+        this.selectionHighlightLayer = new SelectionHighlightLayer(this, this.tileWidth);
+        layerManager.addLayer(this.selectionHighlightLayer);
+        
+        // Create movement highlight layer with click callback
+        this.movementHighlightLayer = new MovementHighlightLayer(
+            this, 
+            this.tileWidth,
+            (q: number, r: number) => this.handleMovementClick(q, r)
+        );
+        layerManager.addLayer(this.movementHighlightLayer);
+        
+        // Create attack highlight layer with click callback
+        this.attackHighlightLayer = new AttackHighlightLayer(
+            this, 
+            this.tileWidth,
+            (q: number, r: number) => this.handleAttackClick(q, r)
+        );
+        layerManager.addLayer(this.attackHighlightLayer);
+        
+        console.log('[PhaserGameScene] Game layers set up successfully');
+    }
+    
+    /**
+     * Handle clicks on movement highlights
+     */
+    private handleMovementClick(q: number, r: number): void {
+        console.log(`[PhaserGameScene] Movement click at (${q}, ${r})`);
+        
+        if (this.selectedUnit && this.gameMode === 'select' || this.gameMode === 'move') {
+            // Emit move command to external handler
+            if (this.callbacks.onTileClicked) {
+                this.callbacks.onTileClicked(q, r);
+            }
+            
+            // Clear selection after move attempt
+            this.clearSelection();
+        }
     }
 
     /**
@@ -271,8 +329,16 @@ export class PhaserGameScene extends PhaserWorldScene {
         this.movableCoords = [];
         this.attackableCoords = [];
         
-        // Clear all visual highlights
-        this.clearAllHighlights();
+        // Clear all visual highlights using layer system
+        if (this.selectionHighlightLayer) {
+            this.selectionHighlightLayer.clearSelection();
+        }
+        if (this.movementHighlightLayer) {
+            this.movementHighlightLayer.clearMovementOptions();
+        }
+        if (this.attackHighlightLayer) {
+            this.attackHighlightLayer.clearAttackOptions();
+        }
         
         // Return to select mode
         this.setGameMode('select');
@@ -305,66 +371,36 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Highlight the selected unit
      */
     private highlightSelectedUnit(q: number, r: number): void {
-        // Clear previous selection highlight
-        if (this.selectionHighlight) {
-            this.selectionHighlight.destroy();
+        if (this.selectionHighlightLayer) {
+            this.selectionHighlightLayer.selectHex(q, r);
+            console.log(`[PhaserGameScene] Unit highlighted at Q=${q}, R=${r}`);
+        } else {
+            console.warn('[PhaserGameScene] Selection highlight layer not available');
         }
-
-        // Create new selection highlight
-        this.selectionHighlight = this.add.graphics();
-        this.selectionHighlight.lineStyle(4, 0xFFFF00, 1.0); // Yellow border
-        this.selectionHighlight.fillStyle(0xFFFF00, 0.2); // Yellow fill with transparency
-
-        // Draw hex outline at unit position
-        const position = hexToPixel(q, r);
-        this.drawHexagonShape(this.selectionHighlight, position.x, position.y, this.tileWidth * 0.9);
-        
-        this.selectionHighlight.setDepth(10); // Above tiles, below UI
-        console.log(`[PhaserGameScene] Unit highlighted at Q=${q}, R=${r}`);
     }
 
     /**
      * Show movement options as green highlights
      */
     private showMovementOptions(movableCoords: Array<{ q: number; r: number }>): void {
-        // Clear previous movement highlights
-        this.clearMovementHighlights();
-
-        movableCoords.forEach(coord => {
-            const highlight = this.add.graphics();
-            highlight.lineStyle(2, 0x00FF00, 0.8); // Green border
-            highlight.fillStyle(0x00FF00, 0.15); // Green fill
-
-            const position = hexToPixel(coord.q, coord.r);
-            this.drawHexagonShape(highlight, position.x, position.y, this.tileWidth * 0.85);
-            
-            highlight.setDepth(5); // Above tiles, below selection
-            this.movementHighlights.push(highlight);
-        });
-
-        console.log(`[PhaserGameScene] Showing ${movableCoords.length} movement options`);
+        if (this.movementHighlightLayer) {
+            this.movementHighlightLayer.showMovementOptions(movableCoords);
+            console.log(`[PhaserGameScene] Showing ${movableCoords.length} movement options`);
+        } else {
+            console.warn('[PhaserGameScene] Movement highlight layer not available');
+        }
     }
 
     /**
      * Show attack options as red highlights
      */
     private showAttackOptions(attackableCoords: Array<{ q: number; r: number }>): void {
-        // Clear previous attack highlights
-        this.clearAttackHighlights();
-
-        attackableCoords.forEach(coord => {
-            const highlight = this.add.graphics();
-            highlight.lineStyle(2, 0xFF0000, 0.8); // Red border
-            highlight.fillStyle(0xFF0000, 0.15); // Red fill
-
-            const position = hexToPixel(coord.q, coord.r);
-            this.drawHexagonShape(highlight, position.x, position.y, this.tileWidth * 0.85);
-            
-            highlight.setDepth(5); // Above tiles, below selection
-            this.attackHighlights.push(highlight);
-        });
-
-        console.log(`[PhaserGameScene] Showing ${attackableCoords.length} attack options`);
+        if (this.attackHighlightLayer) {
+            this.attackHighlightLayer.showAttackOptions(attackableCoords);
+            console.log(`[PhaserGameScene] Showing ${attackableCoords.length} attack options`);
+        } else {
+            console.warn('[PhaserGameScene] Attack highlight layer not available');
+        }
     }
 
     /**
@@ -415,73 +451,38 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Emphasize movement highlights for move mode
      */
     private emphasizeMovementHighlights(): void {
-        this.movementHighlights.forEach(highlight => {
-            highlight.setAlpha(1.0); // Full opacity
-        });
-        this.attackHighlights.forEach(highlight => {
-            highlight.setAlpha(0.3); // Reduced opacity
-        });
+        if (this.movementHighlightLayer) {
+            this.movementHighlightLayer.setAlpha(1.0); // Full opacity
+        }
+        if (this.attackHighlightLayer) {
+            this.attackHighlightLayer.setAlpha(0.3); // Reduced opacity
+        }
     }
 
     /**
      * Emphasize attack highlights for attack mode
      */
     private emphasizeAttackHighlights(): void {
-        this.attackHighlights.forEach(highlight => {
-            highlight.setAlpha(1.0); // Full opacity
-        });
-        this.movementHighlights.forEach(highlight => {
-            highlight.setAlpha(0.3); // Reduced opacity
-        });
+        if (this.attackHighlightLayer) {
+            this.attackHighlightLayer.setAlpha(1.0); // Full opacity
+        }
+        if (this.movementHighlightLayer) {
+            this.movementHighlightLayer.setAlpha(0.3); // Reduced opacity
+        }
     }
 
     /**
      * Normalize highlights for select mode
      */
     private normalizeHighlights(): void {
-        this.movementHighlights.forEach(highlight => {
-            highlight.setAlpha(0.7); // Normal opacity
-        });
-        this.attackHighlights.forEach(highlight => {
-            highlight.setAlpha(0.7); // Normal opacity
-        });
-    }
-
-    /**
-     * Clear all visual highlights
-     */
-    private clearAllHighlights(): void {
-        this.clearSelectionHighlight();
-        this.clearMovementHighlights();
-        this.clearAttackHighlights();
-        this.clearPathPreview();
-    }
-
-    /**
-     * Clear selection highlight
-     */
-    private clearSelectionHighlight(): void {
-        if (this.selectionHighlight) {
-            this.selectionHighlight.destroy();
-            this.selectionHighlight = null;
+        if (this.movementHighlightLayer) {
+            this.movementHighlightLayer.setAlpha(0.7); // Normal opacity
+        }
+        if (this.attackHighlightLayer) {
+            this.attackHighlightLayer.setAlpha(0.7); // Normal opacity
         }
     }
 
-    /**
-     * Clear movement highlights
-     */
-    private clearMovementHighlights(): void {
-        this.movementHighlights.forEach(highlight => highlight.destroy());
-        this.movementHighlights = [];
-    }
-
-    /**
-     * Clear attack highlights
-     */
-    private clearAttackHighlights(): void {
-        this.attackHighlights.forEach(highlight => highlight.destroy());
-        this.attackHighlights = [];
-    }
 
     /**
      * Clear path preview
@@ -529,10 +530,25 @@ export class PhaserGameScene extends PhaserWorldScene {
     }
 
     /**
+     * Get layer instances for direct manipulation
+     */
+    public getSelectionHighlightLayer(): SelectionHighlightLayer | null {
+        return this.selectionHighlightLayer;
+    }
+
+    public getMovementHighlightLayer(): MovementHighlightLayer | null {
+        return this.movementHighlightLayer;
+    }
+
+    public getAttackHighlightLayer(): AttackHighlightLayer | null {
+        return this.attackHighlightLayer;
+    }
+
+    /**
      * Manual cleanup when scene is destroyed
      */
     public destroy(): void {
-        this.clearAllHighlights();
+        this.clearPathPreview();
         super.destroy();
     }
 }

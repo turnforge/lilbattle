@@ -1,6 +1,6 @@
 import { BasePage } from './BasePage';
 import { EventBus, EventTypes } from './EventBus';
-import { WorldViewer } from './WorldViewer';
+import { GameViewer } from './GameViewer';
 import { Unit, Tile, World } from './World';
 import { GameState, GameCreateData, UnitSelectionData } from './GameState';
 import { ComponentLifecycle } from './ComponentLifecycle';
@@ -20,7 +20,7 @@ import { TerrainStatsPanel } from './TerrainStatsPanel';
 class GameViewerPage extends BasePage implements ComponentLifecycle {
     private currentWorldId: string | null;
     private world: World | null = null;
-    private worldViewer: WorldViewer | null = null;
+    private worldViewer: GameViewer | null = null;
     private gameState: GameState | null = null;
     private terrainStatsPanel: TerrainStatsPanel | null = null;
     
@@ -161,7 +161,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             throw new Error('GameViewerPage: phaser-viewer-container not found');
         }
         // Pass element directly (not string ID) as per UI_DESIGN_PRINCIPLES.md
-        this.worldViewer = new WorldViewer(worldViewerContainer, this.eventBus, true, true);
+        this.worldViewer = new GameViewer(worldViewerContainer, this.eventBus, true);
 
         // Create GameState component (no specific container needed)
         const gameStateContainer = document.createElement('div');
@@ -597,12 +597,26 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             
             console.log(`[GameViewerPage] Unit selection: ${movableCoords.length} movement options, ${attackableCoords.length} attack options`);
             
-            // Update WorldViewer to show highlights
+            // Update GameViewer to show highlights using layer-based approach
             if (this.worldViewer) {
-                const scene = this.worldViewer.getScene();
-                if (scene && 'selectUnit' in scene) {
-                    (scene as any).selectUnit(q, r, movableCoords, attackableCoords);
-                    console.log('[GameViewerPage] Highlights sent to PhaserGameScene');
+                // Clear previous selection
+                const selectionLayer = this.worldViewer.getSelectionHighlightLayer();
+                const movementLayer = this.worldViewer.getMovementHighlightLayer();
+                const attackLayer = this.worldViewer.getAttackHighlightLayer();
+                
+                if (selectionLayer && movementLayer && attackLayer) {
+                    // Select the unit
+                    selectionLayer.selectHex(q, r);
+                    
+                    // Show movement options
+                    movementLayer.showMovementOptions(movableCoords);
+                    
+                    // Show attack options
+                    attackLayer.showAttackOptions(attackableCoords);
+                    
+                    console.log('[GameViewerPage] Highlights sent to layers');
+                } else {
+                    console.warn('[GameViewerPage] Some highlight layers not available');
                 }
             }
             

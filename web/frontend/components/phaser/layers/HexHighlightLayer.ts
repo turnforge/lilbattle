@@ -45,7 +45,7 @@ export abstract class HexHighlightLayer extends BaseLayer {
         
         // Draw hexagon
         const position = hexToPixel(q, r);
-        this.drawHexagon(highlight, position.x, position.y, this.tileWidth * 0.85);
+        this.drawHexagon(highlight, position.x, position.y, this.tileWidth * 0.85, strokeColor !== undefined && strokeWidth !== undefined);
         
         // Add to container and store reference
         this.container.add(highlight);
@@ -86,7 +86,7 @@ export abstract class HexHighlightLayer extends BaseLayer {
     /**
      * Draw hexagon shape on graphics object
      */
-    private drawHexagon(graphics: Phaser.GameObjects.Graphics, x: number, y: number, size: number): void {
+    private drawHexagon(graphics: Phaser.GameObjects.Graphics, x: number, y: number, size: number, shouldStroke: boolean = false): void {
         const points: number[] = [];
         
         for (let i = 0; i < 6; i++) {
@@ -97,7 +97,7 @@ export abstract class HexHighlightLayer extends BaseLayer {
         }
         
         graphics.fillPoints(points, true);
-        if (graphics.lineStyle) {
+        if (shouldStroke) {
             graphics.strokePoints(points, true);
         }
     }

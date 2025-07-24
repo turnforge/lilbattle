@@ -1,6 +1,8 @@
 import * as Phaser from 'phaser';
 import { hexToRowCol, hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 import { Unit, Tile, World } from '../World';
+import { LayerManager } from './LayerSystem';
+import { BaseMapLayer, MapLayerCallbacks } from './layers/BaseMapLayer';
 
 export class PhaserWorldScene extends Phaser.Scene {
     // Phaser game instance (self-contained) - renamed to avoid conflict with Phaser's game property
@@ -35,9 +37,13 @@ export class PhaserWorldScene extends Phaser.Scene {
     protected zoomSpeed: number = 0.01;
     protected panSpeed: number = 100;
 
+    // Layer system for managing overlays and interactions
+    protected layerManager: LayerManager | null = null;
+    protected baseMapLayer: BaseMapLayer | null = null;
+    
     // Game interaction callbacks (optional, only used by GameViewerPage)
-    protected tileClickCallback: ((q: number, r: number) => boolean) | null = null;
-    protected unitClickCallback: ((q: number, r: number) => boolean) | null = null;
+    protected tileClickCallback?: ((q: number, r: number) => boolean)
+    protected unitClickCallback?: ((q: number, r: number) => boolean)
     
     // Mouse interaction
     protected isMouseDown: boolean = false;
@@ -143,6 +149,15 @@ export class PhaserWorldScene extends Phaser.Scene {
      * Destroy the scene and its Phaser.Game instance
      */
     public destroy(): void {
+        console.log('[PhaserWorldScene] Destroying scene');
+        
+        // Clean up layer system
+        if (this.layerManager) {
+            this.layerManager.destroy();
+            this.layerManager = null;
+        }
+        this.baseMapLayer = null;
+        
         if (this.phaserGame) {
             this.phaserGame.destroy(true);
             this.phaserGame = null;
@@ -176,8 +191,17 @@ export class PhaserWorldScene extends Phaser.Scene {
         console.log('[PhaserWorldScene] Received tileCallback:', !!tileCallback);
         console.log('[PhaserWorldScene] Received unitCallback:', !!unitCallback);
         
-        this.tileClickCallback = tileCallback || null;
-        this.unitClickCallback = unitCallback || null;
+        this.tileClickCallback = tileCallback
+        this.unitClickCallback = unitCallback
+        
+        // Update base map layer callbacks if available
+        if (this.baseMapLayer) {
+            this.baseMapLayer.setCallbacks({
+                onTileClicked: tileCallback,
+                onUnitClicked: unitCallback,
+                onEmptySpaceClicked: tileCallback
+            });
+        }
         
         console.log('[PhaserWorldScene] Stored tileClickCallback:', !!this.tileClickCallback);
         console.log('[PhaserWorldScene] Stored unitClickCallback:', !!this.unitClickCallback);
@@ -214,6 +238,9 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Set up camera controls
         this.setupCameraControls();
+        
+        // Set up layer system
+        this.setupLayerSystem();
         
         // Set up input handling
         this.setupInputHandling();
@@ -349,6 +376,33 @@ export class PhaserWorldScene extends Phaser.Scene {
         });
     }
     
+    /**
+     * Set up the layer system for managing overlays and interactions
+     */
+    private setupLayerSystem(): void {
+        console.log('[PhaserWorldScene] Setting up layer system');
+        
+        // Create layer manager with coordinate conversion functions
+        this.layerManager = new LayerManager(
+            this,
+            (x: number, y: number) => pixelToHex(x, y),
+            (q: number, r: number) => this.world?.getTileAt(q, r) || null,
+            (q: number, r: number) => this.world?.getUnitAt(q, r) || null
+        );
+        
+        // Create base map layer for default interactions
+        this.baseMapLayer = new BaseMapLayer(this, {
+            onTileClicked: this.tileClickCallback,
+            onUnitClicked: this.unitClickCallback,
+            onEmptySpaceClicked: this.tileClickCallback
+        });
+        
+        // Add base map layer to manager
+        this.layerManager.addLayer(this.baseMapLayer);
+        
+        console.log('[PhaserWorldScene] Layer system initialized');
+    }
+    
     private setupInputHandling() {
         // Mouse/touch interaction handling
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -363,9 +417,21 @@ export class PhaserWorldScene extends Phaser.Scene {
             if (pointer.button === 0) { // Left click only
                 // Only handle click if we didn't drag
                 if (!this.hasDragged) {
-                    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-                    const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
-                    this.onTileClick(hexCoords.q, hexCoords.r);
+                    // Use layer system for click handling if available, fallback to direct handling
+                    if (this.layerManager) {
+                        const handled = this.layerManager.handleClick(pointer);
+                        if (!handled) {
+                            console.log('[PhaserWorldScene] No layer handled click, using fallback');
+                            const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+                            const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
+                            this.onTileClick(hexCoords.q, hexCoords.r);
+                        }
+                    } else {
+                        // Fallback to direct handling
+                        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+                        const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
+                        this.onTileClick(hexCoords.q, hexCoords.r);
+                    }
                 }
                 
                 // Reset state
@@ -980,5 +1046,12 @@ export class PhaserWorldScene extends Phaser.Scene {
         });
         
         return unitsData;
+    }
+    
+    /**
+     * Get access to the layer manager for external layer management
+     */
+    public getLayerManager(): LayerManager | null {
+        return this.layerManager;
     }
 }

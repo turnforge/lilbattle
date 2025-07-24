@@ -12,20 +12,26 @@ import { ComponentLifecycle } from './ComponentLifecycle';
  * - World data rendering (tiles and units)
  * - Camera controls and viewport management
  * - Theme and display options
- * - Scene selection (PhaserWorldScene for basic viewing, PhaserGameScene for interactive gameplay)
  * 
  * Layout and styling are handled by parent container and CSS classes.
+ * 
+ * @template TScene - The type of Phaser scene to use (defaults to PhaserWorldScene)
  */
-export class WorldViewer extends BaseComponent implements ComponentLifecycle {
-    private scene: PhaserWorldScene | PhaserGameScene | null = null;
+export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> extends BaseComponent implements ComponentLifecycle {
+    protected scene: TScene | null = null;
     private loadedWorldData: WorldDataLoadedPayload | null;
     private viewerContainer: HTMLElement | null;
-    private isGameMode: boolean = false; // New: determines which scene type to use
     
-    constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false, isGameMode: boolean = false) {
-        console.log('WorldViewer constructor: received eventBus:', eventBus, 'gameMode:', isGameMode);
+    constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        console.log('WorldViewer constructor: received eventBus:', eventBus);
         super('world-viewer', rootElement, eventBus, debugMode);
-        this.isGameMode = isGameMode;
+    }
+
+    /**
+     * Factory method for creating the scene - can be overridden by subclasses
+     */
+    protected createScene(): TScene {
+        return new PhaserWorldScene() as TScene;
     }
     
     protected initializeComponent(): void {
@@ -108,7 +114,7 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
      * Initialize the appropriate Phaser scene (PhaserWorldScene or PhaserGameScene)
      */
     private async initializePhaserScene(): Promise<void> {
-        console.log(`WorldViewer: initializePhaserScene() called, gameMode: ${this.isGameMode}`);
+        console.log(`WorldViewer: initializePhaserScene() called`);
         
         // Guard against multiple initialization
         if (this.scene) {
@@ -120,19 +126,14 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
             throw new Error('Viewer container not available');
         }
         
-        // Create the appropriate scene type based on mode
-        if (this.isGameMode) {
-            this.log('Creating self-contained PhaserGameScene for interactive gameplay');
-            this.scene = new PhaserGameScene();
-        } else {
-            this.log('Creating self-contained PhaserWorldScene for basic viewing');
-            this.scene = new PhaserWorldScene();
-        }
+        // Create scene using factory method
+        this.log('Creating Phaser scene using factory method');
+        this.scene = this.createScene();
         
         // Initialize it with the container
         await this.scene.initialize(this.viewerContainer.id);
         
-        this.log(`${this.isGameMode ? 'PhaserGameScene' : 'PhaserWorldScene'} initialized successfully`);
+        this.log(`Phaser scene initialized successfully`);
         
         // Emit ready event
         console.log('WorldViewer: Emitting WORLD_VIEWER_READY event');

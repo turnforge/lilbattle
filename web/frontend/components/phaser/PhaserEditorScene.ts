@@ -37,6 +37,30 @@ export class PhaserEditorScene extends PhaserWorldScene {
     }
 
     /**
+     * Override create to set up editor-specific layer callbacks
+     */
+    create() {
+        // Call parent create first to set up layer system
+        super.create();
+        
+        // Set up BaseMapLayer callbacks for editor functionality
+        this.setInteractionCallbacks(
+            (q: number, r: number) => {
+                // Handle tile clicks through the layer system
+                this.onTileClick(q, r);
+                return false; // Don't emit events - editor handles directly
+            },
+            (q: number, r: number) => {
+                // Handle unit clicks the same as tile clicks in editor
+                this.onTileClick(q, r);
+                return false; // Don't emit events - editor handles directly
+            }
+        );
+        
+        console.log('[PhaserEditorScene] Editor scene created with layer callbacks');
+    }
+
+    /**
      * Override the tile click handler for editor functionality
      */
     protected onTileClick(q: number, r: number) {
