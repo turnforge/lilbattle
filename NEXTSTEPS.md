@@ -457,10 +457,10 @@
 - **Maintainability**: Single source of truth for all UI colors reduces maintenance burden
 
 ### Phase 10: Interactive Web Gameplay ✅ INTERACTIVE FOUNDATION COMPLETE
-**Current Phase**: Scene Architecture Complete - Ready for Game-Specific Features
-**Status**: Editor/Viewer separation complete, terrain selection working, world centering implemented
-**Achievement**: PhaserEditorScene created, terrain selection wiring fixed, interactive terrain stats working
-**Next Priority**: Implement PhaserGameScene with unit selection, movement highlighting, and combat interface
+**Current Phase**: PhaserGameScene Foundation Complete - Terrain Click System Working
+**Status**: Game scene architecture implemented, terrain stats integration working, rules engine fix complete
+**Achievement**: PhaserGameScene created, terrain callbacks working, WASM exports added, rules engine issues resolved
+**Next Priority**: Implement unit selection highlighting and movement preview system
 
 #### Editor Scene Architecture ✅ COMPLETE
 - ✅ **PhaserEditorScene Creation**: Extends PhaserWorldScene with editor-specific painting, reference images, brush controls
@@ -477,10 +477,15 @@
 - ✅ **WASM Interface Extension**: GameState.ts updated with terrain stats methods for WASM bridge
 - ✅ **PhaserWorldScene Refactor**: Self-contained with own Phaser.Game instance, callback system for game interaction
 - ✅ **Click Integration**: Terrain clicks in GameViewerPage display stats in TerrainStatsPanel below game log
+- ✅ **PhaserGameScene Implementation**: Extended PhaserWorldScene with interactive game features including unit selection
+- ✅ **WASM Export Resolution**: Added missing getTerrainStatsAt, canSelectUnit, getTileInfo WASM functions
+- ✅ **Rules Engine Integration Fix**: Fixed UI methods to use game's rules engine instead of global empty instance
+- ✅ **Callback System Working**: Fixed timing issues with callback setup after scene initialization
 
 #### Next Development (Week 2) - Game-Specific Features
-- [ ] **PhaserGameScene**: Extend PhaserWorldScene with unit selection highlighting, movement preview, combat targeting
-- [ ] **Unit Selection System**: Click units to select, show movement range, attack targets with visual indicators
+- ✅ **PhaserGameScene**: Extended PhaserWorldScene with unit selection highlighting, movement preview, combat targeting
+- [ ] **Unit Movement Highlighting**: Integrate WASM movement options to show valid move positions with green highlights
+- [ ] **Unit Attack Highlighting**: Integrate WASM attack options to show valid targets with red highlights  
 - [ ] **Movement Interface**: Click-to-move with path preview and movement point validation
 - [ ] **Combat Interface**: Attack targeting with damage preview and combat resolution animations
 - [ ] **Turn Management**: End turn integration with UI updates and player transitions

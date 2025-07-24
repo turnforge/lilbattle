@@ -51,9 +51,8 @@ func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
 		return nil, fmt.Errorf("no tile at position (%d,%d)", q, r)
 	}
 
-	// Get terrain data from rules engine
-	rulesEngine := GetRulesEngine()
-	terrainData, err := rulesEngine.GetTerrainData(tile.TileType)
+	// Get terrain data from game's rules engine
+	terrainData, err := g.GetRulesEngine().GetTerrainData(tile.TileType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get terrain data for type %d: %w", tile.TileType, err)
 	}
@@ -62,7 +61,7 @@ func (g *Game) GetTerrainStatsAt(q, r int) (map[string]any, error) {
 	unit := g.World.UnitAt(coord)
 
 	// Calculate movement cost for default unit type (Infantry = 1)
-	movementCost, err := rulesEngine.getUnitTerrainCost(1, tile.TileType)
+	movementCost, err := g.GetRulesEngine().getUnitTerrainCost(1, tile.TileType)
 	if err != nil {
 		movementCost = terrainData.BaseMoveCost // fallback to base cost
 	}
@@ -109,9 +108,8 @@ func (g *Game) GetTileInfo(q, r int) (map[string]any, error) {
 		return nil, fmt.Errorf("no tile at position (%d,%d)", q, r)
 	}
 
-	// Get basic terrain name from rules engine
-	rulesEngine := GetRulesEngine()
-	terrainData, err := rulesEngine.GetTerrainData(tile.TileType)
+	// Get basic terrain name from game's rules engine
+	terrainData, err := g.GetRulesEngine().GetTerrainData(tile.TileType)
 	terrainName := "Unknown"
 	if err == nil {
 		terrainName = terrainData.Name

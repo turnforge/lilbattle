@@ -390,11 +390,15 @@ WeeWar is evolving from a comprehensive CLI-based turn-based strategy game into 
 - [x] ~~**Complete Data Format Alignment**: Ensure WASM responses match TypeScript interface expectations~~ ✅ COMPLETED
 
 ### Interactive Gameplay Features (Current Priority - In Progress)
-- [ ] **Debug Unit Visibility**: Investigate why units are not visible in GameViewerPage renderer
-- [ ] **Enable Unit Selection**: Connect GameViewerPage unit selection to Phaser viewer highlighting
-- [ ] **Implement Movement Highlighting**: Show valid movement options as colored overlays in Phaser viewer
-- [ ] **Add Click-to-Move**: Enable clicking on highlighted tiles to move selected units
-- [ ] **Implement Attack Targeting**: Show attack options and enable click-to-attack functionality
+- [x] ~~**Terrain Click System Working**: Fixed rules engine integration and WASM exports for terrain stats~~ ✅ COMPLETED
+- [x] ~~**PhaserGameScene Implementation**: Extended PhaserWorldScene with unit selection, movement, and attack highlighting~~ ✅ COMPLETED
+- [x] ~~**WASM Export Resolution**: Added missing getTerrainStatsAt, canSelectUnit, getTileInfo functions~~ ✅ COMPLETED
+- [x] ~~**Rules Engine Integration Fix**: Fixed UI methods to use game's rules engine instead of global empty instance~~ ✅ COMPLETED
+- [x] ~~**Callback System Working**: Fixed timing issues with callback setup after scene initialization~~ ✅ COMPLETED
+- [ ] **Unit Movement Integration**: Connect WASM GetMovementOptions to PhaserGameScene green highlighting system
+- [ ] **Unit Attack Integration**: Connect WASM GetAttackOptions to PhaserGameScene red highlighting system
+- [ ] **Click-to-Move Implementation**: Enable clicking highlighted movement tiles to execute unit moves
+- [ ] **Click-to-Attack Implementation**: Enable clicking highlighted attack targets to execute combat
 - [ ] **Complete Turn Management**: Test full turn cycle with proper UI updates and state synchronization
 
 ### AI Integration and Advanced Features (Week 3-4 - Future)

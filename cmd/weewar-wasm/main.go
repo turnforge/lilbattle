@@ -36,6 +36,9 @@ func main() {
 	js.Global().Set("weewarMoveUnit", js.FuncOf(moveUnit))
 	js.Global().Set("weewarAttackUnit", js.FuncOf(attackUnit))
 	js.Global().Set("weewarEndTurn", js.FuncOf(endTurn))
+	js.Global().Set("weewarGetTerrainStatsAt", js.FuncOf(getTerrainStatsAt))
+	js.Global().Set("weewarCanSelectUnit", js.FuncOf(canSelectUnit))
+	js.Global().Set("weewarGetTileInfo", js.FuncOf(getTileInfo))
 
 	fmt.Println("WeeWar WASM module loaded successfully")
 
@@ -192,6 +195,68 @@ func endTurn(this js.Value, args []js.Value) any {
 	// Return updated game state
 	gameState := globalGame.GetGameStateForUI()
 	return createJSResponse(true, "Turn ended", gameState)
+}
+
+// getTerrainStatsAt returns detailed terrain stats for a tile
+func getTerrainStatsAt(this js.Value, args []js.Value) any {
+	if globalGame == nil {
+		return createJSResponse(false, "No game loaded", nil)
+	}
+
+	if len(args) < 2 {
+		return createJSResponse(false, "Missing coordinate arguments", nil)
+	}
+
+	q := args[0].Int()
+	r := args[1].Int()
+
+	// Use UI method from lib/ui.go
+	stats, err := globalGame.GetTerrainStatsAt(q, r)
+	if err != nil {
+		return createJSResponse(false, err.Error(), nil)
+	}
+
+	return createJSResponse(true, "Terrain stats retrieved", stats)
+}
+
+// canSelectUnit checks if unit at position can be selected by current player
+func canSelectUnit(this js.Value, args []js.Value) any {
+	if globalGame == nil {
+		return createJSResponse(false, "No game loaded", nil)
+	}
+
+	if len(args) < 2 {
+		return createJSResponse(false, "Missing coordinate arguments", nil)
+	}
+
+	q := args[0].Int()
+	r := args[1].Int()
+
+	// Use UI method from lib/ui.go
+	canSelect := globalGame.CanSelectUnit(q, r)
+	return createJSResponse(true, "Selection check completed", canSelect)
+}
+
+// getTileInfo returns basic tile information
+func getTileInfo(this js.Value, args []js.Value) any {
+	if globalGame == nil {
+		return createJSResponse(false, "No game loaded", nil)
+	}
+
+	if len(args) < 2 {
+		return createJSResponse(false, "Missing coordinate arguments", nil)
+	}
+
+	q := args[0].Int()
+	r := args[1].Int()
+
+	// Use UI method from lib/ui.go
+	info, err := globalGame.GetTileInfo(q, r)
+	if err != nil {
+		return createJSResponse(false, err.Error(), nil)
+	}
+
+	return createJSResponse(true, "Tile info retrieved", info)
 }
 
 // =============================================================================
