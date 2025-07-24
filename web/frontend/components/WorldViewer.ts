@@ -296,8 +296,17 @@ export class WorldViewer extends BaseComponent implements ComponentLifecycle {
         tileCallback?: (q: number, r: number) => boolean,
         unitCallback?: (q: number, r: number) => boolean
     ): void {
+        console.log('[WorldViewer] setInteractionCallbacks called');
+        console.log('[WorldViewer] tileCallback:', !!tileCallback);
+        console.log('[WorldViewer] unitCallback:', !!unitCallback);
+        console.log('[WorldViewer] this.scene exists:', !!this.scene);
+        
         if (this.scene) {
+            console.log('[WorldViewer] Calling scene.setInteractionCallbacks');
             this.scene.setInteractionCallbacks(tileCallback, unitCallback);
+            console.log('[WorldViewer] scene.setInteractionCallbacks completed');
+        } else {
+            console.error('[WorldViewer] No scene available to set callbacks on');
         }
     }
 

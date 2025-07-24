@@ -172,12 +172,16 @@ export class PhaserWorldScene extends Phaser.Scene {
         tileCallback?: (q: number, r: number) => boolean,
         unitCallback?: (q: number, r: number) => boolean
     ): void {
+        console.log('[PhaserWorldScene] setInteractionCallbacks called');
+        console.log('[PhaserWorldScene] Received tileCallback:', !!tileCallback);
+        console.log('[PhaserWorldScene] Received unitCallback:', !!unitCallback);
+        
         this.tileClickCallback = tileCallback || null;
         this.unitClickCallback = unitCallback || null;
-        console.log('[PhaserWorldScene] Interaction callbacks set:', {
-            tileCallback: !!tileCallback,
-            unitCallback: !!unitCallback
-        });
+        
+        console.log('[PhaserWorldScene] Stored tileClickCallback:', !!this.tileClickCallback);
+        console.log('[PhaserWorldScene] Stored unitClickCallback:', !!this.unitClickCallback);
+        console.log('[PhaserWorldScene] Interaction callbacks set successfully');
     }
 
     
@@ -784,12 +788,17 @@ export class PhaserWorldScene extends Phaser.Scene {
     // Callback for tile clicks (handles both game interaction and editor events)
     protected onTileClick(q: number, r: number) {
         console.log(`[PhaserWorldScene] Tile clicked: Q=${q}, R=${r}`);
+        console.log(`[PhaserWorldScene] tileClickCallback:`, !!this.tileClickCallback);
+        console.log(`[PhaserWorldScene] unitClickCallback:`, !!this.unitClickCallback);
         
         // Check if there's a unit at this position first for game interaction
         if (this.world) {
             const unit = this.world.getUnitAt(q, r);
+            console.log(`[PhaserWorldScene] Unit found at position:`, !!unit);
             if (unit && this.unitClickCallback) {
+                console.log(`[PhaserWorldScene] Calling unitClickCallback for unit at Q=${q}, R=${r}`);
                 const shouldEmit = this.unitClickCallback(q, r);
+                console.log(`[PhaserWorldScene] unitClickCallback returned:`, shouldEmit);
                 if (!shouldEmit) {
                     return; // Unit callback handled it and suppressed event
                 }
@@ -798,13 +807,16 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Call tile callback if set
         if (this.tileClickCallback) {
+            console.log(`[PhaserWorldScene] Calling tileClickCallback for Q=${q}, R=${r}`);
             const shouldEmit = this.tileClickCallback(q, r);
+            console.log(`[PhaserWorldScene] tileClickCallback returned:`, shouldEmit);
             if (!shouldEmit) {
                 return; // Tile callback handled it and suppressed event
             }
         }
         
         // Default behavior: emit the tile click event for WorldEditorPage or other listeners
+        console.log(`[PhaserWorldScene] Emitting tileClicked event`);
         this.events.emit('tileClicked', { q, r });
     }
     

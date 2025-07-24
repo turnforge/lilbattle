@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -101,8 +102,10 @@ func (p *GameViewerPage) parseGameParameters(r *http.Request) {
 
 // GetTerrainDataJSON returns terrain data from rules engine as JSON string
 func (p *GameViewerPage) GetTerrainDataJSON() string {
-	rulesEngine := weewar.GetRulesEngine()
+	rulesEngine := weewar.DefaultRulesEngine()
 	terrainData, err := json.Marshal(rulesEngine.Terrains)
+	fmt.Println("RuleEngine: ", rulesEngine)
+	fmt.Println("TerrainData: ", terrainData)
 	if err != nil {
 		log.Printf("Error marshaling terrain data: %v", err)
 		return "{}"
@@ -112,7 +115,7 @@ func (p *GameViewerPage) GetTerrainDataJSON() string {
 
 // GetUnitDataJSON returns unit data from rules engine as JSON string
 func (p *GameViewerPage) GetUnitDataJSON() string {
-	rulesEngine := weewar.GetRulesEngine()
+	rulesEngine := weewar.DefaultRulesEngine()
 	unitData, err := json.Marshal(rulesEngine.Units)
 	if err != nil {
 		log.Printf("Error marshaling unit data: %v", err)
@@ -123,7 +126,7 @@ func (p *GameViewerPage) GetUnitDataJSON() string {
 
 // GetMovementMatrixJSON returns movement cost matrix as JSON string
 func (p *GameViewerPage) GetMovementMatrixJSON() string {
-	rulesEngine := weewar.GetRulesEngine()
+	rulesEngine := weewar.DefaultRulesEngine()
 	movementData, err := json.Marshal(rulesEngine.MovementMatrix)
 	if err != nil {
 		log.Printf("Error marshaling movement matrix: %v", err)

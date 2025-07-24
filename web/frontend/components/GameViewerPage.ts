@@ -101,6 +101,17 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         // Subscribe BEFORE creating WorldViewer to catch initialization events
         this.eventBus.subscribe('world-viewer-ready', (payload) => {
             console.log('GameViewerPage: WorldViewer ready event received', payload);
+            
+            // Now that WorldViewer scene is ready, set up the interaction callbacks
+            if (this.worldViewer) {
+                console.log('GameViewerPage: Setting interaction callbacks after scene ready');
+                this.worldViewer.setInteractionCallbacks(
+                    this.onTileClicked,
+                    this.onUnitClicked
+                );
+                console.log('GameViewerPage: Interaction callbacks set after scene ready');
+            }
+            
             if (this.currentWorldId) {
                 console.log('GameViewerPage: WorldId found, proceeding to load world:', this.currentWorldId);
                 // WebGL context timing - wait for next event loop tick
@@ -692,14 +703,8 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         // Bind events now that all components are ready
         this.bindGameSpecificEvents();
 
-        // Set up interaction callbacks for terrain and unit clicks
-        if (this.worldViewer) {
-            this.worldViewer.setInteractionCallbacks(
-                this.onTileClicked,
-                this.onUnitClicked
-            );
-            console.log('GameViewerPage: Interaction callbacks set on WorldViewer');
-        }
+        // Note: Interaction callbacks are set in world-viewer-ready event handler
+        // after the PhaserGameScene is actually created and ready
         
         // Wait for world viewer to be ready, then load world and initialize game
         if (this.currentWorldId) {

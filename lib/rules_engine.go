@@ -3,6 +3,8 @@ package weewar
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/panyam/turnengine/games/weewar/assets"
 )
 
 // =============================================================================
@@ -30,20 +32,6 @@ type MovementMatrix struct {
 type AttackMatrix struct {
 	// attacks[attackerID][defenderID] = damage distribution
 	Attacks map[int]map[int]*DamageDistribution `json:"attacks"`
-}
-
-// =============================================================================
-// Global Rules Engine Instance
-// =============================================================================
-
-var globalRulesEngine *RulesEngine
-
-// GetRulesEngine returns the global rules engine instance
-func GetRulesEngine() *RulesEngine {
-	if globalRulesEngine == nil {
-		globalRulesEngine = NewRulesEngine()
-	}
-	return globalRulesEngine
 }
 
 // =============================================================================
@@ -525,4 +513,21 @@ func GetTerrainData(terrainType int) *TerrainData {
 		}
 	}
 	return &DefaultTerrainData[0] // Default to unknown
+}
+
+var (
+	defaultRulesEngine *RulesEngine
+)
+
+func init() {
+	var err error
+	defaultRulesEngine, err = LoadRulesEngineFromJSON(assets.RulesDataJSON)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// GetDefaultRulesEngine returns a font family that works in WASM environments
+func DefaultRulesEngine() *RulesEngine {
+	return defaultRulesEngine
 }

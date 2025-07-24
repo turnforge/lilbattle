@@ -176,9 +176,9 @@
         <pre id="world-data-json" style="display: none;">{{ if .World }}{{ .World | ToJson }}{{ else }}null{{ end }}</pre>
         
         <!-- Hidden Rules Engine Data for Frontend -->
-        <script type="application/json" id="terrain-data-json">{{ .GetTerrainDataJSON }}</script>
-        <script type="application/json" id="unit-data-json">{{ .GetUnitDataJSON }}</script>
-        <script type="application/json" id="movement-matrix-json">{{ .GetMovementMatrixJSON }}</script>
+        <pre id="terrain-data-json" style="display: none;">{{ .GetTerrainDataJSON }}</pre>
+        <pre id="unit-data-json" style="display: none;">{{ .GetUnitDataJSON }}</pre>
+        <pre id="movement-matrix-json" style="display: none;">{{ .GetMovementMatrixJSON }}</pre>
     </main>
     
     <!-- Include TerrainStatsPanel Template -->

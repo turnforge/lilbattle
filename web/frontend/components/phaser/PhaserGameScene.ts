@@ -82,7 +82,7 @@ export class PhaserGameScene extends PhaserWorldScene {
             return;
         }
 
-        // Handle different interaction modes
+        // Handle different interaction modes first
         switch (this.gameMode) {
             case 'select':
                 this.handleSelectClick(q, r);
@@ -95,23 +95,10 @@ export class PhaserGameScene extends PhaserWorldScene {
                 break;
         }
 
-        // Also call parent callbacks for external handling (terrain stats, etc.)
-        // Check if there's a unit at this position first
-        const unit = this.world.getUnitAt(q, r);
-        if (unit) {
-            // Call unit clicked callback
-            if (this.callbacks.onUnitClicked) {
-                this.callbacks.onUnitClicked(q, r);
-            }
-        } else {
-            // Call tile clicked callback
-            if (this.callbacks.onTileClicked) {
-                this.callbacks.onTileClicked(q, r);
-            }
-        }
-
-        // Also emit the base event for any other listeners
-        this.events.emit('tileClicked', { q, r });
+        // Call parent's interaction callback system (this is what GameViewerPage connects to)
+        console.log(`[PhaserGameScene] About to call super.onTileClick(${q}, ${r})`);
+        super.onTileClick(q, r);
+        console.log(`[PhaserGameScene] Finished calling super.onTileClick(${q}, ${r})`);
     }
 
     /**

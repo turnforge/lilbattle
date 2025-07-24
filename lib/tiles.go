@@ -14,12 +14,12 @@ const (
 
 // TerrainData represents terrain type information
 type TerrainData struct {
-	ID           int         `json:"id"`
-	Name         string      `json:"name"`
-	BaseMoveCost float64     `json:"baseMoveCost"` // Base movement cost for this terrain
-	DefenseBonus float64     `json:"defenseBonus"`
-	Type         TerrainType `json:"type"` // Nature or Player terrain
-	Properties   []string    `json:"properties,omitempty"`
+	ID           int         // `json:"id"`
+	Name         string      // `json:"name"`
+	BaseMoveCost float64     // `json:"baseMoveCost"` // Base movement cost for this terrain
+	DefenseBonus float64     // `json:"defenseBonus"`
+	Type         TerrainType // `json:"type"` // Nature or Player terrain
+	Properties   []string    // `json:"properties,omitempty"`
 	// Note: Unit-specific movement costs in RulesEngine can override base cost
 }
 
