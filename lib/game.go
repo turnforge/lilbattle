@@ -122,7 +122,7 @@ func (g *Game) initializeStartingUnits() error {
 	for playerID := range g.World.PlayerCount() {
 		for _, unit := range g.World.unitsByPlayer[playerID] {
 			// Get unit data from rules engine
-			fmt.Println("Player ID, Unit: ", playerID, unit)
+			// fmt.Println("Player ID, Unit: ", playerID, unit)
 			unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
 			if err != nil {
 				return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)

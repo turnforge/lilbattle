@@ -2,6 +2,8 @@ package weewar
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 )
 
 // =============================================================================
@@ -143,24 +145,48 @@ func (g *Game) GetTileInfo(q, r int) (map[string]any, error) {
 func (g *Game) GetGameStateForUI() map[string]any {
 	// Convert unitsByCoord to JSON-serializable format
 	// Since JSON object keys must be strings, we'll convert AxialCoord to string format
-	allUnitsprivateMap := make(map[string]*Unit)
+	allPlayers := map[int]bool{}
+	allUnits := make(map[string]*Unit)
 	for coord, unit := range g.World.unitsByCoord {
 		coordKey := fmt.Sprintf("%d,%d", coord.Q, coord.R) // e.g., "0,1" for Q=0, R=1
-		allUnitsprivateMap[coordKey] = unit
+		allUnits[coordKey] = unit
+		allPlayers[unit.Player] = true
 	}
 
-	return map[string]any{
-		"currentPlayer": g.CurrentPlayer,    // Current player's turn
-		"turnCounter":   g.TurnCounter,      // Turn number
-		"status":        g.Status,           // GameStatus (playing/ended/paused)
-		"allUnits":      allUnitsprivateMap, // All units on map (coord string -> unit)
-		"players":       g.Players,          // Player information
-		"teams":         g.Teams,            // Team information
-		"mapSize": map[string]int{ // privateMap dimensions
+	out := map[string]any{
+		"currentPlayer": g.CurrentPlayer, // Current player's turn
+		"turnCounter":   g.TurnCounter,   // Turn number
+		"status":        g.Status,        // GameStatus (playing/ended/paused)
+		"allUnits":      allUnits,        // All units on map (coord string -> unit)
+		"players":       slices.Collect(maps.Values(allPlayers)),
+		"teams":         g.Teams, // Team information
+		"mapSize": map[string]int{ //  dimensions
 			"rows": g.World.NumRows(),
 			"cols": g.World.NumCols(),
 		},
-		"winner":    g.winner,    // Winner if game ended
-		"hasWinner": g.hasWinner, // Whether game has ended
+		"winner":      g.winner, // Winner if game ended
+		"hasPlayers":  len(allPlayers) > 0,
+		"playerCount": len(allPlayers),
+		"unitCount":   len(allUnits),
+		"hasUnits":    len(allUnits) > 0,
+		"hasWinner":   g.hasWinner, // Whether game has ended
 	}
+	// fmt.Print("GameStateForUI: ", out)
+	/** sample
+	  GameData for Validation:  {
+	    allUnits: {
+	      '0,0': { player: 1, q: 0, r: 0, unit_type: 1 },
+	      '2,2': { player: 2, q: 2, r: 2, unit_type: 1 }
+	    },
+	    currentPlayer: 1,
+	    hasWinner: false,
+	    mapSize: { cols: 1, rows: 1 },
+	    players: null,
+	    status: 0,
+	    teams: null,
+	    turnCounter: 1,
+	    winner: -1
+	  }
+	*/
+	return out
 }

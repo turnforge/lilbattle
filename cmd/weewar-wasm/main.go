@@ -69,6 +69,7 @@ func createGameFromMap(mapDataStr string) (gameState any, err error) {
 	world := weewar.NewWorld("test") // &weewar.World{}
 	// world := &weewar.World{}
 	if err = world.UnmarshalJSON([]byte(mapDataStr)); err != nil {
+		fmt.Println("Invalid world json: ", string(mapDataStr))
 		return
 	}
 

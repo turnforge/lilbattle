@@ -365,7 +365,11 @@ func (g *Game) GetUnitMovementOptionsFrom(q, r int) ([]TileOption, error) {
 
 // GetUnitMovementOptions returns all tiles a unit can move to using rules engine
 func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
-	return g.rulesEngine.GetMovementOptions(g.World, unit, unit.DistanceLeft)
+	dl := 0
+	if unit != nil {
+		dl = unit.DistanceLeft
+	}
+	return g.rulesEngine.GetMovementOptions(g.World, unit, dl)
 }
 
 // GetUnitAttackOptions returns all positions a unit can attack using rules engine

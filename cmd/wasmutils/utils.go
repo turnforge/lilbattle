@@ -31,6 +31,7 @@ func CreateWrapper(minArgs, maxArgs int, fn WASMFunction) js.Func {
 		// Call the function and handle response
 		result, err := fn(args)
 		if err != nil {
+			fmt.Println("##### Error calling function: ", err)
 			return CreateErrorResponse(err.Error())
 		}
 
