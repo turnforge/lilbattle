@@ -506,10 +506,9 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             return false; // Suppress event emission
         }
 
-        try {
-            // Get terrain info from WASM via ui.go
-            const terrainStats = this.gameState.getTerrainStatsAt(q, r);
-            
+        // Get terrain info from WASM via ui.go
+        const terrainStats = this.gameState.getTerrainStatsAt(q, r);
+        if (terrainStats != null) {
             console.log('[GameViewerPage] Retrieved terrain stats:', terrainStats);
             
             // Update terrain stats panel with the data
@@ -523,15 +522,9 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
                 r: r,
                 player: terrainStats.player
             });
-
-            return true; // We handled it completely, suppress event emission
-
-        } catch (error) {
-            console.error('[GameViewerPage] Failed to get terrain stats:', error);
-            // Clear terrain panel on error
-            this.terrainStatsPanel.clearTerrainInfo();
-            return false; // Suppress event emission on error
+            return false;
         }
+        return true; // We handled it completely, suppress event emission
     };
 
     /**
@@ -607,10 +600,10 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             
             // Convert WASM results to coordinate arrays
             const movableCoords = movementResult.success && movementResult.data ? 
-                movementResult.data.map((pos: any) => ({ q: pos.q, r: pos.r })) : [];
+                movementResult.data.map((pos: any) => ({ q: pos.coord.q, r: pos.coord.r })) : [];
             
             const attackableCoords = attackResult.success && attackResult.data ?
-                attackResult.data.map((pos: any) => ({ q: pos.q, r: pos.r })) : [];
+                attackResult.data.map((pos: any) => ({ q: pos.coord.q, r: pos.coord.r })) : [];
             
             console.log(`[GameViewerPage] Unit selection: ${movableCoords.length} movement options, ${attackableCoords.length} attack options`);
             
