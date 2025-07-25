@@ -44,6 +44,10 @@ func (c AxialCoord) S() int {
 	return -c.Q - c.R
 }
 
+func CoordFromInt32(q, r int32) AxialCoord {
+	return AxialCoord{int(q), int(r)}
+}
+
 // =============================================================================
 // Hex Directions (Universal - independent of EvenRowsOffset)
 // =============================================================================
