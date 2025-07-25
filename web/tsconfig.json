@@ -25,6 +25,10 @@
     "target": "es6",
     "resolveJsonModule": true
   },
-  "include": [ "./frontend/components/*.ts", "./frontend/components/*.tsx"],
+  "include": [
+    "./frontend/gen/**/*.ts",
+    "./frontend/components/*.ts",
+    "./frontend/components/*.tsx"
+  ],
   "exclude": [ "node_modules", "dist" ]
 }
