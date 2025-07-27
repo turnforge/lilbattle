@@ -1,4 +1,21 @@
 import { HexCoord } from './phaser/hexUtils';
+import { 
+    World as ProtoWorld, 
+    WorldData as ProtoWorldData, 
+    Tile as ProtoTile, 
+    Unit as ProtoUnit,
+    TileSchema,
+    UnitSchema,
+    WorldDataSchema,
+    WorldSchema
+} from '../gen/weewar/v1/models_pb';
+import { 
+    UpdateWorldRequest,
+    CreateWorldRequest,
+    UpdateWorldRequestSchema,
+    CreateWorldRequestSchema
+} from '../gen/weewar/v1/worlds_pb';
+import { create, toJson } from '@bufbuild/protobuf';
 
 // Observer pattern interfaces
 export interface WorldObserver {
@@ -435,31 +452,82 @@ export class World {
     // Self-contained persistence methods
     public async save(): Promise<SaveResult> {
         try {
-            // Build save data format
-            const tiles: Array<Tile> = Object.values(this.tiles)
-            const units: Array<Unit> = Object.values(this.units)
+            // Transform TypeScript World data into protobuf-compatible format
+            const tiles: Array<ProtoTile> = Object.values(this.tiles).map(tile => 
+                create(TileSchema, {
+                    q: tile.q,
+                    r: tile.r,
+                    tileType: tile.tileType,
+                    player: tile.player
+                })
+            );
+            
+            const units: Array<ProtoUnit> = Object.values(this.units).map(unit => 
+                create(UnitSchema, {
+                    q: unit.q,
+                    r: unit.r,
+                    player: unit.player,
+                    unitType: unit.unitType,
+                    availableHealth: (unit as any).available_health || 100,
+                    distanceLeft: (unit as any).distance_left || 0,
+                    turnCounter: (unit as any).turn_counter || 0
+                })
+            );
 
-            // Build request
-            const createWorldRequest = {
-                world: {
-                    id: this.worldId || 'new-world',
-                    name: this.metadata.name || 'Untitled World',
-                    description: '',
-                    tags: [],
-                    difficulty: 'medium',
-                    creator_id: 'editor-user',
-                    tiles: tiles,
-                    units: units, 
-                }
-            };
+            // Build World metadata (separate from WorldData)
+            const worldMetadata: ProtoWorld = create(WorldSchema, {
+                id: this.worldId || undefined,
+                name: this.metadata.name || 'Untitled World',
+                description: '',
+                tags: [],
+                difficulty: 'medium',
+                creatorId: 'editor-user'
+            });
 
-            const url = this.isNewWorld ? '/api/v1/worlds' : `/api/v1/worlds/${this.worldId}`;
-            const method = this.isNewWorld ? 'POST' : 'PATCH';
+            // Build WorldData (tiles and units)
+            const worldData: ProtoWorldData = create(WorldDataSchema, {
+                tiles: tiles,
+                units: units
+            });
+
+            // Build request payload based on whether it's a new world or update
+            let request: CreateWorldRequest | UpdateWorldRequest;
+            let url: string;
+            let method: string;
+
+            if (this.isNewWorld) {
+                // CreateWorldRequest
+                request = create(CreateWorldRequestSchema, {
+                    world: worldMetadata,
+                    worldData: worldData
+                });
+                url = '/api/v1/worlds';
+                method = 'POST';
+            } else {
+                // UpdateWorldRequest  
+                request = create(UpdateWorldRequestSchema, {
+                    world: create(WorldSchema, {
+                        ...worldMetadata,
+                        id: this.worldId!
+                    }),
+                    worldData: worldData,
+                    clearWorld: false // Don't clear existing data
+                    // Note: update_mask is optional, omitting for now
+                });
+                url = `/api/v1/worlds/${this.worldId}`;
+                method = 'PATCH';
+            }
+
+            // Convert protobuf request to JSON for HTTP call
+            const requestJson = toJson(
+                this.isNewWorld ? CreateWorldRequestSchema : UpdateWorldRequestSchema, 
+                request
+            );
 
             const response = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(createWorldRequest),
+                body: JSON.stringify(requestJson),
             });
 
             if (response.ok) {
