@@ -13,8 +13,6 @@ type WasmGamesServiceImpl struct {
 	SingletonGame            *v1.Game
 	SingletonGameState       *v1.GameState
 	SingletonGameMoveHistory *v1.GameMoveHistory
-	SingletonWorld           *v1.World
-	SingletonWorldData       *v1.WorldData
 
 	RuntimeGame *weewar.Game
 }
@@ -29,58 +27,16 @@ func NewWasmGamesServiceImpl() *WasmGamesServiceImpl {
 		SingletonGame:            &v1.Game{},
 		SingletonGameState:       &v1.GameState{},
 		SingletonGameMoveHistory: &v1.GameMoveHistory{},
-		SingletonWorld:           &v1.World{},
-		SingletonWorldData:       &v1.WorldData{},
 	}
 	w.Self = w
 	return w
 }
 
-func (w *WasmGamesServiceImpl) GetRuntimeGame(gameId string) (*weewar.Game, error) {
+func (w *WasmGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
 	if w.RuntimeGame == nil {
-		// Create the runtime game from the protobuf data
-		world := weewar.NewWorld(w.SingletonWorld.Name)
-
-		// Convert protobuf tiles to runtime tiles
-		if w.SingletonGameState.WorldData != nil {
-			for _, protoTile := range w.SingletonGameState.WorldData.Tiles {
-				coord := weewar.AxialCoord{Q: int(protoTile.Q), R: int(protoTile.R)}
-				world.SetTileType(coord, int(protoTile.TileType))
-			}
-
-			// Convert protobuf units to runtime units
-			for _, protoUnit := range w.SingletonGameState.WorldData.Units {
-				coord := weewar.AxialCoord{Q: int(protoUnit.Q), R: int(protoUnit.R)}
-				unit := &weewar.Unit{
-					UnitType:        int(protoUnit.UnitType),
-					Coord:           coord,
-					Player:          int(protoUnit.Player),
-					AvailableHealth: int(protoUnit.AvailableHealth),
-					DistanceLeft:    int(protoUnit.DistanceLeft),
-					TurnCounter:     int(protoUnit.TurnCounter),
-				}
-				world.AddUnit(unit)
-			}
-		}
-
-		// Create the runtime game with default rules engine
-		// TODO: Load a proper rules engine or make it configurable
-		rulesEngine := &weewar.RulesEngine{}                   // Default rules engine
-		game, err := weewar.NewGame(world, rulesEngine, 12345) // Default seed
-		if err != nil {
-			return nil, err
-		}
-
-		// Set game state from protobuf data
-		if w.SingletonGame != nil {
-			// Map game metadata fields as needed
-			// TODO: Map additional game fields from protobuf if needed
-		}
-
-		w.RuntimeGame = game
+		w.RuntimeGame, err = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
 	}
-
-	return w.RuntimeGame, nil
+	return w.RuntimeGame, err
 }
 
 func (w *WasmGamesServiceImpl) SaveGame(game *v1.Game, state *v1.GameState, history *v1.GameMoveHistory) error {
@@ -106,12 +62,6 @@ func (w *WasmGamesServiceImpl) Load(
 		panic(err)
 	}
 	if err := pj.Unmarshal(gameMoveHistoryBytes, w.SingletonGameMoveHistory); err != nil {
-		panic(err)
-	}
-	if err := pj.Unmarshal(worldBytes, w.SingletonWorld); err != nil {
-		panic(err)
-	}
-	if err := pj.Unmarshal(worldDataBytes, w.SingletonWorldData); err != nil {
 		panic(err)
 	}
 }

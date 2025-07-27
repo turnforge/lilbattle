@@ -12,13 +12,12 @@ import (
 
 type GamesServiceImpl interface {
 	v1.GamesServiceServer
-	GetRuntimeGame(gameId string) (*weewar.Game, error)
+	GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, error)
 }
 
 type BaseGamesServiceImpl struct {
 	v1.UnimplementedGamesServiceServer
-	WorldsService v1.WorldsServiceServer
-	Self          GamesServiceImpl // The actual implementation
+	Self GamesServiceImpl // The actual implementation
 }
 
 type WorldsServiceImpl interface {
@@ -50,7 +49,7 @@ func (s *BaseGamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.Process
 
 	// Get the runtime game corresponding to this game Id, we can create it on the fly
 	// or we can cache it somewhere, or in the case of wasm just have a singleton
-	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game.Id)
+	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game, gameresp.State)
 	if err != nil {
 		return nil, err
 	}

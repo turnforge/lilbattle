@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -41,4 +43,47 @@ func newProtoInstance[T proto.Message]() (out T) {
 		panic("only pointer types supported")
 	}
 	return
+}
+
+func ProtoToRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, error) {
+	// Create the runtime game from the protobuf data
+	world := weewar.NewWorld(game.Name)
+
+	// Convert protobuf tiles to runtime tiles
+	if gameState.WorldData != nil {
+		for _, protoTile := range gameState.WorldData.Tiles {
+			coord := weewar.AxialCoord{Q: int(protoTile.Q), R: int(protoTile.R)}
+			world.SetTileType(coord, int(protoTile.TileType))
+		}
+
+		// Convert protobuf units to runtime units
+		for _, protoUnit := range gameState.WorldData.Units {
+			coord := weewar.AxialCoord{Q: int(protoUnit.Q), R: int(protoUnit.R)}
+			unit := &weewar.Unit{
+				UnitType:        int(protoUnit.UnitType),
+				Coord:           coord,
+				Player:          int(protoUnit.Player),
+				AvailableHealth: int(protoUnit.AvailableHealth),
+				DistanceLeft:    int(protoUnit.DistanceLeft),
+				TurnCounter:     int(protoUnit.TurnCounter),
+			}
+			world.AddUnit(unit)
+		}
+	}
+
+	// Create the runtime game with default rules engine
+	// TODO: Load a proper rules engine or make it configurable
+	rulesEngine := &weewar.RulesEngine{}                  // Default rules engine
+	out, err := weewar.NewGame(world, rulesEngine, 12345) // Default seed
+	if err != nil {
+		return nil, err
+	}
+
+	// Set game state from protobuf data
+	if out != nil {
+		// Map game metadata fields as needed
+		// TODO: Map additional game fields from protobuf if needed
+	}
+
+	return out, nil
 }

@@ -16,16 +16,16 @@ var GAMES_STORAGE_DIR = weewar.DevDataPath("storage/games")
 // FSGamesServiceImpl implements the GamesService gRPC interface
 type FSGamesServiceImpl struct {
 	BaseGamesServiceImpl
-	storage *FileStorage // Storage area for all files
+	WorldsService v1.WorldsServiceServer
+	storage       *FileStorage // Storage area for all files
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
 func NewGamesService() *FSGamesServiceImpl {
 	service := &FSGamesServiceImpl{
-		BaseGamesServiceImpl: BaseGamesServiceImpl{
-			WorldsService: NewWorldsServiceImpl(),
-		},
-		storage: NewFileStorage(GAMES_STORAGE_DIR),
+		BaseGamesServiceImpl: BaseGamesServiceImpl{},
+		WorldsService:        NewFSWorldsServiceImpl(),
+		storage:              NewFileStorage(GAMES_STORAGE_DIR),
 	}
 	service.Self = service
 
@@ -211,4 +211,8 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 	}
 
 	return resp, err
+}
+
+func (w *FSGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
+	return ProtoToRuntimeGame(game, gameState)
 }
