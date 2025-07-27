@@ -13,26 +13,27 @@ import (
 
 var GAMES_STORAGE_DIR = weewar.DevDataPath("storage/games")
 
-// GamesServiceImpl implements the GamesService gRPC interface
-type GamesServiceImpl struct {
+// FSGamesServiceImpl implements the GamesService gRPC interface
+type FSGamesServiceImpl struct {
 	BaseGamesServiceImpl
 	storage *FileStorage // Storage area for all files
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
-func NewGamesService() *GamesServiceImpl {
-	service := &GamesServiceImpl{
+func NewGamesService() *FSGamesServiceImpl {
+	service := &FSGamesServiceImpl{
 		BaseGamesServiceImpl: BaseGamesServiceImpl{
 			WorldsService: NewWorldsServiceImpl(),
 		},
 		storage: NewFileStorage(GAMES_STORAGE_DIR),
 	}
+	service.Self = service
 
 	return service
 }
 
 // ListGames returns all available games (metadata only for performance)
-func (s *GamesServiceImpl) ListGames(ctx context.Context, req *v1.ListGamesRequest) (resp *v1.ListGamesResponse, err error) {
+func (s *FSGamesServiceImpl) ListGames(ctx context.Context, req *v1.ListGamesRequest) (resp *v1.ListGamesResponse, err error) {
 	resp = &v1.ListGamesResponse{
 		Items: []*v1.Game{},
 		Pagination: &v1.PaginationResponse{
@@ -46,14 +47,14 @@ func (s *GamesServiceImpl) ListGames(ctx context.Context, req *v1.ListGamesReque
 }
 
 // DeleteGame deletes a game
-func (s *GamesServiceImpl) DeleteGame(ctx context.Context, req *v1.DeleteGameRequest) (resp *v1.DeleteGameResponse, err error) {
+func (s *FSGamesServiceImpl) DeleteGame(ctx context.Context, req *v1.DeleteGameRequest) (resp *v1.DeleteGameResponse, err error) {
 	resp = &v1.DeleteGameResponse{}
 	err = s.storage.DeleteEntity(req.Id)
 	return
 }
 
 // CreateWorld creates a new world
-func (s *GamesServiceImpl) CreateGame(ctx context.Context, req *v1.CreateGameRequest) (resp *v1.CreateGameResponse, err error) {
+func (s *FSGamesServiceImpl) CreateGame(ctx context.Context, req *v1.CreateGameRequest) (resp *v1.CreateGameResponse, err error) {
 	if req.Game == nil {
 		return nil, fmt.Errorf("game data is required")
 	}
@@ -100,7 +101,7 @@ func (s *GamesServiceImpl) CreateGame(ctx context.Context, req *v1.CreateGameReq
 }
 
 // GetGame returns a specific game with complete data including tiles and units
-func (s *GamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest) (resp *v1.GetGameResponse, err error) {
+func (s *FSGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest) (resp *v1.GetGameResponse, err error) {
 	if req.Id == "" {
 		return nil, fmt.Errorf("game ID is required")
 	}
@@ -121,55 +122,16 @@ func (s *GamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest) 
 	}
 
 	resp = &v1.GetGameResponse{
-		Game:        game,
-		State:       gameState,
-		MoveHistory: gameHistory,
+		Game:    game,
+		State:   gameState,
+		History: gameHistory,
 	}
 
 	return resp, nil
 }
 
-// ProcessMoves processes moves for an existing game
-func (s *GamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.ProcessMovesRequest) (resp *v1.ProcessMovesResponse, err error) {
-	if len(req.Moves) == 0 {
-		return nil, fmt.Errorf("at least one move is required")
-	}
-
-	gameresp, err := s.GetGame(ctx, &v1.GetGameRequest{Id: req.GameId})
-	if err != nil || gameresp.Game == nil {
-		return nil, err
-	}
-
-	// Given the game we want to get the game runtime (for its active state)
-	rtGame, gameState, err := s.Storage.LoadGameState(gameresp.Game.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the moves validted by the move processor, it is upto the move processor
-	// to decide how "transactional" it wants to be - ie fail after  N moves,
-	// success only if all moves succeeds etc.  Note that at this point the game
-	// state has not changed and neither has the Runtime Game object.  Both the
-	// GameState and the Runtime Game are checkpointed at before the moves started
-	var dmp weewar.DefaultMoveProcessor
-	results, err := dmp.ProcessMoves(rtGame, req.Moves)
-	if err != nil {
-		return nil, err
-	}
-	resp.MoveResults = results
-
-	// Now that we have the results, we want to update our gamestate by applying the
-	// results - this would also set the next "checkoint" to after the reuslts.
-	// It is upto the storage to see how the runtime game is also updated.  For example
-	// a storage that persists the gameState may just not do anythign and let it be
-	// reconstructed on the next load
-	err = s.Storage.SaveGameState(gameState, results)
-
-	return resp, err
-}
-
 // GetMovementOptions returns available movement options for a unit
-func (s *GamesServiceImpl) GetMovementOptions(ctx context.Context, req *v1.GetMovementOptionsRequest) (resp *v1.GetMovementOptionsResponse, err error) {
+func (s *FSGamesServiceImpl) GetMovementOptions(ctx context.Context, req *v1.GetMovementOptionsRequest) (resp *v1.GetMovementOptionsResponse, err error) {
 	// TODO: Implement actual movement calculation logic
 	// For now, return mock data
 	resp = &v1.GetMovementOptionsResponse{
@@ -181,7 +143,7 @@ func (s *GamesServiceImpl) GetMovementOptions(ctx context.Context, req *v1.GetMo
 }
 
 // GetAttackOptions returns available attack options for a unit
-func (s *GamesServiceImpl) GetAttackOptions(ctx context.Context, req *v1.GetAttackOptionsRequest) (resp *v1.GetAttackOptionsResponse, err error) {
+func (s *FSGamesServiceImpl) GetAttackOptions(ctx context.Context, req *v1.GetAttackOptionsRequest) (resp *v1.GetAttackOptionsResponse, err error) {
 	// TODO: Implement actual attack calculation logic
 	// For now, return mock data
 	resp = &v1.GetAttackOptionsResponse{
@@ -193,7 +155,7 @@ func (s *GamesServiceImpl) GetAttackOptions(ctx context.Context, req *v1.GetAtta
 }
 
 // CanSelectUnit determines if a unit can be selected by the current player
-func (s *GamesServiceImpl) CanSelectUnit(ctx context.Context, req *v1.CanSelectUnitRequest) (resp *v1.CanSelectUnitResponse, err error) {
+func (s *FSGamesServiceImpl) CanSelectUnit(ctx context.Context, req *v1.CanSelectUnitRequest) (resp *v1.CanSelectUnitResponse, err error) {
 	// TODO: Implement actual unit selection logic
 	// For now, return mock data
 	resp = &v1.CanSelectUnitResponse{
@@ -201,4 +163,52 @@ func (s *GamesServiceImpl) CanSelectUnit(ctx context.Context, req *v1.CanSelectU
 		Reason:    "",
 	}
 	return resp, nil
+}
+
+// UpdateGame updates an existing game
+func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest) (resp *v1.UpdateGameResponse, err error) {
+	if req.GameId == "" {
+		return nil, fmt.Errorf("game ID is required")
+	}
+
+	// Load existing metadata
+	if req.NewGame != nil {
+		game, err := LoadFSArtifact[*v1.Game](s.storage, req.GameId, "metadata")
+		if err != nil {
+			return nil, fmt.Errorf("game not found: %w", err)
+		}
+
+		// Update metadata fields
+		if req.NewGame.Name != "" {
+			game.Name = req.NewGame.Name
+		}
+		if req.NewGame.Description != "" {
+			game.Description = req.NewGame.Description
+		}
+		if req.NewGame.Tags != nil {
+			game.Tags = req.NewGame.Tags
+		}
+		if req.NewGame.Difficulty != "" {
+			game.Difficulty = req.NewGame.Difficulty
+		}
+		game.UpdatedAt = tspb.New(time.Now())
+
+		if err := s.storage.SaveArtifact(req.NewGame.Id, "metadata", game); err != nil {
+			return nil, fmt.Errorf("failed to update game metadata: %w", err)
+		}
+	}
+
+	if req.NewState != nil {
+		if err := s.storage.SaveArtifact(req.GameId, "state", req.NewState); err != nil {
+			return nil, fmt.Errorf("failed to update game state: %w", err)
+		}
+	}
+
+	if req.NewHistory != nil {
+		if err := s.storage.SaveArtifact(req.GameId, "history", req.NewHistory); err != nil {
+			return nil, fmt.Errorf("failed to update game history: %w", err)
+		}
+	}
+
+	return resp, err
 }
