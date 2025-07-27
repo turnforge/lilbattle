@@ -18,7 +18,7 @@ import { TerrainStatsPanel } from './TerrainStatsPanel';
  * - Providing game controls and UI feedback
  */
 class GameViewerPage extends BasePage implements ComponentLifecycle {
-    private currentWorldId: string | null;
+    private currentGameId: string | null;
     private world: World | null = null;
     private worldViewer: GameViewer | null = null;
     private gameState: GameState | null = null;
@@ -43,7 +43,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
      * Load game configuration from URL parameters and hidden inputs
      */
     private loadGameConfiguration(): void {
-        // Get worldId from hidden input
+        // Get gameId from hidden input
         
         // Initialize gameConfig before calling super() to ensure it's available in initializeSpecificComponents()
         this.gameConfig = this.gameConfig || {
@@ -53,8 +53,8 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
             playerTypes: {},
             playerTeams: {}
         };
-        const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
-        this.currentWorldId = worldIdInput?.value.trim() || null;
+        const gameIdInput = document.getElementById("gameIdInput") as HTMLInputElement | null;
+        this.currentGameId = gameIdInput?.value.trim() || null;
 
         // Get basic config from hidden inputs
         const playerCountInput = document.getElementById("playerCount") as HTMLInputElement | null;
@@ -112,21 +112,31 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
                 console.log('GameViewerPage: Interaction callbacks set after scene ready');
             }
             
-            if (this.currentWorldId) {
-                console.log('GameViewerPage: WorldId found, proceeding to load world:', this.currentWorldId);
+            if (this.currentGameId) {
+                console.log('GameViewerPage: WorldId found, proceeding to load world:', this.currentGameId);
                 // WebGL context timing - wait for next event loop tick
                 setTimeout(async () => {
                     console.log('GameViewerPage: Starting loadWorldAndInitializeGame...');
                     await this.loadWorldAndInitializeGame();
                 }, 10);
             } else {
-                console.warn('GameViewerPage: No currentWorldId found!');
+                console.warn('GameViewerPage: No currentGameId found!');
             }
         }, 'game-viewer-page');
 
         // GameState notification events (for system coordination, not user interaction responses)
         this.eventBus.subscribe('wasm-loaded', (payload) => {
             console.log('GameViewerPage: WASM loaded successfully');
+        }, 'game-viewer-page');
+
+        this.eventBus.subscribe('game-loaded', (payload) => {
+            console.log('GameViewerPage: Game loaded from page data', payload.data);
+            // Update UI with the loaded game state
+            if (this.gameState) {
+                const gameData = this.gameState.getGameData();
+                this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
+                this.logGameEvent(`Game loaded: ${gameData.gameId}`);
+            }
         }, 'game-viewer-page');
 
         this.eventBus.subscribe('game-created', (payload) => {
@@ -186,19 +196,25 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         try {
             console.log('Loading world and initializing game...');
 
-            // Load world data from hidden element
-            const worldData = this.loadWorldDataFromElement();
-            if (!worldData) {
-                throw new Error('No world data found');
+            // Load game data from hidden elements
+            const gameDataResult = this.loadGameDataFromElements();
+            if (!gameDataResult) {
+                throw new Error('No game data found');
+            }
+            
+            const { game, gameState, gameHistory } = gameDataResult;
+            
+            if (!gameState) {
+                throw new Error('No game state data found in game');
             }
 
-            // Deserialize world
-            this.world = World.deserialize(worldData);
+            // Deserialize world for the WorldViewer component
+            this.world = World.deserialize(gameState.world_data);
             
             // Load world into viewer
             if (this.worldViewer) {
-                await this.worldViewer.loadWorld(worldData);
-                this.showToast('Success', `Game loaded: ${this.world.getName() || 'Untitled'}`, 'success');
+                await this.worldViewer.loadWorld(gameState.world_data);
+                this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
             }
 
             // Initialize game using WASM
@@ -231,23 +247,23 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         // Wait for WASM to be ready (only async part)
         await this.gameState.waitUntilReady();
         
-        // Load game data from page elements (synchronous once WASM loaded)
+        // Load game data from page elements - this will trigger 'game-loaded' event
+        // which will update the UI via the event handler
         this.gameState.loadGameFromPageData();
-        const gameData = this.gameState.getGameData();
         
-        // Debug: Check what player the game started with vs what we expect
-        console.log('[GameViewerPage] Game creation debug:', {
-            gameDataCurrentPlayer: gameData.currentPlayer,
-            worldData: this.loadWorldDataFromElement(),
+        // Debug: Log the loaded game data
+        const gameData = this.gameState.getGameData();
+        const gameDataResult = this.loadGameDataFromElements();
+        console.log('[GameViewerPage] Game initialization debug:', {
+            gameStateData: gameData,
+            rawGameData: gameDataResult?.game,
+            rawGameState: gameDataResult?.gameState,
+            worldData: gameDataResult?.worldData,
             // Show units in world data to see their player ownership
-            units: this.loadWorldDataFromElement()?.units || []
+            units: gameDataResult?.worldData?.units || []
         });
         
-        
-        // Update UI synchronously (convert GameStateData to legacy format)
-        this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
-        this.logGameEvent(`Game started with ${this.gameConfig.playerCount} players`);
-        console.log('Game initialized with WASM engine');
+        console.log('Game initialized with WASM engine - UI updates handled by game-loaded event');
     }
 
     /**
@@ -299,30 +315,83 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     }
 
     /**
-     * Load world data from hidden element
+     * Load game data from hidden JSON elements (Game, GameState, GameHistory)
      */
-    private loadWorldDataFromElement(): any {
+    private loadGameDataFromElements(): { game: any; gameState: any; gameHistory: any; worldData: any } | null {
         try {
-            const worldDataElement = document.getElementById('world-data-json');
-            console.log('GameViewerPage: Found world-data-json element:', !!worldDataElement);
-            
-            if (worldDataElement) {
-                const rawContent = worldDataElement.textContent;
-                console.log('GameViewerPage: Raw world data content:', JSON.parse(rawContent || "{}")) //  ? rawContent.substring(0, 200) + '...' : 'null/empty');
-                
-                if (rawContent && rawContent.trim() !== '' && rawContent.trim() !== 'null') {
-                    const worldData = JSON.parse(rawContent);
-                    console.log('GameViewerPage: Parsed world data successfully:', !!worldData);
-                    return worldData && worldData !== null ? worldData : null;
-                } else {
-                    console.warn('GameViewerPage: World data element is empty or contains null');
-                }
-            } else {
-                console.error('GameViewerPage: world-data-json element not found in DOM');
+            // Load Game data
+            const gameElement = document.getElementById('game.data-json');
+            let gameData = null;
+            if (gameElement && gameElement.textContent && gameElement.textContent.trim() !== 'null') {
+                gameData = JSON.parse(gameElement.textContent);
+                console.log('GameViewerPage: Loaded game data:', gameData);
             }
-            return null;
+            
+            // Load GameState data
+            const gameStateElement = document.getElementById('game-state-data-json');
+            let gameStateData = null;
+            if (gameStateElement && gameStateElement.textContent && gameStateElement.textContent.trim() !== 'null') {
+                gameStateData = JSON.parse(gameStateElement.textContent);
+                console.log('GameViewerPage: Loaded game state data:', gameStateData);
+            }
+            
+            // Load GameHistory data
+            const gameHistoryElement = document.getElementById('game-history-data-json');
+            let gameHistoryData = null;
+            if (gameHistoryElement && gameHistoryElement.textContent && gameHistoryElement.textContent.trim() !== 'null') {
+                gameHistoryData = JSON.parse(gameHistoryElement.textContent);
+                console.log('GameViewerPage: Loaded game history data:', gameHistoryData);
+            }
+            
+            // Extract world data from Game for backward compatibility with WorldViewer
+            let worldData = null;
+            if (gameData && gameData.world) {
+                // Combine World metadata with WorldData for the WorldViewer component
+                worldData = {
+                    name: gameData.world.name || 'Untitled Game',
+                    Name: gameData.world.name || 'Untitled Game',
+                    id: gameData.world.id,
+                    width: 40,  // Default
+                    height: 40, // Default
+                    tiles: gameData.world.worldData?.tiles || [],
+                    units: gameData.world.worldData?.units || []
+                };
+                
+                // Calculate actual dimensions from tile bounds
+                if (worldData.tiles && worldData.tiles.length > 0) {
+                    let maxQ = 0, maxR = 0, minQ = 0, minR = 0;
+                    worldData.tiles.forEach((tile: any) => {
+                        if (tile.q > maxQ) maxQ = tile.q;
+                        if (tile.q < minQ) minQ = tile.q;
+                        if (tile.r > maxR) maxR = tile.r;
+                        if (tile.r < minR) minR = tile.r;
+                    });
+                    worldData.width = maxQ - minQ + 1;
+                    worldData.height = maxR - minR + 1;
+                }
+                
+                console.log('GameViewerPage: Extracted world data for WorldViewer:', {
+                    name: worldData.name,
+                    tiles: worldData.tiles.length,
+                    units: worldData.units.length,
+                    dimensions: `${worldData.width}x${worldData.height}`
+                });
+            }
+            
+            if (!gameData) {
+                console.error('GameViewerPage: No game data found');
+                return null;
+            }
+            
+            return {
+                game: gameData,
+                gameState: gameStateData,
+                gameHistory: gameHistoryData,
+                worldData: worldData
+            };
+            
         } catch (error) {
-            console.error('GameViewerPage: Error parsing world data:', error);
+            console.error('GameViewerPage: Error parsing game data from elements:', error);
             return null;
         }
     }
@@ -332,7 +401,8 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
      */
     private convertGameStateToLegacyFormat(gameData: GameStateData): GameCreateData {
         // Extract units and players from world data if available
-        const worldData = gameData.world?.worldData;
+        const world = gameData.world;
+        const worldData = world?.worldData;
         const allUnits = worldData?.units || [];
         const tiles = worldData?.tiles || [];
         
@@ -352,9 +422,9 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         const mapSize = this.calculateMapSize(tiles);
         
         return {
-            currentPlayer: gameData.currentPlayer,
-            turnCounter: gameData.turnCounter,
-            status: gameData.status,
+            currentPlayer: gameData.currentPlayer || 1,
+            turnCounter: gameData.turnCounter || 1,
+            status: gameData.status || 'active',
             allUnits: allUnits,
             players: players,
             teams: teams,
@@ -830,14 +900,14 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         // after the PhaserGameScene is actually created and ready
         
         // Wait for world viewer to be ready, then load world and initialize game
-        if (this.currentWorldId) {
+        if (this.currentGameId) {
             console.log('GameViewerPage: WorldId found, loading world and initializing game...');
             // Small delay to ensure WorldViewer is fully ready
             setTimeout(async () => {
                 await this.loadWorldAndInitializeGame();
             }, 50);
         } else {
-            console.warn('GameViewerPage: No currentWorldId found!');
+            console.warn('GameViewerPage: No currentGameId found!');
         }
         
         console.log('GameViewerPage: activation complete');
@@ -868,7 +938,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         }
         
         this.world = null;
-        this.currentWorldId = null;
+        this.currentGameId = null;
         this.selectedUnit = null;
         this.gameLog = [];
     }

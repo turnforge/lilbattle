@@ -417,35 +417,60 @@ export class GameState extends BaseComponent {
      */
     public loadGameFromPageData(): void {
         try {
-            // Load v1.Game data
-            const gameElement = document.getElementById('game-data');
-            if (gameElement?.textContent) {
+            // Load v1.Game data from the element IDs that match the template
+            const gameElement = document.getElementById('game.data-json');
+            if (gameElement?.textContent && gameElement.textContent.trim() !== 'null') {
                 const gameData = JSON.parse(gameElement.textContent);
                 this.setGameId(gameData.id);
+                this.gameData.currentPlayer = gameData.currentPlayer || 1;
+                this.gameData.turnCounter = gameData.turnCounter || 1;
+                this.gameData.status = gameData.status || 'active';
                 this.log('Loaded game data:', gameData);
-            }
-
-            // Load v1.GameState data 
-            const gameStateElement = document.getElementById('game-state-data');
-            if (gameStateElement?.textContent) {
-                const gameStateData = JSON.parse(gameStateElement.textContent);
-                if (gameStateData.worldData) {
-                    // Create a World object with the worldData
-                    const world = {
-                        worldData: gameStateData.worldData
-                    };
-                    this.setWorld(world as any);
-                    this.log('Loaded game state with world data');
+                
+                // If game has world data, set it
+                if (gameData.world) {
+                    this.setWorld(gameData.world);
+                    this.log('Loaded world from game data');
                 }
             }
 
+            // Load v1.GameState data 
+            const gameStateElement = document.getElementById('game-state-data-json');
+            if (gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null') {
+                const gameStateData = JSON.parse(gameStateElement.textContent);
+                
+                // Update game state fields
+                if (gameStateData.currentPlayer !== undefined) {
+                    this.gameData.currentPlayer = gameStateData.currentPlayer;
+                }
+                if (gameStateData.turnCounter !== undefined) {
+                    this.gameData.turnCounter = gameStateData.turnCounter;
+                }
+                if (gameStateData.status !== undefined) {
+                    this.gameData.status = gameStateData.status;
+                }
+                
+                this.log('Loaded game state data:', gameStateData);
+            }
+
             // Load v1.GameMoveHistory data (optional)
-            const historyElement = document.getElementById('game-history-data');
-            if (historyElement?.textContent) {
+            const historyElement = document.getElementById('game-history-data-json');
+            if (historyElement?.textContent && historyElement.textContent.trim() !== 'null') {
                 const historyData = JSON.parse(historyElement.textContent);
                 this.log('Loaded game move history:', historyData);
                 // TODO: Store history if needed for replay functionality
             }
+
+            // Update last updated timestamp
+            this.gameData.lastUpdated = Date.now();
+            
+            // Emit game loaded event
+            this.emit('game-loaded', { 
+                gameId: this.gameData.gameId,
+                currentPlayer: this.gameData.currentPlayer,
+                turnCounter: this.gameData.turnCounter,
+                status: this.gameData.status
+            });
 
         } catch (error: any) {
             this.log('Failed to load game data from page:', error);
