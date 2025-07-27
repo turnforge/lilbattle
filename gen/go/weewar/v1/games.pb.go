@@ -780,9 +780,11 @@ type CreateGameResponse struct {
 	// *
 	// Game being created
 	Game *Game `protobuf:"bytes,1,opt,name=game,proto3" json:"game,omitempty"`
+	// The starting game state
+	GameState *GameState `protobuf:"bytes,2,opt,name=game_state,json=gameState,proto3" json:"game_state,omitempty"`
 	// *
 	// Error specific to a field if there are any errors.
-	FieldErrors   map[string]string `protobuf:"bytes,2,rep,name=field_errors,json=fieldErrors,proto3" json:"field_errors,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	FieldErrors   map[string]string `protobuf:"bytes,3,rep,name=field_errors,json=fieldErrors,proto3" json:"field_errors,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -820,6 +822,13 @@ func (*CreateGameResponse) Descriptor() ([]byte, []int) {
 func (x *CreateGameResponse) GetGame() *Game {
 	if x != nil {
 		return x.Game
+	}
+	return nil
+}
+
+func (x *CreateGameResponse) GetGameState() *GameState {
+	if x != nil {
+		return x.GameState
 	}
 	return nil
 }
@@ -961,6 +970,223 @@ func (x *ProcessMovesResponse) GetChanges() []*WorldChange {
 }
 
 // *
+// Request to get the game's latest state
+type GetGameStateRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// *
+	// Game ID to add moves to
+	GameId        string `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGameStateRequest) Reset() {
+	*x = GetGameStateRequest{}
+	mi := &file_weewar_v1_games_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGameStateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGameStateRequest) ProtoMessage() {}
+
+func (x *GetGameStateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_games_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGameStateRequest.ProtoReflect.Descriptor instead.
+func (*GetGameStateRequest) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetGameStateRequest) GetGameId() string {
+	if x != nil {
+		return x.GameId
+	}
+	return ""
+}
+
+// *
+// Response holding latest game state
+type GetGameStateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	State         *GameState             `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGameStateResponse) Reset() {
+	*x = GetGameStateResponse{}
+	mi := &file_weewar_v1_games_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGameStateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGameStateResponse) ProtoMessage() {}
+
+func (x *GetGameStateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_games_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGameStateResponse.ProtoReflect.Descriptor instead.
+func (*GetGameStateResponse) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetGameStateResponse) GetState() *GameState {
+	if x != nil {
+		return x.State
+	}
+	return nil
+}
+
+// *
+// Request to list moves for a game
+type ListMovesRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// *
+	// Game ID to add moves to
+	GameId string `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	// Offset of the move to begin fetching from in reverse order from "latest".
+	// 0 => start from now
+	Offset int32 `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
+	// *
+	// Limit to last N moves (from offset).  if <= 0 return all moves
+	LastN         int32 `protobuf:"varint,3,opt,name=last_n,json=lastN,proto3" json:"last_n,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMovesRequest) Reset() {
+	*x = ListMovesRequest{}
+	mi := &file_weewar_v1_games_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMovesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMovesRequest) ProtoMessage() {}
+
+func (x *ListMovesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_games_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMovesRequest.ProtoReflect.Descriptor instead.
+func (*ListMovesRequest) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ListMovesRequest) GetGameId() string {
+	if x != nil {
+		return x.GameId
+	}
+	return ""
+}
+
+func (x *ListMovesRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *ListMovesRequest) GetLastN() int32 {
+	if x != nil {
+		return x.LastN
+	}
+	return 0
+}
+
+// *
+// Response after adding moves to game.
+type ListMovesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Whether there are more moves before this
+	HasMore       bool             `protobuf:"varint,1,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
+	MoveGroups    []*GameMoveGroup `protobuf:"bytes,2,rep,name=move_groups,json=moveGroups,proto3" json:"move_groups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMovesResponse) Reset() {
+	*x = ListMovesResponse{}
+	mi := &file_weewar_v1_games_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMovesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMovesResponse) ProtoMessage() {}
+
+func (x *ListMovesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_games_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMovesResponse.ProtoReflect.Descriptor instead.
+func (*ListMovesResponse) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListMovesResponse) GetHasMore() bool {
+	if x != nil {
+		return x.HasMore
+	}
+	return false
+}
+
+func (x *ListMovesResponse) GetMoveGroups() []*GameMoveGroup {
+	if x != nil {
+		return x.MoveGroups
+	}
+	return nil
+}
+
+// *
 // Request to get movement options for a unit at a position
 type GetMovementOptionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -973,7 +1199,7 @@ type GetMovementOptionsRequest struct {
 
 func (x *GetMovementOptionsRequest) Reset() {
 	*x = GetMovementOptionsRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[17]
+	mi := &file_weewar_v1_games_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -985,7 +1211,7 @@ func (x *GetMovementOptionsRequest) String() string {
 func (*GetMovementOptionsRequest) ProtoMessage() {}
 
 func (x *GetMovementOptionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[17]
+	mi := &file_weewar_v1_games_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -998,7 +1224,7 @@ func (x *GetMovementOptionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMovementOptionsRequest.ProtoReflect.Descriptor instead.
 func (*GetMovementOptionsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{17}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetMovementOptionsRequest) GetGameId() string {
@@ -1033,7 +1259,7 @@ type GetMovementOptionsResponse struct {
 
 func (x *GetMovementOptionsResponse) Reset() {
 	*x = GetMovementOptionsResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[18]
+	mi := &file_weewar_v1_games_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1045,7 +1271,7 @@ func (x *GetMovementOptionsResponse) String() string {
 func (*GetMovementOptionsResponse) ProtoMessage() {}
 
 func (x *GetMovementOptionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[18]
+	mi := &file_weewar_v1_games_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1058,7 +1284,7 @@ func (x *GetMovementOptionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMovementOptionsResponse.ProtoReflect.Descriptor instead.
 func (*GetMovementOptionsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{18}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetMovementOptionsResponse) GetOptions() []*MovementOption {
@@ -1082,7 +1308,7 @@ type MovementOption struct {
 
 func (x *MovementOption) Reset() {
 	*x = MovementOption{}
-	mi := &file_weewar_v1_games_proto_msgTypes[19]
+	mi := &file_weewar_v1_games_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1094,7 +1320,7 @@ func (x *MovementOption) String() string {
 func (*MovementOption) ProtoMessage() {}
 
 func (x *MovementOption) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[19]
+	mi := &file_weewar_v1_games_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1107,7 +1333,7 @@ func (x *MovementOption) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MovementOption.ProtoReflect.Descriptor instead.
 func (*MovementOption) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{19}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *MovementOption) GetQ() int32 {
@@ -1151,7 +1377,7 @@ type GetAttackOptionsRequest struct {
 
 func (x *GetAttackOptionsRequest) Reset() {
 	*x = GetAttackOptionsRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[20]
+	mi := &file_weewar_v1_games_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1163,7 +1389,7 @@ func (x *GetAttackOptionsRequest) String() string {
 func (*GetAttackOptionsRequest) ProtoMessage() {}
 
 func (x *GetAttackOptionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[20]
+	mi := &file_weewar_v1_games_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1176,7 +1402,7 @@ func (x *GetAttackOptionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAttackOptionsRequest.ProtoReflect.Descriptor instead.
 func (*GetAttackOptionsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{20}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetAttackOptionsRequest) GetGameId() string {
@@ -1211,7 +1437,7 @@ type GetAttackOptionsResponse struct {
 
 func (x *GetAttackOptionsResponse) Reset() {
 	*x = GetAttackOptionsResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[21]
+	mi := &file_weewar_v1_games_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1223,7 +1449,7 @@ func (x *GetAttackOptionsResponse) String() string {
 func (*GetAttackOptionsResponse) ProtoMessage() {}
 
 func (x *GetAttackOptionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[21]
+	mi := &file_weewar_v1_games_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1236,7 +1462,7 @@ func (x *GetAttackOptionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAttackOptionsResponse.ProtoReflect.Descriptor instead.
 func (*GetAttackOptionsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{21}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetAttackOptionsResponse) GetOptions() []*AttackOption {
@@ -1260,7 +1486,7 @@ type AttackOption struct {
 
 func (x *AttackOption) Reset() {
 	*x = AttackOption{}
-	mi := &file_weewar_v1_games_proto_msgTypes[22]
+	mi := &file_weewar_v1_games_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1272,7 +1498,7 @@ func (x *AttackOption) String() string {
 func (*AttackOption) ProtoMessage() {}
 
 func (x *AttackOption) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[22]
+	mi := &file_weewar_v1_games_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1285,7 +1511,7 @@ func (x *AttackOption) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttackOption.ProtoReflect.Descriptor instead.
 func (*AttackOption) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{22}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AttackOption) GetQ() int32 {
@@ -1317,526 +1543,6 @@ func (x *AttackOption) GetDamageEstimate() int32 {
 }
 
 // *
-// Request to get tile information
-type GetTileInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	Q             int32                  `protobuf:"varint,2,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,3,opt,name=r,proto3" json:"r,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetTileInfoRequest) Reset() {
-	*x = GetTileInfoRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetTileInfoRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetTileInfoRequest) ProtoMessage() {}
-
-func (x *GetTileInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetTileInfoRequest.ProtoReflect.Descriptor instead.
-func (*GetTileInfoRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *GetTileInfoRequest) GetGameId() string {
-	if x != nil {
-		return x.GameId
-	}
-	return ""
-}
-
-func (x *GetTileInfoRequest) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *GetTileInfoRequest) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
-}
-
-// *
-// Response with tile information
-type GetTileInfoResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Tile          *TileInfo              `protobuf:"bytes,1,opt,name=tile,proto3" json:"tile,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetTileInfoResponse) Reset() {
-	*x = GetTileInfoResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetTileInfoResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetTileInfoResponse) ProtoMessage() {}
-
-func (x *GetTileInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetTileInfoResponse.ProtoReflect.Descriptor instead.
-func (*GetTileInfoResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *GetTileInfoResponse) GetTile() *TileInfo {
-	if x != nil {
-		return x.Tile
-	}
-	return nil
-}
-
-// *
-// Complete information about a tile
-type TileInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Q             int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
-	TerrainType   string                 `protobuf:"bytes,3,opt,name=terrain_type,json=terrainType,proto3" json:"terrain_type,omitempty"`
-	Unit          *UnitInfo              `protobuf:"bytes,4,opt,name=unit,proto3" json:"unit,omitempty"`         // null if no unit on tile
-	Building      *BuildingInfo          `protobuf:"bytes,5,opt,name=building,proto3" json:"building,omitempty"` // null if no building on tile
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *TileInfo) Reset() {
-	*x = TileInfo{}
-	mi := &file_weewar_v1_games_proto_msgTypes[25]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TileInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TileInfo) ProtoMessage() {}
-
-func (x *TileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[25]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TileInfo.ProtoReflect.Descriptor instead.
-func (*TileInfo) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{25}
-}
-
-func (x *TileInfo) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *TileInfo) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
-}
-
-func (x *TileInfo) GetTerrainType() string {
-	if x != nil {
-		return x.TerrainType
-	}
-	return ""
-}
-
-func (x *TileInfo) GetUnit() *UnitInfo {
-	if x != nil {
-		return x.Unit
-	}
-	return nil
-}
-
-func (x *TileInfo) GetBuilding() *BuildingInfo {
-	if x != nil {
-		return x.Building
-	}
-	return nil
-}
-
-// *
-// Information about a unit on a tile
-type UnitInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Player        int32                  `protobuf:"varint,1,opt,name=player,proto3" json:"player,omitempty"`
-	UnitType      int32                  `protobuf:"varint,2,opt,name=unit_type,json=unitType,proto3" json:"unit_type,omitempty"`
-	Health        int32                  `protobuf:"varint,3,opt,name=health,proto3" json:"health,omitempty"`
-	MaxHealth     int32                  `protobuf:"varint,4,opt,name=max_health,json=maxHealth,proto3" json:"max_health,omitempty"`
-	HasMoved      bool                   `protobuf:"varint,5,opt,name=has_moved,json=hasMoved,proto3" json:"has_moved,omitempty"`
-	HasAttacked   bool                   `protobuf:"varint,6,opt,name=has_attacked,json=hasAttacked,proto3" json:"has_attacked,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UnitInfo) Reset() {
-	*x = UnitInfo{}
-	mi := &file_weewar_v1_games_proto_msgTypes[26]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UnitInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UnitInfo) ProtoMessage() {}
-
-func (x *UnitInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[26]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UnitInfo.ProtoReflect.Descriptor instead.
-func (*UnitInfo) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *UnitInfo) GetPlayer() int32 {
-	if x != nil {
-		return x.Player
-	}
-	return 0
-}
-
-func (x *UnitInfo) GetUnitType() int32 {
-	if x != nil {
-		return x.UnitType
-	}
-	return 0
-}
-
-func (x *UnitInfo) GetHealth() int32 {
-	if x != nil {
-		return x.Health
-	}
-	return 0
-}
-
-func (x *UnitInfo) GetMaxHealth() int32 {
-	if x != nil {
-		return x.MaxHealth
-	}
-	return 0
-}
-
-func (x *UnitInfo) GetHasMoved() bool {
-	if x != nil {
-		return x.HasMoved
-	}
-	return false
-}
-
-func (x *UnitInfo) GetHasAttacked() bool {
-	if x != nil {
-		return x.HasAttacked
-	}
-	return false
-}
-
-// *
-// Information about a building on a tile
-type BuildingInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BuildingType  int32                  `protobuf:"varint,1,opt,name=building_type,json=buildingType,proto3" json:"building_type,omitempty"`
-	Owner         int32                  `protobuf:"varint,2,opt,name=owner,proto3" json:"owner,omitempty"`                                      // -1 if neutral
-	CapturePoints int32                  `protobuf:"varint,3,opt,name=capture_points,json=capturePoints,proto3" json:"capture_points,omitempty"` // for capturable buildings
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BuildingInfo) Reset() {
-	*x = BuildingInfo{}
-	mi := &file_weewar_v1_games_proto_msgTypes[27]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BuildingInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BuildingInfo) ProtoMessage() {}
-
-func (x *BuildingInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[27]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BuildingInfo.ProtoReflect.Descriptor instead.
-func (*BuildingInfo) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{27}
-}
-
-func (x *BuildingInfo) GetBuildingType() int32 {
-	if x != nil {
-		return x.BuildingType
-	}
-	return 0
-}
-
-func (x *BuildingInfo) GetOwner() int32 {
-	if x != nil {
-		return x.Owner
-	}
-	return 0
-}
-
-func (x *BuildingInfo) GetCapturePoints() int32 {
-	if x != nil {
-		return x.CapturePoints
-	}
-	return 0
-}
-
-// *
-// Request to get terrain statistics
-type GetTerrainStatsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	Q             int32                  `protobuf:"varint,2,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,3,opt,name=r,proto3" json:"r,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetTerrainStatsRequest) Reset() {
-	*x = GetTerrainStatsRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[28]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetTerrainStatsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetTerrainStatsRequest) ProtoMessage() {}
-
-func (x *GetTerrainStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[28]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetTerrainStatsRequest.ProtoReflect.Descriptor instead.
-func (*GetTerrainStatsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{28}
-}
-
-func (x *GetTerrainStatsRequest) GetGameId() string {
-	if x != nil {
-		return x.GameId
-	}
-	return ""
-}
-
-func (x *GetTerrainStatsRequest) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *GetTerrainStatsRequest) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
-}
-
-// *
-// Response with terrain statistics
-type GetTerrainStatsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Stats         *TerrainStats          `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetTerrainStatsResponse) Reset() {
-	*x = GetTerrainStatsResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[29]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetTerrainStatsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetTerrainStatsResponse) ProtoMessage() {}
-
-func (x *GetTerrainStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[29]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetTerrainStatsResponse.ProtoReflect.Descriptor instead.
-func (*GetTerrainStatsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{29}
-}
-
-func (x *GetTerrainStatsResponse) GetStats() *TerrainStats {
-	if x != nil {
-		return x.Stats
-	}
-	return nil
-}
-
-// *
-// Statistics about terrain at a specific tile
-type TerrainStats struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	TerrainType    string                 `protobuf:"bytes,1,opt,name=terrain_type,json=terrainType,proto3" json:"terrain_type,omitempty"`
-	MovementCost   int32                  `protobuf:"varint,2,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"`
-	DefenseBonus   int32                  `protobuf:"varint,3,opt,name=defense_bonus,json=defenseBonus,proto3" json:"defense_bonus,omitempty"` // percentage defense bonus (0-100)
-	BlocksMovement bool                   `protobuf:"varint,4,opt,name=blocks_movement,json=blocksMovement,proto3" json:"blocks_movement,omitempty"`
-	CanCapture     bool                   `protobuf:"varint,5,opt,name=can_capture,json=canCapture,proto3" json:"can_capture,omitempty"` // if this tile can be captured
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *TerrainStats) Reset() {
-	*x = TerrainStats{}
-	mi := &file_weewar_v1_games_proto_msgTypes[30]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TerrainStats) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TerrainStats) ProtoMessage() {}
-
-func (x *TerrainStats) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[30]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TerrainStats.ProtoReflect.Descriptor instead.
-func (*TerrainStats) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{30}
-}
-
-func (x *TerrainStats) GetTerrainType() string {
-	if x != nil {
-		return x.TerrainType
-	}
-	return ""
-}
-
-func (x *TerrainStats) GetMovementCost() int32 {
-	if x != nil {
-		return x.MovementCost
-	}
-	return 0
-}
-
-func (x *TerrainStats) GetDefenseBonus() int32 {
-	if x != nil {
-		return x.DefenseBonus
-	}
-	return 0
-}
-
-func (x *TerrainStats) GetBlocksMovement() bool {
-	if x != nil {
-		return x.BlocksMovement
-	}
-	return false
-}
-
-func (x *TerrainStats) GetCanCapture() bool {
-	if x != nil {
-		return x.CanCapture
-	}
-	return false
-}
-
-// *
 // Request to check if a unit can be selected
 type CanSelectUnitRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1850,7 +1556,7 @@ type CanSelectUnitRequest struct {
 
 func (x *CanSelectUnitRequest) Reset() {
 	*x = CanSelectUnitRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[31]
+	mi := &file_weewar_v1_games_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1862,7 +1568,7 @@ func (x *CanSelectUnitRequest) String() string {
 func (*CanSelectUnitRequest) ProtoMessage() {}
 
 func (x *CanSelectUnitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[31]
+	mi := &file_weewar_v1_games_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1875,7 +1581,7 @@ func (x *CanSelectUnitRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CanSelectUnitRequest.ProtoReflect.Descriptor instead.
 func (*CanSelectUnitRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{31}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CanSelectUnitRequest) GetGameId() string {
@@ -1918,7 +1624,7 @@ type CanSelectUnitResponse struct {
 
 func (x *CanSelectUnitResponse) Reset() {
 	*x = CanSelectUnitResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[32]
+	mi := &file_weewar_v1_games_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1930,7 +1636,7 @@ func (x *CanSelectUnitResponse) String() string {
 func (*CanSelectUnitResponse) ProtoMessage() {}
 
 func (x *CanSelectUnitResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[32]
+	mi := &file_weewar_v1_games_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1943,7 +1649,7 @@ func (x *CanSelectUnitResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CanSelectUnitResponse.ProtoReflect.Descriptor instead.
 func (*CanSelectUnitResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{32}
+	return file_weewar_v1_games_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *CanSelectUnitResponse) GetCanSelect() bool {
@@ -1958,122 +1664,6 @@ func (x *CanSelectUnitResponse) GetReason() string {
 		return x.Reason
 	}
 	return ""
-}
-
-// *
-// Request to create a game from map data
-type CreateGameFromMapRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	MapData       string                 `protobuf:"bytes,1,opt,name=map_data,json=mapData,proto3" json:"map_data,omitempty"` // JSON or other format containing map information
-	Players       []*GamePlayer          `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
-	Settings      *GameSettings          `protobuf:"bytes,3,opt,name=settings,proto3" json:"settings,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateGameFromMapRequest) Reset() {
-	*x = CreateGameFromMapRequest{}
-	mi := &file_weewar_v1_games_proto_msgTypes[33]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateGameFromMapRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateGameFromMapRequest) ProtoMessage() {}
-
-func (x *CreateGameFromMapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[33]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateGameFromMapRequest.ProtoReflect.Descriptor instead.
-func (*CreateGameFromMapRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{33}
-}
-
-func (x *CreateGameFromMapRequest) GetMapData() string {
-	if x != nil {
-		return x.MapData
-	}
-	return ""
-}
-
-func (x *CreateGameFromMapRequest) GetPlayers() []*GamePlayer {
-	if x != nil {
-		return x.Players
-	}
-	return nil
-}
-
-func (x *CreateGameFromMapRequest) GetSettings() *GameSettings {
-	if x != nil {
-		return x.Settings
-	}
-	return nil
-}
-
-// *
-// Response after creating game from map
-type CreateGameFromMapResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Game          *Game                  `protobuf:"bytes,1,opt,name=game,proto3" json:"game,omitempty"`
-	InitialWorld  *World                 `protobuf:"bytes,2,opt,name=initial_world,json=initialWorld,proto3" json:"initial_world,omitempty"` // The initial world state
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateGameFromMapResponse) Reset() {
-	*x = CreateGameFromMapResponse{}
-	mi := &file_weewar_v1_games_proto_msgTypes[34]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateGameFromMapResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateGameFromMapResponse) ProtoMessage() {}
-
-func (x *CreateGameFromMapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_games_proto_msgTypes[34]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateGameFromMapResponse.ProtoReflect.Descriptor instead.
-func (*CreateGameFromMapResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_games_proto_rawDescGZIP(), []int{34}
-}
-
-func (x *CreateGameFromMapResponse) GetGame() *Game {
-	if x != nil {
-		return x.Game
-	}
-	return nil
-}
-
-func (x *CreateGameFromMapResponse) GetInitialWorld() *World {
-	if x != nil {
-		return x.InitialWorld
-	}
-	return nil
 }
 
 var File_weewar_v1_games_proto protoreflect.FileDescriptor
@@ -2134,10 +1724,12 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
 	"\x05value\x18\x02 \x01(\v2\x0f.weewar.v1.GameR\x05value:\x028\x01\"8\n" +
 	"\x11CreateGameRequest\x12#\n" +
-	"\x04game\x18\x01 \x01(\v2\x0f.weewar.v1.GameR\x04game\"\xcc\x01\n" +
+	"\x04game\x18\x01 \x01(\v2\x0f.weewar.v1.GameR\x04game\"\x81\x02\n" +
 	"\x12CreateGameResponse\x12#\n" +
-	"\x04game\x18\x01 \x01(\v2\x0f.weewar.v1.GameR\x04game\x12Q\n" +
-	"\ffield_errors\x18\x02 \x03(\v2..weewar.v1.CreateGameResponse.FieldErrorsEntryR\vfieldErrors\x1a>\n" +
+	"\x04game\x18\x01 \x01(\v2\x0f.weewar.v1.GameR\x04game\x123\n" +
+	"\n" +
+	"game_state\x18\x02 \x01(\v2\x14.weewar.v1.GameStateR\tgameState\x12Q\n" +
+	"\ffield_errors\x18\x03 \x03(\v2..weewar.v1.CreateGameResponse.FieldErrorsEntryR\vfieldErrors\x1a>\n" +
 	"\x10FieldErrorsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Y\n" +
@@ -2146,7 +1738,19 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x05moves\x18\x03 \x03(\v2\x13.weewar.v1.GameMoveR\x05moves\"\x86\x01\n" +
 	"\x14ProcessMovesResponse\x12<\n" +
 	"\fmove_results\x18\x01 \x03(\v2\x19.weewar.v1.GameMoveResultR\vmoveResults\x120\n" +
-	"\achanges\x18\x02 \x03(\v2\x16.weewar.v1.WorldChangeR\achanges\"P\n" +
+	"\achanges\x18\x02 \x03(\v2\x16.weewar.v1.WorldChangeR\achanges\".\n" +
+	"\x13GetGameStateRequest\x12\x17\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\"B\n" +
+	"\x14GetGameStateResponse\x12*\n" +
+	"\x05state\x18\x01 \x01(\v2\x14.weewar.v1.GameStateR\x05state\"Z\n" +
+	"\x10ListMovesRequest\x12\x17\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\x16\n" +
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\x12\x15\n" +
+	"\x06last_n\x18\x03 \x01(\x05R\x05lastN\"i\n" +
+	"\x11ListMovesResponse\x12\x19\n" +
+	"\bhas_more\x18\x01 \x01(\bR\ahasMore\x129\n" +
+	"\vmove_groups\x18\x02 \x03(\v2\x18.weewar.v1.GameMoveGroupR\n" +
+	"moveGroups\"P\n" +
 	"\x19GetMovementOptionsRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
 	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
@@ -2169,44 +1773,7 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1d\n" +
 	"\n" +
 	"can_attack\x18\x03 \x01(\bR\tcanAttack\x12'\n" +
-	"\x0fdamage_estimate\x18\x04 \x01(\x05R\x0edamageEstimate\"I\n" +
-	"\x12GetTileInfoRequest\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
-	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x03 \x01(\x05R\x01r\">\n" +
-	"\x13GetTileInfoResponse\x12'\n" +
-	"\x04tile\x18\x01 \x01(\v2\x13.weewar.v1.TileInfoR\x04tile\"\xa7\x01\n" +
-	"\bTileInfo\x12\f\n" +
-	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x02 \x01(\x05R\x01r\x12!\n" +
-	"\fterrain_type\x18\x03 \x01(\tR\vterrainType\x12'\n" +
-	"\x04unit\x18\x04 \x01(\v2\x13.weewar.v1.UnitInfoR\x04unit\x123\n" +
-	"\bbuilding\x18\x05 \x01(\v2\x17.weewar.v1.BuildingInfoR\bbuilding\"\xb6\x01\n" +
-	"\bUnitInfo\x12\x16\n" +
-	"\x06player\x18\x01 \x01(\x05R\x06player\x12\x1b\n" +
-	"\tunit_type\x18\x02 \x01(\x05R\bunitType\x12\x16\n" +
-	"\x06health\x18\x03 \x01(\x05R\x06health\x12\x1d\n" +
-	"\n" +
-	"max_health\x18\x04 \x01(\x05R\tmaxHealth\x12\x1b\n" +
-	"\thas_moved\x18\x05 \x01(\bR\bhasMoved\x12!\n" +
-	"\fhas_attacked\x18\x06 \x01(\bR\vhasAttacked\"p\n" +
-	"\fBuildingInfo\x12#\n" +
-	"\rbuilding_type\x18\x01 \x01(\x05R\fbuildingType\x12\x14\n" +
-	"\x05owner\x18\x02 \x01(\x05R\x05owner\x12%\n" +
-	"\x0ecapture_points\x18\x03 \x01(\x05R\rcapturePoints\"M\n" +
-	"\x16GetTerrainStatsRequest\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
-	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x03 \x01(\x05R\x01r\"H\n" +
-	"\x17GetTerrainStatsResponse\x12-\n" +
-	"\x05stats\x18\x01 \x01(\v2\x17.weewar.v1.TerrainStatsR\x05stats\"\xc5\x01\n" +
-	"\fTerrainStats\x12!\n" +
-	"\fterrain_type\x18\x01 \x01(\tR\vterrainType\x12#\n" +
-	"\rmovement_cost\x18\x02 \x01(\x05R\fmovementCost\x12#\n" +
-	"\rdefense_bonus\x18\x03 \x01(\x05R\fdefenseBonus\x12'\n" +
-	"\x0fblocks_movement\x18\x04 \x01(\bR\x0eblocksMovement\x12\x1f\n" +
-	"\vcan_capture\x18\x05 \x01(\bR\n" +
-	"canCapture\"h\n" +
+	"\x0fdamage_estimate\x18\x04 \x01(\x05R\x0edamageEstimate\"h\n" +
 	"\x14CanSelectUnitRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
 	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
@@ -2215,14 +1782,8 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x15CanSelectUnitResponse\x12\x1d\n" +
 	"\n" +
 	"can_select\x18\x01 \x01(\bR\tcanSelect\x12\x16\n" +
-	"\x06reason\x18\x02 \x01(\tR\x06reason\"\x9b\x01\n" +
-	"\x18CreateGameFromMapRequest\x12\x19\n" +
-	"\bmap_data\x18\x01 \x01(\tR\amapData\x12/\n" +
-	"\aplayers\x18\x02 \x03(\v2\x15.weewar.v1.GamePlayerR\aplayers\x123\n" +
-	"\bsettings\x18\x03 \x01(\v2\x17.weewar.v1.GameSettingsR\bsettings\"w\n" +
-	"\x19CreateGameFromMapResponse\x12#\n" +
-	"\x04game\x18\x01 \x01(\v2\x0f.weewar.v1.GameR\x04game\x125\n" +
-	"\rinitial_world\x18\x02 \x01(\v2\x10.weewar.v1.WorldR\finitialWorld2\xee\v\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason2\xce\n" +
+	"\n" +
 	"\fGamesService\x12_\n" +
 	"\n" +
 	"CreateGame\x12\x1c.weewar.v1.CreateGameRequest\x1a\x1d.weewar.v1.CreateGameResponse\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/v1/games\x12_\n" +
@@ -2232,14 +1793,13 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\n" +
 	"DeleteGame\x12\x1c.weewar.v1.DeleteGameRequest\x1a\x1d.weewar.v1.DeleteGameResponse\"\x18\x82\xd3\xe4\x93\x02\x12*\x10/v1/games/{id=*}\x12k\n" +
 	"\n" +
-	"UpdateGame\x12\x1c.weewar.v1.UpdateGameRequest\x1a\x1d.weewar.v1.UpdateGameResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/games/{game.id=*}\x12u\n" +
+	"UpdateGame\x12\x1c.weewar.v1.UpdateGameRequest\x1a\x1d.weewar.v1.UpdateGameResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/games/{game.id=*}\x12r\n" +
+	"\fGetGameState\x12\x1e.weewar.v1.GetGameStateRequest\x1a\x1f.weewar.v1.GetGameStateResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/games/{game_id}/state\x12i\n" +
+	"\tListMoves\x12\x1b.weewar.v1.ListMovesRequest\x1a\x1c.weewar.v1.ListMovesResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/games/{game_id}/moves\x12u\n" +
 	"\fProcessMoves\x12\x1e.weewar.v1.ProcessMovesRequest\x1a\x1f.weewar.v1.ProcessMovesResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/{game_id}/moves\x12\x8f\x01\n" +
 	"\x12GetMovementOptions\x12$.weewar.v1.GetMovementOptionsRequest\x1a%.weewar.v1.GetMovementOptionsResponse\",\x82\xd3\xe4\x93\x02&\x12$/v1/games/{game_id}/movement/{q}/{r}\x12\x87\x01\n" +
-	"\x10GetAttackOptions\x12\".weewar.v1.GetAttackOptionsRequest\x1a#.weewar.v1.GetAttackOptionsResponse\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/games/{game_id}/attack/{q}/{r}\x12v\n" +
-	"\vGetTileInfo\x12\x1d.weewar.v1.GetTileInfoRequest\x1a\x1e.weewar.v1.GetTileInfoResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/games/{game_id}/tile/{q}/{r}\x12\x85\x01\n" +
-	"\x0fGetTerrainStats\x12!.weewar.v1.GetTerrainStatsRequest\x1a\".weewar.v1.GetTerrainStatsResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/games/{game_id}/terrain/{q}/{r}\x12\x82\x01\n" +
-	"\rCanSelectUnit\x12\x1f.weewar.v1.CanSelectUnitRequest\x1a .weewar.v1.CanSelectUnitResponse\".\x82\xd3\xe4\x93\x02(\x12&/v1/games/{game_id}/can-select/{q}/{r}\x12}\n" +
-	"\x11CreateGameFromMap\x12#.weewar.v1.CreateGameFromMapRequest\x1a$.weewar.v1.CreateGameFromMapResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/v1/games/from-mapB\x9c\x01\n" +
+	"\x10GetAttackOptions\x12\".weewar.v1.GetAttackOptionsRequest\x1a#.weewar.v1.GetAttackOptionsResponse\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/games/{game_id}/attack/{q}/{r}\x12\x82\x01\n" +
+	"\rCanSelectUnit\x12\x1f.weewar.v1.CanSelectUnitRequest\x1a .weewar.v1.CanSelectUnitResponse\".\x82\xd3\xe4\x93\x02(\x12&/v1/games/{game_id}/can-select/{q}/{r}B\x9c\x01\n" +
 	"\rcom.weewar.v1B\n" +
 	"GamesProtoP\x01Z:github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
@@ -2256,7 +1816,7 @@ func file_weewar_v1_games_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_games_proto_rawDescData
 }
 
-var file_weewar_v1_games_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
+var file_weewar_v1_games_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_weewar_v1_games_proto_goTypes = []any{
 	(*GameInfo)(nil),                   // 0: weewar.v1.GameInfo
 	(*ListGamesRequest)(nil),           // 1: weewar.v1.ListGamesRequest
@@ -2275,94 +1835,80 @@ var file_weewar_v1_games_proto_goTypes = []any{
 	(*CreateGameResponse)(nil),         // 14: weewar.v1.CreateGameResponse
 	(*ProcessMovesRequest)(nil),        // 15: weewar.v1.ProcessMovesRequest
 	(*ProcessMovesResponse)(nil),       // 16: weewar.v1.ProcessMovesResponse
-	(*GetMovementOptionsRequest)(nil),  // 17: weewar.v1.GetMovementOptionsRequest
-	(*GetMovementOptionsResponse)(nil), // 18: weewar.v1.GetMovementOptionsResponse
-	(*MovementOption)(nil),             // 19: weewar.v1.MovementOption
-	(*GetAttackOptionsRequest)(nil),    // 20: weewar.v1.GetAttackOptionsRequest
-	(*GetAttackOptionsResponse)(nil),   // 21: weewar.v1.GetAttackOptionsResponse
-	(*AttackOption)(nil),               // 22: weewar.v1.AttackOption
-	(*GetTileInfoRequest)(nil),         // 23: weewar.v1.GetTileInfoRequest
-	(*GetTileInfoResponse)(nil),        // 24: weewar.v1.GetTileInfoResponse
-	(*TileInfo)(nil),                   // 25: weewar.v1.TileInfo
-	(*UnitInfo)(nil),                   // 26: weewar.v1.UnitInfo
-	(*BuildingInfo)(nil),               // 27: weewar.v1.BuildingInfo
-	(*GetTerrainStatsRequest)(nil),     // 28: weewar.v1.GetTerrainStatsRequest
-	(*GetTerrainStatsResponse)(nil),    // 29: weewar.v1.GetTerrainStatsResponse
-	(*TerrainStats)(nil),               // 30: weewar.v1.TerrainStats
-	(*CanSelectUnitRequest)(nil),       // 31: weewar.v1.CanSelectUnitRequest
-	(*CanSelectUnitResponse)(nil),      // 32: weewar.v1.CanSelectUnitResponse
-	(*CreateGameFromMapRequest)(nil),   // 33: weewar.v1.CreateGameFromMapRequest
-	(*CreateGameFromMapResponse)(nil),  // 34: weewar.v1.CreateGameFromMapResponse
-	nil,                                // 35: weewar.v1.GetGamesResponse.GamesEntry
-	nil,                                // 36: weewar.v1.CreateGameResponse.FieldErrorsEntry
-	(*Pagination)(nil),                 // 37: weewar.v1.Pagination
-	(*Game)(nil),                       // 38: weewar.v1.Game
-	(*PaginationResponse)(nil),         // 39: weewar.v1.PaginationResponse
-	(*fieldmaskpb.FieldMask)(nil),      // 40: google.protobuf.FieldMask
-	(*GameMove)(nil),                   // 41: weewar.v1.GameMove
-	(*GameMoveResult)(nil),             // 42: weewar.v1.GameMoveResult
-	(*WorldChange)(nil),                // 43: weewar.v1.WorldChange
-	(*GamePlayer)(nil),                 // 44: weewar.v1.GamePlayer
-	(*GameSettings)(nil),               // 45: weewar.v1.GameSettings
-	(*World)(nil),                      // 46: weewar.v1.World
+	(*GetGameStateRequest)(nil),        // 17: weewar.v1.GetGameStateRequest
+	(*GetGameStateResponse)(nil),       // 18: weewar.v1.GetGameStateResponse
+	(*ListMovesRequest)(nil),           // 19: weewar.v1.ListMovesRequest
+	(*ListMovesResponse)(nil),          // 20: weewar.v1.ListMovesResponse
+	(*GetMovementOptionsRequest)(nil),  // 21: weewar.v1.GetMovementOptionsRequest
+	(*GetMovementOptionsResponse)(nil), // 22: weewar.v1.GetMovementOptionsResponse
+	(*MovementOption)(nil),             // 23: weewar.v1.MovementOption
+	(*GetAttackOptionsRequest)(nil),    // 24: weewar.v1.GetAttackOptionsRequest
+	(*GetAttackOptionsResponse)(nil),   // 25: weewar.v1.GetAttackOptionsResponse
+	(*AttackOption)(nil),               // 26: weewar.v1.AttackOption
+	(*CanSelectUnitRequest)(nil),       // 27: weewar.v1.CanSelectUnitRequest
+	(*CanSelectUnitResponse)(nil),      // 28: weewar.v1.CanSelectUnitResponse
+	nil,                                // 29: weewar.v1.GetGamesResponse.GamesEntry
+	nil,                                // 30: weewar.v1.CreateGameResponse.FieldErrorsEntry
+	(*Pagination)(nil),                 // 31: weewar.v1.Pagination
+	(*Game)(nil),                       // 32: weewar.v1.Game
+	(*PaginationResponse)(nil),         // 33: weewar.v1.PaginationResponse
+	(*fieldmaskpb.FieldMask)(nil),      // 34: google.protobuf.FieldMask
+	(*GameState)(nil),                  // 35: weewar.v1.GameState
+	(*GameMove)(nil),                   // 36: weewar.v1.GameMove
+	(*GameMoveResult)(nil),             // 37: weewar.v1.GameMoveResult
+	(*WorldChange)(nil),                // 38: weewar.v1.WorldChange
+	(*GameMoveGroup)(nil),              // 39: weewar.v1.GameMoveGroup
 }
 var file_weewar_v1_games_proto_depIdxs = []int32{
-	37, // 0: weewar.v1.ListGamesRequest.pagination:type_name -> weewar.v1.Pagination
-	38, // 1: weewar.v1.ListGamesResponse.items:type_name -> weewar.v1.Game
-	39, // 2: weewar.v1.ListGamesResponse.pagination:type_name -> weewar.v1.PaginationResponse
-	38, // 3: weewar.v1.GetGameResponse.game:type_name -> weewar.v1.Game
-	38, // 4: weewar.v1.UpdateGameRequest.game:type_name -> weewar.v1.Game
-	40, // 5: weewar.v1.UpdateGameRequest.update_mask:type_name -> google.protobuf.FieldMask
-	38, // 6: weewar.v1.UpdateGameResponse.game:type_name -> weewar.v1.Game
-	35, // 7: weewar.v1.GetGamesResponse.games:type_name -> weewar.v1.GetGamesResponse.GamesEntry
-	38, // 8: weewar.v1.CreateGameRequest.game:type_name -> weewar.v1.Game
-	38, // 9: weewar.v1.CreateGameResponse.game:type_name -> weewar.v1.Game
-	36, // 10: weewar.v1.CreateGameResponse.field_errors:type_name -> weewar.v1.CreateGameResponse.FieldErrorsEntry
-	41, // 11: weewar.v1.ProcessMovesRequest.moves:type_name -> weewar.v1.GameMove
-	42, // 12: weewar.v1.ProcessMovesResponse.move_results:type_name -> weewar.v1.GameMoveResult
-	43, // 13: weewar.v1.ProcessMovesResponse.changes:type_name -> weewar.v1.WorldChange
-	19, // 14: weewar.v1.GetMovementOptionsResponse.options:type_name -> weewar.v1.MovementOption
-	22, // 15: weewar.v1.GetAttackOptionsResponse.options:type_name -> weewar.v1.AttackOption
-	25, // 16: weewar.v1.GetTileInfoResponse.tile:type_name -> weewar.v1.TileInfo
-	26, // 17: weewar.v1.TileInfo.unit:type_name -> weewar.v1.UnitInfo
-	27, // 18: weewar.v1.TileInfo.building:type_name -> weewar.v1.BuildingInfo
-	30, // 19: weewar.v1.GetTerrainStatsResponse.stats:type_name -> weewar.v1.TerrainStats
-	44, // 20: weewar.v1.CreateGameFromMapRequest.players:type_name -> weewar.v1.GamePlayer
-	45, // 21: weewar.v1.CreateGameFromMapRequest.settings:type_name -> weewar.v1.GameSettings
-	38, // 22: weewar.v1.CreateGameFromMapResponse.game:type_name -> weewar.v1.Game
-	46, // 23: weewar.v1.CreateGameFromMapResponse.initial_world:type_name -> weewar.v1.World
-	38, // 24: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
-	13, // 25: weewar.v1.GamesService.CreateGame:input_type -> weewar.v1.CreateGameRequest
-	11, // 26: weewar.v1.GamesService.GetGames:input_type -> weewar.v1.GetGamesRequest
-	1,  // 27: weewar.v1.GamesService.ListGames:input_type -> weewar.v1.ListGamesRequest
-	3,  // 28: weewar.v1.GamesService.GetGame:input_type -> weewar.v1.GetGameRequest
-	9,  // 29: weewar.v1.GamesService.DeleteGame:input_type -> weewar.v1.DeleteGameRequest
-	7,  // 30: weewar.v1.GamesService.UpdateGame:input_type -> weewar.v1.UpdateGameRequest
-	15, // 31: weewar.v1.GamesService.ProcessMoves:input_type -> weewar.v1.ProcessMovesRequest
-	17, // 32: weewar.v1.GamesService.GetMovementOptions:input_type -> weewar.v1.GetMovementOptionsRequest
-	20, // 33: weewar.v1.GamesService.GetAttackOptions:input_type -> weewar.v1.GetAttackOptionsRequest
-	23, // 34: weewar.v1.GamesService.GetTileInfo:input_type -> weewar.v1.GetTileInfoRequest
-	28, // 35: weewar.v1.GamesService.GetTerrainStats:input_type -> weewar.v1.GetTerrainStatsRequest
-	31, // 36: weewar.v1.GamesService.CanSelectUnit:input_type -> weewar.v1.CanSelectUnitRequest
-	33, // 37: weewar.v1.GamesService.CreateGameFromMap:input_type -> weewar.v1.CreateGameFromMapRequest
-	14, // 38: weewar.v1.GamesService.CreateGame:output_type -> weewar.v1.CreateGameResponse
-	12, // 39: weewar.v1.GamesService.GetGames:output_type -> weewar.v1.GetGamesResponse
-	2,  // 40: weewar.v1.GamesService.ListGames:output_type -> weewar.v1.ListGamesResponse
-	4,  // 41: weewar.v1.GamesService.GetGame:output_type -> weewar.v1.GetGameResponse
-	10, // 42: weewar.v1.GamesService.DeleteGame:output_type -> weewar.v1.DeleteGameResponse
-	8,  // 43: weewar.v1.GamesService.UpdateGame:output_type -> weewar.v1.UpdateGameResponse
-	16, // 44: weewar.v1.GamesService.ProcessMoves:output_type -> weewar.v1.ProcessMovesResponse
-	18, // 45: weewar.v1.GamesService.GetMovementOptions:output_type -> weewar.v1.GetMovementOptionsResponse
-	21, // 46: weewar.v1.GamesService.GetAttackOptions:output_type -> weewar.v1.GetAttackOptionsResponse
-	24, // 47: weewar.v1.GamesService.GetTileInfo:output_type -> weewar.v1.GetTileInfoResponse
-	29, // 48: weewar.v1.GamesService.GetTerrainStats:output_type -> weewar.v1.GetTerrainStatsResponse
-	32, // 49: weewar.v1.GamesService.CanSelectUnit:output_type -> weewar.v1.CanSelectUnitResponse
-	34, // 50: weewar.v1.GamesService.CreateGameFromMap:output_type -> weewar.v1.CreateGameFromMapResponse
-	38, // [38:51] is the sub-list for method output_type
-	25, // [25:38] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	31, // 0: weewar.v1.ListGamesRequest.pagination:type_name -> weewar.v1.Pagination
+	32, // 1: weewar.v1.ListGamesResponse.items:type_name -> weewar.v1.Game
+	33, // 2: weewar.v1.ListGamesResponse.pagination:type_name -> weewar.v1.PaginationResponse
+	32, // 3: weewar.v1.GetGameResponse.game:type_name -> weewar.v1.Game
+	32, // 4: weewar.v1.UpdateGameRequest.game:type_name -> weewar.v1.Game
+	34, // 5: weewar.v1.UpdateGameRequest.update_mask:type_name -> google.protobuf.FieldMask
+	32, // 6: weewar.v1.UpdateGameResponse.game:type_name -> weewar.v1.Game
+	29, // 7: weewar.v1.GetGamesResponse.games:type_name -> weewar.v1.GetGamesResponse.GamesEntry
+	32, // 8: weewar.v1.CreateGameRequest.game:type_name -> weewar.v1.Game
+	32, // 9: weewar.v1.CreateGameResponse.game:type_name -> weewar.v1.Game
+	35, // 10: weewar.v1.CreateGameResponse.game_state:type_name -> weewar.v1.GameState
+	30, // 11: weewar.v1.CreateGameResponse.field_errors:type_name -> weewar.v1.CreateGameResponse.FieldErrorsEntry
+	36, // 12: weewar.v1.ProcessMovesRequest.moves:type_name -> weewar.v1.GameMove
+	37, // 13: weewar.v1.ProcessMovesResponse.move_results:type_name -> weewar.v1.GameMoveResult
+	38, // 14: weewar.v1.ProcessMovesResponse.changes:type_name -> weewar.v1.WorldChange
+	35, // 15: weewar.v1.GetGameStateResponse.state:type_name -> weewar.v1.GameState
+	39, // 16: weewar.v1.ListMovesResponse.move_groups:type_name -> weewar.v1.GameMoveGroup
+	23, // 17: weewar.v1.GetMovementOptionsResponse.options:type_name -> weewar.v1.MovementOption
+	26, // 18: weewar.v1.GetAttackOptionsResponse.options:type_name -> weewar.v1.AttackOption
+	32, // 19: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
+	13, // 20: weewar.v1.GamesService.CreateGame:input_type -> weewar.v1.CreateGameRequest
+	11, // 21: weewar.v1.GamesService.GetGames:input_type -> weewar.v1.GetGamesRequest
+	1,  // 22: weewar.v1.GamesService.ListGames:input_type -> weewar.v1.ListGamesRequest
+	3,  // 23: weewar.v1.GamesService.GetGame:input_type -> weewar.v1.GetGameRequest
+	9,  // 24: weewar.v1.GamesService.DeleteGame:input_type -> weewar.v1.DeleteGameRequest
+	7,  // 25: weewar.v1.GamesService.UpdateGame:input_type -> weewar.v1.UpdateGameRequest
+	17, // 26: weewar.v1.GamesService.GetGameState:input_type -> weewar.v1.GetGameStateRequest
+	19, // 27: weewar.v1.GamesService.ListMoves:input_type -> weewar.v1.ListMovesRequest
+	15, // 28: weewar.v1.GamesService.ProcessMoves:input_type -> weewar.v1.ProcessMovesRequest
+	21, // 29: weewar.v1.GamesService.GetMovementOptions:input_type -> weewar.v1.GetMovementOptionsRequest
+	24, // 30: weewar.v1.GamesService.GetAttackOptions:input_type -> weewar.v1.GetAttackOptionsRequest
+	27, // 31: weewar.v1.GamesService.CanSelectUnit:input_type -> weewar.v1.CanSelectUnitRequest
+	14, // 32: weewar.v1.GamesService.CreateGame:output_type -> weewar.v1.CreateGameResponse
+	12, // 33: weewar.v1.GamesService.GetGames:output_type -> weewar.v1.GetGamesResponse
+	2,  // 34: weewar.v1.GamesService.ListGames:output_type -> weewar.v1.ListGamesResponse
+	4,  // 35: weewar.v1.GamesService.GetGame:output_type -> weewar.v1.GetGameResponse
+	10, // 36: weewar.v1.GamesService.DeleteGame:output_type -> weewar.v1.DeleteGameResponse
+	8,  // 37: weewar.v1.GamesService.UpdateGame:output_type -> weewar.v1.UpdateGameResponse
+	18, // 38: weewar.v1.GamesService.GetGameState:output_type -> weewar.v1.GetGameStateResponse
+	20, // 39: weewar.v1.GamesService.ListMoves:output_type -> weewar.v1.ListMovesResponse
+	16, // 40: weewar.v1.GamesService.ProcessMoves:output_type -> weewar.v1.ProcessMovesResponse
+	22, // 41: weewar.v1.GamesService.GetMovementOptions:output_type -> weewar.v1.GetMovementOptionsResponse
+	25, // 42: weewar.v1.GamesService.GetAttackOptions:output_type -> weewar.v1.GetAttackOptionsResponse
+	28, // 43: weewar.v1.GamesService.CanSelectUnit:output_type -> weewar.v1.CanSelectUnitResponse
+	32, // [32:44] is the sub-list for method output_type
+	20, // [20:32] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_games_proto_init() }
@@ -2377,7 +1923,7 @@ func file_weewar_v1_games_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_games_proto_rawDesc), len(file_weewar_v1_games_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   37,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -97,17 +97,7 @@ message GetWorldRequest {
 
 message GetWorldResponse {
   World world = 1;
-}
-
-message GetWorldContentRequest {
-  string id = 1;
-  string version = 2; // Optional, defaults to default_version
-}
-
-message GetWorldContentResponse {
-  string weewar_content = 1;
-  string recipe_content = 2;
-  string readme_content = 3;
+  WorldData world_data = 2;
 }
 
 message UpdateWorldRequest {
@@ -121,11 +111,14 @@ message UpdateWorldRequest {
    * World being updated
    */
   World world = 1;
+  WorldData world_data = 2;
+
+  bool clear_world = 3;
 
   /**
    * Mask of fields being updated in this World to make partial changes.
    */
-  google.protobuf.FieldMask update_mask = 2;
+  google.protobuf.FieldMask update_mask = 4;
 }
 
 /**
@@ -142,6 +135,7 @@ message UpdateWorldResponse {
    * World being updated
    */
   World world = 1;
+  WorldData world_data = 2;
 }
 
 /**
@@ -185,6 +179,7 @@ message CreateWorldRequest {
    * World being updated
    */
   World world = 1;
+  WorldData world_data = 2;
 }
 
 /**
@@ -195,9 +190,10 @@ message CreateWorldResponse {
    * World being created
    */
   World world = 1;
+  WorldData world_data = 2;
 
   /**
    * Error specific to a field if there are any errors.
    */
-  map<string, string> field_errors = 2;
+  map<string, string> field_errors = 3;
 }

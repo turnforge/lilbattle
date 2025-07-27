@@ -45,6 +45,11 @@ const (
 	GamesServiceDeleteGameProcedure = "/weewar.v1.GamesService/DeleteGame"
 	// GamesServiceUpdateGameProcedure is the fully-qualified name of the GamesService's UpdateGame RPC.
 	GamesServiceUpdateGameProcedure = "/weewar.v1.GamesService/UpdateGame"
+	// GamesServiceGetGameStateProcedure is the fully-qualified name of the GamesService's GetGameState
+	// RPC.
+	GamesServiceGetGameStateProcedure = "/weewar.v1.GamesService/GetGameState"
+	// GamesServiceListMovesProcedure is the fully-qualified name of the GamesService's ListMoves RPC.
+	GamesServiceListMovesProcedure = "/weewar.v1.GamesService/ListMoves"
 	// GamesServiceProcessMovesProcedure is the fully-qualified name of the GamesService's ProcessMoves
 	// RPC.
 	GamesServiceProcessMovesProcedure = "/weewar.v1.GamesService/ProcessMoves"
@@ -54,18 +59,9 @@ const (
 	// GamesServiceGetAttackOptionsProcedure is the fully-qualified name of the GamesService's
 	// GetAttackOptions RPC.
 	GamesServiceGetAttackOptionsProcedure = "/weewar.v1.GamesService/GetAttackOptions"
-	// GamesServiceGetTileInfoProcedure is the fully-qualified name of the GamesService's GetTileInfo
-	// RPC.
-	GamesServiceGetTileInfoProcedure = "/weewar.v1.GamesService/GetTileInfo"
-	// GamesServiceGetTerrainStatsProcedure is the fully-qualified name of the GamesService's
-	// GetTerrainStats RPC.
-	GamesServiceGetTerrainStatsProcedure = "/weewar.v1.GamesService/GetTerrainStats"
 	// GamesServiceCanSelectUnitProcedure is the fully-qualified name of the GamesService's
 	// CanSelectUnit RPC.
 	GamesServiceCanSelectUnitProcedure = "/weewar.v1.GamesService/CanSelectUnit"
-	// GamesServiceCreateGameFromMapProcedure is the fully-qualified name of the GamesService's
-	// CreateGameFromMap RPC.
-	GamesServiceCreateGameFromMapProcedure = "/weewar.v1.GamesService/CreateGameFromMap"
 )
 
 // GamesServiceClient is a client for the weewar.v1.GamesService service.
@@ -85,14 +81,15 @@ type GamesServiceClient interface {
 	DeleteGame(context.Context, *connect.Request[v1.DeleteGameRequest]) (*connect.Response[v1.DeleteGameResponse], error)
 	// GetGame returns a specific game with metadata
 	UpdateGame(context.Context, *connect.Request[v1.UpdateGameRequest]) (*connect.Response[v1.UpdateGameResponse], error)
+	// Gets the latest game state
+	GetGameState(context.Context, *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error)
+	// List the moves for a game
+	ListMoves(context.Context, *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error)
 	ProcessMoves(context.Context, *connect.Request[v1.ProcessMovesRequest]) (*connect.Response[v1.ProcessMovesResponse], error)
 	// Game interaction methods for UI components
 	GetMovementOptions(context.Context, *connect.Request[v1.GetMovementOptionsRequest]) (*connect.Response[v1.GetMovementOptionsResponse], error)
 	GetAttackOptions(context.Context, *connect.Request[v1.GetAttackOptionsRequest]) (*connect.Response[v1.GetAttackOptionsResponse], error)
-	GetTileInfo(context.Context, *connect.Request[v1.GetTileInfoRequest]) (*connect.Response[v1.GetTileInfoResponse], error)
-	GetTerrainStats(context.Context, *connect.Request[v1.GetTerrainStatsRequest]) (*connect.Response[v1.GetTerrainStatsResponse], error)
 	CanSelectUnit(context.Context, *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error)
-	CreateGameFromMap(context.Context, *connect.Request[v1.CreateGameFromMapRequest]) (*connect.Response[v1.CreateGameFromMapResponse], error)
 }
 
 // NewGamesServiceClient constructs a client for the weewar.v1.GamesService service. By default, it
@@ -142,6 +139,18 @@ func NewGamesServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(gamesServiceMethods.ByName("UpdateGame")),
 			connect.WithClientOptions(opts...),
 		),
+		getGameState: connect.NewClient[v1.GetGameStateRequest, v1.GetGameStateResponse](
+			httpClient,
+			baseURL+GamesServiceGetGameStateProcedure,
+			connect.WithSchema(gamesServiceMethods.ByName("GetGameState")),
+			connect.WithClientOptions(opts...),
+		),
+		listMoves: connect.NewClient[v1.ListMovesRequest, v1.ListMovesResponse](
+			httpClient,
+			baseURL+GamesServiceListMovesProcedure,
+			connect.WithSchema(gamesServiceMethods.ByName("ListMoves")),
+			connect.WithClientOptions(opts...),
+		),
 		processMoves: connect.NewClient[v1.ProcessMovesRequest, v1.ProcessMovesResponse](
 			httpClient,
 			baseURL+GamesServiceProcessMovesProcedure,
@@ -160,28 +169,10 @@ func NewGamesServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(gamesServiceMethods.ByName("GetAttackOptions")),
 			connect.WithClientOptions(opts...),
 		),
-		getTileInfo: connect.NewClient[v1.GetTileInfoRequest, v1.GetTileInfoResponse](
-			httpClient,
-			baseURL+GamesServiceGetTileInfoProcedure,
-			connect.WithSchema(gamesServiceMethods.ByName("GetTileInfo")),
-			connect.WithClientOptions(opts...),
-		),
-		getTerrainStats: connect.NewClient[v1.GetTerrainStatsRequest, v1.GetTerrainStatsResponse](
-			httpClient,
-			baseURL+GamesServiceGetTerrainStatsProcedure,
-			connect.WithSchema(gamesServiceMethods.ByName("GetTerrainStats")),
-			connect.WithClientOptions(opts...),
-		),
 		canSelectUnit: connect.NewClient[v1.CanSelectUnitRequest, v1.CanSelectUnitResponse](
 			httpClient,
 			baseURL+GamesServiceCanSelectUnitProcedure,
 			connect.WithSchema(gamesServiceMethods.ByName("CanSelectUnit")),
-			connect.WithClientOptions(opts...),
-		),
-		createGameFromMap: connect.NewClient[v1.CreateGameFromMapRequest, v1.CreateGameFromMapResponse](
-			httpClient,
-			baseURL+GamesServiceCreateGameFromMapProcedure,
-			connect.WithSchema(gamesServiceMethods.ByName("CreateGameFromMap")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -195,13 +186,12 @@ type gamesServiceClient struct {
 	getGame            *connect.Client[v1.GetGameRequest, v1.GetGameResponse]
 	deleteGame         *connect.Client[v1.DeleteGameRequest, v1.DeleteGameResponse]
 	updateGame         *connect.Client[v1.UpdateGameRequest, v1.UpdateGameResponse]
+	getGameState       *connect.Client[v1.GetGameStateRequest, v1.GetGameStateResponse]
+	listMoves          *connect.Client[v1.ListMovesRequest, v1.ListMovesResponse]
 	processMoves       *connect.Client[v1.ProcessMovesRequest, v1.ProcessMovesResponse]
 	getMovementOptions *connect.Client[v1.GetMovementOptionsRequest, v1.GetMovementOptionsResponse]
 	getAttackOptions   *connect.Client[v1.GetAttackOptionsRequest, v1.GetAttackOptionsResponse]
-	getTileInfo        *connect.Client[v1.GetTileInfoRequest, v1.GetTileInfoResponse]
-	getTerrainStats    *connect.Client[v1.GetTerrainStatsRequest, v1.GetTerrainStatsResponse]
 	canSelectUnit      *connect.Client[v1.CanSelectUnitRequest, v1.CanSelectUnitResponse]
-	createGameFromMap  *connect.Client[v1.CreateGameFromMapRequest, v1.CreateGameFromMapResponse]
 }
 
 // CreateGame calls weewar.v1.GamesService.CreateGame.
@@ -234,6 +224,16 @@ func (c *gamesServiceClient) UpdateGame(ctx context.Context, req *connect.Reques
 	return c.updateGame.CallUnary(ctx, req)
 }
 
+// GetGameState calls weewar.v1.GamesService.GetGameState.
+func (c *gamesServiceClient) GetGameState(ctx context.Context, req *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error) {
+	return c.getGameState.CallUnary(ctx, req)
+}
+
+// ListMoves calls weewar.v1.GamesService.ListMoves.
+func (c *gamesServiceClient) ListMoves(ctx context.Context, req *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error) {
+	return c.listMoves.CallUnary(ctx, req)
+}
+
 // ProcessMoves calls weewar.v1.GamesService.ProcessMoves.
 func (c *gamesServiceClient) ProcessMoves(ctx context.Context, req *connect.Request[v1.ProcessMovesRequest]) (*connect.Response[v1.ProcessMovesResponse], error) {
 	return c.processMoves.CallUnary(ctx, req)
@@ -249,24 +249,9 @@ func (c *gamesServiceClient) GetAttackOptions(ctx context.Context, req *connect.
 	return c.getAttackOptions.CallUnary(ctx, req)
 }
 
-// GetTileInfo calls weewar.v1.GamesService.GetTileInfo.
-func (c *gamesServiceClient) GetTileInfo(ctx context.Context, req *connect.Request[v1.GetTileInfoRequest]) (*connect.Response[v1.GetTileInfoResponse], error) {
-	return c.getTileInfo.CallUnary(ctx, req)
-}
-
-// GetTerrainStats calls weewar.v1.GamesService.GetTerrainStats.
-func (c *gamesServiceClient) GetTerrainStats(ctx context.Context, req *connect.Request[v1.GetTerrainStatsRequest]) (*connect.Response[v1.GetTerrainStatsResponse], error) {
-	return c.getTerrainStats.CallUnary(ctx, req)
-}
-
 // CanSelectUnit calls weewar.v1.GamesService.CanSelectUnit.
 func (c *gamesServiceClient) CanSelectUnit(ctx context.Context, req *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error) {
 	return c.canSelectUnit.CallUnary(ctx, req)
-}
-
-// CreateGameFromMap calls weewar.v1.GamesService.CreateGameFromMap.
-func (c *gamesServiceClient) CreateGameFromMap(ctx context.Context, req *connect.Request[v1.CreateGameFromMapRequest]) (*connect.Response[v1.CreateGameFromMapResponse], error) {
-	return c.createGameFromMap.CallUnary(ctx, req)
 }
 
 // GamesServiceHandler is an implementation of the weewar.v1.GamesService service.
@@ -286,14 +271,15 @@ type GamesServiceHandler interface {
 	DeleteGame(context.Context, *connect.Request[v1.DeleteGameRequest]) (*connect.Response[v1.DeleteGameResponse], error)
 	// GetGame returns a specific game with metadata
 	UpdateGame(context.Context, *connect.Request[v1.UpdateGameRequest]) (*connect.Response[v1.UpdateGameResponse], error)
+	// Gets the latest game state
+	GetGameState(context.Context, *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error)
+	// List the moves for a game
+	ListMoves(context.Context, *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error)
 	ProcessMoves(context.Context, *connect.Request[v1.ProcessMovesRequest]) (*connect.Response[v1.ProcessMovesResponse], error)
 	// Game interaction methods for UI components
 	GetMovementOptions(context.Context, *connect.Request[v1.GetMovementOptionsRequest]) (*connect.Response[v1.GetMovementOptionsResponse], error)
 	GetAttackOptions(context.Context, *connect.Request[v1.GetAttackOptionsRequest]) (*connect.Response[v1.GetAttackOptionsResponse], error)
-	GetTileInfo(context.Context, *connect.Request[v1.GetTileInfoRequest]) (*connect.Response[v1.GetTileInfoResponse], error)
-	GetTerrainStats(context.Context, *connect.Request[v1.GetTerrainStatsRequest]) (*connect.Response[v1.GetTerrainStatsResponse], error)
 	CanSelectUnit(context.Context, *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error)
-	CreateGameFromMap(context.Context, *connect.Request[v1.CreateGameFromMapRequest]) (*connect.Response[v1.CreateGameFromMapResponse], error)
 }
 
 // NewGamesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -339,6 +325,18 @@ func NewGamesServiceHandler(svc GamesServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(gamesServiceMethods.ByName("UpdateGame")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gamesServiceGetGameStateHandler := connect.NewUnaryHandler(
+		GamesServiceGetGameStateProcedure,
+		svc.GetGameState,
+		connect.WithSchema(gamesServiceMethods.ByName("GetGameState")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gamesServiceListMovesHandler := connect.NewUnaryHandler(
+		GamesServiceListMovesProcedure,
+		svc.ListMoves,
+		connect.WithSchema(gamesServiceMethods.ByName("ListMoves")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gamesServiceProcessMovesHandler := connect.NewUnaryHandler(
 		GamesServiceProcessMovesProcedure,
 		svc.ProcessMoves,
@@ -357,28 +355,10 @@ func NewGamesServiceHandler(svc GamesServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(gamesServiceMethods.ByName("GetAttackOptions")),
 		connect.WithHandlerOptions(opts...),
 	)
-	gamesServiceGetTileInfoHandler := connect.NewUnaryHandler(
-		GamesServiceGetTileInfoProcedure,
-		svc.GetTileInfo,
-		connect.WithSchema(gamesServiceMethods.ByName("GetTileInfo")),
-		connect.WithHandlerOptions(opts...),
-	)
-	gamesServiceGetTerrainStatsHandler := connect.NewUnaryHandler(
-		GamesServiceGetTerrainStatsProcedure,
-		svc.GetTerrainStats,
-		connect.WithSchema(gamesServiceMethods.ByName("GetTerrainStats")),
-		connect.WithHandlerOptions(opts...),
-	)
 	gamesServiceCanSelectUnitHandler := connect.NewUnaryHandler(
 		GamesServiceCanSelectUnitProcedure,
 		svc.CanSelectUnit,
 		connect.WithSchema(gamesServiceMethods.ByName("CanSelectUnit")),
-		connect.WithHandlerOptions(opts...),
-	)
-	gamesServiceCreateGameFromMapHandler := connect.NewUnaryHandler(
-		GamesServiceCreateGameFromMapProcedure,
-		svc.CreateGameFromMap,
-		connect.WithSchema(gamesServiceMethods.ByName("CreateGameFromMap")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/weewar.v1.GamesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -395,20 +375,18 @@ func NewGamesServiceHandler(svc GamesServiceHandler, opts ...connect.HandlerOpti
 			gamesServiceDeleteGameHandler.ServeHTTP(w, r)
 		case GamesServiceUpdateGameProcedure:
 			gamesServiceUpdateGameHandler.ServeHTTP(w, r)
+		case GamesServiceGetGameStateProcedure:
+			gamesServiceGetGameStateHandler.ServeHTTP(w, r)
+		case GamesServiceListMovesProcedure:
+			gamesServiceListMovesHandler.ServeHTTP(w, r)
 		case GamesServiceProcessMovesProcedure:
 			gamesServiceProcessMovesHandler.ServeHTTP(w, r)
 		case GamesServiceGetMovementOptionsProcedure:
 			gamesServiceGetMovementOptionsHandler.ServeHTTP(w, r)
 		case GamesServiceGetAttackOptionsProcedure:
 			gamesServiceGetAttackOptionsHandler.ServeHTTP(w, r)
-		case GamesServiceGetTileInfoProcedure:
-			gamesServiceGetTileInfoHandler.ServeHTTP(w, r)
-		case GamesServiceGetTerrainStatsProcedure:
-			gamesServiceGetTerrainStatsHandler.ServeHTTP(w, r)
 		case GamesServiceCanSelectUnitProcedure:
 			gamesServiceCanSelectUnitHandler.ServeHTTP(w, r)
-		case GamesServiceCreateGameFromMapProcedure:
-			gamesServiceCreateGameFromMapHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -442,6 +420,14 @@ func (UnimplementedGamesServiceHandler) UpdateGame(context.Context, *connect.Req
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.UpdateGame is not implemented"))
 }
 
+func (UnimplementedGamesServiceHandler) GetGameState(context.Context, *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.GetGameState is not implemented"))
+}
+
+func (UnimplementedGamesServiceHandler) ListMoves(context.Context, *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.ListMoves is not implemented"))
+}
+
 func (UnimplementedGamesServiceHandler) ProcessMoves(context.Context, *connect.Request[v1.ProcessMovesRequest]) (*connect.Response[v1.ProcessMovesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.ProcessMoves is not implemented"))
 }
@@ -454,18 +440,6 @@ func (UnimplementedGamesServiceHandler) GetAttackOptions(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.GetAttackOptions is not implemented"))
 }
 
-func (UnimplementedGamesServiceHandler) GetTileInfo(context.Context, *connect.Request[v1.GetTileInfoRequest]) (*connect.Response[v1.GetTileInfoResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.GetTileInfo is not implemented"))
-}
-
-func (UnimplementedGamesServiceHandler) GetTerrainStats(context.Context, *connect.Request[v1.GetTerrainStatsRequest]) (*connect.Response[v1.GetTerrainStatsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.GetTerrainStats is not implemented"))
-}
-
 func (UnimplementedGamesServiceHandler) CanSelectUnit(context.Context, *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.CanSelectUnit is not implemented"))
-}
-
-func (UnimplementedGamesServiceHandler) CreateGameFromMap(context.Context, *connect.Request[v1.CreateGameFromMapRequest]) (*connect.Response[v1.CreateGameFromMapResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GamesService.CreateGameFromMap is not implemented"))
 }

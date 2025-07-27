@@ -63,6 +63,20 @@ service GamesService {
     };
   }
 
+  // Gets the latest game state
+  rpc GetGameState(GetGameStateRequest) returns (GetGameStateResponse) {
+    option (google.api.http) = {
+      get: "/v1/games/{game_id}/state",
+    };
+  }
+
+  // List the moves for a game
+  rpc ListMoves(ListMovesRequest) returns (ListMovesResponse) {
+    option (google.api.http) = {
+      get: "/v1/games/{game_id}/moves",
+    };
+  }
+
   rpc ProcessMoves(ProcessMovesRequest) returns (ProcessMovesResponse) {
     option (google.api.http) = {
       post: "/v1/games/{game_id}/moves",
@@ -83,28 +97,9 @@ service GamesService {
     };
   }
 
-  rpc GetTileInfo(GetTileInfoRequest) returns (GetTileInfoResponse) {
-    option (google.api.http) = {
-      get: "/v1/games/{game_id}/tile/{q}/{r}"
-    };
-  }
-
-  rpc GetTerrainStats(GetTerrainStatsRequest) returns (GetTerrainStatsResponse) {
-    option (google.api.http) = {
-      get: "/v1/games/{game_id}/terrain/{q}/{r}"
-    };
-  }
-
   rpc CanSelectUnit(CanSelectUnitRequest) returns (CanSelectUnitResponse) {
     option (google.api.http) = {
       get: "/v1/games/{game_id}/can-select/{q}/{r}"
-    };
-  }
-
-  rpc CreateGameFromMap(CreateGameFromMapRequest) returns (CreateGameFromMapResponse) {
-    option (google.api.http) = {
-      post: "/v1/games/from-map",
-      body: "*",
     };
   }
 }
@@ -242,10 +237,13 @@ message CreateGameResponse {
    */
   Game game = 1;
 
+  // The starting game state
+  GameState game_state = 2;
+
   /**
    * Error specific to a field if there are any errors.
    */
-  map<string, string> field_errors = 2;
+  map<string, string> field_errors = 3;
 }
 
 /**
@@ -290,6 +288,52 @@ message ProcessMovesResponse {
    * starting a snapshot (and not just a move)
    */
   repeated WorldChange changes = 2;
+}
+
+/**
+ * Request to get the game's latest state
+ */
+message GetGameStateRequest {
+  /**
+   * Game ID to add moves to
+   */
+  string game_id = 1;
+}
+
+/**
+ * Response holding latest game state
+ */
+message GetGameStateResponse {
+  GameState state = 1;
+}
+
+/**
+ * Request to list moves for a game
+ */
+message ListMovesRequest {
+  /**
+   * Game ID to add moves to
+   */
+  string game_id = 1;
+
+  // Offset of the move to begin fetching from in reverse order from "latest".
+  // 0 => start from now
+  int32 offset = 2;
+
+  /**
+   * Limit to last N moves (from offset).  if <= 0 return all moves
+   */
+  int32 last_n = 3;
+}
+
+/**
+ * Response after adding moves to game.
+ */
+message ListMovesResponse {
+  // Whether there are more moves before this
+  bool has_more = 1;
+
+  repeated GameMoveGroup move_groups = 2;
 }
 
 // =============================================================================
@@ -349,81 +393,6 @@ message AttackOption {
 }
 
 /**
- * Request to get tile information
- */
-message GetTileInfoRequest {
-  string game_id = 1;
-  int32 q = 2;
-  int32 r = 3;
-}
-
-/**
- * Response with tile information
- */
-message GetTileInfoResponse {
-  TileInfo tile = 1;
-}
-
-/**
- * Complete information about a tile
- */
-message TileInfo {
-  int32 q = 1;
-  int32 r = 2;
-  string terrain_type = 3;
-  UnitInfo unit = 4; // null if no unit on tile
-  BuildingInfo building = 5; // null if no building on tile
-}
-
-/**
- * Information about a unit on a tile
- */
-message UnitInfo {
-  int32 player = 1;
-  int32 unit_type = 2;
-  int32 health = 3;
-  int32 max_health = 4;
-  bool has_moved = 5;
-  bool has_attacked = 6;
-}
-
-/**
- * Information about a building on a tile
- */
-message BuildingInfo {
-  int32 building_type = 1;
-  int32 owner = 2; // -1 if neutral
-  int32 capture_points = 3; // for capturable buildings
-}
-
-/**
- * Request to get terrain statistics
- */
-message GetTerrainStatsRequest {
-  string game_id = 1;
-  int32 q = 2;
-  int32 r = 3;
-}
-
-/**
- * Response with terrain statistics
- */
-message GetTerrainStatsResponse {
-  TerrainStats stats = 1;
-}
-
-/**
- * Statistics about terrain at a specific tile
- */
-message TerrainStats {
-  string terrain_type = 1;
-  int32 movement_cost = 2;
-  int32 defense_bonus = 3; // percentage defense bonus (0-100)
-  bool blocks_movement = 4;
-  bool can_capture = 5; // if this tile can be captured
-}
-
-/**
  * Request to check if a unit can be selected
  */
 message CanSelectUnitRequest {
@@ -439,21 +408,4 @@ message CanSelectUnitRequest {
 message CanSelectUnitResponse {
   bool can_select = 1;
   string reason = 2; // explanation if can_select is false
-}
-
-/**
- * Request to create a game from map data
- */
-message CreateGameFromMapRequest {
-  string map_data = 1; // JSON or other format containing map information
-  repeated GamePlayer players = 2;
-  GameSettings settings = 3;
-}
-
-/**
- * Response after creating game from map
- */
-message CreateGameFromMapResponse {
-  Game game = 1;
-  World initial_world = 2; // The initial world state
 }

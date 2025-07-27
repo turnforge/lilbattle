@@ -48,6 +48,12 @@ func (exports *Weewar_v1_servicesServicesExports) RegisterAPI() {
 			"updateGame": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.gamesServiceUpdateGame(this, args)
 			}),
+			"getGameState": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.gamesServiceGetGameState(this, args)
+			}),
+			"listMoves": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.gamesServiceListMoves(this, args)
+			}),
 			"processMoves": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.gamesServiceProcessMoves(this, args)
 			}),
@@ -57,17 +63,8 @@ func (exports *Weewar_v1_servicesServicesExports) RegisterAPI() {
 			"getAttackOptions": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.gamesServiceGetAttackOptions(this, args)
 			}),
-			"getTileInfo": js.FuncOf(func(this js.Value, args []js.Value) any {
-				return exports.gamesServiceGetTileInfo(this, args)
-			}),
-			"getTerrainStats": js.FuncOf(func(this js.Value, args []js.Value) any {
-				return exports.gamesServiceGetTerrainStats(this, args)
-			}),
 			"canSelectUnit": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.gamesServiceCanSelectUnit(this, args)
-			}),
-			"createGameFromMap": js.FuncOf(func(this js.Value, args []js.Value) any {
-				return exports.gamesServiceCreateGameFromMap(this, args)
 			}),
 		},
 		"usersService": map[string]interface{}{
@@ -360,6 +357,86 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceUpdateGame(this js
 	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
 }
 
+// gamesServiceGetGameState handles the GetGameState method for GamesService
+func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetGameState(this js.Value, args []js.Value) any {
+	if exports.GamesService == nil {
+		return createJSResponse(false, "GamesService not initialized", nil)
+	}
+
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	var req *weewarv1.GetGameStateRequest
+	if err := protojson.Unmarshal([]byte(requestJSON), req); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.GamesService.GetGameState(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response
+	responseJSON, err := protojson.Marshal(resp)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// gamesServiceListMoves handles the ListMoves method for GamesService
+func (exports *Weewar_v1_servicesServicesExports) gamesServiceListMoves(this js.Value, args []js.Value) any {
+	if exports.GamesService == nil {
+		return createJSResponse(false, "GamesService not initialized", nil)
+	}
+
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	var req *weewarv1.ListMovesRequest
+	if err := protojson.Unmarshal([]byte(requestJSON), req); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.GamesService.ListMoves(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response
+	responseJSON, err := protojson.Marshal(resp)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
 // gamesServiceProcessMoves handles the ProcessMoves method for GamesService
 func (exports *Weewar_v1_servicesServicesExports) gamesServiceProcessMoves(this js.Value, args []js.Value) any {
 	if exports.GamesService == nil {
@@ -480,86 +557,6 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetAttackOptions(t
 	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
 }
 
-// gamesServiceGetTileInfo handles the GetTileInfo method for GamesService
-func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetTileInfo(this js.Value, args []js.Value) any {
-	if exports.GamesService == nil {
-		return createJSResponse(false, "GamesService not initialized", nil)
-	}
-
-	if len(args) < 1 {
-		return createJSResponse(false, "Request JSON required", nil)
-	}
-
-	requestJSON := args[0].String()
-	if requestJSON == "" {
-		return createJSResponse(false, "Request JSON is empty", nil)
-	}
-
-	// Parse request
-	var req *weewarv1.GetTileInfoRequest
-	if err := protojson.Unmarshal([]byte(requestJSON), req); err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
-	}
-
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Call service method
-	resp, err := exports.GamesService.GetTileInfo(ctx, req)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
-	}
-
-	// Marshal response
-	responseJSON, err := protojson.Marshal(resp)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
-	}
-
-	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
-}
-
-// gamesServiceGetTerrainStats handles the GetTerrainStats method for GamesService
-func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetTerrainStats(this js.Value, args []js.Value) any {
-	if exports.GamesService == nil {
-		return createJSResponse(false, "GamesService not initialized", nil)
-	}
-
-	if len(args) < 1 {
-		return createJSResponse(false, "Request JSON required", nil)
-	}
-
-	requestJSON := args[0].String()
-	if requestJSON == "" {
-		return createJSResponse(false, "Request JSON is empty", nil)
-	}
-
-	// Parse request
-	var req *weewarv1.GetTerrainStatsRequest
-	if err := protojson.Unmarshal([]byte(requestJSON), req); err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
-	}
-
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Call service method
-	resp, err := exports.GamesService.GetTerrainStats(ctx, req)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
-	}
-
-	// Marshal response
-	responseJSON, err := protojson.Marshal(resp)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
-	}
-
-	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
-}
-
 // gamesServiceCanSelectUnit handles the CanSelectUnit method for GamesService
 func (exports *Weewar_v1_servicesServicesExports) gamesServiceCanSelectUnit(this js.Value, args []js.Value) any {
 	if exports.GamesService == nil {
@@ -587,46 +584,6 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceCanSelectUnit(this
 
 	// Call service method
 	resp, err := exports.GamesService.CanSelectUnit(ctx, req)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
-	}
-
-	// Marshal response
-	responseJSON, err := protojson.Marshal(resp)
-	if err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
-	}
-
-	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
-}
-
-// gamesServiceCreateGameFromMap handles the CreateGameFromMap method for GamesService
-func (exports *Weewar_v1_servicesServicesExports) gamesServiceCreateGameFromMap(this js.Value, args []js.Value) any {
-	if exports.GamesService == nil {
-		return createJSResponse(false, "GamesService not initialized", nil)
-	}
-
-	if len(args) < 1 {
-		return createJSResponse(false, "Request JSON required", nil)
-	}
-
-	requestJSON := args[0].String()
-	if requestJSON == "" {
-		return createJSResponse(false, "Request JSON is empty", nil)
-	}
-
-	// Parse request
-	var req *weewarv1.CreateGameFromMapRequest
-	if err := protojson.Unmarshal([]byte(requestJSON), req); err != nil {
-		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
-	}
-
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Call service method
-	resp, err := exports.GamesService.CreateGameFromMap(ctx, req)
 	if err != nil {
 		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
 	}

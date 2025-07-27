@@ -287,6 +287,7 @@ func (x *GetWorldRequest) GetVersion() string {
 type GetWorldResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	World         *World                 `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	WorldData     *WorldData             `protobuf:"bytes,2,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -328,133 +329,30 @@ func (x *GetWorldResponse) GetWorld() *World {
 	return nil
 }
 
-type GetWorldContentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Version       string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"` // Optional, defaults to default_version
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetWorldContentRequest) Reset() {
-	*x = GetWorldContentRequest{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetWorldContentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetWorldContentRequest) ProtoMessage() {}
-
-func (x *GetWorldContentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[5]
+func (x *GetWorldResponse) GetWorldData() *WorldData {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+		return x.WorldData
 	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetWorldContentRequest.ProtoReflect.Descriptor instead.
-func (*GetWorldContentRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *GetWorldContentRequest) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *GetWorldContentRequest) GetVersion() string {
-	if x != nil {
-		return x.Version
-	}
-	return ""
-}
-
-type GetWorldContentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WeewarContent string                 `protobuf:"bytes,1,opt,name=weewar_content,json=weewarContent,proto3" json:"weewar_content,omitempty"`
-	RecipeContent string                 `protobuf:"bytes,2,opt,name=recipe_content,json=recipeContent,proto3" json:"recipe_content,omitempty"`
-	ReadmeContent string                 `protobuf:"bytes,3,opt,name=readme_content,json=readmeContent,proto3" json:"readme_content,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetWorldContentResponse) Reset() {
-	*x = GetWorldContentResponse{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetWorldContentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetWorldContentResponse) ProtoMessage() {}
-
-func (x *GetWorldContentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetWorldContentResponse.ProtoReflect.Descriptor instead.
-func (*GetWorldContentResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *GetWorldContentResponse) GetWeewarContent() string {
-	if x != nil {
-		return x.WeewarContent
-	}
-	return ""
-}
-
-func (x *GetWorldContentResponse) GetRecipeContent() string {
-	if x != nil {
-		return x.RecipeContent
-	}
-	return ""
-}
-
-func (x *GetWorldContentResponse) GetReadmeContent() string {
-	if x != nil {
-		return x.ReadmeContent
-	}
-	return ""
+	return nil
 }
 
 type UpdateWorldRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// *
 	// World being updated
-	World *World `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	World      *World     `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	WorldData  *WorldData `protobuf:"bytes,2,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
+	ClearWorld bool       `protobuf:"varint,3,opt,name=clear_world,json=clearWorld,proto3" json:"clear_world,omitempty"`
 	// *
 	// Mask of fields being updated in this World to make partial changes.
-	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
+	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,4,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateWorldRequest) Reset() {
 	*x = UpdateWorldRequest{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[7]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -466,7 +364,7 @@ func (x *UpdateWorldRequest) String() string {
 func (*UpdateWorldRequest) ProtoMessage() {}
 
 func (x *UpdateWorldRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[7]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -479,7 +377,7 @@ func (x *UpdateWorldRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWorldRequest.ProtoReflect.Descriptor instead.
 func (*UpdateWorldRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{7}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UpdateWorldRequest) GetWorld() *World {
@@ -487,6 +385,20 @@ func (x *UpdateWorldRequest) GetWorld() *World {
 		return x.World
 	}
 	return nil
+}
+
+func (x *UpdateWorldRequest) GetWorldData() *WorldData {
+	if x != nil {
+		return x.WorldData
+	}
+	return nil
+}
+
+func (x *UpdateWorldRequest) GetClearWorld() bool {
+	if x != nil {
+		return x.ClearWorld
+	}
+	return false
 }
 
 func (x *UpdateWorldRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
@@ -502,14 +414,15 @@ type UpdateWorldResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// *
 	// World being updated
-	World         *World `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	World         *World     `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	WorldData     *WorldData `protobuf:"bytes,2,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateWorldResponse) Reset() {
 	*x = UpdateWorldResponse{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[8]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -521,7 +434,7 @@ func (x *UpdateWorldResponse) String() string {
 func (*UpdateWorldResponse) ProtoMessage() {}
 
 func (x *UpdateWorldResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[8]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -534,12 +447,19 @@ func (x *UpdateWorldResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWorldResponse.ProtoReflect.Descriptor instead.
 func (*UpdateWorldResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{8}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateWorldResponse) GetWorld() *World {
 	if x != nil {
 		return x.World
+	}
+	return nil
+}
+
+func (x *UpdateWorldResponse) GetWorldData() *WorldData {
+	if x != nil {
+		return x.WorldData
 	}
 	return nil
 }
@@ -557,7 +477,7 @@ type DeleteWorldRequest struct {
 
 func (x *DeleteWorldRequest) Reset() {
 	*x = DeleteWorldRequest{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[9]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -569,7 +489,7 @@ func (x *DeleteWorldRequest) String() string {
 func (*DeleteWorldRequest) ProtoMessage() {}
 
 func (x *DeleteWorldRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[9]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -582,7 +502,7 @@ func (x *DeleteWorldRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteWorldRequest.ProtoReflect.Descriptor instead.
 func (*DeleteWorldRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{9}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteWorldRequest) GetId() string {
@@ -602,7 +522,7 @@ type DeleteWorldResponse struct {
 
 func (x *DeleteWorldResponse) Reset() {
 	*x = DeleteWorldResponse{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[10]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +534,7 @@ func (x *DeleteWorldResponse) String() string {
 func (*DeleteWorldResponse) ProtoMessage() {}
 
 func (x *DeleteWorldResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[10]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +547,7 @@ func (x *DeleteWorldResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteWorldResponse.ProtoReflect.Descriptor instead.
 func (*DeleteWorldResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{10}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{8}
 }
 
 // *
@@ -643,7 +563,7 @@ type GetWorldsRequest struct {
 
 func (x *GetWorldsRequest) Reset() {
 	*x = GetWorldsRequest{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[11]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -655,7 +575,7 @@ func (x *GetWorldsRequest) String() string {
 func (*GetWorldsRequest) ProtoMessage() {}
 
 func (x *GetWorldsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[11]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -668,7 +588,7 @@ func (x *GetWorldsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorldsRequest.ProtoReflect.Descriptor instead.
 func (*GetWorldsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{11}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetWorldsRequest) GetIds() []string {
@@ -689,7 +609,7 @@ type GetWorldsResponse struct {
 
 func (x *GetWorldsResponse) Reset() {
 	*x = GetWorldsResponse{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[12]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +621,7 @@ func (x *GetWorldsResponse) String() string {
 func (*GetWorldsResponse) ProtoMessage() {}
 
 func (x *GetWorldsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[12]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +634,7 @@ func (x *GetWorldsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorldsResponse.ProtoReflect.Descriptor instead.
 func (*GetWorldsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{12}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetWorldsResponse) GetWorlds() map[string]*World {
@@ -730,14 +650,15 @@ type CreateWorldRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// *
 	// World being updated
-	World         *World `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	World         *World     `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	WorldData     *WorldData `protobuf:"bytes,2,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateWorldRequest) Reset() {
 	*x = CreateWorldRequest{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[13]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -749,7 +670,7 @@ func (x *CreateWorldRequest) String() string {
 func (*CreateWorldRequest) ProtoMessage() {}
 
 func (x *CreateWorldRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[13]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -762,12 +683,19 @@ func (x *CreateWorldRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWorldRequest.ProtoReflect.Descriptor instead.
 func (*CreateWorldRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{13}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateWorldRequest) GetWorld() *World {
 	if x != nil {
 		return x.World
+	}
+	return nil
+}
+
+func (x *CreateWorldRequest) GetWorldData() *WorldData {
+	if x != nil {
+		return x.WorldData
 	}
 	return nil
 }
@@ -778,17 +706,18 @@ type CreateWorldResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// *
 	// World being created
-	World *World `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	World     *World     `protobuf:"bytes,1,opt,name=world,proto3" json:"world,omitempty"`
+	WorldData *WorldData `protobuf:"bytes,2,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	// *
 	// Error specific to a field if there are any errors.
-	FieldErrors   map[string]string `protobuf:"bytes,2,rep,name=field_errors,json=fieldErrors,proto3" json:"field_errors,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	FieldErrors   map[string]string `protobuf:"bytes,3,rep,name=field_errors,json=fieldErrors,proto3" json:"field_errors,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateWorldResponse) Reset() {
 	*x = CreateWorldResponse{}
-	mi := &file_weewar_v1_worlds_proto_msgTypes[14]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +729,7 @@ func (x *CreateWorldResponse) String() string {
 func (*CreateWorldResponse) ProtoMessage() {}
 
 func (x *CreateWorldResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_worlds_proto_msgTypes[14]
+	mi := &file_weewar_v1_worlds_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,12 +742,19 @@ func (x *CreateWorldResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWorldResponse.ProtoReflect.Descriptor instead.
 func (*CreateWorldResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{14}
+	return file_weewar_v1_worlds_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateWorldResponse) GetWorld() *World {
 	if x != nil {
 		return x.World
+	}
+	return nil
+}
+
+func (x *CreateWorldResponse) GetWorldData() *WorldData {
+	if x != nil {
+		return x.WorldData
 	}
 	return nil
 }
@@ -858,23 +794,24 @@ const file_weewar_v1_worlds_proto_rawDesc = "" +
 	"pagination\";\n" +
 	"\x0fGetWorldRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\tR\aversion\":\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\"o\n" +
 	"\x10GetWorldResponse\x12&\n" +
-	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\"B\n" +
-	"\x16GetWorldContentRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\tR\aversion\"\x8e\x01\n" +
-	"\x17GetWorldContentResponse\x12%\n" +
-	"\x0eweewar_content\x18\x01 \x01(\tR\rweewarContent\x12%\n" +
-	"\x0erecipe_content\x18\x02 \x01(\tR\rrecipeContent\x12%\n" +
-	"\x0ereadme_content\x18\x03 \x01(\tR\rreadmeContent\"\x94\x01\n" +
+	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x123\n" +
+	"\n" +
+	"world_data\x18\x02 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\"\xea\x01\n" +
 	"\x12UpdateWorldRequest\x12&\n" +
-	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x12;\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
+	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x123\n" +
+	"\n" +
+	"world_data\x18\x02 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\x12\x1f\n" +
+	"\vclear_world\x18\x03 \x01(\bR\n" +
+	"clearWorld\x12;\n" +
+	"\vupdate_mask\x18\x04 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask:\x19\x92A\x16\n" +
-	"\x14*\x12UpdateWorldRequest\"Y\n" +
+	"\x14*\x12UpdateWorldRequest\"\x8e\x01\n" +
 	"\x13UpdateWorldResponse\x12&\n" +
-	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world:\x1a\x92A\x17\n" +
+	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x123\n" +
+	"\n" +
+	"world_data\x18\x02 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData:\x1a\x92A\x17\n" +
 	"\x15*\x13UpdateWorldResponse\"$\n" +
 	"\x12DeleteWorldRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x15\n" +
@@ -885,12 +822,16 @@ const file_weewar_v1_worlds_proto_rawDesc = "" +
 	"\x06worlds\x18\x01 \x03(\v2(.weewar.v1.GetWorldsResponse.WorldsEntryR\x06worlds\x1aK\n" +
 	"\vWorldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12&\n" +
-	"\x05value\x18\x02 \x01(\v2\x10.weewar.v1.WorldR\x05value:\x028\x01\"<\n" +
+	"\x05value\x18\x02 \x01(\v2\x10.weewar.v1.WorldR\x05value:\x028\x01\"q\n" +
 	"\x12CreateWorldRequest\x12&\n" +
-	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\"\xd1\x01\n" +
+	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x123\n" +
+	"\n" +
+	"world_data\x18\x02 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\"\x86\x02\n" +
 	"\x13CreateWorldResponse\x12&\n" +
-	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x12R\n" +
-	"\ffield_errors\x18\x02 \x03(\v2/.weewar.v1.CreateWorldResponse.FieldErrorsEntryR\vfieldErrors\x1a>\n" +
+	"\x05world\x18\x01 \x01(\v2\x10.weewar.v1.WorldR\x05world\x123\n" +
+	"\n" +
+	"world_data\x18\x02 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\x12R\n" +
+	"\ffield_errors\x18\x03 \x03(\v2/.weewar.v1.CreateWorldResponse.FieldErrorsEntryR\vfieldErrors\x1a>\n" +
 	"\x10FieldErrorsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xf1\x04\n" +
@@ -919,60 +860,64 @@ func file_weewar_v1_worlds_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_worlds_proto_rawDescData
 }
 
-var file_weewar_v1_worlds_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_weewar_v1_worlds_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_weewar_v1_worlds_proto_goTypes = []any{
-	(*WorldInfo)(nil),               // 0: weewar.v1.WorldInfo
-	(*ListWorldsRequest)(nil),       // 1: weewar.v1.ListWorldsRequest
-	(*ListWorldsResponse)(nil),      // 2: weewar.v1.ListWorldsResponse
-	(*GetWorldRequest)(nil),         // 3: weewar.v1.GetWorldRequest
-	(*GetWorldResponse)(nil),        // 4: weewar.v1.GetWorldResponse
-	(*GetWorldContentRequest)(nil),  // 5: weewar.v1.GetWorldContentRequest
-	(*GetWorldContentResponse)(nil), // 6: weewar.v1.GetWorldContentResponse
-	(*UpdateWorldRequest)(nil),      // 7: weewar.v1.UpdateWorldRequest
-	(*UpdateWorldResponse)(nil),     // 8: weewar.v1.UpdateWorldResponse
-	(*DeleteWorldRequest)(nil),      // 9: weewar.v1.DeleteWorldRequest
-	(*DeleteWorldResponse)(nil),     // 10: weewar.v1.DeleteWorldResponse
-	(*GetWorldsRequest)(nil),        // 11: weewar.v1.GetWorldsRequest
-	(*GetWorldsResponse)(nil),       // 12: weewar.v1.GetWorldsResponse
-	(*CreateWorldRequest)(nil),      // 13: weewar.v1.CreateWorldRequest
-	(*CreateWorldResponse)(nil),     // 14: weewar.v1.CreateWorldResponse
-	nil,                             // 15: weewar.v1.GetWorldsResponse.WorldsEntry
-	nil,                             // 16: weewar.v1.CreateWorldResponse.FieldErrorsEntry
-	(*Pagination)(nil),              // 17: weewar.v1.Pagination
-	(*World)(nil),                   // 18: weewar.v1.World
-	(*PaginationResponse)(nil),      // 19: weewar.v1.PaginationResponse
-	(*fieldmaskpb.FieldMask)(nil),   // 20: google.protobuf.FieldMask
+	(*WorldInfo)(nil),             // 0: weewar.v1.WorldInfo
+	(*ListWorldsRequest)(nil),     // 1: weewar.v1.ListWorldsRequest
+	(*ListWorldsResponse)(nil),    // 2: weewar.v1.ListWorldsResponse
+	(*GetWorldRequest)(nil),       // 3: weewar.v1.GetWorldRequest
+	(*GetWorldResponse)(nil),      // 4: weewar.v1.GetWorldResponse
+	(*UpdateWorldRequest)(nil),    // 5: weewar.v1.UpdateWorldRequest
+	(*UpdateWorldResponse)(nil),   // 6: weewar.v1.UpdateWorldResponse
+	(*DeleteWorldRequest)(nil),    // 7: weewar.v1.DeleteWorldRequest
+	(*DeleteWorldResponse)(nil),   // 8: weewar.v1.DeleteWorldResponse
+	(*GetWorldsRequest)(nil),      // 9: weewar.v1.GetWorldsRequest
+	(*GetWorldsResponse)(nil),     // 10: weewar.v1.GetWorldsResponse
+	(*CreateWorldRequest)(nil),    // 11: weewar.v1.CreateWorldRequest
+	(*CreateWorldResponse)(nil),   // 12: weewar.v1.CreateWorldResponse
+	nil,                           // 13: weewar.v1.GetWorldsResponse.WorldsEntry
+	nil,                           // 14: weewar.v1.CreateWorldResponse.FieldErrorsEntry
+	(*Pagination)(nil),            // 15: weewar.v1.Pagination
+	(*World)(nil),                 // 16: weewar.v1.World
+	(*PaginationResponse)(nil),    // 17: weewar.v1.PaginationResponse
+	(*WorldData)(nil),             // 18: weewar.v1.WorldData
+	(*fieldmaskpb.FieldMask)(nil), // 19: google.protobuf.FieldMask
 }
 var file_weewar_v1_worlds_proto_depIdxs = []int32{
-	17, // 0: weewar.v1.ListWorldsRequest.pagination:type_name -> weewar.v1.Pagination
-	18, // 1: weewar.v1.ListWorldsResponse.items:type_name -> weewar.v1.World
-	19, // 2: weewar.v1.ListWorldsResponse.pagination:type_name -> weewar.v1.PaginationResponse
-	18, // 3: weewar.v1.GetWorldResponse.world:type_name -> weewar.v1.World
-	18, // 4: weewar.v1.UpdateWorldRequest.world:type_name -> weewar.v1.World
-	20, // 5: weewar.v1.UpdateWorldRequest.update_mask:type_name -> google.protobuf.FieldMask
-	18, // 6: weewar.v1.UpdateWorldResponse.world:type_name -> weewar.v1.World
-	15, // 7: weewar.v1.GetWorldsResponse.worlds:type_name -> weewar.v1.GetWorldsResponse.WorldsEntry
-	18, // 8: weewar.v1.CreateWorldRequest.world:type_name -> weewar.v1.World
-	18, // 9: weewar.v1.CreateWorldResponse.world:type_name -> weewar.v1.World
-	16, // 10: weewar.v1.CreateWorldResponse.field_errors:type_name -> weewar.v1.CreateWorldResponse.FieldErrorsEntry
-	18, // 11: weewar.v1.GetWorldsResponse.WorldsEntry.value:type_name -> weewar.v1.World
-	13, // 12: weewar.v1.WorldsService.CreateWorld:input_type -> weewar.v1.CreateWorldRequest
-	11, // 13: weewar.v1.WorldsService.GetWorlds:input_type -> weewar.v1.GetWorldsRequest
-	1,  // 14: weewar.v1.WorldsService.ListWorlds:input_type -> weewar.v1.ListWorldsRequest
-	3,  // 15: weewar.v1.WorldsService.GetWorld:input_type -> weewar.v1.GetWorldRequest
-	9,  // 16: weewar.v1.WorldsService.DeleteWorld:input_type -> weewar.v1.DeleteWorldRequest
-	7,  // 17: weewar.v1.WorldsService.UpdateWorld:input_type -> weewar.v1.UpdateWorldRequest
-	14, // 18: weewar.v1.WorldsService.CreateWorld:output_type -> weewar.v1.CreateWorldResponse
-	12, // 19: weewar.v1.WorldsService.GetWorlds:output_type -> weewar.v1.GetWorldsResponse
-	2,  // 20: weewar.v1.WorldsService.ListWorlds:output_type -> weewar.v1.ListWorldsResponse
-	4,  // 21: weewar.v1.WorldsService.GetWorld:output_type -> weewar.v1.GetWorldResponse
-	10, // 22: weewar.v1.WorldsService.DeleteWorld:output_type -> weewar.v1.DeleteWorldResponse
-	8,  // 23: weewar.v1.WorldsService.UpdateWorld:output_type -> weewar.v1.UpdateWorldResponse
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	15, // 0: weewar.v1.ListWorldsRequest.pagination:type_name -> weewar.v1.Pagination
+	16, // 1: weewar.v1.ListWorldsResponse.items:type_name -> weewar.v1.World
+	17, // 2: weewar.v1.ListWorldsResponse.pagination:type_name -> weewar.v1.PaginationResponse
+	16, // 3: weewar.v1.GetWorldResponse.world:type_name -> weewar.v1.World
+	18, // 4: weewar.v1.GetWorldResponse.world_data:type_name -> weewar.v1.WorldData
+	16, // 5: weewar.v1.UpdateWorldRequest.world:type_name -> weewar.v1.World
+	18, // 6: weewar.v1.UpdateWorldRequest.world_data:type_name -> weewar.v1.WorldData
+	19, // 7: weewar.v1.UpdateWorldRequest.update_mask:type_name -> google.protobuf.FieldMask
+	16, // 8: weewar.v1.UpdateWorldResponse.world:type_name -> weewar.v1.World
+	18, // 9: weewar.v1.UpdateWorldResponse.world_data:type_name -> weewar.v1.WorldData
+	13, // 10: weewar.v1.GetWorldsResponse.worlds:type_name -> weewar.v1.GetWorldsResponse.WorldsEntry
+	16, // 11: weewar.v1.CreateWorldRequest.world:type_name -> weewar.v1.World
+	18, // 12: weewar.v1.CreateWorldRequest.world_data:type_name -> weewar.v1.WorldData
+	16, // 13: weewar.v1.CreateWorldResponse.world:type_name -> weewar.v1.World
+	18, // 14: weewar.v1.CreateWorldResponse.world_data:type_name -> weewar.v1.WorldData
+	14, // 15: weewar.v1.CreateWorldResponse.field_errors:type_name -> weewar.v1.CreateWorldResponse.FieldErrorsEntry
+	16, // 16: weewar.v1.GetWorldsResponse.WorldsEntry.value:type_name -> weewar.v1.World
+	11, // 17: weewar.v1.WorldsService.CreateWorld:input_type -> weewar.v1.CreateWorldRequest
+	9,  // 18: weewar.v1.WorldsService.GetWorlds:input_type -> weewar.v1.GetWorldsRequest
+	1,  // 19: weewar.v1.WorldsService.ListWorlds:input_type -> weewar.v1.ListWorldsRequest
+	3,  // 20: weewar.v1.WorldsService.GetWorld:input_type -> weewar.v1.GetWorldRequest
+	7,  // 21: weewar.v1.WorldsService.DeleteWorld:input_type -> weewar.v1.DeleteWorldRequest
+	5,  // 22: weewar.v1.WorldsService.UpdateWorld:input_type -> weewar.v1.UpdateWorldRequest
+	12, // 23: weewar.v1.WorldsService.CreateWorld:output_type -> weewar.v1.CreateWorldResponse
+	10, // 24: weewar.v1.WorldsService.GetWorlds:output_type -> weewar.v1.GetWorldsResponse
+	2,  // 25: weewar.v1.WorldsService.ListWorlds:output_type -> weewar.v1.ListWorldsResponse
+	4,  // 26: weewar.v1.WorldsService.GetWorld:output_type -> weewar.v1.GetWorldResponse
+	8,  // 27: weewar.v1.WorldsService.DeleteWorld:output_type -> weewar.v1.DeleteWorldResponse
+	6,  // 28: weewar.v1.WorldsService.UpdateWorld:output_type -> weewar.v1.UpdateWorldResponse
+	23, // [23:29] is the sub-list for method output_type
+	17, // [17:23] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_worlds_proto_init() }
@@ -987,7 +932,7 @@ func file_weewar_v1_worlds_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_worlds_proto_rawDesc), len(file_weewar_v1_worlds_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

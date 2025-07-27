@@ -108,38 +108,6 @@
         ]
       }
     },
-    "/v1/games/from-map": {
-      "post": {
-        "operationId": "GamesService_CreateGameFromMap",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateGameFromMapResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateGameFromMapRequest"
-            }
-          }
-        ],
-        "tags": [
-          "GamesService"
-        ]
-      }
-    },
     "/v1/games/{game.id}": {
       "patch": {
         "summary": "GetGame returns a specific game with metadata",
@@ -379,6 +347,52 @@
       }
     },
     "/v1/games/{gameId}/moves": {
+      "get": {
+        "summary": "List the moves for a game",
+        "operationId": "GamesService_ListMoves",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMovesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gameId",
+            "description": "*\nGame ID to add moves to",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "Offset of the move to begin fetching from in reverse order from \"latest\".\n0 =\u003e start from now",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "lastN",
+            "description": "*\nLimit to last N moves (from offset).  if \u003c= 0 return all moves",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "GamesService"
+        ]
+      },
       "post": {
         "operationId": "GamesService_ProcessMoves",
         "responses": {
@@ -428,14 +442,15 @@
         ]
       }
     },
-    "/v1/games/{gameId}/terrain/{q}/{r}": {
+    "/v1/games/{gameId}/state": {
       "get": {
-        "operationId": "GamesService_GetTerrainStats",
+        "summary": "Gets the latest game state",
+        "operationId": "GamesService_GetGameState",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetTerrainStatsResponse"
+              "$ref": "#/definitions/v1GetGameStateResponse"
             }
           },
           "default": {
@@ -448,67 +463,10 @@
         "parameters": [
           {
             "name": "gameId",
+            "description": "*\nGame ID to add moves to",
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "q",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "r",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "GamesService"
-        ]
-      }
-    },
-    "/v1/games/{gameId}/tile/{q}/{r}": {
-      "get": {
-        "operationId": "GamesService_GetTileInfo",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetTileInfoResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "gameId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "q",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "r",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
           }
         ],
         "tags": [
@@ -1124,24 +1082,18 @@
                       "type": "string",
                       "title": "Difficulty - example attribute"
                     },
-                    "tiles": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/v1Tile"
-                      },
-                      "title": "JSON-fied tile data about what units and terrains are at each location"
-                    },
-                    "units": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/v1Unit"
-                      },
-                      "title": "All units on the world and who they belong to"
+                    "worldData": {
+                      "$ref": "#/definitions/v1WorldData",
+                      "title": "The actual world contents/data"
                     }
                   },
                   "title": "*\nWorld being updated"
+                },
+                "worldData": {
+                  "$ref": "#/definitions/v1WorldData"
+                },
+                "clearWorld": {
+                  "type": "boolean"
                 },
                 "updateMask": {
                   "type": "string",
@@ -1267,26 +1219,6 @@
       },
       "title": "*\nAttack with one unit against another"
     },
-    "v1BuildingInfo": {
-      "type": "object",
-      "properties": {
-        "buildingType": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "owner": {
-          "type": "integer",
-          "format": "int32",
-          "title": "-1 if neutral"
-        },
-        "capturePoints": {
-          "type": "integer",
-          "format": "int32",
-          "title": "for capturable buildings"
-        }
-      },
-      "title": "*\nInformation about a building on a tile"
-    },
     "v1CanSelectUnitResponse": {
       "type": "object",
       "properties": {
@@ -1299,39 +1231,6 @@
         }
       },
       "title": "*\nResponse indicating if unit can be selected"
-    },
-    "v1CreateGameFromMapRequest": {
-      "type": "object",
-      "properties": {
-        "mapData": {
-          "type": "string",
-          "title": "JSON or other format containing map information"
-        },
-        "players": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1GamePlayer"
-          }
-        },
-        "settings": {
-          "$ref": "#/definitions/v1GameSettings"
-        }
-      },
-      "title": "*\nRequest to create a game from map data"
-    },
-    "v1CreateGameFromMapResponse": {
-      "type": "object",
-      "properties": {
-        "game": {
-          "$ref": "#/definitions/v1Game"
-        },
-        "initialWorld": {
-          "$ref": "#/definitions/v1World",
-          "title": "The initial world state"
-        }
-      },
-      "title": "*\nResponse after creating game from map"
     },
     "v1CreateGameRequest": {
       "type": "object",
@@ -1349,6 +1248,10 @@
         "game": {
           "$ref": "#/definitions/v1Game",
           "title": "*\nGame being created"
+        },
+        "gameState": {
+          "$ref": "#/definitions/v1GameState",
+          "title": "The starting game state"
         },
         "fieldErrors": {
           "type": "object",
@@ -1393,6 +1296,9 @@
         "world": {
           "$ref": "#/definitions/v1World",
           "title": "*\nWorld being updated"
+        },
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData"
         }
       },
       "title": "*\nWorld creation request object"
@@ -1403,6 +1309,9 @@
         "world": {
           "$ref": "#/definitions/v1World",
           "title": "*\nWorld being created"
+        },
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData"
         },
         "fieldErrors": {
           "type": "object",
@@ -1513,6 +1422,11 @@
           "type": "string",
           "format": "date-time"
         },
+        "sequenceNum": {
+          "type": "string",
+          "format": "int64",
+          "title": "A monotonically increasing and unique (within the game) sequence number for the move\nThis is generated by the server"
+        },
         "moveUnit": {
           "$ref": "#/definitions/v1MoveUnitAction"
         },
@@ -1525,12 +1439,48 @@
       },
       "title": "*\nRepresents a single move which can be one of many actions in the game"
     },
+    "v1GameMoveGroup": {
+      "type": "object",
+      "properties": {
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When the moves happened (or were submitted)"
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "moves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameMove"
+          },
+          "title": "*\nList of moves to add -"
+        },
+        "moveResults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameMoveResult"
+          },
+          "title": "Each game move result stores the result of the individual Move in the request.\nie move_results[i] = ResultOfProcessing(ProcessMoveRequest.moves[i])"
+        }
+      },
+      "title": "A move group - we can allow X moves in one \"tick\""
+    },
     "v1GameMoveResult": {
       "type": "object",
       "properties": {
         "isPermanent": {
           "type": "boolean",
           "description": "Whether the result is permenant and can be undone.\nJust moving a unit for example is not permanent, but attacking a unit\nwould be (ie a player cannot undo it)."
+        },
+        "sequenceNum": {
+          "type": "string",
+          "format": "int64",
+          "title": "A monotonically increasing and unique (within the game) sequence number for the move"
         },
         "changes": {
           "type": "array",
@@ -1595,6 +1545,24 @@
         }
       }
     },
+    "v1GameState": {
+      "type": "object",
+      "properties": {
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "gameId": {
+          "type": "string",
+          "title": "ID of the game whos state is being tracked"
+        },
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData",
+          "title": "Current world state"
+        }
+      },
+      "title": "Holds the game's Active/Current state (eg world state)"
+    },
     "v1GetAttackOptionsResponse": {
       "type": "object",
       "properties": {
@@ -1615,6 +1583,15 @@
           "$ref": "#/definitions/v1Game"
         }
       }
+    },
+    "v1GetGameStateResponse": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/v1GameState"
+        }
+      },
+      "title": "*\nResponse holding latest game state"
     },
     "v1GetGamesResponse": {
       "type": "object",
@@ -1641,24 +1618,6 @@
       },
       "title": "*\nResponse with movement options for a unit"
     },
-    "v1GetTerrainStatsResponse": {
-      "type": "object",
-      "properties": {
-        "stats": {
-          "$ref": "#/definitions/v1TerrainStats"
-        }
-      },
-      "title": "*\nResponse with terrain statistics"
-    },
-    "v1GetTileInfoResponse": {
-      "type": "object",
-      "properties": {
-        "tile": {
-          "$ref": "#/definitions/v1TileInfo"
-        }
-      },
-      "title": "*\nResponse with tile information"
-    },
     "v1GetUserResponse": {
       "type": "object",
       "properties": {
@@ -1684,6 +1643,9 @@
       "properties": {
         "world": {
           "$ref": "#/definitions/v1World"
+        },
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData"
         }
       }
     },
@@ -1713,6 +1675,23 @@
           "$ref": "#/definitions/v1PaginationResponse"
         }
       }
+    },
+    "v1ListMovesResponse": {
+      "type": "object",
+      "properties": {
+        "hasMore": {
+          "type": "boolean",
+          "title": "Whether there are more moves before this"
+        },
+        "moveGroups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameMoveGroup"
+          }
+        }
+      },
+      "description": "*\nResponse after adding moves to game."
     },
     "v1ListUsersResponse": {
       "type": "object",
@@ -1874,31 +1853,6 @@
       },
       "description": "*\nResponse after adding moves to game.\n\nReturns the response of the moves along with all the changes incurred as a result"
     },
-    "v1TerrainStats": {
-      "type": "object",
-      "properties": {
-        "terrainType": {
-          "type": "string"
-        },
-        "movementCost": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "defenseBonus": {
-          "type": "integer",
-          "format": "int32",
-          "title": "percentage defense bonus (0-100)"
-        },
-        "blocksMovement": {
-          "type": "boolean"
-        },
-        "canCapture": {
-          "type": "boolean",
-          "title": "if this tile can be captured"
-        }
-      },
-      "title": "*\nStatistics about terrain at a specific tile"
-    },
     "v1Tile": {
       "type": "object",
       "properties": {
@@ -1922,31 +1876,6 @@
           "title": "Whether the tile itself belongs to a player"
         }
       }
-    },
-    "v1TileInfo": {
-      "type": "object",
-      "properties": {
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "terrainType": {
-          "type": "string"
-        },
-        "unit": {
-          "$ref": "#/definitions/v1UnitInfo",
-          "title": "null if no unit on tile"
-        },
-        "building": {
-          "$ref": "#/definitions/v1BuildingInfo",
-          "title": "null if no building on tile"
-        }
-      },
-      "title": "*\nComplete information about a tile"
     },
     "v1Unit": {
       "type": "object",
@@ -1991,34 +1920,6 @@
         }
       },
       "title": "*\nA unit took damage"
-    },
-    "v1UnitInfo": {
-      "type": "object",
-      "properties": {
-        "player": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "unitType": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "health": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "maxHealth": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hasMoved": {
-          "type": "boolean"
-        },
-        "hasAttacked": {
-          "type": "boolean"
-        }
-      },
-      "title": "*\nInformation about a unit on a tile"
     },
     "v1UnitKilledChange": {
       "type": "object",
@@ -2092,6 +1993,9 @@
         "world": {
           "$ref": "#/definitions/v1World",
           "title": "*\nWorld being updated"
+        },
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData"
         }
       },
       "description": "*\nThe request for (partially) updating an World.",
@@ -2179,21 +2083,9 @@
           "type": "string",
           "title": "Difficulty - example attribute"
         },
-        "tiles": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Tile"
-          },
-          "title": "JSON-fied tile data about what units and terrains are at each location"
-        },
-        "units": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1Unit"
-          },
-          "title": "All units on the world and who they belong to"
+        "worldData": {
+          "$ref": "#/definitions/v1WorldData",
+          "title": "The actual world contents/data"
         }
       }
     },
@@ -2214,6 +2106,27 @@
         }
       },
       "title": "*\nRepresents a change to the game world"
+    },
+    "v1WorldData": {
+      "type": "object",
+      "properties": {
+        "tiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Tile"
+          },
+          "title": "JSON-fied tile data about what units and terrains are at each location"
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Unit"
+          },
+          "title": "All units on the world and who they belong to"
+        }
+      }
     }
   }
 }
