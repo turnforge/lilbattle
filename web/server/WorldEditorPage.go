@@ -25,10 +25,7 @@ type TBButton struct {
 }
 
 type TerrainType struct {
-	ID              int    `json:"id"`
-	Name            string `json:"name"`
-	MoveCost        int    `json:"moveCost"`
-	DefenseBonus    int    `json:"defenseBonus"`
+	weewar.TerrainData
 	IconDataURL     string `json:"iconDataURL"`
 	HasPlayerColors bool   `json:"hasPlayerColors"`
 }
@@ -83,17 +80,19 @@ func (v *WorldEditorPage) SetupDefaults() {
 
 	// No longer need hardcoded world - terrain type is now in TerrainData struct
 
-	for i := 0; i <= 26; i++ {
+	for i := int32(0); i <= 26; i++ {
 		terrainData := weewar.GetTerrainData(i)
 		if terrainData != nil {
 			// Use web-accessible static URL path for the tile asset
 			iconDataURL := fmt.Sprintf("/static/assets/v1/Tiles/%d/0.png", i)
 
 			terrain := TerrainType{
-				ID:              terrainData.ID,
-				Name:            terrainData.Name,
-				MoveCost:        int(terrainData.BaseMoveCost),
-				DefenseBonus:    int(terrainData.DefenseBonus),
+				TerrainData: weewar.TerrainData{
+					ID:           terrainData.ID,
+					Name:         terrainData.Name,
+					BaseMoveCost: terrainData.BaseMoveCost,
+					DefenseBonus: terrainData.DefenseBonus,
+				},
 				IconDataURL:     iconDataURL,
 				HasPlayerColors: terrainData.Type == weewar.TerrainPlayer,
 			}

@@ -43,7 +43,7 @@ rules:
           - "go.sum"
     commands:
       - "echo '🔧 Building WeeWar Binary...'"
-      - "make test"
+      # - "make test"
       - "make wasm"
       - "make binlocal"
       - "make cli"

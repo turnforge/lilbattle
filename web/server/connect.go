@@ -10,10 +10,10 @@ import (
 
 // ConnectGamesServiceAdapter adapts the gRPC GamesService to Connect's interface
 type ConnectGamesServiceAdapter struct {
-	svc *services.GamesServiceImpl
+	svc *services.FSGamesServiceImpl
 }
 
-func NewConnectGamesServiceAdapter(svc *services.GamesServiceImpl) *ConnectGamesServiceAdapter {
+func NewConnectGamesServiceAdapter(svc *services.FSGamesServiceImpl) *ConnectGamesServiceAdapter {
 	return &ConnectGamesServiceAdapter{svc: svc}
 }
 
@@ -73,6 +73,46 @@ func (a *ConnectGamesServiceAdapter) ProcessMoves(ctx context.Context, req *conn
 	return connect.NewResponse(resp), nil
 }
 
+func (a *ConnectGamesServiceAdapter) GetMovementOptions(ctx context.Context, req *connect.Request[v1.GetMovementOptionsRequest]) (*connect.Response[v1.GetMovementOptionsResponse], error) {
+	resp, err := a.svc.GetMovementOptions(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *ConnectGamesServiceAdapter) GetAttackOptions(ctx context.Context, req *connect.Request[v1.GetAttackOptionsRequest]) (*connect.Response[v1.GetAttackOptionsResponse], error) {
+	resp, err := a.svc.GetAttackOptions(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *ConnectGamesServiceAdapter) ListMoves(ctx context.Context, req *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error) {
+	resp, err := a.svc.ListMoves(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *ConnectGamesServiceAdapter) CanSelectUnit(ctx context.Context, req *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error) {
+	resp, err := a.svc.CanSelectUnit(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *ConnectGamesServiceAdapter) GetGameState(ctx context.Context, req *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error) {
+	resp, err := a.svc.GetGameState(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 /** If you had a streamer than you can use this to act as a bridge between websocket and grpc streams
 func (a *ConnectGameServiceAdapter) StreamSomeThing(ctx context.Context, req *connect.Request[v1.StreamSomeThingRequest], stream *connect.ServerStream[v1.StreamSomeThingResponse]) error {
 	// Create a custom stream implementation that bridges to Connect
@@ -88,10 +128,10 @@ func (a *ConnectGameServiceAdapter) StreamSomeThing(ctx context.Context, req *co
 
 // ConnectWorldsServiceAdapter adapts the gRPC WorldsService to Connect's interface
 type ConnectWorldsServiceAdapter struct {
-	svc *services.WorldsServiceImpl
+	svc *services.FSWorldsServiceImpl
 }
 
-func NewConnectWorldsServiceAdapter(svc *services.WorldsServiceImpl) *ConnectWorldsServiceAdapter {
+func NewConnectWorldsServiceAdapter(svc *services.FSWorldsServiceImpl) *ConnectWorldsServiceAdapter {
 	return &ConnectWorldsServiceAdapter{svc: svc}
 }
 

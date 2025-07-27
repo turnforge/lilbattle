@@ -51,7 +51,7 @@ func (br *BufferRenderer) RenderTerrain(world *World, viewState *ViewState, draw
 		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Get terrain color based on tile type
-		terrainColor := br.GetTerrainColor(tile.TileType)
+		terrainColor := br.GetTerrainColor(int(tile.TileType))
 
 		// Create hex shape for the tile
 		hexPath := br.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
@@ -87,7 +87,8 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 			}
 
 			// Use s CenterXYForTile method with the s origin
-			x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			coord := UnitGetCoord(unit)
+			x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 			// Try to load real unit asset first if AssetProvider is available
 			if assetProvider != nil && assetProvider.HasUnitAsset(unit.UnitType, unit.Player) {
@@ -97,14 +98,14 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 
 					// Add health indicator if unit is damaged
 					if unit.AvailableHealth < 100 {
-						br.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, unit.AvailableHealth, 100)
+						br.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, int(unit.AvailableHealth), 100)
 					}
 					continue
 				}
 			}
 
 			// Fallback to simple colored circle if no asset available
-			unitColor := br.GetPlayerColor(unit.Player)
+			unitColor := br.GetPlayerColor(int(unit.Player))
 
 			// Draw unit as a circle centered at the tile position
 			radius := (options.TileWidth + options.TileHeight) / 8 // Smaller than hex
@@ -120,7 +121,7 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 
 			// Add health indicator if unit is damaged
 			if unit.AvailableHealth < 100 {
-				br.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, unit.AvailableHealth, 100)
+				br.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, int(unit.AvailableHealth), 100)
 			}
 		}
 	}

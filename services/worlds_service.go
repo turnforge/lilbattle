@@ -20,7 +20,7 @@ type FSWorldsServiceImpl struct {
 }
 
 // NewFSWorldsService creates a new FSWorldsService implementation
-func NewFSWorldsServiceImpl() *FSWorldsServiceImpl {
+func NewFSWorldsService() *FSWorldsServiceImpl {
 	service := &FSWorldsServiceImpl{storage: NewFileStorage(WORLDS_STORAGE_DIR)}
 	return service
 }

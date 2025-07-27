@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
@@ -190,7 +191,7 @@ func (ba *BasicAIAdvisor) generateAllValidMoves(game *weewar.Game, playerID int)
 }
 
 // generateMovementMoves creates movement proposals for a specific unit
-func (ba *BasicAIAdvisor) generateMovementMoves(game *weewar.Game, unit *weewar.Unit) ([]*MoveProposal, error) {
+func (ba *BasicAIAdvisor) generateMovementMoves(game *weewar.Game, unit *v1.Unit) ([]*MoveProposal, error) {
 	moves := make([]*MoveProposal, 0)
 
 	// Get valid movement positions (this would use the existing game methods)
@@ -204,7 +205,7 @@ func (ba *BasicAIAdvisor) generateMovementMoves(game *weewar.Game, unit *weewar.
 }
 
 // generateAttackMoves creates attack proposals for a specific unit
-func (ba *BasicAIAdvisor) generateAttackMoves(game *weewar.Game, unit *weewar.Unit) ([]*MoveProposal, error) {
+func (ba *BasicAIAdvisor) generateAttackMoves(game *weewar.Game, unit *v1.Unit) ([]*MoveProposal, error) {
 	moves := make([]*MoveProposal, 0)
 
 	// Get valid attack targets (this would use the existing game methods)
@@ -235,7 +236,7 @@ func (ba *BasicAIAdvisor) identifyThreats(game *weewar.Game, playerID int) ([]Th
 }
 
 // findEnemyThreats finds enemy units that can threaten the given unit
-func (ba *BasicAIAdvisor) findEnemyThreats(game *weewar.Game, targetUnit *weewar.Unit, playerID int) []Threat {
+func (ba *BasicAIAdvisor) findEnemyThreats(game *weewar.Game, targetUnit *v1.Unit, playerID int) []Threat {
 	threats := make([]Threat, 0)
 
 	// Check all enemy players
@@ -288,7 +289,7 @@ func (ba *BasicAIAdvisor) identifyOpportunities(game *weewar.Game, playerID int)
 }
 
 // findAttackOpportunities finds weak enemy units that can be attacked
-func (ba *BasicAIAdvisor) findAttackOpportunities(game *weewar.Game, attackerUnit *weewar.Unit, playerID int) []Opportunity {
+func (ba *BasicAIAdvisor) findAttackOpportunities(game *weewar.Game, attackerUnit *v1.Unit, playerID int) []Opportunity {
 	opportunities := make([]Opportunity, 0)
 
 	// Check all enemy players
@@ -325,7 +326,7 @@ func (ba *BasicAIAdvisor) findAttackOpportunities(game *weewar.Game, attackerUni
 }
 
 // findCaptureOpportunities finds bases or cities that can be captured
-func (ba *BasicAIAdvisor) findCaptureOpportunities(game *weewar.Game, unit *weewar.Unit, playerID int) []Opportunity {
+func (ba *BasicAIAdvisor) findCaptureOpportunities(game *weewar.Game, unit *v1.Unit, playerID int) []Opportunity {
 	opportunities := make([]Opportunity, 0)
 
 	// TODO: Implement base/city capture opportunity detection
@@ -339,10 +340,10 @@ func (ba *BasicAIAdvisor) findCaptureOpportunities(game *weewar.Game, unit *weew
 // =============================================================================
 
 // canUnitAttackTarget checks if one unit can attack another
-func (ba *BasicAIAdvisor) canUnitAttackTarget(game *weewar.Game, attacker, target *weewar.Unit) bool {
+func (ba *BasicAIAdvisor) canUnitAttackTarget(game *weewar.Game, attacker, target *v1.Unit) bool {
 	// TODO: Implement proper attack range checking using game methods
 	// For now, use simple distance check
-	distance := ba.calculateDistance(attacker.Coord, target.Coord)
+	distance := ba.calculateDistance(weewar.CoordFromInt32(attacker.Q, attacker.R), weewar.CoordFromInt32(target.Q, target.R))
 	return distance <= 1.0 // Assume range of 1 for most units
 }
 
@@ -356,7 +357,7 @@ func (ba *BasicAIAdvisor) calculateDistance(pos1, pos2 weewar.AxialCoord) float6
 }
 
 // calculateThreatLevel assesses how dangerous a threat is
-func (ba *BasicAIAdvisor) calculateThreatLevel(threatUnit, targetUnit *weewar.Unit) float64 {
+func (ba *BasicAIAdvisor) calculateThreatLevel(threatUnit, targetUnit *v1.Unit) float64 {
 	// Simple threat calculation based on unit health
 	threatHealth := float64(threatUnit.AvailableHealth) / 100.0
 	targetHealth := float64(targetUnit.AvailableHealth) / 100.0
@@ -366,7 +367,7 @@ func (ba *BasicAIAdvisor) calculateThreatLevel(threatUnit, targetUnit *weewar.Un
 }
 
 // calculateAttackOpportunityValue assesses how good an attack opportunity is
-func (ba *BasicAIAdvisor) calculateAttackOpportunityValue(attacker, target *weewar.Unit) float64 {
+func (ba *BasicAIAdvisor) calculateAttackOpportunityValue(attacker, target *v1.Unit) float64 {
 	attackerHealth := float64(attacker.AvailableHealth) / 100.0
 	targetHealth := float64(target.AvailableHealth) / 100.0
 
@@ -375,13 +376,13 @@ func (ba *BasicAIAdvisor) calculateAttackOpportunityValue(attacker, target *weew
 }
 
 // getUnitName returns a human-readable unit name
-func (ba *BasicAIAdvisor) getUnitName(unit *weewar.Unit) string {
+func (ba *BasicAIAdvisor) getUnitName(unit *v1.Unit) string {
 	// TODO: Get actual unit name from unit data
 	return fmt.Sprintf("Unit%d", unit.UnitType)
 }
 
 // generateThreatSolutions suggests ways to deal with a threat
-func (ba *BasicAIAdvisor) generateThreatSolutions(game *weewar.Game, target, threat *weewar.Unit) []string {
+func (ba *BasicAIAdvisor) generateThreatSolutions(game *weewar.Game, target, threat *v1.Unit) []string {
 	solutions := make([]string, 0)
 
 	solutions = append(solutions, "Move unit to safety")

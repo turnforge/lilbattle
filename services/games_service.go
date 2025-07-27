@@ -21,10 +21,10 @@ type FSGamesServiceImpl struct {
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
-func NewGamesService() *FSGamesServiceImpl {
+func NewFSGamesService() *FSGamesServiceImpl {
 	service := &FSGamesServiceImpl{
 		BaseGamesServiceImpl: BaseGamesServiceImpl{},
-		WorldsService:        NewFSWorldsServiceImpl(),
+		WorldsService:        NewFSWorldsService(),
 		storage:              NewFileStorage(GAMES_STORAGE_DIR),
 	}
 	service.Self = service

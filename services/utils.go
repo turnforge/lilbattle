@@ -59,13 +59,14 @@ func ProtoToRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, e
 		// Convert protobuf units to runtime units
 		for _, protoUnit := range gameState.WorldData.Units {
 			coord := weewar.AxialCoord{Q: int(protoUnit.Q), R: int(protoUnit.R)}
-			unit := &weewar.Unit{
-				UnitType:        int(protoUnit.UnitType),
-				Coord:           coord,
-				Player:          int(protoUnit.Player),
-				AvailableHealth: int(protoUnit.AvailableHealth),
-				DistanceLeft:    int(protoUnit.DistanceLeft),
-				TurnCounter:     int(protoUnit.TurnCounter),
+			unit := &v1.Unit{
+				UnitType:        protoUnit.UnitType,
+				Q:               int32(coord.Q),
+				R:               int32(coord.R),
+				Player:          protoUnit.Player,
+				AvailableHealth: protoUnit.AvailableHealth,
+				DistanceLeft:    protoUnit.DistanceLeft,
+				TurnCounter:     protoUnit.TurnCounter,
 			}
 			world.AddUnit(unit)
 		}

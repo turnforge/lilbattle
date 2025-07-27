@@ -138,38 +138,6 @@ func (g *Game) IsValidMove(from, to AxialCoord) bool {
 	return valid
 }
 
-// GetUnitMovementLeft returns remaining movement points
-func (g *Game) GetUnitMovementLeft(unit *Unit) int {
-	if unit == nil {
-		return 0
-	}
-	return unit.DistanceLeft
-}
-
-// GetUnitAttackRange returns attack range in tiles
-func (g *Game) GetUnitAttackRange(unit *Unit) int {
-	if unit == nil {
-		return 0
-	}
-
-	// Use rules engine to get unit data
-	if unitData, err := g.rulesEngine.GetUnitData(unit.UnitType); err == nil {
-		return unitData.AttackRange
-	}
-
-	// Fallback to simple range based on unit type
-	switch unit.UnitType {
-	case 1: // Infantry
-		return 1
-	case 2: // Artillery
-		return 3
-	case 3: // Tank
-		return 1
-	default:
-		return 1
-	}
-}
-
 // MoveUnit executes unit movement using cube coordinates
 func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, action *v1.MoveUnitAction) (result *v1.GameMoveResult, err error) {
 	// TODO - use a pushed world at ProcessMoves level instead of g.World each time
@@ -186,8 +154,9 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 	}
 
 	// Check if move is valid
-	if !g.IsValidMove(unit.Coord, to) {
-		return nil, fmt.Errorf("invalid move from %v to %v", unit.Coord, to)
+	unitCoord := UnitGetCoord(unit)
+	if !g.IsValidMove(unitCoord, to) {
+		return nil, fmt.Errorf("invalid move from %v to %v", unitCoord, to)
 	}
 
 	// Get movement cost using RulesEngine
@@ -196,12 +165,12 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 		return nil, fmt.Errorf("failed to calculate movement cost: %w", err)
 	}
 	cost := int(costFloat + 0.5) // Round to nearest integer
-	if cost > unit.DistanceLeft {
+	if cost > int(unit.DistanceLeft) {
 		return nil, fmt.Errorf("insufficient movement points: need %d, have %d", cost, unit.DistanceLeft)
 	}
 
 	// Store original position for event
-	fromPos := unit.Coord
+	fromPos := unitCoord
 	toPos := to
 
 	// Move unit using World unit management
@@ -211,7 +180,7 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 	}
 
 	// Update unit stats
-	unit.DistanceLeft -= cost
+	unit.DistanceLeft -= int32(cost)
 
 	// Update timestamp
 	g.LastActionAt = time.Now()
@@ -270,12 +239,12 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 	}
 
 	// Apply damage
-	defender.AvailableHealth -= defenderDamage
+	defender.AvailableHealth -= int32(defenderDamage)
 	if defender.AvailableHealth < 0 {
 		defender.AvailableHealth = 0
 	}
 
-	attacker.AvailableHealth -= attackerDamage
+	attacker.AvailableHealth -= int32(attackerDamage)
 	if attacker.AvailableHealth < 0 {
 		attacker.AvailableHealth = 0
 	}
@@ -371,7 +340,7 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 }
 
 // CanMoveUnit validates potential movement using cube coordinates
-func (g *Game) CanMoveUnit(unit *Unit, to AxialCoord) bool {
+func (g *Game) CanMoveUnit(unit *v1.Unit, to AxialCoord) bool {
 	if unit == nil {
 		return false
 	}
@@ -382,11 +351,12 @@ func (g *Game) CanMoveUnit(unit *Unit, to AxialCoord) bool {
 	}
 
 	// Check if move is valid
-	return g.IsValidMove(unit.Coord, to)
+	unitCoord := UnitGetCoord(unit)
+	return g.IsValidMove(unitCoord, to)
 }
 
 // CanAttackUnit validates potential attack
-func (g *Game) CanAttackUnit(attacker, defender *Unit) bool {
+func (g *Game) CanAttackUnit(attacker, defender *v1.Unit) bool {
 	if attacker == nil || defender == nil {
 		return false
 	}
@@ -461,10 +431,10 @@ func (g *Game) GetUnitMovementOptionsFrom(q, r int) ([]TileOption, error) {
 }
 
 // GetUnitMovementOptions returns all tiles a unit can move to using rules engine
-func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
+func (g *Game) GetUnitMovementOptions(unit *v1.Unit) ([]TileOption, error) {
 	dl := 0
 	if unit != nil {
-		dl = unit.DistanceLeft
+		dl = int(unit.DistanceLeft)
 	}
 	return g.rulesEngine.GetMovementOptions(g.World, unit, dl)
 }
@@ -473,7 +443,7 @@ func (g *Game) GetUnitMovementOptions(unit *Unit) ([]TileOption, error) {
 func (g *Game) GetUnitAttackOptionsFrom(q, r int) ([]AxialCoord, error) {
 	return g.GetUnitAttackOptions(g.World.UnitAt(AxialCoord{q, r}))
 }
-func (g *Game) GetUnitAttackOptions(unit *Unit) ([]AxialCoord, error) {
+func (g *Game) GetUnitAttackOptions(unit *v1.Unit) ([]AxialCoord, error) {
 	return g.rulesEngine.GetAttackOptions(g.World, unit)
 }
 

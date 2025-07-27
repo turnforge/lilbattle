@@ -1,5 +1,7 @@
 package weewar
 
+import v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+
 // =============================================================================
 // Observer Pattern for World State Changes
 // =============================================================================
@@ -59,10 +61,10 @@ func (ws *WorldSubject) ClearObservers() {
 
 // UnitObserver provides notifications for unit-specific events
 type UnitObserver interface {
-	OnUnitMoved(unit *Unit, fromRow, fromCol, toRow, toCol int)
-	OnUnitDestroyed(unit *Unit)
-	OnUnitSpawned(unit *Unit)
-	OnUnitDamaged(unit *Unit, damage int)
+	OnUnitMoved(unit *v1.Unit, fromRow, fromCol, toRow, toCol int)
+	OnUnitDestroyed(unit *v1.Unit)
+	OnUnitSpawned(unit *v1.Unit)
+	OnUnitDamaged(unit *v1.Unit, damage int)
 }
 
 // TerrainObserver provides notifications for terrain changes

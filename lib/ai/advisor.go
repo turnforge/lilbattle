@@ -3,6 +3,7 @@ package ai
 import (
 	"time"
 
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
@@ -212,8 +213,8 @@ type Threat struct {
 	ThreatType  ThreatType      `json:"threatType"`  // Type of threat
 
 	// Units involved
-	TargetUnit *weewar.Unit `json:"targetUnit"` // Unit being threatened
-	ThreatUnit *weewar.Unit `json:"threatUnit"` // Unit posing threat
+	TargetUnit *v1.Unit `json:"targetUnit"` // Unit being threatened
+	ThreatUnit *v1.Unit `json:"threatUnit"` // Unit posing threat
 
 	// Analysis
 	Description string   `json:"description"` // Human-readable description
@@ -257,8 +258,8 @@ type Opportunity struct {
 	Value           float64         `json:"value"`           // Strategic value (0-1)
 
 	// Units involved
-	RequiredUnit *weewar.Unit `json:"requiredUnit"` // Unit that can exploit opportunity
-	TargetUnit   *weewar.Unit `json:"targetUnit"`   // Unit that can be targeted (if applicable)
+	RequiredUnit *v1.Unit `json:"requiredUnit"` // Unit that can exploit opportunity
+	TargetUnit   *v1.Unit `json:"targetUnit"`   // Unit that can be targeted (if applicable)
 
 	// Analysis
 	Description  string   `json:"description"`  // Human-readable description

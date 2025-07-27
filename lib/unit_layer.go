@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -55,7 +57,7 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 			ul.clearHexArea(coord, options)
 
 			// Find unit at this position
-			unit := ul.findUnitAt(world, coord)
+			unit := world.UnitAt(coord)
 			if unit != nil {
 				ul.renderUnit(world, unit, options)
 			}
@@ -67,9 +69,9 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 }
 
 // renderUnit renders a single unit
-func (ul *UnitLayer) renderUnit(world *World, unit *Unit, options LayerRenderOptions) {
+func (ul *UnitLayer) renderUnit(world *World, unit *v1.Unit, options LayerRenderOptions) {
 	// Get pixel position using privateMap's coordinate system
-	x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+	x, y := world.CenterXYForTile(AxialCoord{int(unit.Q), int(unit.R)}, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
 	x -= float64(ul.X)
@@ -85,7 +87,7 @@ func (ul *UnitLayer) renderUnit(world *World, unit *Unit, options LayerRenderOpt
 }
 
 // renderUnitSprite renders a unit sprite
-func (ul *UnitLayer) renderUnitSprite(unitType, playerID int, x, y float64, options LayerRenderOptions) {
+func (ul *UnitLayer) renderUnitSprite(unitType, playerID int32, x, y float64, options LayerRenderOptions) {
 	// Check cache first
 	spriteKey := fmt.Sprintf("%d_%d", unitType, playerID)
 	cachedSprite, exists := ul.unitSprites[spriteKey]
@@ -106,7 +108,7 @@ func (ul *UnitLayer) renderUnitSprite(unitType, playerID int, x, y float64, opti
 }
 
 // drawSimpleUnitToBuffer draws a colored circle for a unit
-func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int, options LayerRenderOptions) {
+func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int32, options LayerRenderOptions) {
 	// Get player color
 	var unitColor Color
 	switch playerID {
@@ -146,16 +148,4 @@ func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int, options 
 func (ul *UnitLayer) clearHexArea(coord AxialCoord, options LayerRenderOptions) {
 	// For now, just clear the entire buffer - can optimize later
 	ul.buffer.Clear()
-}
-
-// findUnitAt finds a unit at the given coordinate
-func (ul *UnitLayer) findUnitAt(world *World, coord AxialCoord) *Unit {
-	for _, playerUnits := range world.unitsByPlayer {
-		for _, unit := range playerUnits {
-			if unit != nil && unit.Coord == coord {
-				return unit
-			}
-		}
-	}
-	return nil
 }

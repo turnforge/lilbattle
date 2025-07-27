@@ -3,6 +3,7 @@ package ai
 import (
 	"math"
 
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
@@ -116,7 +117,7 @@ func (pe *PositionEvaluator) SetWeights(weights *EvaluationWeights) {
 // =============================================================================
 
 // EvaluatePosition returns comprehensive position evaluation
-func (pe *PositionEvaluator) EvaluatePosition(game *weewar.Game, playerID int) *PositionEvaluation {
+func (pe *PositionEvaluator) EvaluatePosition(game *weewar.Game, playerID int32) *PositionEvaluation {
 	eval := &PositionEvaluation{
 		ComponentScores: make(map[string]float64),
 		Strengths:       make([]string, 0),
@@ -167,7 +168,7 @@ func (pe *PositionEvaluator) EvaluatePosition(game *weewar.Game, playerID int) *
 // Material Evaluation (40% weight)
 // =============================================================================
 
-func (pe *PositionEvaluator) evaluateMaterial(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateMaterial(game *weewar.Game, playerID int32) float64 {
 	unitValue := pe.evaluateUnitValue(game, playerID) * pe.weights.UnitValue
 	unitHealth := pe.evaluateUnitHealth(game, playerID) * pe.weights.UnitHealth
 	unitPositioning := pe.evaluateUnitPositioning(game, playerID) * pe.weights.UnitPositioning
@@ -176,7 +177,7 @@ func (pe *PositionEvaluator) evaluateMaterial(game *weewar.Game, playerID int) f
 		(pe.weights.UnitValue + pe.weights.UnitHealth + pe.weights.UnitPositioning)
 }
 
-func (pe *PositionEvaluator) evaluateUnitValue(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateUnitValue(game *weewar.Game, playerID int32) float64 {
 	// playerUnits := game.GetUnitsForPlayer(playerID)
 	playerValue := 0.0
 	totalValue := 0.0
@@ -200,7 +201,7 @@ func (pe *PositionEvaluator) evaluateUnitValue(game *weewar.Game, playerID int) 
 	return playerValue / totalValue
 }
 
-func (pe *PositionEvaluator) evaluateUnitHealth(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateUnitHealth(game *weewar.Game, playerID int32) float64 {
 	playerUnits := game.GetUnitsForPlayer(playerID)
 	totalHealthScore := 0.0
 	totalValue := 0.0
@@ -220,7 +221,7 @@ func (pe *PositionEvaluator) evaluateUnitHealth(game *weewar.Game, playerID int)
 	return totalHealthScore / totalValue
 }
 
-func (pe *PositionEvaluator) evaluateUnitPositioning(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateUnitPositioning(game *weewar.Game, playerID int32) float64 {
 	playerUnits := game.GetUnitsForPlayer(playerID)
 	totalPositionalScore := 0.0
 
@@ -248,7 +249,7 @@ func (pe *PositionEvaluator) evaluateUnitPositioning(game *weewar.Game, playerID
 // Economic Evaluation (35% weight)
 // =============================================================================
 
-func (pe *PositionEvaluator) evaluateEconomic(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateEconomic(game *weewar.Game, playerID int32) float64 {
 	baseControl := pe.evaluateBaseControl(game, playerID) * pe.weights.BaseControl
 	incomeControl := pe.evaluateIncomeControl(game, playerID) * pe.weights.IncomeControl
 
@@ -256,7 +257,7 @@ func (pe *PositionEvaluator) evaluateEconomic(game *weewar.Game, playerID int) f
 		(pe.weights.BaseControl + pe.weights.IncomeControl)
 }
 
-func (pe *PositionEvaluator) evaluateBaseControl(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateBaseControl(game *weewar.Game, playerID int32) float64 {
 	controlledBases := 0.0
 	totalBases := 0.0
 
@@ -279,7 +280,7 @@ func (pe *PositionEvaluator) evaluateBaseControl(game *weewar.Game, playerID int
 	return controlledBases / totalBases
 }
 
-func (pe *PositionEvaluator) evaluateIncomeControl(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateIncomeControl(game *weewar.Game, playerID int32) float64 {
 	controlledCities := 0.0
 	totalCities := 0.0
 
@@ -305,7 +306,7 @@ func (pe *PositionEvaluator) evaluateIncomeControl(game *weewar.Game, playerID i
 // Tactical Evaluation (15% weight)
 // =============================================================================
 
-func (pe *PositionEvaluator) evaluateTactical(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateTactical(game *weewar.Game, playerID int32) float64 {
 	territoryControl := pe.evaluateTerritoryControl(game, playerID) * pe.weights.TerritoryControl
 	threatLevel := pe.evaluateThreatLevel(game, playerID) * pe.weights.ThreatLevel
 	attackOptions := pe.evaluateAttackOptions(game, playerID) * pe.weights.AttackOptions
@@ -314,13 +315,13 @@ func (pe *PositionEvaluator) evaluateTactical(game *weewar.Game, playerID int) f
 		(pe.weights.TerritoryControl + pe.weights.ThreatLevel + pe.weights.AttackOptions)
 }
 
-func (pe *PositionEvaluator) evaluateTerritoryControl(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateTerritoryControl(game *weewar.Game, playerID int32) float64 {
 	// Simple territory control based on unit positions
 	// TODO: Implement proper territory influence calculation
 	return 0.5
 }
 
-func (pe *PositionEvaluator) evaluateThreatLevel(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateThreatLevel(game *weewar.Game, playerID int32) float64 {
 	threats := pe.identifyThreats(game, playerID)
 	totalThreat := 0.0
 
@@ -340,7 +341,7 @@ func (pe *PositionEvaluator) evaluateThreatLevel(game *weewar.Game, playerID int
 	return 1.0 - normalizedThreat
 }
 
-func (pe *PositionEvaluator) evaluateAttackOptions(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateAttackOptions(game *weewar.Game, playerID int32) float64 {
 	opportunities := pe.identifyOpportunities(game, playerID)
 	totalOpportunity := 0.0
 
@@ -371,7 +372,7 @@ func (pe *PositionEvaluator) evaluateAttackOptions(game *weewar.Game, playerID i
 // Strategic Evaluation (10% weight)
 // =============================================================================
 
-func (pe *PositionEvaluator) evaluateStrategic(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateStrategic(game *weewar.Game, playerID int32) float64 {
 	mobility := pe.evaluateMobility(game, playerID) * pe.weights.MobilityFactor
 	supportNetwork := pe.evaluateSupportNetwork(game, playerID) * pe.weights.SupportNetwork
 
@@ -379,7 +380,7 @@ func (pe *PositionEvaluator) evaluateStrategic(game *weewar.Game, playerID int) 
 		(pe.weights.MobilityFactor + pe.weights.SupportNetwork)
 }
 
-func (pe *PositionEvaluator) evaluateMobility(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateMobility(game *weewar.Game, playerID int32) float64 {
 	playerUnits := game.GetUnitsForPlayer(playerID)
 	totalMobility := 0.0
 
@@ -401,7 +402,7 @@ func (pe *PositionEvaluator) evaluateMobility(game *weewar.Game, playerID int) f
 	return math.Min(totalMobility/float64(len(playerUnits)), 1.0)
 }
 
-func (pe *PositionEvaluator) evaluateSupportNetwork(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) evaluateSupportNetwork(game *weewar.Game, playerID int32) float64 {
 	playerUnits := game.GetUnitsForPlayer(playerID)
 	supportScore := 0.0
 
@@ -421,7 +422,7 @@ func (pe *PositionEvaluator) evaluateSupportNetwork(game *weewar.Game, playerID 
 // Helper Methods
 // =============================================================================
 
-func (pe *PositionEvaluator) getUnitCost(unitTypeID int) float64 {
+func (pe *PositionEvaluator) getUnitCost(unitTypeID int32) float64 {
 	unitData, err := pe.rulesEngine.GetUnitData(unitTypeID)
 	if err != nil {
 		panic(err)
@@ -429,7 +430,7 @@ func (pe *PositionEvaluator) getUnitCost(unitTypeID int) float64 {
 	return float64(unitData.BaseStats.Cost)
 }
 
-func (pe *PositionEvaluator) getTotalUnitValue(game *weewar.Game, playerID int) float64 {
+func (pe *PositionEvaluator) getTotalUnitValue(game *weewar.Game, playerID int32) float64 {
 	units := game.GetUnitsForPlayer(playerID)
 	total := 0.0
 
@@ -440,7 +441,7 @@ func (pe *PositionEvaluator) getTotalUnitValue(game *weewar.Game, playerID int) 
 	return total
 }
 
-func (pe *PositionEvaluator) evaluateUnitPosition(unit *weewar.Unit, game *weewar.Game) float64 {
+func (pe *PositionEvaluator) evaluateUnitPosition(unit *v1.Unit, game *weewar.Game) float64 {
 	positionScore := 0.0
 
 	// Terrain defensive bonus
@@ -464,7 +465,7 @@ func (pe *PositionEvaluator) getStrategicLocationValue(pos weewar.AxialCoord, ga
 	return 0.5
 }
 
-func (pe *PositionEvaluator) countNearbyAllies(unit *weewar.Unit, game *weewar.Game, playerID int) int {
+func (pe *PositionEvaluator) countNearbyAllies(unit *v1.Unit, game *weewar.Game, playerID int32) int {
 	count := 0
 	playerUnits := game.GetUnitsForPlayer(playerID)
 
@@ -487,7 +488,7 @@ func (pe *PositionEvaluator) calculateDistance(pos1, pos2 weewar.AxialCoord) flo
 	return math.Max(math.Abs(dx), math.Max(math.Abs(dy), math.Abs(dx+dy)))
 }
 
-func (pe *PositionEvaluator) isProductionBase(terrainTypeID int) bool {
+func (pe *PositionEvaluator) isProductionBase(terrainTypeID int32) bool {
 	panic("not implemented with real types")
 	/*
 		// Base terrain type IDs (from game data analysis)
@@ -501,7 +502,7 @@ func (pe *PositionEvaluator) isProductionBase(terrainTypeID int) bool {
 	*/
 }
 
-func (pe *PositionEvaluator) isIncomeBuilding(terrainTypeID int) bool {
+func (pe *PositionEvaluator) isIncomeBuilding(terrainTypeID int32) bool {
 	panic("not implemented")
 	/*
 		// Income building terrain type IDs
@@ -514,7 +515,7 @@ func (pe *PositionEvaluator) isIncomeBuilding(terrainTypeID int) bool {
 	*/
 }
 
-func (pe *PositionEvaluator) isControlledByPlayer(pos weewar.AxialCoord, playerID int, game *weewar.Game) bool {
+func (pe *PositionEvaluator) isControlledByPlayer(pos weewar.AxialCoord, playerID int32, game *weewar.Game) bool {
 	// Check if there's a friendly unit on this position
 	if game.World != nil {
 		if unit := game.World.UnitAt(pos); unit != nil {
@@ -526,13 +527,13 @@ func (pe *PositionEvaluator) isControlledByPlayer(pos weewar.AxialCoord, playerI
 	return false
 }
 
-func (pe *PositionEvaluator) identifyThreats(game *weewar.Game, playerID int) []Threat {
+func (pe *PositionEvaluator) identifyThreats(game *weewar.Game, playerID int32) []Threat {
 	// TODO: Implement threat identification
 	// This is a placeholder that would analyze enemy units that can attack player units
 	return make([]Threat, 0)
 }
 
-func (pe *PositionEvaluator) identifyOpportunities(game *weewar.Game, playerID int) []Opportunity {
+func (pe *PositionEvaluator) identifyOpportunities(game *weewar.Game, playerID int32) []Opportunity {
 	// TODO: Implement opportunity identification
 	// This is a placeholder that would analyze weak enemy units, undefended bases, etc.
 	return make([]Opportunity, 0)

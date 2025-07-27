@@ -34,7 +34,7 @@ func NewEmbeddedAssetManager() *EmbeddedAssetManager {
 }
 
 // GetTileImage returns the tile image for a given tile type and player ID using embedded assets
-func (eam *EmbeddedAssetManager) GetTileImage(tileType int, playerID int) (image.Image, error) {
+func (eam *EmbeddedAssetManager) GetTileImage(tileType int32, playerID int32) (image.Image, error) {
 	cacheKey := fmt.Sprintf("%d_%d", tileType, playerID)
 
 	eam.cacheMutex.RLock()
@@ -60,7 +60,7 @@ func (eam *EmbeddedAssetManager) GetTileImage(tileType int, playerID int) (image
 }
 
 // GetUnitImage returns the unit image for a given unit type and player color using embedded assets
-func (eam *EmbeddedAssetManager) GetUnitImage(unitType int, playerColor int) (image.Image, error) {
+func (eam *EmbeddedAssetManager) GetUnitImage(unitType int32, playerColor int32) (image.Image, error) {
 	key := fmt.Sprintf("%d_%d", unitType, playerColor)
 
 	eam.cacheMutex.RLock()
@@ -102,14 +102,14 @@ func (eam *EmbeddedAssetManager) loadEmbeddedImage(path string) (image.Image, er
 }
 
 // HasTileAsset checks if a tile asset exists in embedded files
-func (eam *EmbeddedAssetManager) HasTileAsset(tileType int, playerID int) bool {
+func (eam *EmbeddedAssetManager) HasTileAsset(tileType int32, playerID int32) bool {
 	tilePath := fmt.Sprintf("v1/Tiles/%d/%d.png", tileType, playerID)
 	_, err := embeddedAssets.ReadFile(tilePath)
 	return err == nil
 }
 
 // HasUnitAsset checks if a unit asset exists in embedded files
-func (eam *EmbeddedAssetManager) HasUnitAsset(unitType int, playerColor int) bool {
+func (eam *EmbeddedAssetManager) HasUnitAsset(unitType int32, playerColor int32) bool {
 	unitPath := fmt.Sprintf("v1/Units/%d/%d.png", unitType, playerColor)
 	_, err := embeddedAssets.ReadFile(unitPath)
 	return err == nil
@@ -118,8 +118,8 @@ func (eam *EmbeddedAssetManager) HasUnitAsset(unitType int, playerColor int) boo
 // PreloadCommonAssets preloads commonly used assets for better performance
 func (eam *EmbeddedAssetManager) PreloadCommonAssets() error {
 	// Preload common tile types (1-26) with basic player colors (0-5)
-	for i := 1; i <= 26; i++ {
-		for playerID := 0; playerID <= 5; playerID++ {
+	for i := int32(1); i <= 26; i++ {
+		for playerID := int32(0); playerID <= 5; playerID++ {
 			if eam.HasTileAsset(i, playerID) {
 				_, err := eam.GetTileImage(i, playerID)
 				if err != nil {
@@ -131,8 +131,8 @@ func (eam *EmbeddedAssetManager) PreloadCommonAssets() error {
 	}
 
 	// Preload common unit types with basic player colors (0-5)
-	for unitType := 1; unitType <= 44; unitType++ {
-		for playerColor := 0; playerColor <= 5; playerColor++ {
+	for unitType := int32(1); unitType <= 44; unitType++ {
+		for playerColor := int32(0); playerColor <= 5; playerColor++ {
 			if eam.HasUnitAsset(unitType, playerColor) {
 				_, err := eam.GetUnitImage(unitType, playerColor)
 				if err != nil {

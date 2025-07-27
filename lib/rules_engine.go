@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/panyam/turnengine/games/weewar/assets"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -14,8 +15,8 @@ import (
 // RulesEngine provides data-driven game rules working with existing types
 type RulesEngine struct {
 	// Core data maps (extends existing unitDataprivateMap pattern)
-	Units    map[int]*UnitData    `json:"units"`
-	Terrains map[int]*TerrainData `json:"terrains"`
+	Units    map[int32]*UnitData    `json:"units"`
+	Terrains map[int32]*TerrainData `json:"terrains"`
 
 	// Canonical rule matrices
 	MovementMatrix *MovementMatrix `json:"movementMatrix"`
@@ -25,13 +26,13 @@ type RulesEngine struct {
 // MovementMatrix defines movement costs between unit types and terrain types using IDs
 type MovementMatrix struct {
 	// costs[unitID][terrainID] = movement cost
-	Costs map[int]map[int]float64 `json:"costs"`
+	Costs map[int32]map[int32]float64 `json:"costs"`
 }
 
 // AttackMatrix defines combat outcomes between unit types using IDs
 type AttackMatrix struct {
 	// attacks[attackerID][defenderID] = damage distribution
-	Attacks map[int]map[int]*DamageDistribution `json:"attacks"`
+	Attacks map[int32]map[int32]*DamageDistribution `json:"attacks"`
 }
 
 // =============================================================================
@@ -41,10 +42,10 @@ type AttackMatrix struct {
 // NewRulesEngine creates a new rules engine instance
 func NewRulesEngine() *RulesEngine {
 	return &RulesEngine{
-		Units:          make(map[int]*UnitData),
-		Terrains:       make(map[int]*TerrainData),
-		MovementMatrix: &MovementMatrix{Costs: make(map[int]map[int]float64)},
-		AttackMatrix:   &AttackMatrix{Attacks: make(map[int]map[int]*DamageDistribution)},
+		Units:          make(map[int32]*UnitData),
+		Terrains:       make(map[int32]*TerrainData),
+		MovementMatrix: &MovementMatrix{Costs: make(map[int32]map[int32]float64)},
+		AttackMatrix:   &AttackMatrix{Attacks: make(map[int32]map[int32]*DamageDistribution)},
 	}
 }
 
@@ -53,7 +54,7 @@ func NewRulesEngine() *RulesEngine {
 // =============================================================================
 
 // GetUnitData returns unit data by ID (enhanced version of existing function)
-func (re *RulesEngine) GetUnitData(unitID int) (*UnitData, error) {
+func (re *RulesEngine) GetUnitData(unitID int32) (*UnitData, error) {
 	unit, exists := re.Units[unitID]
 	if !exists {
 		return nil, fmt.Errorf("unit ID %d not found", unitID)
@@ -63,7 +64,7 @@ func (re *RulesEngine) GetUnitData(unitID int) (*UnitData, error) {
 }
 
 // GetTerrainData returns terrain data by ID
-func (re *RulesEngine) GetTerrainData(terrainID int) (*TerrainData, error) {
+func (re *RulesEngine) GetTerrainData(terrainID int32) (*TerrainData, error) {
 	terrain, exists := re.Terrains[terrainID]
 	if !exists {
 		return nil, fmt.Errorf("terrain ID %d not found", terrainID)
@@ -74,7 +75,7 @@ func (re *RulesEngine) GetTerrainData(terrainID int) (*TerrainData, error) {
 
 // getUnitTerrainCost returns movement cost for unit type on terrain type (internal helper)
 // First checks unit-specific matrix, then falls back to terrain's base cost
-func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int) (float64, error) {
+func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int32) (float64, error) {
 	// First, try unit-specific movement cost from matrix
 	if unitCosts, exists := re.MovementMatrix.Costs[unitID]; exists {
 		if cost, exists := unitCosts[terrainID]; exists {
@@ -95,12 +96,12 @@ func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int) (float64, error
 
 // GetMovementCost calculates movement cost for a unit to move to a specific destination
 // Uses the unit's current position as starting point and recalculates based on current world state
-func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) (float64, error) {
+func (re *RulesEngine) GetMovementCost(world *World, unit *v1.Unit, to AxialCoord) (float64, error) {
 	if unit == nil {
 		return 0, fmt.Errorf("unit is nil")
 	}
 
-	from := unit.Coord
+	from := UnitGetCoord(unit)
 	if from == to {
 		return 0, nil
 	}
@@ -120,7 +121,7 @@ func (re *RulesEngine) GetMovementCost(world *World, unit *Unit, to AxialCoord) 
 }
 
 // calculatePathCost uses Dijkstra's algorithm to find minimum cost path
-func (re *RulesEngine) calculatePathCost(world *World, unitType int, from, to AxialCoord) (float64, error) {
+func (re *RulesEngine) calculatePathCost(world *World, unitType int32, from, to AxialCoord) (float64, error) {
 	// Simple implementation - for now return distance * average terrain cost
 	// TODO: Implement full Dijkstra's algorithm
 	distance := float64(CubeDistance(from, to))
@@ -144,7 +145,7 @@ func (re *RulesEngine) calculatePathCost(world *World, unitType int, from, to Ax
 // - Terrain traversability (unit type vs terrain rules)
 // - Movement cost feasibility (enough movement points)
 // - Game state validity (no units blocking, correct start position)
-func (re *RulesEngine) IsValidPath(unit *Unit, path []AxialCoord, world *World) (bool, error) {
+func (re *RulesEngine) IsValidPath(unit *v1.Unit, path []AxialCoord, world *World) (bool, error) {
 	if unit == nil {
 		return false, fmt.Errorf("unit is nil")
 	}
@@ -154,8 +155,9 @@ func (re *RulesEngine) IsValidPath(unit *Unit, path []AxialCoord, world *World) 
 	}
 
 	// Path must start at unit's current position
-	if path[0] != unit.Coord {
-		return false, fmt.Errorf("path does not start at unit position: expected %v, got %v", unit.Coord, path[0])
+	unitCoord := UnitGetCoord(unit)
+	if path[0] != unitCoord {
+		return false, fmt.Errorf("path does not start at unit position: expected %v, got %v", unitCoord, path[0])
 	}
 
 	// Empty movement (staying in place) is always valid
@@ -209,7 +211,7 @@ func (re *RulesEngine) IsValidPath(unit *Unit, path []AxialCoord, world *World) 
 }
 
 // CalculateCombatDamage calculates damage using canonical DamageDistribution
-func (re *RulesEngine) CalculateCombatDamage(attackerID, defenderID int, rng *rand.Rand) (int, error) {
+func (re *RulesEngine) CalculateCombatDamage(attackerID, defenderID int32, rng *rand.Rand) (int, error) {
 	attackerAttacks, exists := re.AttackMatrix.Attacks[attackerID]
 	if !exists {
 		return 0, fmt.Errorf("unit ID %d cannot attack", attackerID)
@@ -224,7 +226,7 @@ func (re *RulesEngine) CalculateCombatDamage(attackerID, defenderID int, rng *ra
 }
 
 // GetCombatPrediction provides combat prediction using existing types
-func (re *RulesEngine) GetCombatPrediction(attackerID, defenderID int) (*DamageDistribution, error) {
+func (re *RulesEngine) GetCombatPrediction(attackerID, defenderID int32) (*DamageDistribution, error) {
 	attackerAttacks, exists := re.AttackMatrix.Attacks[attackerID]
 	if !exists {
 		return nil, fmt.Errorf("unit ID %d cannot attack", attackerID)
@@ -306,7 +308,7 @@ type TileOption struct {
 
 // GetMovementOptions returns all EMPTY tiles a unit can move to using Dijkstra's algorithm
 // Only returns tiles without units (movement destinations)
-func (re *RulesEngine) GetMovementOptions(world *World, unit *Unit, remainingMovement int) ([]TileOption, error) {
+func (re *RulesEngine) GetMovementOptions(world *World, unit *v1.Unit, remainingMovement int) ([]TileOption, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
@@ -316,11 +318,12 @@ func (re *RulesEngine) GetMovementOptions(world *World, unit *Unit, remainingMov
 		return nil, fmt.Errorf("failed to get unit data: %w", err)
 	}
 
-	return re.dijkstraMovement(world, unit.UnitType, unit.Coord, float64(remainingMovement))
+	unitCoord := UnitGetCoord(unit)
+	return re.dijkstraMovement(world, unit.UnitType, unitCoord, float64(remainingMovement))
 }
 
 // dijkstraMovement implements Dijkstra's algorithm to find all reachable EMPTY tiles with minimum cost
-func (re *RulesEngine) dijkstraMovement(world *World, unitType int, startCoord AxialCoord, maxMovement float64) ([]TileOption, error) {
+func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord AxialCoord, maxMovement float64) ([]TileOption, error) {
 	// Distance map: coord -> minimum cost to reach
 	distances := make(map[AxialCoord]float64)
 
@@ -406,7 +409,7 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int, startCoord A
 
 // GetAttackOptions returns all positions a unit can attack from its current position
 // Only returns tiles with ENEMY units that are within attack range
-func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord, error) {
+func (re *RulesEngine) GetAttackOptions(world *World, unit *v1.Unit) ([]AxialCoord, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
@@ -420,13 +423,14 @@ func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord,
 	attackRange := unitData.AttackRange
 
 	// Check all positions within attack range
+	unitCoord := UnitGetCoord(unit)
 	for dQ := -attackRange; dQ <= attackRange; dQ++ {
 		for dR := -attackRange; dR <= attackRange; dR++ {
 			if dQ == 0 && dR == 0 {
 				continue // Skip self
 			}
 
-			targetCoord := AxialCoord{Q: unit.Coord.Q + dQ, R: unit.Coord.R + dR}
+			targetCoord := AxialCoord{Q: unitCoord.Q + dQ, R: unitCoord.R + dR}
 
 			// Check if there's an enemy unit at this position (attack rule: only enemy units)
 			tile := world.TileAt(targetCoord)
@@ -451,7 +455,7 @@ func (re *RulesEngine) GetAttackOptions(world *World, unit *Unit) ([]AxialCoord,
 }
 
 // CanUnitAttackTarget checks if a unit can attack a specific target
-func (re *RulesEngine) CanUnitAttackTarget(attacker *Unit, target *Unit) (bool, error) {
+func (re *RulesEngine) CanUnitAttackTarget(attacker *v1.Unit, target *v1.Unit) (bool, error) {
 	if attacker == nil || target == nil {
 		return false, fmt.Errorf("attacker or target is nil")
 	}
@@ -468,7 +472,9 @@ func (re *RulesEngine) CanUnitAttackTarget(attacker *Unit, target *Unit) (bool, 
 	}
 
 	// Check range (using simple distance for now)
-	distance := CubeDistance(attacker.Coord, target.Coord)
+	attackerCoord := UnitGetCoord(attacker)
+	targetCoord := UnitGetCoord(target)
+	distance := CubeDistance(attackerCoord, targetCoord)
 	unitData, err := re.GetUnitData(attacker.UnitType)
 	if err != nil {
 		return false, err
@@ -506,7 +512,7 @@ var DefaultTerrainData = []TerrainData{
 }
 
 // GetTerrainData returns terrain data for the given type
-func GetTerrainData(terrainType int) *TerrainData {
+func GetTerrainData(terrainType int32) *TerrainData {
 	for i := range DefaultTerrainData {
 		if DefaultTerrainData[i].ID == terrainType {
 			return &DefaultTerrainData[i]

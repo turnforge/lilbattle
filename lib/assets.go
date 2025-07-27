@@ -41,7 +41,7 @@ func NewAssetManager(dataPath string) *AssetManager {
 }
 
 // GetTileImage returns the tile image for a given tile type and player ID
-func (am *AssetManager) GetTileImage(tileType int, playerID int) (image.Image, error) {
+func (am *AssetManager) GetTileImage(tileType int32, playerID int32) (image.Image, error) {
 	cacheKey := fmt.Sprintf("%d_%d", tileType, playerID)
 
 	am.cacheMutex.RLock()
@@ -67,7 +67,7 @@ func (am *AssetManager) GetTileImage(tileType int, playerID int) (image.Image, e
 }
 
 // GetUnitImage returns the unit image for a given unit type and player color
-func (am *AssetManager) GetUnitImage(unitType int, playerColor int) (image.Image, error) {
+func (am *AssetManager) GetUnitImage(unitType int32, playerColor int32) (image.Image, error) {
 	key := fmt.Sprintf("%d_%d", unitType, playerColor)
 
 	am.cacheMutex.RLock()
@@ -109,14 +109,14 @@ func (am *AssetManager) loadImageFile(path string) (image.Image, error) {
 }
 
 // HasTileAsset checks if a tile asset exists without loading it
-func (am *AssetManager) HasTileAsset(tileType int, playerID int) bool {
+func (am *AssetManager) HasTileAsset(tileType int32, playerID int32) bool {
 	tilePath := filepath.Join(am.dataPath, "Tiles", fmt.Sprintf("%d_files", tileType), fmt.Sprintf("%d.png", playerID))
 	_, err := os.Stat(tilePath)
 	return err == nil
 }
 
 // HasUnitAsset checks if a unit asset exists without loading it
-func (am *AssetManager) HasUnitAsset(unitType int, playerColor int) bool {
+func (am *AssetManager) HasUnitAsset(unitType int32, playerColor int32) bool {
 	unitPath := filepath.Join(am.dataPath, "Units", fmt.Sprintf("%d_files", unitType), fmt.Sprintf("%d.png", playerColor))
 	_, err := os.Stat(unitPath)
 	return err == nil
@@ -125,8 +125,8 @@ func (am *AssetManager) HasUnitAsset(unitType int, playerColor int) bool {
 // PreloadCommonAssets preloads commonly used assets for better performance
 func (am *AssetManager) PreloadCommonAssets() error {
 	// Preload common tile types (1-26) with basic player colors (0-5)
-	for i := 1; i <= 26; i++ {
-		for playerID := 0; playerID <= 5; playerID++ {
+	for i := int32(1); i <= 26; i++ {
+		for playerID := int32(0); playerID <= 5; playerID++ {
 			if am.HasTileAsset(i, playerID) {
 				_, err := am.GetTileImage(i, playerID)
 				if err != nil {
@@ -138,8 +138,8 @@ func (am *AssetManager) PreloadCommonAssets() error {
 	}
 
 	// Preload common unit types with basic player colors (0-5)
-	for unitType := 1; unitType <= 44; unitType++ {
-		for playerColor := 0; playerColor <= 5; playerColor++ {
+	for unitType := int32(1); unitType <= 44; unitType++ {
+		for playerColor := int32(0); playerColor <= 5; playerColor++ {
 			if am.HasUnitAsset(unitType, playerColor) {
 				_, err := am.GetUnitImage(unitType, playerColor)
 				if err != nil {
@@ -204,7 +204,7 @@ func (am *AssetManager) GetUnitData(unitType int) (*UnitData, error) {
 }
 
 // GetTerrainDataAsset returns terrain data for a given terrain type
-func (am *AssetManager) GetTerrainDataAsset(terrainType int) (*TerrainData, error) {
+func (am *AssetManager) GetTerrainDataAsset(terrainType int32) (*TerrainData, error) {
 	if !am.dataLoaded {
 		if err := am.LoadGameData(); err != nil {
 			return nil, err

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -13,7 +15,7 @@ import (
 
 // PlayerInfo contains game-specific information about a player
 type PlayerInfo struct {
-	Player   int    `json:"playerID"` // 0-based player index
+	Player   int32  `json:"playerID"` // 0-based player index
 	Name     string `json:"name"`     // Player display name
 	TeamID   int    `json:"teamID"`   // Which team this player belongs to
 	IsActive bool   `json:"isActive"` // Whether player is still in the game
@@ -35,8 +37,8 @@ type Game struct {
 	World *World `json:"world"` // Contains the pure state (map, units, entities)
 
 	// Game flow control
-	CurrentPlayer int        `json:"currentPlayer"` // 0-based player index
-	TurnCounter   int        `json:"turnCounter"`   // 1-based turn number
+	CurrentPlayer int32      `json:"currentPlayer"` // 0-based player index
+	TurnCounter   int32      `json:"turnCounter"`   // 1-based turn number
 	Status        GameStatus `json:"status"`        // Game status
 
 	// Player and team information
@@ -60,8 +62,8 @@ type Game struct {
 	LastActionAt time.Time `json:"lastActionAt"` // When last action was taken
 
 	// Internal state
-	winner    int  `json:"winner"`    // Winner player ID (-1 if no winner)
-	hasWinner bool `json:"hasWinner"` // Whether game has ended with winner
+	winner    int32 `json:"winner"`    // Winner player ID (-1 if no winner)
+	hasWinner bool  `json:"hasWinner"` // Whether game has ended with winner
 }
 
 // =============================================================================
@@ -136,8 +138,8 @@ func (g *Game) initializeStartingUnits() error {
 }
 
 // resetPlayerUnits resets movement and actions for a player's units
-func (g *Game) resetPlayerUnits(playerID int) error {
-	if playerID < 0 || playerID >= len(g.World.unitsByPlayer) {
+func (g *Game) resetPlayerUnits(playerID int32) error {
+	if playerID <= 0 || playerID > g.World.PlayerCount() {
 		return fmt.Errorf("invalid player ID: %d", playerID)
 	}
 
@@ -153,18 +155,18 @@ func (g *Game) resetPlayerUnits(playerID int) error {
 		}
 
 		// Reset movement points from rules data
-		unit.DistanceLeft = unitData.MovementPoints
-		unit.TurnCounter = g.TurnCounter
+		unit.DistanceLeft = int32(unitData.MovementPoints)
+		unit.TurnCounter = int32(g.TurnCounter)
 	}
 
 	return nil
 }
 
 // checkVictoryConditions checks if any player has won
-func (g *Game) checkVictoryConditions() (winner int, hasWinner bool) {
+func (g *Game) checkVictoryConditions() (winner int32, hasWinner bool) {
 	// Simple victory condition: last player with units wins
 	playersWithUnits := 0
-	lastPlayerWithUnits := -1
+	lastPlayerWithUnits := int32(-1)
 
 	for playerID := range g.World.PlayerCount() {
 		if len(g.World.unitsByPlayer[playerID]) > 0 {
@@ -194,7 +196,7 @@ func (g *Game) validateGameState() error {
 		return fmt.Errorf("invalid turn counter: %d", g.TurnCounter)
 	}
 
-	if len(g.World.unitsByPlayer) != g.World.PlayerCount() {
+	if int32(len(g.World.unitsByPlayer)) != g.World.PlayerCount() {
 		return fmt.Errorf("units array length (%d) doesn't match player count (%d)", len(g.World.unitsByPlayer), g.World.PlayerCount())
 	}
 
@@ -203,7 +205,7 @@ func (g *Game) validateGameState() error {
 
 // GetUnitID generates a unique identifier for a unit in the format PN
 // where P is the player letter (A-Z) and N is the unit number for that player
-func (g *Game) GetUnitID(unit *Unit) string {
+func (g *Game) GetUnitID(unit *v1.Unit) string {
 	if unit == nil {
 		return ""
 	}
@@ -345,12 +347,12 @@ func (g *Game) SaveGame() ([]byte, error) {
 }
 
 // GetCurrentPlayer returns active player ID
-func (g *Game) GetCurrentPlayer() int {
+func (g *Game) GetCurrentPlayer() int32 {
 	return g.CurrentPlayer
 }
 
 // GetTurnNumber returns current turn count
-func (g *Game) GetTurnNumber() int {
+func (g *Game) GetTurnNumber() int32 {
 	return g.TurnCounter
 }
 
@@ -360,7 +362,7 @@ func (g *Game) GetGameStatus() GameStatus {
 }
 
 // GetWinner returns winning player if game ended
-func (g *Game) GetWinner() (int, bool) {
+func (g *Game) GetWinner() (int32, bool) {
 	return g.winner, g.hasWinner
 }
 
@@ -369,13 +371,13 @@ func (g *Game) GetWinner() (int, bool) {
 // =============================================================================
 
 // GetUnitsForPlayer returns all units owned by player
-func (g *Game) GetUnitsForPlayer(playerID int) []*Unit {
+func (g *Game) GetUnitsForPlayer(playerID int) []*v1.Unit {
 	if playerID < 0 || playerID >= len(g.World.unitsByPlayer) {
 		return nil
 	}
 
 	// Return a copy to prevent external modification
-	units := make([]*Unit, len(g.World.unitsByPlayer[playerID]))
+	units := make([]*v1.Unit, len(g.World.unitsByPlayer[playerID]))
 	copy(units, g.World.unitsByPlayer[playerID])
 	return units
 }

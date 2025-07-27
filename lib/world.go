@@ -7,6 +7,8 @@ import (
 	"maps"
 	"math"
 	"slices"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -34,9 +36,9 @@ type World struct {
 	// PlayerCount int `json:"playerCount"` // Number of players in the game
 
 	// Ways to identify various kinds of units and tiles
-	unitsByPlayer [][]*Unit            `json:"-"` // All units in the game world by player ID
-	unitsByCoord  map[AxialCoord]*Unit `json:"-"` // All units in the game world by player ID
-	tilesByCoord  map[AxialCoord]*Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
+	unitsByPlayer [][]*v1.Unit            `json:"-"` // All units in the game world by player ID
+	unitsByCoord  map[AxialCoord]*v1.Unit `json:"-"` // All units in the game world by player ID
+	tilesByCoord  map[AxialCoord]*v1.Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
 
 	// In case we are pushed environment this will tell us
 	// if a unit was "deleted" in this layer so not to recurse
@@ -68,8 +70,8 @@ type World struct {
 func NewWorld(name string) *World {
 	w := &World{
 		Name:         name,
-		tilesByCoord: map[AxialCoord]*Tile{},
-		unitsByCoord: map[AxialCoord]*Unit{},
+		tilesByCoord: map[AxialCoord]*v1.Tile{},
+		unitsByCoord: map[AxialCoord]*v1.Unit{},
 		tileDeleted:  map[AxialCoord]bool{},
 		unitDeleted:  map[AxialCoord]bool{},
 	}
@@ -87,17 +89,17 @@ func (w *World) Push() *World {
 // World State Access Methods
 // =============================================================================
 
-func (w *World) PlayerCount() int {
+func (w *World) PlayerCount() int32 {
 	if w.parent != nil {
 		return w.PlayerCount()
 	}
-	return len(w.unitsByPlayer)
+	return int32(len(w.unitsByPlayer))
 }
 
-func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *Tile] {
+func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 	// TODO - handle the case of doing a "merged" iteration with parents if anything is missing here
 	// or conversely iterate parent and only return parent's K,V value if it is not in this layer
-	return func(yield func(AxialCoord, *Tile) bool) {
+	return func(yield func(AxialCoord, *v1.Tile) bool) {
 		for k, v := range w.tilesByCoord {
 			if !yield(k, v) {
 				return
@@ -106,10 +108,10 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *Tile] {
 	}
 }
 
-func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *Unit] {
+func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 	// TODO - handle the case of doing a "merged" iteration with parents if anything is missing here
 	// or conversely iterate parent and only return parent's K,V value if it is not in this layer
-	return func(yield func(AxialCoord, *Unit) bool) {
+	return func(yield func(AxialCoord, *v1.Unit) bool) {
 		for k, v := range w.unitsByCoord {
 			if !yield(k, v) {
 				return
@@ -119,7 +121,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *Unit] {
 }
 
 // Getize returns the dimensions of the world map
-func (w *World) UnitAt(coord AxialCoord) (out *Unit) {
+func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
 	out = w.unitsByCoord[coord]
 	if out == nil && w.parent != nil {
 		out = w.parent.UnitAt(coord)
@@ -128,7 +130,7 @@ func (w *World) UnitAt(coord AxialCoord) (out *Unit) {
 }
 
 // TileAt returns the tile at the specified cube coordinates
-func (w *World) TileAt(coord AxialCoord) (out *Tile) {
+func (w *World) TileAt(coord AxialCoord) (out *v1.Tile) {
 	out = w.tilesByCoord[coord]
 	if out == nil && w.parent != nil {
 		out = w.parent.TileAt(coord)
@@ -137,7 +139,7 @@ func (w *World) TileAt(coord AxialCoord) (out *Tile) {
 }
 
 // GetPlayerUnits returns all units belonging to the specified player
-func (w *World) GetPlayerUnits(playerID int) []*Unit {
+func (w *World) GetPlayerUnits(playerID int) []*v1.Unit {
 	// TODO - handle the case of doing a "merged" iteration with parents if anything is missing here
 	// or conversely iterate parent and only return parent's K,V value if it is not in this layer
 	return w.unitsByPlayer[playerID]
@@ -157,20 +159,21 @@ func (w *World) SetTileType(coord AxialCoord, terrainType int) bool {
 		w.AddTile(tile)
 	} else {
 		// Update existing tile
-		tile.TileType = terrainType
+		tile.TileType = int32(terrainType)
 	}
 
 	return true
 }
 
 // AddTileCube adds a tile at the specified cube coordinate (primary method)
-func (w *World) AddTile(tile *Tile) {
-	q, r := tile.Coord.Q, tile.Coord.R
+func (w *World) AddTile(tile *v1.Tile) {
+	coord := TileGetCoord(tile)
+	q, r := coord.Q, coord.R
 	if q < w.minQ || q > w.maxQ || r < w.minR || r > w.maxR {
 		w.boundsChanged = true
 	}
-	w.tileDeleted[tile.Coord] = false
-	w.tilesByCoord[tile.Coord] = tile
+	w.tileDeleted[coord] = false
+	w.tilesByCoord[coord] = tile
 }
 
 // DeleteTile removes the tile at the specified cube coordinate
@@ -180,12 +183,12 @@ func (w *World) DeleteTile(coord AxialCoord) {
 }
 
 // AddUnit adds a new unit to the world at the specified position
-func (w *World) AddUnit(unit *Unit) (oldunit *Unit, err error) {
+func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
 	}
 
-	playerID := unit.Player
+	playerID := int(unit.Player)
 	if playerID < 0 {
 		return nil, fmt.Errorf("invalid player ID: %d", playerID)
 	}
@@ -193,28 +196,30 @@ func (w *World) AddUnit(unit *Unit) (oldunit *Unit, err error) {
 		w.unitsByPlayer = append(w.unitsByPlayer, nil)
 	}
 
-	oldunit = w.UnitAt(unit.Coord)
+	coord := UnitGetCoord(unit)
+	oldunit = w.UnitAt(coord)
 
 	// make sure to replace a unit here
-	w.unitDeleted[unit.Coord] = false
-	w.unitsByPlayer[unit.Player] = append(w.unitsByPlayer[unit.Player], unit)
-	w.unitsByCoord[unit.Coord] = unit
+	w.unitDeleted[coord] = false
+	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
+	w.unitsByCoord[coord] = unit
 	return
 }
 
 // RemoveUnit removes a unit from the world
-func (w *World) RemoveUnit(unit *Unit) error {
+func (w *World) RemoveUnit(unit *v1.Unit) error {
 	if unit == nil {
 		return fmt.Errorf("unit is nil")
 	}
 
-	tile := w.TileAt(unit.Coord)
+	coord := UnitGetCoord(unit)
+	tile := w.TileAt(coord)
 	if tile == nil {
 		return fmt.Errorf("invalid tile")
 	}
-	p := unit.Player
-	w.unitDeleted[unit.Coord] = true
-	delete(w.unitsByCoord, unit.Coord)
+	p := int(unit.Player)
+	w.unitDeleted[coord] = true
+	delete(w.unitsByCoord, coord)
 	for i, u := range w.unitsByPlayer[p] {
 		if u == unit {
 			// Remove unit from slice
@@ -226,16 +231,17 @@ func (w *World) RemoveUnit(unit *Unit) error {
 }
 
 // MoveUnit moves a unit to a new position
-func (w *World) MoveUnit(unit *Unit, newCoord AxialCoord) error {
+func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 	if unit == nil {
 		return fmt.Errorf("unit is nil")
 	}
 
 	// Remove from old position
-	delete(w.unitsByCoord, unit.Coord)
+	oldCoord := UnitGetCoord(unit)
+	delete(w.unitsByCoord, oldCoord)
 
 	// Update unit position
-	unit.Coord = newCoord
+	UnitSetCoord(unit, newCoord)
 
 	// Add to new position
 	w.unitsByCoord[newCoord] = unit
@@ -257,12 +263,29 @@ func (w *World) Clone() *World {
 	// Clone map
 	for _, tile := range w.tilesByCoord {
 		if tile != nil {
-			out.AddTile(tile.Clone())
+			// Create a copy of the proto tile
+			clonedTile := &v1.Tile{
+				Q:        tile.Q,
+				R:        tile.R,
+				TileType: tile.TileType,
+				Player:   tile.Player,
+			}
+			out.AddTile(clonedTile)
 		}
 	}
 	for _, unit := range w.unitsByCoord {
 		if unit != nil {
-			out.AddUnit(unit.Clone())
+			// Create a copy of the proto unit
+			clonedUnit := &v1.Unit{
+				Q:               unit.Q,
+				R:               unit.R,
+				Player:          unit.Player,
+				UnitType:        unit.UnitType,
+				AvailableHealth: unit.AvailableHealth,
+				DistanceLeft:    unit.DistanceLeft,
+				TurnCounter:     unit.TurnCounter,
+			}
+			out.AddUnit(clonedUnit)
 		}
 	}
 	return out
@@ -273,9 +296,9 @@ func (w *World) Clone() *World {
 // =============================================================================
 
 // GetAllTiles returns all tiles as a map from cube coordinates to tiles
-func (w *World) CopyAllTiles() map[AxialCoord]*Tile {
+func (w *World) CopyAllTiles() map[AxialCoord]*v1.Tile {
 	// Return a copy to prevent external modification
-	result := make(map[AxialCoord]*Tile)
+	result := make(map[AxialCoord]*v1.Tile)
 	for coord, tile := range w.tilesByCoord {
 		result[coord] = tile
 	}
@@ -287,8 +310,8 @@ func (w *World) CopyAllTiles() map[AxialCoord]*Tile {
 // This includes visual concerns like selections, highlights, and camera position.
 type ViewState struct {
 	// Selection and highlighting
-	SelectedUnit    *Unit      `json:"selectedUnit"`    // Currently selected unit
-	HoveredTile     *Tile      `json:"hoveredTile"`     // Tile under cursor
+	SelectedUnit    *v1.Unit   `json:"selectedUnit"`    // Currently selected unit
+	HoveredTile     *v1.Tile   `json:"hoveredTile"`     // Tile under cursor
 	MovableTiles    []Position `json:"movableTiles"`    // Highlighted movement tiles
 	AttackableTiles []Position `json:"attackableTiles"` // Highlighted attack tiles
 
@@ -346,8 +369,8 @@ func (w *World) UnmarshalJSON(data []byte) error {
 	// First try to unmarshal with new bounds format
 	type mapJSON struct {
 		Name  string
-		Tiles []*Tile
-		Units []*Unit
+		Tiles []*v1.Tile
+		Units []*v1.Unit
 	}
 
 	var dict mapJSON
@@ -381,7 +404,7 @@ func (vs *ViewState) ClearSelection() {
 }
 
 // SetSelection sets the selected unit and updates related highlights
-func (vs *ViewState) SetSelection(unit *Unit, movableTiles, attackableTiles []Position) {
+func (vs *ViewState) SetSelection(unit *v1.Unit, movableTiles, attackableTiles []Position) {
 	vs.SelectedUnit = unit
 	vs.MovableTiles = movableTiles
 	vs.AttackableTiles = attackableTiles
@@ -404,8 +427,8 @@ func (vs *ViewState) SetBrush(terrainType, brushSize int) {
 // This includes visual concerns like selections, highlights, and camera position.
 type ViewState struct {
 	// Selection and highlighting
-	SelectedUnit    *Unit      `json:"selectedUnit"`    // Currently selected unit
-	HoveredTile     *Tile      `json:"hoveredTile"`     // Tile under cursor
+	SelectedUnit    *v1.Unit   `json:"selectedUnit"`    // Currently selected unit
+	HoveredTile     *v1.Tile   `json:"hoveredTile"`     // Tile under cursor
 	MovableTiles    []Position `json:"movableTiles"`    // Highlighted movement tiles
 	AttackableTiles []Position `json:"attackableTiles"` // Highlighted attack tiles
 

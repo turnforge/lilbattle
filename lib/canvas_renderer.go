@@ -53,7 +53,7 @@ func (cr *CanvasRenderer) RenderTerrain(world *World, viewState *ViewState, draw
 		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Get terrain color based on tile type
-		terrainColor := cr.GetTerrainColor(tile.TileType)
+		terrainColor := cr.GetTerrainColor(int(tile.TileType))
 
 		// Create hex shape for the tile
 		hexPath := cr.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
@@ -89,7 +89,8 @@ func (cr *CanvasRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 			}
 
 			// Use privateMap's CenterXYForTile method (privateMap handles origin internally)
-			x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+			coord := UnitGetCoord(unit)
+			x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 			// Try to load real unit asset first if AssetProvider is available
 			if assetProvider != nil && assetProvider.HasUnitAsset(unit.UnitType, unit.Player) {
@@ -99,14 +100,14 @@ func (cr *CanvasRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 
 					// Add health indicator if unit is damaged
 					if unit.AvailableHealth < 100 {
-						cr.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, unit.AvailableHealth, 100)
+						cr.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, int(unit.AvailableHealth), 100)
 					}
 					continue
 				}
 			}
 
 			// Fallback to simple colored circle if no asset available
-			unitColor := cr.GetPlayerColor(unit.Player)
+			unitColor := cr.GetPlayerColor(int(unit.Player))
 
 			// Draw unit as a circle centered at the tile position
 			radius := (options.TileWidth + options.TileHeight) / 8 // Smaller than hex
@@ -122,7 +123,7 @@ func (cr *CanvasRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 
 			// Add health indicator if unit is damaged
 			if unit.AvailableHealth < 100 {
-				cr.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, unit.AvailableHealth, 100)
+				cr.renderHealthBar(drawable, x, y, options.TileWidth, options.TileHeight, int(unit.AvailableHealth), 100)
 			}
 		}
 	}
@@ -160,7 +161,8 @@ func (cr *CanvasRenderer) RenderHighlights(world *World, viewState *ViewState, d
 	if viewState.SelectedUnit != nil {
 		unit := viewState.SelectedUnit
 		// Use privateMap's CenterXYForTile method (privateMap handles origin internally)
-		x, y := world.CenterXYForTile(unit.Coord, options.TileWidth, options.TileHeight, options.YIncrement)
+		coord := UnitGetCoord(unit)
+		x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 		// Create hex shape for highlighting
 		hexPath := cr.createHexagonPath(x, y, options.TileWidth, options.TileHeight)
@@ -204,7 +206,7 @@ func (cr *CanvasRenderer) RenderUI(world *World, viewState *ViewState, drawable 
 	if viewState.HoveredTile != nil && viewState.BrushSize >= 0 {
 		// Show brush preview at hovered tile - note: HoveredTile should be updated to use AxialCoord
 		// For now, assume it has a Coord field that's AxialCoord
-		hoveredCoord := viewState.HoveredTile.Coord // This may need updating when we update ViewState
+		hoveredCoord := TileGetCoord(viewState.HoveredTile) // This may need updating when we update ViewState
 
 		// Use privateMap's CenterXYForTile method (privateMap handles origin internally)
 		x, y := world.CenterXYForTile(hoveredCoord, options.TileWidth, options.TileHeight, options.YIncrement)

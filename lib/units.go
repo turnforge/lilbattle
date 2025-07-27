@@ -1,7 +1,5 @@
 package weewar
 
-import "encoding/json"
-
 type UnitStats struct {
 	Cost       int  `json:"cost"`
 	Health     int  `json:"health"`
@@ -16,9 +14,9 @@ type UnitData struct {
 	BaseStats      UnitStats `json:"baseStats"`
 	ID             int       `json:"id"`
 	Name           string    `json:"name"`
-	MovementPoints int       `json:"movementPoints"`
+	MovementPoints int32     `json:"movementPoints"`
 	AttackRange    int       `json:"attackRange"`
-	Health         int       `json:"health"`
+	Health         int32     `json:"health"`
 	Properties     []string  `json:"properties,omitempty"`
 	// Note: Movement costs and attack data managed separately by RulesEngine
 }
@@ -35,88 +33,6 @@ type DamageDistribution struct {
 type DamageBucket struct {
 	Damage int     `json:"damage"`
 	Weight float64 `json:"weight"`
-}
-
-// Unit represents a runtime unit instance in the game
-type Unit struct {
-	UnitType int // Reference to UnitData by ID
-
-	// Runtime state
-	DistanceLeft    int // Movement points remaining this turn
-	AvailableHealth int // Current health points
-	TurnCounter     int // Which turn this unit was created/last acted
-
-	// Position on the map
-	Coord AxialCoord `json:"coord"` // Cube coordinate position
-
-	// Player ownership
-	Player int
-}
-
-// MarshalJSON implements custom JSON marshaling for Unit
-func (t *Unit) MarshalJSON() ([]byte, error) {
-	// Convert cube map to tile list for JSON
-	out := map[string]any{
-		"q":         t.Coord.Q,
-		"r":         t.Coord.R,
-		"unit_type": t.UnitType,
-		"player":    t.Player,
-	}
-	return json.Marshal(out)
-}
-
-// UnmarshalJSON implements custom JSON unmarshaling for Tiile
-func (t *Unit) UnmarshalJSON(data []byte) error {
-	// First try to unmarshal with new bounds format
-	type mapJSON struct {
-		Q        int `json:"q"`
-		R        int `json:"r"`
-		UnitType int `json:"unit_type"`
-		Player   int `json:"player"`
-	}
-
-	var dict mapJSON
-
-	if err := json.Unmarshal(data, &dict); err != nil {
-		return err
-	}
-
-	t.Coord = AxialCoord{dict.Q, dict.R}
-	t.UnitType = dict.UnitType
-	t.Player = dict.Player
-	return nil
-}
-
-// GetPosition returns the unit's cube coordinate position
-func (u *Unit) GetPosition() AxialCoord {
-	return u.Coord
-}
-
-// SetPosition sets the unit's position using cube coordinates
-func (u *Unit) SetPosition(coord AxialCoord) {
-	u.Coord = coord
-}
-
-// NewUnit creates a new unit instance
-func NewUnit(unitType, playerID int) *Unit {
-	return &Unit{
-		UnitType:        unitType,
-		Player:          playerID,
-		DistanceLeft:    0, // Will be set based on UnitData
-		AvailableHealth: 0, // Will be set based on UnitData
-		TurnCounter:     0,
-	}
-}
-
-func (u *Unit) Clone() *Unit {
-	return &Unit{
-		UnitType:        u.UnitType,
-		DistanceLeft:    u.DistanceLeft,
-		AvailableHealth: u.AvailableHealth,
-		TurnCounter:     u.TurnCounter,
-		Coord:           u.Coord,
-		Player:          u.Player,
-	}
 }
 
 // Basic unit data map - matches weewar-data.json

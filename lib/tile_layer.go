@@ -3,6 +3,8 @@ package weewar
 import (
 	"fmt"
 	"image"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -12,14 +14,14 @@ import (
 // TileLayer handles rendering of terrain tiles
 type TileLayer struct {
 	*BaseLayer
-	terrainSprites map[int]image.Image // Cached terrain sprites
+	terrainSprites map[int32]image.Image // Cached terrain sprites
 }
 
 // NewTileLayer creates a new tile layer
 func NewTileLayer(width, height int, scheduler LayerScheduler) *TileLayer {
 	return &TileLayer{
 		BaseLayer:      NewBaseLayer("terrain", width, height, scheduler),
-		terrainSprites: make(map[int]image.Image),
+		terrainSprites: make(map[int32]image.Image),
 	}
 }
 
@@ -55,7 +57,7 @@ func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
 }
 
 // renderTile renders a single terrain tile
-func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, options LayerRenderOptions) {
+func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *v1.Tile, options LayerRenderOptions) {
 	if tile == nil {
 		return
 	}
@@ -82,7 +84,7 @@ func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *Tile, opti
 }
 
 // isPlayerOwnedTerrain checks if a terrain type is player-owned (bases, cities, etc.)
-func (tl *TileLayer) isPlayerOwnedTerrain(tileType int) bool {
+func (tl *TileLayer) isPlayerOwnedTerrain(tileType int32) bool {
 	switch tileType {
 	case 1: // Land Base
 		return true
@@ -106,7 +108,7 @@ func (tl *TileLayer) isPlayerOwnedTerrain(tileType int) bool {
 }
 
 // renderTerrainSprite renders a terrain sprite
-func (tl *TileLayer) renderTerrainSprite(tileType int, playerID int, x, y float64, options LayerRenderOptions) {
+func (tl *TileLayer) renderTerrainSprite(tileType int32, playerID int32, x, y float64, options LayerRenderOptions) {
 	// Create cache key that includes player ID for player-owned terrain
 	cacheKey := tileType
 	if tl.isPlayerOwnedTerrain(tileType) {
@@ -133,7 +135,7 @@ func (tl *TileLayer) renderTerrainSprite(tileType int, playerID int, x, y float6
 }
 
 // getTerrainColor returns color for terrain type
-func (tl *TileLayer) getTerrainColor(terrainType int, playerID int) Color {
+func (tl *TileLayer) getTerrainColor(terrainType int32, playerID int32) Color {
 	switch terrainType {
 	case 1: // Grass
 		return Color{R: 0x22, G: 0x8B, B: 0x22}

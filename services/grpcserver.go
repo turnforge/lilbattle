@@ -24,8 +24,8 @@ func (s *Server) Start(ctx context.Context, srvErr chan error, srvChan chan bool
 	)
 
 	// Register services
-	v1.RegisterGamesServiceServer(server, NewGamesService())
-	v1.RegisterWorldsServiceServer(server, NewWorldsService())
+	v1.RegisterGamesServiceServer(server, NewFSGamesService())
+	v1.RegisterWorldsServiceServer(server, NewFSWorldsService())
 
 	l, err := net.Listen("tcp", s.Address)
 	if err != nil {

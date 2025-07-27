@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 // =============================================================================
@@ -17,7 +19,7 @@ import (
 // SelectUnit returns unit at position with movement and attack options for UI
 // Combines existing GetUnitAt, GetUnitMovementOptions, and GetUnitAttackOptions
 // Returns data needed for UI highlighting and interaction
-func (g *Game) SelectUnit(coord AxialCoord) (unit *Unit, movable []TileOption, attackable []AxialCoord, err error) {
+func (g *Game) SelectUnit(coord AxialCoord) (unit *v1.Unit, movable []TileOption, attackable []AxialCoord, err error) {
 	// Get unit at position using existing method
 	unit = g.World.UnitAt(coord)
 	if unit == nil {
@@ -145,8 +147,8 @@ func (g *Game) GetTileInfo(q, r int) (map[string]any, error) {
 func (g *Game) GetGameStateForUI() map[string]any {
 	// Convert unitsByCoord to JSON-serializable format
 	// Since JSON object keys must be strings, we'll convert AxialCoord to string format
-	allPlayers := map[int]bool{}
-	allUnits := make(map[string]*Unit)
+	allPlayers := map[int32]bool{}
+	allUnits := make(map[string]*v1.Unit)
 	for coord, unit := range g.World.unitsByCoord {
 		coordKey := fmt.Sprintf("%d,%d", coord.Q, coord.R) // e.g., "0,1" for Q=0, R=1
 		allUnits[coordKey] = unit
