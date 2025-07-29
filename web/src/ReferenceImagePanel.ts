@@ -1,13 +1,14 @@
-import { ComponentLifecycle } from './ComponentLifecycle';
-import { BaseComponent } from './Component';
-import { EventBus, EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload, ReferenceScaleChangedPayload, ReferenceStateChangedPayload, ReferenceImageLoadedPayload } from './EventBus';
+import { LCMComponent } from '../lib/LCMComponent';
+import { BaseComponent } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
+import { EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload, ReferenceScaleChangedPayload, ReferenceStateChangedPayload, ReferenceImageLoadedPayload } from './events';
 
 /**
  * ReferenceImagePanel - Demonstrates new lifecycle architecture
  * 
  * This component showcases the breadth-first lifecycle pattern:
  * 1. bindToDOM() - Set up UI controls without dependencies
- * 2. injectDependencies() - Receive PhaserEditorComponent when available
+ * 2. setupDependencies() - Receive PhaserEditorComponent when available
  * 3. activate() - Enable functionality once all dependencies ready
  * 
  * Benefits:
@@ -39,8 +40,8 @@ export class ReferenceImagePanel extends BaseComponent {
     
     // Dependencies are now set directly using explicit setters instead of ComponentDependencyDeclaration
     
-    // ComponentLifecycle Phase 1: Initialize DOM and discover children (no dependencies needed)
-    public initializeDOM(): ComponentLifecycle[] {
+    // LCMComponent Phase 1: Initialize DOM and discover children (no dependencies needed)
+    public performLocalInit(): LCMComponent[] {
         if (this.isUIBound) {
             this.log('Already bound to DOM, skipping');
             return [];
@@ -71,7 +72,7 @@ export class ReferenceImagePanel extends BaseComponent {
     }
     
     // Phase 2: Inject dependencies - simplified to use explicit setters
-    public injectDependencies(deps: Record<string, any>): void {
+    public setupDependencies(): void {
         this.log('ReferenceImagePanel: Dependencies injection phase - using explicit setters');
         
         // Dependencies should be set directly by parent using setters

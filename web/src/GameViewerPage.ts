@@ -1,10 +1,10 @@
-import { BasePage } from './BasePage';
-import { EventBus, EventTypes } from './EventBus';
+import { BasePage } from '../lib/BasePage';
+import { EventBus } from '../lib/EventBus';
 import { GameViewer } from './GameViewer';
 import { Unit, Tile, World } from './World';
 import { GameState, GameStateData, GameCreateData, UnitSelectionData } from './GameState';
-import { ComponentLifecycle } from './ComponentLifecycle';
-import { LifecycleController } from './LifecycleController';
+import { LCMComponent } from '../lib/LCMComponent';
+import { LifecycleController } from '../lib/LifecycleController';
 import { PLAYER_BG_COLORS } from './ColorsAndNames';
 import { TerrainStatsPanel } from './TerrainStatsPanel';
 
@@ -17,7 +17,7 @@ import { TerrainStatsPanel } from './TerrainStatsPanel';
  * - Handling player interactions (unit selection, movement, attacks)
  * - Providing game controls and UI feedback
  */
-class GameViewerPage extends BasePage implements ComponentLifecycle {
+class GameViewerPage extends BasePage implements LCMComponent {
     private currentGameId: string | null;
     private world: World | null = null;
     private worldViewer: GameViewer | null = null;
@@ -86,7 +86,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     /**
      * Initialize page-specific components (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle initialization through ComponentLifecycle interface
+     * so we make this a no-op and handle initialization through LCMComponent interface
      */
     protected initializeSpecificComponents(): void {
         console.log('GameViewerPage: initializeSpecificComponents() called by BasePage - doing minimal setup');
@@ -269,7 +269,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     /**
      * Bind page-specific events (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle event binding in ComponentLifecycle.activate()
+     * so we make this a no-op and handle event binding in LCMComponent.activate()
      */
     protected bindSpecificEvents(): void {
         console.log('GameViewerPage: bindSpecificEvents() called by BasePage - deferred to activate() phase');
@@ -844,14 +844,14 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     }
 
     // =============================================================================
-    // ComponentLifecycle Interface Implementation
+    // LCMComponent Interface Implementation
     // =============================================================================
 
     /**
      * Phase 1: Initialize DOM and discover child components
      */
-    initializeDOM(): ComponentLifecycle[] {
-        console.log('GameViewerPage: initializeDOM() - Phase 1');
+    performLocalInit(): LCMComponent[] {
+        console.log('GameViewerPage: performLocalInit() - Phase 1');
         
         // Subscribe to events BEFORE creating components
         this.subscribeToWorldViewerEvents();
@@ -866,7 +866,7 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
         console.log('GameViewerPage: DOM initialized, returning child components');
         
         // Return child components for lifecycle management
-        const childComponents: ComponentLifecycle[] = [];
+        const childComponents: LCMComponent[] = [];
         if (this.worldViewer) {
             childComponents.push(this.worldViewer);
         }
@@ -882,8 +882,8 @@ class GameViewerPage extends BasePage implements ComponentLifecycle {
     /**
      * Phase 2: Inject dependencies (none needed for GameViewerPage)
      */
-    injectDependencies(deps: Record<string, any>): void {
-        console.log('GameViewerPage: injectDependencies() - Phase 2', Object.keys(deps));
+    setupDependencies(): void {
+        console.log('GameViewerPage: setupDependencies() - Phase 2', Object.keys(deps));
         // GameViewerPage doesn't need external dependencies
     }
 

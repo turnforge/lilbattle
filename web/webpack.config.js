@@ -8,9 +8,9 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const SRC_FOLDERS = [
-  "./frontend/components",
-  "./frontend/lib",
-  "./frontend/gen"
+  "./src",
+  "./lib",
+  "./gen"
 ];
 const OUTPUT_FOLDERS = ["./templates"]; // Where gen.*.html files go
 const OUTPUT_DIR = path.resolve(__dirname, "./static/js/gen/");

@@ -1,6 +1,6 @@
-import { BaseComponent } from './Component';
-import { EventBus } from './EventBus';
-import { ComponentLifecycle } from './ComponentLifecycle';
+import { BaseComponent } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
+import { LCMComponent } from '../lib/LCMComponent';
 import { TERRAIN_NAMES } from './ColorsAndNames';
 
 /**
@@ -56,7 +56,7 @@ interface MovementMatrix {
  * Uses the terrain-stats-panel-template from TerrainStatsPanel.html
  * Gets terrain data from rules engine JSON embedded in page by Go backend
  */
-export class TerrainStatsPanel extends BaseComponent implements ComponentLifecycle {
+export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
     private isUIBound = false;
     private isActivated = false;
     private currentTerrain: TerrainInfo | null = null;
@@ -70,8 +70,8 @@ export class TerrainStatsPanel extends BaseComponent implements ComponentLifecyc
         super('terrain-stats-panel', rootElement, eventBus, debugMode);
     }
 
-    // ComponentLifecycle Phase 1: Initialize DOM structure
-    public initializeDOM(): ComponentLifecycle[] {
+    // LCMComponent Phase 1: Initialize DOM structure
+    public performLocalInit(): LCMComponent[] {
         if (this.isUIBound) {
             this.log('Already bound to DOM, skipping');
             return [];
@@ -94,7 +94,7 @@ export class TerrainStatsPanel extends BaseComponent implements ComponentLifecyc
     }
 
     // Phase 2: No external dependencies needed
-    public injectDependencies(deps: Record<string, any>): void {
+    public setupDependencies(): void {
         this.log('TerrainStatsPanel: No dependencies required');
     }
 

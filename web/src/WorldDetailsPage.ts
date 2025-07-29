@@ -1,10 +1,10 @@
-import { BasePage } from './BasePage';
-import { EventBus, EventTypes } from './EventBus';
+import { BasePage } from '../lib/BasePage';
+import { EventBus } from '../lib/EventBus';
 import { WorldViewer } from './WorldViewer';
 import { WorldStatsPanel } from './WorldStatsPanel';
 import { World } from './World';
-import { ComponentLifecycle } from './ComponentLifecycle';
-import { LifecycleController } from './LifecycleController';
+import { LCMComponent } from '../lib/LCMComponent';
+import { LifecycleController } from '../lib/LifecycleController';
 
 /**
  * World Details Page - Orchestrator for world viewing functionality
@@ -19,7 +19,7 @@ import { LifecycleController } from './LifecycleController';
  * - Phaser management (delegated to WorldViewer)
  * - Statistics display (delegated to WorldStatsPanel)
  */
-class WorldDetailsPage extends BasePage implements ComponentLifecycle {
+class WorldDetailsPage extends BasePage implements LCMComponent {
     private currentWorldId: string | null;
     private isLoadingWorld: boolean = false;
     private world: World | null = null;
@@ -28,16 +28,10 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
     private worldViewer: WorldViewer | null = null;
     private worldStatsPanel: WorldStatsPanel | null = null;
 
-    constructor() {
-        console.log('WorldDetailsPage: Constructor starting...');
-        super(); // BasePage will call initializeSpecificComponents() and bindSpecificEvents() 
-        console.log('WorldDetailsPage: Constructor completed - lifecycle will be managed externally');
-    }
-
     /**
      * Load game configuration from hidden inputs (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle initialization through ComponentLifecycle interface
+     * so we make this a no-op and handle initialization through LCMComponent interface
      */
     protected initializeSpecificComponents(): void {
         console.log('WorldDetailsPage: initializeSpecificComponents() called by BasePage - doing minimal setup');
@@ -106,7 +100,7 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
     /**
      * Bind page-specific events (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle event binding in ComponentLifecycle.activate()
+     * so we make this a no-op and handle event binding in LCMComponent.activate()
      */
     protected bindSpecificEvents(): void {
         console.log('WorldDetailsPage: bindSpecificEvents() called by BasePage - deferred to activate() phase');
@@ -289,14 +283,14 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
     }
 
     // =============================================================================
-    // ComponentLifecycle Interface Implementation
+    // LCMComponent Interface Implementation
     // =============================================================================
 
     /**
      * Phase 1: Initialize DOM and discover child components
      */
-    initializeDOM(): ComponentLifecycle[] {
-        console.log('WorldDetailsPage: initializeDOM() - Phase 1');
+    performLocalInit(): LCMComponent[] {
+        console.log('WorldDetailsPage: performLocalInit() - Phase 1');
         
         // Subscribe to events BEFORE creating components
         this.subscribeToWorldViewerEvents();
@@ -307,11 +301,11 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
         console.log('WorldDetailsPage: DOM initialized, returning child components');
         
         // Return child components for lifecycle management
-        const childComponents: ComponentLifecycle[] = [];
+        const childComponents: LCMComponent[] = [];
         if (this.worldViewer) {
             childComponents.push(this.worldViewer);
         }
-        if (this.worldStatsPanel && (this.worldStatsPanel as any).initializeDOM) {
+        if (this.worldStatsPanel && (this.worldStatsPanel as any).performLocalInit) {
             childComponents.push(this.worldStatsPanel as any);
         }
         return childComponents;
@@ -320,8 +314,8 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
     /**
      * Phase 2: Inject dependencies (none needed for WorldDetailsPage)
      */
-    injectDependencies(deps: Record<string, any>): void {
-        console.log('WorldDetailsPage: injectDependencies() - Phase 2', Object.keys(deps));
+    setupDependencies(deps: Record<string, any>): void {
+        console.log('WorldDetailsPage: setupDependencies() - Phase 2', Object.keys(deps));
         // WorldDetailsPage doesn't need external dependencies
     }
 
@@ -349,24 +343,22 @@ class WorldDetailsPage extends BasePage implements ComponentLifecycle {
 // Initialize page when DOM is ready using LifecycleController
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM loaded, starting WorldDetailsPage initialization...');
+
+    // Create page-level event bus
+    const eventBus = new EventBus(true); // Enable debug mode
     
     // Create page instance (just basic setup)
-    const worldDetailsPage = new WorldDetailsPage();
+    const worldDetailsPage = new WorldDetailsPage(eventBus);
     
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController({
+    const lifecycleController = new LifecycleController(eventBus, {
         enableDebugLogging: true,
         phaseTimeoutMs: 15000, // Increased timeout for component loading
         continueOnError: false // Fail fast for debugging
     });
     
-    // Set up lifecycle event logging
-    lifecycleController.onLifecycleEvent((event) => {
-        console.log(`[WorldDetails Lifecycle] ${event.type}: ${event.componentName} - ${event.phase}`, event.error || '');
-    });
-    
     // Start breadth-first initialization
-    await lifecycleController.initializeFromRoot(worldDetailsPage, 'WorldDetailsPage');
+    await lifecycleController.initializeFromRoot(worldDetailsPage);
     
     console.log('WorldDetailsPage fully initialized via LifecycleController');
 });

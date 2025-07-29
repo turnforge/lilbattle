@@ -1,21 +1,22 @@
-import { BasePage } from './BasePage';
+import { BasePage } from '../lib/BasePage';
 import { DockviewApi, DockviewComponent } from 'dockview-core';
 import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
-import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from './KeyboardShortcutManager';
-import { shouldIgnoreShortcut } from './DOMUtils';
+import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from '../lib/KeyboardShortcutManager';
+import { shouldIgnoreShortcut } from '../lib/DOMUtils';
 import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { WorldEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
-import { EventBus, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './EventBus';
+import { EventBus } from '../lib/EventBus';
+import { EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
 import { EditorToolsPanel } from './EditorToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
-import { ComponentLifecycle } from './ComponentLifecycle';
-import { LifecycleController } from './LifecycleController';
+import { LCMComponent } from '../lib/LCMComponent';
+import { LifecycleController } from '../lib/LifecycleController';
 import { BRUSH_SIZE_NAMES , TERRAIN_NAMES } from "./ColorsAndNames"
 
 /**
  * World Editor page with unified World architecture and centralized page state
- * Now implements ComponentLifecycle for breadth-first initialization
+ * Now implements LCMComponent for breadth-first initialization
  */
 class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserver {
     private world: World | null = null;
@@ -79,7 +80,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
                 console.log(`[Lifecycle] ${event.type}: ${event.componentName} - ${event.phase}`, event.error || '');
             });
             
-            // Dependencies are set directly using explicit setters in initializeDOM phase
+            // Dependencies are set directly using explicit setters in performLocalInit phase
             
             // Start breadth-first initialization
             await this.lifecycleController.initializeFromRoot(this, 'WorldEditorPage');
@@ -105,20 +106,20 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         this.setupUnsavedChangesWarning();
     }
     
-    // ComponentLifecycle implementation
+    // LCMComponent implementation
     
     /**
      * Phase 1: Initialize DOM and discover child components
      */
-    public initializeDOM(): ComponentLifecycle[] {
+    public performLocalInit(): LCMComponent[] {
         try {
             console.log('WorldEditorPage: Starting DOM initialization phase');
             
             // Initialize basic components first
             this.initializeSpecificComponents();
             
-            // Create child components that implement ComponentLifecycle
-            const childComponents: ComponentLifecycle[] = [];
+            // Create child components that implement LCMComponent
+            const childComponents: LCMComponent[] = [];
             
             // Create ReferenceImagePanel as a lifecycle-managed component
             const referenceTemplate = document.getElementById('reference-image-panel-template');
@@ -150,17 +151,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     /**
      * Phase 2: Inject dependencies from lifecycle controller
      */
-    public injectDependencies(deps: Record<string, any>): void {
-        console.log('WorldEditorPage: Injecting dependencies:', Object.keys(deps));
-        
-        // WorldEditorPage doesn't need any specific dependencies from other components
-        // It provides dependencies to child components instead
-        
-        // Store a reference to the lifecycle controller if provided
-        if (deps.lifecycleController) {
-            console.log('WorldEditorPage: Lifecycle controller reference injected');
-        }
-        
+    public setupDependencies(): void {
         console.log('WorldEditorPage: Dependencies injection complete');
     }
     
@@ -1511,11 +1502,11 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             this.editorToolsPanel = new EditorToolsPanel(container, this.eventBus, true);
             
             // Phase 1: Initialize DOM
-            await this.editorToolsPanel.initializeDOM();
+            await this.editorToolsPanel.performLocalInit();
             
             // Phase 2: Set dependencies directly using explicit setters
             this.editorToolsPanel.setPageState(this.pageState);
-            await this.editorToolsPanel.injectDependencies({});
+            await this.editorToolsPanel.setupDependencies({});
             
             // Phase 3: Activate component
             await this.editorToolsPanel.activate();
@@ -1554,7 +1545,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             this.tileStatsPanel = new TileStatsPanel(container, this.eventBus, true);
             
             // Phase 1: Initialize DOM
-            await this.tileStatsPanel.initializeDOM();
+            await this.tileStatsPanel.performLocalInit();
             
             // Phase 2: Set dependencies directly using explicit setters
             if (this.world) {
@@ -1562,7 +1553,7 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             } else {
                 throw new Error('World is not available for TileStatsPanel');
             }
-            await this.tileStatsPanel.injectDependencies({});
+            await this.tileStatsPanel.setupDependencies({});
             
             // Phase 3: Activate component
             await this.tileStatsPanel.activate();

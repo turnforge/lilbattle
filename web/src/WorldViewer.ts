@@ -1,9 +1,10 @@
-import { BaseComponent, DOMValidation } from './Component';
-import { EventBus, EventPayload, EventTypes, WorldDataLoadedPayload } from './EventBus';
+import { BaseComponent, DOMValidation } from '../lib/Component';
+import { EventBus, EventPayload, } from '../lib/EventBus';
+import { WorldEventTypes, WorldDataLoadedPayload } from './events';
 import { PhaserWorldScene } from './phaser/PhaserWorldScene';
 import { PhaserGameScene } from './phaser/PhaserGameScene';
 import { Unit, Tile, World } from './World';
-import { ComponentLifecycle } from './ComponentLifecycle';
+import { LCMComponent } from '../lib/LCMComponent';
 
 /**
  * WorldViewer Component - Manages Phaser-based world visualization
@@ -17,7 +18,7 @@ import { ComponentLifecycle } from './ComponentLifecycle';
  * 
  * @template TScene - The type of Phaser scene to use (defaults to PhaserWorldScene)
  */
-export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> extends BaseComponent implements ComponentLifecycle {
+export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> extends BaseComponent implements LCMComponent {
     protected scene: TScene | null = null;
     private loadedWorldData: WorldDataLoadedPayload | null;
     private viewerContainer: HTMLElement | null;
@@ -38,7 +39,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         this.log('Initializing WorldViewer component');
         
         // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(EventTypes.WORLD_DATA_LOADED, (payload) => {
+        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, (payload) => {
             this.handleWorldDataLoaded(payload);
         });
         
@@ -137,7 +138,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         
         // Emit ready event
         console.log('WorldViewer: Emitting WORLD_VIEWER_READY event');
-        this.emit(EventTypes.WORLD_VIEWER_READY, {
+        this.emit(WorldEventTypes.WORLD_VIEWER_READY, {
             componentId: this.componentId,
             success: true
         });
@@ -222,7 +223,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         }
         
         // Emit data loaded event for other components
-        this.emit(EventTypes.WORLD_DATA_LOADED, this.loadedWorldData);
+        this.emit(WorldEventTypes.WORLD_DATA_LOADED, this.loadedWorldData);
     }
     
     /**
@@ -312,14 +313,14 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     }
 
     // =============================================================================
-    // ComponentLifecycle Interface Implementation
+    // LCMComponent Interface Implementation
     // =============================================================================
 
     /**
      * Phase 1: Initialize DOM and discover child components
      */
-    initializeDOM(): ComponentLifecycle[] {
-        console.log('WorldViewer: initializeDOM() - Phase 1');
+    performLocalInit(): LCMComponent[] {
+        console.log('WorldViewer: performLocalInit() - Phase 1');
         
         // DOM setup is already done in bindToDOM(), just return no child components
         return [];
@@ -328,8 +329,8 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     /**
      * Phase 2: Inject dependencies (none needed for WorldViewer)
      */
-    injectDependencies(deps: Record<string, any>): void {
-        console.log('WorldViewer: injectDependencies() - Phase 2', Object.keys(deps));
+    setupDependencies(): void {
+        console.log('WorldViewer: setupDependencies() - Phase 2', Object.keys(deps));
         // WorldViewer doesn't need external dependencies
     }
 

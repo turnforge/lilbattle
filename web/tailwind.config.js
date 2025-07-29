@@ -10,8 +10,10 @@ module.exports = {
     "./templates/*.html",
     "./templates/*.html",
     "./templates/*.css",
-    "./frontend/components/*.ts",
-    "./frontend/components/*.tsx"
+    "./lib/*.ts",
+    "./lib/*.tsx",
+    "./src/*.ts",
+    "./src/*.tsx"
   ],
   darkMode: 'class',
   theme: {

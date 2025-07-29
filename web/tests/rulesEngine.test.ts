@@ -5,7 +5,7 @@
 
 import { createTestGameState, validateMovementOptions, validateAttackOptions } from './helpers/wasmTestUtils';
 import { SMALL_TEST_MAP, MEDIUM_TEST_MAP, COMBAT_TEST_MAP, TEST_MAPS, testMapToJSON } from './fixtures/testMaps';
-import { GameState } from '../frontend/components/GameState';
+import { GameState } from '../src/GameState';
 
 describe('Rules Engine Validation', () => {
   

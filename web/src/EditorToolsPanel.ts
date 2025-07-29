@@ -1,14 +1,15 @@
-import { BaseComponent } from './Component';
-import { EventBus, EditorEventTypes } from './EventBus';
+import { BaseComponent } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
+import { EditorEventTypes } from './events';
 import { WorldEditorPageState } from './WorldEditorPageState';
-import { ComponentLifecycle } from './ComponentLifecycle';
+import { LCMComponent } from '../lib/LCMComponent';
 import { BRUSH_SIZE_NAMES, TERRAIN_NAMES, UNIT_NAMES } from './ColorsAndNames'
 
 /**
  * EditorToolsPanel Component - State generator and DOM owner for editor tools with tabbed interface
  * 
  * This component demonstrates the new lifecycle architecture with explicit dependency injection:
- * 1. initializeDOM() - Set up UI controls and event handlers without dependencies
+ * 1. performLocalInit() - Set up UI controls and event handlers without dependencies
  * 2. injectDependencies() - Receive WorldEditorPageState when available
  * 3. activate() - Enable full functionality once all dependencies are ready
  * 
@@ -43,8 +44,8 @@ export class EditorToolsPanel extends BaseComponent {
         super('editor-tools-panel', rootElement, eventBus, debugMode);
     }
     
-    // ComponentLifecycle Phase 1: Initialize DOM and discover children (no dependencies needed)
-    public initializeDOM(): ComponentLifecycle[] {
+    // LCMComponent Phase 1: Initialize DOM and discover children (no dependencies needed)
+    public performLocalInit(): LCMComponent[] {
         if (this.isUIBound) {
             this.log('Already bound to DOM, skipping');
             return [];

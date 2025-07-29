@@ -1,5 +1,6 @@
-import { BaseComponent } from './Component';
-import { EventBus, EventTypes, WorldDataLoadedPayload, WorldStatsUpdatedPayload } from './EventBus';
+import { BaseComponent } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
+import { WorldEventTypes, WorldDataLoadedPayload, WorldStatsUpdatedPayload } from './events';
 
 /**
  * WorldStatsPanel Component - Manages world statistics display
@@ -21,11 +22,11 @@ export class WorldStatsPanel extends BaseComponent {
         this.log('Initializing WorldStatsPanel component');
         
         // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(EventTypes.WORLD_DATA_LOADED, (payload) => {
+        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, (payload) => {
             this.handleWorldDataLoaded(payload.data);
         });
         
-        this.subscribe<WorldStatsUpdatedPayload>(EventTypes.WORLD_STATS_UPDATED, (payload) => {
+        this.subscribe<WorldStatsUpdatedPayload>(WorldEventTypes.WORLD_STATS_UPDATED, (payload) => {
             this.handleStatsUpdated(payload.data);
         });
         
@@ -114,7 +115,7 @@ export class WorldStatsPanel extends BaseComponent {
             this.updateDisplay();
             
             // Emit stats updated event for other components
-            this.emit(EventTypes.WORLD_STATS_UPDATED, this.statsData);
+            this.emit(WorldEventTypes.WORLD_STATS_UPDATED, this.statsData);
             
         } catch (error) {
             this.handleError('Failed to calculate statistics', error);

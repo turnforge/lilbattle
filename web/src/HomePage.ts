@@ -1,7 +1,7 @@
 
-import { ThemeManager } from './ThemeManager'; // For theme consistency if needed later
-import { Modal } from './Modal';
-import { ToastManager } from './ToastManager';
+import { ThemeManager } from '../lib/ThemeManager'; // For theme consistency if needed later
+import { Modal } from '../lib/Modal';
+import { ToastManager } from '../lib/ToastManager';
 
 /**
  * Manages the listing page logic

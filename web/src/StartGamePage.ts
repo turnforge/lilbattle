@@ -1,9 +1,9 @@
-import { BasePage } from './BasePage';
-import { EventBus, EventTypes } from './EventBus';
+import { BasePage } from '../lib/BasePage';
+import { EventBus } from '../lib/EventBus';
 import { WorldViewer } from './WorldViewer';
 import { World } from './World';
-import { ComponentLifecycle } from './ComponentLifecycle';
-import { LifecycleController } from './LifecycleController';
+import { LCMComponent } from '../lib/LCMComponent';
+import { LifecycleController } from '../lib/LifecycleController';
 
 /**
  * Start Game Page - Orchestrator for game configuration functionality
@@ -18,7 +18,7 @@ import { LifecycleController } from './LifecycleController';
  * - Phaser management (delegated to WorldViewer)
  * - Game logic (delegated to game engine)
  */
-class StartGamePage extends BasePage implements ComponentLifecycle {
+class StartGamePage extends BasePage implements LCMComponent {
     private currentWorldId: string | null;
     private isLoadingWorld: boolean = false;
     private world: World | null = null;
@@ -42,7 +42,7 @@ class StartGamePage extends BasePage implements ComponentLifecycle {
     /**
      * Load initial state (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle initialization through ComponentLifecycle interface
+     * so we make this a no-op and handle initialization through LCMComponent interface
      */
     protected initializeSpecificComponents(): void {
         console.log('StartGamePage: initializeSpecificComponents() called by BasePage - doing minimal setup');
@@ -98,7 +98,7 @@ class StartGamePage extends BasePage implements ComponentLifecycle {
     /**
      * Bind page-specific events (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle event binding in ComponentLifecycle.activate()
+     * so we make this a no-op and handle event binding in LCMComponent.activate()
      */
     protected bindSpecificEvents(): void {
         console.log('StartGamePage: bindSpecificEvents() called by BasePage - deferred to activate() phase');
@@ -592,14 +592,14 @@ class StartGamePage extends BasePage implements ComponentLifecycle {
     }
 
     // =============================================================================
-    // ComponentLifecycle Interface Implementation
+    // LCMComponent Interface Implementation
     // =============================================================================
 
     /**
      * Phase 1: Initialize DOM and discover child components
      */
-    initializeDOM(): ComponentLifecycle[] {
-        console.log('StartGamePage: initializeDOM() - Phase 1');
+    override performLocalInit(): LCMComponent[] {
+        console.log('StartGamePage: performLocalInit() - Phase 1');
         
         // Subscribe to events BEFORE creating components
         this.subscribeToWorldViewerEvents();
@@ -610,7 +610,7 @@ class StartGamePage extends BasePage implements ComponentLifecycle {
         console.log('StartGamePage: DOM initialized, returning child components');
         
         // Return child components for lifecycle management
-        const childComponents: ComponentLifecycle[] = [];
+        const childComponents: LCMComponent[] = [];
         if (this.worldViewer) {
             childComponents.push(this.worldViewer);
         }
@@ -620,8 +620,8 @@ class StartGamePage extends BasePage implements ComponentLifecycle {
     /**
      * Phase 2: Inject dependencies (none needed for StartGamePage)
      */
-    injectDependencies(deps: Record<string, any>): void {
-        console.log('StartGamePage: injectDependencies() - Phase 2', Object.keys(deps));
+    setupDependencies(): void {
+        console.log('StartGamePage: setupDependencies() - Phase 2', Object.keys(deps));
         // StartGamePage doesn't need external dependencies
     }
 

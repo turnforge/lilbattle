@@ -11,15 +11,11 @@ export abstract class BasePage {
     protected themeManager: typeof ThemeManager | null = null;
     protected modal: Modal | null = null;
     protected toastManager: ToastManager | null = null;
-    protected eventBus: EventBus;
 
     protected themeToggleButton: HTMLButtonElement | null = null;
     protected themeToggleIcon: HTMLElement | null = null;
 
-    constructor() {
-        // Create page-level event bus
-        this.eventBus = new EventBus(true); // Enable debug mode
-        
+    constructor(public readonly eventBus: EventBus) {
         // Initialize base components first
         this.initializeBaseComponents();
         this.bindBaseEvents();

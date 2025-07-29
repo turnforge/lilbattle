@@ -1,5 +1,5 @@
-import { BaseComponent, ComponentState } from './Component';
-import { EventBus } from './EventBus';
+import { BaseComponent, ComponentState } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
 import Weewar_v1_servicesClient from '../gen/wasm-clients/weewar_v1_servicesClient.client';
 import { ProcessMovesRequest, ProcessMovesResponse, ProcessMovesRequestSchema } from '../gen/weewar/v1/games_pb';
 import { World, GameMove, WorldChange, GameMoveSchema, MoveUnitAction, MoveUnitActionSchema, AttackUnitAction, AttackUnitActionSchema, EndTurnAction, EndTurnActionSchema } from '../gen/weewar/v1/models_pb';

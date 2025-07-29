@@ -14,12 +14,15 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 
 ### Core Components
 
-#### Frontend Components (`web/frontend/components/`)
+#### Frontend Components (`web/src/`)
 - **World.ts**: Enhanced with Observer pattern, batched events, and self-contained persistence
 - **WorldEditorPage.ts**: Refactored to use World as single source of truth, implements WorldObserver
 - **PhaserEditorComponent.ts**: Phaser.js-based world editor with WebGL rendering
+
+#### Frontend Library Components (`web/lib/`)
 - **EventBus.ts**: Type-safe event system for inter-component communication
 - **Component.ts**: Base class with lifecycle management and DOM scoping
+- **BasePage.ts**: Base class for all our pages - implements a LifeCycledComponent
 
 #### Backend Services (`pkg/services/`)
 - **WorldsService**: gRPC service for world CRUD operations

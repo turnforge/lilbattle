@@ -3,7 +3,7 @@
  * Tests the GameState component with real WASM integration
  */
 
-import { GameState } from '../frontend/components/GameState';
+import { GameState } from '../src/GameState';
 import { createTestGameState, validateGameState, validateMovementOptions, validateAttackOptions } from './helpers/wasmTestUtils';
 import { SMALL_TEST_MAP, COMBAT_TEST_MAP, testMapToJSON } from './fixtures/testMaps';
 import * as path from 'path';

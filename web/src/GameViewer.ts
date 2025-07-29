@@ -1,4 +1,4 @@
-import { EventBus } from './EventBus';
+import { EventBus } from '../lib/EventBus';
 import { WorldViewer } from './WorldViewer';
 import { PhaserGameScene } from './phaser/PhaserGameScene';
 import { SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer } from './phaser/layers/HexHighlightLayer';

@@ -1,11 +1,11 @@
-import { ThemeManager } from './ThemeManager';
-import { Modal } from './Modal';
-import { ToastManager } from './ToastManager';
+import { ThemeManager } from '../lib/ThemeManager';
+import { Modal } from '../lib/Modal';
+import { ToastManager } from '../lib/ToastManager';
 
 /**
  * Main application initialization
  */
-class GameDetailsPage {
+class UserDetailsPage {
     private themeManager: typeof ThemeManager | null = null;
     private modal: Modal | null = null;
     private toastManager: ToastManager | null = null;
@@ -13,8 +13,8 @@ class GameDetailsPage {
     private themeToggleButton: HTMLButtonElement | null = null;
     private themeToggleIcon: HTMLElement | null = null;
 
-    private currentGameId: string | null = null;
-    private isLoadingGame: boolean = false; // Loading state
+    private currentUserId: string | null = null;
+    private isLoadingUser: boolean = false; // Loading state
 
     constructor() {
         this.initializeComponents();
@@ -71,21 +71,21 @@ class GameDetailsPage {
         const designId = designIdInput?.value.trim() || null;
 
         if (designId) {
-            this.currentGameId = designId;
-            console.log(`Found Game ID: ${this.currentGameId}. Loading data...`);
-            this.loadGameData(this.currentGameId);
+            this.currentUserId = designId;
+            console.log(`Found User ID: ${this.currentUserId}. Loading data...`);
+            this.loadUserData(this.currentUserId);
         } else {
-            console.error("Game ID input element not found or has no value. Cannot load document.");
-            this.toastManager?.showToast("Error", "Could not load document: Game ID missing.", "error");
+            console.error("User ID input element not found or has no value. Cannot load document.");
+            this.toastManager?.showToast("Error", "Could not load document: User ID missing.", "error");
         }
     }
 
     /**
      * Fetches design metadata, initializes section shells, and triggers content loading for each section.
      */
-    private async loadGameData(designId: string): Promise<void> {
+    private async loadUserData(designId: string): Promise<void> {
         // TODO: Show global loading indicator
-        console.log(`GameDetailsPage: Loading design ${designId}...`);
+        console.log(`UserDetailsPage: Loading design ${designId}...`);
 
         // here is where we would do "reload" via ajax - this coul dbe via ajax or via htmx
     }
@@ -135,5 +135,5 @@ class GameDetailsPage {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const lc = new GameDetailsPage();
+    const lc = new UserDetailsPage();
 });

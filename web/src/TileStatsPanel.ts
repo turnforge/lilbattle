@@ -1,15 +1,15 @@
 import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
-import { BaseComponent } from './Component';
-import { EventBus } from './EventBus';
-import { ComponentLifecycle } from './ComponentLifecycle';
+import { BaseComponent } from '../lib/Component';
+import { EventBus } from '../lib/EventBus';
+import { LCMComponent } from '../lib/LCMComponent';
 import { TERRAIN_NAMES, UNIT_NAMES, PLAYER_COLORS } from './ColorsAndNames'
 
 /**
  * TileStatsPanel displays statistics about tiles and units on the world
  * 
  * This component demonstrates the new lifecycle architecture:
- * 1. initializeDOM() - Set up UI structure without dependencies
- * 2. injectDependencies() - Receive World instance when available
+ * 1. performLocalInit() - Set up UI structure without dependencies
+ * 2. setupDependencies() - Receive World instance when available
  * 3. activate() - Subscribe to World events and enable functionality
  * 
  * Architecture:
@@ -31,8 +31,8 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
         super('tile-stats-panel', rootElement, eventBus, debugMode);
     }
     
-    // ComponentLifecycle Phase 1: Initialize DOM and discover children (no dependencies needed)
-    public initializeDOM(): ComponentLifecycle[] {
+    // LCMComponent Phase 1: Initialize DOM and discover children (no dependencies needed)
+    public override performLocalInit(): LCMComponent[] {
         if (this.isUIBound) {
             this.log('Already bound to DOM, skipping');
             return [];
@@ -58,7 +58,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     }
     
     // Phase 2: Inject dependencies - simplified to use explicit setters
-    public injectDependencies(deps: Record<string, any>): void {
+    public setupDependencies(): void {
         this.log('TileStatsPanel: Dependencies injection phase - using explicit setters');
         
         // Dependencies should be set directly by parent using setters

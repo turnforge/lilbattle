@@ -1,5 +1,5 @@
 /**
- * ComponentLifecycle Interface - Defines multi-phase component initialization
+ * LCMComponent Interface - Defines multi-phase component initialization
  * 
  * This interface implements a breadth-first lifecycle pattern that eliminates
  * initialization order dependencies and race conditions through synchronization barriers.
@@ -17,13 +17,27 @@
  * - Error Isolation: Component failures don't cascade to others
  */
 
-export interface ComponentLifecycle {
+/**
+ * LCM Component - Short for LifeCycle Managed Component 
+ * enable components to be declared first and their loading be managed by a
+ * LifecycleController so that we have layered creation, dependency injection and setup
+ * in a breadth first way.
+ *
+ * A key constraint on LCMComponents are that they should not perform any initialization
+ * in the constructor.  This is because a LifecycleController should be used to load/setup
+ * these components and they will follow a layered approach.  Performing these actions in
+ * the constructor could violate the idempotency guarantees.
+ */
+export interface LCMComponent {
     /**
-     * Phase 1: Initialize DOM and discover child components
+     * Phase 1: The "local" initialization of the component.
+     *
+     * In this phase the component initializes itself and returns any children it might
+     * want initialized as part of the lifecycled loading.
      * 
      * This phase should:
      * - Set up basic DOM elements and event listeners
-     * - Create child components (but don't initialize them)
+     * - Create child components (but don't initialize them) and return them
      * - Return array of child components for lifecycle controller discovery
      * 
      * This phase must be synchronous and should not:
@@ -33,7 +47,7 @@ export interface ComponentLifecycle {
      * 
      * @returns Array of child components to be managed by lifecycle controller
      */
-    initializeDOM(): ComponentLifecycle[];
+    performLocalInit(): Promise<LCMComponent[]> | LCMComponent[];
     
     /**
      * Phase 2: Inject dependencies from parent/siblings
@@ -51,7 +65,7 @@ export interface ComponentLifecycle {
      * @param deps Record of dependency name to dependency instance
      * @returns Promise<void> or void - can be async
      */
-    injectDependencies(deps: Record<string, any>): Promise<void> | void;
+    setupDependencies(): Promise<void> | void;
     
     /**
      * Phase 3: Activate component when all dependencies are ready
@@ -86,32 +100,9 @@ export interface ComponentLifecycle {
 }
 
 /**
- * Type representing the current phase of a component's lifecycle
- */
-export type ComponentPhase = 'created' | 'dom-bound' | 'dependencies-injected' | 'activated' | 'deactivated';
-
-/**
- * Interface for components that need to declare their dependencies
- * This is optional but helps with debugging and validation
- */
-export interface ComponentDependencyDeclaration {
-    /**
-     * Declare required dependencies that must be provided in injectDependencies
-     * Component will not activate if these are missing
-     */
-    getRequiredDependencies(): string[];
-    
-    /**
-     * Declare optional dependencies that may be provided
-     * Component should gracefully handle if these are missing
-     */
-    getOptionalDependencies(): string[];
-}
-
-/**
  * Configuration for component lifecycle behavior
  */
-export interface ComponentLifecycleConfig {
+export interface LCMComponentConfig {
     /**
      * Maximum time to wait for a lifecycle phase to complete (ms)
      * Default: 10000 (10 seconds)
@@ -138,51 +129,12 @@ export interface ComponentLifecycleConfig {
 }
 
 /**
- * Error thrown when a component lifecycle operation fails
- */
-export class ComponentLifecycleError extends Error {
-    constructor(
-        public readonly componentName: string,
-        public readonly phase: ComponentPhase,
-        message: string,
-        public readonly cause?: Error
-    ) {
-        super(`${componentName}.${phase}: ${message}`);
-        this.name = 'ComponentLifecycleError';
-    }
-}
-
-/**
- * Error thrown when component dependencies are not satisfied
- */
-export class ComponentDependencyError extends ComponentLifecycleError {
-    constructor(
-        componentName: string,
-        public readonly missingDependencies: string[],
-        public readonly providedDependencies: string[]
-    ) {
-        super(
-            componentName,
-            'dependencies-injected',
-            `Missing required dependencies: ${missingDependencies.join(', ')}. Provided: ${providedDependencies.join(', ')}`
-        );
-        this.name = 'ComponentDependencyError';
-    }
-}
-
-/**
  * Event emitted during component lifecycle transitions
  */
-export interface ComponentLifecycleEvent {
+export interface LCMComponentEvent {
     type: 'phase-start' | 'phase-complete' | 'phase-error' | 'component-ready';
-    phase: ComponentPhase;
     componentName: string;
     timestamp: number;
     error?: Error;
     metadata?: Record<string, any>;
 }
-
-/**
- * Callback for lifecycle events
- */
-export type ComponentLifecycleEventCallback = (event: ComponentLifecycleEvent) => void;

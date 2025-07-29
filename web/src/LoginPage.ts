@@ -1,5 +1,5 @@
 
-import { BasePage } from './BasePage';
+import { BasePage } from '../lib/BasePage';
 
 class LoginPage extends BasePage {
     private form: HTMLFormElement | null;
