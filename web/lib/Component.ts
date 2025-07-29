@@ -38,10 +38,16 @@ export interface Component {
  */
 export abstract class BaseComponent implements Component, LCMComponent {
     protected eventUnsubscribers: (() => void)[] = [];
+    protected _eventBus: EventBus;
     
-    constructor(public readonly componentId: string, public readonly rootElement: HTMLElement, public eventBus: EventBus, public readonly debugMode: boolean = false) {
+    constructor(public readonly componentId: string, public readonly rootElement: HTMLElement, eventBus: EventBus | null = null, public readonly debugMode: boolean = false) {
         // Mark as component in DOM for debugging
+        this._eventBus = eventBus || new EventBus();
         this.rootElement.setAttribute('data-component', this.componentId);
+    }
+
+    public get eventBus(): EventBus {
+      return this._eventBus
     }
     
     public contentUpdated(newHTML: string): void {

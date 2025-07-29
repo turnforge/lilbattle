@@ -33,10 +33,6 @@ class StartGamePage extends BasePage implements LCMComponent {
     // Component instances
     private worldViewer: WorldViewer | null = null;
     
-    constructor(eventBus: EventBus) {
-        super('start-game-page', eventBus, true); // Enable debug mode
-    }
-    
     /**
      * Load initial state (required by BasePage)
      * This method is called by BasePage constructor, but we're using external LifecycleController
@@ -144,7 +140,7 @@ class StartGamePage extends BasePage implements LCMComponent {
             const worldData = this.loadWorldDataFromElement();
             
             if (worldData) {
-                this.world = World.deserialize(worldData);
+                this.world = World.deserialize(this.eventBus, worldData);
                 console.log('World data loaded successfully');
                 
                 // Calculate player count from world units
@@ -603,7 +599,7 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Phase 2: Inject dependencies (none needed for StartGamePage)
      */
     setupDependencies(): void {
-        console.log('StartGamePage: setupDependencies() - Phase 2', Object.keys(deps));
+        console.log('StartGamePage: setupDependencies() - Phase 2')
         // StartGamePage doesn't need external dependencies
     }
 
@@ -649,20 +645,14 @@ type PlayerType = 'human' | 'ai' | 'open' | 'none';
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM loaded, starting StartGamePage initialization...');
 
-    const eventBus = new EventBus()
-    
     // Create page instance (just basic setup)
-    const startGamePage = new StartGamePage("StartGamepage", eventBus);
+    const page = new StartGamePage("StartGamePage");
     
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController(eventBus, {
-        enableDebugLogging: true,
-        phaseTimeoutMs: 15000, // Increased timeout for component loading
-        continueOnError: false // Fail fast for debugging
-    });
+    const lifecycleController = new LifecycleController(page.eventBus, LifecycleController.DefaultConfig)
     
     // Start breadth-first initialization
-    await lifecycleController.initializeFromRoot(startGamePage);
+    await lifecycleController.initializeFromRoot(page);
     
     console.log('StartGamePage fully initialized via LifecycleController');
 });

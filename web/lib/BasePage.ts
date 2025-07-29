@@ -18,7 +18,7 @@ export abstract class BasePage extends BaseComponent {
     protected themeToggleIcon: HTMLElement | null = null;
 
     // Constructor now just uses document as the rootElement
-    constructor(public readonly componentId: string, public eventBus: EventBus, public readonly debugMode: boolean = false) {
+    constructor(public readonly componentId: string, eventBus: EventBus | null = null, public readonly debugMode: boolean = false) {
         // Mark as component in DOM for debugging
         super(componentId, document.body, eventBus, debugMode)
     }

@@ -51,18 +51,6 @@ class WorldEditorPage extends BasePage {
     // UI state  
     private hasPendingWorldDataLoad: boolean = false;
     
-    constructor(eventBus: EventBus) {
-        super('world-editor-page', eventBus, true); // Enable debug mode
-        
-        // Subscribe to World events via EventBus
-        this.subscribe(WorldEventType.WORLD_LOADED, this, (data: any) => { this.handleWorldLoaded(data); });
-        this.subscribe(WorldEventType.WORLD_SAVED, this, (data: any) => { this.handleWorldSaved(data); });
-        this.subscribe(WorldEventType.TILES_CHANGED, this, () => { this.handleWorldDataChanged(); });
-        this.subscribe(WorldEventType.UNITS_CHANGED, this, () => { this.handleWorldDataChanged(); });
-        this.subscribe(WorldEventType.WORLD_CLEARED, this, () => { this.handleWorldDataChanged(); });
-        this.subscribe(WorldEventType.WORLD_METADATA_CHANGED, this, () => { this.handleWorldDataChanged(); });
-    }
-    
     /**
      * Fallback initialization if lifecycle controller fails
      */
@@ -277,6 +265,14 @@ class WorldEditorPage extends BasePage {
      */
     private subscribeToEditorEvents(): void {
         console.log('WorldEditorPage: Subscribing to editor events');
+
+        // Subscribe to World events via EventBus
+        this.subscribe(WorldEventType.WORLD_LOADED, this, (data: any) => { this.handleWorldLoaded(data); });
+        this.subscribe(WorldEventType.WORLD_SAVED, this, (data: any) => { this.handleWorldSaved(data); });
+        this.subscribe(WorldEventType.TILES_CHANGED, this, () => { this.handleWorldDataChanged(); });
+        this.subscribe(WorldEventType.UNITS_CHANGED, this, () => { this.handleWorldDataChanged(); });
+        this.subscribe(WorldEventType.WORLD_CLEARED, this, () => { this.handleWorldDataChanged(); });
+        this.subscribe(WorldEventType.WORLD_METADATA_CHANGED, this, () => { this.handleWorldDataChanged(); });
         
         // Note: Tool state changes now handled via PageState Observer pattern
         // EditorToolsPanel directly updates pageState, which notifies observers
@@ -2169,18 +2165,16 @@ class WorldEditorPage extends BasePage {
 
 // Initialize the editor when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    // Create page-level event bus
-    const eventBus = new EventBus(true); // Enable debug mode
+    console.log('DOM loaded, starting WorldEditorPage initialization...');
 
-    const page = new WorldEditorPage(eventBus);
-
+    // Create page instance (just basic setup)
+    const page = new WorldEditorPage("WorldEditorPage");
+    
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController(eventBus, {
-        enableDebugLogging: true,
-        phaseTimeoutMs: 15000, // Increased timeout for complex initialization
-        continueOnError: false // Fail fast for debugging
-    });
-
+    const lifecycleController = new LifecycleController(page.eventBus, LifecycleController.DefaultConfig)
+    
     // Start breadth-first initialization
     await lifecycleController.initializeFromRoot(page);
+    
+    console.log('WorldEditorPage fully initialized via LifecycleController');
 });

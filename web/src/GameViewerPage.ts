@@ -32,10 +32,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
     // UI state
     private selectedUnit: any = null;
     private gameLog: string[] = [];
-    
-    constructor(eventBus: EventBus) {
-        super('game-viewer-page', eventBus, true); // Enable debug mode
-    }
 
     /**
      * Load game configuration from URL parameters and hidden inputs
@@ -920,22 +916,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM loaded, starting GameViewerPage initialization...');
     
     // Create page instance (just basic setup)
-    const gameViewerPage = new GameViewerPage();
+    const gameViewerPage = new GameViewerPage("GameViewerPage");
     
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController({
+    const lifecycleController = new LifecycleController(gameViewerPage.eventBus, {
         enableDebugLogging: true,
         phaseTimeoutMs: 15000, // Increased timeout for WASM loading
         continueOnError: false // Fail fast for debugging
     });
     
-    // Set up lifecycle event logging
-    lifecycleController.onLifecycleEvent((event) => {
-        console.log(`[GameViewer Lifecycle] ${event.type}: ${event.componentName} - ${event.phase}`, event.error || '');
-    });
-    
     // Start breadth-first initialization
-    await lifecycleController.initializeFromRoot(gameViewerPage, 'GameViewerPage');
+    await lifecycleController.initializeFromRoot(gameViewerPage);
     
     console.log('GameViewerPage fully initialized via LifecycleController');
 });

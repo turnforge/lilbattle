@@ -27,10 +27,6 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
     // Component instances
     private worldViewer: WorldViewer | null = null;
     private worldStatsPanel: WorldStatsPanel | null = null;
-    
-    constructor(eventBus: EventBus, debugMode = true) {
-        super('world-details-page', eventBus, debugMode); // Enable debug mode
-    }
 
     /**
      * Load game configuration from hidden inputs (required by BasePage)
@@ -338,21 +334,14 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM loaded, starting WorldDetailsPage initialization...');
 
-    // Create page-level event bus
-    const eventBus = new EventBus(true); // Enable debug mode
-    
     // Create page instance (just basic setup)
-    const worldDetailsPage = new WorldDetailsPage(eventBus);
+    const page = new WorldDetailsPage("WorldDetailsPage");
     
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController(eventBus, {
-        enableDebugLogging: true,
-        phaseTimeoutMs: 15000, // Increased timeout for component loading
-        continueOnError: false // Fail fast for debugging
-    });
+    const lifecycleController = new LifecycleController(page.eventBus, LifecycleController.DefaultConfig)
     
     // Start breadth-first initialization
-    await lifecycleController.initializeFromRoot(worldDetailsPage);
+    await lifecycleController.initializeFromRoot(page);
     
     console.log('WorldDetailsPage fully initialized via LifecycleController');
 });

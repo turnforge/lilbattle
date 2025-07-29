@@ -26,6 +26,11 @@ export class LifecycleController {
     private allComponents: LCMComponent[];
     private componentsByLevel: LCMComponent[][];
     private config: Required<LCMComponentConfig>;
+    public static DefaultConfig: LCMComponentConfig = {
+        enableDebugLogging: true,
+        phaseTimeoutMs: 15000, // Increased timeout for component loading
+        continueOnError: false // Fail fast for debugging
+    }
     
     constructor(protected eventBus: EventBus, config: LCMComponentConfig = {}) {
         this.config = {
