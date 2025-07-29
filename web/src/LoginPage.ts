@@ -1,5 +1,7 @@
 
 import { BasePage } from '../lib/BasePage';
+import { EventBus } from '../lib/EventBus';
+import { LCMComponent } from '../lib/LCMComponent';
 
 class LoginPage extends BasePage {
     private form: HTMLFormElement | null;
@@ -13,14 +15,12 @@ class LoginPage extends BasePage {
 
     private isSignUpMode: boolean = false;
 
-    constructor() {
-        super();
-        this.initializeSpecificComponents();
-        this.bindSpecificEvents();
+    constructor(eventBus: EventBus) {
+        super('login-page', eventBus, true); // Enable debug mode
         this.updateUI(); // Set initial UI state
     }
 
-    protected initializeSpecificComponents(): void {
+    protected initializeSpecificComponents(): LCMComponent[] {
         // Find form elements
         this.callbackURL = (document.getElementById("callbackURL") as HTMLInputElement)
         this.form = document.getElementById('auth-form') as HTMLFormElement;
@@ -34,9 +34,10 @@ class LoginPage extends BasePage {
 
         if (!this.form || !this.titleElement || !this.submitButton || !this.toggleLink || !this.confirmPasswordGroup || !this.confirmPasswordInput || !this.emailInput) {
             console.error("LoginPage: Could not find all required authentication form elements.");
-            return;
+            return [];
         }
 
+        return [];
     }
 
     protected bindSpecificEvents(): void {
