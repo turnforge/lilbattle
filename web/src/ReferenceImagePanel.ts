@@ -116,27 +116,25 @@ export class ReferenceImagePanel extends BaseComponent {
      */
     private subscribeToReferenceEvents(): void {
         // Subscribe to scale changes from direct Phaser interaction
-        this.eventBus.subscribe<ReferenceScaleChangedPayload>(
+        this.subscribe<ReferenceScaleChangedPayload>(
             EditorEventTypes.REFERENCE_SCALE_CHANGED,
+            this,
             (payload) => {
                 // Only handle events NOT originating from this component to prevent loops
-                if (payload.source !== this.componentId) {
-                    this.handleReferenceScaleChanged(payload.data);
-                }
-            },
-            this.componentId
+                console.assert(payload.emitter != this, "We are getting back our own message")
+                this.handleReferenceScaleChanged(payload.data);
+            }
         );
         
         // Subscribe to state changes from direct Phaser interaction
-        this.eventBus.subscribe<ReferenceStateChangedPayload>(
+        this.subscribe<ReferenceStateChangedPayload>(
             EditorEventTypes.REFERENCE_STATE_CHANGED,
+            this,
             (payload) => {
                 // Only handle events NOT originating from this component to prevent loops
-                if (payload.source !== this.componentId) {
-                    this.handleReferenceStateChanged(payload.data);
-                }
-            },
-            this.componentId
+                console.assert(payload.emitter != this, "We are getting back our own message")
+                this.handleReferenceStateChanged(payload.data);
+            }
         );
         
         this.log('Subscribed to reference image EventBus events (excluding self-originated events)');
@@ -547,7 +545,8 @@ export class ReferenceImagePanel extends BaseComponent {
                 height: img.height,
                 url: imageUrl
             }, 
-            this.componentId
+            this,
+            this
         );
         
         // Clean up the object URL after a delay to allow other components to use it
@@ -570,6 +569,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetModePayload>(
             EditorEventTypes.REFERENCE_SET_MODE, 
             { mode }, 
+            this,
             this
         );
         
@@ -627,7 +627,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetAlphaPayload>(
             EditorEventTypes.REFERENCE_SET_ALPHA, 
             { alpha }, 
-            this.componentId
+            this,
+            this
         );
         this.log(`Reference alpha set to: ${Math.round(alpha * 100)}%`);
     }
@@ -637,7 +638,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION, 
             { x: 0, y: 0 }, 
-            this.componentId
+            this,
+            this
         );
         this.log('Reference position reset to center');
         this.showToast('Position Reset', 'Reference image centered', 'success');
@@ -648,7 +650,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
             { scaleX: 1, scaleY: 1 }, 
-            this.componentId
+            this,
+            this
         );
         this.log('Reference scale reset to 100%');
         this.showToast('Scale Reset', 'Reference image scale reset', 'success');
@@ -664,7 +667,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
             { scaleX: newScaleX, scaleY: currentScaleY }, 
-            this.componentId
+            this,
+            this
         );
         
         // Update local state cache
@@ -684,7 +688,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
             { scaleX: currentScaleX, scaleY: newScaleY }, 
-            this.componentId
+            this,
+            this
         );
         
         // Update local state cache
@@ -703,7 +708,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
             { scaleX: clampedScale, scaleY: currentScaleY }, 
-            this.componentId
+            this,
+            this
         );
         
         // Update local state cache
@@ -722,7 +728,8 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE, 
             { scaleX: currentScaleX, scaleY: clampedScale }, 
-            this.componentId
+            this,
+            this
         );
         
         // Update local state cache
@@ -759,7 +766,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION, 
             { x: newPositionX, y: currentPositionY }, 
-            this.componentId
+            this, this
         );
         
         // Update local state cache
@@ -779,7 +786,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION, 
             { x: currentPositionX, y: newPositionY }, 
-            this.componentId
+            this, this
         );
         
         // Update local state cache
@@ -797,7 +804,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION, 
             { x: positionX, y: currentPositionY }, 
-            this.componentId
+            this, this
         );
         
         // Update local state cache
@@ -815,7 +822,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION, 
             { x: currentPositionX, y: positionY }, 
-            this.componentId
+            this, this
         );
         
         // Update local state cache
@@ -845,7 +852,7 @@ export class ReferenceImagePanel extends BaseComponent {
     
     private clearReferenceImage(): void {
         // Emit event to PhaserEditorComponent via EventBus
-        this.eventBus.emit(EditorEventTypes.REFERENCE_CLEAR, {}, this.componentId);
+        this.eventBus.emit(EditorEventTypes.REFERENCE_CLEAR, {}, this, this);
         
         // Reset local state cache
         this.referenceState = {
