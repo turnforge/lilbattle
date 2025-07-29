@@ -113,12 +113,14 @@ class WorldEditorPage extends BasePage {
             console.log('WorldEditorPage: Created EditorToolsPanel child component with dependencies');
         }
         
-        // Create TileStatsPanel as a lifecycle-managed component
-        const tileStatsContainer = document.createElement('div');
-        tileStatsContainer.id = 'tilestats-container';
-        tileStatsContainer.style.width = '100%';
-        tileStatsContainer.style.height = '100%';
-        this.tileStatsPanel = new TileStatsPanel(tileStatsContainer, this.eventBus, true);
+        // Create TileStatsPanel as a lifecycle-managed component using template
+        const tileStatsTemplate = document.getElementById('tilestats-panel-template');
+        if (!tileStatsTemplate) {
+            throw new Error('tilestats-panel-template not found in DOM');
+        }
+        
+        // Use the template element directly - it already has proper structure and styling
+        this.tileStatsPanel = new TileStatsPanel(tileStatsTemplate, this.eventBus, true);
         
         // Set dependencies directly using explicit setters
         if (this.world) {
@@ -127,6 +129,22 @@ class WorldEditorPage extends BasePage {
         
         childComponents.push(this.tileStatsPanel);
         console.log('WorldEditorPage: Created TileStatsPanel child component with dependencies');
+        
+        // Create PhaserEditorComponent as a lifecycle-managed component using template
+        const canvasTemplate = document.getElementById('canvas-panel-template');
+        if (!canvasTemplate) {
+            throw new Error('canvas-panel-template not found in DOM');
+        }
+        
+        // Use the template element directly - it already has proper structure and styling
+        this.phaserEditorComponent = new PhaserEditorComponent(canvasTemplate, this.eventBus, true);
+        
+        // Set dependencies directly using explicit setters
+        this.phaserEditorComponent.setPageState(this.pageState);
+        this.phaserEditorComponent.setWorld(this.world);
+        
+        childComponents.push(this.phaserEditorComponent);
+        console.log('WorldEditorPage: Created PhaserEditorComponent child component using template');
         
         console.log(`WorldEditorPage: DOM initialization complete, discovered ${childComponents.length} child components`);
         return childComponents;
@@ -1143,26 +1161,44 @@ class WorldEditorPage extends BasePage {
     }
 
     private createPhaserComponent() {
+        // Use the lifecycle-managed PhaserEditorComponent if available
+        if (this.phaserEditorComponent) {
+            // The lifecycle-managed component already has the template structure
+            const container = this.phaserEditorComponent.rootElement;
+            
+            return {
+                element: container,
+                init: () => {
+                    console.log('PhaserEditorComponent dockview component initialized (lifecycle-managed)');
+                    // Bind grid and coordinates checkboxes since the template is already in the component
+                    this.bindPhaserPanelEvents(container);
+                },
+                dispose: () => {
+                    // Cleanup handled by lifecycle controller
+                }
+            };
+        }
+        
+        // Fallback: use the template element directly from the DOM
         const template = document.getElementById('canvas-panel-template');
         if (!template) {
             console.error('Phaser panel template not found');
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
         
-        const container = template.cloneNode(true) as HTMLElement;
-        container.style.display = 'block';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
-                // Initialize PhaserEditorComponent
-                this.phaserEditorComponent = new PhaserEditorComponent(container, this.eventBus, this.pageState, this.world, true);
-                this.logToConsole('PhaserEditorComponent initialized');
+                // Initialize PhaserEditorComponent using the template directly
+                // PhaserEditorComponent will find the #editor-canvas-container within this template
+                this.phaserEditorComponent = new PhaserEditorComponent(template, this.eventBus, this.debugMode);
+                this.logToConsole('PhaserEditorComponent initialized using template directly');
                 
-                // Bind grid and coordinates checkboxes now that the template is in the DOM
-                this.bindPhaserPanelEvents(container);
+                // Bind grid and coordinates checkboxes
+                this.bindPhaserPanelEvents(template);
             },
             dispose: () => {
                 if (this.phaserEditorComponent) {
@@ -1189,16 +1225,20 @@ class WorldEditorPage extends BasePage {
             };
         }
         
-        // Fallback to container creation if lifecycle panel not available
-        const container = document.createElement('div');
-        container.id = 'tilestats-container';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Fallback: use the template element directly from the DOM
+        const template = document.getElementById('tilestats-panel-template');
+        if (!template) {
+            console.error('TileStats panel template not found');
+            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
+        }
+        
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
-                console.log('TileStatsPanel dockview component initialized (fallback mode)');
+                console.log('TileStatsPanel dockview component initialized (fallback mode using template)');
             },
             dispose: () => {}
         };

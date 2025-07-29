@@ -9,6 +9,7 @@ import { create } from '@bufbuild/protobuf';
  * Minimal game state interface focused on core game data
  */
 export interface GameStateData {
+    lastUpdated: number;
     wasmLoaded: boolean;
     gameId: string;
     currentPlayer: number;
@@ -63,7 +64,7 @@ export class GameState extends BaseComponent {
         
         // Initialize minimal game data
         this.gameData = {
-            ...this.state,
+            lastUpdated: Date.now(),
             wasmLoaded: false,
             gameId: '', // Will be set when game is loaded/created
             currentPlayer: 0,

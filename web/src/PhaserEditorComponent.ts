@@ -1,4 +1,5 @@
 import { BaseComponent } from '../lib/Component';
+import { LCMComponent } from '../lib/LCMComponent';
 import { EventBus } from '../lib/EventBus';
 import { EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
 import { PhaserWorldEditor } from './phaser/PhaserWorldEditor';
@@ -23,97 +24,174 @@ import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedE
  * - Save/load UI (will be handled by SaveLoadComponent)
  * - Direct DOM manipulation outside of phaser-container
  */
-export class PhaserEditorComponent extends BaseComponent {
+export class PhaserEditorComponent extends BaseComponent implements LCMComponent {
     private phaserEditor: PhaserWorldEditor | null = null;
     private isInitialized: boolean = false;
+    
+    // Dependencies (injected in phase 2)
     private pageState: WorldEditorPageState | null = null;
     private world: World | null = null;
     
-    constructor(rootElement: HTMLElement, eventBus: EventBus, pageState?: WorldEditorPageState | null, world?: World | null, debugMode: boolean = false) {
-        super('phaser-editor', rootElement, eventBus, debugMode);
+    // =============================================================================
+    // LCMComponent Interface Implementation
+    // =============================================================================
+
+    /**
+     * Phase 1: Initialize DOM and discover child components
+     */
+    public performLocalInit(): LCMComponent[] {
+        this.log('PhaserEditorComponent: performLocalInit() - Phase 1');
         
-        if (pageState) {
-            this.pageState = pageState;
-        }
+        // Set up Phaser container within our root element
+        this.setupPhaserContainer();
         
-        if (world) {
-            this.world = world;
-        }
+        // Bind toolbar event handlers
+        this.bindToolbarEvents();
+        
+        this.log('PhaserEditorComponent: DOM setup complete');
+        
+        // This is a leaf component - no children
+        return [];
     }
-    
-    protected initializeComponent(): void {
-        this.log('Initializing PhaserEditorComponent');
+
+    /**
+     * Phase 2: Inject dependencies
+     */
+    public setupDependencies(): void {
+        this.log('PhaserEditorComponent: setupDependencies() - Phase 2');
+        
+        // Dependencies should be set by parent using setters
+        // This phase validates that required dependencies are available
+        if (!this.pageState) {
+            throw new Error('PhaserEditorComponent requires pageState - use setPageState()');
+        }
+        
+        if (!this.world) {
+            throw new Error('PhaserEditorComponent requires world - use setWorld()');
+        }
+        
+        this.log('PhaserEditorComponent: Dependencies validation complete');
+    }
+
+    /**
+     * Phase 3: Activate component when all dependencies are ready
+     */
+    public async activate(): Promise<void> {
+        this.log('PhaserEditorComponent: activate() - Phase 3');
+        
+        // Subscribe to EventBus events now that dependencies are available
+        this.subscribeToEvents();
+        
+        // Initialize Phaser editor now that dependencies are ready
+        await this.initializePhaserEditor();
+        
+        this.log('PhaserEditorComponent: activation complete');
+    }
+
+    /**
+     * Cleanup phase
+     */
+    public deactivate(): void {
+        this.log('PhaserEditorComponent: deactivate() - cleanup');
+        this.destroy();
+    }
+
+    // Explicit dependency setters
+    public setPageState(pageState: WorldEditorPageState): void {
+        this.pageState = pageState;
+        this.log('PageState dependency set via explicit setter');
+    }
+
+    public setWorld(world: World): void {
+        this.world = world;
+        this.log('World dependency set via explicit setter');
+    }
+
+    // Explicit dependency getters
+    public getPageState(): WorldEditorPageState | null {
+        return this.pageState;
+    }
+
+    public getWorld(): World | null {
+        return this.world;
+    }
+
+    /**
+     * Subscribe to all EventBus events (called in activate phase)
+     */
+    private subscribeToEvents(): void {
+        this.log('Subscribing to EventBus events');
         
         // Subscribe to reference image events from ReferenceImagePanel
-        this.eventBus.subscribe<ReferenceImageLoadedPayload>(
+        this.subscribe<ReferenceImageLoadedPayload>(
             EditorEventTypes.REFERENCE_IMAGE_LOADED,
+            this,
             (payload) => {
                 this.handleReferenceImageLoaded(payload.data);
-            },
-            this.componentId
+            }
         );
         
         // Subscribe to grid visibility events from WorldEditorPage
-        this.eventBus.subscribe<GridSetVisibilityPayload>(
+        this.subscribe<GridSetVisibilityPayload>(
             EditorEventTypes.GRID_SET_VISIBILITY,
+            this,
             (payload) => {
                 this.handleGridSetVisibility(payload.data);
-            },
-            this.componentId
+            }
         );
         
         // Subscribe to coordinates visibility events from WorldEditorPage
-        this.eventBus.subscribe<CoordinatesSetVisibilityPayload>(
+        this.subscribe<CoordinatesSetVisibilityPayload>(
             EditorEventTypes.COORDINATES_SET_VISIBILITY,
+            this,
             (payload) => {
                 this.handleCoordinatesSetVisibility(payload.data);
-            },
-            this.componentId
+            }
         );
         
         // Subscribe to reference image control events from ReferenceImagePanel
-        this.eventBus.subscribe<ReferenceSetModePayload>(
+        this.subscribe<ReferenceSetModePayload>(
             EditorEventTypes.REFERENCE_SET_MODE,
+            this,
             (payload) => {
                 this.handleReferenceSetMode(payload.data);
-            },
-            this.componentId
+            }
         );
         
-        this.eventBus.subscribe<ReferenceSetAlphaPayload>(
+        this.subscribe<ReferenceSetAlphaPayload>(
             EditorEventTypes.REFERENCE_SET_ALPHA,
+            this,
             (payload) => {
                 this.handleReferenceSetAlpha(payload.data);
-            },
-            this.componentId
+            }
         );
         
-        this.eventBus.subscribe<ReferenceSetPositionPayload>(
+        this.subscribe<ReferenceSetPositionPayload>(
             EditorEventTypes.REFERENCE_SET_POSITION,
+            this,
             (payload) => {
                 this.handleReferenceSetPosition(payload.data);
-            },
-            this.componentId
+            }
         );
         
-        this.eventBus.subscribe<ReferenceSetScalePayload>(
+        this.subscribe<ReferenceSetScalePayload>(
             EditorEventTypes.REFERENCE_SET_SCALE,
+            this,
             (payload) => {
                 this.handleReferenceSetScale(payload.data);
-            },
-            this.componentId
+            }
         );
         
-        this.eventBus.subscribe(
+        this.subscribe(
             EditorEventTypes.REFERENCE_CLEAR,
+            this,
             () => {
                 this.handleReferenceClear();
-            },
-            this.componentId
+            }
         );
         
         // Subscribe to tool state changes via EventBus
-        this.eventBus.subscribe(
+        this.subscribe(
             PageStateEventType.TOOL_STATE_CHANGED,
             this,
             (eventData) => {
@@ -122,31 +200,31 @@ export class PhaserEditorComponent extends BaseComponent {
         );
         
         // Subscribe to World events via EventBus
-        this.eventBus.subscribe(
+        this.subscribe(
             WorldEventType.WORLD_LOADED,
             this,
             (eventData) => {
-                this.handleWorldLoaded(eventData as WorldLoadedEventData);
+                this.handleWorldLoaded(eventData.data);
             }
         );
         
-        this.eventBus.subscribe(
+        this.subscribe(
             WorldEventType.TILES_CHANGED,
             this,
             (eventData) => {
-                this.handleTilesChanged(eventData as TilesChangedEventData);
+                this.handleTilesChanged(eventData.data);
             }
         );
         
-        this.eventBus.subscribe(
+        this.subscribe(
             WorldEventType.UNITS_CHANGED,
             this,
             (eventData) => {
-                this.handleUnitsChanged(eventData as UnitsChangedEventData);
+                this.handleUnitsChanged(eventData.data);
             }
         );
         
-        this.eventBus.subscribe(
+        this.subscribe(
             WorldEventType.WORLD_CLEARED,
             this,
             () => {
@@ -154,25 +232,18 @@ export class PhaserEditorComponent extends BaseComponent {
             }
         );
         
-        this.log('PhaserEditorComponent component initialized');
+        this.log('EventBus subscriptions complete');
     }
     
+    // Legacy BaseComponent compatibility (now handled by LCMComponent lifecycle)
+    protected initializeComponent(): void {
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
+    }
     
     protected bindToDOM(): void {
-        this.log('Binding PhaserEditorComponent to DOM');
-        
-        // Set up Phaser container within our root element
-        this.setupPhaserContainer();
-        
-        // Bind toolbar event handlers
-        this.bindToolbarEvents();
-        
-        this.log('Phaser container setup complete');
-        
-        // Now initialize Phaser editor with the properly set up container
-        this.initializePhaserEditor();
-        
-        this.log('PhaserEditorComponent bound to DOM');
+        // This is handled by the new lifecycle system
+        // Keep empty for backward compatibility
     }
     
     protected destroyComponent(): void {
@@ -247,41 +318,29 @@ export class PhaserEditorComponent extends BaseComponent {
     /**
      * Wait for container to become visible before initializing Phaser
      */
-    private waitForContainerVisible(containerElement: HTMLElement): void {
-        const checkVisibility = () => {
-            const rect = containerElement.getBoundingClientRect();
+    private async waitForContainerVisible(containerElement: HTMLElement): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const checkVisibility = () => {
+                const rect = containerElement.getBoundingClientRect();
+                
+                if (rect.width > 0 && rect.height > 0) {
+                    this.log('Container is visible, ready for Phaser initialization');
+                    resolve();
+                } else {
+                    // Check again after a short delay
+                    setTimeout(checkVisibility, 50);
+                }
+            };
             
-            if (rect.width > 0 && rect.height > 0) {
-                // Continue with Phaser initialization
-                this.phaserEditor = new PhaserWorldEditor(containerElement);
-                this.setupPhaserEventHandlers().catch(error => {
-                    console.error('[PhaserEditorComponent] Failed to setup event handlers:', error);
-                });
-                
-                const isDarkMode = document.documentElement.classList.contains('dark');
-                this.phaserEditor.setTheme(isDarkMode);
-                
-                this.isInitialized = true;
-                this.log('Phaser editor initialized successfully');
-                
-                // Emit ready event for other components (async to allow parent assignment to complete)
-                setTimeout(() => {
-                    this.emit(EditorEventTypes.PHASER_READY, {}, this);
-                }, 0);
-            } else {
-                // Check again after a short delay
-                setTimeout(checkVisibility, 50);
-            }
-        };
-        
-        // Start checking
-        setTimeout(checkVisibility, 50);
+            // Start checking
+            setTimeout(checkVisibility, 50);
+        });
     }
     
     /**
-     * Initialize the Phaser editor
+     * Initialize the Phaser editor (called in activate phase)
      */
-    private initializePhaserEditor(): void {
+    private async initializePhaserEditor(): Promise<void> {
         this.log('Initializing Phaser editor...');
         
         // Find the container element that we just set up
@@ -291,19 +350,13 @@ export class PhaserEditorComponent extends BaseComponent {
         }
         
         // Wait for container to have dimensions before initializing Phaser
-        const rect = containerElement.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) {
-            this.waitForContainerVisible(containerElement);
-            return;
-        }
+        await this.waitForContainerVisible(containerElement);
         
         // Create Phaser editor instance with the element directly
         this.phaserEditor = new PhaserWorldEditor(containerElement);
         
-        // Set up event handlers (async)
-        this.setupPhaserEventHandlers().catch(error => {
-            console.error('[PhaserEditorComponent] Failed to setup event handlers:', error);
-        });
+        // Set up event handlers
+        await this.setupPhaserEventHandlers();
         
         // Apply current theme
         const isDarkMode = document.documentElement.classList.contains('dark');
@@ -312,10 +365,8 @@ export class PhaserEditorComponent extends BaseComponent {
         this.isInitialized = true;
         this.log('Phaser editor initialized successfully');
         
-        // Emit ready event for other components (async to allow parent assignment to complete)
-        setTimeout(() => {
-            this.emit(EditorEventTypes.PHASER_READY, {}, this);
-        }, 0);
+        // Emit ready event for other components
+        this.emit(EditorEventTypes.PHASER_READY, {}, this, this);
     }
     
     /**
@@ -335,7 +386,7 @@ export class PhaserEditorComponent extends BaseComponent {
                 this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
                     q: q,
                     r: r
-                }, this);
+                }, this, this);
                 
                 // Handle painting based on current mode
                 this.handleTileClick(q, r);
@@ -348,7 +399,7 @@ export class PhaserEditorComponent extends BaseComponent {
                 this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
                     q: q,
                     r: r
-                }, this);
+                }, this, this);
                 
                 this.handleTileClick(q, r);
                 return false; // Don't emit additional events from scene
@@ -360,12 +411,12 @@ export class PhaserEditorComponent extends BaseComponent {
         // Handle world changes
         this.phaserEditor.onWorldChange(() => {
             this.log('World changed in Phaser');
-            this.emit(EditorEventTypes.WORLD_CHANGED, {}, this);
+            this.emit(EditorEventTypes.WORLD_CHANGED, {}, this, this);
         });
         
         // Handle reference scale changes
         this.phaserEditor.onReferenceScaleChange((x: number, y: number) => {
-            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y }, this);
+            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y }, this, this);
         });
         
         this.log('Phaser event handlers setup complete');
@@ -649,7 +700,7 @@ export class PhaserEditorComponent extends BaseComponent {
                     terrainType: toolState.selectedTerrain,
                     playerColor: playerId,
                     brushSize: toolState.brushSize
-                }, this);
+                }, this, this);
                 break;
                 
             case 'unit':
@@ -667,7 +718,7 @@ export class PhaserEditorComponent extends BaseComponent {
                     r: r,
                     unitType: toolState.selectedUnit,
                     playerId: toolState.selectedPlayer
-                }, this);
+                }, this, this);
                 break;
                 
             case 'clear':
@@ -697,8 +748,8 @@ export class PhaserEditorComponent extends BaseComponent {
                 this.log(`Cleared tile and unit at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
                 
                 // Emit separate events for backward compatibility
-                this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r }, this);
-                this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r }, this);
+                this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r }, this, this);
+                this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r }, this, this);
                 break;
         }
     }

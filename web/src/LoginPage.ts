@@ -15,11 +15,6 @@ class LoginPage extends BasePage {
 
     private isSignUpMode: boolean = false;
 
-    constructor(eventBus: EventBus) {
-        super('login-page', eventBus, true); // Enable debug mode
-        this.updateUI(); // Set initial UI state
-    }
-
     protected initializeSpecificComponents(): LCMComponent[] {
         // Find form elements
         this.callbackURL = (document.getElementById("callbackURL") as HTMLInputElement)
@@ -85,13 +80,9 @@ class LoginPage extends BasePage {
         // Clean up any specific resources for LoginPage
         // Currently no specific cleanup needed
     }
-
-    public static init(): LoginPage {
-       return new LoginPage();
-    }
 }
 
 // Initialize the component when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    LoginPage.init();
+    return new LoginPage("LoginPage");
 });
