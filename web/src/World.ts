@@ -1,3 +1,4 @@
+import { EventBus } from '../lib/EventBus';
 import { HexCoord } from './phaser/hexUtils';
 import { 
     World as ProtoWorld, 
@@ -16,11 +17,6 @@ import {
     CreateWorldRequestSchema
 } from '../gen/weewar/v1/worlds_pb';
 import { create, toJson } from '@bufbuild/protobuf';
-
-// Observer pattern interfaces
-export interface WorldObserver {
-    onWorldEvent(event: WorldEvent): void;
-}
 
 export interface WorldEvent {
     type: WorldEventType;
@@ -109,7 +105,9 @@ export interface WorldMetadata {
 
 /**
  * World class handles all world data management including tiles, units, and metadata.
- * Enhanced with Observer pattern for change notifications and self-contained persistence.
+ *
+ * Features:
+ * - EventBus-based communication for decentralized component architecture
  */
 export class World {
     // Core data
@@ -122,81 +120,84 @@ export class World {
     private isNewWorld: boolean = true;
     private hasUnsavedChanges: boolean = false;
     
-    // Observer pattern
-    private observers: WorldObserver[] = [];
+    // EventBus for decentralized communication
+    private eventBus: EventBus;
+
+    // Client-side batching control
+    private isBatching: boolean = false;
     private pendingTileChanges: TileChange[] = [];
     private pendingUnitChanges: UnitChange[] = [];
-    private batchTimeout: number | null = null;
     
-    constructor(public name: string = 'New World', width: number = 40, height: number = 40) {
+    constructor(eventBus: EventBus, public name: string = 'New World', width: number = 40, height: number = 40) {
+        this.eventBus = eventBus;
         this.metadata = { name, width, height };
     }
     
-    // Observer pattern methods
-    public subscribe(observer: WorldObserver): void {
-        if (!this.observers.includes(observer)) {
-            this.observers.push(observer);
-        }
+    // EventBus communication - emit state changes as events
+    private emitStateChange(eventType: WorldEventType, data: any, emitter: any = null): void {
+        this.eventBus.emit(eventType, data, emitter || this, this);
     }
     
-    public unsubscribe(observer: WorldObserver): void {
-        const index = this.observers.indexOf(observer);
-        if (index > -1) {
-            this.observers.splice(index, 1);
-        }
+    // Client-controlled batching methods
+    public startBatch(): void {
+        this.isBatching = true;
     }
     
-    private emit(event: WorldEvent): void {
-        this.observers.forEach(observer => {
-            try {
-                observer.onWorldEvent(event);
-            } catch (error) {
-                console.error('Error in world observer:', error);
-            }
-        });
-    }
-    
-    // Batched change management
-    private scheduleBatchEmit(): void {
-        if (this.batchTimeout !== null) {
-            return; // Already scheduled
+    public commitBatch(): void {
+        if (!this.isBatching) {
+            return;
         }
         
-        this.batchTimeout = window.setTimeout(() => {
-            this.flushBatchedChanges();
-        }, 0); // Emit on next tick
-    }
-    
-    private flushBatchedChanges(): void {
+        // Emit batched changes
         if (this.pendingTileChanges.length > 0) {
-            this.emit({
-                type: WorldEventType.TILES_CHANGED,
-                data: { changes: [...this.pendingTileChanges] } as TilesChangedEventData
-            });
+            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+                changes: [...this.pendingTileChanges]
+            } as TilesChangedEventData);
             this.pendingTileChanges = [];
         }
         
         if (this.pendingUnitChanges.length > 0) {
-            this.emit({
-                type: WorldEventType.UNITS_CHANGED,
-                data: { changes: [...this.pendingUnitChanges] } as UnitsChangedEventData
-            });
+            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+                changes: [...this.pendingUnitChanges]
+            } as UnitsChangedEventData);
             this.pendingUnitChanges = [];
         }
         
-        this.batchTimeout = null;
+        this.isBatching = false;
+    }
+    
+    public cancelBatch(): void {
+        this.isBatching = false;
+        this.pendingTileChanges = [];
+        this.pendingUnitChanges = [];
     }
     
     private addTileChange(q: number, r: number, tile: Tile | null): void {
-        this.pendingTileChanges.push({ q, r, tile });
         this.hasUnsavedChanges = true;
-        this.scheduleBatchEmit();
+        
+        if (this.isBatching) {
+            // Add to batch
+            this.pendingTileChanges.push({ q, r, tile });
+        } else {
+            // Emit immediately
+            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+                changes: [{ q, r, tile }]
+            } as TilesChangedEventData);
+        }
     }
     
     private addUnitChange(q: number, r: number, unit: Unit | null): void {
-        this.pendingUnitChanges.push({ q, r, unit });
         this.hasUnsavedChanges = true;
-        this.scheduleBatchEmit();
+        
+        if (this.isBatching) {
+            // Add to batch
+            this.pendingUnitChanges.push({ q, r, unit });
+        } else {
+            // Emit immediately
+            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+                changes: [{ q, r, unit }]
+            } as UnitsChangedEventData);
+        }
     }
     
     // Persistence methods
@@ -230,9 +231,8 @@ export class World {
         if (this.metadata.name !== name) {
             this.metadata.name = name;
             this.hasUnsavedChanges = true;
-            this.emit({
-                type: WorldEventType.WORLD_METADATA_CHANGED,
-                data: { name, width: this.metadata.width, height: this.metadata.height }
+            this.emitStateChange(WorldEventType.WORLD_METADATA_CHANGED, {
+                name, width: this.metadata.width, height: this.metadata.height
             });
         }
     }
@@ -386,10 +386,7 @@ export class World {
         this.clearAllTiles();
         this.clearAllUnits();
         
-        this.emit({
-            type: WorldEventType.WORLD_CLEARED,
-            data: {}
-        });
+        this.emitStateChange(WorldEventType.WORLD_CLEARED, {});
     }
     
     public fillAllTerrain(tileType: number, player: number, viewport?: { minQ: number, maxQ: number, minR: number, maxR: number }): void {
@@ -451,7 +448,6 @@ export class World {
     
     // Self-contained persistence methods
     public async save(): Promise<SaveResult> {
-        try {
             // Transform TypeScript World data into protobuf-compatible format
             const tiles: Array<ProtoTile> = Object.values(this.tiles).map(tile => 
                 create(TileSchema, {
@@ -541,9 +537,8 @@ export class World {
                 
                 this.markAsSaved();
                 
-                this.emit({
-                    type: WorldEventType.WORLD_SAVED,
-                    data: { worldId: this.worldId, success: true }
+                this.emitStateChange(WorldEventType.WORLD_SAVED, {
+                    worldId: this.worldId, success: true
                 });
                 
                 return { success: true, worldId: newWorldId };
@@ -551,38 +546,21 @@ export class World {
                 const errorText = await response.text();
                 throw new Error(`Save failed: ${response.status} ${response.statusText} - ${errorText}`);
             }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown save error';
-            
-            this.emit({
-                type: WorldEventType.WORLD_SAVED,
-                data: { worldId: this.worldId, success: false, error: errorMessage }
-            });
-            
-            return { success: false, error: errorMessage };
-        }
     }
     
     public async load(worldId: string): Promise<void> {
-        try {
             // For now, we load from HTML element (server-side rendered data)
             // Future enhancement: could load directly from API
             this.loadFromElement('world-data-json');
             this.setWorldId(worldId);
             this.hasUnsavedChanges = false;
             
-            this.emit({
-                type: WorldEventType.WORLD_LOADED,
-                data: {
-                    worldId: this.worldId,
-                    isNewWorld: this.isNewWorld,
-                    tileCount: this.getTileCount(),
-                    unitCount: this.getUnitCount()
-                } as WorldLoadedEventData
-            });
-        } catch (error) {
-            throw new Error(`Failed to load world ${worldId}: ${error}`);
-        }
+            this.emitStateChange(WorldEventType.WORLD_LOADED, {
+                worldId: this.worldId,
+                isNewWorld: this.isNewWorld,
+                tileCount: this.getTileCount(),
+                unitCount: this.getUnitCount()
+            } as WorldLoadedEventData);
     }
     
     public loadFromElement(elementId: string): void {
@@ -597,20 +575,15 @@ export class World {
                 throw new Error(`World data element '${elementId}' not found or empty`);
             }
             
-            try {
                 const data = JSON.parse(element.textContent);
                 this.loadFromData(data);
                 return;
-            } catch (error) {
-                throw new Error(`Failed to parse world data from element: ${error}`);
-            }
         }
         
         if (!worldMetadataElement || !worldTilesElement) {
             throw new Error('Missing required world data elements (both world-data-json and world-tiles-data-json are needed)');
         }
         
-        try {
             // Parse world metadata
             let worldMetadata = null;
             if (worldMetadataElement.textContent) {
@@ -657,9 +630,6 @@ export class World {
             } else {
                 throw new Error('Failed to parse world metadata or tiles data');
             }
-        } catch (error) {
-            throw new Error(`Failed to parse world data from elements: ${error}`);
-        }
     }
     
     public loadFromData(data: any): void {
@@ -732,17 +702,15 @@ export class World {
         
         // Emit batched changes immediately
         if (tileChanges.length > 0) {
-            this.emit({
-                type: WorldEventType.TILES_CHANGED,
-                data: { changes: tileChanges } as TilesChangedEventData
-            });
+            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+                changes: tileChanges
+            } as TilesChangedEventData);
         }
         
         if (unitChanges.length > 0) {
-            this.emit({
-                type: WorldEventType.UNITS_CHANGED,
-                data: { changes: unitChanges } as UnitsChangedEventData
-            });
+            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+                changes: unitChanges
+            } as UnitsChangedEventData);
         }
         
         this.hasUnsavedChanges = false;
@@ -784,8 +752,8 @@ export class World {
         };
     }
     
-    public static deserialize(data: any): World {
-        const world = new World(data.name || 'Untitled World', data.width || 40, data.height || 40);
+    public static deserialize(eventBus: EventBus, data: any): World {
+        const world = new World(eventBus, data.name || 'Untitled World', data.width || 40, data.height || 40);
         world.loadFromData(data);
         return world;
     }
@@ -836,6 +804,6 @@ export class World {
     
     // Clone method for safe copying
     public clone(): World {
-        return World.deserialize(this.serialize());
+        return World.deserialize(this.eventBus, this.serialize());
     }
 }

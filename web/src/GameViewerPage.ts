@@ -33,12 +33,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
     private selectedUnit: any = null;
     private gameLog: string[] = [];
 
-    constructor() {
-        console.log('GameViewerPage: Constructor starting...'); 
-        super(); // BasePage will call initializeSpecificComponents() and bindSpecificEvents()
-        console.log('GameViewerPage: Constructor completed - lifecycle will be managed externally');
-    }
-
     /**
      * Load game configuration from URL parameters and hidden inputs
      */
@@ -193,47 +187,41 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Load world data and initialize game
      */
     private async loadWorldAndInitializeGame(): Promise<void> {
-        try {
-            console.log('Loading world and initializing game...');
+        console.log('Loading world and initializing game...');
 
-            // Load game data from hidden elements
-            const gameDataResult = this.loadGameDataFromElements();
-            if (!gameDataResult) {
-                throw new Error('No game data found');
-            }
-            
-            const { game, gameState, gameHistory } = gameDataResult;
-            
-            if (!gameState) {
-                throw new Error('No game state data found in game');
-            }
-
-            // Deserialize world for the WorldViewer component
-            this.world = World.deserialize(gameState.world_data);
-            
-            // Load world into viewer
-            if (this.worldViewer) {
-                await this.worldViewer.loadWorld(gameState.world_data);
-                this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
-            }
-
-            // Initialize game using WASM
-            console.log('About to initialize game with WASM...');
-            try {
-                await this.initializeGameWithWASM();
-                console.log('WASM initialization completed successfully');
-            } catch (error) {
-                console.error('WASM initialization failed, but continuing with world display:', error);
-                // Continue without WASM for now - still show the map
-                this.updateGameStatus('Map loaded - WASM initialization failed');
-            }
-            
-            // Update UI will be handled by GameState events
-
-        } catch (error) {
-            console.error('Failed to load world and initialize game:', error);
-            this.showToast('Error', 'Failed to load game', 'error');
+        // Load game data from hidden elements
+        const gameDataResult = this.loadGameDataFromElements();
+        if (!gameDataResult) {
+            throw new Error('No game data found');
         }
+        
+        const { game, gameState, gameHistory } = gameDataResult;
+        
+        if (!gameState) {
+            throw new Error('No game state data found in game');
+        }
+
+        // Deserialize world for the WorldViewer component
+        this.world = World.deserialize(gameState.world_data);
+        
+        // Load world into viewer
+        if (this.worldViewer) {
+            await this.worldViewer.loadWorld(gameState.world_data);
+            this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
+        }
+
+        // Initialize game using WASM
+        console.log('About to initialize game with WASM...');
+        try {
+            await this.initializeGameWithWASM();
+            console.log('WASM initialization completed successfully');
+        } catch (error) {
+            console.error('WASM initialization failed, but continuing with world display:', error);
+            // Continue without WASM for now - still show the map
+            this.updateGameStatus('Map loaded - WASM initialization failed');
+        }
+        
+        // Update UI will be handled by GameState events
     }
 
     /**
@@ -318,82 +306,76 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Load game data from hidden JSON elements (Game, GameState, GameHistory)
      */
     private loadGameDataFromElements(): { game: any; gameState: any; gameHistory: any; worldData: any } | null {
-        try {
-            // Load Game data
-            const gameElement = document.getElementById('game.data-json');
-            let gameData = null;
-            if (gameElement && gameElement.textContent && gameElement.textContent.trim() !== 'null') {
-                gameData = JSON.parse(gameElement.textContent);
-                console.log('GameViewerPage: Loaded game data:', gameData);
-            }
-            
-            // Load GameState data
-            const gameStateElement = document.getElementById('game-state-data-json');
-            let gameStateData = null;
-            if (gameStateElement && gameStateElement.textContent && gameStateElement.textContent.trim() !== 'null') {
-                gameStateData = JSON.parse(gameStateElement.textContent);
-                console.log('GameViewerPage: Loaded game state data:', gameStateData);
-            }
-            
-            // Load GameHistory data
-            const gameHistoryElement = document.getElementById('game-history-data-json');
-            let gameHistoryData = null;
-            if (gameHistoryElement && gameHistoryElement.textContent && gameHistoryElement.textContent.trim() !== 'null') {
-                gameHistoryData = JSON.parse(gameHistoryElement.textContent);
-                console.log('GameViewerPage: Loaded game history data:', gameHistoryData);
-            }
-            
-            // Extract world data from Game for backward compatibility with WorldViewer
-            let worldData = null;
-            if (gameData && gameData.world) {
-                // Combine World metadata with WorldData for the WorldViewer component
-                worldData = {
-                    name: gameData.world.name || 'Untitled Game',
-                    Name: gameData.world.name || 'Untitled Game',
-                    id: gameData.world.id,
-                    width: 40,  // Default
-                    height: 40, // Default
-                    tiles: gameData.world.worldData?.tiles || [],
-                    units: gameData.world.worldData?.units || []
-                };
-                
-                // Calculate actual dimensions from tile bounds
-                if (worldData.tiles && worldData.tiles.length > 0) {
-                    let maxQ = 0, maxR = 0, minQ = 0, minR = 0;
-                    worldData.tiles.forEach((tile: any) => {
-                        if (tile.q > maxQ) maxQ = tile.q;
-                        if (tile.q < minQ) minQ = tile.q;
-                        if (tile.r > maxR) maxR = tile.r;
-                        if (tile.r < minR) minR = tile.r;
-                    });
-                    worldData.width = maxQ - minQ + 1;
-                    worldData.height = maxR - minR + 1;
-                }
-                
-                console.log('GameViewerPage: Extracted world data for WorldViewer:', {
-                    name: worldData.name,
-                    tiles: worldData.tiles.length,
-                    units: worldData.units.length,
-                    dimensions: `${worldData.width}x${worldData.height}`
-                });
-            }
-            
-            if (!gameData) {
-                console.error('GameViewerPage: No game data found');
-                return null;
-            }
-            
-            return {
-                game: gameData,
-                gameState: gameStateData,
-                gameHistory: gameHistoryData,
-                worldData: worldData
+        // Load Game data
+        const gameElement = document.getElementById('game.data-json');
+        let gameData = null;
+        if (gameElement && gameElement.textContent && gameElement.textContent.trim() !== 'null') {
+            gameData = JSON.parse(gameElement.textContent);
+            console.log('GameViewerPage: Loaded game data:', gameData);
+        }
+        
+        // Load GameState data
+        const gameStateElement = document.getElementById('game-state-data-json');
+        let gameStateData = null;
+        if (gameStateElement && gameStateElement.textContent && gameStateElement.textContent.trim() !== 'null') {
+            gameStateData = JSON.parse(gameStateElement.textContent);
+            console.log('GameViewerPage: Loaded game state data:', gameStateData);
+        }
+        
+        // Load GameHistory data
+        const gameHistoryElement = document.getElementById('game-history-data-json');
+        let gameHistoryData = null;
+        if (gameHistoryElement && gameHistoryElement.textContent && gameHistoryElement.textContent.trim() !== 'null') {
+            gameHistoryData = JSON.parse(gameHistoryElement.textContent);
+            console.log('GameViewerPage: Loaded game history data:', gameHistoryData);
+        }
+        
+        // Extract world data from Game for backward compatibility with WorldViewer
+        let worldData = null;
+        if (gameData && gameData.world) {
+            // Combine World metadata with WorldData for the WorldViewer component
+            worldData = {
+                name: gameData.world.name || 'Untitled Game',
+                Name: gameData.world.name || 'Untitled Game',
+                id: gameData.world.id,
+                width: 40,  // Default
+                height: 40, // Default
+                tiles: gameData.world.worldData?.tiles || [],
+                units: gameData.world.worldData?.units || []
             };
             
-        } catch (error) {
-            console.error('GameViewerPage: Error parsing game data from elements:', error);
+            // Calculate actual dimensions from tile bounds
+            if (worldData.tiles && worldData.tiles.length > 0) {
+                let maxQ = 0, maxR = 0, minQ = 0, minR = 0;
+                worldData.tiles.forEach((tile: any) => {
+                    if (tile.q > maxQ) maxQ = tile.q;
+                    if (tile.q < minQ) minQ = tile.q;
+                    if (tile.r > maxR) maxR = tile.r;
+                    if (tile.r < minR) minR = tile.r;
+                });
+                worldData.width = maxQ - minQ + 1;
+                worldData.height = maxR - minR + 1;
+            }
+            
+            console.log('GameViewerPage: Extracted world data for WorldViewer:', {
+                name: worldData.name,
+                tiles: worldData.tiles.length,
+                units: worldData.units.length,
+                dimensions: `${worldData.width}x${worldData.height}`
+            });
+        }
+        
+        if (!gameData) {
+            console.error('GameViewerPage: No game data found');
             return null;
         }
+        
+        return {
+            game: gameData,
+            gameState: gameStateData,
+            gameHistory: gameHistoryData,
+            worldData: worldData
+        };
     }
 
     /**
@@ -473,24 +455,18 @@ class GameViewerPage extends BasePage implements LCMComponent {
             return;
         }
 
-        try {
-            console.log('Ending current player\'s turn...');
-            
-            // Async WASM call
-            await this.gameState.endTurn(this.gameState.getGameData().currentPlayer);
-            
-            // Get updated game data and update UI
-            const gameData = this.gameState.getGameData();
-            this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
-            this.clearUnitSelection();
-            
-            this.logGameEvent(`Player ${gameData.currentPlayer}'s turn begins`);
-            this.showToast('Info', `Player ${gameData.currentPlayer}'s turn`, 'info');
-            
-        } catch (error) {
-            console.error('Failed to end turn:', error);
-            this.showToast('Error', 'Failed to end turn', 'error');
-        }
+        console.log('Ending current player\'s turn...');
+        
+        // Async WASM call
+        await this.gameState.endTurn(this.gameState.getGameData().currentPlayer);
+        
+        // Get updated game data and update UI
+        const gameData = this.gameState.getGameData();
+        this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
+        this.clearUnitSelection();
+        
+        this.logGameEvent(`Player ${gameData.currentPlayer}'s turn begins`);
+        this.showToast('Info', `Player ${gameData.currentPlayer}'s turn`, 'info');
     }
 
     private undoMove(): void {
@@ -526,17 +502,12 @@ class GameViewerPage extends BasePage implements LCMComponent {
             return;
         }
 
-        try {
-            // Synchronous WASM call
-            const gameData = this.gameState.getGameState();
-            
-            console.log(`Showing all units for Player ${gameData.currentPlayer}`);
-            // TODO: Highlight all player units and center camera
-            this.showToast('Info', `Showing all Player ${gameData.currentPlayer} units`, 'info');
-            
-        } catch (error) {
-            console.error('Failed to get game state:', error);
-        }
+        // Synchronous WASM call
+        const gameData = this.gameState.getGameState();
+        
+        console.log(`Showing all units for Player ${gameData.currentPlayer}`);
+        // TODO: Highlight all player units and center camera
+        this.showToast('Info', `Showing all Player ${gameData.currentPlayer} units`, 'info');
     }
 
     private centerOnAction(): void {
@@ -569,22 +540,15 @@ class GameViewerPage extends BasePage implements LCMComponent {
             return;
         }
 
-        try {
-            // Async WASM call
-            await this.gameState.moveUnit(fromQ, fromR, toQ, toR);
-            
-            // Immediate UI feedback
-            this.logGameEvent(`Unit moved from (${fromQ},${fromR}) to (${toQ},${toR})`);
-            this.showToast('Success', 'Unit moved successfully', 'success');
-            
-            // Clear selection after successful move
-            this.clearUnitSelection();
-            
-        } catch (error) {
-            console.error('Failed to move unit:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to move unit';
-            this.showToast('Error', errorMessage, 'error');
-        }
+        // Async WASM call
+        await this.gameState.moveUnit(fromQ, fromR, toQ, toR);
+        
+        // Immediate UI feedback
+        this.logGameEvent(`Unit moved from (${fromQ},${fromR}) to (${toQ},${toR})`);
+        this.showToast('Success', 'Unit moved successfully', 'success');
+        
+        // Clear selection after successful move
+        this.clearUnitSelection();
     }
 
     private async attackUnit(attackerQ: number, attackerR: number, defenderQ: number, defenderR: number): Promise<void> {
@@ -593,22 +557,15 @@ class GameViewerPage extends BasePage implements LCMComponent {
             return;
         }
 
-        try {
-            // Async WASM call
-            await this.gameState.attackUnit(attackerQ, attackerR, defenderQ, defenderR);
-            
-            // Immediate UI feedback
-            this.logGameEvent(`Attack: (${attackerQ},${attackerR}) → (${defenderQ},${defenderR})`);
-            this.showToast('Success', 'Attack completed', 'success');
-            
-            // Clear selection after attack
-            this.clearUnitSelection();
-            
-        } catch (error) {
-            console.error('Failed to attack:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to attack';
-            this.showToast('Error', errorMessage, 'error');
-        }
+        // Async WASM call
+        await this.gameState.attackUnit(attackerQ, attackerR, defenderQ, defenderR);
+        
+        // Immediate UI feedback
+        this.logGameEvent(`Attack: (${attackerQ},${attackerR}) → (${defenderQ},${defenderR})`);
+        this.showToast('Success', 'Attack completed', 'success');
+        
+        // Clear selection after attack
+        this.clearUnitSelection();
     }
 
     private clearUnitSelection(): void {

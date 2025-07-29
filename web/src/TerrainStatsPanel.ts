@@ -77,20 +77,14 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
             return [];
         }
 
-        try {
-            this.log('Binding TerrainStatsPanel to DOM using template');
-            this.bindToTemplate();
-            this.loadRulesEngineData();
-            this.isUIBound = true;
-            this.log('TerrainStatsPanel bound to DOM successfully');
-            
-            // This is a leaf component - no children
-            return [];
-            
-        } catch (error) {
-            this.handleError('Failed to bind TerrainStatsPanel to DOM', error);
-            throw error;
-        }
+        this.log('Binding TerrainStatsPanel to DOM using template');
+        this.bindToTemplate();
+        this.loadRulesEngineData();
+        this.isUIBound = true;
+        this.log('TerrainStatsPanel bound to DOM successfully');
+        
+        // This is a leaf component - no children
+        return [];
     }
 
     // Phase 2: No external dependencies needed
@@ -138,7 +132,6 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
      * Load rules engine data from embedded JSON in page
      */
     private loadRulesEngineData(): void {
-        try {
             // Load terrain data
             const terrainElement = document.getElementById('terrain-data-json');
             if (terrainElement && terrainElement.textContent) {
@@ -159,11 +152,6 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
                 this.movementMatrix = JSON.parse(movementElement.textContent);
                 this.log('Loaded movement matrix with', { unitTypes: Object.keys(this.movementMatrix?.Costs || {}).length });
             }
-
-        } catch (error) {
-            this.log('Error loading rules engine data:', error);
-            // Continue with empty data - component will still work with fallbacks
-        }
     }
 
     /**

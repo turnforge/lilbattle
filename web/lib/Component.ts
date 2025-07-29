@@ -81,8 +81,8 @@ export abstract class BaseComponent implements Component, LCMComponent {
     /**
      * Emit an event from this component
      */
-    protected emit<T = any>(eventType: string, data: T, target: any): void {
-        this.eventBus.emit(eventType, data, this, target)
+    protected emit<T = any>(eventType: string, data: T, target: any, emitter: any = null): void {
+        this.eventBus.emit(eventType, data, target, emitter || this)
     }
     
     /**

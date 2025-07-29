@@ -239,7 +239,6 @@ export class ReferenceImageLayer extends BaseLayer {
      * Load reference image from clipboard
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
-        try {
             const items = await navigator.clipboard.read();
             
             for (const item of items) {
@@ -255,18 +254,12 @@ export class ReferenceImageLayer extends BaseLayer {
             
             console.warn('[ReferenceImageLayer] No image found in clipboard');
             return false;
-            
-        } catch (error) {
-            console.error('[ReferenceImageLayer] Failed to load from clipboard:', error);
-            return false;
-        }
     }
     
     /**
      * Load reference image from file
      */
     public async loadReferenceFromFile(file: File): Promise<boolean> {
-        try {
             if (!file.type.startsWith('image/')) {
                 console.error('[ReferenceImageLayer] File is not an image:', file.type);
                 return false;
@@ -276,11 +269,6 @@ export class ReferenceImageLayer extends BaseLayer {
             this.setReferenceImage(imageUrl);
             console.log(`[ReferenceImageLayer] Reference image loaded from file: ${file.name}`);
             return true;
-            
-        } catch (error) {
-            console.error('[ReferenceImageLayer] Failed to load from file:', error);
-            return false;
-        }
     }
     
     /**

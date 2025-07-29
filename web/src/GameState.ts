@@ -107,20 +107,14 @@ export class GameState extends BaseComponent {
      */
     private async loadWASMModule(): Promise<void> {
         this.log('Loading WASM module with generated client...');
+    
+        await this.client.loadWasm('/static/wasm/weewar-cli.wasm');
         
-        try {
-            await this.client.loadWasm('/static/wasm/weewar-cli.wasm');
-            
-            this.gameData.wasmLoaded = true;
-            this.gameData.lastUpdated = Date.now();
+        this.gameData.wasmLoaded = true;
+        this.gameData.lastUpdated = Date.now();
 
-            this.log('WASM module loaded successfully via generated client');
-            this.emit('wasm-loaded', { success: true });
-        } catch (error) {
-            this.log('Failed to load WASM module:', error);
-            this.emit('wasm-load-error', { error });
-            throw error;
-        }
+        this.log('WASM module loaded successfully via generated client');
+        this.emit('wasm-loaded', { success: true }, this);
     }
 
     /**
@@ -175,7 +169,7 @@ export class GameState extends BaseComponent {
         this.log('World object set');
         
         // Notify observers that world has been loaded/updated
-        this.emit('world-loaded', { world: world });
+        this.emit('world-loaded', { world: world }, this);
     }
 
     /**
@@ -201,32 +195,26 @@ export class GameState extends BaseComponent {
             throw new Error('Game ID not set. Call setGameId() first.');
         }
 
-        try {
-            this.log('Processing moves:', moves);
+        this.log('Processing moves:', moves);
 
-            // Create request for ProcessMoves service
-            const request = create(ProcessMovesRequestSchema, {
-                gameId: this.gameData.gameId,
-                moves: moves
-            });
+        // Create request for ProcessMoves service
+        const request = create(ProcessMovesRequestSchema, {
+            gameId: this.gameData.gameId,
+            moves: moves
+        });
 
-            // Call the ProcessMoves service  
-            const response: ProcessMovesResponse = await client.gamesService.processMoves(request);
+        // Call the ProcessMoves service  
+        const response: ProcessMovesResponse = await client.gamesService.processMoves(request);
 
-            // Extract world changes from response
-            const worldChanges = response.changes || [];
-            
-            this.log('Received world changes:', worldChanges);
+        // Extract world changes from response
+        const worldChanges = response.changes || [];
+        
+        this.log('Received world changes:', worldChanges);
 
-            // Apply changes to internal state and notify observers
-            this.applyWorldChanges(worldChanges);
-            
-            return worldChanges;
-
-        } catch (error: any) {
-            this.log('ProcessMoves failed:', error);
-            throw new Error(`ProcessMoves failed: ${error.message}`);
-        }
+        // Apply changes to internal state and notify observers
+        this.applyWorldChanges(worldChanges);
+        
+        return worldChanges;
     }
 
     /**
@@ -319,7 +307,7 @@ export class GameState extends BaseComponent {
         this.emit('world-changed', { 
             changes: changes,
             gameState: this.getGameData()
-        });
+        }, this);
 
         // Emit granular events for specific UI components
         for (const change of changes) {
@@ -328,14 +316,14 @@ export class GameState extends BaseComponent {
                     previousPlayer: change.changeType.value.previousPlayer,
                     currentPlayer: change.changeType.value.newPlayer,
                     turnCounter: change.changeType.value.newTurn
-                });
+                }, this);
             }
 
             if (change.changeType.case === 'unitMoved') {
                 this.emit('unit-moved', {
                     from: { q: change.changeType.value.fromQ, r: change.changeType.value.fromR },
                     to: { q: change.changeType.value.toQ, r: change.changeType.value.toR }
-                });
+                }, this);
             }
 
             if (change.changeType.case === 'unitDamaged') {
@@ -343,7 +331,7 @@ export class GameState extends BaseComponent {
                     position: { q: change.changeType.value.q, r: change.changeType.value.r },
                     previousHealth: change.changeType.value.previousHealth,
                     newHealth: change.changeType.value.newHealth
-                });
+                }, this);
             }
 
             if (change.changeType.case === 'unitKilled') {
@@ -351,7 +339,7 @@ export class GameState extends BaseComponent {
                     position: { q: change.changeType.value.q, r: change.changeType.value.r },
                     player: change.changeType.value.player,
                     unitType: change.changeType.value.unitType
-                });
+                }, this);
             }
         }
     }
@@ -416,66 +404,60 @@ export class GameState extends BaseComponent {
      * This replaces the old createGameFromMap approach with direct data loading
      */
     public loadGameFromPageData(): void {
-        try {
-            // Load v1.Game data from the element IDs that match the template
-            const gameElement = document.getElementById('game.data-json');
-            if (gameElement?.textContent && gameElement.textContent.trim() !== 'null') {
-                const gameData = JSON.parse(gameElement.textContent);
-                this.setGameId(gameData.id);
-                this.gameData.currentPlayer = gameData.currentPlayer || 1;
-                this.gameData.turnCounter = gameData.turnCounter || 1;
-                this.gameData.status = gameData.status || 'active';
-                this.log('Loaded game data:', gameData);
-                
-                // If game has world data, set it
-                if (gameData.world) {
-                    this.setWorld(gameData.world);
-                    this.log('Loaded world from game data');
-                }
-            }
-
-            // Load v1.GameState data 
-            const gameStateElement = document.getElementById('game-state-data-json');
-            if (gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null') {
-                const gameStateData = JSON.parse(gameStateElement.textContent);
-                
-                // Update game state fields
-                if (gameStateData.currentPlayer !== undefined) {
-                    this.gameData.currentPlayer = gameStateData.currentPlayer;
-                }
-                if (gameStateData.turnCounter !== undefined) {
-                    this.gameData.turnCounter = gameStateData.turnCounter;
-                }
-                if (gameStateData.status !== undefined) {
-                    this.gameData.status = gameStateData.status;
-                }
-                
-                this.log('Loaded game state data:', gameStateData);
-            }
-
-            // Load v1.GameMoveHistory data (optional)
-            const historyElement = document.getElementById('game-history-data-json');
-            if (historyElement?.textContent && historyElement.textContent.trim() !== 'null') {
-                const historyData = JSON.parse(historyElement.textContent);
-                this.log('Loaded game move history:', historyData);
-                // TODO: Store history if needed for replay functionality
-            }
-
-            // Update last updated timestamp
-            this.gameData.lastUpdated = Date.now();
+        // Load v1.Game data from the element IDs that match the template
+        const gameElement = document.getElementById('game.data-json');
+        if (gameElement?.textContent && gameElement.textContent.trim() !== 'null') {
+            const gameData = JSON.parse(gameElement.textContent);
+            this.setGameId(gameData.id);
+            this.gameData.currentPlayer = gameData.currentPlayer || 1;
+            this.gameData.turnCounter = gameData.turnCounter || 1;
+            this.gameData.status = gameData.status || 'active';
+            this.log('Loaded game data:', gameData);
             
-            // Emit game loaded event
-            this.emit('game-loaded', { 
-                gameId: this.gameData.gameId,
-                currentPlayer: this.gameData.currentPlayer,
-                turnCounter: this.gameData.turnCounter,
-                status: this.gameData.status
-            });
-
-        } catch (error: any) {
-            this.log('Failed to load game data from page:', error);
-            throw new Error(`Failed to load game data: ${error.message}`);
+            // If game has world data, set it
+            if (gameData.world) {
+                this.setWorld(gameData.world);
+                this.log('Loaded world from game data');
+            }
         }
+
+        // Load v1.GameState data 
+        const gameStateElement = document.getElementById('game-state-data-json');
+        if (gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null') {
+            const gameStateData = JSON.parse(gameStateElement.textContent);
+            
+            // Update game state fields
+            if (gameStateData.currentPlayer !== undefined) {
+                this.gameData.currentPlayer = gameStateData.currentPlayer;
+            }
+            if (gameStateData.turnCounter !== undefined) {
+                this.gameData.turnCounter = gameStateData.turnCounter;
+            }
+            if (gameStateData.status !== undefined) {
+                this.gameData.status = gameStateData.status;
+            }
+            
+            this.log('Loaded game state data:', gameStateData);
+        }
+
+        // Load v1.GameMoveHistory data (optional)
+        const historyElement = document.getElementById('game-history-data-json');
+        if (historyElement?.textContent && historyElement.textContent.trim() !== 'null') {
+            const historyData = JSON.parse(historyElement.textContent);
+            this.log('Loaded game move history:', historyData);
+            // TODO: Store history if needed for replay functionality
+        }
+
+        // Update last updated timestamp
+        this.gameData.lastUpdated = Date.now();
+        
+        // Emit game loaded event
+        this.emit('game-loaded', { 
+            gameId: this.gameData.gameId,
+            currentPlayer: this.gameData.currentPlayer,
+            turnCounter: this.gameData.turnCounter,
+            status: this.gameData.status
+        }, this);
     }
 
     /**
@@ -576,24 +558,20 @@ export class GameState extends BaseComponent {
     public static initializeSaveBridge(): void {
         // Set up bridge functions that WASM BrowserSaveHandler expects
         (window as any).gameSaveHandler = async (sessionData: string): Promise<string> => {
-            try {
-                const response = await fetch('/api/v1/games/sessions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: sessionData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Save failed: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                return JSON.stringify({ success: true, sessionId: result.sessionId });
-            } catch (error: any) {
-                return JSON.stringify({ success: false, error: error.message });
+            const response = await fetch('/api/v1/games/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: sessionData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Save failed: ${response.statusText}`);
             }
+            
+            const result = await response.json();
+            return JSON.stringify({ success: true, sessionId: result.sessionId });
         };
         
         console.log('Game save/load bridge functions initialized');

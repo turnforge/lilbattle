@@ -2,20 +2,14 @@
  * WorldEditorPageState - Centralized state management for WorldEditorPage
  * 
  * Provides single source of truth for all editor UI state that needs to be
- * shared between components within the WorldEditorPage. Uses Observer pattern
- * for efficient component synchronization.
+ * shared between components within the WorldEditorPage. Uses EventBus
+ * for decentralized component communication.
  */
 
-// Observer pattern interfaces
-export interface PageStateObserver {
-    onPageStateEvent(event: PageStateEvent): void;
-}
+import { EventBus } from '../lib/EventBus';
+import { EditorEventTypes, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
 
-export interface PageStateEvent {
-    type: PageStateEventType;
-    data: any;
-}
-
+// Event type constants for EventBus communication
 export enum PageStateEventType {
     TOOL_STATE_CHANGED = 'tool-state-changed',
     VISUAL_STATE_CHANGED = 'visual-state-changed', 
@@ -75,7 +69,7 @@ export interface SavedUIState {
  * WorldEditorPageState - Centralized state management for world editor page
  * 
  * Features:
- * - Observer pattern for real-time component synchronization
+ * - EventBus-based communication for decentralized component architecture
  * - Type-safe state updates with granular change tracking
  * - State persistence for save/restore operations (keyboard shortcuts)
  * - Batched state updates for performance
@@ -87,13 +81,14 @@ export class WorldEditorPageState {
     private visualState: VisualState;
     private workflowState: WorkflowState;
     
-    // Observer pattern
-    private observers: Set<PageStateObserver> = new Set();
+    // EventBus for decentralized communication
+    private eventBus: EventBus;
     
     // State persistence for undo/restore
     private savedUIState: SavedUIState | null = null;
     
-    constructor() {
+    constructor(eventBus: EventBus) {
+        this.eventBus = eventBus;
         // Initialize with sensible defaults
         this.toolState = {
             selectedTerrain: 1, // Default to grass
@@ -115,23 +110,9 @@ export class WorldEditorPageState {
         };
     }
     
-    // Observer pattern methods
-    public subscribe(observer: PageStateObserver): void {
-        this.observers.add(observer);
-    }
-    
-    public unsubscribe(observer: PageStateObserver): void {
-        this.observers.delete(observer);
-    }
-    
-    private emit(event: PageStateEvent): void {
-        this.observers.forEach(observer => {
-            try {
-                observer.onPageStateEvent(event);
-            } catch (error) {
-                console.error('Error in page state observer:', error);
-            }
-        });
+    // EventBus communication - emit state changes as events
+    private emitStateChange(eventType: PageStateEventType, data: any, emitter: any = null): void {
+        this.eventBus.emit(eventType, data, emitter || this, this);
     }
     
     // Tool state management
@@ -139,7 +120,7 @@ export class WorldEditorPageState {
         return { ...this.toolState };
     }
     
-    public updateToolState(updates: Partial<ToolState>): void {
+    public updateToolState(updates: Partial<ToolState>, emitter: any = null): void {
         const previousState = { ...this.toolState };
         const changedFields: (keyof ToolState)[] = [];
         
@@ -155,14 +136,11 @@ export class WorldEditorPageState {
         if (changedFields.length > 0) {
             this.workflowState.lastAction = `tool-update-${changedFields.join(',')}`;
             
-            this.emit({
-                type: PageStateEventType.TOOL_STATE_CHANGED,
-                data: {
-                    previousState,
-                    newState: { ...this.toolState },
-                    changedFields
-                } as ToolStateChangedEventData
-            });
+            this.emitStateChange(PageStateEventType.TOOL_STATE_CHANGED, {
+                previousState,
+                newState: { ...this.toolState },
+                changedFields
+            } as ToolStateChangedEventData, emitter);
         }
     }
     
@@ -198,7 +176,7 @@ export class WorldEditorPageState {
         return { ...this.visualState };
     }
     
-    public updateVisualState(updates: Partial<VisualState>): void {
+    public updateVisualState(updates: Partial<VisualState>, emitter: any = null): void {
         const previousState = { ...this.visualState };
         const changedFields: (keyof VisualState)[] = [];
         
@@ -214,23 +192,36 @@ export class WorldEditorPageState {
         if (changedFields.length > 0) {
             this.workflowState.lastAction = `visual-update-${changedFields.join(',')}`;
             
-            this.emit({
-                type: PageStateEventType.VISUAL_STATE_CHANGED,
-                data: {
-                    previousState,
-                    newState: { ...this.visualState },
-                    changedFields
-                } as VisualStateChangedEventData
-            });
+            this.emitStateChange(PageStateEventType.VISUAL_STATE_CHANGED, {
+                previousState,
+                newState: { ...this.visualState },
+                changedFields
+            } as VisualStateChangedEventData, emitter);
         }
     }
     
     public setShowGrid(show: boolean): void {
         this.updateVisualState({ showGrid: show });
+        
+        // Emit specific event for interested components
+        this.eventBus.emit<GridSetVisibilityPayload>(
+            EditorEventTypes.GRID_SET_VISIBILITY,
+            { show },
+            this,
+            this
+        );
     }
     
     public setShowCoordinates(show: boolean): void {
         this.updateVisualState({ showCoordinates: show });
+        
+        // Emit specific event for interested components
+        this.eventBus.emit<CoordinatesSetVisibilityPayload>(
+            EditorEventTypes.COORDINATES_SET_VISIBILITY,
+            { show },
+            this,
+            this
+        );
     }
     
     // Workflow state management
@@ -238,7 +229,7 @@ export class WorldEditorPageState {
         return { ...this.workflowState };
     }
     
-    public updateWorkflowState(updates: Partial<WorkflowState>): void {
+    public updateWorkflowState(updates: Partial<WorkflowState>, emitter: any = null): void {
         const previousState = { ...this.workflowState };
         const changedFields: (keyof WorkflowState)[] = [];
         
@@ -252,14 +243,11 @@ export class WorldEditorPageState {
         
         // Only emit if there were actual changes
         if (changedFields.length > 0) {
-            this.emit({
-                type: PageStateEventType.WORKFLOW_STATE_CHANGED,
-                data: {
-                    previousState,
-                    newState: { ...this.workflowState },
-                    changedFields
-                } as WorkflowStateChangedEventData
-            });
+            this.emitStateChange(PageStateEventType.WORKFLOW_STATE_CHANGED, {
+                previousState,
+                newState: { ...this.workflowState },
+                changedFields
+            } as WorkflowStateChangedEventData, emitter);
         }
     }
     
@@ -397,7 +385,4 @@ export class WorldEditorPageState {
         return this.workflowState.lastAction;
     }
     
-    public getObserverCount(): number {
-        return this.observers.size;
-    }
 }

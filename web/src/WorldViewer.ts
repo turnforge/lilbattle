@@ -180,7 +180,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         this.log('Loading world data');
         
         // Process world data
-        const world = World.deserialize(worldData);
+        const world = World.deserialize(this.eventBus, worldData);
         const allTiles = world.getAllTiles();
         const allUnits = world.getAllUnits();
         

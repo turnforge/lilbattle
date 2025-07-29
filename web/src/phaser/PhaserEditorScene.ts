@@ -113,7 +113,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
      * Load reference image from clipboard
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
-        try {
             // Read from clipboard
             const items = await navigator.clipboard.read();
             
@@ -130,18 +129,12 @@ export class PhaserEditorScene extends PhaserWorldScene {
             
             console.warn('[PhaserEditorScene] No image found in clipboard');
             return false;
-            
-        } catch (error) {
-            console.error('[PhaserEditorScene] Failed to load from clipboard:', error);
-            return false;
-        }
     }
 
     /**
      * Load reference image from file
      */
     public async loadReferenceFromFile(file: File): Promise<boolean> {
-        try {
             if (!file.type.startsWith('image/')) {
                 console.error('[PhaserEditorScene] File is not an image:', file.type);
                 return false;
@@ -151,11 +144,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             this.setReferenceImage(imageUrl);
             console.log(`[PhaserEditorScene] Reference image loaded from file: ${file.name}`);
             return true;
-            
-        } catch (error) {
-            console.error('[PhaserEditorScene] Failed to load from file:', error);
-            return false;
-        }
     }
 
     /**

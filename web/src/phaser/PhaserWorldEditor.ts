@@ -133,23 +133,15 @@ export class PhaserWorldEditor {
     public async setTerrain(terrain: number) {
         this.currentTerrain = terrain;
         
-        try {
             const scene = await this.waitForSceneReady();
             scene.setCurrentTerrain(terrain);
-        } catch (error) {
-            console.error('[PhaserWorldEditor] Failed to set terrain:', error);
-        }
     }
     
     public async setColor(color: number) {
         this.currentColor = color;
         
-        try {
             const scene = await this.waitForSceneReady();
             scene.setCurrentPlayer(color);
-        } catch (error) {
-            console.error('[PhaserWorldEditor] Failed to set color:', error);
-        }
     }
     
     public setBrushSize(size: number) {
@@ -238,7 +230,6 @@ export class PhaserWorldEditor {
     }
     
     public async setTilesData(tiles: Array<Tile>) {
-        try {
             const scene = await this.waitForSceneReady();
             console.log(`[PhaserWorldEditor] Setting tiles data: ${tiles.length} tiles`);
             
@@ -253,9 +244,6 @@ export class PhaserWorldEditor {
             });
             
             console.log(`[PhaserWorldEditor] Successfully loaded ${tiles.length} tiles`);
-        } catch (error) {
-            console.error('[PhaserWorldEditor] Failed to set tiles data:', error);
-        }
     }
     
     // Event callbacks
@@ -443,13 +431,8 @@ export class PhaserWorldEditor {
      * Load reference image from clipboard
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
-        try {
             const scene = await this.waitForSceneReady();
             return scene.loadReferenceFromClipboard();
-        } catch (error) {
-            console.error('[PhaserWorldEditor] Failed to load reference from clipboard:', error);
-            return false;
-        }
     }
     
     /**
@@ -458,7 +441,6 @@ export class PhaserWorldEditor {
     public async loadReferenceFromFile(file: File): Promise<boolean> {
         console.log(`[PhaserWorldEditor] loadReferenceFromFile called with: ${file.name}`);
         
-        try {
             const scene = await this.waitForSceneReady();
             console.log(`[PhaserWorldEditor] Scene ready, type: ${scene.constructor.name}`);
             
@@ -472,10 +454,6 @@ export class PhaserWorldEditor {
             const result = await scene.loadReferenceFromFile(file);
             console.log(`[PhaserWorldEditor] Scene loadReferenceFromFile returned: ${result}`);
             return result;
-        } catch (error) {
-            console.error('[PhaserWorldEditor] Error in loadReferenceFromFile:', error);
-            return false;
-        }
     }
     
     /**

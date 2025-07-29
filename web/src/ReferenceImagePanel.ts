@@ -47,28 +47,22 @@ export class ReferenceImagePanel extends BaseComponent {
             return [];
         }
         
-        try {
-            this.log('Binding ReferenceImagePanel to DOM');
-            
-            // Set up UI elements and event handlers
-            this.bindLoadingControls();
-            this.bindDisplayModeControls();
-            this.bindAlphaControls();
-            this.bindPositionControls();
-            this.bindScaleControls();
-            this.bindPositionTranslationControls();
-            this.bindClearControls();
-            
-            this.isUIBound = true;
-            this.log('ReferenceImagePanel bound to DOM successfully');
-            
-            // This is a leaf component - no children
-            return [];
-            
-        } catch (error) {
-            this.handleError('Failed to bind ReferenceImagePanel to DOM', error);
-            throw error;
-        }
+        this.log('Binding ReferenceImagePanel to DOM');
+        
+        // Set up UI elements and event handlers
+        this.bindLoadingControls();
+        this.bindDisplayModeControls();
+        this.bindAlphaControls();
+        this.bindPositionControls();
+        this.bindScaleControls();
+        this.bindPositionTranslationControls();
+        this.bindClearControls();
+        
+        this.isUIBound = true;
+        this.log('ReferenceImagePanel bound to DOM successfully');
+        
+        // This is a leaf component - no children
+        return [];
     }
     
     // Phase 2: Inject dependencies - simplified to use explicit setters
@@ -428,12 +422,7 @@ export class ReferenceImagePanel extends BaseComponent {
     private executeWhenReady(operation: () => void): void {
         if (this.isActivated) {
             // Component is ready - execute immediately
-            try {
-                operation();
-            } catch (error) {
-                this.handleError('Operation failed', error);
-                this.showToast('Error', 'Operation failed', 'error');
-            }
+            operation();
         } else {
             // Component not ready - queue for later
             this.pendingOperations.push(operation);
@@ -452,12 +441,7 @@ export class ReferenceImagePanel extends BaseComponent {
             this.pendingOperations = [];
             
             operations.forEach(operation => {
-                try {
-                    operation();
-                } catch (error) {
-                    this.handleError('Pending operation failed', error);
-                    this.showToast('Error', 'Pending operation failed', 'error');
-                }
+                operation();
             });
         }
     }
@@ -482,114 +466,94 @@ export class ReferenceImagePanel extends BaseComponent {
     // Reference Image Operations (Phase 3 - when dependencies are available)
     
     private async loadReferenceFromClipboard(): Promise<void> {
-        try {
-            this.log('Loading reference image directly from clipboard');
-            this.showToast('Loading', 'Loading reference image from clipboard...', 'info');
-            this.updateReferenceStatus('Loading from clipboard...');
-            
-            // Check if clipboard API is available
-            if (!navigator.clipboard || !navigator.clipboard.read) {
-                throw new Error('Clipboard API not supported in this browser');
-            }
-            
-            // Read from clipboard
-            const clipboardItems = await navigator.clipboard.read();
-            let imageFound = false;
-            
-            for (const clipboardItem of clipboardItems) {
-                for (const type of clipboardItem.types) {
-                    if (type.startsWith('image/')) {
-                        const blob = await clipboardItem.getType(type);
-                        await this.loadReferenceFromBlob(blob, 'clipboard');
-                        imageFound = true;
-                        break;
-                    }
-                }
-                if (imageFound) break;
-            }
-            
-            if (!imageFound) {
-                throw new Error('No image found in clipboard');
-            }
-            
-        } catch (error) {
-            this.handleError(`Failed to load reference image from clipboard`, error);
-            this.showToast('Error', 'Failed to load image from clipboard', 'error');
-            this.updateReferenceStatus('Failed to load from clipboard');
-        }
+          this.log('Loading reference image directly from clipboard');
+          this.showToast('Loading', 'Loading reference image from clipboard...', 'info');
+          this.updateReferenceStatus('Loading from clipboard...');
+          
+          // Check if clipboard API is available
+          if (!navigator.clipboard || !navigator.clipboard.read) {
+              throw new Error('Clipboard API not supported in this browser');
+          }
+          
+          // Read from clipboard
+          const clipboardItems = await navigator.clipboard.read();
+          let imageFound = false;
+          
+          for (const clipboardItem of clipboardItems) {
+              for (const type of clipboardItem.types) {
+                  if (type.startsWith('image/')) {
+                      const blob = await clipboardItem.getType(type);
+                      await this.loadReferenceFromBlob(blob, 'clipboard');
+                      imageFound = true;
+                      break;
+                  }
+              }
+              if (imageFound) break;
+          }
+          
+          if (!imageFound) {
+              throw new Error('No image found in clipboard');
+          }
     }
     
     private async loadReferenceFromFile(file: File): Promise<void> {
-        try {
-            this.log(`Loading reference image directly from file: ${file.name} (${file.size} bytes)`);
-            this.showToast('Loading', `Loading reference image from ${file.name}...`, 'info');
-            this.updateReferenceStatus(`Loading from ${file.name}...`);
-            
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                throw new Error('Selected file is not an image');
-            }
-            
-            // Load image directly
-            await this.loadReferenceFromBlob(file, file.name);
-            
-        } catch (error) {
-            this.handleError(`Failed to load reference image from file`, error);
-            this.showToast('Error', 'Failed to load image from file', 'error');
-            this.updateReferenceStatus('Failed to load from file');
+        this.log(`Loading reference image directly from file: ${file.name} (${file.size} bytes)`);
+        this.showToast('Loading', `Loading reference image from ${file.name}...`, 'info');
+        this.updateReferenceStatus(`Loading from ${file.name}...`);
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            throw new Error('Selected file is not an image');
         }
+        
+        // Load image directly
+        await this.loadReferenceFromBlob(file, file.name);
     }
     
     /**
      * Common method to load reference image from blob/file
      */
     private async loadReferenceFromBlob(blob: Blob, source: string): Promise<void> {
-        try {
-            // Create object URL for the blob
-            const imageUrl = URL.createObjectURL(blob);
-            
-            // Create image element to validate and get dimensions
-            const img = new Image();
-            
-            await new Promise<void>((resolve, reject) => {
-                img.onload = () => resolve();
-                img.onerror = () => reject(new Error('Failed to load image'));
-                img.src = imageUrl;
-            });
-            
-            this.log(`Reference image loaded successfully: ${img.width}x${img.height} from ${source}`);
-            
-            // Update UI state first
-            this.referenceState.isLoaded = true;
-            this.updateReferenceStatus(`Loaded from ${source} (${img.width}x${img.height})`);
-            this.showToast('Success', `Reference image loaded from ${source}`, 'success');
-            this.updateUIState();
-            
-            // Set default mode to background if currently hidden - BEFORE emitting event
-            this.setDefaultMode();
-            
-            // Notify EventBus that image was loaded (notification, not request)
-            // This happens AFTER setDefaultMode so Phaser gets the image with correct mode
-            this.eventBus.emit<ReferenceImageLoadedPayload>(
-                EditorEventTypes.REFERENCE_IMAGE_LOADED, 
-                {
-                    source: source,
-                    width: img.width,
-                    height: img.height,
-                    url: imageUrl
-                }, 
-                this.componentId
-            );
-            
-            // Clean up the object URL after a delay to allow other components to use it
-            setTimeout(() => {
-                URL.revokeObjectURL(imageUrl);
-            }, 1000);
-            
-        } catch (error) {
-            this.handleError(`Failed to process reference image from ${source}`, error);
-            throw error; // Re-throw to be handled by caller
-        }
+        // Create object URL for the blob
+        const imageUrl = URL.createObjectURL(blob);
+        
+        // Create image element to validate and get dimensions
+        const img = new Image();
+        
+        await new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = imageUrl;
+        });
+        
+        this.log(`Reference image loaded successfully: ${img.width}x${img.height} from ${source}`);
+        
+        // Update UI state first
+        this.referenceState.isLoaded = true;
+        this.updateReferenceStatus(`Loaded from ${source} (${img.width}x${img.height})`);
+        this.showToast('Success', `Reference image loaded from ${source}`, 'success');
+        this.updateUIState();
+        
+        // Set default mode to background if currently hidden - BEFORE emitting event
+        this.setDefaultMode();
+        
+        // Notify EventBus that image was loaded (notification, not request)
+        // This happens AFTER setDefaultMode so Phaser gets the image with correct mode
+        this.eventBus.emit<ReferenceImageLoadedPayload>(
+            EditorEventTypes.REFERENCE_IMAGE_LOADED, 
+            {
+                source: source,
+                width: img.width,
+                height: img.height,
+                url: imageUrl
+            }, 
+            this.componentId
+        );
+        
+        // Clean up the object URL after a delay to allow other components to use it
+        setTimeout(() => {
+            URL.revokeObjectURL(imageUrl);
+        }, 1000);
     }
     
     private setDefaultMode(): void {
@@ -606,7 +570,7 @@ export class ReferenceImagePanel extends BaseComponent {
         this.eventBus.emit<ReferenceSetModePayload>(
             EditorEventTypes.REFERENCE_SET_MODE, 
             { mode }, 
-            this.componentId
+            this
         );
         
         // Update UI radio buttons to reflect current mode

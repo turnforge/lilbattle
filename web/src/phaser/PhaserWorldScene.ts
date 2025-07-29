@@ -124,17 +124,8 @@ export class PhaserWorldScene extends Phaser.Scene {
             }
         };
 
-        try {
-            this.phaserGame = new Phaser.Game(config);
+        this.phaserGame = new Phaser.Game(config);
             
-            // Scene will automatically call create() when ready
-            // We'll mark as initialized in the create() method
-
-        } catch (error) {
-            console.error('[PhaserWorldScene] Failed to create Phaser game:', error);
-            throw error;
-        }
-
         return this.initializePromise;
     }
 

@@ -2,12 +2,14 @@ import { ThemeManager } from './ThemeManager';
 import { Modal } from './Modal';
 import { ToastManager } from './ToastManager';
 import { EventBus } from './EventBus';
+import { BaseComponent } from './Component';
+import { LCMComponent } from './LCMComponent';
 
 /**
  * Base class for all pages that provides common UI components and functionality
- * Includes page-level EventBus for component communication
+ * Implements proper LCMComponent lifecycle management for pages
  */
-export abstract class BasePage {
+export abstract class BasePage extends BaseComponent {
     protected themeManager: typeof ThemeManager | null = null;
     protected modal: Modal | null = null;
     protected toastManager: ToastManager | null = null;
@@ -15,14 +17,37 @@ export abstract class BasePage {
     protected themeToggleButton: HTMLButtonElement | null = null;
     protected themeToggleIcon: HTMLElement | null = null;
 
-    constructor(public readonly eventBus: EventBus) {
+    // Constructor now just uses document as the rootElement
+    constructor(public readonly componentId: string, public eventBus: EventBus, public readonly debugMode: boolean = false) {
+        // Mark as component in DOM for debugging
+        super(componentId, document.body, eventBus, debugMode)
+    }
+
+    // LCMComponent Phase 1: Initialize page structure and discover child components
+    public override performLocalInit(): LCMComponent[] {
+        this.log('BasePage: Starting local initialization');
+        
         // Initialize base components first
         this.initializeBaseComponents();
+        
+        // Then initialize page-specific components and discover children
+        const childComponents = this.initializeSpecificComponents();
+        
+        this.log('BasePage: Local initialization complete');
+        return childComponents;
+    }
+    
+    // LCMComponent Phase 3: Activate the page (bind events after all components are ready)
+    public override activate(): void {
+        this.log('BasePage: Activating page');
+        
+        // Bind base events first
         this.bindBaseEvents();
         
-        // Then initialize page-specific components and events
-        this.initializeSpecificComponents();
+        // Then bind page-specific events
         this.bindSpecificEvents();
+        
+        this.log('BasePage: Page activation complete');
     }
 
     /**
@@ -118,8 +143,9 @@ export abstract class BasePage {
 
     /**
      * Abstract method that subclasses must implement to initialize their specific components
+     * Should return any child components that need lifecycle management
      */
-    protected abstract initializeSpecificComponents(): void;
+    protected abstract initializeSpecificComponents(): LCMComponent[];
 
     /**
      * Abstract method that subclasses must implement to bind their specific events
@@ -127,7 +153,15 @@ export abstract class BasePage {
     protected abstract bindSpecificEvents(): void;
 
     /**
-     * Abstract method that subclasses can implement to handle cleanup
+     * Component-specific cleanup logic (required by BaseComponent)
      */
-    public abstract destroy?(): void;
+    protected destroyComponent(): void {
+        this.log('BasePage: Cleaning up base page components');
+        
+        // Clean up base components
+        this.modal = null;
+        this.toastManager = null;
+        this.themeToggleButton = null;
+        this.themeToggleIcon = null;
+    }
 }

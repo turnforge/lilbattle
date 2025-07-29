@@ -25,7 +25,6 @@ export class PhaserPanel {
      * Initialize the Phaser panel with a container element
      */
     public initialize(containerId: string): boolean {
-        try {
             this.containerElement = document.getElementById(containerId);
             if (!this.containerElement) {
                 throw new Error(`Container element with ID '${containerId}' not found`);
@@ -53,11 +52,6 @@ export class PhaserPanel {
             this.log('Phaser panel initialized successfully');
             
             return true;
-            
-        } catch (error) {
-            this.log(`Failed to initialize Phaser panel: ${error}`);
-            return false;
-        }
     }
     
     /**
@@ -99,14 +93,9 @@ export class PhaserPanel {
             return false;
         }
         
-        try {
             this.phaserEditor.setTile(tile, brushSize);
             this.log(`Painted terrain ${tile.tileType} at Q=${tile.q}, R=${tile.r} with brush size ${brushSize}`);
             return true;
-        } catch (error) {
-            this.log(`Failed to paint tile: ${error}`);
-            return false;
-        }
     }
     
     /**
@@ -330,12 +319,8 @@ export class PhaserPanel {
             return;
         }
         
-        try {
             await this.phaserEditor.setTilesData(tiles);
             this.log(`Loaded ${tiles.length} tiles`);
-        } catch (error) {
-            this.log(`Failed to load tiles: ${error}`);
-        }
     }
     
     /**
@@ -446,14 +431,9 @@ export class PhaserPanel {
             return false;
         }
         
-        try {
             const result = await this.phaserEditor.loadReferenceFromClipboard();
             this.log(result ? 'Reference image loaded from clipboard' : 'No image found in clipboard');
             return result;
-        } catch (error) {
-            this.log(`Failed to load reference image: ${error}`);
-            return false;
-        }
     }
     
     /**
@@ -469,14 +449,9 @@ export class PhaserPanel {
         
         this.log('Phaser panel initialized, calling phaserEditor.loadReferenceFromFile');
         
-        try {
             const result = await this.phaserEditor.loadReferenceFromFile(file);
             this.log(result ? `Reference image loaded from file: ${file.name}` : 'Failed to load file');
             return result;
-        } catch (error) {
-            this.log(`Failed to load reference image from file: ${error}`);
-            return false;
-        }
     }
     
     /**

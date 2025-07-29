@@ -2,8 +2,8 @@ import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
 import { PhaserWorldEditor } from './phaser/PhaserWorldEditor';
-import { WorldEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType } from './WorldEditorPageState';
-import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { WorldEditorPageState, PageStateEventType } from './WorldEditorPageState';
+import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 
 /**
  * PhaserEditorComponent - Manages the Phaser.js-based world editor interface using BaseComponent architecture
@@ -23,7 +23,7 @@ import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChan
  * - Save/load UI (will be handled by SaveLoadComponent)
  * - Direct DOM manipulation outside of phaser-container
  */
-export class PhaserEditorComponent extends BaseComponent implements PageStateObserver, WorldObserver {
+export class PhaserEditorComponent extends BaseComponent {
     private phaserEditor: PhaserWorldEditor | null = null;
     private isInitialized: boolean = false;
     private pageState: WorldEditorPageState | null = null;
@@ -34,12 +34,10 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         
         if (pageState) {
             this.pageState = pageState;
-            this.pageState.subscribe(this);
         }
         
         if (world) {
             this.world = world;
-            this.world.subscribe(this);
         }
     }
     
@@ -114,45 +112,51 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             this.componentId
         );
         
-        // Tool changes now handled via PageState Observer pattern
-        // PageState will notify us when tools change
+        // Subscribe to tool state changes via EventBus
+        this.eventBus.subscribe(
+            PageStateEventType.TOOL_STATE_CHANGED,
+            this,
+            (eventData) => {
+                this.handleToolStateChanged(eventData);
+            }
+        );
+        
+        // Subscribe to World events via EventBus
+        this.eventBus.subscribe(
+            WorldEventType.WORLD_LOADED,
+            this,
+            (eventData) => {
+                this.handleWorldLoaded(eventData as WorldLoadedEventData);
+            }
+        );
+        
+        this.eventBus.subscribe(
+            WorldEventType.TILES_CHANGED,
+            this,
+            (eventData) => {
+                this.handleTilesChanged(eventData as TilesChangedEventData);
+            }
+        );
+        
+        this.eventBus.subscribe(
+            WorldEventType.UNITS_CHANGED,
+            this,
+            (eventData) => {
+                this.handleUnitsChanged(eventData as UnitsChangedEventData);
+            }
+        );
+        
+        this.eventBus.subscribe(
+            WorldEventType.WORLD_CLEARED,
+            this,
+            () => {
+                this.handleWorldCleared();
+            }
+        );
         
         this.log('PhaserEditorComponent component initialized');
     }
     
-    // PageStateObserver implementation
-    public onPageStateEvent(event: PageStateEvent): void {
-        switch (event.type) {
-            case PageStateEventType.TOOL_STATE_CHANGED:
-                this.handleToolStateChanged(event.data);
-                break;
-        }
-    }
-    
-    // WorldObserver implementation
-    public onWorldEvent(event: WorldEvent): void {
-        if (!this.phaserEditor || !this.isInitialized) {
-            return;
-        }
-        
-        switch (event.type) {
-            case WorldEventType.WORLD_LOADED:
-                this.handleWorldLoaded(event.data as WorldLoadedEventData);
-                break;
-                
-            case WorldEventType.TILES_CHANGED:
-                this.handleTilesChanged(event.data as TilesChangedEventData);
-                break;
-                
-            case WorldEventType.UNITS_CHANGED:
-                this.handleUnitsChanged(event.data as UnitsChangedEventData);
-                break;
-                
-            case WorldEventType.WORLD_CLEARED:
-                this.handleWorldCleared();
-                break;
-        }
-    }
     
     protected bindToDOM(): void {
         this.log('Binding PhaserEditorComponent to DOM');
@@ -262,7 +266,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
                 
                 // Emit ready event for other components (async to allow parent assignment to complete)
                 setTimeout(() => {
-                    this.emit(EditorEventTypes.PHASER_READY, {});
+                    this.emit(EditorEventTypes.PHASER_READY, {}, this);
                 }, 0);
             } else {
                 // Check again after a short delay
@@ -310,7 +314,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         
         // Emit ready event for other components (async to allow parent assignment to complete)
         setTimeout(() => {
-            this.emit(EditorEventTypes.PHASER_READY, {});
+            this.emit(EditorEventTypes.PHASER_READY, {}, this);
         }, 0);
     }
     
@@ -321,51 +325,47 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
         if (!this.phaserEditor) return;
         
         // Wait for the scene to be ready and set up layer callbacks
-        try {
-            const scene = await this.phaserEditor.waitForSceneReady();
-            
-            // Set up BaseMapLayer callbacks for editor functionality
-            scene.setInteractionCallbacks(
-                (q: number, r: number) => {
-                    this.log(`Tile clicked: Q=${q}, R=${r}`);
-                    
-                    this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
-                        q: q,
-                        r: r
-                    });
-                    
-                    // Handle painting based on current mode
-                    this.handleTileClick(q, r);
-                    return false; // Don't emit additional events from scene
-                },
-                (q: number, r: number) => {
-                    // Handle unit clicks the same as tile clicks in editor
-                    this.log(`Unit clicked: Q=${q}, R=${r}`);
-                    
-                    this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
-                        q: q,
-                        r: r
-                    });
-                    
-                    this.handleTileClick(q, r);
-                    return false; // Don't emit additional events from scene
-                }
-            );
-            
-            console.log('[PhaserEditorComponent] Layer callbacks set up successfully');
-        } catch (error) {
-            console.error('[PhaserEditorComponent] Failed to set up layer callbacks:', error);
-        }
+        const scene = await this.phaserEditor.waitForSceneReady();
+        
+        // Set up BaseMapLayer callbacks for editor functionality
+        scene.setInteractionCallbacks(
+            (q: number, r: number) => {
+                this.log(`Tile clicked: Q=${q}, R=${r}`);
+                
+                this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
+                    q: q,
+                    r: r
+                }, this);
+                
+                // Handle painting based on current mode
+                this.handleTileClick(q, r);
+                return false; // Don't emit additional events from scene
+            },
+            (q: number, r: number) => {
+                // Handle unit clicks the same as tile clicks in editor
+                this.log(`Unit clicked: Q=${q}, R=${r}`);
+                
+                this.emit<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, {
+                    q: q,
+                    r: r
+                }, this);
+                
+                this.handleTileClick(q, r);
+                return false; // Don't emit additional events from scene
+            }
+        );
+        
+        console.log('[PhaserEditorComponent] Layer callbacks set up successfully');
         
         // Handle world changes
         this.phaserEditor.onWorldChange(() => {
             this.log('World changed in Phaser');
-            this.emit(EditorEventTypes.WORLD_CHANGED, {});
+            this.emit(EditorEventTypes.WORLD_CHANGED, {}, this);
         });
         
         // Handle reference scale changes
         this.phaserEditor.onReferenceScaleChange((x: number, y: number) => {
-            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y });
+            this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y }, this);
         });
         
         this.log('Phaser event handlers setup complete');
@@ -407,6 +407,10 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
      * Handle World event handlers
      */
     private handleWorldLoaded(data: WorldLoadedEventData): void {
+        if (!this.phaserEditor || !this.isInitialized) {
+            return;
+        }
+        
         this.log('World loaded, updating Phaser display');
         
         // Load tile data from World into Phaser
@@ -420,6 +424,10 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     }
     
     private handleTilesChanged(data: TilesChangedEventData): void {
+        if (!this.phaserEditor || !this.isInitialized) {
+            return;
+        }
+        
         this.log(`Updating ${data.changes.length} tile changes in Phaser`);
         
         // Update individual tiles in Phaser based on World changes
@@ -434,6 +442,10 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     }
     
     private handleUnitsChanged(data: UnitsChangedEventData): void {
+        if (!this.phaserEditor || !this.isInitialized) {
+            return;
+        }
+        
         this.log(`Updating ${data.changes.length} unit changes in Phaser`);
         
         // Update individual units in Phaser based on World changes
@@ -448,9 +460,13 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
     }
     
     private handleWorldCleared(): void {
+        if (!this.phaserEditor || !this.isInitialized) {
+            return;
+        }
+        
         this.log('World cleared, clearing Phaser display');
-        this.phaserEditor?.clearAllTiles();
-        this.phaserEditor?.clearAllUnits();
+        this.phaserEditor.clearAllTiles();
+        this.phaserEditor.clearAllUnits();
     }
     
     /**
@@ -555,21 +571,17 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
             return;
         }
         
-        try {
-            // Convert the URL back to a blob and create a File object
-            const response = await fetch(data.url);
-            const blob = await response.blob();
-            const file = new File([blob], `reference-${data.source}`, { type: blob.type });
-            
-            // Load the reference image into Phaser using the existing file method
-            const result = await this.phaserEditor.loadReferenceFromFile(file);
-            if (result) {
-                this.log(`Reference image loaded into Phaser from ${data.source}`);
-            } else {
-                this.log(`Failed to load reference image into Phaser from ${data.source}`);
-            }
-        } catch (error) {
-            this.handleError(`Failed to load reference image into Phaser from ${data.source}`, error);
+        // Convert the URL back to a blob and create a File object
+        const response = await fetch(data.url);
+        const blob = await response.blob();
+        const file = new File([blob], `reference-${data.source}`, { type: blob.type });
+        
+        // Load the reference image into Phaser using the existing file method
+        const result = await this.phaserEditor.loadReferenceFromFile(file);
+        if (result) {
+            this.log(`Reference image loaded into Phaser from ${data.source}`);
+        } else {
+            this.log(`Failed to load reference image into Phaser from ${data.source}`);
         }
     }
     
@@ -637,7 +649,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
                     terrainType: toolState.selectedTerrain,
                     playerColor: playerId,
                     brushSize: toolState.brushSize
-                });
+                }, this);
                 break;
                 
             case 'unit':
@@ -655,7 +667,7 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
                     r: r,
                     unitType: toolState.selectedUnit,
                     playerId: toolState.selectedPlayer
-                });
+                }, this);
                 break;
                 
             case 'clear':
@@ -685,8 +697,8 @@ export class PhaserEditorComponent extends BaseComponent implements PageStateObs
                 this.log(`Cleared tile and unit at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
                 
                 // Emit separate events for backward compatibility
-                this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r });
-                this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r });
+                this.emit<TileClearedPayload>(EditorEventTypes.TILE_CLEARED, { q: q, r: r }, this);
+                this.emit<UnitRemovedPayload>(EditorEventTypes.UNIT_REMOVED, { q: q, r: r }, this);
                 break;
         }
     }

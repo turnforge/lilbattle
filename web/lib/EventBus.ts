@@ -108,10 +108,10 @@ export class EventBus {
      * Emit an event to all subscribers (except the source)
      * @param eventType - The event type to emit
      * @param data - The event data payload
+     * @param target - The target entity that this event relates to.
      * @param emitter - The entity that emitted the event.
-     * @param targetter - The target entity that this event relates to.
      */
-    public emit<T = any>(eventType: string, data: T, emitter: any, target: any): void {
+    public emit<T = any>(eventType: string, data: T, target: any, emitter: any): void {
         const subscriptions = this.subscribers.get(eventType);
         if (!subscriptions || subscriptions.length === 0) {
             if (this.debugMode) {
@@ -136,14 +136,14 @@ export class EventBus {
         
         // Call each handler with error isolation
         subscriptions.forEach(subscription => {
-            // Source exclusion - don't send event back to the source
-            if (subscription.target === target) {
+            // Source exclusion - don't send event back to the source or the emitter
+            if (subscription.target === emitter || subscription.target === target) {
                 if (this.debugMode) {
                     console.log(`[EventBus] Skipping target '${target}'`);
                 }
                 return;
             }
-            
+
             try {
                 subscription.handler(payload);
                 successCount++;

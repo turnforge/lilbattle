@@ -53,7 +53,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
      * Load reference image from clipboard
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
-        try {
             // Check if clipboard API is available
             if (!navigator.clipboard) {
                 console.warn('[EditablePhaserWorldScene] Clipboard API not available');
@@ -102,18 +101,12 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
             
             console.warn('[EditablePhaserWorldScene] No image found in clipboard');
             return false;
-            
-        } catch (error) {
-            console.error('[EditablePhaserWorldScene] Failed to read clipboard:', error);
-            return false;
-        }
     }
     
     /**
      * Load reference image from data URL
      */
     private async loadReferenceFromDataURL(dataURL: string): Promise<boolean> {
-        try {
             // Generate unique texture key
             this.referenceTextureKey = `reference_${Date.now()}`;
             
@@ -144,27 +137,16 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
                 
                 img.src = dataURL;
             });
-            
-        } catch (error) {
-            console.error('[EditablePhaserWorldScene] Failed to load reference from data URL:', error);
-            return false;
-        }
     }
     
     /**
      * Load reference image from file
      */
     public async loadReferenceFromFile(file: File): Promise<boolean> {
-        try {
             console.log(`[EditablePhaserWorldScene] Loading reference image from file: ${file.name} (${file.size} bytes, type: ${file.type})`);
             
             // File is already a Blob, so we can use it directly
             return this.replaceReferenceImage(file);
-            
-        } catch (error) {
-            console.error('[EditablePhaserWorldScene] Failed to load reference from file:', error);
-            return false;
-        }
     }
     
     /**
@@ -234,7 +216,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
      * Load reference image from blob data
      */
     private async loadReferenceFromBlob(blob: Blob): Promise<boolean> {
-        try {
             console.log(`[EditablePhaserWorldScene] Processing blob: size=${blob.size}, type=${blob.type}`);
             
             // Generate unique texture key
@@ -292,11 +273,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
                 console.log(`[EditablePhaserWorldScene] Setting image src to: ${url}`);
                 img.src = url;
             });
-            
-        } catch (error) {
-            console.error('[EditablePhaserWorldScene] Failed to load reference from blob:', error);
-            return false;
-        }
     }
     
     /**

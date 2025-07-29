@@ -4,8 +4,8 @@ import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from '../lib/KeyboardShortcutManager';
 import { shouldIgnoreShortcut } from '../lib/DOMUtils';
-import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
-import { WorldEditorPageState, PageStateObserver, PageStateEvent, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
+import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { WorldEditorPageState, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
 import { EventBus } from '../lib/EventBus';
 import { EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
 import { EditorToolsPanel } from './EditorToolsPanel';
@@ -18,7 +18,7 @@ import { BRUSH_SIZE_NAMES , TERRAIN_NAMES } from "./ColorsAndNames"
  * World Editor page with unified World architecture and centralized page state
  * Now implements LCMComponent for breadth-first initialization
  */
-class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserver {
+class WorldEditorPage extends BasePage {
     private world: World | null = null;
     private pageState: WorldEditorPageState;
     private editorOutput: HTMLElement | null = null;
@@ -51,6 +51,35 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     // UI state  
     private hasPendingWorldDataLoad: boolean = false;
     
+    constructor(eventBus: EventBus) {
+        super('world-editor-page', eventBus, true); // Enable debug mode
+        
+        // Subscribe to World events via EventBus
+        this.subscribe(WorldEventType.WORLD_LOADED, this, (data: WorldLoadedEventData) => {
+            this.handleWorldLoaded(data);
+        });
+        
+        this.subscribe(WorldEventType.WORLD_SAVED, this, (data: any) => {
+            this.handleWorldSaved(data);
+        });
+        
+        this.subscribe(WorldEventType.TILES_CHANGED, this, () => {
+            this.handleWorldDataChanged();
+        });
+        
+        this.subscribe(WorldEventType.UNITS_CHANGED, this, () => {
+            this.handleWorldDataChanged();
+        });
+        
+        this.subscribe(WorldEventType.WORLD_CLEARED, this, () => {
+            this.handleWorldDataChanged();
+        });
+        
+        this.subscribe(WorldEventType.WORLD_METADATA_CHANGED, this, () => {
+            this.handleWorldDataChanged();
+        });
+    }
+    
     /**
      * Fallback initialization if lifecycle controller fails
      */
@@ -69,14 +98,16 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
      * Phase 1: Initialize DOM and discover child components
      */
     public performLocalInit(): LCMComponent[] {
-        this.pageState = new WorldEditorPageState();
-        this.pageState.subscribe(this); // Subscribe to page state changes
+        this.pageState = new WorldEditorPageState(this.eventBus);
         this.subscribeToEditorEvents();
 
         console.log('WorldEditorPage: Starting DOM initialization phase');
         
         // Initialize basic components first
         this.initializeSpecificComponents();
+        
+        // Create World instance early so child components can use it
+        this.createWorldInstance();
         
         // Create child components that implement LCMComponent
         const childComponents: LCMComponent[] = [];
@@ -93,14 +124,86 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
                 this.showToast(title, message, type);
             });
             
-            // PhaserEditorComponent communication via EventBus - no direct dependency needed
-            
             childComponents.push(this.referenceImagePanel);
             console.log('WorldEditorPage: Created ReferenceImagePanel child component with dependencies');
         }
         
+        // Create EditorToolsPanel as a lifecycle-managed component
+        const toolsTemplate = document.getElementById('tools-panel-template');
+        if (toolsTemplate) {
+            const toolsContainer = toolsTemplate.cloneNode(true) as HTMLElement;
+            toolsContainer.style.display = 'block';
+            this.editorToolsPanel = new EditorToolsPanel(toolsContainer, this.eventBus, true);
+            
+            // Set dependencies directly using explicit setters  
+            this.editorToolsPanel.setPageState(this.pageState);
+            
+            childComponents.push(this.editorToolsPanel);
+            console.log('WorldEditorPage: Created EditorToolsPanel child component with dependencies');
+        }
+        
+        // Create TileStatsPanel as a lifecycle-managed component
+        const tileStatsContainer = document.createElement('div');
+        tileStatsContainer.id = 'tilestats-container';
+        tileStatsContainer.style.width = '100%';
+        tileStatsContainer.style.height = '100%';
+        this.tileStatsPanel = new TileStatsPanel(tileStatsContainer, this.eventBus, true);
+        
+        // Set dependencies directly using explicit setters
+        if (this.world) {
+            this.tileStatsPanel.setWorld(this.world);
+        }
+        
+        childComponents.push(this.tileStatsPanel);
+        console.log('WorldEditorPage: Created TileStatsPanel child component with dependencies');
+        
         console.log(`WorldEditorPage: DOM initialization complete, discovered ${childComponents.length} child components`);
         return childComponents;
+    }
+    
+    /**
+     * Create World instance and initialize it
+     */
+    private createWorldInstance(): void {
+        // Read initial state from DOM
+        const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
+        const isNewWorldInput = document.getElementById("isNewWorld") as HTMLInputElement | null;
+        
+        const worldId = worldIdInput?.value.trim() || null;
+        const isNewWorld = isNewWorldInput?.value === "true";
+
+        // Create World instance and subscribe to events
+        this.world = new World(this.eventBus, 'New World', 8, 8);
+        
+        if (!isNewWorld && worldId) {
+            // Load existing world
+            this.world.setWorldId(worldId);
+            this.loadExistingWorld(worldId);
+        } else {
+            // Initialize new world
+            this.initializeNewWorld();
+        }
+        
+        console.log('WorldEditorPage: World instance created and configured');
+    }
+    
+    private initializeNewWorld(): void {
+        // Try to load template world data from hidden element first
+        this.world!.loadFromElement('world-data-json');
+        this.hasPendingWorldDataLoad = true;
+        
+        this.updateEditorStatus('New World');
+    }
+
+    private async loadExistingWorld(worldId: string): Promise<void> {
+        try {
+            await this.world!.load(worldId);
+            this.hasPendingWorldDataLoad = true;
+        } catch (error) {
+            console.error('Failed to load world:', error);
+            this.logToConsole(`Failed to load world: ${error}`);
+            this.updateEditorStatus('Load Error');
+        }
     }
     
     /**
@@ -108,7 +211,8 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
      */
     public setupDependencies(): void {
         console.log('WorldEditorPage: Dependencies injection complete');
-        this.loadInitialState();
+        // World is now created in performLocalInit, just update status
+        this.updateEditorStatus('Initializing...');
     }
     
     /**
@@ -161,62 +265,28 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     
     // Dependencies are set directly using explicit setters - no ComponentDependencyDeclaration needed
     
-    // WorldObserver implementation
-    public onWorldEvent(event: WorldEvent): void {
-        switch (event.type) {
-            case WorldEventType.WORLD_LOADED:
-                const loadedData = event.data as WorldLoadedEventData;
-                this.updateEditorStatus('Loaded');
-                this.updateSaveButtonState();
-                break;
-                
-            case WorldEventType.WORLD_SAVED:
-                this.updateEditorStatus('Saved');
-                this.updateSaveButtonState();
-                if (event.data.success && event.data.worldId) {
-                    // Update URL if this was a new world
-                    if (this.world?.getIsNewWorld()) {
-                        history.replaceState(null, '', `/worlds/${event.data.worldId}/edit`);
-                    }
-                }
-                break;
-                
-            case WorldEventType.TILES_CHANGED:
-            case WorldEventType.UNITS_CHANGED:
-                // World data changed, update UI state
-                this.updateSaveButtonState();
-                break;
-                
-            case WorldEventType.WORLD_CLEARED:
-                this.updateSaveButtonState();
-                break;
-                
-            case WorldEventType.WORLD_METADATA_CHANGED:
-                this.updateSaveButtonState();
-                break;
+    // World event handlers via EventBus
+    private handleWorldLoaded(data: WorldLoadedEventData): void {
+        this.updateEditorStatus('Loaded');
+        this.updateSaveButtonState();
+    }
+    
+    private handleWorldSaved(data: any): void {
+        this.updateEditorStatus('Saved');
+        this.updateSaveButtonState();
+        if (data.success && data.worldId) {
+            // Update URL if this was a new world
+            if (this.world?.getIsNewWorld()) {
+                history.replaceState(null, '', `/worlds/${data.worldId}/edit`);
+            }
         }
     }
     
-    // PageStateObserver implementation
-    public onPageStateEvent(event: PageStateEvent): void {
-        switch (event.type) {
-            case PageStateEventType.TOOL_STATE_CHANGED:
-                // Tool state changes are handled by components that need them
-                // WorldEditorPage mainly coordinates but doesn't need to react to tool changes
-                this.logToConsole(`Tool state changed: ${JSON.stringify(event.data)}`);
-                break;
-                
-            case PageStateEventType.VISUAL_STATE_CHANGED:
-                // Visual state changes might affect display
-                this.logToConsole(`Visual state changed: ${JSON.stringify(event.data)}`);
-                break;
-                
-            case PageStateEventType.WORKFLOW_STATE_CHANGED:
-                // Workflow state changes affect the overall page flow
-                this.logToConsole(`Workflow state changed: ${JSON.stringify(event.data)}`);
-                break;
-        }
+    private handleWorldDataChanged(): void {
+        // World data changed, update UI state
+        this.updateSaveButtonState();
     }
+    
     
     /**
      * Subscribe to editor-specific events before components are created
@@ -229,28 +299,31 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         // EditorToolsPanel directly updates pageState, which notifies observers
         
         // Subscribe to tile clicks from Phaser
-        this.eventBus.subscribe<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, (payload) => {
+        this.eventBus.subscribe<TileClickedPayload>(EditorEventTypes.TILE_CLICKED, this, (payload) => {
             this.handlePhaserTileClick(payload.data.q, payload.data.r);
-        }, 'world-editor-page');
+        });
         
         // Subscribe to Phaser ready event
-        this.eventBus.subscribe(EditorEventTypes.PHASER_READY, () => {
+        this.eventBus.subscribe(EditorEventTypes.PHASER_READY, this, () => {
             this.handlePhaserReady();
-        }, 'world-editor-page');
+        });
         
         // World changes are automatically tracked by World class via Observer pattern
         
         console.log('WorldEditorPage: Editor event subscriptions complete');
     }
 
-    protected initializeSpecificComponents(): void {
+    protected initializeSpecificComponents(): LCMComponent[] {
         const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
         const isNewWorldInput = document.getElementById("isNewWorld") as HTMLInputElement | null;
         
         // World ID and new world state are now handled by the World instance
 
         this.editorOutput = document.getElementById('editor-output');
-
+        
+        // WorldEditorPage manages its own children through its performLocalInit override
+        // Return empty array as child components are handled by LCMComponent implementation
+        return [];
     }
 
     private initializeDockview(): void {
@@ -682,59 +755,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         this.setupCustomNumberInput();
         
     }
-
-    private loadInitialState(): void {
-        // Theme button state is handled by BasePage
-        this.updateEditorStatus('Initializing...');
-
-        // Read initial state from DOM
-        const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
-        const isNewWorldInput = document.getElementById("isNewWorld") as HTMLInputElement | null;
-        
-        const worldId = worldIdInput?.value.trim() || null;
-        const isNewWorld = isNewWorldInput?.value === "true";
-
-        // Create World instance and subscribe to events
-        this.world = new World('New World', 8, 8);
-        this.world.subscribe(this);
-        
-        if (!isNewWorld && worldId) {
-            // Load existing world
-            this.world.setWorldId(worldId);
-            this.loadExistingWorld(worldId);
-        } else {
-            // Initialize new world
-            this.initializeNewWorld();
-        }
-        
-        // Phaser component initialization will be handled by dockview when the component is created
-    }
-
-
-    private initializeNewWorld(): void {
-        // Try to load template world data from hidden element first
-        try {
-            this.world!.loadFromElement('world-data-json');
-            this.hasPendingWorldDataLoad = true;
-        } catch (error) {
-            // No template data, world is already initialized as empty
-            console.log('No template data found, using empty world');
-            this.hasPendingWorldDataLoad = true;
-        }
-        
-        this.updateEditorStatus('New World');
-    }
-
-    private async loadExistingWorld(worldId: string): Promise<void> {
-        try {
-            await this.world!.load(worldId);
-            this.hasPendingWorldDataLoad = true;
-        } catch (error) {
-            console.error('Failed to load world:', error);
-            this.logToConsole(`Failed to load world: ${error}`);
-            this.updateEditorStatus('Load Error');
-        }
-    }
     
     /**
      * Load world data from hidden element in the HTML
@@ -749,7 +769,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             return;
         }
         
-        try {
             // Load tiles first using setTilesData for better performance
             const allTiles = this.world.getAllTiles();
             await this.phaserEditorComponent.setTilesData(allTiles);
@@ -784,11 +803,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
                 // Center camera on the loaded world
                 this.centerCameraOnWorld();
             }
-            
-        } catch (error) {
-            console.error('Error loading world data into Phaser:', error);
-            this.logToConsole(`Error loading into Phaser: ${error}`);
-        }
     }
 
     /**
@@ -825,7 +839,8 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         this.eventBus.emit<GridSetVisibilityPayload>(
             EditorEventTypes.GRID_SET_VISIBILITY,
             { show: showGrid },
-            'world-editor-page'
+            this,
+            this.pageState
         );
         this.logToConsole(`Grid visibility set to: ${showGrid}`);
     }
@@ -840,7 +855,8 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         this.eventBus.emit<CoordinatesSetVisibilityPayload>(
             EditorEventTypes.COORDINATES_SET_VISIBILITY,
             { show: showCoordinates },
-            'world-editor-page'
+            this,
+            this.pageState
         );
         this.logToConsole(`Coordinates visibility set to: ${showCoordinates}`);
     }
@@ -1005,18 +1021,13 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             return;
         }
 
-        try {
-            // World now handles its own export operations
-            const result = await this.world.save();
-            
-            if (result.success) {
-                this.showToast('Success', 'World exported successfully', 'success');
-            } else {
-                this.showToast('Error', result.error || 'Failed to export world', 'error');
-            }
-        } catch (error) {
-            console.error('Export failed:', error);
-            this.showToast('Error', 'Export failed', 'error');
+        // World now handles its own export operations
+        const result = await this.world.save();
+        
+        if (result.success) {
+            this.showToast('Success', 'World exported successfully', 'success');
+        } else {
+            this.showToast('Error', result.error || 'Failed to export world', 'error');
         }
     }
 
@@ -1116,6 +1127,22 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
 
     // Dockview panel creation methods
     private createToolsComponent() {
+        // Use the lifecycle-managed EditorToolsPanel if available
+        if (this.editorToolsPanel) {
+            const container = this.editorToolsPanel.rootElement;
+            return {
+                element: container,
+                init: () => {
+                    // Panel is already initialized through lifecycle controller
+                    console.log('EditorToolsPanel dockview component initialized (lifecycle-managed)');
+                },
+                dispose: () => {
+                    // Cleanup handled by lifecycle controller
+                }
+            };
+        }
+        
+        // Fallback to template-based creation if lifecycle panel not available
         const template = document.getElementById('tools-panel-template');
         if (!template) {
             console.error('Tools panel template not found');
@@ -1129,17 +1156,10 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         
         return {
             element: container,
-            init: async () => {
-                // Initialize EditorToolsPanel component using new lifecycle
-                await this.initializeEditorToolsPanelLifecycle(container);
+            init: () => {
+                console.log('EditorToolsPanel dockview component initialized (fallback mode)');
             },
-            dispose: () => {
-                // Clean up EditorToolsPanel
-                if (this.editorToolsPanel) {
-                    this.editorToolsPanel.destroy();
-                    this.editorToolsPanel = null;
-                }
-            }
+            dispose: () => {}
         };
     }
 
@@ -1175,7 +1195,22 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     }
 
     private createTileStatsComponent() {
-        // Create a container for the TileStats panel
+        // Use the lifecycle-managed TileStatsPanel if available
+        if (this.tileStatsPanel) {
+            const container = this.tileStatsPanel.rootElement;
+            return {
+                element: container,
+                init: () => {
+                    // Panel is already initialized through lifecycle controller
+                    console.log('TileStatsPanel dockview component initialized (lifecycle-managed)');
+                },
+                dispose: () => {
+                    // Cleanup handled by lifecycle controller
+                }
+            };
+        }
+        
+        // Fallback to container creation if lifecycle panel not available
         const container = document.createElement('div');
         container.id = 'tilestats-container';
         container.style.width = '100%';
@@ -1183,16 +1218,10 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
         
         return {
             element: container,
-            init: async () => {
-                // Initialize TileStatsPanel component using new lifecycle
-                await this.initializeTileStatsPanelLifecycle(container);
+            init: () => {
+                console.log('TileStatsPanel dockview component initialized (fallback mode)');
             },
-            dispose: () => {
-                if (this.tileStatsPanel) {
-                    this.tileStatsPanel.destroy();
-                    this.tileStatsPanel = null;
-                }
-            }
+            dispose: () => {}
         };
     }
 
@@ -1338,7 +1367,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     private setPanelSizes(): void {
         if (!this.dockview) return;
 
-        try {
             // Set left panel (Tools) to 270px width
             const toolsPanel = this.dockview.getPanel('tools');
             if (toolsPanel) {
@@ -1363,9 +1391,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             }
 
             this.logToConsole('Panel sizes set: Tools=270px, Advanced=260px, ReferenceImage=300px, World Editor=remaining');
-        } catch (error) {
-            this.logToConsole(`Failed to set panel sizes: ${error}`);
-        }
     }
 
     private saveDockviewLayout(): void {
@@ -1444,7 +1469,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     
     // EditorToolsPanel methods
     private async initializeEditorToolsPanelLifecycle(container: HTMLElement): Promise<void> {
-        try {
             this.logToConsole('Initializing EditorToolsPanel with lifecycle...');
             
             // Create EditorToolsPanel component
@@ -1455,21 +1479,16 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             
             // Phase 2: Set dependencies directly using explicit setters
             this.editorToolsPanel.setPageState(this.pageState);
-            await this.editorToolsPanel.setupDependencies({});
+            await this.editorToolsPanel.setupDependencies();
             
             // Phase 3: Activate component
             await this.editorToolsPanel.activate();
             
             this.logToConsole('EditorToolsPanel initialized with lifecycle architecture');
-            
-        } catch (error) {
-            this.logToConsole(`Failed to initialize EditorToolsPanel with lifecycle: ${error}`);
-        }
     }
     
     // Legacy method for backward compatibility
     private initializeEditorToolsPanel(container: HTMLElement): void {
-        try {
             this.logToConsole('Initializing EditorToolsPanel...');
             
             // Create EditorToolsPanel component
@@ -1479,15 +1498,10 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             this.editorToolsPanel.setPageState(this.pageState);
             
             this.logToConsole('EditorToolsPanel initialized with page state');
-            
-        } catch (error) {
-            this.logToConsole(`Failed to initialize EditorToolsPanel: ${error}`);
-        }
     }
     
     // TileStats panel methods
     private async initializeTileStatsPanelLifecycle(container: HTMLElement): Promise<void> {
-        try {
             this.logToConsole('Initializing TileStatsPanel with lifecycle...');
             
             // Create TileStatsPanel component
@@ -1502,16 +1516,12 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             } else {
                 throw new Error('World is not available for TileStatsPanel');
             }
-            await this.tileStatsPanel.setupDependencies({});
+            await this.tileStatsPanel.setupDependencies();
             
             // Phase 3: Activate component
             await this.tileStatsPanel.activate();
             
             this.logToConsole('TileStatsPanel initialized with lifecycle architecture');
-            
-        } catch (error) {
-            this.logToConsole(`Failed to initialize TileStatsPanel with lifecycle: ${error}`);
-        }
     }
     
     // Legacy method for backward compatibility - now uses lifecycle internally
@@ -2161,7 +2171,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
     }
     
     private handlePhaserTileClick(q: number, r: number): void {
-        try {
             // Update coordinate inputs
             const rowInput = document.getElementById('paint-row') as HTMLInputElement;
             const colInput = document.getElementById('paint-col') as HTMLInputElement;
@@ -2172,13 +2181,6 @@ class WorldEditorPage extends BasePage implements WorldObserver, PageStateObserv
             // Log the click
             const currentMode = this.pageState?.getToolState().placementMode || 'terrain';
             this.logToConsole(`Tile clicked at Q=${q}, R=${r} in ${currentMode} mode`);
-            
-            // Note: Actual tile painting is now handled directly by PhaserEditorComponent
-            // This method just updates UI elements that need to react to clicks
-            
-        } catch (error) {
-            this.logToConsole(`Tile click handler error: ${error}`);
-        }
     }
 }
 
@@ -2190,7 +2192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const page = new WorldEditorPage(eventBus);
 
     // Create lifecycle controller with debug logging
-    const lifecycleController = new LifecycleController(eventBus{
+    const lifecycleController = new LifecycleController(eventBus, {
         enableDebugLogging: true,
         phaseTimeoutMs: 15000, // Increased timeout for complex initialization
         continueOnError: false // Fail fast for debugging

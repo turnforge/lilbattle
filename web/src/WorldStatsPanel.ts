@@ -22,11 +22,11 @@ export class WorldStatsPanel extends BaseComponent {
         this.log('Initializing WorldStatsPanel component');
         
         // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, (payload) => {
+        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
             this.handleWorldDataLoaded(payload.data);
         });
         
-        this.subscribe<WorldStatsUpdatedPayload>(WorldEventTypes.WORLD_STATS_UPDATED, (payload) => {
+        this.subscribe<WorldStatsUpdatedPayload>(WorldEventTypes.WORLD_STATS_UPDATED, this, (payload) => {
             this.handleStatsUpdated(payload.data);
         });
         
@@ -34,24 +34,21 @@ export class WorldStatsPanel extends BaseComponent {
     }
     
     protected bindToDOM(): void {
-        try {
-            this.log('Binding WorldStatsPanel to DOM');
-            
-            // Find or create basic stats section
-            let basicStats = this.findElement('[data-stat-section="basic"]');
-            if (!basicStats) {
-                this.createBasicStatsSection();
-            }
-            
-            // Find or create terrain stats section  
-            let terrainStats = this.findElement('[data-stat-section="terrain"]');
-            if (!terrainStats) {
-                this.createTerrainStatsSection();
-            }
-            
-            this.log('WorldStatsPanel bound to DOM');
-            
-        // Removed try/catch - let errors propagate for easier debugging
+        this.log('Binding WorldStatsPanel to DOM');
+        
+        // Find or create basic stats section
+        let basicStats = this.findElement('[data-stat-section="basic"]');
+        if (!basicStats) {
+            this.createBasicStatsSection();
+        }
+        
+        // Find or create terrain stats section  
+        let terrainStats = this.findElement('[data-stat-section="terrain"]');
+        if (!terrainStats) {
+            this.createTerrainStatsSection();
+        }
+        
+        this.log('WorldStatsPanel bound to DOM');
     }
     
     protected destroyComponent(): void {
@@ -82,40 +79,37 @@ export class WorldStatsPanel extends BaseComponent {
      * Calculate statistics from world data and update display
      */
     private calculateAndUpdateStats(worldData: WorldDataLoadedPayload): void {
-        try {
-            // Calculate dimensions from bounds
-            const width = worldData.bounds ? worldData.bounds.maxQ - worldData.bounds.minQ + 1 : 0;
-            const height = worldData.bounds ? worldData.bounds.maxR - worldData.bounds.minR + 1 : 0;
+        // Calculate dimensions from bounds
+        const width = worldData.bounds ? worldData.bounds.maxQ - worldData.bounds.minQ + 1 : 0;
+        const height = worldData.bounds ? worldData.bounds.maxR - worldData.bounds.minR + 1 : 0;
+        
+        // Calculate terrain distribution
+        const terrainDistribution: { [terrainType: number]: { count: number; percentage: number; name: string } } = {};
+        
+        Object.entries(worldData.terrainCounts).forEach(([terrainType, count]) => {
+            const percentage = worldData.totalTiles > 0 ? Math.round((count / worldData.totalTiles) * 100) : 0;
+            const terrainNum = parseInt(terrainType);
             
-            // Calculate terrain distribution
-            const terrainDistribution: { [terrainType: number]: { count: number; percentage: number; name: string } } = {};
-            
-            Object.entries(worldData.terrainCounts).forEach(([terrainType, count]) => {
-                const percentage = worldData.totalTiles > 0 ? Math.round((count / worldData.totalTiles) * 100) : 0;
-                const terrainNum = parseInt(terrainType);
-                
-                terrainDistribution[terrainNum] = {
-                    count: count,
-                    percentage: percentage,
-                    name: this.getTerrainName(terrainNum)
-                };
-            });
-            
-            // Create stats payload
-            this.statsData = {
-                totalTiles: worldData.totalTiles,
-                totalUnits: worldData.totalUnits,
-                dimensions: { width, height },
-                terrainDistribution
+            terrainDistribution[terrainNum] = {
+                count: count,
+                percentage: percentage,
+                name: this.getTerrainName(terrainNum)
             };
-            
-            // Update display
-            this.updateDisplay();
-            
-            // Emit stats updated event for other components
-            this.emit(WorldEventTypes.WORLD_STATS_UPDATED, this.statsData);
-            
-        // Removed try/catch - let errors propagate for easier debugging
+        });
+        
+        // Create stats payload
+        this.statsData = {
+            totalTiles: worldData.totalTiles,
+            totalUnits: worldData.totalUnits,
+            dimensions: { width, height },
+            terrainDistribution
+        };
+        
+        // Update display
+        this.updateDisplay();
+        
+        // Emit stats updated event for other components
+        this.emit(WorldEventTypes.WORLD_STATS_UPDATED, this.statsData, this);
     }
     
     /**
@@ -124,11 +118,8 @@ export class WorldStatsPanel extends BaseComponent {
     private updateDisplay(): void {
         if (!this.statsData) return;
         
-        try {
-            this.updateBasicStats();
-            this.updateTerrainStats();
-            
-        // Removed try/catch - let errors propagate for easier debugging
+        this.updateBasicStats();
+        this.updateTerrainStats();
     }
     
     /**

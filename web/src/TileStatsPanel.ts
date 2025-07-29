@@ -1,4 +1,4 @@
-import { Unit, Tile, World, WorldObserver, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
@@ -18,7 +18,7 @@ import { TERRAIN_NAMES, UNIT_NAMES, PLAYER_COLORS } from './ColorsAndNames'
  * - Creates its own DOM structure for statistics display
  * - Handles refresh button and automatic data updates
  */
-export class TileStatsPanel extends BaseComponent implements WorldObserver {
+export class TileStatsPanel extends BaseComponent {
     // Dependencies (injected via explicit setters)
     private world: World | null = null;
     
@@ -26,6 +26,9 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     private isUIBound = false;
     private isActivated = false;
     private pendingOperations: Array<() => void> = [];
+    
+    // EventBus unsubscribe handlers for World events
+    private worldUnsubscribeHandlers: Array<() => void> = [];
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('tile-stats-panel', rootElement, eventBus, debugMode);
@@ -38,23 +41,17 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
             return [];
         }
         
-        try {
-            this.log('Binding TileStatsPanel to DOM');
-            
-            // Create the stats display structure
-            this.createStatsDisplay();
-            this.setupRefreshButton();
-            
-            this.isUIBound = true;
-            this.log('TileStatsPanel bound to DOM successfully');
-            
-            // This is a leaf component - no children
-            return [];
-            
-        } catch (error) {
-            this.handleError('Failed to bind TileStatsPanel to DOM', error);
-            throw error;
-        }
+        this.log('Binding TileStatsPanel to DOM');
+        
+        // Create the stats display structure
+        this.createStatsDisplay();
+        this.setupRefreshButton();
+        
+        this.isUIBound = true;
+        this.log('TileStatsPanel bound to DOM successfully');
+        
+        // This is a leaf component - no children
+        return [];
     }
     
     // Phase 2: Inject dependencies - simplified to use explicit setters
@@ -75,9 +72,27 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
         this.world = world;
         this.log('World set via explicit setter');
         
-        // Subscribe to world events immediately when world is set
-        if (this.world) {
-            this.world.subscribe(this);
+        // Unsubscribe from previous world if it exists
+        this.worldUnsubscribeHandlers.forEach(unsubscribe => unsubscribe());
+        this.worldUnsubscribeHandlers = [];
+        
+        // Subscribe to world events via EventBus immediately when world is set
+        if (world) {
+            this.worldUnsubscribeHandlers.push(
+                this.eventBus.subscribe(WorldEventType.TILES_CHANGED, this, (eventData) => {
+                    this.onWorldEvent({ type: WorldEventType.TILES_CHANGED, data: eventData });
+                })
+            );
+            this.worldUnsubscribeHandlers.push(
+                this.eventBus.subscribe(WorldEventType.UNITS_CHANGED, this, (eventData) => {
+                    this.onWorldEvent({ type: WorldEventType.UNITS_CHANGED, data: eventData });
+                })
+            );
+            this.worldUnsubscribeHandlers.push(
+                this.eventBus.subscribe(WorldEventType.WORLD_LOADED, this, (eventData) => {
+                    this.onWorldEvent({ type: WorldEventType.WORLD_LOADED, data: eventData });
+                })
+            );
         }
     }
     
@@ -109,10 +124,9 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     public deactivate(): void {
         this.log('Deactivating TileStatsPanel');
         
-        // Unsubscribe from World events
-        if (this.world) {
-            this.world.unsubscribe(this);
-        }
+        // Unsubscribe from World events using stored handlers
+        this.worldUnsubscribeHandlers.forEach(unsubscribe => unsubscribe());
+        this.worldUnsubscribeHandlers = [];
         
         // Clear any pending operations
         this.pendingOperations = [];
@@ -187,11 +201,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
     private executeWhenReady(operation: () => void): void {
         if (this.isActivated && this.world) {
             // Component is ready - execute immediately
-            try {
-                operation();
-            } catch (error) {
-                this.handleError('Operation failed', error);
-            }
+            operation();
         } else {
             // Component not ready - queue for later
             this.pendingOperations.push(operation);
@@ -210,11 +220,7 @@ export class TileStatsPanel extends BaseComponent implements WorldObserver {
             this.pendingOperations = [];
             
             operations.forEach(operation => {
-                try {
-                    operation();
-                } catch (error) {
-                    this.handleError('Pending operation failed', error);
-                }
+                operation();
             });
         }
     }

@@ -27,6 +27,10 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
     // Component instances
     private worldViewer: WorldViewer | null = null;
     private worldStatsPanel: WorldStatsPanel | null = null;
+    
+    constructor(eventBus: EventBus, debugMode = true) {
+        super('world-details-page', eventBus, debugMode); // Enable debug mode
+    }
 
     /**
      * Load game configuration from hidden inputs (required by BasePage)
@@ -45,7 +49,7 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
         console.log('WorldDetailsPage: Subscribing to world-viewer-ready event');
-        this.eventBus.subscribe('world-viewer-ready', () => {
+        this.eventBus.subscribe('world-viewer-ready', null, () => {
             console.log('WorldDetailsPage: WorldViewer is ready, loading world data...');
             if (this.currentWorldId) {
               // Give Phaser time to fully initialize webgl context and scene
@@ -53,7 +57,7 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
                 await this.loadWorldData()
               }, 10)
             }
-        }, 'world-details-page');
+        });
     }
 
     /**
@@ -144,14 +148,13 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
      * Load world data and coordinate between components
      */
     private async loadWorldData(): Promise<void> {
-        try {
             console.log(`WorldDetailsPage: Loading world data...`);
             
             // Load world data from the hidden JSON element
             const worldData = this.loadWorldDataFromElement();
             
             if (worldData) {
-                this.world = World.deserialize(worldData);
+                this.world = World.deserialize(this.eventBus, worldData);
                 console.log('World data loaded successfully');
                 
                 // Use WorldViewer component to load the world
@@ -166,11 +169,6 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
                 console.error('No world data found');
                 this.showToast('Error', 'No world data found', 'error');
             }
-            
-        } catch (error) {
-            console.error('Failed to load world data:', error);
-            this.showToast('Error', 'Failed to load world data', 'error');
-        }
     }
     
     /**
@@ -178,7 +176,6 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
      * Now loads from both world metadata and world tiles/units data
      */
     private loadWorldDataFromElement(): any {
-        try {
             // Load world metadata
             const worldMetadataElement = document.getElementById('world-data-json');
             const worldTilesElement = document.getElementById('world-tiles-data-json');
@@ -244,10 +241,6 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
             
             console.log('No valid world data found in page elements');
             return null;
-        } catch (error) {
-            console.error('Error parsing world data from page elements:', error);
-            return null;
-        }
     }
     
 

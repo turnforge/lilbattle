@@ -145,11 +145,7 @@ export class EditorToolsPanel extends BaseComponent {
     private executeWhenReady(operation: () => void): void {
         if (this.isActivated && this.pageState) {
             // Component is ready - execute immediately
-            try {
-                operation();
-            } catch (error) {
-                this.handleError('Operation failed', error);
-            }
+            operation();
         } else {
             // Component not ready - queue for later
             this.pendingOperations.push(operation);
@@ -168,11 +164,7 @@ export class EditorToolsPanel extends BaseComponent {
             this.pendingOperations = [];
             
             operations.forEach(operation => {
-                try {
-                    operation();
-                } catch (error) {
-                    this.handleError('Pending operation failed', error);
-                }
+                operation();
             });
         }
     }
