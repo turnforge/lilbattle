@@ -35,50 +35,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         return new PhaserWorldScene() as TScene;
     }
     
-    protected initializeComponent(): void {
-        this.log('Initializing WorldViewer component');
-        
-        // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
-            this.handleWorldDataLoaded(payload);
-        });
-        
-        this.log('WorldViewer component initialized');
-    }
-    
-    protected bindToDOM(): void {
-        this.log('Binding WorldViewer to DOM');
-        
-        // Find the phaser-viewer-container within the root element
-        let phaserContainer = this.rootElement.querySelector('#phaser-viewer-container') as HTMLElement;
-        
-        if (!phaserContainer) {
-            // If not found as child, check if root element IS the phaser container
-            if (this.rootElement.id === 'phaser-viewer-container') {
-                phaserContainer = this.rootElement;
-            } else {
-                // Create the phaser container as a child
-                console.warn('phaser-viewer-container not found, creating one');
-                phaserContainer = document.createElement('div');
-                phaserContainer.id = 'phaser-viewer-container';
-                phaserContainer.className = 'w-full h-full min-h-96';
-                this.rootElement.appendChild(phaserContainer);
-            }
-        }
-        
-        this.viewerContainer = phaserContainer;
-        
-        // Ensure the container has the right classes
-        if (!this.viewerContainer.classList.contains('w-full')) {
-            this.viewerContainer.className = 'w-full h-full min-h-96';
-        }
-        
-        this.log('WorldViewer bound to DOM, container:', this.viewerContainer);
-        
-        // Phaser initialization will happen in activate() phase, not here
-        console.log('WorldViewer: DOM binding complete, waiting for activate() phase');
-    }
-    
     protected destroyComponent(): void {
         this.log('Destroying WorldViewer component');
         
@@ -98,7 +54,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     /**
      * Initialize the appropriate Phaser scene (PhaserWorldScene or PhaserGameScene)
      */
-    private async initializePhaserScene(): Promise<void> {
+    protected async initializePhaserScene(): Promise<void> {
         console.log(`WorldViewer: initializePhaserScene() called`);
         
         // Guard against multiple initialization
@@ -125,7 +81,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         this.emit(WorldEventTypes.WORLD_VIEWER_READY, {
             componentId: this.componentId,
             success: true
-        }, this);
+        }, this, this);
         console.log('WorldViewer: WORLD_VIEWER_READY event emitted');
         
         // Load world data if we have it
@@ -207,7 +163,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         }
         
         // Emit data loaded event for other components
-        this.emit(WorldEventTypes.WORLD_DATA_LOADED, this.loadedWorldData, this);
+        this.emit(WorldEventTypes.WORLD_DATA_LOADED, this.loadedWorldData, this, this);
     }
     
     /**
@@ -306,7 +262,33 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     performLocalInit(): LCMComponent[] {
         console.log('WorldViewer: performLocalInit() - Phase 1');
         
-        // DOM setup is already done in bindToDOM(), just return no child components
+        // Find the phaser-viewer-container within the root element
+        let phaserContainer = this.rootElement.querySelector('#phaser-viewer-container') as HTMLElement;
+        
+        if (!phaserContainer) {
+            // If not found as child, check if root element IS the phaser container
+            if (this.rootElement.id === 'phaser-viewer-container') {
+                phaserContainer = this.rootElement;
+            } else {
+                // Create the phaser container as a child
+                console.warn('phaser-viewer-container not found, creating one');
+                phaserContainer = document.createElement('div');
+                phaserContainer.id = 'phaser-viewer-container';
+                phaserContainer.className = 'w-full h-full min-h-96';
+                this.rootElement.appendChild(phaserContainer);
+            }
+        }
+        
+        this.viewerContainer = phaserContainer;
+        
+        // Ensure the container has the right classes
+        if (!this.viewerContainer.classList.contains('w-full')) {
+            this.viewerContainer.className = 'w-full h-full min-h-96';
+        }
+        
+        this.log('WorldViewer bound to DOM, container:', this.viewerContainer);
+        console.log('WorldViewer: DOM binding complete, waiting for activate() phase');
+        
         return [];
     }
 
@@ -323,6 +305,11 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      */
     async activate(): Promise<void> {
         console.log('WorldViewer: activate() - Phase 3 - Initializing Phaser');
+        
+        // Subscribe to world data events
+        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
+            this.handleWorldDataLoaded(payload);
+        });
         
         // Now initialize PhaserWorldScene in the proper lifecycle phase
         await this.initializePhaserScene();

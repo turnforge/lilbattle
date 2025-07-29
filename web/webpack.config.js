@@ -19,8 +19,6 @@ const OUTPUT_DIR = path.resolve(__dirname, "./static/js/gen/");
 const components = [
   ["HomePage", 0, "ts"],
   ["LoginPage", 0, "ts"],
-  // ["AppItemListingPage", 0, "ts"],
-  ["GameDetailsPage", 0, "ts"],
   ["WorldDetailsPage", 0, "ts"],
   ["WorldEditorPage", 0, "ts"],
   ["StartGamePage", 0, "ts"],

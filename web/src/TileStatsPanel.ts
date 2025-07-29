@@ -512,17 +512,6 @@ export class TileStatsPanel extends BaseComponent {
         this.deactivate();
     }
     
-    // BaseComponent lifecycle compatibility
-    protected initializeComponent(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
-    }
-    
-    protected bindToDOM(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
-    }
-    
     protected destroyComponent(): void {
         this.deactivate();
     }

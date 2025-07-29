@@ -19,7 +19,7 @@ import { BRUSH_SIZE_NAMES , TERRAIN_NAMES } from "./ColorsAndNames"
  * Now implements LCMComponent for breadth-first initialization
  */
 class WorldEditorPage extends BasePage {
-    private world: World | null = null;
+    private world: World;
     private pageState: WorldEditorPageState;
     private editorOutput: HTMLElement | null = null;
 
@@ -83,12 +83,11 @@ class WorldEditorPage extends BasePage {
         // Create child components that implement LCMComponent
         const childComponents: LCMComponent[] = [];
         
-        // Create ReferenceImagePanel as a lifecycle-managed component
+        // Create ReferenceImagePanel as a lifecycle-managed component using template
         const referenceTemplate = document.getElementById('reference-image-panel-template');
         if (referenceTemplate) {
-            const referenceContainer = referenceTemplate.cloneNode(true) as HTMLElement;
-            referenceContainer.style.display = 'block';
-            this.referenceImagePanel = new ReferenceImagePanel(referenceContainer, this.eventBus, true);
+            // Use the template element directly - it already has proper structure and styling
+            this.referenceImagePanel = new ReferenceImagePanel(referenceTemplate, this.eventBus, true);
             
             // Set dependencies directly using explicit setters
             this.referenceImagePanel.setToastCallback((title: string, message: string, type: 'success' | 'error' | 'info') => {
@@ -96,21 +95,20 @@ class WorldEditorPage extends BasePage {
             });
             
             childComponents.push(this.referenceImagePanel);
-            console.log('WorldEditorPage: Created ReferenceImagePanel child component with dependencies');
+            console.log('WorldEditorPage: Created ReferenceImagePanel child component using template directly');
         }
         
-        // Create EditorToolsPanel as a lifecycle-managed component
+        // Create EditorToolsPanel as a lifecycle-managed component using template
         const toolsTemplate = document.getElementById('tools-panel-template');
         if (toolsTemplate) {
-            const toolsContainer = toolsTemplate.cloneNode(true) as HTMLElement;
-            toolsContainer.style.display = 'block';
-            this.editorToolsPanel = new EditorToolsPanel(toolsContainer, this.eventBus, true);
+            // Use the template element directly - it already has proper structure and styling
+            this.editorToolsPanel = new EditorToolsPanel(toolsTemplate, this.eventBus, true);
             
             // Set dependencies directly using explicit setters  
             this.editorToolsPanel.setPageState(this.pageState);
             
             childComponents.push(this.editorToolsPanel);
-            console.log('WorldEditorPage: Created EditorToolsPanel child component with dependencies');
+            console.log('WorldEditorPage: Created EditorToolsPanel child component using template directly');
         }
         
         // Create TileStatsPanel as a lifecycle-managed component using template
@@ -137,7 +135,7 @@ class WorldEditorPage extends BasePage {
         }
         
         // Use the template element directly - it already has proper structure and styling
-        this.phaserEditorComponent = new PhaserEditorComponent(canvasTemplate, this.eventBus, true);
+        this.phaserEditorComponent = new PhaserEditorComponent("PhaseEditorComponent", canvasTemplate, this.eventBus, true);
         
         // Set dependencies directly using explicit setters
         this.phaserEditorComponent.setPageState(this.pageState);
@@ -1139,22 +1137,20 @@ class WorldEditorPage extends BasePage {
             };
         }
         
-        // Fallback to template-based creation if lifecycle panel not available
+        // Fallback: use the template element directly from the DOM
         const template = document.getElementById('tools-panel-template');
         if (!template) {
             console.error('Tools panel template not found');
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
         
-        const container = template.cloneNode(true) as HTMLElement;
-        container.style.display = 'block';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
-                console.log('EditorToolsPanel dockview component initialized (fallback mode)');
+                console.log('EditorToolsPanel dockview component initialized (fallback mode using template)');
             },
             dispose: () => {}
         };
@@ -1194,7 +1190,7 @@ class WorldEditorPage extends BasePage {
             init: () => {
                 // Initialize PhaserEditorComponent using the template directly
                 // PhaserEditorComponent will find the #editor-canvas-container within this template
-                this.phaserEditorComponent = new PhaserEditorComponent(template, this.eventBus, this.debugMode);
+                this.phaserEditorComponent = new PhaserEditorComponent("PhaserEditorComponent", template, this.eventBus, this.debugMode);
                 this.logToConsole('PhaserEditorComponent initialized using template directly');
                 
                 // Bind grid and coordinates checkboxes
@@ -1251,16 +1247,14 @@ class WorldEditorPage extends BasePage {
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
         
-        const container = template.cloneNode(true) as HTMLElement;
-        container.style.display = 'block';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
-                // Find the editor output element within this cloned template
-                const outputElement = container.querySelector('#editor-output');
+                // Find the editor output element within the template
+                const outputElement = template.querySelector('#editor-output');
                 if (outputElement) {
                     this.editorOutput = outputElement as HTMLElement;
                 }
@@ -1276,13 +1270,11 @@ class WorldEditorPage extends BasePage {
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
         
-        const container = template.cloneNode(true) as HTMLElement;
-        container.style.display = 'block';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
                 // Advanced tools panel is already initialized through global event binding
             },
@@ -1306,22 +1298,20 @@ class WorldEditorPage extends BasePage {
             };
         }
         
-        // Fallback to template-based creation if lifecycle panel not available
+        // Fallback: use the template element directly from the DOM
         const template = document.getElementById('reference-image-panel-template');
         if (!template) {
             console.error('Reference image panel template not found');
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
         
-        const container = template.cloneNode(true) as HTMLElement;
-        container.style.display = 'block';
-        container.style.width = '100%';
-        container.style.height = '100%';
+        // Use the template element directly - no cloning needed
+        template.style.display = 'block';
         
         return {
-            element: container,
+            element: template,
             init: () => {
-                console.log('ReferenceImagePanel dockview component initialized (fallback mode)');
+                console.log('ReferenceImagePanel dockview component initialized (fallback mode using template)');
             },
             dispose: () => {}
         };

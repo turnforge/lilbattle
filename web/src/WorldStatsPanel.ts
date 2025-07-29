@@ -1,6 +1,8 @@
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
+import { LCMComponent } from '../lib/LCMComponent';
 import { WorldEventTypes, WorldDataLoadedPayload, WorldStatsUpdatedPayload } from './events';
+import { TERRAIN_NAMES } from './ColorsAndNames';
 
 /**
  * WorldStatsPanel Component - Manages world statistics display
@@ -10,16 +12,46 @@ import { WorldEventTypes, WorldDataLoadedPayload, WorldStatsUpdatedPayload } fro
  * - Managing basic info and calculated metrics
  * 
  * Layout and styling are handled by parent container and CSS classes.
+ * Uses the worldstats-panel-template from WorldEditorPage.html
  */
-export class WorldStatsPanel extends BaseComponent {
+export class WorldStatsPanel extends BaseComponent implements LCMComponent {
     private statsData: WorldStatsUpdatedPayload | null = null;
+    private isUIBound = false;
+    private isActivated = false;
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('world-stats-panel', rootElement, eventBus, debugMode);
     }
     
-    protected initializeComponent(): void {
-        this.log('Initializing WorldStatsPanel component');
+    // LCMComponent Phase 1: Initialize DOM structure
+    public performLocalInit(): LCMComponent[] {
+        if (this.isUIBound) {
+            this.log('Already bound to DOM, skipping');
+            return [];
+        }
+
+        this.log('Binding WorldStatsPanel to DOM using template');
+        this.bindToTemplate();
+        this.isUIBound = true;
+        this.log('WorldStatsPanel bound to DOM successfully');
+        
+        // This is a leaf component - no children
+        return [];
+    }
+
+    // Phase 2: No external dependencies needed
+    public setupDependencies(): void {
+        this.log('WorldStatsPanel: No dependencies required');
+    }
+
+    // Phase 3: Activate component - Subscribe to events here
+    public activate(): void {
+        if (this.isActivated) {
+            this.log('Already activated, skipping');
+            return;
+        }
+
+        this.log('Activating WorldStatsPanel');
         
         // Subscribe to world data events
         this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
@@ -30,30 +62,36 @@ export class WorldStatsPanel extends BaseComponent {
             this.handleStatsUpdated(payload.data);
         });
         
-        this.log('WorldStatsPanel component initialized');
+        this.isActivated = true;
+        this.log('WorldStatsPanel activated successfully');
     }
-    
-    protected bindToDOM(): void {
-        this.log('Binding WorldStatsPanel to DOM');
-        
-        // Find or create basic stats section
-        let basicStats = this.findElement('[data-stat-section="basic"]');
-        if (!basicStats) {
-            this.createBasicStatsSection();
+
+    // Phase 4: Deactivate component
+    public deactivate(): void {
+        this.log('Deactivating WorldStatsPanel');
+        this.statsData = null;
+        this.isActivated = false;
+        this.log('WorldStatsPanel deactivated');
+    }
+
+    /**
+     * Bind component to the template from WorldEditorPage.html
+     */
+    private bindToTemplate(): void {
+        const template = document.getElementById('worldstats-panel-template');
+        if (!template) {
+            throw new Error('worldstats-panel-template not found. Make sure WorldEditorPage.html template is included.');
         }
-        
-        // Find or create terrain stats section  
-        let terrainStats = this.findElement('[data-stat-section="terrain"]');
-        if (!terrainStats) {
-            this.createTerrainStatsSection();
-        }
-        
-        this.log('WorldStatsPanel bound to DOM');
+
+        // Use the template directly instead of cloning
+        const templateContent = template.innerHTML;
+        this.rootElement.innerHTML = templateContent;
+
+        this.log('Template bound successfully');
     }
     
     protected destroyComponent(): void {
-        this.log('Destroying WorldStatsPanel component');
-        this.statsData = null;
+        this.deactivate();
     }
     
     /**
@@ -93,7 +131,7 @@ export class WorldStatsPanel extends BaseComponent {
             terrainDistribution[terrainNum] = {
                 count: count,
                 percentage: percentage,
-                name: this.getTerrainName(terrainNum)
+                name: TERRAIN_NAMES[terrainNum].name
             };
         });
         
@@ -109,7 +147,7 @@ export class WorldStatsPanel extends BaseComponent {
         this.updateDisplay();
         
         // Emit stats updated event for other components
-        this.emit(WorldEventTypes.WORLD_STATS_UPDATED, this.statsData, this);
+        this.emit(WorldEventTypes.WORLD_STATS_UPDATED, this.statsData, this, this);
     }
     
     /**
@@ -160,83 +198,6 @@ export class WorldStatsPanel extends BaseComponent {
                 terrainElement.textContent = `${info.count} (${info.percentage}%)`;
             }
         });
-    }
-    
-    /**
-     * Create basic stats section if missing
-     */
-    private createBasicStatsSection(): void {
-        const section = document.createElement('div');
-        section.setAttribute('data-stat-section', 'basic');
-        section.className = 'mb-6';
-        section.innerHTML = `
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Basic Info</h3>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">Dimensions:</span>
-                    <span class="text-gray-900 dark:text-white" data-stat="dimensions">0 × 0</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">Total Tiles:</span>
-                    <span class="text-gray-900 dark:text-white" data-stat="total-tiles">0</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">Total Units:</span>
-                    <span class="text-gray-900 dark:text-white" data-stat="total-units">0</span>
-                </div>
-            </div>
-        `;
-        this.rootElement.appendChild(section);
-    }
-    
-    /**
-     * Create terrain stats section if missing
-     */
-    private createTerrainStatsSection(): void {
-        const section = document.createElement('div');
-        section.setAttribute('data-stat-section', 'terrain');
-        section.className = 'mb-6';
-        section.innerHTML = `
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Terrain Distribution</h3>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">🌱 Grass:</span>
-                    <span class="text-gray-900 dark:text-white" data-terrain="1">0 (0%)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">🏜️ Desert:</span>
-                    <span class="text-gray-900 dark:text-white" data-terrain="2">0 (0%)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">🌊 Water:</span>
-                    <span class="text-gray-900 dark:text-white" data-terrain="3">0 (0%)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">⛰️ Mountain:</span>
-                    <span class="text-gray-900 dark:text-white" data-terrain="16">0 (0%)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600 dark:text-gray-400">🗿 Rock:</span>
-                    <span class="text-gray-900 dark:text-white" data-terrain="20">0 (0%)</span>
-                </div>
-            </div>
-        `;
-        this.rootElement.appendChild(section);
-    }
-    
-    /**
-     * Get terrain name and icon by type
-     */
-    private getTerrainName(terrainType: number): string {
-        const terrainNames: { [key: number]: string } = {
-            1: '🌱 Grass',
-            2: '🏜️ Desert', 
-            3: '🌊 Water',
-            16: '⛰️ Mountain',
-            20: '🗿 Rock'
-        };
-        
-        return terrainNames[terrainType] || `Terrain ${terrainType}`;
     }
     
     /**

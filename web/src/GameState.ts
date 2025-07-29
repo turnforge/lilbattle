@@ -89,11 +89,6 @@ export class GameState extends BaseComponent {
         });
     }
 
-    protected bindToDOM(): void {
-        // GameState is a data controller with no DOM interactions
-        // It communicates via EventBus only
-    }
-
     protected destroyComponent(): void {
         // this.client = null;
         this.wasmLoadPromise = null;

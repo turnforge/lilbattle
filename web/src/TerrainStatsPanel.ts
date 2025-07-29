@@ -116,14 +116,14 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
      * Bind component to the template from TerrainStatsPanel.html
      */
     private bindToTemplate(): void {
-        const template = document.getElementById('terrain-stats-panel-template') as HTMLTemplateElement;
+        const template = document.getElementById('terrain-stats-panel-template');
         if (!template) {
             throw new Error('terrain-stats-panel-template not found. Make sure TerrainStatsPanel.html is included.');
         }
 
-        // Clone the template content and append to root element
-        const templateContent = template.content.cloneNode(true) as DocumentFragment;
-        this.rootElement.appendChild(templateContent);
+        // Use the template directly instead of cloning
+        const templateContent = template.innerHTML;
+        this.rootElement.innerHTML = templateContent;
 
         this.log('Template bound successfully');
     }
@@ -375,15 +375,6 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
      */
     public getTerrainData(tileType: number): TerrainData | null {
         return this.terrainData[tileType] || null;
-    }
-
-    // BaseComponent lifecycle compatibility
-    protected initializeComponent(): void {
-        // Handled by the new lifecycle system
-    }
-
-    protected bindToDOM(): void {
-        // Handled by the new lifecycle system
     }
 
     protected destroyComponent(): void {

@@ -235,17 +235,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         this.log('EventBus subscriptions complete');
     }
     
-    // Legacy BaseComponent compatibility (now handled by LCMComponent lifecycle)
-    protected initializeComponent(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
-    }
-    
-    protected bindToDOM(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
-    }
-    
     protected destroyComponent(): void {
         this.log('Destroying PhaserEditorComponent');
         

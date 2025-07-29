@@ -7,7 +7,7 @@ import { EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload
  * ReferenceImagePanel - Demonstrates new lifecycle architecture
  * 
  * This component showcases the breadth-first lifecycle pattern:
- * 1. bindToDOM() - Set up UI controls without dependencies
+ * 1. performLocalInit() - Set up UI controls without dependencies
  * 2. setupDependencies() - Receive PhaserEditorComponent when available
  * 3. activate() - Enable functionality once all dependencies ready
  * 
@@ -912,17 +912,6 @@ export class ReferenceImagePanel extends BaseComponent {
         } else {
             this.log(`Toast: ${title} - ${message} (${type})`);
         }
-    }
-    
-    // BaseComponent lifecycle compatibility
-    protected initializeComponent(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
-    }
-    
-    protected bindToDOM(): void {
-        // This is handled by the new lifecycle system
-        // Keep empty for backward compatibility
     }
     
     protected destroyComponent(): void {
