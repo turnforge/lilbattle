@@ -1140,9 +1140,156 @@ export class MapEditorPage extends BasePage implements MapObserver {
 
 ---
 
-**Last Updated**: 2025-01-22  
-**Architecture Version**: 10.4 (ComponentLifecycle Architecture Complete)  
-**Status**: Complete ComponentLifecycle architecture implementation with external orchestration across all major pages. Clean separation of constructor, DOM, dependency, and activation phases eliminates race conditions and architecture violations. Ready for unit interaction and gameplay completion.
+**Last Updated**: 2025-01-31  
+**Architecture Version**: 11.0 (WASM-Centric GameState Architecture)  
+**Status**: Revolutionary WASM-centric GameState architecture with local caching optimization. Eliminated front-end game state persistence, WASM serves as single source of truth with performance cache. Complete terrain stats functionality with protobuf integration.
+
+## WASM-Centric GameState Architecture (v11.0) ✅ COMPLETED
+
+### Core Architectural Transformation ✅
+**Purpose**: Eliminate frontend game state persistence through WASM singleton pattern with local performance caching
+- **WASM as Source of Truth**: All authoritative game state managed in WASM singletons (Game, GameState, GameMoveHistory)
+- **Frontend Performance Cache**: Local cached GameState proto for query optimization without WASM calls
+- **Singleton Data Loading**: GameViewerPage calls `loadGameDataToWasm()` to populate WASM singletons from page JSON
+- **Non-Nullable Architecture**: World and cachedGameState initialized in constructor, never null
+- **Clean GameState Interface**: Eliminated "mish mash of proto and local methods" through unified WASM pattern
+
+### WASM Singleton Pattern Implementation ✅
+**LoadGameData JavaScript Function**: Direct data injection from frontend to WASM singletons
+```go
+// cmd/weewar-wasm/main.go - Exposed to JavaScript
+js.Global().Get("weewar").Set("loadGameData", js.FuncOf(func(this js.Value, args []js.Value) any {
+    // Convert JavaScript Uint8Array to Go byte slices
+    gameBytes := make([]byte, args[0].Get("length").Int())
+    js.CopyBytesToGo(gameBytes, args[0])
+    
+    gameStateBytes := make([]byte, args[1].Get("length").Int())
+    js.CopyBytesToGo(gameStateBytes, args[1])
+    
+    gameMoveHistoryBytes := make([]byte, args[2].Get("length").Int())
+    js.CopyBytesToGo(gameMoveHistoryBytes, args[2])
+    
+    // Call Load method on WasmGamesServiceImpl singleton
+    wasmGamesService.Load(gameBytes, gameStateBytes, gameMoveHistoryBytes)
+    
+    return map[string]any{
+        "success": true,
+        "message": "Game data loaded successfully into WASM singletons",
+    }
+}))
+```
+
+### Frontend GameState Architecture ✅
+**Lean GameState Component**: Only World object for frontend purposes, WASM handles all game logic
+```typescript
+// web/src/GameState.ts - WASM-centric architecture
+export class GameState extends BaseComponent {
+    private world: World;                    // For UI rendering only
+    private cachedGameState: ProtoGameState;  // Performance cache, NOT source of truth
+    
+    constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        super('game-state', rootElement, eventBus, debugMode);
+        
+        // Non-nullable initialization - controlled order prevents null scenarios
+        this.world = new World(eventBus, 'Loading...');
+        this.cachedGameState = create(ProtoGameStateSchema, {
+            gameId: '',
+            currentPlayer: 0,
+            turnCounter: 1,
+            status: 'loading'
+        });
+    }
+    
+    // Load game data into WASM singletons - NEW WASM-CENTRIC APPROACH
+    public async loadGameDataToWasm(): Promise<void> {
+        await this.ensureWASMLoaded();
+        
+        // Read JSON from page elements and convert to Uint8Array
+        const gameBytes = new TextEncoder().encode(gameElement.textContent);
+        const gameStateBytes = new TextEncoder().encode(gameStateElement.textContent);
+        const historyBytes = new TextEncoder().encode(historyElement.textContent);
+        
+        // Call WASM loadGameData function - populates singletons
+        const wasmResult = (window as any).weewar.loadGameData(gameBytes, gameStateBytes, historyBytes);
+        
+        if (!wasmResult.success) {
+            throw new Error(`WASM load failed: ${wasmResult.error}`);
+        }
+        
+        // Initialize World and cache from WASM data
+        await this.initializeWorldFromWasm();
+    }
+}
+```
+
+### Local Caching Optimization ✅
+**Performance Without Compromising Architecture**: Local cache avoids WASM calls for UI operations
+```typescript
+// Cached data access - no WASM calls for performance
+public getGameState(): ProtoGameState {
+    return this.cachedGameState;  // Immediate return, no async WASM call
+}
+
+// Cache update when game state changes
+private applyWorldChanges(changes: WorldChange[]): void {
+    // Update cached GameState for player changes
+    if (change.changeType.case === 'playerChanged') {
+        this.cachedGameState = create(ProtoGameStateSchema, {
+            ...this.cachedGameState,
+            currentPlayer: change.changeType.value.newPlayer,
+            turnCounter: change.changeType.value.newTurn
+        });
+    }
+    
+    // Update World object for UI rendering
+    this.applyUnitMovedToWorld(change.changeType.value);
+}
+```
+
+### Game Initialization Flow ✅
+**GameViewerPage Integration**: Clean initialization flow with WASM data loading
+```typescript
+// web/src/GameViewerPage.ts - Updated initialization
+private async initializeGameWithWASM(): Promise<void> {
+    if (!this.gameState) {
+        throw new Error('GameState component not initialized');
+    }
+
+    // Wait for WASM to be ready (only async part)
+    await this.gameState.waitUntilReady();
+    
+    // Load game data into WASM singletons - NEW APPROACH
+    await this.gameState.loadGameDataToWasm();
+    
+    console.log('Game initialized with WASM engine - data loaded into WASM singletons');
+}
+```
+
+### Method Signature Improvements ✅
+**Non-Async Pattern**: Use cached data instead of WASM calls for immediate UI feedback
+```typescript
+// OLD: Async method requiring WASM calls
+public async moveUnit(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
+    const gameState = await this.getGameState(); // SLOW: WASM call
+    const currentPlayer = gameState.currentPlayer;
+    // ... rest of method
+}
+
+// NEW: Sync method using cached data
+public async moveUnit(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
+    const currentPlayer = this.cachedGameState.currentPlayer; // FAST: cached access
+    const moveAction = GameState.createMoveUnitAction(fromQ, fromR, toQ, toR, currentPlayer);
+    await this.processMoves([moveAction]);
+}
+```
+
+### Architecture Benefits ✅
+- **Single Source of Truth**: WASM maintains authoritative game state, eliminates state synchronization issues
+- **Performance Optimization**: Local caching provides immediate UI feedback without sacrificing architectural purity
+- **Initialization Control**: Non-nullable types with controlled initialization order prevent runtime errors
+- **Clean Interfaces**: Eliminated mixed proto/local methods, unified through WASM services
+- **Terrain Stats Integration**: End-to-end protobuf TerrainDefinition data flow with coordinate information
+- **Memory Efficiency**: Local cache only for performance, not persistence - reduces memory footprint
 
 **Latest Achievement (v10.3)**: Complete WASM Integration with Working Game Bridge:
 
