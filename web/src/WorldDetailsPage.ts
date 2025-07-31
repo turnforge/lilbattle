@@ -85,6 +85,10 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
      */
     deactivate(): void {
         console.log('WorldDetailsPage: deactivate() - cleanup');
+        
+        // Remove event subscriptions
+        this.removeSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
+        
         this.destroy();
     }
     
@@ -94,14 +98,25 @@ class WorldDetailsPage extends BasePage implements LCMComponent {
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
         console.log('WorldDetailsPage: Subscribing to WORLD_VIEWER_READY event');
-        this.eventBus.subscribe(WorldEventTypes.WORLD_VIEWER_READY, null, () => {
-            console.log('WorldDetailsPage: WorldViewer is ready, passing World object...');
-            // Give Phaser time to fully initialize webgl context and scene
+        this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
+    }
+    
+    /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_VIEWER_READY:
+                console.log('WorldDetailsPage: WorldViewer is ready, passing World object...');
                 // Pass the canonical World object directly
-                this.worldViewer!.loadWorld(this.world!);
+                this.worldViewer.loadWorld(this.world);
                 this.showToast('Success', 'World loaded successfully', 'success');
-            // setTimeout(async () => { }, 10);
-        });
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
     }
 
     /**

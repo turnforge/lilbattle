@@ -53,22 +53,41 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
 
         this.log('Activating WorldStatsPanel');
         
-        // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
-            this.handleWorldDataLoaded(payload.data);
-        });
-        
-        this.subscribe<WorldStatsUpdatedPayload>(WorldEventTypes.WORLD_STATS_UPDATED, this, (payload) => {
-            this.handleStatsUpdated(payload.data);
-        });
+        // Subscribe to world data events about any world/stats
+        this.addSubscription(WorldEventTypes.WORLD_DATA_LOADED, null);
+        this.addSubscription(WorldEventTypes.WORLD_STATS_UPDATED, null);
         
         this.isActivated = true;
         this.log('WorldStatsPanel activated successfully');
     }
 
+    /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_DATA_LOADED:
+                this.handleWorldDataLoaded(data);
+                break;
+                
+            case WorldEventTypes.WORLD_STATS_UPDATED:
+                this.handleStatsUpdated(data);
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
+    }
+
     // Phase 4: Deactivate component
     public deactivate(): void {
         this.log('Deactivating WorldStatsPanel');
+        
+        // Remove event subscriptions
+        this.removeSubscription(WorldEventTypes.WORLD_DATA_LOADED, null);
+        this.removeSubscription(WorldEventTypes.WORLD_STATS_UPDATED, null);
+        
         this.statsData = null;
         this.isActivated = false;
         this.log('WorldStatsPanel deactivated');

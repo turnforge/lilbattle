@@ -11,10 +11,10 @@ export interface EventSubscriber {
      * Handle incoming events from the EventBus
      * @param eventType - The type of event being handled
      * @param data - The event data payload
-     * @param target - The target/subject entity (what the event is about)
+     * @param subject - The subject/subject entity (what the event is about)
      * @param emitter - The entity that emitted the event
      */
-    handleBusEvent(eventType: string, data: any, target: any, emitter: any): void;
+    handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void;
 }
 
 /**
@@ -37,7 +37,7 @@ export class EventBus {
      * Add a subscription using the EventSubscriber pattern
      * Provides automatic idempotency - same subscriber object won't be added twice
      */
-    public addSubscription(eventType: string, target: any, subscriber: EventSubscriber): void {
+    public addSubscription(eventType: string, subject: any, subscriber: EventSubscriber): void {
         if (!this.subscribers.has(eventType)) {
             this.subscribers.set(eventType, new Set());
         }
@@ -58,7 +58,7 @@ export class EventBus {
     /**
      * Remove a subscription using the EventSubscriber pattern
      */
-    public removeSubscription(eventType: string, target: any, subscriber: EventSubscriber): void {
+    public removeSubscription(eventType: string, subject: any, subscriber: EventSubscriber): void {
         const subscribers = this.subscribers.get(eventType);
         
         if (subscribers) {
@@ -79,10 +79,10 @@ export class EventBus {
      * Emit an event to all subscribers
      * @param eventType - The event type to emit
      * @param data - The event data payload
-     * @param target - The target/subject entity that this event relates to
+     * @param subject - The subject/subject entity that this event relates to
      * @param emitter - The entity that emitted the event
      */
-    public emit<T = any>(eventType: string, data: T, target: any, emitter: any): void {
+    public emit<T = any>(eventType: string, data: T, subject: any, emitter: any): void {
         const subscribers = this.subscribers.get(eventType);
         
         if (!subscribers || subscribers.size === 0) {
@@ -102,7 +102,7 @@ export class EventBus {
         // Call EventSubscriber handlers with error isolation
         subscribers.forEach(subscriber => {
             try {
-                subscriber.handleBusEvent(eventType, data, target, emitter);
+                subscriber.handleBusEvent(eventType, data, subject, emitter);
                 successCount++;
             } catch (error) {
                 errorCount++;

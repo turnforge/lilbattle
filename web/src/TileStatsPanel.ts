@@ -28,7 +28,6 @@ export class TileStatsPanel extends BaseComponent {
     private pendingOperations: Array<() => void> = [];
     
     // EventBus unsubscribe handlers for World events
-    private worldUnsubscribeHandlers: Array<() => void> = [];
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('tile-stats-panel', rootElement, eventBus, debugMode);
@@ -69,30 +68,21 @@ export class TileStatsPanel extends BaseComponent {
     
     // Explicit dependency setters
     public setWorld(world: World): void {
+        // Unsubscribe from previous world if it exists
+        if (this.world) {
+            this.removeSubscription(WorldEventType.TILES_CHANGED, this.world);
+            this.removeSubscription(WorldEventType.UNITS_CHANGED, this.world);
+            this.removeSubscription(WorldEventType.WORLD_LOADED, this.world);
+        }
+        
         this.world = world;
         this.log('World set via explicit setter');
         
-        // Unsubscribe from previous world if it exists
-        this.worldUnsubscribeHandlers.forEach(unsubscribe => unsubscribe());
-        this.worldUnsubscribeHandlers = [];
-        
         // Subscribe to world events via EventBus immediately when world is set
         if (world) {
-            this.worldUnsubscribeHandlers.push(
-                this.eventBus.subscribe(WorldEventType.TILES_CHANGED, this, (eventData) => {
-                    this.onWorldEvent({ type: WorldEventType.TILES_CHANGED, data: eventData });
-                })
-            );
-            this.worldUnsubscribeHandlers.push(
-                this.eventBus.subscribe(WorldEventType.UNITS_CHANGED, this, (eventData) => {
-                    this.onWorldEvent({ type: WorldEventType.UNITS_CHANGED, data: eventData });
-                })
-            );
-            this.worldUnsubscribeHandlers.push(
-                this.eventBus.subscribe(WorldEventType.WORLD_LOADED, this, (eventData) => {
-                    this.onWorldEvent({ type: WorldEventType.WORLD_LOADED, data: eventData });
-                })
-            );
+            this.addSubscription(WorldEventType.TILES_CHANGED, world);
+            this.addSubscription(WorldEventType.UNITS_CHANGED, world);
+            this.addSubscription(WorldEventType.WORLD_LOADED, world);
         }
     }
     
@@ -120,13 +110,39 @@ export class TileStatsPanel extends BaseComponent {
         this.log('TileStatsPanel activated successfully');
     }
     
+    /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventType.TILES_CHANGED:
+                this.onWorldEvent({ type: WorldEventType.TILES_CHANGED, data });
+                break;
+                
+            case WorldEventType.UNITS_CHANGED:
+                this.onWorldEvent({ type: WorldEventType.UNITS_CHANGED, data });
+                break;
+                
+            case WorldEventType.WORLD_LOADED:
+                this.onWorldEvent({ type: WorldEventType.WORLD_LOADED, data });
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, subject, emitter);
+        }
+    }
+
     // Phase 4: Deactivate component
     public deactivate(): void {
         this.log('Deactivating TileStatsPanel');
         
-        // Unsubscribe from World events using stored handlers
-        this.worldUnsubscribeHandlers.forEach(unsubscribe => unsubscribe());
-        this.worldUnsubscribeHandlers = [];
+        // Unsubscribe from World events
+        if (this.world) {
+            this.removeSubscription(WorldEventType.TILES_CHANGED, this.world);
+            this.removeSubscription(WorldEventType.UNITS_CHANGED, this.world);
+            this.removeSubscription(WorldEventType.WORLD_LOADED, this.world);
+        }
         
         // Clear any pending operations
         this.pendingOperations = [];

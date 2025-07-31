@@ -36,8 +36,7 @@ export interface Component {
  * All components auto-initialize in constructor AND implement LCMComponent
  * for coordination with other components when needed.
  */
-export abstract class BaseComponent implements Component, LCMComponent {
-    protected eventUnsubscribers: (() => void)[] = [];
+export abstract class BaseComponent implements Component, LCMComponent, EventSubscriber {
     protected _eventBus: EventBus;
     
     constructor(public readonly componentId: string, public readonly rootElement: HTMLElement, eventBus: EventBus | null = null, public readonly debugMode: boolean = false) {
@@ -62,10 +61,6 @@ export abstract class BaseComponent implements Component, LCMComponent {
     
     public destroy(): void {
         this.log('Destroying component...');
-
-        // Unsubscribe from all events
-        this.eventUnsubscribers.forEach(unsubscribe => unsubscribe());
-        this.eventUnsubscribers = [];
         
         // Call component-specific cleanup
         this.destroyComponent();
@@ -77,18 +72,36 @@ export abstract class BaseComponent implements Component, LCMComponent {
     }
     
     /**
-     * Subscribe to an event with automatic cleanup on destroy
+     * Subscribe to an event using the new EventSubscriber pattern
      */
-    protected subscribe<T = any>(eventType: string, target: any, handler: EventHandler<T>): void {
-        const unsubscribe = this.eventBus.subscribe(eventType, target, handler);
-        this.eventUnsubscribers.push(unsubscribe);
+    protected addSubscription(eventType: string, target: any = null): void {
+        this.eventBus.addSubscription(eventType, target, this);
+    }
+    
+    /**
+     * Unsubscribe from an event using the new EventSubscriber pattern  
+     */
+    protected removeSubscription(eventType: string, target: any = null): void {
+        this.eventBus.removeSubscription(eventType, target, this);
     }
     
     /**
      * Emit an event from this component
      */
     protected emit<T = any>(eventType: string, data: T, target: any, emitter: any = null): void {
-        this.eventBus.emit(eventType, data, target, emitter || this)
+        this.eventBus.emit(eventType, data, target, emitter || this);
+    }
+    
+    /**
+     * Default implementation of EventSubscriber interface
+     * Components can override this to handle events
+     */
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        // Default: no event handling
+        // Subclasses should override this method to handle specific events
+        if (this.debugMode) {
+            console.log(`[${this.componentId}] Received unhandled event: ${eventType}`);
+        }
     }
     
     /**

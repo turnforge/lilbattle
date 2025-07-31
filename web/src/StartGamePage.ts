@@ -51,15 +51,7 @@ class StartGamePage extends BasePage implements LCMComponent {
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
             console.log('StartGamePage: Subscribing to world-viewer-ready event');
-            this.eventBus.subscribe('world-viewer-ready', this.worldViewer, () => {
-                console.log('StartGamePage: WorldViewer is ready, loading world data...');
-                if (this.currentWorldId) {
-                  // Give Phaser time to fully initialize webgl context and scene
-                  setTimeout(async () => {
-                    await this.loadWorldData()
-                  }, 10)
-                }
-            });
+            this.addSubscription('world-viewer-ready', null);
     }
 
     /**
@@ -591,10 +583,35 @@ class StartGamePage extends BasePage implements LCMComponent {
     }
 
     /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
+        switch(eventType) {
+            case 'world-viewer-ready':
+                console.log('StartGamePage: WorldViewer is ready, loading world data...');
+                if (this.currentWorldId) {
+                    // Give Phaser time to fully initialize webgl context and scene
+                    setTimeout(async () => {
+                        await this.loadWorldData();
+                    }, 10);
+                }
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, subject, emitter);
+        }
+    }
+
+    /**
      * Cleanup phase (called by lifecycle controller if needed)
      */
     deactivate(): void {
         console.log('StartGamePage: deactivate() - cleanup');
+        
+        // Remove event subscriptions
+        this.removeSubscription('world-viewer-ready', null);
+        
         this.destroy();
     }
 }

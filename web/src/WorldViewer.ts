@@ -1,5 +1,5 @@
 import { BaseComponent } from '../lib/Component';
-import { EventBus, EventPayload, } from '../lib/EventBus';
+import { EventBus } from '../lib/EventBus';
 import { WorldEventTypes, WorldDataLoadedPayload } from './events';
 import { PhaserWorldScene } from './phaser/PhaserWorldScene';
 import { PhaserGameScene } from './phaser/PhaserGameScene';
@@ -93,8 +93,8 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     /**
      * Handle world data loaded event (deprecated - World object should be passed directly)
      */
-    private handleWorldDataLoaded(payload: EventPayload<WorldDataLoadedPayload>): void {
-        this.log(`Received world data for world: ${payload.data.worldId}`);
+    private handleWorldDataLoaded(payload: WorldDataLoadedPayload): void {
+        this.log(`Received world data for world: ${payload.worldId}`);
         // This is now deprecated - World object should be passed directly via loadWorld()
         console.warn('WorldViewer: handleWorldDataLoaded is deprecated, use loadWorld(world) instead');
     }
@@ -299,10 +299,8 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
             return;
         }
         
-        // Subscribe to world data events
-        this.subscribe<WorldDataLoadedPayload>(WorldEventTypes.WORLD_DATA_LOADED, this, (payload) => {
-            this.handleWorldDataLoaded(payload);
-        });
+        // Subscribe to world data events about any world
+        this.addSubscription(WorldEventTypes.WORLD_DATA_LOADED, null);
         
         // Now initialize PhaserWorldScene in the proper lifecycle phase
         await this.initializePhaserScene();
@@ -311,10 +309,29 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     }
 
     /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_DATA_LOADED:
+                this.handleWorldDataLoaded(data);
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
+    }
+
+    /**
      * Cleanup phase (called by lifecycle controller if needed)
      */
     deactivate(): void {
         console.log('WorldViewer: deactivate() - cleanup');
+        
+        // Remove event subscriptions
+        this.removeSubscription(WorldEventTypes.WORLD_DATA_LOADED, null);
+        
         this.destroyComponent();
     }
 }
