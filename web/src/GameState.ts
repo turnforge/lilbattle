@@ -1,38 +1,10 @@
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import Weewar_v1_servicesClient from '../gen/wasm-clients/weewar_v1_servicesClient.client';
-import { ProcessMovesRequest, ProcessMovesResponse, ProcessMovesRequestSchema } from '../gen/weewar/v1/games_pb';
-import { World, GameMove, WorldChange, GameMoveSchema, MoveUnitAction, MoveUnitActionSchema, AttackUnitAction, AttackUnitActionSchema, EndTurnAction, EndTurnActionSchema } from '../gen/weewar/v1/models_pb';
+import { ProcessMovesRequest, ProcessMovesResponse, ProcessMovesRequestSchema, GetGameRequest, GetGameRequestSchema, GetGameStateRequest, GetGameStateRequestSchema } from '../gen/weewar/v1/games_pb';
+import { GameMove, WorldChange, GameMoveSchema, MoveUnitAction, MoveUnitActionSchema, AttackUnitAction, AttackUnitActionSchema, EndTurnAction, EndTurnActionSchema, TerrainDefinition, UnitDefinition, GameState as ProtoGameState, GameStateSchema as ProtoGameStateSchema, Game as ProtoGame, GameSchema as ProtoGameSchema } from '../gen/weewar/v1/models_pb';
 import { create } from '@bufbuild/protobuf';
-
-/**
- * Minimal game state interface focused on core game data
- */
-export interface GameStateData {
-    lastUpdated: number;
-    wasmLoaded: boolean;
-    gameId: string;
-    currentPlayer: number;
-    turnCounter: number;
-    status: string;
-    world: World | null; // Shared world object that all UI components reference
-}
-
-/**
- * Legacy interface for backward compatibility with GameViewerPage
- * TODO: Remove once GameViewerPage is updated to use new architecture
- */
-export interface GameCreateData {
-    currentPlayer: number;
-    turnCounter: number;
-    status: string;
-    allUnits: any[];
-    players: any[];
-    teams: any[];
-    mapSize: { rows: number; cols: number };
-    winner: number;
-    hasWinner: boolean;
-}
+import { World } from './World';
 
 /**
  * Legacy interface for backward compatibility with GameViewerPage  
@@ -42,6 +14,32 @@ export interface UnitSelectionData {
     unit: any;
     movableCoords: Array<{ coord: { Q: number; R: number }; cost: number }>;
     attackableCoords: Array<{ Q: number; R: number }>;
+}
+
+/**
+ * Terrain stats class combining TerrainDefinition with tile coordinate data
+ * Extends the generated TerrainDefinition with position information
+ */
+export class TerrainStats {
+    public readonly terrainDefinition: TerrainDefinition;
+    public readonly q: number;
+    public readonly r: number;
+    public readonly player: number;
+
+    constructor(terrainDefinition: TerrainDefinition, q: number, r: number, player: number = 0) {
+        this.terrainDefinition = terrainDefinition;
+        this.q = q;
+        this.r = r;
+        this.player = player;
+    }
+
+    // Convenience getters that delegate to TerrainDefinition
+    get id(): number { return this.terrainDefinition.id; }
+    get name(): string { return this.terrainDefinition.name; }
+    get baseMoveCost(): number { return this.terrainDefinition.baseMoveCost; }
+    get defenseBonus(): number { return this.terrainDefinition.defenseBonus; }
+    get type(): number { return this.terrainDefinition.type; }
+    get description(): string { return this.terrainDefinition.description; }
 }
 
 /**
@@ -56,37 +54,52 @@ export interface UnitSelectionData {
  */
 export class GameState extends BaseComponent {
     private client: Weewar_v1_servicesClient;
-    private gameData: GameStateData;
     private wasmLoadPromise: Promise<void> | null;
+    private wasmLoaded: boolean = false;
+    private gameId: string = '';
+    private world: World;
+    status: string
+    
+    // Local cache of Game and GameState protos for query optimization (avoid WASM calls)
+    // Source of truth is WASM, this is just a performance cache
+    private cachedGame: ProtoGame;
+    private cachedGameState: ProtoGameState;
+    
+    // Cached rules engine data (loaded from page JSON)
+    private terrainDefinitions: { [id: number]: TerrainDefinition } = {};
+    private unitDefinitions: { [id: number]: UnitDefinition } = {};
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('game-state', rootElement, eventBus, debugMode);
         
-        // Initialize minimal game data
-        this.gameData = {
-            lastUpdated: Date.now(),
-            wasmLoaded: false,
-            gameId: '', // Will be set when game is loaded/created
-            currentPlayer: 0,
-            turnCounter: 1,
-            status: 'loading',
-            world: null // Will be populated when game/world is loaded
-        };
-        
         // Initialize WASM client and loading
         this.client = new Weewar_v1_servicesClient();
         this.wasmLoadPromise = this.loadWASMModule();
+        
+        // Initialize with empty objects (will be populated by loadGameDataToWasm)
+        this.world = new World(eventBus, 'Loading...');
+        this.status = 'loading'
+        this.cachedGame = create(ProtoGameSchema, {
+            id: '',
+            name: 'Loading...',
+            creatorId: '',
+            worldId: ''
+        });
+        this.cachedGameState = create(ProtoGameStateSchema, {
+            gameId: '',
+            currentPlayer: 0,
+            turnCounter: 1,
+        });
+        
+        // Load rules engine data from page
+        this.loadRulesEngineData();
     }
 
     protected initializeComponent(): void {
-        this.log('Initializing minimal GameState controller...');
+        this.log('Initializing WASM-centric GameState controller...');
         
-        // Try to load game data from page elements after WASM is loaded
-        this.wasmLoadPromise?.then(() => {
-            this.loadGameFromPageData();
-        }).catch((error) => {
-            this.log('Could not load game data from page during initialization:', error);
-        });
+        // WASM initialization happens automatically in constructor
+        // Game data loading is now handled by GameViewerPage calling loadGameDataToWasm()
     }
 
     protected destroyComponent(): void {
@@ -94,8 +107,25 @@ export class GameState extends BaseComponent {
         this.wasmLoadPromise = null;
     }
 
-    public getGameData(): GameStateData {
-        return { ...this.gameData };
+    /**
+     * Load rules engine data from embedded JSON in page
+     */
+    private loadRulesEngineData(): void {
+        // Load terrain definitions
+        const terrainElement = document.getElementById('terrain-data-json');
+        if (terrainElement && terrainElement.textContent) {
+            const terrainData = JSON.parse(terrainElement.textContent);
+            this.terrainDefinitions = terrainData;
+            this.log('Loaded terrain definitions:', { count: Object.keys(this.terrainDefinitions).length });
+        }
+
+        // Load unit definitions  
+        const unitElement = document.getElementById('unit-data-json');
+        if (unitElement && unitElement.textContent) {
+            const unitData = JSON.parse(unitElement.textContent);
+            this.unitDefinitions = unitData;
+            this.log('Loaded unit definitions:', { count: Object.keys(this.unitDefinitions).length });
+        }
     }
 
     /**
@@ -106,8 +136,7 @@ export class GameState extends BaseComponent {
     
         await this.client.loadWasm('/static/wasm/weewar-cli.wasm');
         
-        this.gameData.wasmLoaded = true;
-        this.gameData.lastUpdated = Date.now();
+        this.wasmLoaded = true;
 
         this.log('WASM module loaded successfully via generated client');
         this.emit('wasm-loaded', { success: true }, this);
@@ -117,7 +146,7 @@ export class GameState extends BaseComponent {
      * Ensure WASM module is loaded before API calls
      */
     private async ensureWASMLoaded(): Promise<Weewar_v1_servicesClient> {
-        if (this.gameData.wasmLoaded && this.client.isReady()) {
+        if (this.wasmLoaded && this.client.isReady()) {
             return this.client;
         }
 
@@ -127,7 +156,7 @@ export class GameState extends BaseComponent {
 
         await this.wasmLoadPromise;
 
-        if (!this.gameData.wasmLoaded || !this.client.isReady()) {
+        if (!this.wasmLoaded || !this.client.isReady()) {
             throw new Error('WASM module failed to load');
         }
         return this.client;
@@ -137,7 +166,7 @@ export class GameState extends BaseComponent {
      * Check if WASM is ready for operations
      */
     public isReady(): boolean {
-        return this.gameData.wasmLoaded;
+        return this.wasmLoaded;
     }
 
     /**
@@ -146,33 +175,19 @@ export class GameState extends BaseComponent {
     public async waitUntilReady(): Promise<void> {
         await this.ensureWASMLoaded();
     }
-
+    
     /**
-     * Set the current game ID for subsequent move processing
+     * Get the current game ID
      */
-    public setGameId(gameId: string): void {
-        this.gameData.gameId = gameId;
-        this.gameData.lastUpdated = Date.now();
-        this.log('Game ID set to:', gameId);
+    public getGameId(): string {
+        return this.cachedGameState.gameId;
     }
-
-    /**
-     * Set the shared world object that all UI components reference
-     */
-    public setWorld(world: World): void {
-        this.gameData.world = world;
-        this.gameData.lastUpdated = Date.now();
-        this.log('World object set');
-        
-        // Notify observers that world has been loaded/updated
-        this.emit('world-loaded', { world: world }, this);
-    }
-
+    
     /**
      * Get the shared world object (used by all UI components)
      */
-    public getWorld(): World | null {
-        return this.gameData.world;
+    public getWorld(): World {
+        return this.world;
     }
 
     /**
@@ -187,7 +202,7 @@ export class GameState extends BaseComponent {
     public async processMoves(moves: GameMove[]): Promise<WorldChange[]> {
         const client = await this.ensureWASMLoaded();
 
-        if (!this.gameData.gameId) {
+        if (!this.gameId) {
             throw new Error('Game ID not set. Call setGameId() first.');
         }
 
@@ -195,7 +210,7 @@ export class GameState extends BaseComponent {
 
         // Create request for ProcessMoves service
         const request = create(ProcessMovesRequestSchema, {
-            gameId: this.gameData.gameId,
+            gameId: this.gameId,
             moves: moves
         });
 
@@ -214,42 +229,46 @@ export class GameState extends BaseComponent {
     }
 
     /**
-     * Apply world changes to internal game state and shared World object
+     * Apply world changes to World object and cached GameState for UI rendering
+     * Note: Authoritative game state is maintained in WASM, this only updates UI layer
      */
     private applyWorldChanges(changes: WorldChange[]): void {
-        let stateChanged = false;
+        let worldUpdated = false;
+        let gameStateUpdated = false;
 
-        // Process each world change and update internal state + shared world
+        // Process each world change and update both World object and cached GameState
         for (const change of changes) {
-            // Handle different types of world changes using union type
-            if (change.changeType.case === 'playerChanged') {
-                this.gameData.currentPlayer = change.changeType.value.newPlayer;
-                this.gameData.turnCounter = change.changeType.value.newTurn;
-                stateChanged = true;
-                this.log('Player changed:', change.changeType.value);
-            }
-            
             if (change.changeType.case === 'unitMoved') {
                 this.applyUnitMovedToWorld(change.changeType.value);
-                stateChanged = true;
-                this.log('Unit moved:', change.changeType.value);
+                worldUpdated = true;
+                this.log('Applied unit move to World object:', change.changeType.value);
             }
 
             if (change.changeType.case === 'unitDamaged') {
                 this.applyUnitDamagedToWorld(change.changeType.value);
-                stateChanged = true;
-                this.log('Unit damaged:', change.changeType.value);
+                worldUpdated = true;
+                this.log('Applied unit damage to World object:', change.changeType.value);
             }
 
             if (change.changeType.case === 'unitKilled') {
                 this.applyUnitKilledToWorld(change.changeType.value);
-                stateChanged = true;
-                this.log('Unit killed:', change.changeType.value);
+                worldUpdated = true;
+                this.log('Applied unit death to World object:', change.changeType.value);
+            }
+            
+            // Update cached GameState for player changes
+            if (change.changeType.case === 'playerChanged') {
+                this.cachedGameState = create(ProtoGameStateSchema, {
+                    ...this.cachedGameState,
+                    currentPlayer: change.changeType.value.newPlayer,
+                    turnCounter: change.changeType.value.newTurn
+                });
+                gameStateUpdated = true;
+                this.log('Updated cached GameState for player change:', change.changeType.value);
             }
         }
 
-        if (stateChanged) {
-            this.gameData.lastUpdated = Date.now();
+        if (worldUpdated || gameStateUpdated) {
             this.notifyObservers(changes);
         }
     }
@@ -258,41 +277,49 @@ export class GameState extends BaseComponent {
      * Apply unit movement to the shared World object
      */
     private applyUnitMovedToWorld(unitMoved: any): void {
-        if (!this.gameData.world || !this.gameData.world.worldData?.tiles) {
-            this.log('Cannot apply unit move - world not loaded');
+        // Get the unit at the source position
+        const unit = this.world.getUnitAt(unitMoved.fromQ, unitMoved.fromR);
+        if (!unit) {
+            this.log(`No unit found at (${unitMoved.fromQ}, ${unitMoved.fromR}) to move`);
             return;
         }
 
-        // TODO: Find and move the unit in the world tiles array
-        // This will require accessing world.worldData.tiles and finding the unit at fromQ,fromR
-        // then moving it to toQ,toR
-        this.log('Applying unit move to world:', unitMoved);
+        // Remove unit from source position
+        this.world.removeUnitAt(unitMoved.fromQ, unitMoved.fromR);
+        
+        // Place unit at destination position
+        this.world.setUnitAt(unitMoved.toQ, unitMoved.toR, unit.unitType, unit.player);
+        
+        this.log(`Moved unit from (${unitMoved.fromQ}, ${unitMoved.fromR}) to (${unitMoved.toQ}, ${unitMoved.toR})`);
     }
 
     /**
      * Apply unit damage to the shared World object
      */
     private applyUnitDamagedToWorld(unitDamaged: any): void {
-        if (!this.gameData.world || !this.gameData.world.worldData?.tiles) {
-            this.log('Cannot apply unit damage - world not loaded');
+        // Get the unit at the specified position
+        const unit = this.world.getUnitAt(unitDamaged.q, unitDamaged.r);
+        if (!unit) {
+            this.log(`No unit found at (${unitDamaged.q}, ${unitDamaged.r}) to damage`);
             return;
         }
 
-        // TODO: Find the unit at q,r and update its health
-        this.log('Applying unit damage to world:', unitDamaged);
+        // Note: The World class doesn't currently track health, so we just log this change
+        // The actual health tracking would happen in a more detailed unit model
+        this.log(`Unit at (${unitDamaged.q}, ${unitDamaged.r}) damaged: ${unitDamaged.previousHealth} -> ${unitDamaged.newHealth}`);
     }
 
     /**
      * Apply unit death to the shared World object
      */
     private applyUnitKilledToWorld(unitKilled: any): void {
-        if (!this.gameData.world || !this.gameData.world.worldData?.tiles) {
-            this.log('Cannot apply unit death - world not loaded');
-            return;
+        // Remove the unit from the world
+        const removed = this.world.removeUnitAt(unitKilled.q, unitKilled.r);
+        if (removed) {
+            this.log(`Removed killed unit at (${unitKilled.q}, ${unitKilled.r}): player ${unitKilled.player} unit type ${unitKilled.unitType}`);
+        } else {
+            this.log(`No unit found at (${unitKilled.q}, ${unitKilled.r}) to remove`);
         }
-
-        // TODO: Find and remove the unit at q,r from the world
-        this.log('Applying unit death to world:', unitKilled);
     }
 
     /**
@@ -302,7 +329,7 @@ export class GameState extends BaseComponent {
         // Emit specific events for different types of changes
         this.emit('world-changed', { 
             changes: changes,
-            gameState: this.getGameData()
+            world: this.world
         }, this);
 
         // Emit granular events for specific UI components
@@ -396,65 +423,79 @@ export class GameState extends BaseComponent {
     }
 
     /**
-     * Load game data from pre-populated page elements (v1.Game, v1.GameState, v1.GameMoveHistory)
-     * This replaces the old createGameFromMap approach with direct data loading
+     * Load game data into WASM singletons from page elements
+     * This populates the WASM singleton objects that serve as the source of truth
      */
-    public loadGameFromPageData(): void {
-        // Load v1.Game data from the element IDs that match the template
-        const gameElement = document.getElementById('game.data-json');
-        if (gameElement?.textContent && gameElement.textContent.trim() !== 'null') {
-            const gameData = JSON.parse(gameElement.textContent);
-            this.setGameId(gameData.id);
-            this.gameData.currentPlayer = gameData.currentPlayer || 1;
-            this.gameData.turnCounter = gameData.turnCounter || 1;
-            this.gameData.status = gameData.status || 'active';
-            this.log('Loaded game data:', gameData);
-            
-            // If game has world data, set it
-            if (gameData.world) {
-                this.setWorld(gameData.world);
-                this.log('Loaded world from game data');
-            }
-        }
-
-        // Load v1.GameState data 
-        const gameStateElement = document.getElementById('game-state-data-json');
-        if (gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null') {
-            const gameStateData = JSON.parse(gameStateElement.textContent);
-            
-            // Update game state fields
-            if (gameStateData.currentPlayer !== undefined) {
-                this.gameData.currentPlayer = gameStateData.currentPlayer;
-            }
-            if (gameStateData.turnCounter !== undefined) {
-                this.gameData.turnCounter = gameStateData.turnCounter;
-            }
-            if (gameStateData.status !== undefined) {
-                this.gameData.status = gameStateData.status;
-            }
-            
-            this.log('Loaded game state data:', gameStateData);
-        }
-
-        // Load v1.GameMoveHistory data (optional)
-        const historyElement = document.getElementById('game-history-data-json');
-        if (historyElement?.textContent && historyElement.textContent.trim() !== 'null') {
-            const historyData = JSON.parse(historyElement.textContent);
-            this.log('Loaded game move history:', historyData);
-            // TODO: Store history if needed for replay functionality
-        }
-
-        // Update last updated timestamp
-        this.gameData.lastUpdated = Date.now();
+    public async loadGameDataToWasm(): Promise<void> {
+        await this.ensureWASMLoaded();
         
-        // Emit game loaded event
-        this.emit('game-loaded', { 
-            gameId: this.gameData.gameId,
-            currentPlayer: this.gameData.currentPlayer,
-            turnCounter: this.gameData.turnCounter,
-            status: this.gameData.status
-        }, this);
+        // Get raw JSON data from page elements
+        const gameElement = document.getElementById('game.data-json');
+        const gameStateElement = document.getElementById('game-state-data-json');
+        const historyElement = document.getElementById('game-history-data-json');
+        
+        if (!gameElement?.textContent || gameElement.textContent.trim() === 'null') {
+            throw new Error('No game data found in page elements');
+        }
+        
+        // Convert JSON strings to Uint8Array for WASM
+        const gameBytes = new TextEncoder().encode(gameElement.textContent);
+        const gameStateBytes = new TextEncoder().encode(
+            gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null' 
+                ? gameStateElement.textContent 
+                : '{}'
+        );
+        const historyBytes = new TextEncoder().encode(
+            historyElement?.textContent && historyElement.textContent.trim() !== 'null'
+                ? historyElement.textContent
+                : '{"gameId":"","groups":[]}'
+        );
+        
+        // Call WASM loadGameData function
+        const wasmResult = (window as any).weewar.loadGameData(gameBytes, gameStateBytes, historyBytes);
+        
+        if (!wasmResult.success) {
+            throw new Error(`WASM load failed: ${wasmResult.error}`);
+        }
+        
+        this.log('Game data loaded into WASM singletons:', wasmResult.message);
+        
+        // Now get the loaded game data from WASM to initialize our World object
+        await this.initializeWorldFromWasm();
     }
+
+    /**
+     * Initialize local World and cached GameState from WASM data
+     */
+    private async initializeWorldFromWasm(): Promise<void> {
+        const client = await this.ensureWASMLoaded();
+        
+        // Get game data from WASM to extract game ID and world data
+        const gameResponse = await client.gamesService.getGame(create(GetGameRequestSchema, { id: '' }));
+        
+        if (!gameResponse.game || !gameResponse.state) {
+            throw new Error('No game data returned from WASM');
+        }
+        
+        // Update cached Game and GameState from WASM response
+        this.cachedGame = gameResponse.game;
+        this.cachedGameState = gameResponse.state;
+        
+        // Update World object from game data for UI rendering
+        if (gameResponse.state.worldData) {
+            this.world.setName(gameResponse.game.name || 'Untitled Game');
+            this.world.loadTilesAndUnits(
+                gameResponse.state.worldData.tiles || [],
+                gameResponse.state.worldData.units || []
+            );
+        }
+        
+        this.log('World and cached GameState initialized from WASM data');
+        
+        // Notify observers that world has been loaded/updated
+        this.emit('world-loaded', { world: this.world }, this);
+    }
+
 
     /**
      * Legacy method for compatibility with GameViewerPage
@@ -467,10 +508,18 @@ export class GameState extends BaseComponent {
 
     /**
      * Legacy method for compatibility with GameViewerPage
-     * Returns current game state data
+     * Returns current game state data from local cache (avoids WASM calls)
      */
-    public getGameState(): any {
-        return this.getGameData();
+    public getGameState(): ProtoGameState {
+        return this.cachedGameState;
+    }
+    
+    /**
+     * Get cached Game proto object for instant access (avoids WASM calls)
+     * Source of truth is WASM, this is just a performance cache
+     */
+    public getGame(): ProtoGame {
+        return this.cachedGame;
     }
 
     /**
@@ -478,7 +527,10 @@ export class GameState extends BaseComponent {
      * Creates a MoveUnit action and processes it
      */
     public async moveUnit(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
-        const moveAction = GameState.createMoveUnitAction(fromQ, fromR, toQ, toR, this.gameData.currentPlayer);
+        // Get current player from cached GameState
+        const currentPlayer = this.cachedGameState.currentPlayer || 1;
+        
+        const moveAction = GameState.createMoveUnitAction(fromQ, fromR, toQ, toR, currentPlayer);
         await this.processMoves([moveAction]);
     }
 
@@ -487,18 +539,42 @@ export class GameState extends BaseComponent {
      * Creates an AttackUnit action and processes it
      */
     public async attackUnit(attackerQ: number, attackerR: number, defenderQ: number, defenderR: number): Promise<void> {
-        const attackAction = GameState.createAttackUnitAction(attackerQ, attackerR, defenderQ, defenderR, this.gameData.currentPlayer);
+        // Get current player from cached GameState
+        const currentPlayer = this.cachedGameState.currentPlayer || 1;
+        
+        const attackAction = GameState.createAttackUnitAction(attackerQ, attackerR, defenderQ, defenderR, currentPlayer);
         await this.processMoves([attackAction]);
     }
 
     /**
-     * Legacy method for compatibility with GameViewerPage
-     * TODO: Implement using services or local world access
+     * Get terrain stats for a tile at the specified coordinates
+     * Combines World tile data with TerrainDefinition from rules engine
      */
-    public async getTerrainStatsAt(q: number, r: number): Promise<any> {
-        // TODO: Access world data directly or use a service
-        this.log('getTerrainStatsAt called - needs implementation');
-        return null;
+    public async getTerrainStatsAt(q: number, r: number): Promise<TerrainStats | null> {
+        // Find the tile at coordinates (q, r)
+        const tile = this.world.getTileAt(q, r)
+        if (!tile) {
+            this.log(`No tile found at coordinates (${q}, ${r})`);
+            return null;
+        }
+
+        // Look up the TerrainDefinition using the tile's tileType
+        const terrainDefinition = this.terrainDefinitions[tile.tileType];
+        if (!terrainDefinition) {
+            this.log(`No terrain definition found for tile type ${tile.tileType}`);
+            return null;
+        }
+
+        // Create and return TerrainStats instance
+        const terrainStats = new TerrainStats(terrainDefinition, q, r, tile.player);
+        this.log(`Created terrain stats for tile at (${q}, ${r}):`, {
+            name: terrainStats.name,
+            type: terrainStats.type,
+            baseMoveCost: terrainStats.baseMoveCost,
+            defenseBonus: terrainStats.defenseBonus
+        });
+
+        return terrainStats;
     }
 
     /**

@@ -1537,6 +1537,14 @@
           "type": "string",
           "title": "ID of the game whos state is being tracked"
         },
+        "turnCounter": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "currentPlayer": {
+          "type": "integer",
+          "format": "int32"
+        },
         "worldData": {
           "$ref": "#/definitions/v1WorldData",
           "title": "Current world state"

@@ -451,15 +451,6 @@ export class World {
         };
     }
     
-    /*
-    public async load(worldId: string): Promise<void> {
-            // For now, we load from HTML element (server-side rendered data)
-            // Future enhancement: could load directly from API
-            this.loadFromElement('world-data-json');
-            this.setWorldId(worldId);
-    }
-    */
-    
     // Self-contained persistence methods
     public async save(): Promise<SaveResult> {
         // Transform TypeScript World data into protobuf-compatible format
@@ -561,7 +552,7 @@ export class World {
             throw new Error(`Save failed: ${response.status} ${response.statusText} - ${errorText}`);
         }
     }
-    
+
     public loadFromElement(worldMetadataElement: HTMLElement, worldTilesElement: HTMLElement): World {
         // Now handles dual element loading: metadata + tiles/units data
         // Parse world metadata
@@ -625,59 +616,61 @@ export class World {
         if (data.Name) this.metadata.name = data.Name; // Backend format
         if (data.width) this.metadata.width = data.width;
         if (data.height) this.metadata.height = data.height;
-        
+
+        return this.loadTilesAndUnits(data.tiles, data.units)
+    }
+
+    loadTilesAndUnits(tiles: any, units: any): World {
         // Batch load tiles - handle both array and map formats
         const tileChanges: TileChange[] = [];
-        if (data.tiles) {
-            // Old map format for backward compatibility
-            data.tiles.forEach((tileData: any) => {
-                const q = tileData.q || 0
-                const r = tileData.r || 0
-                const key = q + "," + r;
-                let tileType: number;
-                let player = 0
-                
-                if (tileData.tileType !== undefined) {
-                    tileType = tileData.tileType;
-                    player = tileData.player;
-                } else if (tileData.tile_type !== undefined) {
-                    tileType = tileData.tile_type;
-                    player = tileData.player || 0;
-                } else {
-                    return; // Skip invalid tile
-                }
-                
-                const tile: Tile = { q, r, tileType, player };
-                this.tiles[key] = tile;
-                tileChanges.push({ q, r, tile });
-            });
-        }
+        tiles = tiles || []
+        // Old map format for backward compatibility
+        tiles.forEach((tileData: any) => {
+            const q = tileData.q || 0
+            const r = tileData.r || 0
+            const key = q + "," + r;
+            let tileType: number;
+            let player = 0
+            
+            if (tileData.tileType !== undefined) {
+                tileType = tileData.tileType;
+                player = tileData.player;
+            } else if (tileData.tile_type !== undefined) {
+                tileType = tileData.tile_type;
+                player = tileData.player || 0;
+            } else {
+                return; // Skip invalid tile
+            }
+            
+            const tile: Tile = { q, r, tileType, player };
+            this.tiles[key] = tile;
+            tileChanges.push({ q, r, tile });
+        });
         
         // Batch load units - handle both array and map formats
         const unitChanges: UnitChange[] = [];
-        if (data.units) {
-            // Old map format for backward compatibility
-            data.units.forEach((unitData: any) => {
-                const q = unitData.q || 0
-                const r = unitData.r || 0
-                const key = q + "," + r;
-                let unitType: number, player: number;
-                
-                if (unitData.unitType !== undefined && unitData.player !== undefined) {
-                    unitType = unitData.unitType;
-                    player = unitData.player;
-                } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
-                    unitType = unitData.unit_type;
-                    player = unitData.player;
-                } else {
-                    return; // Skip invalid unit
-                }
-                
-                const unit: Unit = { q, r, unitType, player };
-                this.units[key] = unit;
-                unitChanges.push({ q, r, unit });
-            });
-        }
+        units = units || []
+        // Old map format for backward compatibility
+        units.forEach((unitData: any) => {
+            const q = unitData.q || 0
+            const r = unitData.r || 0
+            const key = q + "," + r;
+            let unitType: number, player: number;
+            
+            if (unitData.unitType !== undefined && unitData.player !== undefined) {
+                unitType = unitData.unitType;
+                player = unitData.player;
+            } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
+                unitType = unitData.unit_type;
+                player = unitData.player;
+            } else {
+                return; // Skip invalid unit
+            }
+            
+            const unit: Unit = { q, r, unitType, player };
+            this.units[key] = unit;
+            unitChanges.push({ q, r, unit });
+        });
         
         // Emit batched changes immediately
         if (tileChanges.length > 0) {

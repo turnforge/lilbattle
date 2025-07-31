@@ -243,8 +243,12 @@ message GameState {
   // ID of the game whos state is being tracked
   string game_id = 3;
 
+  int32 turn_counter = 4;
+
+  int32 current_player = 5;
+
   // Current world state
-  WorldData world_data = 4;
+  WorldData world_data = 6;
 }
 
 // Holds the game's move history (can be used as a replay log)

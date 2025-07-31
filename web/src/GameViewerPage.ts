@@ -2,7 +2,8 @@ import { BasePage } from '../lib/BasePage';
 import { EventBus } from '../lib/EventBus';
 import { GameViewer } from './GameViewer';
 import { Unit, Tile, World } from './World';
-import { GameState, GameStateData, GameCreateData, UnitSelectionData } from './GameState';
+import { GameState, UnitSelectionData } from './GameState';
+import { GameState as ProtoGameState, Game as ProtoGame, GameConfiguration as ProtoGameConfiguration } from '../gen/weewar/v1/models_pb';
 import { LCMComponent } from '../lib/LCMComponent';
 import { LifecycleController } from '../lib/LifecycleController';
 import { PLAYER_BG_COLORS } from './ColorsAndNames';
@@ -25,10 +26,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
     private gameState: GameState
     private terrainStatsPanel: TerrainStatsPanel
     
-    // Game configuration from URL parameters
-    private playerCount: number = 2;
-    private maxTurns: number = 0;
-    private gameConfig: GameConfiguration;
+    // Game configuration accessed directly from WASM-cached Game proto
     
     // UI state
     private selectedUnit: any = null;
@@ -106,47 +104,15 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 
     /**
-     * Load game configuration from URL parameters and hidden inputs
+     * Load basic game initialization data (just gameId from DOM)
+     * Game configuration is now accessed directly from WASM-cached Game proto
      */
     private loadGameConfiguration(): void {
         // Get gameId from hidden input
-        
-        // Initialize gameConfig before calling super() to ensure it's available in initializeSpecificComponents()
-        this.gameConfig = this.gameConfig || {
-            playerCount: 2,
-            maxTurns: 0,
-            unitRestrictions: {},
-            playerTypes: {},
-            playerTeams: {}
-        };
         const gameIdInput = document.getElementById("gameIdInput") as HTMLInputElement | null;
         this.currentGameId = gameIdInput?.value.trim() || null;
 
-        // Get basic config from hidden inputs
-        const playerCountInput = document.getElementById("playerCount") as HTMLInputElement | null;
-        const maxTurnsInput = document.getElementById("maxTurns") as HTMLInputElement | null;
-
-        this.gameConfig.playerCount = parseInt(playerCountInput?.value || '2');
-        this.gameConfig.maxTurns = parseInt(maxTurnsInput?.value || '0');
-
-        // Parse URL parameters for detailed configuration
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Parse unit restrictions
-        for (const [key, value] of urlParams.entries()) {
-            if (key.startsWith('unit_') && value === 'allowed') {
-                const unitId = key.substring(5);
-                this.gameConfig.unitRestrictions[unitId] = 'allowed';
-            } else if (key.startsWith('player_') && key.includes('_type')) {
-                const playerId = key.split('_')[1];
-                this.gameConfig.playerTypes[playerId] = value;
-            } else if (key.startsWith('player_') && key.includes('_team')) {
-                const playerId = key.split('_')[1];
-                this.gameConfig.playerTeams[playerId] = parseInt(value);
-            }
-        }
-
-        console.log('Game configuration loaded:', this.gameConfig);
+        console.log('Game ID loaded:', this.currentGameId);
     }
 
     /**
@@ -198,9 +164,9 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 console.log('GameViewerPage: Game loaded from page data', data);
                 // Update UI with the loaded game state
                 if (this.gameState) {
-                    const gameData = this.gameState.getGameData();
-                    this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
-                    this.logGameEvent(`Game loaded: ${gameData.gameId}`);
+                    const gameState = this.gameState.getGameState();
+                    this.updateGameUIFromState(gameState);
+                    this.logGameEvent(`Game loaded: ${gameState.gameId}`);
                 }
                 break;
             
@@ -309,23 +275,10 @@ class GameViewerPage extends BasePage implements LCMComponent {
         // Wait for WASM to be ready (only async part)
         await this.gameState.waitUntilReady();
         
-        // Load game data from page elements - this will trigger 'game-loaded' event
-        // which will update the UI via the event handler
-        this.gameState.loadGameFromPageData();
+        // Load game data into WASM singletons - this is the new WASM-centric approach
+        await this.gameState.loadGameDataToWasm();
         
-        // Debug: Log the loaded game data
-        const gameData = this.gameState.getGameData();
-        const gameDataResult = this.loadGameDataFromElements();
-        console.log('[GameViewerPage] Game initialization debug:', {
-            gameStateData: gameData,
-            rawGameData: gameDataResult?.game,
-            rawGameState: gameDataResult?.gameState,
-            worldData: gameDataResult?.worldData,
-            // Show units in world data to see their player ownership
-            units: gameDataResult?.worldData?.units || []
-        });
-        
-        console.log('Game initialized with WASM engine - UI updates handled by game-loaded event');
+        console.log('Game initialized with WASM engine - data loaded into WASM singletons');
     }
 
     /**
@@ -452,73 +405,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         };
     }
 
-    /**
-     * Convert new GameStateData to legacy GameCreateData format for UI compatibility
-     */
-    private convertGameStateToLegacyFormat(gameData: GameStateData): GameCreateData {
-        // Extract units and players from world data if available
-        const world = gameData.world;
-        const worldData = world?.worldData;
-        const allUnits = worldData?.units || [];
-        const tiles = worldData?.tiles || [];
-        
-        // Create basic player list from units (extract unique player IDs)
-        const playerIds = [...new Set(allUnits.map((unit: any) => unit.player as number))].filter((id: number) => id > 0);
-        const players = playerIds.map((id: number) => ({
-            id: id,
-            name: `Player ${id}`,
-            color: this.getPlayerColor(id),
-            isHuman: true
-        }));
-        
-        // Create basic teams (no teams for now)
-        const teams: any[] = [];
-        
-        // Calculate map size from tiles
-        const mapSize = this.calculateMapSize(tiles);
-        
-        return {
-            currentPlayer: gameData.currentPlayer || 1,
-            turnCounter: gameData.turnCounter || 1,
-            status: gameData.status || 'active',
-            allUnits: allUnits,
-            players: players,
-            teams: teams,
-            mapSize: mapSize,
-            winner: 0, // No winner yet
-            hasWinner: false
-        };
-    }
-    
-    /**
-     * Helper to get player color
-     */
-    private getPlayerColor(playerId: number): string {
-        const colors = ['#FF0000', '#0000FF', '#00FF00', '#FFFF00', '#FF00FF', '#00FFFF'];
-        return colors[(playerId - 1) % colors.length] || '#FFFFFF';
-    }
-    
-    /**
-     * Helper to calculate map size from tiles
-     */
-    private calculateMapSize(tiles: any[]): { rows: number; cols: number } {
-        if (tiles.length === 0) {
-            return { rows: 0, cols: 0 };
-        }
-        
-        const qValues = tiles.map((t: any) => t.q as number);
-        const rValues = tiles.map((t: any) => t.r as number);
-        
-        const minQ = Math.min(...qValues);
-        const maxQ = Math.max(...qValues);
-        const minR = Math.min(...rValues);
-        const maxR = Math.max(...rValues);
-        
-        return {
-            cols: maxQ - minQ + 1,
-            rows: maxR - minR + 1
-        };
-    }
 
     /**
      * Game action handlers - all synchronous for immediate UI feedback
@@ -532,15 +418,15 @@ class GameViewerPage extends BasePage implements LCMComponent {
         console.log('Ending current player\'s turn...');
         
         // Async WASM call
-        await this.gameState.endTurn(this.gameState.getGameData().currentPlayer);
+        await this.gameState.endTurn(this.gameState.getGameState().currentPlayer);
         
-        // Get updated game data and update UI
-        const gameData = this.gameState.getGameData();
-        this.updateGameUIFromState(this.convertGameStateToLegacyFormat(gameData));
+        // Get updated game state and update UI
+        const gameState = this.gameState.getGameState();
+        this.updateGameUIFromState(gameState);
         this.clearUnitSelection();
         
-        this.logGameEvent(`Player ${gameData.currentPlayer}'s turn begins`);
-        this.showToast('Info', `Player ${gameData.currentPlayer}'s turn`, 'info');
+        this.logGameEvent(`Player ${gameState.currentPlayer}'s turn begins`);
+        this.showToast('Info', `Player ${gameState.currentPlayer}'s turn`, 'info');
     }
 
     private undoMove(): void {
@@ -590,24 +476,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
         this.showToast('Info', 'Centering view', 'info');
     }
 
-    private handleUnitSelection(selectionData: UnitSelectionData): void {
-        this.selectedUnit = selectionData.unit;
-        console.log('Unit selected:', selectionData);
-        
-        // Update selected unit info panel
-        this.updateSelectedUnitInfo(selectionData.unit);
-        
-        // Show unit action buttons
-        const unitInfoPanel = document.getElementById('selected-unit-info');
-        if (unitInfoPanel) {
-            unitInfoPanel.classList.remove('hidden');
-        }
-
-        // TODO: Highlight movement and attack options on the map
-        console.log('Movement options:', selectionData.movableCoords);
-        console.log('Attack options:', selectionData.attackableCoords);
-    }
-
+    /*
     private async moveUnit(fromQ: number, fromR: number, toQ: number, toR: number): Promise<void> {
         if (!this.gameState?.isReady()) {
             this.showToast('Error', 'Game not ready', 'error');
@@ -641,6 +510,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
         // Clear selection after attack
         this.clearUnitSelection();
     }
+   */
 
     private clearUnitSelection(): void {
         this.selectedUnit = null;
@@ -683,8 +553,8 @@ class GameViewerPage extends BasePage implements LCMComponent {
             // Update terrain stats panel with the data
             this.terrainStatsPanel?.updateTerrainInfo({
                 name: terrainStats.name || 'Unknown Terrain',
-                tileType: terrainStats.tileType || 0,
-                movementCost: terrainStats.movementCost || 1.0,
+                tileType: terrainStats.type || 0,
+                movementCost: terrainStats.baseMoveCost || 1.0,
                 defenseBonus: terrainStats.defenseBonus || 0.0,
                 description: terrainStats.description || 'No description available',
                 q: q,
@@ -712,7 +582,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
         }
 
         // Handle async unit selection
-        this.gameState.canSelectUnit(q, r, this.gameState.getGameData().currentPlayer).then(canSelect => {
+        this.gameState.canSelectUnit(q, r, this.gameState.getGameState().currentPlayer).then(canSelect => {
             // Debug info to understand why selection might be failing
             console.log(`[GameViewerPage] Unit selection debug:`, {
                 position: `(${q}, ${r})`,
@@ -757,8 +627,8 @@ class GameViewerPage extends BasePage implements LCMComponent {
 
         // Get all data async with Promise.all
         Promise.all([
-            this.gameState.getMovementOptions(q, r, this.gameState.getGameData().currentPlayer),
-            this.gameState.getAttackOptions(q, r, this.gameState.getGameData().currentPlayer),
+            this.gameState.getMovementOptions(q, r, this.gameState.getGameState().currentPlayer),
+            this.gameState.getAttackOptions(q, r, this.gameState.getGameState().currentPlayer),
             this.gameState.getTileInfo(q, r)
         ]).then(([movementResult, attackResult, unitInfo]) => {
             console.log('[GameViewerPage] Movement options:', movementResult);
@@ -825,14 +695,14 @@ class GameViewerPage extends BasePage implements LCMComponent {
         }
     }
 
-    private updateGameUIFromState(gameData: GameCreateData): void {
+    private updateGameUIFromState(gameState: ProtoGameState): void {
         // Update game status with player-specific color - use player ID directly
-        this.updateGameStatus(`Ready - Player ${gameData.currentPlayer}'s Turn`, gameData.currentPlayer);
+        this.updateGameStatus(`Ready - Player ${gameState.currentPlayer}'s Turn`, gameState.currentPlayer);
         
         // Update turn counter
         const turnElement = document.getElementById('turn-counter');
         if (turnElement) {
-            turnElement.textContent = `Turn ${gameData.turnCounter}`;
+            turnElement.textContent = `Turn ${gameState.turnCounter}`;
         }
     }
 
@@ -875,14 +745,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 }
 
-// Type definitions - using type alias instead of interface for simple data structures
-type GameConfiguration = {
-    playerCount: number;
-    maxTurns: number;
-    unitRestrictions: { [unitId: string]: string };
-    playerTypes: { [playerId: string]: string };
-    playerTeams: { [playerId: string]: number };
-};
+// Game configuration is now accessed directly from WASM-cached Game proto object
 
 // Initialize page when DOM is ready using LifecycleController
 document.addEventListener('DOMContentLoaded', async () => {

@@ -1215,9 +1215,11 @@ type GameState struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// ID of the game whos state is being tracked
-	GameId string `protobuf:"bytes,3,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	GameId        string `protobuf:"bytes,3,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	TurnCounter   int32  `protobuf:"varint,4,opt,name=turn_counter,json=turnCounter,proto3" json:"turn_counter,omitempty"`
+	CurrentPlayer int32  `protobuf:"varint,5,opt,name=current_player,json=currentPlayer,proto3" json:"current_player,omitempty"`
 	// Current world state
-	WorldData     *WorldData `protobuf:"bytes,4,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
+	WorldData     *WorldData `protobuf:"bytes,6,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1264,6 +1266,20 @@ func (x *GameState) GetGameId() string {
 		return x.GameId
 	}
 	return ""
+}
+
+func (x *GameState) GetTurnCounter() int32 {
+	if x != nil {
+		return x.TurnCounter
+	}
+	return 0
+}
+
+func (x *GameState) GetCurrentPlayer() int32 {
+	if x != nil {
+		return x.CurrentPlayer
+	}
+	return 0
 }
 
 func (x *GameState) GetWorldData() *WorldData {
@@ -2293,13 +2309,15 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\rallowed_units\x18\x01 \x03(\x05R\fallowedUnits\x12&\n" +
 	"\x0fturn_time_limit\x18\x02 \x01(\x05R\rturnTimeLimit\x12\x1b\n" +
 	"\tteam_mode\x18\x03 \x01(\tR\bteamMode\x12\x1b\n" +
-	"\tmax_turns\x18\x04 \x01(\x05R\bmaxTurns\"\x94\x01\n" +
+	"\tmax_turns\x18\x04 \x01(\x05R\bmaxTurns\"\xde\x01\n" +
 	"\tGameState\x129\n" +
 	"\n" +
 	"updated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x17\n" +
-	"\agame_id\x18\x03 \x01(\tR\x06gameId\x123\n" +
+	"\agame_id\x18\x03 \x01(\tR\x06gameId\x12!\n" +
+	"\fturn_counter\x18\x04 \x01(\x05R\vturnCounter\x12%\n" +
+	"\x0ecurrent_player\x18\x05 \x01(\x05R\rcurrentPlayer\x123\n" +
 	"\n" +
-	"world_data\x18\x04 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\"\\\n" +
+	"world_data\x18\x06 \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\"\\\n" +
 	"\x0fGameMoveHistory\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\x120\n" +
 	"\x06groups\x18\x02 \x03(\v2\x18.weewar.v1.GameMoveGroupR\x06groups\"\xea\x01\n" +
