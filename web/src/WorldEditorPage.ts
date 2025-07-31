@@ -21,32 +21,32 @@ import { BRUSH_SIZE_NAMES , TERRAIN_NAMES } from "./ColorsAndNames"
 class WorldEditorPage extends BasePage {
     private world: World;
     private pageState: WorldEditorPageState;
-    private editorOutput: HTMLElement | null = null;
+    private editorOutput: HTMLElement;
 
     // Dockview interface
-    private dockview: DockviewApi | null = null;
+    private dockview: DockviewApi;
     
     // Phaser editor component for world editing
-    private phaserEditorComponent: PhaserEditorComponent | null = null;
+    private phaserEditorComponent: PhaserEditorComponent;
     
     // TileStats panel for displaying statistics
-    private tileStatsPanel: TileStatsPanel | null = null;
+    private tileStatsPanel: TileStatsPanel;
     
     // Editor tools panel for terrain/unit selection
-    private editorToolsPanel: EditorToolsPanel | null = null;
+    private editorToolsPanel: EditorToolsPanel;
     
     // Reference image panel for reference image controls
-    private referenceImagePanel: ReferenceImagePanel | null = null;
+    private referenceImagePanel: ReferenceImagePanel;
 
     // Keyboard shortcut manager
-    private keyboardShortcutManager: KeyboardShortcutManager | null = null;
+    private keyboardShortcutManager: KeyboardShortcutManager;
     
     // Lifecycle controller for managing component initialization
-    private lifecycleController: LifecycleController | null = null;
+    private lifecycleController: LifecycleController;
 
     // State management for undo/restore operations
     // Simplified state backup for preview/cancel functionality
-    private savedToolState: ToolState | null = null;
+    private savedToolState: ToolState;
 
     // UI state  
     private hasPendingWorldDataLoad: boolean = false;
@@ -58,17 +58,15 @@ class WorldEditorPage extends BasePage {
      */
     public performLocalInit(): LCMComponent[] {
         this.pageState = new WorldEditorPageState(this.eventBus);
+        
+        // Create World instance early so child components can use it
+        this.createWorldInstance();
+
         this.subscribeToEditorEvents();
 
         this.initializeSpecificComponents();
 
         console.log('WorldEditorPage: Starting DOM initialization phase');
-        
-        // Initialize basic components first
-        this.initializeSpecificComponents();
-        
-        // Create World instance early so child components can use it
-        this.createWorldInstance();
         
         // Create child components that implement LCMComponent
         const childComponents: LCMComponent[] = [];
@@ -129,7 +127,7 @@ class WorldEditorPage extends BasePage {
         
         // Set dependencies directly using explicit setters
         this.phaserEditorComponent.setPageState(this.pageState);
-        this.phaserEditorComponent.setWorld(this.world);
+        // this.phaserEditorComponent.setWorld(this.world);
         
         childComponents.push(this.phaserEditorComponent);
         console.log('WorldEditorPage: Created PhaserEditorComponent child component using template');
@@ -146,41 +144,17 @@ class WorldEditorPage extends BasePage {
     private createWorldInstance(): void {
         // Read initial state from DOM
         const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
-        const isNewWorldInput = document.getElementById("isNewWorld") as HTMLInputElement | null;
-        
         const worldId = worldIdInput?.value.trim() || null;
-        const isNewWorld = isNewWorldInput?.value === "true";
-
-        // Create World instance and subscribe to events
-        this.world = new World(this.eventBus, 'New World', 8, 8);
-        
-        if (!isNewWorld && worldId) {
-            // Load existing world
-            this.world.setWorldId(worldId);
-            this.loadExistingWorld(worldId);
-        } else {
-            // Initialize new world
-            this.initializeNewWorld();
-        }
-        
+        this.loadWorld(worldId);
         console.log('WorldEditorPage: World instance created and configured');
     }
-    
-    private initializeNewWorld(): void {
-        // Try to load template world data from hidden element first
-        const worldMetadataElement = document.getElementById('world-data-json');
-        const worldTilesElement = document.getElementById('world-tiles-data-json');
-        this.world = new World(this.eventBus).loadFromElement(worldMetadataElement!, worldTilesElement!);
-        this.hasPendingWorldDataLoad = true;
-        
-        this.updateEditorStatus('New World');
-    }
 
-    private async loadExistingWorld(worldId: string): Promise<void> {
+    private async loadWorld(worldId: string | null): Promise<void> {
         try {
             const worldMetadataElement = document.getElementById('world-data-json');
             const worldTilesElement = document.getElementById('world-tiles-data-json');
             this.world = new World(this.eventBus).loadFromElement(worldMetadataElement!, worldTilesElement!);
+            this.world.setWorldId(worldId)
             // await this.world!.load(worldId);
             this.hasPendingWorldDataLoad = true;
         } catch (error) {
@@ -210,26 +184,10 @@ class WorldEditorPage extends BasePage {
         this.initializeKeyboardShortcuts();
         this.setupUnsavedChangesWarning();
         
-        // Set cross-component dependencies now that all components are created
-        this.setupCrossComponentDependencies();
-        
         // Update UI state
         this.updateEditorStatus('Ready');
         
         console.log('WorldEditorPage: Activation complete');
-    }
-    
-    /**
-     * Set up dependencies between components that require each other
-     * 
-     * Note: Using EventBus communication for loose coupling instead of direct dependencies
-     * Components communicate via events rather than direct method calls
-     */
-    private setupCrossComponentDependencies(): void {
-        // ReferenceImagePanel and PhaserEditorComponent communicate via EventBus
-        // No direct dependencies needed - they remain decoupled
-        
-        console.log('WorldEditorPage: Components use EventBus communication - no direct dependencies needed');
     }
     
     /**
@@ -323,7 +281,7 @@ class WorldEditorPage extends BasePage {
                 break;
             
             case EditorEventTypes.PHASER_READY:
-                this.handlePhaserReady();
+                this.handlePhaserReady().then(() => {});
                 break;
             
             default:
@@ -338,7 +296,7 @@ class WorldEditorPage extends BasePage {
         
         // World ID and new world state are now handled by the World instance
 
-        this.editorOutput = document.getElementById('editor-output');
+        this.editorOutput = document.getElementById('editor-output')!;
         return [];
     }
 
@@ -771,55 +729,6 @@ class WorldEditorPage extends BasePage {
         this.setupCustomNumberInput();
         
     }
-    
-    /**
-     * Load world data from hidden element in the HTML
-     */
-    
-    /**
-     * Load world data (tiles and units) into the Phaser scene
-     */
-    private async loadWorldDataIntoPhaser(): Promise<void> {
-        
-        if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized() || !this.world) {
-            return;
-        }
-        
-            // Load tiles first using setTilesData for better performance
-            const allTiles = this.world.getAllTiles();
-            await this.phaserEditorComponent.setTilesData(allTiles);
-            
-            // Load units AFTER tiles are loaded - ensure proper rendering order
-            const allUnits = this.world.getAllUnits();
-            if (allUnits.length > 0) {
-                let unitsLoaded = 0;
-                
-                // Add delay to ensure tiles are rendered first and textures are loaded
-                setTimeout(() => {
-                    allUnits.forEach((unit) => {
-                        
-                        // Paint unit in Phaser (units render above tiles due to depth=10)
-                        const success = this.phaserEditorComponent!.setUnit(unit);
-                        if (success) {
-                            unitsLoaded++;
-                        } else {
-                        }
-                    });
-                    
-                    // Refresh tile stats after all loading is complete
-                    this.refreshTileStats();
-                    
-                    // Center camera on the loaded world
-                    this.centerCameraOnWorld();
-                }, 300); // Increased delay to ensure tiles are rendered first
-            } else {
-                // No units to load, refresh stats immediately
-                this.refreshTileStats();
-                
-                // Center camera on the loaded world
-                this.centerCameraOnWorld();
-            }
-    }
 
     /**
      * Show loading indicator on world
@@ -1220,7 +1129,7 @@ class WorldEditorPage extends BasePage {
             dispose: () => {
                 if (this.phaserEditorComponent) {
                     this.phaserEditorComponent.destroy();
-                    this.phaserEditorComponent = null;
+                    this.phaserEditorComponent = null as any;
                 }
             }
         };
@@ -1564,7 +1473,7 @@ class WorldEditorPage extends BasePage {
             // UI element updates are handled by EditorToolsPanel via pageState observers
             
             // Clear saved state
-            this.savedToolState = null;
+            this.savedToolState = null as any;
         }
     }
     
@@ -2121,17 +2030,17 @@ class WorldEditorPage extends BasePage {
     
     // Old EventBus handlers removed - components now use pageState directly
     
-    private handlePhaserReady(): void {
+    private async handlePhaserReady() {
         console.log('WorldEditorPage: Phaser ready via EventBus');
         this.logToConsole('EventBus: Phaser editor is ready');
         
-        // Load pending world data if available
-        if (this.hasPendingWorldDataLoad) {
-            console.log('WorldEditorPage: Loading pending world data');
+        // Load world data if available
+        if (this.world && this.phaserEditorComponent) {
+            console.log('WorldEditorPage: Loading world data into Phaser editor');
             // Give Phaser time to fully initialize webgl context and scene
-            setTimeout(() => {
-                this.loadWorldDataIntoPhaser();
-            }, 10);
+            await this.phaserEditorComponent.loadWorld(this.world);
+            this.hasPendingWorldDataLoad = false;
+            this.refreshTileStats();
         }
     }
     

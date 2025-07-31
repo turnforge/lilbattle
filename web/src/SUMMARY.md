@@ -8,7 +8,7 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 
 *   **`WorldViewer.ts`**: Phaser-based world visualization component with proper DOM scoping and event-driven initialization  
 *   **`WorldStatsPanel.ts`**: Statistics display component with safe DOM selectors and event-driven updates
-*   **`WorldDetailsPage.ts`**: Orchestrator page following new architecture - handles data loading and component coordination only
+*   **`WorldViewerPage.ts`**: Orchestrator page following new architecture - handles data loading and component coordination only
 
 ## Key Architecture Principles
 

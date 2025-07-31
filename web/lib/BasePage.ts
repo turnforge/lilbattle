@@ -29,7 +29,7 @@ export abstract class BasePage extends BaseComponent {
     }
 
     // LCMComponent Phase 1: Initialize page structure and discover child components
-    public override performLocalInit(): LCMComponent[] {
+    public override performLocalInit(): Promise<LCMComponent[]> | LCMComponent[] {
         this.log('BasePage: Starting local initialization');
         
         // Then initialize page-specific components and discover children

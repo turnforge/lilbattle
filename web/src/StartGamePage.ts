@@ -4,6 +4,7 @@ import { WorldViewer } from './WorldViewer';
 import { World } from './World';
 import { LCMComponent } from '../lib/LCMComponent';
 import { LifecycleController } from '../lib/LifecycleController';
+import { WorldEventTypes } from './events';
 
 /**
  * Start Game Page - Orchestrator for game configuration functionality
@@ -21,8 +22,8 @@ import { LifecycleController } from '../lib/LifecycleController';
 class StartGamePage extends BasePage implements LCMComponent {
     private currentWorldId: string | null;
     private isLoadingWorld: boolean = false;
-    private world: World | null = null;
-    private playerCount: number = 2; // Default to 2, will be updated from world data
+    private world: World;
+    private playerCount: number;
     private gameConfig: GameConfiguration = {
         players: [],
         allowedUnits: [], // Will be populated with unit IDs
@@ -31,18 +32,75 @@ class StartGamePage extends BasePage implements LCMComponent {
     };
     
     // Component instances
-    private worldViewer: WorldViewer | null = null;
-    
+    private worldViewer: WorldViewer
+
+    // =============================================================================
+    // LCMComponent Interface Implementation
+    // =============================================================================
+
     /**
-     * Load initial state (required by BasePage)
-     * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle initialization through LCMComponent interface
+     * Phase 1: Initialize DOM and discover child components
      */
-    protected initializeSpecificComponents(): LCMComponent[] {
-        console.log('StartGamePage: initializeSpecificComponents() called by BasePage - doing minimal setup');
+    performLocalInit(): Promise<LCMComponent[]> | LCMComponent[] {
+        console.log('StartGamePage: performLocalInit() - Phase 1');
+
         this.loadInitialState(); // Load initial state here since constructor calls this
-        console.log('StartGamePage: Actual component initialization will be handled by LifecycleController');
-        return [];
+
+        this.loadWorldData()
+        
+        // Subscribe to events BEFORE creating components
+        this.subscribeToWorldViewerEvents();
+        
+        // Create child components
+        this.createComponents();
+        
+        console.log('StartGamePage: DOM initialized, returning child components');
+        
+        // Return child components for lifecycle management
+        return [this.worldViewer];
+    }
+
+    /**
+     * Phase 3: Activate component when all dependencies are ready
+     */
+    async activate(): Promise<void> {
+        console.log('StartGamePage: activate() - Phase 3');
+        
+        // Bind events now that all components are ready
+        this.bindPageSpecificEvents();
+        
+        console.log('StartGamePage: activation complete');
+    }
+
+    /**
+     * Handle incoming events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_VIEWER_READY:
+                console.log('StartGamePage: WorldViewer is ready, loading world data...');
+                if (this.currentWorldId) {
+                    this.worldViewer.loadWorld(this.world);
+                    this.showToast('Success', 'World loaded successfully', 'success');
+                }
+                break;
+                
+            default:
+                // Call parent implementation for unhandled events
+                super.handleBusEvent(eventType, data, subject, emitter);
+        }
+    }
+
+    /**
+     * Cleanup phase (called by lifecycle controller if needed)
+     */
+    deactivate(): void {
+        console.log('StartGamePage: deactivate() - cleanup');
+        
+        // Remove event subscriptions
+        this.removeSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
+        
+        this.destroy();
     }
     
     /**
@@ -50,8 +108,8 @@ class StartGamePage extends BasePage implements LCMComponent {
      */
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
-            console.log('StartGamePage: Subscribing to world-viewer-ready event');
-            this.addSubscription('world-viewer-ready', null);
+        console.log('StartGamePage: Subscribing to WORLD_VIEWER_READY event');
+        this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
     }
 
     /**
@@ -100,59 +158,25 @@ class StartGamePage extends BasePage implements LCMComponent {
     /**
      * Load world data and coordinate between components
      */
-    private async loadWorldData(): Promise<void> {
-            console.log(`StartGamePage: Loading world data...`);
-            
-            // Load world data from the hidden JSON element
-            const worldData = this.loadWorldDataFromElement();
-            
-            if (worldData) {
-                this.world = World.deserialize(this.eventBus, worldData);
-                console.log('World data loaded successfully');
-                
-                // Calculate player count from world units
-                this.playerCount = this.calculatePlayerCountFromWorld(worldData);
-                console.log('Detected player count:', this.playerCount);
-                
-                // Initialize game configuration based on world
-                this.initializeGameConfiguration();
-                
-                // Bind unit restriction events (units are now server-rendered)
-                this.bindUnitRestrictionEvents();
-                
-                // Use WorldViewer component to load the world
-                if (this.worldViewer) {
-                    await this.worldViewer.loadWorld(worldData);
-                    this.showToast('Success', 'World loaded successfully', 'success');
-                } else {
-                    console.warn('WorldViewer component not available');
-                }
-                
-            } else {
-                console.error('No world data found');
-                this.showToast('Error', 'No world data found', 'error');
-            }
-    }
-    
-    /**
-     * Calculate player count from world units
-     */
-    private calculatePlayerCountFromWorld(worldData: any): number {
-        if (!worldData || !worldData.units) {
-            return 2; // Default fallback
-        }
+    private loadWorldData(): void {
+        console.log(`StartGamePage: Loading world data...`);
         
-        // Find the highest player ID in world units
-        let maxPlayer = 0;
-        for (const unit of worldData.units) {
-            if (unit.player && unit.player > maxPlayer) {
-                maxPlayer = unit.player;
-            }
-        }
+        // Load world data from the hidden JSON element
+        const worldMetadataElement = document.getElementById('world-data-json');
+        const worldTilesElement = document.getElementById('world-tiles-data-json');
+        this.world = new World(this.eventBus).loadFromElement(worldMetadataElement!, worldTilesElement!);
         
-        // Player IDs are 1-based, so player count is maxPlayer
-        // Ensure minimum of 2 players
-        return Math.max(2, maxPlayer);
+        console.log('World data loaded successfully');
+        
+        // Calculate player count from world units
+        this.playerCount = this.world.playerCount
+        console.log('Detected player count:', this.playerCount);
+        
+        // Initialize game configuration based on world
+        this.initializeGameConfiguration();
+        
+        // Bind unit restriction events (units are now server-rendered)
+        this.bindUnitRestrictionEvents();
     }
     
     /**
@@ -298,79 +322,6 @@ class StartGamePage extends BasePage implements LCMComponent {
         });
     }
     
-    
-    /**
-     * Load world data from the hidden JSON elements in the page
-     * Now loads from both world metadata and world tiles/units data
-     */
-    private loadWorldDataFromElement(): any {
-            // Load world metadata
-            const worldMetadataElement = document.getElementById('world-data-json');
-            const worldTilesElement = document.getElementById('world-tiles-data-json');
-            
-            console.log(`World metadata element found: ${worldMetadataElement ? 'YES' : 'NO'}`);
-            console.log(`World tiles element found: ${worldTilesElement ? 'YES' : 'NO'}`);
-            
-            if (!worldMetadataElement || !worldTilesElement) {
-                console.log('Missing required world data elements');
-                return null;
-            }
-            
-            // Parse world metadata
-            let worldMetadata = null;
-            if (worldMetadataElement.textContent) {
-                console.log(`Raw world metadata: ${worldMetadataElement.textContent.substring(0, 200)}...`);
-                worldMetadata = JSON.parse(worldMetadataElement.textContent);
-            }
-            
-            // Parse world tiles/units data
-            let worldTilesData = null;
-            if (worldTilesElement.textContent) {
-                console.log(`Raw world tiles data: ${worldTilesElement.textContent.substring(0, 200)}...`);
-                worldTilesData = JSON.parse(worldTilesElement.textContent);
-            }
-            
-            if (worldMetadata && worldTilesData) {
-                // Combine into format expected by World.loadFromData()
-                const combinedData = {
-                    // World metadata
-                    name: worldMetadata.name || 'Untitled World',
-                    Name: worldMetadata.name || 'Untitled World', // Both for compatibility
-                    id: worldMetadata.id,
-                    
-                    // Calculate dimensions from tiles if present
-                    width: 40,  // Default
-                    height: 40, // Default
-                    
-                    // World tiles and units
-                    tiles: worldTilesData.tiles || [],
-                    units: worldTilesData.units || []
-                };
-                
-                // Calculate actual dimensions from tile bounds
-                if (combinedData.tiles && combinedData.tiles.length > 0) {
-                    let maxQ = 0, maxR = 0, minQ = 0, minR = 0;
-                    combinedData.tiles.forEach((tile: any) => {
-                        if (tile.q > maxQ) maxQ = tile.q;
-                        if (tile.q < minQ) minQ = tile.q;
-                        if (tile.r > maxR) maxR = tile.r;
-                        if (tile.r < minR) minR = tile.r;
-                    });
-                    combinedData.width = maxQ - minQ + 1;
-                    combinedData.height = maxR - minR + 1;
-                }
-                
-                console.log('Combined world data created for StartGamePage');
-                console.log(`World: ${combinedData.name}, Tiles: ${combinedData.tiles.length}, Units: ${combinedData.units.length}`);
-                console.log(`Dimensions: ${combinedData.width}x${combinedData.height}`);
-                
-                return combinedData;
-            }
-            
-            console.log('No valid world data found in page elements');
-            return null;
-    }
-
     private handlePlayerConfigChange(event: Event, configType: 'type' | 'team'): void {
         const select = event.target as HTMLSelectElement;
         const playerId = parseInt(select.dataset.player || '0');
@@ -528,91 +479,12 @@ class StartGamePage extends BasePage implements LCMComponent {
         // Clean up components
         if (this.worldViewer) {
             this.worldViewer.destroy();
-            this.worldViewer = null;
+            this.worldViewer = null as any;
         }
         
         // Clean up world data
-        this.world = null;
+        this.world = null as any;
         this.currentWorldId = null;
-    }
-
-    // =============================================================================
-    // LCMComponent Interface Implementation
-    // =============================================================================
-
-    /**
-     * Phase 1: Initialize DOM and discover child components
-     */
-    override performLocalInit(): LCMComponent[] {
-        console.log('StartGamePage: performLocalInit() - Phase 1');
-        
-        // Subscribe to events BEFORE creating components
-        this.subscribeToWorldViewerEvents();
-        
-        // Create child components
-        this.createComponents();
-        
-        console.log('StartGamePage: DOM initialized, returning child components');
-        
-        // Return child components for lifecycle management
-        const childComponents: LCMComponent[] = [];
-        if (this.worldViewer) {
-            childComponents.push(this.worldViewer);
-        }
-        return childComponents;
-    }
-
-    /**
-     * Phase 2: Inject dependencies (none needed for StartGamePage)
-     */
-    setupDependencies(): void {
-        console.log('StartGamePage: setupDependencies() - Phase 2')
-        // StartGamePage doesn't need external dependencies
-    }
-
-    /**
-     * Phase 3: Activate component when all dependencies are ready
-     */
-    async activate(): Promise<void> {
-        console.log('StartGamePage: activate() - Phase 3');
-        
-        // Bind events now that all components are ready
-        this.bindPageSpecificEvents();
-        
-        console.log('StartGamePage: activation complete');
-    }
-
-    /**
-     * Handle incoming events from the EventBus
-     */
-    public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
-        switch(eventType) {
-            case 'world-viewer-ready':
-                console.log('StartGamePage: WorldViewer is ready, loading world data...');
-                if (this.currentWorldId) {
-                    // Give Phaser time to fully initialize webgl context and scene
-                    setTimeout(async () => {
-                        await this.loadWorldData();
-                    }, 10);
-                }
-                break;
-                
-            default:
-                // Call parent implementation for unhandled events
-                super.handleBusEvent(eventType, data, subject, emitter);
-        }
-    }
-
-    /**
-     * Cleanup phase (called by lifecycle controller if needed)
-     */
-    deactivate(): void {
-        console.log('StartGamePage: deactivate() - cleanup');
-        
-        // Remove event subscriptions
-        this.removeSubscription('world-viewer-ready', null);
-        
-        this.destroy();
     }
 }
 

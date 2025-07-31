@@ -210,8 +210,9 @@ export class World {
     }
     
     public setWorldId(worldId: string | null): void {
+        worldId = (worldId || "").trim();
         this.worldId = worldId;
-        this.isNewWorld = worldId === null;
+        this.isNewWorld = worldId === "";
     }
     
     public getIsNewWorld(): boolean {
@@ -791,5 +792,23 @@ export class World {
     // Clone method for safe copying
     public clone(): World {
         return World.deserialize(this.eventBus, this.serialize());
+    }
+    
+    /**
+     * Calculate player count from world units
+     */
+    public get playerCount(): number {
+        // Find the highest player ID in world units
+        let maxPlayer = 0;
+        for (const key in this.units) {
+            const unit = this.units[key]
+            if (unit.player && unit.player > maxPlayer) {
+                maxPlayer = unit.player;
+            }
+        }
+        
+        // Player IDs are 1-based, so player count is maxPlayer
+        // Ensure minimum of 2 players
+        return Math.max(2, maxPlayer);
     }
 }

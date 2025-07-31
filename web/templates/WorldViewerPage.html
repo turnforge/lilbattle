@@ -1,4 +1,4 @@
-<!-- templates/WorldDetailsPage.html -->
+<!-- templates/WorldViewerPage.html -->
 {{# include "BasePage.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
@@ -161,9 +161,9 @@
 
 {{ define "PostBodySection" }}
 <!-- Any additional scripts or content for World detail page -->
-{{# include "gen/WorldDetailsPage.html" #}}
+{{# include "gen/WorldViewerPage.html" #}}
 {{ end }}
 
-{{ define "WorldDetailsPage" }}
+{{ define "WorldViewerPage" }}
 {{ template "BasePage" . }}
 {{ end }}

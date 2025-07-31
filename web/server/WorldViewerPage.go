@@ -8,14 +8,14 @@ import (
 	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
-type WorldDetailsPage struct {
+type WorldViewerPage struct {
 	BasePage
 	Header  Header
 	World   *protos.World // Use the same type as WorldEditorPage for consistency
 	WorldId string
 }
 
-func (p *WorldDetailsPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
 	p.WorldId = r.PathValue("worldId")
 	if p.WorldId == "" {
 		http.Error(w, "World ID is required", http.StatusBadRequest)
@@ -53,7 +53,6 @@ func (p *WorldDetailsPage) Load(r *http.Request, w http.ResponseWriter, vc *View
 	return nil, false
 }
 
-
-func (p *WorldDetailsPage) Copy() View {
-	return &WorldDetailsPage{}
+func (p *WorldViewerPage) Copy() View {
+	return &WorldViewerPage{}
 }

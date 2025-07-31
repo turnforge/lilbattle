@@ -25,12 +25,12 @@ import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedE
  * - Direct DOM manipulation outside of phaser-container
  */
 export class PhaserEditorComponent extends BaseComponent implements LCMComponent {
-    private phaserEditor: PhaserWorldEditor | null = null;
+    private phaserEditor: PhaserWorldEditor;
     private isInitialized: boolean = false;
     
     // Dependencies (injected in phase 2)
-    private pageState: WorldEditorPageState | null = null;
-    private world: World | null = null;
+    private pageState: WorldEditorPageState;
+    private world: World;
     
     // =============================================================================
     // LCMComponent Interface Implementation
@@ -41,6 +41,9 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      */
     public performLocalInit(): LCMComponent[] {
         this.log('PhaserEditorComponent: performLocalInit() - Phase 1');
+        
+        // Subscribe to EventBus events now that dependencies are available
+        this.subscribeToEvents();
         
         // Set up Phaser container within our root element
         this.setupPhaserContainer();
@@ -66,10 +69,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             throw new Error('PhaserEditorComponent requires pageState - use setPageState()');
         }
         
-        if (!this.world) {
-            throw new Error('PhaserEditorComponent requires world - use setWorld()');
-        }
-        
         this.log('PhaserEditorComponent: Dependencies validation complete');
     }
 
@@ -78,9 +77,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      */
     public async activate(): Promise<void> {
         this.log('PhaserEditorComponent: activate() - Phase 3');
-        
-        // Subscribe to EventBus events now that dependencies are available
-        this.subscribeToEvents();
         
         // Initialize Phaser editor now that dependencies are ready
         await this.initializePhaserEditor();
@@ -114,6 +110,50 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
 
     public getWorld(): World | null {
         return this.world;
+    }
+
+    /**
+     * Load World object into the Phaser editor scene
+     */
+    public async loadWorld(world: World): Promise<void> {
+        this.log('Loading canonical World object into Phaser editor');
+        
+        // Store the canonical World object
+        this.world = world;
+        
+        // Load into Phaser if ready
+        if (this.phaserEditor && this.isInitialized) {
+            await this.loadWorldIntoEditor();
+        }
+    }
+
+    /**
+     * Load the current World object into the Phaser editor scene
+     */
+    private async loadWorldIntoEditor(): Promise<void> {
+        if (!this.phaserEditor || !this.isInitialized || !this.world) {
+            this.log('Phaser editor not ready or no world data, deferring world load');
+            return;
+        }
+        
+        this.log('Loading World object into Phaser editor scene');
+        
+        // Load tiles first using setTilesData for better performance
+        const allTiles = this.world.getAllTiles();
+        await this.setTilesData(allTiles);
+        
+        // Load units AFTER tiles are loaded - ensure proper rendering order
+        const allUnits = this.world.getAllUnits();
+        if (allUnits.length > 0) {
+            // Add delay to ensure tiles are rendered first and textures are loaded
+            setTimeout(() => {
+                allUnits.forEach((unit) => {
+                    this.setUnit(unit);
+                });
+            }, 10);
+        }
+        
+        this.log('World data loaded into Phaser editor successfully');
     }
 
     /**
@@ -219,7 +259,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         // Destroy Phaser editor
         if (this.phaserEditor) {
             this.phaserEditor.destroy();
-            this.phaserEditor = null;
+            this.phaserEditor = null as any;
         }
         
         // Remove Phaser container
@@ -290,7 +330,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             const checkVisibility = () => {
                 const rect = containerElement.getBoundingClientRect();
                 
-                if (rect.width > 0 && rect.height > 0) {
+                if (true || (rect.width > 0 && rect.height > 0)) {
                     this.log('Container is visible, ready for Phaser initialization');
                     resolve();
                 } else {
