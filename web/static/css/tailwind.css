@@ -2099,6 +2099,10 @@ select {
   height: 0.75rem;
 }
 
+.h-32 {
+  height: 8rem;
+}
+
 .h-4 {
   height: 1rem;
 }
@@ -2129,10 +2133,6 @@ select {
 
 .h-screen {
   height: 100vh;
-}
-
-.max-h-40 {
-  max-height: 10rem;
 }
 
 .max-h-48 {
@@ -2221,6 +2221,10 @@ select {
 
 .w-8 {
   width: 2rem;
+}
+
+.w-80 {
+  width: 20rem;
 }
 
 .w-auto {

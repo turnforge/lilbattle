@@ -249,9 +249,9 @@ class GameViewerPage extends BasePage implements LCMComponent {
         console.log('GameViewerPage: GameState created:', this.gameState);
 
         // Create TerrainStatsPanel component
-        const terrainStatsContainer = document.getElementById('terrain-stats-panel');
+        const terrainStatsContainer = document.getElementById('terrain-stats-container');
         if (!terrainStatsContainer) {
-            throw new Error('GameViewerPage: terrain-stats-panel container not found');
+            throw new Error('GameViewerPage: terrain-stats-container not found');
         }
         this.terrainStatsPanel = new TerrainStatsPanel(terrainStatsContainer, this.eventBus, true);
         console.log('GameViewerPage: TerrainStatsPanel created:', this.terrainStatsPanel);

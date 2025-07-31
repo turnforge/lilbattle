@@ -115,10 +115,10 @@
             </div>
         </div>
 
-        <!-- Main Game Container -->
+        <!-- Main Game Container - BorderLayout: West (Actions) | Center (World) | East (TerrainStats) -->
         <div id="game-viewer-container" class="flex-1 min-h-0 flex">
-            <!-- Side Panel for Actions/Info -->
-            <div class="action-panel w-64 flex flex-col">
+            <!-- West Panel: Game Actions/Info -->
+            <div class="action-panel w-64 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
                 <div class="p-4">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Game Actions</h3>
                     
@@ -152,23 +152,23 @@
                 </div>
                 
                 <!-- Game Log -->
-                <div class="border-t border-gray-200 dark:border-gray-700 p-4">
+                <div class="border-t border-gray-200 dark:border-gray-700 p-4 flex-1">
                     <h4 class="font-medium text-gray-900 dark:text-white mb-2">Game Log</h4>
-                    <div id="game-log" class="text-xs text-gray-600 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto">
+                    <div id="game-log" class="text-xs text-gray-600 dark:text-gray-300 space-y-1 h-32 overflow-y-auto">
                         <div>Game started with {{ .PlayerCount }} players</div>
                         <div>Player 1's turn begins</div>
                     </div>
                 </div>
-                
-                <!-- Terrain Stats Panel -->
-                <div id="terrain-stats-panel" class="border-t border-gray-200 dark:border-gray-700">
-                    <!-- TerrainStatsPanel template will be bound here -->
-                </div>
             </div>
             
-            <!-- Main Phaser Game Area -->
+            <!-- Center: Main Phaser Game Area -->
             <div class="flex-1 min-h-0">
                 <div id="phaser-viewer-container" class="w-full h-full"></div>
+            </div>
+            
+            <!-- East Panel: Terrain Stats -->
+            <div id="terrain-stats-container" class="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
+                <!-- TerrainStatsPanel will bind to the template below -->
             </div>
         </div>
         
@@ -182,9 +182,6 @@
         <pre id="unit-data-json" style="display: none;">{{ .GetUnitDataJSON }}</pre>
         <pre id="movement-matrix-json" style="display: none;">{{ .GetMovementMatrixJSON }}</pre>
     </main>
-    
-    <!-- Include TerrainStatsPanel Template -->
-    {{# include "TerrainStatsPanel.html" #}}
 {{ end }}
 
 {{ define "PostBodySection" }}

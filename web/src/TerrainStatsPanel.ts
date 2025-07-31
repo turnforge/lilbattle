@@ -78,7 +78,6 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
 
         this.log('Binding TerrainStatsPanel to DOM using template');
-        this.bindToTemplate();
         this.loadRulesEngineData();
         this.isUIBound = true;
         this.log('TerrainStatsPanel bound to DOM successfully');
@@ -113,45 +112,29 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
     }
 
     /**
-     * Bind component to the template from TerrainStatsPanel.html
-     */
-    private bindToTemplate(): void {
-        const template = document.getElementById('terrain-stats-panel-template');
-        if (!template) {
-            throw new Error('terrain-stats-panel-template not found. Make sure TerrainStatsPanel.html is included.');
-        }
-
-        // Use the template directly instead of cloning
-        const templateContent = template.innerHTML;
-        this.rootElement.innerHTML = templateContent;
-
-        this.log('Template bound successfully');
-    }
-
-    /**
      * Load rules engine data from embedded JSON in page
      */
     private loadRulesEngineData(): void {
-            // Load terrain data
-            const terrainElement = document.getElementById('terrain-data-json');
-            if (terrainElement && terrainElement.textContent) {
-                this.terrainData = JSON.parse(terrainElement.textContent);
-                this.log('Loaded terrain data:', { count: Object.keys(this.terrainData).length });
-            }
+        // Load terrain data
+        const terrainElement = document.getElementById('terrain-data-json');
+        if (terrainElement && terrainElement.textContent) {
+            this.terrainData = JSON.parse(terrainElement.textContent);
+            this.log('Loaded terrain data:', { count: Object.keys(this.terrainData).length });
+        }
 
-            // Load unit data
-            const unitElement = document.getElementById('unit-data-json');
-            if (unitElement && unitElement.textContent) {
-                this.unitData = JSON.parse(unitElement.textContent);
-                this.log('Loaded unit data:', { count: Object.keys(this.unitData).length });
-            }
+        // Load unit data
+        const unitElement = document.getElementById('unit-data-json');
+        if (unitElement && unitElement.textContent) {
+            this.unitData = JSON.parse(unitElement.textContent);
+            this.log('Loaded unit data:', { count: Object.keys(this.unitData).length });
+        }
 
-            // Load movement matrix
-            const movementElement = document.getElementById('movement-matrix-json');
-            if (movementElement && movementElement.textContent) {
-                this.movementMatrix = JSON.parse(movementElement.textContent);
-                this.log('Loaded movement matrix with', { unitTypes: Object.keys(this.movementMatrix?.Costs || {}).length });
-            }
+        // Load movement matrix
+        const movementElement = document.getElementById('movement-matrix-json');
+        if (movementElement && movementElement.textContent) {
+            this.movementMatrix = JSON.parse(movementElement.textContent);
+            this.log('Loaded movement matrix with', { unitTypes: Object.keys(this.movementMatrix?.Costs || {}).length });
+        }
     }
 
     /**
@@ -159,8 +142,7 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
      */
     public updateTerrainInfo(terrainInfo: TerrainInfo): void {
         if (!this.isActivated) {
-            this.log('Component not activated, cannot update terrain info');
-            return;
+            throw new Error('Component not activated, cannot update terrain info');
         }
 
         this.currentTerrain = terrainInfo;
