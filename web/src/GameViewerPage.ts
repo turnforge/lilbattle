@@ -20,10 +20,10 @@ import { WorldEventTypes } from './events';
  */
 class GameViewerPage extends BasePage implements LCMComponent {
     private currentGameId: string | null;
-    private world: World | null = null;
-    private worldViewer: GameViewer | null = null;
-    private gameState: GameState | null = null;
-    private terrainStatsPanel: TerrainStatsPanel | null = null;
+    private world: World
+    private worldViewer: GameViewer
+    private gameState: GameState
+    private terrainStatsPanel: TerrainStatsPanel
     
     // Game configuration from URL parameters
     private playerCount: number = 2;
@@ -33,6 +33,77 @@ class GameViewerPage extends BasePage implements LCMComponent {
     // UI state
     private selectedUnit: any = null;
     private gameLog: string[] = [];
+
+    // =============================================================================
+    // LCMComponent Interface Implementation
+    // =============================================================================
+
+    /**
+     * Phase 1: Initialize DOM and discover child components
+     */
+    performLocalInit(): LCMComponent[] {
+        console.log('GameViewerPage: performLocalInit() - Phase 1');
+
+        // Load game config first
+        this.loadGameConfiguration(); // Load game config here since constructor calls this
+        
+        // Subscribe to events BEFORE creating components
+        this.subscribeToGameStateEvents();
+        
+        // Create child components
+        this.createComponents();
+        
+        // Initialize basic UI state
+        this.updateGameStatus('Game Loading...');
+        this.initializeGameLog();
+        
+        console.log('GameViewerPage: DOM initialized, returning child components');
+
+        console.assert(this.worldViewer != null, "World viewer could not be created")
+        console.assert(this.gameState != null, "gameState could not be created")
+        console.assert(this.terrainStatsPanel != null, "terrainStatsPanel could not be created")
+        
+        // Return child components for lifecycle management
+        return [
+            this.worldViewer,
+            this.gameState,
+            this.terrainStatsPanel,
+        ]
+    }
+
+    /**
+     * Phase 3: Activate component when all dependencies are ready
+     */
+    async activate(): Promise<void> {
+        console.log('GameViewerPage: activate() - Phase 3');
+        
+        // Bind events now that all components are ready
+        this.bindGameSpecificEvents();
+        
+        console.log('GameViewerPage: activation complete');
+    }
+
+    public destroy(): void {
+        if (this.worldViewer) {
+            this.worldViewer.destroy();
+            this.worldViewer = null as any;
+        }
+        
+        if (this.gameState) {
+            this.gameState.destroy();
+            this.gameState = null as any;
+        }
+
+        if (this.terrainStatsPanel) {
+            this.terrainStatsPanel.destroy();
+            this.terrainStatsPanel = null as any;
+        }
+        
+        this.world = null as any;
+        this.currentGameId = null;
+        this.selectedUnit = null;
+        this.gameLog = [];
+    }
 
     /**
      * Load game configuration from URL parameters and hidden inputs
@@ -79,26 +150,13 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 
     /**
-     * Initialize page-specific components (required by BasePage)
-     * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle initialization through LCMComponent interface
-     */
-    protected initializeSpecificComponents(): LCMComponent[] {
-        console.log('GameViewerPage: initializeSpecificComponents() called by BasePage - doing minimal setup');
-        this.loadGameConfiguration(); // Load game config here since constructor calls this
-        console.log('GameViewerPage: Actual component initialization will be handled by LifecycleController');
-        return [];
-    }
-
-    /**
      * Subscribe to GameState events
      */
     private subscribeToGameStateEvents(): void {
         // GameViewer ready event - set up interaction callbacks and load world
-        this.addSubscription('game-viewer-ready', this);
+        this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, this);
         
         // GameState notification events (for system coordination, not user interaction responses)
-        this.addSubscription('wasm-loaded', this);
         this.addSubscription('game-loaded', this);
         this.addSubscription('game-created', this);
         this.addSubscription('unit-moved', this);
@@ -111,7 +169,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
      */
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
-            case 'game-viewer-ready':
+            case WorldEventTypes.WORLD_VIEWER_READY:
                 console.log('GameViewerPage: GameViewer ready event received', data);
                 
                 // Now that GameViewer scene is ready, set up the interaction callbacks
@@ -134,10 +192,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 } else {
                     console.warn('GameViewerPage: No currentGameId found!');
                 }
-                break;
-            
-            case 'wasm-loaded':
-                console.log('GameViewerPage: WASM loaded successfully');
                 break;
             
             case 'game-loaded':
@@ -179,7 +233,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
     /**
      * Create WorldViewer and GameState component instances
      */
-    private createWorldViewerComponent(): void {
+    private createComponents(): void {
         const worldViewerContainer = document.getElementById('phaser-viewer-container');
         if (!worldViewerContainer) {
             throw new Error('GameViewerPage: phaser-viewer-container not found');
@@ -226,7 +280,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
         
         // Load world into viewer
         if (this.worldViewer) {
-            await this.worldViewer.loadWorld(gameState.world_data);
+            await this.worldViewer.loadWorld(this.world);
             this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
         }
 
@@ -818,95 +872,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             // Scroll to bottom
             gameLogElement.scrollTop = gameLogElement.scrollHeight;
         }
-    }
-
-    // =============================================================================
-    // LCMComponent Interface Implementation
-    // =============================================================================
-
-    /**
-     * Phase 1: Initialize DOM and discover child components
-     */
-    performLocalInit(): LCMComponent[] {
-        console.log('GameViewerPage: performLocalInit() - Phase 1');
-        
-        // Subscribe to events BEFORE creating components
-        this.subscribeToGameStateEvents();
-        
-        // Create child components
-        this.createWorldViewerComponent();
-        
-        // Initialize basic UI state
-        this.updateGameStatus('Game Loading...');
-        this.initializeGameLog();
-        
-        console.log('GameViewerPage: DOM initialized, returning child components');
-        
-        // Return child components for lifecycle management
-        const childComponents: LCMComponent[] = [];
-        if (this.worldViewer) {
-            childComponents.push(this.worldViewer);
-        }
-        if (this.gameState) {
-            childComponents.push(this.gameState);
-        }
-        if (this.terrainStatsPanel) {
-            childComponents.push(this.terrainStatsPanel);
-        }
-        return childComponents;
-    }
-
-    /**
-     * Phase 2: Inject dependencies (none needed for GameViewerPage)
-     */
-    setupDependencies(): void {
-        console.log('GameViewerPage: setupDependencies() - Phase 2')
-        // GameViewerPage doesn't need external dependencies
-    }
-
-    /**
-     * Phase 3: Activate component when all dependencies are ready
-     */
-    async activate(): Promise<void> {
-        console.log('GameViewerPage: activate() - Phase 3');
-        
-        // Bind events now that all components are ready
-        this.bindGameSpecificEvents();
-
-        // Note: Interaction callbacks and world loading are handled in the 
-        // game-viewer-ready event handler after the PhaserGameScene is actually created and ready
-        
-        console.log('GameViewerPage: activation complete');
-    }
-
-    /**
-     * Cleanup phase (called by lifecycle controller if needed)
-     */
-    deactivate(): void {
-        console.log('GameViewerPage: deactivate() - cleanup');
-        this.destroy();
-    }
-
-    public destroy(): void {
-        if (this.worldViewer) {
-            this.worldViewer.destroy();
-            this.worldViewer = null;
-        }
-        
-        if (this.gameState) {
-            this.gameState.destroy();
-            this.gameState = null;
-        }
-
-        if (this.terrainStatsPanel) {
-            this.terrainStatsPanel.destroy();
-            this.terrainStatsPanel = null;
-        }
-        
-        this.world = null;
-        this.currentGameId = null;
-        this.selectedUnit = null;
-        this.gameLog = [];
     }
 }
 

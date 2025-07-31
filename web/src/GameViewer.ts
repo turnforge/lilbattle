@@ -25,23 +25,6 @@ export class GameViewer extends WorldViewer<PhaserGameScene> {
     }
 
     /**
-     * Override to handle GameViewer-specific initialization after Phaser scene is ready
-     */
-    protected async initializePhaserScene(): Promise<void> {
-        // Call parent implementation first
-        await super.initializePhaserScene();
-        
-        // GameViewer-specific setup can go here if needed
-        console.log('GameViewer: Phaser scene initialized and ready for game interactions');
-        
-        // Emit a GameViewer-specific ready event for the parent page
-        this.emit('game-viewer-ready', {
-            componentId: this.componentId,
-            success: true
-        }, this, this);
-    }
-
-    /**
      * Get game-specific highlight layers with proper typing
      */
     public getSelectionHighlightLayer(): SelectionHighlightLayer | null {

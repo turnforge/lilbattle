@@ -57,7 +57,7 @@ this.rootElement.style.height = '500px';
 
 ### 4. LCMComponent Lifecycle Management
 
-**All components must follow the 3-phase LCMComponent lifecycle:**
+**All components must follow the 4-phase LCMComponent lifecycle:**
 
 1. **performLocalInit()**: EventBus subscriptions, DOM setup, and child component discovery (breadth-first)
 2. **setupDependencies()**: Dependency injection and validation 
@@ -69,7 +69,7 @@ this.rootElement.style.height = '500px';
 ```typescript
 performLocalInit(): LCMComponent[] {
     // 1. FIRST: Subscribe to events before creating children
-    this.subscribe('child-ready', this, this.handleChildReady);
+    this.addSubscription('child-ready', this);
     
     // 2. THEN: Create child components (they can emit events immediately)
     const child = new ChildComponent(rootElement, eventBus);
@@ -77,25 +77,61 @@ performLocalInit(): LCMComponent[] {
     // 3. FINALLY: Return children for lifecycle management
     return [child];
 }
+
+// Handle events via EventSubscriber interface
+public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+    switch(eventType) {
+        case 'child-ready':
+            this.handleChildReady(data);
+            break;
+        default:
+            super.handleBusEvent(eventType, data, target, emitter);
+    }
+}
 ```
 
 This lifecycle ensures proper initialization order and eliminates race conditions through synchronization barriers.
 
-### 5. Event-Driven Communication
+### 5. Event-Driven Communication with EventSubscriber Pattern
 
-**Components communicate only through EventBus:**
+**Components communicate only through EventBus using the EventSubscriber interface:**
 
-- No direct method calls between components
-- Use type-safe event definitions
-- Events include source identification for debugging
+- All components implement `EventSubscriber` interface with `handleBusEvent()` method
+- Use `addSubscription()` instead of callback-based subscriptions
+- Type-safe event definitions with constants
 - Error isolation - one component failure doesn't cascade
 - Events are synchronous and allow multiple entities to react
-- Events should not be sent back to the source component
+- EventBus automatically prevents events from being sent back to the source component
 
-**Example:**
+**EventSubscriber Pattern:**
 ```typescript
-// ✅ CORRECT - EventBus communication
-this.emit(EventTypes.WORLD_DATA_LOADED, worldData);
+// ✅ CORRECT - EventSubscriber pattern
+export class MyComponent extends BaseComponent implements EventSubscriber {
+    performLocalInit(): LCMComponent[] {
+        // Subscribe using EventSubscriber interface
+        this.addSubscription(WorldEventTypes.WORLD_DATA_LOADED, this);
+        return [];
+    }
+    
+    // Handle events via interface method
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_DATA_LOADED:
+                this.handleWorldDataLoaded(data);
+                break;
+            default:
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
+    }
+    
+    // Emit events
+    private notifyDataLoaded(): void {
+        this.emit(WorldEventTypes.WORLD_DATA_LOADED, worldData, this, this);
+    }
+}
+
+// ❌ WRONG - Old callback pattern (deprecated)
+this.subscribe('event-type', (data) => { /* handle */ });
 
 // ❌ WRONG - Direct method calls
 otherComponent.updateData(worldData);
@@ -132,10 +168,10 @@ otherComponent.updateData(worldData);
 
 ### LCMComponent Lifecycle Pattern
 
-All components implement the 3-phase LCMComponent lifecycle for proper initialization order:
+All components implement the 4-phase LCMComponent lifecycle for proper initialization order:
 
 ```typescript
-export class MyComponent extends BaseComponent implements LCMComponent {
+export class MyComponent extends BaseComponent implements LCMComponent, EventSubscriber {
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('my-component', rootElement, eventBus, debugMode);
         // Note: Lifecycle methods are called by LifecycleController, not constructor
@@ -144,8 +180,8 @@ export class MyComponent extends BaseComponent implements LCMComponent {
     // Phase 1: Subscribe to events FIRST, then create children
     performLocalInit(): LCMComponent[] {
         // 1. CRITICAL: Subscribe to events before creating children
-        this.subscribe(EventTypes.CHILD_READY, this, this.handleChildReady);
-        this.subscribe(EventTypes.DATA_LOADED, this, this.handleDataLoaded);
+        this.addSubscription(EventTypes.CHILD_READY, this);
+        this.addSubscription(EventTypes.DATA_LOADED, this);
         
         // 2. Set up DOM elements
         this.myButton = this.findElement('.my-button') || this.createButton();
@@ -172,9 +208,23 @@ export class MyComponent extends BaseComponent implements LCMComponent {
         this.emit(EventTypes.COMPONENT_READY, { componentId: this.componentId }, this, this);
     }
     
-    // Cleanup
+    // Phase 4: Cleanup
     deactivate(): void {
         this.destroy();
+    }
+    
+    // Handle events via EventSubscriber interface
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case EventTypes.CHILD_READY:
+                this.handleChildReady(data);
+                break;
+            case EventTypes.DATA_LOADED:
+                this.handleDataLoaded(data);
+                break;
+            default:
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
     }
     
     // Component-specific cleanup
@@ -193,7 +243,7 @@ export class ParentPage extends BasePage implements LCMComponent {
     // Phase 1: Subscribe to events BEFORE creating children
     performLocalInit(): LCMComponent[] {
         // 1. CRITICAL: Subscribe to child events first
-        this.subscribe('child-ready', this, this.handleChildReady);
+        this.addSubscription('child-ready', this);
         
         // 2. Create child components (they can emit events immediately)
         const componentRoot = this.ensureElement('[data-component="my-component"]', 'fallback-id');
@@ -207,6 +257,17 @@ export class ParentPage extends BasePage implements LCMComponent {
     activate(): void {
         super.activate(); // Bind base page events
         // Any additional page-specific coordination
+    }
+    
+    // Handle events via EventSubscriber interface
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case 'child-ready':
+                this.handleChildReady(data);
+                break;
+            default:
+                super.handleBusEvent(eventType, data, target, emitter);
+        }
     }
     
     private ensureElement(selector: string, fallbackId: string): HTMLElement {
@@ -224,7 +285,11 @@ export class ParentPage extends BasePage implements LCMComponent {
 // Initialize with LifecycleController for proper coordination
 document.addEventListener('DOMContentLoaded', async () => {
     const page = new ParentPage('parent-page');
-    const lifecycleController = new LifecycleController(page.eventBus);
+    const lifecycleController = new LifecycleController(page.eventBus, {
+        enableDebugLogging: true,
+        phaseTimeoutMs: 15000,
+        continueOnError: false
+    });
     await lifecycleController.initializeFromRoot(page);
 });
 ```
@@ -238,13 +303,25 @@ export const EventTypes = {
     ERROR_OCCURRED: 'error-occurred'
 } as const;
 
-// Subscribe to events
-this.subscribe<DataPayload>(EventTypes.DATA_LOADED, (payload) => {
-    this.handleDataLoaded(payload.data);
-});
+// Subscribe to events (EventSubscriber pattern)
+this.addSubscription(EventTypes.DATA_LOADED, this);
+
+// Handle events via EventSubscriber interface
+public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+    switch(eventType) {
+        case EventTypes.DATA_LOADED:
+            this.handleDataLoaded(data);
+            break;
+        case EventTypes.ERROR_OCCURRED:
+            this.handleError(data);
+            break;
+        default:
+            super.handleBusEvent(eventType, data, target, emitter);
+    }
+}
 
 // Emit events
-this.emit(EventTypes.DATA_LOADED, { data: myData });
+this.emit(EventTypes.DATA_LOADED, { data: myData }, this, this);
 ```
 
 ### DOM Scoping

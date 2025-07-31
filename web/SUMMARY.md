@@ -3,14 +3,14 @@
 ## Purpose
 The web module provides a modern web interface for the WeeWar turn-based strategy game, featuring a professional world editor, readonly world viewer, and comprehensive game management system.
 
-## Current Architecture (v5.0)
+## Current Architecture (v7.0)
 
-### Unified World Architecture with Observer Pattern
-- **Single Source of Truth**: Enhanced World class serves as central data store for all world operations
-- **Event-Driven Communication**: WorldObserver interface with type-safe WorldEvent system
-- **Batched Performance**: TileChange and UnitChange arrays with setTimeout-based scheduling
-- **Self-contained Persistence**: World class handles save/load operations directly
-- **Automatic Change Tracking**: Eliminates manual change marking throughout components
+### LCMComponent Lifecycle Architecture with EventSubscriber Pattern
+- **4-Phase Lifecycle Management**: performLocalInit() → setupDependencies() → activate() → deactivate()
+- **Breadth-First Initialization**: LifecycleController orchestrates component coordination with synchronization barriers
+- **EventSubscriber Interface**: Type-safe event handling via handleBusEvent() method, replacing callback-based subscriptions
+- **World-Centric Data Management**: Enhanced World class serves as single source of truth with observer pattern
+- **Race Condition Elimination**: Synchronization barriers prevent timing issues and component coordination problems
 
 ### Core Components
 
@@ -20,9 +20,11 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **PhaserEditorComponent.ts**: Phaser.js-based world editor with WebGL rendering
 
 #### Frontend Library Components (`web/lib/`)
-- **EventBus.ts**: Type-safe event system for inter-component communication
-- **Component.ts**: Base class with lifecycle management and DOM scoping
-- **BasePage.ts**: Base class for all our pages - implements a LifeCycledComponent
+- **LCMComponent.ts**: Lifecycle Managed Component interface with 4-phase initialization
+- **LifecycleController.ts**: Breadth-first component orchestration with synchronization barriers
+- **EventBus.ts**: EventSubscriber pattern with type-safe event handling and error isolation
+- **Component.ts**: BaseComponent with LCMComponent integration and DOM scoping
+- **BasePage.ts**: Page base class implementing the LCMComponent pattern with common UI functionality
 
 #### Backend Services (`pkg/services/`)
 - **WorldsService**: gRPC service for world CRUD operations
@@ -39,20 +41,28 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Professional Tools**: Terrain painting, unit placement, brush sizes, player management
 
 #### Component Architecture
-- **Event-Driven Design**: Components communicate via EventBus and World Observer pattern
-- **Clean Separation**: UI components focus on presentation, World handles data operations
-- **Type Safety**: Comprehensive TypeScript interfaces prevent runtime errors
-- **Lifecycle Management**: Proper initialization, cleanup, and error handling
+- **LCMComponent Lifecycle**: 4-phase initialization with breadth-first coordination via LifecycleController
+- **EventSubscriber Pattern**: Type-safe event handling via handleBusEvent() interface method
+- **World-Centric Data Flow**: Single source of truth with automatic component synchronization
+- **Error Isolation**: Component failures don't cascade through synchronization barriers
+- **Race Condition Prevention**: Synchronization barriers eliminate timing dependencies
 
-### Recent Achievements (Session 2025-01-20)
+### Recent Achievements (Session 2025-01-31)
 
-#### Breadth-First Lifecycle Architecture Design (v6.0)
-- Designed multi-phase component initialization pattern to eliminate race conditions and timing issues
-- Created ComponentLifecycle interface with bindToDOM, injectDependencies, and activate phases
-- Designed LifecycleController for breadth-first orchestration with synchronization barriers
-- Established clear separation between DOM construction, dependency injection, and activation phases
-- Documented benefits over traditional depth-first initialization including race condition prevention
-- Provided implementation patterns for async-safe component initialization
+#### LCMComponent Architecture Implementation (v7.0)
+- **Full LCMComponent Implementation**: All pages and components now implement 4-phase lifecycle
+- **EventSubscriber Pattern Migration**: Replaced callback-based subscriptions with type-safe handleBusEvent() interface
+- **LifecycleController Integration**: All pages use breadth-first initialization with synchronization barriers
+- **World Object Consistency**: Fixed WorldViewer/PhaserEditorComponent to use World objects instead of raw data
+- **TypeScript Error Resolution**: Eliminated all frontend build errors through consistent API patterns
+- **Component Coordination**: Proper event timing with subscribe-before-create pattern throughout codebase
+
+#### Architecture Benefits Realized
+- **Race Condition Elimination**: No more timing issues between component initialization
+- **Event Handling Consistency**: All components use same EventSubscriber pattern
+- **World Data Loading**: Consistent loadWorld(world) API across all Phaser components
+- **Error Isolation**: Component failures contained through synchronization barriers
+- **Type Safety**: handleBusEvent() interface prevents runtime event handling errors
 
 #### Component Architecture Cleanup and Technical Debt Reduction (v5.2)
 - Comprehensive cleanup of WorldEditorPage with dead code elimination
@@ -80,18 +90,18 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - Separated state levels: Page-level (tools), Application-level (theme), Component-level (local UI)
 
 #### Architecture Benefits
-- **Code Reduction**: WorldEditorPage simplified through centralization and dead code elimination
-- **Data Consistency**: Single source of truth eliminates scattered data copies
-- **Performance**: Batched events reduce UI update frequency
-- **Component Boundaries**: Proper encapsulation with each component owning its DOM elements
-- **State Management**: Clean separation of state generators vs state observers
-- **Maintainability**: Centralized logic easier to debug and extend, further improved through cleanup
-- **Type Safety**: Comprehensive interfaces prevent runtime errors
-- **Technical Debt Reduction**: Streamlined component architecture with cleaner boundaries
-- **Code Organization**: Improved readability through consolidated methods and simplified patterns
-- **Initialization Safety**: Breadth-first lifecycle eliminates race conditions and timing dependencies
-- **Error Isolation**: Component failures don't cascade through synchronization barriers
-- **Async Handling**: Proper async initialization without blocking other components
+- **LCMComponent Lifecycle**: 4-phase initialization eliminates race conditions and timing dependencies
+- **EventSubscriber Pattern**: Type-safe, error-isolated event handling across all components
+- **Breadth-First Coordination**: LifecycleController prevents component initialization conflicts
+- **World-Centric Architecture**: Single source of truth with automatic component synchronization
+- **Error Isolation**: Component failures contained through synchronization barriers
+- **Consistent APIs**: All Phaser components use same loadWorld(world) pattern
+- **Type Safety**: Interface-based event handling prevents runtime errors
+- **Component Boundaries**: Proper encapsulation with clear lifecycle phases
+- **Async Safety**: Proper async initialization without blocking other components
+- **Maintainability**: Clear separation of phases makes debugging and extension easier
+- **Code Organization**: Consistent patterns across all pages and components
+- **Performance**: Batched events and efficient component coordination
 
 ### Technical Specifications
 
@@ -115,23 +125,29 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 
 ### Development Guidelines
 
-#### Observer Pattern Usage
-- Implement WorldObserver interface in components needing world updates
-- Subscribe to World events in component initialization
-- Handle specific event types (TILES_CHANGED, UNITS_CHANGED, MAP_LOADED, etc.)
-- Use batched events for performance optimization
+#### LCMComponent Lifecycle Pattern
+- Implement all 4 phases: performLocalInit() → setupDependencies() → activate() → deactivate()
+- Subscribe to events FIRST in performLocalInit() before creating child components
+- Use LifecycleController for page initialization with proper configuration
+- Return child components from performLocalInit() for lifecycle management
+
+#### EventSubscriber Pattern Usage
+- Implement EventSubscriber interface with handleBusEvent() method
+- Use addSubscription() instead of callback-based subscriptions
+- Handle events via switch statement in handleBusEvent()
+- Call super.handleBusEvent() for unhandled events
 
 #### Component Development
-- Extend BaseComponent for lifecycle management
-- Use EventBus for inter-component communication
-- Implement proper cleanup in destroyComponent()
-- Scope DOM queries to component containers
+- Extend BaseComponent and implement LCMComponent interface
+- Use EventBus with EventSubscriber pattern for inter-component communication
+- Implement proper cleanup in destroyComponent() and deactivate()
+- Scope DOM queries to component containers with findElement()
 
 #### World Operations
-- Use World class methods for all tile/unit operations
+- Use World class methods for all tile/unit operations (single source of truth)
+- Pass World objects (not raw data) to Phaser components via loadWorld() method
+- Subscribe to World events for automatic UI synchronization
 - Let World handle persistence and change tracking automatically
-- Subscribe to World events for UI updates
-- Avoid direct manipulation of world data outside World class
 
 ### Next Development Priorities
 
@@ -155,7 +171,8 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Layout**: DockView for professional panel management
 
 ## Status
-**Current Version**: 6.0 (Breadth-First Lifecycle Architecture Design)  
-**Status**: Production-ready with streamlined component architecture and designed breadth-first lifecycle system  
+**Current Version**: 7.0 (LCMComponent Architecture Implementation)  
+**Status**: Production-ready with full LCMComponent lifecycle and EventSubscriber pattern  
 **Build Status**: Clean compilation with all TypeScript errors resolved  
-**Next Milestone**: Implement breadth-first lifecycle architecture and complete component integration with unified state management
+**Architecture**: Breadth-first initialization with synchronization barriers and race condition elimination  
+**Next Milestone**: Performance optimization and advanced component features
