@@ -76,10 +76,15 @@ func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 func (p *GameViewerPage) GetTerrainDataJSON() string {
 	rulesEngine := weewar.DefaultRulesEngine()
 	
-	// Marshal each terrain definition using protojson for consistent camelCase
+	// Marshal each terrain definition using protojson with EmitUnpopulated for all fields
+	marshaler := protojson.MarshalOptions{
+		EmitUnpopulated: true,
+		UseProtoNames:   false, // Use JSON names (camelCase)
+	}
+	
 	terrainMap := make(map[string]json.RawMessage)
 	for id, terrain := range rulesEngine.Terrains {
-		terrainJSON, err := protojson.Marshal(terrain)
+		terrainJSON, err := marshaler.Marshal(terrain)
 		if err != nil {
 			log.Printf("Error marshaling terrain %d: %v", id, err)
 			continue
@@ -99,10 +104,15 @@ func (p *GameViewerPage) GetTerrainDataJSON() string {
 func (p *GameViewerPage) GetUnitDataJSON() string {
 	rulesEngine := weewar.DefaultRulesEngine()
 	
-	// Marshal each unit definition using protojson for consistent camelCase
+	// Marshal each unit definition using protojson with EmitUnpopulated for all fields
+	marshaler := protojson.MarshalOptions{
+		EmitUnpopulated: true,
+		UseProtoNames:   false, // Use JSON names (camelCase)
+	}
+	
 	unitMap := make(map[string]json.RawMessage)
 	for id, unit := range rulesEngine.Units {
-		unitJSON, err := protojson.Marshal(unit)
+		unitJSON, err := marshaler.Marshal(unit)
 		if err != nil {
 			log.Printf("Error marshaling unit %d: %v", id, err)
 			continue

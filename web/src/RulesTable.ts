@@ -24,7 +24,6 @@ export class TerrainStats {
     get name(): string { return this.terrainDefinition.name; }
     get baseMoveCost(): number { return this.terrainDefinition.baseMoveCost; }
     get defenseBonus(): number { return this.terrainDefinition.defenseBonus; }
-    get type(): number { return this.terrainDefinition.type; }
     get description(): string { return this.terrainDefinition.description; }
 }
 
@@ -62,7 +61,6 @@ export class RulesTable {
         const terrainStats = new TerrainStats(terrainDefinition, 0, 0, player);
         console.log(`Created terrain stats for tile type: ${tileId}, player: ${player}`, {
             name: terrainStats.name,
-            type: terrainStats.type,
             baseMoveCost: terrainStats.baseMoveCost,
             defenseBonus: terrainStats.defenseBonus
         });

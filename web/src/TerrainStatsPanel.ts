@@ -234,11 +234,6 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
                     value: `${sign}${(terrainStats.defenseBonus * 100).toFixed(0)}%`
                 });
             }
-
-            properties.push({
-                name: 'Terrain Type',
-                value: terrainStats.type.toString()
-            });
         }
 
         // Add movement costs for different unit types if available

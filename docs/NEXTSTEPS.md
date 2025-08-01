@@ -368,9 +368,9 @@
 ## Current Development Focus
 
 ### Phase 14: RulesTable Architecture & Proto Migration ✅ COMPLETED
-**Completed Phase**: Shared RulesTable and Proto Migration Planning
-**Status**: RulesTable refactor complete, proto migration planned  
-**Achievement**: Centralized rules management with proto migration strategy for data alignment
+**Completed Phase**: Complete Proto Migration with Rules Engine Integration
+**Status**: Full proto migration completed with terrain data loading working end-to-end  
+**Achievement**: Unified proto definitions throughout stack with complete field support
 
 #### RulesTable Architecture Implementation ✅ COMPLETED
 - **Shared RulesTable Class**: Centralized rules engine data management in TypeScript
@@ -380,26 +380,22 @@
 - **Performance Optimization**: Rules data loaded once and shared across components
 - **Architecture Cleanup**: Eliminated scattered RulesEngine creation pattern
 
+#### Proto Migration Implementation ✅ COMPLETED
+**Issue Resolution**: Fixed JSON marshaling mismatch between Go backend and TypeScript frontend
+**Root Cause**: Standard `json.Unmarshal` couldn't properly handle proto message field conversion
+**Solution Implemented**: 
+- **Rules Data Conversion**: Created conversion script to properly format rules-data.json with proto-compatible field marshaling
+- **Enhanced Rules Loader**: Updated `LoadRulesEngineFromJSON` to use `protojson.Unmarshal` for proper proto field handling
+- **Frontend Marshaling Fix**: Updated `GetTerrainDataJSON()` to use `protojson.MarshalOptions` with `EmitUnpopulated: true`
+- **Complete Field Support**: All terrain fields (`baseMoveCost`, `defenseBonus`, `type`, `description`) now available to frontend
+
 #### Technical Implementation Benefits ✅ COMPLETED
-- **Single Source of Truth**: All terrain/unit/movement rules managed by shared RulesTable instance  
-- **Better Performance**: Rules data loaded once instead of recreated multiple times
-- **Cleaner Architecture**: Removed duplicated rules engine creation throughout codebase
-- **Consistent Data Access**: All components access rules data through same interface
-- **Maintainability**: Centralized rules logic easier to debug, test, and extend
-
-#### Proto Migration Strategy (PENDING IMPLEMENTATION)
-**Identified Issue**: JSON marshaling mismatch between Go structs (Capital case) and TypeScript proto definitions (camelCase)
-**Root Cause Analysis**: 
-- Go rules engine uses custom structs (`TerrainData`, `UnitData`) with Capital case field names
-- Proto definitions exist for same concepts (`TerrainDefinition`, `UnitDefinition`) with camelCase
-- JSON marshaling uses Go structs → Capital case, TypeScript expects proto format → camelCase
-- **Result**: Duplication and serialization alignment issues
-
-**Proposed Solution**: Use Proto Definitions Everywhere
-- Update Go rules engine to use proto definitions instead of custom structs
-- Update `LoadRulesEngineFromJSON` to return proto objects
-- Update marshaling methods to use protojson for consistent serialization
-- **Benefits**: Single source of truth, automatic alignment, no duplication
+- **Single Source of Truth**: All terrain/unit/movement rules use proto definitions consistently  
+- **Unified Field Marshaling**: Proto field names (camelCase) used consistently between Go backend and TypeScript frontend
+- **Complete Data Access**: Frontend receives all terrain fields instead of just id/name
+- **Better Performance**: Rules data loaded once with proper proto field conversion
+- **Maintainability**: Centralized proto-based rules logic throughout stack
+- **Type Safety**: Proto definitions ensure field consistency between backend and frontend
 
 ### Phase 13: WASM-Centric GameState Architecture ✅ COMPLETED
 **Completed Phase**: Revolutionary GameState architecture with WASM singletons and local caching

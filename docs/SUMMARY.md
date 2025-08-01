@@ -276,6 +276,7 @@ go test -v -run TestPNG           # PNG rendering tests
 - [x] Interactive game viewer foundation with URL-based configuration ✅ COMPLETED
 - [x] WASM bridge integration core issues resolved ✅ COMPLETED
 - [x] ComponentLifecycle architecture with external orchestration ✅ COMPLETED
+- [x] Proto migration with complete terrain data loading ✅ COMPLETED
 - [ ] Unit visibility debugging and interactive gameplay (CURRENT FOCUS)
 - [ ] Frontend-WASM coordination optimization and error handling
 - [ ] Complete unit selection and movement highlighting in Phaser viewer
