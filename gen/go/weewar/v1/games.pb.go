@@ -1526,10 +1526,12 @@ func (*EndTurnOption) Descriptor() ([]byte, []int) {
 // *
 // Option to move to a specific coordinate
 type MoveOption struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Q             int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
-	MovementCost  int32                  `protobuf:"varint,3,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Q            int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
+	R            int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
+	MovementCost int32                  `protobuf:"varint,3,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"`
+	// Ready-to-use action object for ProcessMoves
+	Action        *MoveUnitAction `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1585,6 +1587,13 @@ func (x *MoveOption) GetMovementCost() int32 {
 	return 0
 }
 
+func (x *MoveOption) GetAction() *MoveUnitAction {
+	if x != nil {
+		return x.Action
+	}
+	return nil
+}
+
 // *
 // A possible attack target
 type AttackOption struct {
@@ -1596,8 +1605,10 @@ type AttackOption struct {
 	TargetUnitHealth int32 `protobuf:"varint,4,opt,name=target_unit_health,json=targetUnitHealth,proto3" json:"target_unit_health,omitempty"`
 	CanAttack        bool  `protobuf:"varint,5,opt,name=can_attack,json=canAttack,proto3" json:"can_attack,omitempty"`
 	DamageEstimate   int32 `protobuf:"varint,6,opt,name=damage_estimate,json=damageEstimate,proto3" json:"damage_estimate,omitempty"` // Estimated damage this attack would deal
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Ready-to-use action object for ProcessMoves
+	Action        *AttackUnitAction `protobuf:"bytes,7,opt,name=action,proto3" json:"action,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AttackOption) Reset() {
@@ -1670,6 +1681,13 @@ func (x *AttackOption) GetDamageEstimate() int32 {
 		return x.DamageEstimate
 	}
 	return 0
+}
+
+func (x *AttackOption) GetAction() *AttackUnitAction {
+	if x != nil {
+		return x.Action
+	}
+	return nil
 }
 
 // *
@@ -1911,12 +1929,13 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x05build\x18\x04 \x01(\v2\x1a.weewar.v1.BuildUnitOptionH\x00R\x05build\x12<\n" +
 	"\acapture\x18\x05 \x01(\v2 .weewar.v1.CaptureBuildingOptionH\x00R\acaptureB\r\n" +
 	"\voption_type\"\x0f\n" +
-	"\rEndTurnOption\"M\n" +
+	"\rEndTurnOption\"\x80\x01\n" +
 	"\n" +
 	"MoveOption\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12#\n" +
-	"\rmovement_cost\x18\x03 \x01(\x05R\fmovementCost\"\xca\x01\n" +
+	"\rmovement_cost\x18\x03 \x01(\x05R\fmovementCost\x121\n" +
+	"\x06action\x18\x04 \x01(\v2\x19.weewar.v1.MoveUnitActionR\x06action\"\xff\x01\n" +
 	"\fAttackOption\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12(\n" +
@@ -1924,7 +1943,8 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x12target_unit_health\x18\x04 \x01(\x05R\x10targetUnitHealth\x12\x1d\n" +
 	"\n" +
 	"can_attack\x18\x05 \x01(\bR\tcanAttack\x12'\n" +
-	"\x0fdamage_estimate\x18\x06 \x01(\x05R\x0edamageEstimate\"i\n" +
+	"\x0fdamage_estimate\x18\x06 \x01(\x05R\x0edamageEstimate\x123\n" +
+	"\x06action\x18\a \x01(\v2\x1b.weewar.v1.AttackUnitActionR\x06action\"i\n" +
 	"\x0fBuildUnitOption\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +
@@ -2008,6 +2028,8 @@ var file_weewar_v1_games_proto_goTypes = []any{
 	(*GameMoveResult)(nil),         // 38: weewar.v1.GameMoveResult
 	(*WorldChange)(nil),            // 39: weewar.v1.WorldChange
 	(*GameMoveGroup)(nil),          // 40: weewar.v1.GameMoveGroup
+	(*MoveUnitAction)(nil),         // 41: weewar.v1.MoveUnitAction
+	(*AttackUnitAction)(nil),       // 42: weewar.v1.AttackUnitAction
 }
 var file_weewar_v1_games_proto_depIdxs = []int32{
 	31, // 0: weewar.v1.ListGamesRequest.pagination:type_name -> weewar.v1.Pagination
@@ -2037,32 +2059,34 @@ var file_weewar_v1_games_proto_depIdxs = []int32{
 	24, // 24: weewar.v1.GameOption.end_turn:type_name -> weewar.v1.EndTurnOption
 	27, // 25: weewar.v1.GameOption.build:type_name -> weewar.v1.BuildUnitOption
 	28, // 26: weewar.v1.GameOption.capture:type_name -> weewar.v1.CaptureBuildingOption
-	32, // 27: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
-	13, // 28: weewar.v1.GamesService.CreateGame:input_type -> weewar.v1.CreateGameRequest
-	11, // 29: weewar.v1.GamesService.GetGames:input_type -> weewar.v1.GetGamesRequest
-	1,  // 30: weewar.v1.GamesService.ListGames:input_type -> weewar.v1.ListGamesRequest
-	3,  // 31: weewar.v1.GamesService.GetGame:input_type -> weewar.v1.GetGameRequest
-	9,  // 32: weewar.v1.GamesService.DeleteGame:input_type -> weewar.v1.DeleteGameRequest
-	7,  // 33: weewar.v1.GamesService.UpdateGame:input_type -> weewar.v1.UpdateGameRequest
-	17, // 34: weewar.v1.GamesService.GetGameState:input_type -> weewar.v1.GetGameStateRequest
-	19, // 35: weewar.v1.GamesService.ListMoves:input_type -> weewar.v1.ListMovesRequest
-	15, // 36: weewar.v1.GamesService.ProcessMoves:input_type -> weewar.v1.ProcessMovesRequest
-	21, // 37: weewar.v1.GamesService.GetOptionsAt:input_type -> weewar.v1.GetOptionsAtRequest
-	14, // 38: weewar.v1.GamesService.CreateGame:output_type -> weewar.v1.CreateGameResponse
-	12, // 39: weewar.v1.GamesService.GetGames:output_type -> weewar.v1.GetGamesResponse
-	2,  // 40: weewar.v1.GamesService.ListGames:output_type -> weewar.v1.ListGamesResponse
-	4,  // 41: weewar.v1.GamesService.GetGame:output_type -> weewar.v1.GetGameResponse
-	10, // 42: weewar.v1.GamesService.DeleteGame:output_type -> weewar.v1.DeleteGameResponse
-	8,  // 43: weewar.v1.GamesService.UpdateGame:output_type -> weewar.v1.UpdateGameResponse
-	18, // 44: weewar.v1.GamesService.GetGameState:output_type -> weewar.v1.GetGameStateResponse
-	20, // 45: weewar.v1.GamesService.ListMoves:output_type -> weewar.v1.ListMovesResponse
-	16, // 46: weewar.v1.GamesService.ProcessMoves:output_type -> weewar.v1.ProcessMovesResponse
-	22, // 47: weewar.v1.GamesService.GetOptionsAt:output_type -> weewar.v1.GetOptionsAtResponse
-	38, // [38:48] is the sub-list for method output_type
-	28, // [28:38] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	41, // 27: weewar.v1.MoveOption.action:type_name -> weewar.v1.MoveUnitAction
+	42, // 28: weewar.v1.AttackOption.action:type_name -> weewar.v1.AttackUnitAction
+	32, // 29: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
+	13, // 30: weewar.v1.GamesService.CreateGame:input_type -> weewar.v1.CreateGameRequest
+	11, // 31: weewar.v1.GamesService.GetGames:input_type -> weewar.v1.GetGamesRequest
+	1,  // 32: weewar.v1.GamesService.ListGames:input_type -> weewar.v1.ListGamesRequest
+	3,  // 33: weewar.v1.GamesService.GetGame:input_type -> weewar.v1.GetGameRequest
+	9,  // 34: weewar.v1.GamesService.DeleteGame:input_type -> weewar.v1.DeleteGameRequest
+	7,  // 35: weewar.v1.GamesService.UpdateGame:input_type -> weewar.v1.UpdateGameRequest
+	17, // 36: weewar.v1.GamesService.GetGameState:input_type -> weewar.v1.GetGameStateRequest
+	19, // 37: weewar.v1.GamesService.ListMoves:input_type -> weewar.v1.ListMovesRequest
+	15, // 38: weewar.v1.GamesService.ProcessMoves:input_type -> weewar.v1.ProcessMovesRequest
+	21, // 39: weewar.v1.GamesService.GetOptionsAt:input_type -> weewar.v1.GetOptionsAtRequest
+	14, // 40: weewar.v1.GamesService.CreateGame:output_type -> weewar.v1.CreateGameResponse
+	12, // 41: weewar.v1.GamesService.GetGames:output_type -> weewar.v1.GetGamesResponse
+	2,  // 42: weewar.v1.GamesService.ListGames:output_type -> weewar.v1.ListGamesResponse
+	4,  // 43: weewar.v1.GamesService.GetGame:output_type -> weewar.v1.GetGameResponse
+	10, // 44: weewar.v1.GamesService.DeleteGame:output_type -> weewar.v1.DeleteGameResponse
+	8,  // 45: weewar.v1.GamesService.UpdateGame:output_type -> weewar.v1.UpdateGameResponse
+	18, // 46: weewar.v1.GamesService.GetGameState:output_type -> weewar.v1.GetGameStateResponse
+	20, // 47: weewar.v1.GamesService.ListMoves:output_type -> weewar.v1.ListMovesResponse
+	16, // 48: weewar.v1.GamesService.ProcessMoves:output_type -> weewar.v1.ProcessMovesResponse
+	22, // 49: weewar.v1.GamesService.GetOptionsAt:output_type -> weewar.v1.GetOptionsAtResponse
+	40, // [40:50] is the sub-list for method output_type
+	30, // [30:40] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_games_proto_init() }

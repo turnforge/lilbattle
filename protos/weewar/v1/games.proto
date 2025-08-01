@@ -383,6 +383,8 @@ message MoveOption {
   int32 q = 1;
   int32 r = 2;
   int32 movement_cost = 3;
+  // Ready-to-use action object for ProcessMoves
+  MoveUnitAction action = 4;
 }
 
 /**
@@ -396,6 +398,8 @@ message AttackOption {
   int32 target_unit_health = 4;
   bool can_attack = 5;
   int32 damage_estimate = 6; // Estimated damage this attack would deal
+  // Ready-to-use action object for ProcessMoves
+  AttackUnitAction action = 7;
 }
 
 /**
