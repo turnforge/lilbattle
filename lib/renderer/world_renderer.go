@@ -1,5 +1,9 @@
 package rendering
 
+import (
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
+)
+
 // =============================================================================
 // WorldRenderer Interface - Platform-Agnostic Rendering
 // =============================================================================
@@ -8,21 +12,21 @@ package rendering
 // This interface abstracts away the differences between Buffer (PNG) and CanvasBuffer (HTML Canvas).
 type WorldRenderer interface {
 	// RenderWorld renders the complete world state to the given drawable surface
-	RenderWorld(world *World, options WorldRenderOptions)
+	RenderWorld(world *weewar.World, options WorldRenderOptions)
 
 	/*
-		RenderWorld(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
+		RenderWorld(world *weewar.World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
 		   // RenderTerrain renders only the terrain layer
-		   RenderTerrain(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
+		   RenderTerrain(world *weewar.World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
 
 		   // RenderUnits renders only the units layer
-		   RenderUnits(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
+		   RenderUnits(world *weewar.World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
 
 		   // RenderHighlights renders selection highlights and movement indicators
-		   RenderHighlights(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
+		   RenderHighlights(world *weewar.World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
 
 		   // RenderUI renders text overlays and UI elements
-		   RenderUI(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
+		   RenderUI(world *weewar.World, viewState *ViewState, drawable Drawable, options WorldRenderOptions)
 	*/
 }
 
@@ -112,7 +116,7 @@ func (br *BaseRenderer) createHexagonPath(centerX, centerY, tileWidth, tileHeigh
 }
 
 // CalculateRenderOptions creates appropriate render options based on canvas size and map dimensions
-func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, world *World) WorldRenderOptions {
+func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, world *weewar.World) WorldRenderOptions {
 	if world == nil {
 		// Default options for empty world
 		return WorldRenderOptions{

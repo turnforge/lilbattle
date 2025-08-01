@@ -1,5 +1,9 @@
 package rendering
 
+import (
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
+)
+
 // =============================================================================
 // BufferRenderer - PNG/File Output Implementation
 // Moved from world_renderer.go
@@ -17,7 +21,7 @@ func NewBufferRenderer() *BufferRenderer {
 }
 
 // RenderWorld renders the complete world state to a drawable surface
-func (br *BufferRenderer) RenderWorld(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (br *BufferRenderer) RenderWorld(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// Clear the drawable surface
 	drawable.Clear()
 
@@ -36,7 +40,7 @@ func (br *BufferRenderer) RenderWorld(world *World, viewState *ViewState, drawab
 }
 
 // RenderTerrain renders the terrain layer directly using World data
-func (br *BufferRenderer) RenderTerrain(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (br *BufferRenderer) RenderTerrain(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	if world == nil {
 		return
 	}
@@ -69,12 +73,12 @@ func (br *BufferRenderer) RenderTerrain(world *World, viewState *ViewState, draw
 }
 
 // RenderUnits renders the units layer directly using World data with asset support
-func (br *BufferRenderer) RenderUnits(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (br *BufferRenderer) RenderUnits(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	br.RenderUnitsWithAssets(world, viewState, drawable, options, nil)
 }
 
 // RenderUnitsWithAssets renders units using AssetManager when available, falling back to simple shapes
-func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions, assetProvider AssetProvider) {
+func (br *BufferRenderer) RenderUnitsWithAssets(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions, assetProvider weewar.AssetProvider) {
 	if world == nil {
 		return
 	}
@@ -90,7 +94,7 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 			coord := UnitGetCoord(unit)
 			x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
-			// Try to load real unit asset first if AssetProvider is available
+			// Try to load real unit asset first if weewar.AssetProvider is available
 			if assetProvider != nil && assetProvider.HasUnitAsset(unit.UnitType, unit.Player) {
 				if unitImg, err := assetProvider.GetUnitImage(unit.UnitType, unit.Player); err == nil {
 					// Render real unit sprite (CenterXYForTile already returns centered coordinates)
@@ -128,7 +132,7 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *World, viewState *ViewSta
 }
 
 // RenderHighlights renders selection highlights and movement indicators directly using World data
-func (br *BufferRenderer) RenderHighlights(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (br *BufferRenderer) RenderHighlights(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	if viewState == nil || world == nil {
 		return
 	}
@@ -157,7 +161,7 @@ func (br *BufferRenderer) RenderHighlights(world *World, viewState *ViewState, d
 }
 
 // RenderUI renders text overlays and UI elements directly using World data
-func (br *BufferRenderer) RenderUI(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (br *BufferRenderer) RenderUI(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	if world == nil {
 		return
 	}

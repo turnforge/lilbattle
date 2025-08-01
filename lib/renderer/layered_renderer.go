@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/draw"
 	"time"
+
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 // =============================================================================
@@ -34,7 +36,7 @@ type LayeredRenderer struct {
 	renderOptions LayerRenderOptions
 
 	// Current world reference
-	currentWorld *World
+	currentWorld *weewar.World
 }
 
 // NewLayeredRenderer creates a new layered renderer with default tile dimensions
@@ -68,7 +70,7 @@ func NewLayeredRendererWithTileSize(drawable Drawable, width, height int, tileWi
 }
 
 // SetWorld updates the current world reference
-func (r *LayeredRenderer) SetWorld(w *World) {
+func (r *LayeredRenderer) SetWorld(w *weewar.World) {
 	r.currentWorld = w
 	// Mark all layers as dirty when world changes
 	for _, layer := range r.Layers {

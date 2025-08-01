@@ -5,22 +5,24 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 // Layer represents a single rendering layer (terrain, units, UI, etc.)
 type Layer interface {
 	// Core rendering
-	Render(world *World, options LayerRenderOptions)
+	Render(world *weewar.World, options LayerRenderOptions)
 
 	// Dirty tracking for efficient updates
-	MarkDirty(coord AxialCoord)
+	MarkDirty(coord weewar.AxialCoord)
 	MarkAllDirty()
 	ClearDirty()
 	IsDirty() bool
 
 	// Lifecycle management
 	SetViewPort(x, y, width, height int)
-	SetAssetProvider(provider AssetProvider)
+	SetAssetProvider(provider weewar.AssetProvider)
 
 	// Layer identification
 	GetName() string
@@ -50,11 +52,11 @@ type BaseLayer struct {
 	buffer              *Buffer
 
 	// Dirty tracking
-	dirtyCoords map[AxialCoord]bool
+	dirtyCoords map[weewar.AxialCoord]bool
 	allDirty    bool
 
 	// Asset provider
-	assetProvider AssetProvider
+	assetProvider weewar.AssetProvider
 
 	// Renderer reference for scheduling
 	scheduler LayerScheduler
@@ -67,7 +69,7 @@ func NewBaseLayer(name string, width, height int, scheduler LayerScheduler) *Bas
 		Width:       width,
 		Height:      height,
 		buffer:      NewBuffer(int(width), int(height)),
-		dirtyCoords: make(map[AxialCoord]bool),
+		dirtyCoords: make(map[weewar.AxialCoord]bool),
 		allDirty:    true, // Start with everything dirty
 		scheduler:   scheduler,
 	}
@@ -100,7 +102,7 @@ func (bl *BaseLayer) GetName() string {
 	return bl.name
 }
 
-func (bl *BaseLayer) MarkDirty(coord AxialCoord) {
+func (bl *BaseLayer) MarkDirty(coord weewar.AxialCoord) {
 	bl.dirtyCoords[coord] = true
 	if true || bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
@@ -109,7 +111,7 @@ func (bl *BaseLayer) MarkDirty(coord AxialCoord) {
 
 func (bl *BaseLayer) MarkAllDirty() {
 	bl.allDirty = true
-	bl.dirtyCoords = make(map[AxialCoord]bool)
+	bl.dirtyCoords = make(map[weewar.AxialCoord]bool)
 	// fmt.Println("Layer, Scheduler: ", bl.GetName(), bl.scheduler)
 	if bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
@@ -117,7 +119,7 @@ func (bl *BaseLayer) MarkAllDirty() {
 }
 
 func (bl *BaseLayer) ClearDirty() {
-	bl.dirtyCoords = make(map[AxialCoord]bool)
+	bl.dirtyCoords = make(map[weewar.AxialCoord]bool)
 	bl.allDirty = false
 }
 
@@ -135,7 +137,7 @@ func (bl *BaseLayer) SetViewPort(x, y, width, height int) {
 	bl.MarkAllDirty()
 }
 
-func (bl *BaseLayer) SetAssetProvider(provider AssetProvider) {
+func (bl *BaseLayer) SetAssetProvider(provider weewar.AssetProvider) {
 	bl.assetProvider = provider
 	bl.MarkAllDirty()
 }

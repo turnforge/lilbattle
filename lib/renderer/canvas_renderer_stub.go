@@ -3,6 +3,10 @@
 
 package rendering
 
+import (
+	weewar "github.com/panyam/turnengine/games/weewar/lib"
+)
+
 // =============================================================================
 // CanvasRenderer Stub - Non-WASM Builds
 // =============================================================================
@@ -19,26 +23,26 @@ func NewCanvasRenderer() *CanvasRenderer {
 }
 
 // RenderWorld stub implementation (does nothing on non-WASM platforms)
-func (cr *CanvasRenderer) RenderWorld(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (cr *CanvasRenderer) RenderWorld(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// No-op for non-WASM builds
 }
 
 // RenderTerrain stub implementation
-func (cr *CanvasRenderer) RenderTerrain(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (cr *CanvasRenderer) RenderTerrain(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// No-op for non-WASM builds
 }
 
 // RenderUnits stub implementation
-func (cr *CanvasRenderer) RenderUnits(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (cr *CanvasRenderer) RenderUnits(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// No-op for non-WASM builds
 }
 
 // RenderHighlights stub implementation
-func (cr *CanvasRenderer) RenderHighlights(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (cr *CanvasRenderer) RenderHighlights(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// No-op for non-WASM builds
 }
 
 // RenderUI stub implementation
-func (cr *CanvasRenderer) RenderUI(world *World, viewState *ViewState, drawable Drawable, options WorldRenderOptions) {
+func (cr *CanvasRenderer) RenderUI(world *weewar.World, viewState *weewar.ViewState, drawable Drawable, options WorldRenderOptions) {
 	// No-op for non-WASM builds
 }
