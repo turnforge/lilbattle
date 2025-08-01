@@ -73,16 +73,8 @@ func (a *ConnectGamesServiceAdapter) ProcessMoves(ctx context.Context, req *conn
 	return connect.NewResponse(resp), nil
 }
 
-func (a *ConnectGamesServiceAdapter) GetMovementOptions(ctx context.Context, req *connect.Request[v1.GetMovementOptionsRequest]) (*connect.Response[v1.GetMovementOptionsResponse], error) {
-	resp, err := a.svc.GetMovementOptions(ctx, req.Msg)
-	if err != nil {
-		return nil, err
-	}
-	return connect.NewResponse(resp), nil
-}
-
-func (a *ConnectGamesServiceAdapter) GetAttackOptions(ctx context.Context, req *connect.Request[v1.GetAttackOptionsRequest]) (*connect.Response[v1.GetAttackOptionsResponse], error) {
-	resp, err := a.svc.GetAttackOptions(ctx, req.Msg)
+func (a *ConnectGamesServiceAdapter) GetOptionsAt(ctx context.Context, req *connect.Request[v1.GetOptionsAtRequest]) (*connect.Response[v1.GetOptionsAtResponse], error) {
+	resp, err := a.svc.GetOptionsAt(ctx, req.Msg)
 	if err != nil {
 		return nil, err
 	}
@@ -91,14 +83,6 @@ func (a *ConnectGamesServiceAdapter) GetAttackOptions(ctx context.Context, req *
 
 func (a *ConnectGamesServiceAdapter) ListMoves(ctx context.Context, req *connect.Request[v1.ListMovesRequest]) (*connect.Response[v1.ListMovesResponse], error) {
 	resp, err := a.svc.ListMoves(ctx, req.Msg)
-	if err != nil {
-		return nil, err
-	}
-	return connect.NewResponse(resp), nil
-}
-
-func (a *ConnectGamesServiceAdapter) CanSelectUnit(ctx context.Context, req *connect.Request[v1.CanSelectUnitRequest]) (*connect.Response[v1.CanSelectUnitResponse], error) {
-	resp, err := a.svc.CanSelectUnit(ctx, req.Msg)
 	if err != nil {
 		return nil, err
 	}

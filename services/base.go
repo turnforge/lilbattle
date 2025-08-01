@@ -101,100 +101,20 @@ func (s *BaseGamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.Process
 	return resp, err
 }
 
-// GetMovementOptions returns all tiles a unit can move to using DefaultMoveProcessor
-func (s *BaseGamesServiceImpl) GetMovementOptions(ctx context.Context, req *v1.GetMovementOptionsRequest) (*v1.GetMovementOptionsResponse, error) {
+// GetOptionsAt returns all available options at a specific position
+func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOptionsAtRequest) (*v1.GetOptionsAtResponse, error) {
 	// Load game data using the service implementation
 	gameresp, err := s.Self.GetGame(ctx, &v1.GetGameRequest{Id: req.GameId})
 	if err != nil || gameresp.Game == nil {
-		return nil, fmt.Errorf("failed to load game: %w", err)
-	}
-	if gameresp.State == nil {
-		return nil, fmt.Errorf("game state cannot be nil")
-	}
-
-	// Get the runtime game
-	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game, gameresp.State)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get runtime game: %w", err)
-	}
-
-	// Use DefaultMoveProcessor to get movement options with validation
-	var dmp weewar.DefaultMoveProcessor
-	tileOptions, err := dmp.GetMovementOptions(rtGame, req.Q, req.R)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert runtime TileOption to proto MovementOption
-	var movementOptions []*v1.MovementOption
-	for _, option := range tileOptions {
-		movementOptions = append(movementOptions, &v1.MovementOption{
-			Q:            int32(option.Coord.Q),
-			R:            int32(option.Coord.R),
-			MovementCost: int32(option.Cost),
-			IsValid:      true,
-		})
-	}
-
-	return &v1.GetMovementOptionsResponse{
-		Options: movementOptions,
-	}, nil
-}
-
-// GetAttackOptions returns all positions a unit can attack using DefaultMoveProcessor
-func (s *BaseGamesServiceImpl) GetAttackOptions(ctx context.Context, req *v1.GetAttackOptionsRequest) (*v1.GetAttackOptionsResponse, error) {
-	// Load game data using the service implementation
-	gameresp, err := s.Self.GetGame(ctx, &v1.GetGameRequest{Id: req.GameId})
-	if err != nil || gameresp.Game == nil {
-		return nil, fmt.Errorf("failed to load game: %w", err)
-	}
-	if gameresp.State == nil {
-		return nil, fmt.Errorf("game state cannot be nil")
-	}
-
-	// Get the runtime game
-	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game, gameresp.State)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get runtime game: %w", err)
-	}
-
-	// Use DefaultMoveProcessor to get attack options with validation
-	var dmp weewar.DefaultMoveProcessor
-	attackCoords, err := dmp.GetAttackOptions(rtGame, req.Q, req.R)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert runtime AxialCoord to proto AttackOption
-	var attackOptions []*v1.AttackOption
-	for _, coord := range attackCoords {
-		attackOptions = append(attackOptions, &v1.AttackOption{
-			Q: int32(coord.Q),
-			R: int32(coord.R),
-		})
-	}
-
-	return &v1.GetAttackOptionsResponse{
-		Options: attackOptions,
-	}, nil
-}
-
-// CanSelectUnit validates if a unit can be selected using DefaultMoveProcessor
-func (s *BaseGamesServiceImpl) CanSelectUnit(ctx context.Context, req *v1.CanSelectUnitRequest) (*v1.CanSelectUnitResponse, error) {
-	// Load game data using the service implementation
-	gameresp, err := s.Self.GetGame(ctx, &v1.GetGameRequest{Id: req.GameId})
-	if err != nil || gameresp.Game == nil {
-		return &v1.CanSelectUnitResponse{
-			CanSelect:       false,
-			Reason:          fmt.Sprintf("failed to load game: %v", err),
+		return &v1.GetOptionsAtResponse{
+			Options:         []*v1.GameOption{},
 			CurrentPlayer:   0,
 			GameInitialized: false,
 		}, nil
 	}
 	if gameresp.State == nil {
-		return &v1.CanSelectUnitResponse{
-			CanSelect:       false,
-			Reason:          "game state cannot be nil",
+		return &v1.GetOptionsAtResponse{
+			Options:         []*v1.GameOption{},
 			CurrentPlayer:   0,
 			GameInitialized: false,
 		}, nil
@@ -203,21 +123,97 @@ func (s *BaseGamesServiceImpl) CanSelectUnit(ctx context.Context, req *v1.CanSel
 	// Get the runtime game
 	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game, gameresp.State)
 	if err != nil {
-		return &v1.CanSelectUnitResponse{
-			CanSelect:       false,
-			Reason:          fmt.Sprintf("failed to get runtime game: %v", err),
-			CurrentPlayer:   gameresp.State.CurrentPlayer, // Use proto state value
+		return &v1.GetOptionsAtResponse{
+			Options:         []*v1.GameOption{},
+			CurrentPlayer:   gameresp.State.CurrentPlayer,
 			GameInitialized: false,
 		}, nil
 	}
 
-	// Use DefaultMoveProcessor to validate unit selection
-	var dmp weewar.DefaultMoveProcessor
-	canSelect, reason := dmp.CanSelectUnit(rtGame, req.Q, req.R)
+	var options []*v1.GameOption
 
-	return &v1.CanSelectUnitResponse{
-		CanSelect:       canSelect,
-		Reason:          reason,
+	// Check what's at this position
+	unit := rtGame.World.UnitAt(weewar.AxialCoord{Q: int(req.Q), R: int(req.R)})
+
+	if unit == nil {
+		// Empty tile - check for building/capture options, then end turn
+		// TODO: Add building construction options if this is a city/factory tile
+		// For now, just add end turn
+		options = append(options, &v1.GameOption{
+			OptionType: &v1.GameOption_EndTurn{
+				EndTurn: &v1.EndTurnOption{},
+			},
+		})
+	} else if unit.Player != rtGame.CurrentPlayer {
+		// Enemy unit - only end turn available (can't interact with enemy units directly)
+		options = append(options, &v1.GameOption{
+			OptionType: &v1.GameOption_EndTurn{
+				EndTurn: &v1.EndTurnOption{},
+			},
+		})
+	} else {
+		// Our unit - get all available options
+		var dmp weewar.DefaultMoveProcessor
+
+		// Get movement options if unit has movement left
+		if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 {
+			tileOptions, err := dmp.GetMovementOptions(rtGame, req.Q, req.R)
+			if err == nil {
+				for _, tileOption := range tileOptions {
+					options = append(options, &v1.GameOption{
+						OptionType: &v1.GameOption_Move{
+							Move: &v1.MoveOption{
+								Q:            int32(tileOption.Coord.Q),
+								R:            int32(tileOption.Coord.R),
+								MovementCost: int32(tileOption.Cost),
+							},
+						},
+					})
+				}
+			}
+		}
+
+		// Get attack options if unit can attack
+		if unit.AvailableHealth > 0 {
+			attackCoords, err := dmp.GetAttackOptions(rtGame, req.Q, req.R)
+			if err == nil {
+				for _, coord := range attackCoords {
+					// Get target unit info for rich attack option data
+					targetUnit := rtGame.World.UnitAt(coord)
+					if targetUnit != nil {
+						// Calculate estimated damage (simplified for now)
+						damageEstimate := int32(50) // TODO: Use proper damage calculation from rules engine
+
+						options = append(options, &v1.GameOption{
+							OptionType: &v1.GameOption_Attack{
+								Attack: &v1.AttackOption{
+									Q:                int32(coord.Q),
+									R:                int32(coord.R),
+									TargetUnitType:   targetUnit.UnitType,
+									TargetUnitHealth: targetUnit.AvailableHealth,
+									CanAttack:        true,
+									DamageEstimate:   damageEstimate,
+								},
+							},
+						})
+					}
+				}
+			}
+		}
+
+		// TODO: Add capture building options if unit can capture buildings at this location
+		// TODO: Add build unit options if this is a production facility
+
+		// Always add end turn option
+		options = append(options, &v1.GameOption{
+			OptionType: &v1.GameOption_EndTurn{
+				EndTurn: &v1.EndTurnOption{},
+			},
+		})
+	}
+
+	return &v1.GetOptionsAtResponse{
+		Options:         options,
 		CurrentPlayer:   rtGame.CurrentPlayer,
 		GameInitialized: rtGame != nil && rtGame.World != nil,
 	}, nil

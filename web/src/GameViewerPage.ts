@@ -535,34 +535,35 @@ class GameViewerPage extends BasePage implements LCMComponent {
             return false; // Suppress event emission
         }
 
-        // Handle async unit selection
-        this.gameState.canSelectUnit(q, r, this.gameState.getGameState().currentPlayer).then(canSelect => {
-            // Debug info to understand why selection might be failing
-            console.log(`[GameViewerPage] Unit selection debug:`, {
-                position: `(${q}, ${r})`,
-                canSelect: canSelect,
-                currentPlayer: (this.gameState as any).gameData?.currentPlayer,
-                gameInitialized: (this.gameState as any).gameData?.gameInitialized
-            });
+        // Handle async unit interaction using unified getOptionsAt
+        this.gameState.getOptionsAt(q, r).then(response => {
+            console.log(`[GameViewerPage] Options at (${q}, ${r}):`, response);
             
-            if (canSelect) {
-                // This is a selectable unit - use existing selection logic
-                this.selectUnitAt(q, r);
-            } else {
-                // This is an enemy or non-selectable unit - just show info
-                console.log(`[GameViewerPage] Non-selectable unit at Q=${q}, R=${r}`);
+            const options = response.options || [];
+            const hasMovementOptions = options.some((opt: any) => opt.optionType?.case === 'move');
+            const hasAttackOptions = options.some((opt: any) => opt.optionType?.case === 'attack');
+            const hasOnlyEndTurn = options.length === 1 && options[0].optionType?.case === 'endTurn';
+            
+            if (hasMovementOptions || hasAttackOptions) {
+                // This unit has actionable options - select it
+                this.selectUnitAt(q, r, options);
+            } else if (hasOnlyEndTurn) {
+                // This is either an empty tile or enemy unit - just show info
+                console.log(`[GameViewerPage] Non-actionable position at Q=${q}, R=${r}`);
                 
-                // Get basic tile info to show enemy unit details (async)
+                // Get basic tile info to show details (async)
                 this.gameState?.getTileInfo(q, r).then(tileInfo => {
-                    console.log('[GameViewerPage] Enemy unit tile info:', tileInfo);
-                    // For now, just show a message - could extend to show unit details panel later
-                    this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
+                    if (tileInfo?.hasUnit) {
+                        this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
+                    } else {
+                        this.showToast('Info', `Empty tile at (${q}, ${r})`, 'info');
+                    }
                 }).catch(error => {
                     console.error('Failed to get tile info:', error);
                 });
             }
         }).catch(error => {
-            console.error('[GameViewerPage] Failed to handle unit click:', error);
+            console.error('[GameViewerPage] Failed to get options at position:', error);
         });
         
         return false; // Suppress event emission
@@ -571,68 +572,63 @@ class GameViewerPage extends BasePage implements LCMComponent {
     /**
      * Select unit and show movement/attack highlights
      */
-    private selectUnitAt(q: number, r: number): void {
-        console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r}`);
+    private selectUnitAt(q: number, r: number, options: any[]): void {
+        console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r} with ${options.length} options`);
         
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for unit selection');
             return;
         }
 
-        // Get all data async with Promise.all
-        Promise.all([
-            this.gameState.getMovementOptions(q, r, this.gameState.getGameState().currentPlayer),
-            this.gameState.getAttackOptions(q, r, this.gameState.getGameState().currentPlayer),
-            this.gameState.getTileInfo(q, r)
-        ]).then(([movementResult, attackResult, unitInfo]) => {
-            console.log('[GameViewerPage] Movement options:', movementResult);
-            console.log('[GameViewerPage] Attack options:', attackResult);
-            console.log('[GameViewerPage] Unit info:', unitInfo);
+        // Process the provided options (from getOptionsAt)
+        this.processUnitSelection(q, r, options);
+    }
+
+    /**
+     * Process unit selection with unified options format
+     */
+    private processUnitSelection(q: number, r: number, options: any[]): void {
+        // Extract movement and attack options from the unified options
+        const movementOptions = options.filter(opt => opt.optionType?.case === 'move');
+        const attackOptions = options.filter(opt => opt.optionType?.case === 'attack');
+        
+        console.log(`[GameViewerPage] Unit selected: ${movementOptions.length} moves, ${attackOptions.length} attacks available`);
+        
+        // Convert to coordinate arrays for highlighting
+        const movableCoords = movementOptions.map((option: any) => ({
+            q: option.optionType.value.q,
+            r: option.optionType.value.r
+        }));
+        
+        const attackableCoords = attackOptions.map((option: any) => ({
+            q: option.optionType.value.q,
+            r: option.optionType.value.r
+        }));
+
+        // Update GameViewer to show highlights using layer-based approach  
+        if (this.worldViewer) {
+            // Clear previous selection
+            const selectionLayer = this.worldViewer.getSelectionHighlightLayer();
+            const movementLayer = this.worldViewer.getMovementHighlightLayer();
+            const attackLayer = this.worldViewer.getAttackHighlightLayer();
             
-            // Convert results to coordinate arrays (these are now direct arrays from our methods)
-            const movableCoords = Array.isArray(movementResult) ? 
-                movementResult.map((pos: any) => ({ q: pos.coord?.q || pos.q, r: pos.coord?.r || pos.r })) : [];
-            
-            const attackableCoords = Array.isArray(attackResult) ?
-                attackResult.map((pos: any) => ({ q: pos.coord?.q || pos.q, r: pos.coord?.r || pos.r })) : [];
-            
-            console.log(`[GameViewerPage] Unit selection: ${movableCoords.length} movement options, ${attackableCoords.length} attack options`);
-            
-            // Update GameViewer to show highlights using layer-based approach
-            if (this.worldViewer) {
-                // Clear previous selection
-                const selectionLayer = this.worldViewer.getSelectionHighlightLayer();
-                const movementLayer = this.worldViewer.getMovementHighlightLayer();
-                const attackLayer = this.worldViewer.getAttackHighlightLayer();
+            if (selectionLayer && movementLayer && attackLayer) {
+                // Select the unit
+                selectionLayer.selectHex(q, r);
                 
-                if (selectionLayer && movementLayer && attackLayer) {
-                    // Select the unit
-                    selectionLayer.selectHex(q, r);
-                    
-                    // Show movement options
-                    movementLayer.showMovementOptions(movableCoords);
-                    
-                    // Show attack options
-                    attackLayer.showAttackOptions(attackableCoords);
-                    
-                    console.log('[GameViewerPage] Highlights sent to layers');
-                } else {
-                    console.warn('[GameViewerPage] Some highlight layers not available');
-                }
+                // Show movement options
+                movementLayer.showMovementOptions(movableCoords);
+                
+                // Show attack options  
+                attackLayer.showAttackOptions(attackableCoords);
+                
+                console.log('[GameViewerPage] Highlights sent to layers');
+            } else {
+                console.warn('[GameViewerPage] Some highlight layers not available');
             }
-            
-            // Update UI with unit info (unitInfo is now direct data, not wrapped in success/data)
-            if (unitInfo) {
-                this.updateSelectedUnitInfo(unitInfo);
-            }
-            
-            // Add to game log
-            console.log(`Unit selected at (${q}, ${r}) - ${movableCoords.length} moves, ${attackableCoords.length} attacks available`);
-            
-        }).catch(error => {
-            console.error('[GameViewerPage] Failed to select unit:', error);
-            this.showToast('Error', 'Failed to select unit', 'error');
-        });
+        }
+
+        this.showToast('Success', `Unit selected at (${q}, ${r}) - ${movementOptions.length} moves, ${attackOptions.length} attacks available`, 'success');
     }
 
     /**

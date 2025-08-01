@@ -73,9 +73,11 @@ func (re *RulesEngine) GetTerrainData(terrainID int32) (*v1.TerrainDefinition, e
 // First checks unit-specific matrix, then falls back to terrain's base cost
 func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int32) (float64, error) {
 	// First, try unit-specific movement cost from matrix
-	if unitCosts, exists := re.MovementMatrix.Costs[unitID]; exists {
-		if cost, exists := unitCosts.TerrainCosts[terrainID]; exists {
-			return cost, nil
+	if re.MovementMatrix != nil && re.MovementMatrix.Costs != nil {
+		if unitCosts, exists := re.MovementMatrix.Costs[unitID]; exists && unitCosts != nil {
+			if cost, exists := unitCosts.TerrainCosts[terrainID]; exists {
+				return cost, nil
+			}
 		}
 	}
 

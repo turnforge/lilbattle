@@ -91,15 +91,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     }
     
     /**
-     * Handle world data loaded event (deprecated - World object should be passed directly)
-     */
-    private handleWorldDataLoaded(payload: WorldDataLoadedPayload): void {
-        this.log(`Received world data for world: ${payload.worldId}`);
-        // This is now deprecated - World object should be passed directly via loadWorld()
-        console.warn('WorldViewer: handleWorldDataLoaded is deprecated, use loadWorld(world) instead');
-    }
-    
-    /**
      * Load World object into the PhaserWorldScene
      */
     private async loadWorldIntoScene(): Promise<void> {
@@ -314,7 +305,7 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
             case WorldEventTypes.WORLD_DATA_LOADED:
-                this.handleWorldDataLoaded(data);
+                // this.handleWorldDataLoaded(data);
                 break;
                 
             default:
