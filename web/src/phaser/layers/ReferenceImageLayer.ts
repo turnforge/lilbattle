@@ -85,8 +85,6 @@ export class ReferenceImageLayer extends BaseLayer {
      * Set reference image from URL
      */
     public setReferenceImage(imageUrl: string): void {
-        console.log(`[ReferenceImageLayer] Setting reference image: ${imageUrl}`);
-        
         if (this.referenceImage) {
             this.referenceImage.destroy();
             this.referenceImage = null;
@@ -136,15 +134,12 @@ export class ReferenceImageLayer extends BaseLayer {
         
         // Add to container
         this.container.add(this.referenceImage);
-        
-        console.log(`[ReferenceImageLayer] Reference image sprite created`);
     }
     
     /**
      * Set reference mode (0=hidden, 1=background, 2=overlay)
      */
     public setReferenceMode(mode: number): void {
-        console.log(`[ReferenceImageLayer] Setting mode to: ${mode}`);
         this.referenceMode = mode;
         
         if (this.referenceImage) {
@@ -164,7 +159,6 @@ export class ReferenceImageLayer extends BaseLayer {
      * Set reference image alpha
      */
     public setReferenceAlpha(alpha: number): void {
-        console.log(`[ReferenceImageLayer] Setting alpha to: ${alpha}`);
         this.referenceAlpha = alpha;
         
         if (this.referenceImage) {
@@ -187,7 +181,6 @@ export class ReferenceImageLayer extends BaseLayer {
      * Set reference image scale
      */
     public setReferenceScale(x: number, y: number): void {
-        console.log(`[ReferenceImageLayer] Setting scale to: (${x}, ${y})`);
         this.referenceScale = { x, y };
         
         if (this.referenceImage) {
@@ -224,8 +217,6 @@ export class ReferenceImageLayer extends BaseLayer {
      * Clear reference image
      */
     public clearReferenceImage(): void {
-        console.log(`[ReferenceImageLayer] Clearing reference image`);
-        
         if (this.referenceImage) {
             this.referenceImage.destroy();
             this.referenceImage = null;
@@ -247,7 +238,6 @@ export class ReferenceImageLayer extends BaseLayer {
                     const imageUrl = URL.createObjectURL(imageBlob);
                     
                     this.setReferenceImage(imageUrl);
-                    console.log('[ReferenceImageLayer] Reference image loaded from clipboard');
                     return true;
                 }
             }
@@ -267,7 +257,6 @@ export class ReferenceImageLayer extends BaseLayer {
             
             const imageUrl = URL.createObjectURL(file);
             this.setReferenceImage(imageUrl);
-            console.log(`[ReferenceImageLayer] Reference image loaded from file: ${file.name}`);
             return true;
     }
     
@@ -292,8 +281,6 @@ export class ReferenceImageLayer extends BaseLayer {
         this.dragStartY = worldY;
         this.dragStartImageX = this.referenceImage.x;
         this.dragStartImageY = this.referenceImage.y;
-        
-        console.log(`[ReferenceImageLayer] Started drag from (${worldX}, ${worldY})`);
     }
     
     /**
@@ -302,7 +289,6 @@ export class ReferenceImageLayer extends BaseLayer {
     public stopDrag(): void {
         if (this.isDragging) {
             this.isDragging = false;
-            console.log(`[ReferenceImageLayer] Stopped drag`);
         }
     }
     

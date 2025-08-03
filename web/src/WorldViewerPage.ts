@@ -37,21 +37,16 @@ class WorldViewerPage extends BasePage implements LCMComponent {
      * Phase 1: Initialize DOM and discover child components
      */
     performLocalInit(): LCMComponent[] {
-        console.log('WorldViewerPage: performLocalInit() - Phase 1');
-        
         // 1. FIRST: Load World from DOM elements (canonical source of truth)
         const worldMetadataElement = document.getElementById('world-data-json');
         const worldTilesElement = document.getElementById('world-tiles-data-json');
         this.world = new World(this.eventBus).loadFromElement(worldMetadataElement!, worldTilesElement!);
-        console.log('WorldViewerPage: World object loaded from DOM elements');
         
         // 2. THEN: Subscribe to events BEFORE creating components
         this.subscribeToWorldViewerEvents();
         
         // 3. FINALLY: Create child components
         this.createComponents();
-        
-        console.log('WorldViewerPage: DOM initialized, returning child components');
         
         // Return child components for lifecycle management
         const childComponents: LCMComponent[] = [];
@@ -64,20 +59,14 @@ class WorldViewerPage extends BasePage implements LCMComponent {
      * Phase 3: Activate component when all dependencies are ready
      */
     async activate(): Promise<void> {
-        console.log('WorldViewerPage: activate() - Phase 3');
-        
         // Bind events now that all components are ready
         this.bindPageSpecificEvents();
-        
-        console.log('WorldViewerPage: activation complete');
     }
 
     /**
      * Cleanup phase (called by lifecycle controller if needed)
      */
     deactivate(): void {
-        console.log('WorldViewerPage: deactivate() - cleanup');
-        
         // Remove event subscriptions
         this.removeSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
         
@@ -89,7 +78,6 @@ class WorldViewerPage extends BasePage implements LCMComponent {
      */
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
-        console.log('WorldViewerPage: Subscribing to WORLD_VIEWER_READY event');
         this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
     }
     
@@ -99,7 +87,6 @@ class WorldViewerPage extends BasePage implements LCMComponent {
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
             case WorldEventTypes.WORLD_VIEWER_READY:
-                console.log('WorldViewerPage: WorldViewer is ready, passing World object...');
                 // Pass the canonical World object directly
                 this.worldViewer.loadWorld(this.world);
                 this.showToast('Success', 'World loaded successfully', 'success');
@@ -117,7 +104,6 @@ class WorldViewerPage extends BasePage implements LCMComponent {
     private createComponents(): void {
         // Create WorldViewer component
         const worldViewerRoot = this.ensureElement('[data-component="world-viewer"]', 'world-viewer-root');
-        console.log('WorldViewerPage: Creating WorldViewer with eventBus:', this.eventBus);
         this.worldViewer = new WorldViewer(worldViewerRoot, this.eventBus, true);
         
         // Create WorldStatsPanel component - pass the content div, not the container with header
@@ -127,8 +113,6 @@ class WorldViewerPage extends BasePage implements LCMComponent {
             throw new Error('WorldViewerPage: WorldStatsPanel content div not found');
         }
         this.worldStatsPanel = new WorldStatsPanel(worldStatsContent, this.eventBus, true);
-        
-        console.log('WorldViewerPage: Components created');
     }
 
     /**
@@ -184,8 +168,6 @@ class WorldViewerPage extends BasePage implements LCMComponent {
 
 // Initialize page when DOM is ready using LifecycleController
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, starting WorldViewerPage initialization...');
-
     // Create page instance (just basic setup)
     const page = new WorldViewerPage("WorldViewerPage");
     
@@ -194,6 +176,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start breadth-first initialization
     await lifecycleController.initializeFromRoot(page);
-    
-    console.log('WorldViewerPage fully initialized via LifecycleController');
 });

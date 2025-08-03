@@ -24,7 +24,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
     private viewerContainer: HTMLElement | null;
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
-        console.log('WorldViewer constructor: received eventBus:', eventBus);
         super('world-viewer', rootElement, eventBus, debugMode);
     }
 
@@ -55,11 +54,9 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      * Initialize the appropriate Phaser scene (PhaserWorldScene or PhaserGameScene)
      */
     protected async initializePhaserScene(): Promise<void> {
-        console.log(`WorldViewer: initializePhaserScene() called`);
-        
         // Guard against multiple initialization
         if (this.scene) {
-            console.log('WorldViewer: Phaser scene already initialized, skipping');
+            console.warn('WorldViewer: Phaser scene already initialized, skipping');
             return;
         }
         
@@ -77,12 +74,10 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         this.log(`Phaser scene initialized successfully`);
         
         // Emit ready event
-        console.log('WorldViewer: Emitting WORLD_VIEWER_READY event');
         this.emit(WorldEventTypes.WORLD_VIEWER_READY, {
             componentId: this.componentId,
             success: true
         }, this, this);
-        console.log('WorldViewer: WORLD_VIEWER_READY event emitted');
         
         // Load world data if we have it
         if (this.world) {
@@ -216,15 +211,8 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         tileCallback?: (q: number, r: number) => boolean,
         unitCallback?: (q: number, r: number) => boolean
     ): void {
-        console.log('[WorldViewer] setInteractionCallbacks called');
-        console.log('[WorldViewer] tileCallback:', !!tileCallback);
-        console.log('[WorldViewer] unitCallback:', !!unitCallback);
-        console.log('[WorldViewer] this.scene exists:', !!this.scene);
-        
         if (this.scene) {
-            console.log('[WorldViewer] Calling scene.setInteractionCallbacks');
             this.scene.setInteractionCallbacks(tileCallback, unitCallback);
-            console.log('[WorldViewer] scene.setInteractionCallbacks completed');
         } else {
             console.error('[WorldViewer] No scene available to set callbacks on');
         }
@@ -238,8 +226,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      * Phase 1: Initialize DOM and discover child components
      */
     performLocalInit(): LCMComponent[] {
-        console.log('WorldViewer: performLocalInit() - Phase 1');
-        
         // Find the phaser-viewer-container within the root element
         let phaserContainer = this.rootElement.querySelector('#phaser-viewer-container') as HTMLElement;
         
@@ -265,7 +251,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         }
         
         this.log('WorldViewer bound to DOM, container:', this.viewerContainer);
-        console.log('WorldViewer: DOM binding complete, waiting for activate() phase');
         
         return [];
     }
@@ -274,7 +259,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      * Phase 2: Inject dependencies (none needed for WorldViewer)
      */
     setupDependencies(): void {
-        console.log('WorldViewer: setupDependencies() - Phase 2')
         // WorldViewer doesn't need external dependencies
     }
 
@@ -282,8 +266,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      * Phase 3: Activate component - Initialize Phaser here
      */
     async activate(): Promise<void> {
-        console.log('WorldViewer: activate() - Phase 3 - Initializing Phaser, current scene:', !!this.scene);
-        
         // Check if already initialized
         if (this.scene) {
             throw new Error('WorldViewer: Already activated and scene exists, skipping');
@@ -295,8 +277,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
         
         // Now initialize PhaserWorldScene in the proper lifecycle phase
         await this.initializePhaserScene();
-        
-        console.log('WorldViewer: activation complete');
     }
 
     /**
@@ -318,8 +298,6 @@ export class WorldViewer<TScene extends PhaserWorldScene = PhaserWorldScene> ext
      * Cleanup phase (called by lifecycle controller if needed)
      */
     deactivate(): void {
-        console.log('WorldViewer: deactivate() - cleanup');
-        
         // Remove event subscriptions
         this.removeSubscription(WorldEventTypes.WORLD_DATA_LOADED, null);
         

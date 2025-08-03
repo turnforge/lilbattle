@@ -580,8 +580,6 @@ export class PhaserPanel {
     private log(message: string): void {
         if (this.onLogCallback) {
             this.onLogCallback(`[PhaserPanel] ${message}`);
-        } else {
-            console.log(`[PhaserPanel] ${message}`);
         }
     }
 }

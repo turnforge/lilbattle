@@ -681,10 +681,10 @@ export class UnitMovedChange implements UnitMovedChangeInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitMovedChange";
 
-  fromQ: number = 0;
-  fromR: number = 0;
-  toQ: number = 0;
-  toR: number = 0;
+  /** Complete unit state before the move */
+  previousUnit?: Unit;
+  /** Complete unit state after the move (includes updated position, distanceLeft, etc.) */
+  updatedUnit?: Unit;
 
   /**
    * Create and deserialize an instance from raw data
@@ -707,10 +707,10 @@ export class UnitDamagedChange implements UnitDamagedChangeInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitDamagedChange";
 
-  previousHealth: number = 0;
-  newHealth: number = 0;
-  q: number = 0;
-  r: number = 0;
+  /** Complete unit state before taking damage */
+  previousUnit?: Unit;
+  /** Complete unit state after taking damage */
+  updatedUnit?: Unit;
 
   /**
    * Create and deserialize an instance from raw data
@@ -733,10 +733,8 @@ export class UnitKilledChange implements UnitKilledChangeInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitKilledChange";
 
-  player: number = 0;
-  unitType: number = 0;
-  q: number = 0;
-  r: number = 0;
+  /** Complete unit state before being killed */
+  previousUnit?: Unit;
 
   /**
    * Create and deserialize an instance from raw data
@@ -763,6 +761,8 @@ export class PlayerChangedChange implements PlayerChangedChangeInterface {
   newPlayer: number = 0;
   previousTurn: number = 0;
   newTurn: number = 0;
+  /** Units that had their movement/health reset for the new turn */
+  resetUnits: Unit[] = [];
 
   /**
    * Create and deserialize an instance from raw data

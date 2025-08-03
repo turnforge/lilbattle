@@ -140,8 +140,6 @@ export class SelectionHighlightLayer extends HexHighlightLayer {
      * Show selection highlight at hex coordinate
      */
     public selectHex(q: number, r: number): void {
-        console.log(`[SelectionHighlightLayer] Selecting hex (${q}, ${r})`);
-        
         // Clear previous selection
         this.clearSelection();
         
@@ -203,8 +201,6 @@ export class MovementHighlightLayer extends HexHighlightLayer {
     }
     
     public handleClick(context: ClickContext): boolean {
-        console.log(`[MovementHighlightLayer] Movement click at (${context.hexQ}, ${context.hexR})`);
-        
         // Get the move option for this coordinate
         const coordKey = `${context.hexQ},${context.hexR}`;
         const moveOption = this.movementOptions.get(coordKey);
@@ -222,8 +218,6 @@ export class MovementHighlightLayer extends HexHighlightLayer {
      * Show movement options using protobuf MoveOption objects
      */
     public showMovementOptions(moveOptions: MoveOption[]): void {
-        console.log(`[MovementHighlightLayer] Showing ${moveOptions.length} movement options`);
-        
         // Clear existing highlights and stored options
         this.clearHighlights();
         this.movementOptions.clear();
@@ -243,7 +237,6 @@ export class MovementHighlightLayer extends HexHighlightLayer {
      * Clear all movement highlights
      */
     public clearMovementOptions(): void {
-        console.log(`[MovementHighlightLayer] Clearing movement options`);
         this.clearHighlights();
         this.movementOptions.clear();
     }
@@ -291,8 +284,6 @@ export class AttackHighlightLayer extends HexHighlightLayer {
     }
     
     public handleClick(context: ClickContext): boolean {
-        console.log(`[AttackHighlightLayer] Attack click at (${context.hexQ}, ${context.hexR})`);
-        
         if (this.onAttackCallback) {
             this.onAttackCallback(context.hexQ, context.hexR);
         }
@@ -304,8 +295,6 @@ export class AttackHighlightLayer extends HexHighlightLayer {
      * Show attack options
      */
     public showAttackOptions(coords: Array<{ q: number; r: number }>): void {
-        console.log(`[AttackHighlightLayer] Showing ${coords.length} attack options`);
-        
         // Clear existing highlights
         this.clearHighlights();
         
@@ -320,7 +309,6 @@ export class AttackHighlightLayer extends HexHighlightLayer {
      * Clear all attack highlights
      */
     public clearAttackOptions(): void {
-        console.log(`[AttackHighlightLayer] Clearing attack options`);
         this.clearHighlights();
     }
 }

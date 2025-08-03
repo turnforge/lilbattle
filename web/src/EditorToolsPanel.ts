@@ -350,7 +350,6 @@ export class EditorToolsPanel extends BaseComponent {
                 
                 if (terrain) {
                     const terrainValue = parseInt(terrain);
-                    console.log("Terrain: ", terrainValue, typeof(terrainValue), TERRAIN_NAMES, TERRAIN_NAMES[terrainValue])
                     const terrainName = TERRAIN_NAMES[terrainValue].name
                     
                     if (terrainValue === 0) {

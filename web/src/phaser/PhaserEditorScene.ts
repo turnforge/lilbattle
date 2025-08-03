@@ -37,20 +37,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
     }
 
     /**
-     * Override create to set up editor-specific layer callbacks
-     */
-    create() {
-        // Call parent create first to set up layer system
-        super.create();
-        
-        // Note: BaseMapLayer callbacks will be set by PhaserEditorComponent
-        // The component will handle the painting logic and world updates
-        
-        console.log('[PhaserEditorScene] Editor scene created');
-    }
-
-
-    /**
      * Set current terrain type for painting
      */
     public setCurrentTerrain(terrainType: number): void {
@@ -105,7 +91,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             );
             this.referenceImage.setAlpha(this.referenceAlpha);
             this.referenceImage.setDepth(-1); // Behind tiles
-            console.log(`[PhaserEditorScene] Reference image loaded: ${imageUrl}`);
         });
     }
 
@@ -122,7 +107,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
                     const imageUrl = URL.createObjectURL(imageBlob);
                     
                     this.setReferenceImage(imageUrl);
-                    console.log('[PhaserEditorScene] Reference image loaded from clipboard');
                     return true;
                 }
             }
@@ -142,7 +126,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             
             const imageUrl = URL.createObjectURL(file);
             this.setReferenceImage(imageUrl);
-            console.log(`[PhaserEditorScene] Reference image loaded from file: ${file.name}`);
             return true;
     }
 
@@ -159,7 +142,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
                 this.referenceImage.setDepth(1000); // Overlay
             }
         }
-        console.log(`[PhaserEditorScene] Reference mode set to: ${mode}`);
     }
 
     /**
@@ -170,7 +152,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
         if (this.referenceImage) {
             this.referenceImage.setVisible(this.referenceMode);
         }
-        console.log(`[PhaserEditorScene] Reference mode: ${this.referenceMode}`);
     }
 
     /**
@@ -181,7 +162,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
         if (this.referenceImage) {
             this.referenceImage.setAlpha(alpha);
         }
-        console.log(`[PhaserEditorScene] Reference alpha set to: ${alpha}`);
     }
 
     /**
@@ -192,7 +172,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
         if (this.referenceImage) {
             this.referenceImage.setPosition(x, y);
         }
-        console.log(`[PhaserEditorScene] Reference position set to: (${x}, ${y})`);
     }
 
     /**
@@ -204,7 +183,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             // Emit scale change event for WorldEditor
             this.events.emit('referenceScaleChanged', { x, y });
         }
-        console.log(`[PhaserEditorScene] Reference scale set to: (${x}, ${y})`);
     }
 
     /**
@@ -218,7 +196,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             // Emit scale change event for WorldEditor
             this.events.emit('referenceScaleChanged', { x, y });
         }
-        console.log(`[PhaserEditorScene] Reference scale from top-left set to: (${x}, ${y})`);
     }
 
     /**
@@ -265,7 +242,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
             this.referenceImage = null;
         }
         this.referenceMode = false;
-        console.log(`[PhaserEditorScene] Reference image cleared`);
     }
 
     /**
@@ -295,7 +271,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
      * Create a test pattern for debugging
      */
     public createTestPattern(): void {
-        console.log('[PhaserEditorScene] Creating test pattern...');
         
         // Clear existing
         this.clearAllTiles();
@@ -319,7 +294,5 @@ export class PhaserEditorScene extends PhaserWorldScene {
         ];
 
         testUnits.forEach(unit => this.setUnit(Unit.from(unit)));
-        
-        console.log('[PhaserEditorScene] Test pattern created');
     }
 }

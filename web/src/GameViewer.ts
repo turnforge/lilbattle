@@ -29,8 +29,6 @@ export class GameViewer extends WorldViewer<PhaserGameScene> {
         this.addSubscription('unit-moved', null);
         this.addSubscription('unit-damaged', null);
         this.addSubscription('unit-killed', null);
-        
-        console.log('GameViewer: Subscribed to GameState world change events');
     }
 
     /**
@@ -128,6 +126,13 @@ export class GameViewer extends WorldViewer<PhaserGameScene> {
 
     public getSelectedUnit(): { q: number; r: number; unitData: any } | null {
         return this.scene?.getSelectedUnit() || null;
+    }
+
+    /**
+     * Get the Phaser scene for advanced operations
+     */
+    public getScene(): PhaserGameScene | null {
+        return this.scene;
     }
 
     /**

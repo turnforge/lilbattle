@@ -73,7 +73,7 @@ export class PhaserWorldScene extends Phaser.Scene {
      */
     public async initialize(containerId: string): Promise<void> {
         if (this.isInitialized) {
-            console.log('[PhaserWorldScene] Already initialized');
+            console.warn('[PhaserWorldScene] Already initialized');
             return;
         }
 
@@ -146,8 +146,6 @@ export class PhaserWorldScene extends Phaser.Scene {
      * Destroy the scene and its Phaser.Game instance
      */
     public destroy(): void {
-        console.log('[PhaserWorldScene] Destroying scene');
-        
         // Clean up layer system
         if (this.layerManager) {
             this.layerManager.destroy();
@@ -172,7 +170,6 @@ export class PhaserWorldScene extends Phaser.Scene {
      */
     public setWorld(world: World): void {
         this.world = world;
-        console.log('[PhaserWorldScene] World set as source of truth');
     }
 
     /**
@@ -184,10 +181,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         tileCallback?: (q: number, r: number) => boolean,
         unitCallback?: (q: number, r: number) => boolean
     ): void {
-        console.log('[PhaserWorldScene] setInteractionCallbacks called');
-        console.log('[PhaserWorldScene] Received tileCallback:', !!tileCallback);
-        console.log('[PhaserWorldScene] Received unitCallback:', !!unitCallback);
-        
         this.tileClickCallback = tileCallback
         this.unitClickCallback = unitCallback
         
@@ -199,10 +192,6 @@ export class PhaserWorldScene extends Phaser.Scene {
                 onEmptySpaceClicked: tileCallback
             });
         }
-        
-        console.log('[PhaserWorldScene] Stored tileClickCallback:', !!this.tileClickCallback);
-        console.log('[PhaserWorldScene] Stored unitClickCallback:', !!this.unitClickCallback);
-        console.log('[PhaserWorldScene] Interaction callbacks set successfully');
     }
 
     
@@ -214,7 +203,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Track when all assets are loaded
         this.load.on('complete', () => {
-            console.log('[PhaserWorldScene] All assets loaded successfully');
             this.terrainsLoaded = true;
             this.unitsLoaded = true;
             if (this.assetsReadyResolver) {
@@ -252,11 +240,8 @@ export class PhaserWorldScene extends Phaser.Scene {
         // Set initial theme
         this.updateTheme();
         
-        console.log('[PhaserWorldScene] Scene created successfully');
-        
         // Mark as initialized and resolve promise
         this.isInitialized = true;
-        console.log('[PhaserWorldScene] isInitialized set to true');
         if (this.initializeResolver) {
             this.initializeResolver();
             this.initializeResolver = null;
@@ -293,9 +278,6 @@ export class PhaserWorldScene extends Phaser.Scene {
             this.load.image(`terrain_${type}`, assetPath);
             this.load.image(`terrain_${type}_0`, assetPath); // Color 0 alias for consistency
         });
-        
-        console.log(`[PhaserWorldScene] Loading city terrain assets: ${cityTerrains.join(', ')} (with colors)`);
-        console.log(`[PhaserWorldScene] Loading nature terrain assets: ${natureTerrains.join(', ')} (default only)`);
     }
     
     private loadUnitAssets() {
@@ -312,20 +294,12 @@ export class PhaserWorldScene extends Phaser.Scene {
             }
         });
         
-        console.log(`[PhaserWorldScene] Loading unit assets: ${unitTypes.join(', ')} (with colors 0-12)`);
-        
         // Add completion handlers to track loading progress
-        this.load.on('filecomplete-image', (key: string, type: string, data: any) => {
-            if (key.startsWith('unit_')) {
-                console.log(`[PhaserWorldScene] Unit texture loaded: ${key}`);
-            }
-        });
+        // this.load.on('filecomplete-image', (key: string, type: string, data: any) => { });
         
         this.load.on('complete', () => {
-            console.log('[PhaserWorldScene] All asset loading complete');
             // List first few unit textures to verify they're loaded
-            const unitKeys = this.textures.getTextureKeys().filter(key => key.startsWith('unit_')).slice(0, 10);
-            console.log('[PhaserWorldScene] Sample loaded unit textures:', unitKeys);
+            // const unitKeys = this.textures.getTextureKeys().filter(key => key.startsWith('unit_')).slice(0, 10);
         });
     }
     
@@ -398,8 +372,6 @@ export class PhaserWorldScene extends Phaser.Scene {
      * Set up the layer system for managing overlays and interactions
      */
     private setupLayerSystem(): void {
-        console.log('[PhaserWorldScene] Setting up layer system');
-        
         // Create layer manager with coordinate conversion functions
         this.layerManager = new LayerManager(
             this,
@@ -417,8 +389,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Add base map layer to manager
         this.layerManager.addLayer(this.baseMapLayer);
-        
-        console.log('[PhaserWorldScene] Layer system initialized');
     }
     
     private setupInputHandling() {
@@ -439,7 +409,6 @@ export class PhaserWorldScene extends Phaser.Scene {
                     if (this.layerManager) {
                         const handled = this.layerManager.handleClick(pointer);
                         if (!handled) {
-                            console.log('[PhaserWorldScene] No layer handled click, using fallback');
                             const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
                             const hexCoords = pixelToHex(worldPoint.x, worldPoint.y);
                             this.onTileClick(hexCoords.q, hexCoords.r);
@@ -581,18 +550,17 @@ export class PhaserWorldScene extends Phaser.Scene {
         if (this.textures.exists(textureKey)) {
             const tileSprite = this.add.sprite(position.x, position.y, textureKey);
             tileSprite.setOrigin(0.5, 0.5);
-            this.tileSprites.set(key, tileSprite);
+            this.tileSprites.set(textureKey, tileSprite);
         } else {
-            console.warn(`[PhaserWorldScene] Texture not found: ${textureKey}`);
-            console.warn(`[PhaserWorldScene] Available textures:`, this.textures.list);
+            // console.warn(`[PhaserWorldScene] Texture not found: ${textureKey}`);
+            // console.warn(`[PhaserWorldScene] Available textures:`, this.textures.list);
             
             // Try fallback to basic terrain texture without color
             const fallbackKey = `terrain_${terrainType}`;
             if (this.textures.exists(fallbackKey)) {
-                console.log(`[PhaserWorldScene] Using fallback texture: ${fallbackKey}`);
                 const tileSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 tileSprite.setOrigin(0.5, 0.5);
-                this.tileSprites.set(key, tileSprite);
+                this.tileSprites.set(fallbackKey, tileSprite);
             } else {
                 console.error(`[PhaserWorldScene] Fallback texture also not found: ${fallbackKey}`);
             }
@@ -636,8 +604,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         const key = `${q},${r}`;
         const position = hexToPixel(q, r);
         
-        console.log(`[PhaserWorldScene] setUnit called: q=${q}, r=${r}, unitType=${unitType}, color=${color}`);
-        
         // Remove existing unit and labels if they exist
         if (this.unitSprites.has(key)) {
             this.unitSprites.get(key)?.destroy();
@@ -646,8 +612,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Create new unit sprite
         const textureKey = `unit_${unitType}_${color}`;
-        console.log(`[PhaserWorldScene] Looking for texture: ${textureKey}`);
-        console.log(`[PhaserWorldScene] Texture exists: ${this.textures.exists(textureKey)}`);
         
         if (this.textures.exists(textureKey)) {
             const unitSprite = this.add.sprite(position.x, position.y, textureKey);
@@ -660,7 +624,6 @@ export class PhaserWorldScene extends Phaser.Scene {
             // Try fallback to basic unit texture without color
             const fallbackKey = `unit_${unitType}`;
             if (this.textures.exists(fallbackKey)) {
-                console.log(`[PhaserWorldScene] Using fallback unit texture: ${fallbackKey}`);
                 const unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 unitSprite.setOrigin(0.5, 0.5);
                 unitSprite.setDepth(10);
@@ -749,6 +712,33 @@ export class PhaserWorldScene extends Phaser.Scene {
                 labels.distanceText.destroy();
             }
             this.unitLabels.delete(key);
+        }
+    }
+    
+    /**
+     * Update existing unit labels with fresh unit data
+     */
+    private updateUnitLabels(unit: Unit): void {
+        const key = `${unit.q},${unit.r}`;
+        const labels = this.unitLabels.get(key);
+        
+        if (labels && labels.healthText && this.showUnitHealth) {
+            const health = unit.availableHealth || 100;
+            const movementPoints = unit.distanceLeft || 0;
+            const labelText = `${movementPoints}/${health}`;
+            
+            labels.healthText.setText(labelText);
+        }
+    }
+    
+    /**
+     * Public method to refresh all unit labels with current World data
+     */
+    public refreshUnitLabels(world: any): void {
+        const allUnits = world.getAllUnits();
+        
+        for (const unit of allUnits) {
+            this.updateUnitLabels(unit);
         }
     }
     
@@ -1012,24 +1002,15 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Update grid display
         this.updateGridDisplay();
-        
-        console.log('[PhaserWorldScene] Test pattern created with negative coordinates support');
     }
     
     // Callback for tile clicks (handles both game interaction and editor events)
     protected onTileClick(q: number, r: number) {
-        console.log(`[PhaserWorldScene] Tile clicked: Q=${q}, R=${r}`);
-        console.log(`[PhaserWorldScene] tileClickCallback:`, !!this.tileClickCallback);
-        console.log(`[PhaserWorldScene] unitClickCallback:`, !!this.unitClickCallback);
-        
         // Check if there's a unit at this position first for game interaction
         if (this.world) {
             const unit = this.world.getUnitAt(q, r);
-            console.log(`[PhaserWorldScene] Unit found at position:`, !!unit);
             if (unit && this.unitClickCallback) {
-                console.log(`[PhaserWorldScene] Calling unitClickCallback for unit at Q=${q}, R=${r}`);
                 const shouldEmit = this.unitClickCallback(q, r);
-                console.log(`[PhaserWorldScene] unitClickCallback returned:`, shouldEmit);
                 if (!shouldEmit) {
                     return; // Unit callback handled it and suppressed event
                 }
@@ -1038,16 +1019,13 @@ export class PhaserWorldScene extends Phaser.Scene {
         
         // Call tile callback if set
         if (this.tileClickCallback) {
-            console.log(`[PhaserWorldScene] Calling tileClickCallback for Q=${q}, R=${r}`);
             const shouldEmit = this.tileClickCallback(q, r);
-            console.log(`[PhaserWorldScene] tileClickCallback returned:`, shouldEmit);
             if (!shouldEmit) {
                 return; // Tile callback handled it and suppressed event
             }
         }
         
         // Default behavior: emit the tile click event for WorldEditorPage or other listeners
-        console.log(`[PhaserWorldScene] Emitting tileClicked event`);
         this.events.emit('tileClicked', { q, r });
     }
     
@@ -1065,7 +1043,6 @@ export class PhaserWorldScene extends Phaser.Scene {
 
         // Wait for assets to be ready before placing tiles/units
         await this.waitForAssetsReady();
-        console.log('[PhaserWorldScene] Assets ready, loading world data');
         
         // Clear existing content
         this.clearAllTiles();
@@ -1077,7 +1054,6 @@ export class PhaserWorldScene extends Phaser.Scene {
             tiles.forEach(tile => {
                 this.setTile(tile);
             });
-            console.log(`[PhaserWorldScene] Loaded ${tiles.length} tiles`);
         }
         
         // Load units from World
@@ -1086,7 +1062,6 @@ export class PhaserWorldScene extends Phaser.Scene {
             units.forEach(unit => {
                 this.setUnit(unit);
             });
-            console.log(`[PhaserWorldScene] Loaded ${units.length} units`);
         }
         
         // Center camera on the loaded world
@@ -1098,13 +1073,11 @@ export class PhaserWorldScene extends Phaser.Scene {
      */
     public centerCameraOnWorld(): void {
         if (!this.world) {
-            console.log('[PhaserWorldScene] Cannot center camera - no world loaded');
             return;
         }
         
         const allTiles = this.world.getAllTiles();
         if (allTiles.length === 0) {
-            console.log('[PhaserWorldScene] No tiles to center camera on');
             return;
         }
         
@@ -1124,8 +1097,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         // Calculate center point
         const centerQ = Math.floor((minQ + maxQ) / 2);
         const centerR = Math.floor((minR + maxR) / 2);
-        
-        console.log(`[PhaserWorldScene] Centering camera on Q=${centerQ}, R=${centerR} (bounds: Q=${minQ}-${maxQ}, R=${minR}-${maxR})`);
         
         // Convert hex coordinates to pixel coordinates
         const centerPixel = hexToPixel(centerQ, centerR);
@@ -1183,7 +1154,6 @@ export class PhaserWorldScene extends Phaser.Scene {
             throw new Error('[PhaserWorldScene] Assets ready promise not initialized');
         }
         
-        console.log('[PhaserWorldScene] Waiting for assets to be ready...');
         return this.assetsReadyPromise;
     }
     

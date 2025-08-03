@@ -51,8 +51,6 @@ export class LifecycleController {
      * @returns Promise that resolves when all components are fully initialized
      */
     public async initializeFromRoot(rootComponent: LCMComponent): Promise<void> {
-        this.log('Starting component tree initialization');
-        
         // Phase 1 - Performance post-load setup where each parent will have the change
         // to set dependencies on its children (either to its siblings or to itself).
         await this.performLocalInit(rootComponent);
@@ -61,9 +59,6 @@ export class LifecycleController {
         await this.injectDependencies();
 
         await this.activate();
-        
-        this.log('Component tree initialization complete');
-        // this.emitEvent('component-ready', 'activated', 'All Components');
     }
     
     /**
@@ -73,7 +68,6 @@ export class LifecycleController {
         const visited = new Set<LCMComponent>();
         let queue = [rootComponent] as LCMComponent[]
         
-        this.log("Starting performLocalInit, Levels: ", this.componentsByLevel.length)
         if (this.componentsByLevel.length > 0) {
           throw new Error("Already done")
         }
@@ -111,7 +105,6 @@ export class LifecycleController {
             }
             queue = newqueue
         }
-        this.log("Finished performLocalInit, Levels: ", this.componentsByLevel.length)
     }
 
     /**
@@ -137,7 +130,6 @@ export class LifecycleController {
         for (let level = 0;level < this.componentsByLevel.length; level++) {
             const promises = new Array<Promise<void>>()
             const levelComps = this.componentsByLevel[level]
-            console.log("Activating components in level: ", level)
             for (const comp of levelComps) {
                 if (visited.has(comp)) {
                   throw new Error("Comp already visited")
@@ -158,12 +150,10 @@ export class LifecycleController {
      * deactivated
      */
     public async deactivateAll(): Promise<void> {
-        this.log('Deactivating all components');
         // destruction should leaf to the root so we are removing things from bottom to top
         for (let level = this.componentsByLevel.length - 1;level >= 0; level--) {
             const promises = new Array<Promise<void>>()
             const levelComps = this.componentsByLevel[level]
-            console.log("Clearing components in level: ", level)
             for (const comp of levelComps) {
                 this.emitEvent(LifecycleEventTypes.DEACTIVATION_STARTED , comp, level)
                 const result = comp.deactivate()

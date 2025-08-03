@@ -1787,6 +1787,14 @@
         "newTurn": {
           "type": "integer",
           "format": "int32"
+        },
+        "resetUnits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Unit"
+          },
+          "title": "Units that had their movement/health reset for the new turn"
         }
       },
       "title": "*\nActive player changed"
@@ -1879,21 +1887,13 @@
     "v1UnitDamagedChange": {
       "type": "object",
       "properties": {
-        "previousHealth": {
-          "type": "integer",
-          "format": "int32"
+        "previousUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Complete unit state before taking damage"
         },
-        "newHealth": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
+        "updatedUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Complete unit state after taking damage"
         }
       },
       "title": "*\nA unit took damage"
@@ -1901,21 +1901,9 @@
     "v1UnitKilledChange": {
       "type": "object",
       "properties": {
-        "player": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "unitType": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
+        "previousUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Complete unit state before being killed"
         }
       },
       "title": "*\nA unit was killed"
@@ -1923,21 +1911,13 @@
     "v1UnitMovedChange": {
       "type": "object",
       "properties": {
-        "fromQ": {
-          "type": "integer",
-          "format": "int32"
+        "previousUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Complete unit state before the move"
         },
-        "fromR": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "toQ": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "toR": {
-          "type": "integer",
-          "format": "int32"
+        "updatedUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Complete unit state after the move (includes updated position, distanceLeft, etc.)"
         }
       },
       "title": "*\nA unit moved from one position to another"

@@ -31,7 +31,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
     
     private setupReferenceImageSystem(): void {
         // Reference image will be added when user switches to reference mode
-        console.log('[EditablePhaserWorldScene] Reference image system initialized');
     }
     
     private setupReferenceInputHandling(): void {
@@ -59,23 +58,16 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
                 return false;
             }
             
-            console.log('[EditablePhaserWorldScene] Attempting to read clipboard...');
-            
             // Try clipboard.read() first
             if (navigator.clipboard.read) {
                 try {
                     const clipboardItems = await navigator.clipboard.read();
-                    console.log(`[EditablePhaserWorldScene] Found ${clipboardItems.length} clipboard items`);
                     
                     for (const clipboardItem of clipboardItems) {
-                        console.log(`[EditablePhaserWorldScene] Clipboard item types:`, clipboardItem.types);
                         
                         for (const type of clipboardItem.types) {
-                            console.log(`[EditablePhaserWorldScene] Checking type: ${type}`);
                             if (type.startsWith('image/')) {
-                                console.log(`[EditablePhaserWorldScene] Found image type: ${type}`);
                                 const blob = await clipboardItem.getType(type);
-                                console.log(`[EditablePhaserWorldScene] Blob size: ${blob.size} bytes`);
                                 return this.replaceReferenceImage(blob);
                             }
                         }
@@ -88,10 +80,8 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
             // Fallback: Try readText for data URLs
             if (navigator.clipboard.readText) {
                 try {
-                    console.log('[EditablePhaserWorldScene] Trying readText fallback...');
                     const text = await navigator.clipboard.readText();
                     if (text.startsWith('data:image/')) {
-                        console.log('[EditablePhaserWorldScene] Found data URL in text');
                         return this.replaceReferenceImageFromDataURL(text);
                     }
                 } catch (textError) {
@@ -126,7 +116,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
                     // Add texture to Phaser
                     this.textures.addCanvas(this.referenceTextureKey!, canvas);
                     
-                    console.log(`[EditablePhaserWorldScene] Reference image loaded from data URL: ${img.width}x${img.height}`);
                     resolve(true);
                 };
                 
@@ -143,10 +132,8 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
      * Load reference image from file
      */
     public async loadReferenceFromFile(file: File): Promise<boolean> {
-            console.log(`[EditablePhaserWorldScene] Loading reference image from file: ${file.name} (${file.size} bytes, type: ${file.type})`);
-            
-            // File is already a Blob, so we can use it directly
-            return this.replaceReferenceImage(file);
+        // File is already a Blob, so we can use it directly
+        return this.replaceReferenceImage(file);
     }
     
     /**
@@ -216,63 +203,52 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
      * Load reference image from blob data
      */
     private async loadReferenceFromBlob(blob: Blob): Promise<boolean> {
-            console.log(`[EditablePhaserWorldScene] Processing blob: size=${blob.size}, type=${blob.type}`);
-            
-            // Generate unique texture key
-            this.referenceTextureKey = `reference_${Date.now()}`;
-            console.log(`[EditablePhaserWorldScene] Generated texture key: ${this.referenceTextureKey}`);
-            
-            // Create image element to load the blob
-            const img = new Image();
-            const url = URL.createObjectURL(blob);
-            console.log(`[EditablePhaserWorldScene] Created object URL: ${url}`);
-            
-            return new Promise((resolve) => {
-                img.onload = () => {
-                    console.log(`[EditablePhaserWorldScene] Image loaded successfully: ${img.width}x${img.height}`);
+        // Generate unique texture key
+        this.referenceTextureKey = `reference_${Date.now()}`;
+        
+        // Create image element to load the blob
+        const img = new Image();
+        const url = URL.createObjectURL(blob);
+        
+        return new Promise((resolve) => {
+            img.onload = () => {
+                try {
+                    // Create canvas to get image data
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
                     
-                    try {
-                        // Create canvas to get image data
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        
-                        if (!ctx) {
-                            console.error('[EditablePhaserWorldScene] Failed to get canvas context');
-                            URL.revokeObjectURL(url);
-                            resolve(false);
-                            return;
-                        }
-                        
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                        console.log(`[EditablePhaserWorldScene] Drew image to canvas: ${canvas.width}x${canvas.height}`);
-                        
-                        // Add texture to Phaser
-                        this.textures.addCanvas(this.referenceTextureKey!, canvas);
-                        console.log(`[EditablePhaserWorldScene] Added texture to Phaser: ${this.referenceTextureKey}`);
-                        
-                        // Clean up
-                        URL.revokeObjectURL(url);
-                        
-                        console.log(`[EditablePhaserWorldScene] Reference image loaded successfully: ${img.width}x${img.height}`);
-                        resolve(true);
-                    } catch (canvasError) {
-                        console.error('[EditablePhaserWorldScene] Canvas processing error:', canvasError);
+                    if (!ctx) {
+                        console.error('[EditablePhaserWorldScene] Failed to get canvas context');
                         URL.revokeObjectURL(url);
                         resolve(false);
+                        return;
                     }
-                };
-                
-                img.onerror = (error) => {
+                    
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Add texture to Phaser
+                    this.textures.addCanvas(this.referenceTextureKey!, canvas);
+                    
+                    // Clean up
                     URL.revokeObjectURL(url);
-                    console.error('[EditablePhaserWorldScene] Image load error:', error);
+                    
+                    resolve(true);
+                } catch (canvasError) {
+                    console.error('[EditablePhaserWorldScene] Canvas processing error:', canvasError);
+                    URL.revokeObjectURL(url);
                     resolve(false);
-                };
-                
-                console.log(`[EditablePhaserWorldScene] Setting image src to: ${url}`);
-                img.src = url;
-            });
+                }
+            };
+            
+            img.onerror = (error) => {
+                URL.revokeObjectURL(url);
+                console.error('[EditablePhaserWorldScene] Image load error:', error);
+                resolve(false);
+            };
+            img.src = url;
+        });
     }
     
     /**
@@ -327,8 +303,6 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
             // Overlay mode - above tiles but below units
             this.referenceImage.setDepth(15);
         }
-        
-        console.log(`[EditablePhaserWorldScene] Reference image shown in mode ${this.referenceMode}`);
     }
     
     /**
@@ -580,7 +554,5 @@ export class EditablePhaserWorldScene extends PhaserWorldScene {
         this.referencePosition = { x: 0, y: 0 };
         this.referenceScale = { x: 1, y: 1 };
         this.referenceAlpha = 0.5;
-        
-        console.log('[EditablePhaserWorldScene] Reference image cleared');
     }
 }

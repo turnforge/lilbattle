@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
@@ -33,8 +34,12 @@ func NewWasmGamesServiceImpl() *WasmGamesServiceImpl {
 }
 
 func (w *WasmGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
+	fmt.Printf("GetRuntimeGame: Called - RuntimeGame cached: %t\n", w.RuntimeGame != nil)
 	if w.RuntimeGame == nil {
+		fmt.Printf("GetRuntimeGame: Creating new runtime game via ProtoToRuntimeGame\n")
 		w.RuntimeGame, err = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
+	} else {
+		fmt.Printf("GetRuntimeGame: Using cached runtime game\n")
 	}
 	return w.RuntimeGame, err
 }
@@ -75,6 +80,11 @@ func (w *WasmGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameReque
 }
 
 func (w *WasmGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest) (*v1.UpdateGameResponse, error) {
+	fmt.Printf("UpdateGame: Called - this will invalidate RuntimeGame cache!\n")
+	fmt.Printf("UpdateGame: NewGame provided: %t\n", req.NewGame != nil)
+	fmt.Printf("UpdateGame: NewState provided: %t\n", req.NewState != nil)
+	fmt.Printf("UpdateGame: NewHistory provided: %t\n", req.NewHistory != nil)
+
 	// Update singleton instances with new data
 	if req.NewGame != nil {
 		w.SingletonGame = req.NewGame
@@ -86,8 +96,10 @@ func (w *WasmGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGam
 		w.SingletonGameMoveHistory = req.NewHistory
 	}
 
-	// Invalidate runtime game cache so it gets recreated with new data
-	w.RuntimeGame = nil
+	// Don't invalidate runtime game cache for WASM singleton - keep it alive
+	// The runtime game is the source of truth and should persist across moves
+	fmt.Printf("UpdateGame: Keeping RuntimeGame alive (not invalidating cache)\n")
+	// w.RuntimeGame = nil  // COMMENTED OUT - keep runtime game alive
 
 	return &v1.UpdateGameResponse{
 		Game: w.SingletonGame,

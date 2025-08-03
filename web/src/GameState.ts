@@ -3,7 +3,7 @@ import { EventBus } from '../lib/EventBus';
 import Weewar_v1_servicesClient from '../gen/wasm-clients/weewar_v1_servicesClient.client';
 import { ProcessMovesRequest, ProcessMovesResponse, GetGameRequest, GetGameStateRequest, GetOptionsAtRequest, GameMove, WorldChange, MoveUnitAction, AttackUnitAction, EndTurnAction, GameState as ProtoGameState, Game as ProtoGame } from '../gen/wasm-clients/weewar/v1/models'
 import { create } from '@bufbuild/protobuf';
-import { World } from './World';
+import { World, Unit } from './World';
 
 /**
  * Legacy interface for backward compatibility with GameViewerPage  
@@ -235,6 +235,19 @@ export class GameState extends BaseComponent {
                 });
                 gameStateUpdated = true;
                 this.log('Updated cached GameState for player change:', change.playerChanged);
+                
+                // Apply reset units to World (units with refreshed movement points)
+                if (change.playerChanged.resetUnits && change.playerChanged.resetUnits.length > 0) {
+                    console.log('DEBUG applying reset units:', change.playerChanged.resetUnits);
+                    for (const resetUnit of change.playerChanged.resetUnits) {
+                        const existingUnit = this.world.getUnitAt(resetUnit.q, resetUnit.r);
+                        console.log(`DEBUG reset unit at (${resetUnit.q}, ${resetUnit.r}): distanceLeft=${resetUnit.distanceLeft}, existing unit:`, existingUnit);
+                        this.world.setUnitDirect(resetUnit);
+                        console.log(`DEBUG unit after setUnitDirect:`, this.world.getUnitAt(resetUnit.q, resetUnit.r));
+                    }
+                    worldUpdated = true;
+                    this.log(`Applied ${change.playerChanged.resetUnits.length} reset units to World`);
+                }
             }
         }
 
@@ -247,48 +260,52 @@ export class GameState extends BaseComponent {
      * Apply unit movement to the shared World object
      */
     private applyUnitMovedToWorld(unitMoved: any): void {
-        // Get the unit at the source position
-        const unit = this.world.getUnitAt(unitMoved.fromQ, unitMoved.fromR);
-        if (!unit) {
-            this.log(`No unit found at (${unitMoved.fromQ}, ${unitMoved.fromR}) to move`);
-            return;
+        console.log('DEBUG applyUnitMovedToWorld:', unitMoved);
+        console.log('DEBUG previousUnit:', unitMoved.previousUnit);
+        console.log('DEBUG updatedUnit:', unitMoved.updatedUnit);
+        
+        // Remove unit from source position using previous unit location
+        if (unitMoved.previousUnit) {
+            this.world.removeUnitAt(unitMoved.previousUnit.q, unitMoved.previousUnit.r);
         }
-
-        // Remove unit from source position
-        this.world.removeUnitAt(unitMoved.fromQ, unitMoved.fromR);
         
-        // Place unit at destination position
-        this.world.setUnitAt(unitMoved.toQ, unitMoved.toR, unit.unitType, unit.player);
-        
-        this.log(`Moved unit from (${unitMoved.fromQ}, ${unitMoved.fromR}) to (${unitMoved.toQ}, ${unitMoved.toR})`);
+        // Use the complete updated unit state from the server
+        if (unitMoved.updatedUnit) {
+            console.log('DEBUG setting unit direct with:', unitMoved.updatedUnit);
+            this.world.setUnitDirect(unitMoved.updatedUnit);
+            this.log(`Moved unit from (${unitMoved.previousUnit?.q}, ${unitMoved.previousUnit?.r}) to (${unitMoved.updatedUnit.q}, ${unitMoved.updatedUnit.r})`);
+        } else {
+            this.log(`No updated unit data provided for move`);
+        }
     }
 
     /**
      * Apply unit damage to the shared World object
      */
     private applyUnitDamagedToWorld(unitDamaged: any): void {
-        // Get the unit at the specified position
-        const unit = this.world.getUnitAt(unitDamaged.q, unitDamaged.r);
-        if (!unit) {
-            this.log(`No unit found at (${unitDamaged.q}, ${unitDamaged.r}) to damage`);
-            return;
+        // Use the complete updated unit state from the server
+        if (unitDamaged.updatedUnit) {
+            this.world.setUnitDirect(unitDamaged.updatedUnit);
+            this.log(`Unit at (${unitDamaged.updatedUnit.q}, ${unitDamaged.updatedUnit.r}) damaged: ${unitDamaged.previousUnit?.availableHealth} -> ${unitDamaged.updatedUnit.availableHealth}`);
+        } else {
+            this.log(`No updated unit data provided for damage`);
         }
-
-        // Note: The World class doesn't currently track health, so we just log this change
-        // The actual health tracking would happen in a more detailed unit model
-        this.log(`Unit at (${unitDamaged.q}, ${unitDamaged.r}) damaged: ${unitDamaged.previousHealth} -> ${unitDamaged.newHealth}`);
     }
 
     /**
      * Apply unit death to the shared World object
      */
     private applyUnitKilledToWorld(unitKilled: any): void {
-        // Remove the unit from the world
-        const removed = this.world.removeUnitAt(unitKilled.q, unitKilled.r);
-        if (removed) {
-            this.log(`Removed killed unit at (${unitKilled.q}, ${unitKilled.r}): player ${unitKilled.player} unit type ${unitKilled.unitType}`);
+        // Remove the unit from the world using previous unit location
+        if (unitKilled.previousUnit) {
+            const removed = this.world.removeUnitAt(unitKilled.previousUnit.q, unitKilled.previousUnit.r);
+            if (removed) {
+                this.log(`Removed killed unit at (${unitKilled.previousUnit.q}, ${unitKilled.previousUnit.r}): player ${unitKilled.previousUnit.player} unit type ${unitKilled.previousUnit.unitType}`);
+            } else {
+                this.log(`No unit found at (${unitKilled.previousUnit.q}, ${unitKilled.previousUnit.r}) to remove`);
+            }
         } else {
-            this.log(`No unit found at (${unitKilled.q}, ${unitKilled.r}) to remove`);
+            this.log(`No previous unit data provided for killed unit`);
         }
     }
 
@@ -314,24 +331,24 @@ export class GameState extends BaseComponent {
 
             if (change.unitMoved) {
                 this.emit('unit-moved', {
-                    from: { q: change.unitMoved.fromQ, r: change.unitMoved.fromR },
-                    to: { q: change.unitMoved.toQ, r: change.unitMoved.toR }
+                    from: { q: change.unitMoved.previousUnit?.q || 0, r: change.unitMoved.previousUnit?.r || 0 },
+                    to: { q: change.unitMoved.updatedUnit?.q || 0, r: change.unitMoved.updatedUnit?.r || 0 }
                 }, this);
             }
 
             if (change.unitDamaged) {
                 this.emit('unit-damaged', {
-                    position: { q: change.unitDamaged.q, r: change.unitDamaged.r },
-                    previousHealth: change.unitDamaged.previousHealth,
-                    newHealth: change.unitDamaged.newHealth
+                    position: { q: change.unitDamaged.updatedUnit?.q || 0, r: change.unitDamaged.updatedUnit?.r || 0 },
+                    previousHealth: change.unitDamaged.previousUnit?.availableHealth || 0,
+                    newHealth: change.unitDamaged.updatedUnit?.availableHealth || 0
                 }, this);
             }
 
             if (change.unitKilled) {
                 this.emit('unit-killed', {
-                    position: { q: change.unitKilled.q, r: change.unitKilled.r },
-                    player: change.unitKilled.player,
-                    unitType: change.unitKilled.unitType
+                    position: { q: change.unitKilled.previousUnit?.q || 0, r: change.unitKilled.previousUnit?.r || 0 },
+                    player: change.unitKilled.previousUnit?.player || 0,
+                    unitType: change.unitKilled.previousUnit?.unitType || 0
                 }, this);
             }
         }
@@ -447,6 +464,11 @@ export class GameState extends BaseComponent {
         // Update World object from game data for UI rendering
         if (gameResponse.state.worldData) {
             this.world.setName(gameResponse.game.name || 'Untitled Game');
+            console.log('DEBUG gameResponse.state.worldData.units:', gameResponse.state.worldData.units);
+            gameResponse.state.worldData.units?.forEach((unit: Unit, i: number) => {
+                console.log(`DEBUG unit ${i}:`, unit);
+                console.log(`DEBUG unit ${i} distanceLeft: ${unit.distanceLeft}, availableHealth: ${unit.availableHealth}`);
+            });
             this.world.loadTilesAndUnits(
                 gameResponse.state.worldData.tiles || [],
                 gameResponse.state.worldData.units || []
@@ -552,6 +574,7 @@ export class GameState extends BaseComponent {
      * Replaces canSelectUnit, getMovementOptions, getAttackOptions
      */
     public async getOptionsAt(q: number, r: number): Promise<any> {
+        console.log(`DEBUG getOptionsAt called with q=${q}, r=${r}`);
         const client = await this.ensureWASMLoaded();
         
         try {
@@ -566,12 +589,15 @@ export class GameState extends BaseComponent {
                 q: q,
                 r: r
             });
+            console.log('DEBUG getOptionsAt request:', request);
 
             const response = await client.gamesService.getOptionsAt(request);
+            console.log('DEBUG getOptionsAt response:', response);
             
             this.log(`getOptionsAt(${q}, ${r}): ${response.options?.length || 0} options, currentPlayer: ${response.currentPlayer}`);
             return response;
         } catch (error) {
+            console.log(`DEBUG Error in getOptionsAt: ${error}`);
             this.log(`Error in getOptionsAt: ${error}`);
             return { options: [], currentPlayer: 0, gameInitialized: false };
         }

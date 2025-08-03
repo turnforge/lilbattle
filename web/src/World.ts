@@ -329,16 +329,28 @@ export class World {
         return false;
     }
     
+    /**
+     * Set a unit directly with full Unit object (preserves all runtime state)
+     */
+    public setUnitDirect(unit: Unit): void {
+        const key = `${unit.q},${unit.r}`;
+        const existingUnit = this.units[key];
+        this.units[key] = unit;
+        this.addUnitChange(unit.q, unit.r, unit);
+    }
+    
     public getAllUnits(): Array<Unit> {
         const result: Array<Unit> = [];
-        
-        Object.entries(this.units).forEach(([key, unitData]) => {
-            const [q, r] = key.split(',').map(Number);
+
+        Object.values(this.units).forEach((unitData: Unit) => {
             result.push(Unit.from({
-                q,
-                r,
+                q: unitData.q,
+                r: unitData.r,
                 unitType: unitData.unitType,
-                player: unitData.player
+                player: unitData.player,
+                availableHealth: unitData.availableHealth,
+                distanceLeft: unitData.distanceLeft,
+                turnCounter: unitData.turnCounter,
             }));
         });
         
@@ -616,7 +628,18 @@ export class World {
                 return; // Skip invalid unit
             }
             
-            const unit: Unit = Unit.from({ q, r, unitType, player });
+            // Pass all unit data from WASM, including runtime state (distanceLeft, availableHealth, etc.)
+            const unit: Unit = Unit.from({ 
+                q, 
+                r, 
+                unitType, 
+                player,
+                // Include runtime state from WASM
+                availableHealth: unitData.availableHealth || unitData.available_health || 100,
+                distanceLeft: (unitData.distanceLeft && unitData.distanceLeft > 0) ? unitData.distanceLeft : 
+                             (unitData.distance_left && unitData.distance_left > 0) ? unitData.distance_left : 3,
+                turnCounter: unitData.turnCounter || unitData.turn_counter || 1
+            });
             this.units[key] = unit;
             unitChanges.push({ q, r, unit });
         });

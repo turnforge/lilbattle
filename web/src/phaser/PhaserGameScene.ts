@@ -66,16 +66,12 @@ export class PhaserGameScene extends PhaserWorldScene {
         
         // Set up game-specific layers
         this.setupGameLayers();
-        
-        console.log('[PhaserGameScene] Game scene created successfully');
     }
     
     /**
      * Set up game-specific highlight layers
      */
     private setupGameLayers(): void {
-        console.log('[PhaserGameScene] Setting up game layers');
-        
         const layerManager = this.getLayerManager();
         if (!layerManager) {
             console.error('[PhaserGameScene] No LayerManager available');
@@ -101,16 +97,12 @@ export class PhaserGameScene extends PhaserWorldScene {
             (q: number, r: number) => this.handleAttackClick(q, r)
         );
         layerManager.addLayer(this.attackHighlightLayer);
-        
-        console.log('[PhaserGameScene] Game layers set up successfully');
     }
     
     /**
      * Handle clicks on movement highlights
      */
     private handleMovementClick(q: number, r: number, moveOption: any): void {
-        console.log(`[PhaserGameScene] Movement click at (${q}, ${r}) with move option:`, moveOption);
-        
         // Route movement clicks to a dedicated move callback instead of general tile click
         if (this.callbacks.onMovementClicked) {
             this.callbacks.onMovementClicked(q, r, moveOption);
@@ -124,7 +116,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      */
     public setCallbacks(callbacks: GameSceneCallbacks): void {
         this.callbacks = callbacks;
-        console.log('[PhaserGameScene] Callbacks set:', Object.keys(callbacks));
     }
 
     /**
@@ -132,8 +123,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Note: We don't call super.onTileClick() because the LayerSystem already handles callbacks
      */
     protected onTileClick(q: number, r: number): void {
-        console.log(`[PhaserGameScene] Tile clicked: Q=${q}, R=${r}, Mode=${this.gameMode}`);
-        
         if (!this.world) {
             console.warn('[PhaserGameScene] No World available for tile click');
             return;
@@ -151,12 +140,6 @@ export class PhaserGameScene extends PhaserWorldScene {
                 this.handleAttackClick(q, r);
                 break;
         }
-
-        // Note: We intentionally don't call super.onTileClick() here because:
-        // 1. The LayerSystem already called the GameViewerPage callbacks via BaseMapLayer
-        // 2. Calling super.onTileClick() would result in duplicate callback invocations
-        // 3. This method is only called as a fallback when LayerSystem doesn't handle the click
-        console.log(`[PhaserGameScene] Game-specific click handling completed`);
     }
 
     /**
@@ -207,9 +190,6 @@ export class PhaserGameScene extends PhaserWorldScene {
         const unitAtPosition = this.getUnitAt(q, r);
         
         if (unitAtPosition) {
-            // Unit click - try to select it
-            console.log(`[PhaserGameScene] Unit found at Q=${q}, R=${r}:`, unitAtPosition);
-            
             // Clear previous selection
             this.clearSelection();
             
@@ -222,12 +202,9 @@ export class PhaserGameScene extends PhaserWorldScene {
             
             // Highlight selected unit
             this.highlightSelectedUnit(q, r);
-            
-            console.log(`[PhaserGameScene] Unit selected at Q=${q}, R=${r}`);
         } else {
             // Empty tile click in select mode - clear selection
             this.clearSelection();
-            console.log(`[PhaserGameScene] Selection cleared by empty tile click`);
         }
     }
 
@@ -244,8 +221,6 @@ export class PhaserGameScene extends PhaserWorldScene {
         const isValidMove = this.movableCoords.some(coord => coord.q === q && coord.r === r);
         
         if (isValidMove) {
-            console.log(`[PhaserGameScene] Valid move target: Q=${q}, R=${r}`);
-            
             // External callback will handle the actual move through game engine
             // We just provide visual feedback here
             this.showMovePreview(this.selectedUnit.q, this.selectedUnit.r, q, r);
@@ -253,7 +228,7 @@ export class PhaserGameScene extends PhaserWorldScene {
             // Return to select mode after move attempt
             this.setGameMode('select');
         } else {
-            console.log(`[PhaserGameScene] Invalid move target: Q=${q}, R=${r}`);
+            console.warn(`[PhaserGameScene] Invalid move target: Q=${q}, R=${r}`);
             // Could show visual feedback for invalid move
         }
     }
@@ -271,8 +246,6 @@ export class PhaserGameScene extends PhaserWorldScene {
         const isValidAttack = this.attackableCoords.some(coord => coord.q === q && coord.r === r);
         
         if (isValidAttack) {
-            console.log(`[PhaserGameScene] Valid attack target: Q=${q}, R=${r}`);
-            
             // External callback will handle the actual attack through game engine
             // We just provide visual feedback here
             this.showAttackPreview(this.selectedUnit.q, this.selectedUnit.r, q, r);
@@ -280,8 +253,7 @@ export class PhaserGameScene extends PhaserWorldScene {
             // Return to select mode after attack attempt
             this.setGameMode('select');
         } else {
-            console.log(`[PhaserGameScene] Invalid attack target: Q=${q}, R=${r}`);
-            // Could show visual feedback for invalid attack
+            console.warn(`[PhaserGameScene] Invalid attack target: Q=${q}, R=${r}`);
         }
     }
 
@@ -289,7 +261,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Set the current game mode
      */
     public setGameMode(mode: 'select' | 'move' | 'attack'): void {
-        console.log(`[PhaserGameScene] Game mode changed: ${this.gameMode} → ${mode}`);
         this.gameMode = mode;
         
         // Update visual indicators based on mode
@@ -305,8 +276,6 @@ export class PhaserGameScene extends PhaserWorldScene {
             console.warn(`[PhaserGameScene] No unit found at Q=${q}, R=${r} for selection`);
             return;
         }
-
-        console.log(`[PhaserGameScene] Selecting unit at Q=${q}, R=${r} with ${movableCoords.length} move options and ${attackableCoords.length} attack options`);
 
         // Store selection state
         this.selectedUnit = { q, r, unitData };
@@ -328,8 +297,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Clear unit selection and all highlights
      */
     public clearSelection(): void {
-        console.log('[PhaserGameScene] Clearing selection and highlights');
-        
         this.selectedUnit = null;
         this.movableCoords = [];
         this.attackableCoords = [];
@@ -381,7 +348,6 @@ export class PhaserGameScene extends PhaserWorldScene {
     private highlightSelectedUnit(q: number, r: number): void {
         if (this.selectionHighlightLayer) {
             this.selectionHighlightLayer.selectHex(q, r);
-            console.log(`[PhaserGameScene] Unit highlighted at Q=${q}, R=${r}`);
         } else {
             console.warn('[PhaserGameScene] Selection highlight layer not available');
         }
@@ -393,7 +359,6 @@ export class PhaserGameScene extends PhaserWorldScene {
     private showMovementOptions(moveOptions: any[]): void {
         if (this.movementHighlightLayer) {
             this.movementHighlightLayer.showMovementOptions(moveOptions);
-            console.log(`[PhaserGameScene] Showing ${moveOptions.length} movement options`);
         } else {
             console.warn('[PhaserGameScene] Movement highlight layer not available');
         }
@@ -405,7 +370,6 @@ export class PhaserGameScene extends PhaserWorldScene {
     private showAttackOptions(attackableCoords: Array<{ q: number; r: number }>): void {
         if (this.attackHighlightLayer) {
             this.attackHighlightLayer.showAttackOptions(attackableCoords);
-            console.log(`[PhaserGameScene] Showing ${attackableCoords.length} attack options`);
         } else {
             console.warn('[PhaserGameScene] Attack highlight layer not available');
         }
@@ -429,8 +393,6 @@ export class PhaserGameScene extends PhaserWorldScene {
         this.pathPreview.strokePath();
         
         this.pathPreview.setDepth(15); // Above everything
-
-        console.log(`[PhaserGameScene] Move preview: (${fromQ},${fromR}) → (${toQ},${toR})`);
     }
 
     /**
@@ -451,8 +413,6 @@ export class PhaserGameScene extends PhaserWorldScene {
         this.pathPreview.strokePath();
         
         this.pathPreview.setDepth(15); // Above everything
-
-        console.log(`[PhaserGameScene] Attack preview: (${fromQ},${fromR}) → (${toQ},${toR})`);
     }
 
     /**
@@ -506,7 +466,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Set current player (affects interaction permissions)
      */
     public setCurrentPlayer(playerId: number): void {
-        console.log(`[PhaserGameScene] Current player changed: ${this.currentPlayer} → ${playerId}`);
         this.currentPlayer = playerId;
     }
 
@@ -514,7 +473,6 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Set whether it's the player's turn (affects interaction availability)
      */
     public setPlayerTurn(isPlayerTurn: boolean): void {
-        console.log(`[PhaserGameScene] Player turn changed: ${this.isPlayerTurn} → ${isPlayerTurn}`);
         this.isPlayerTurn = isPlayerTurn;
         
         if (!isPlayerTurn) {

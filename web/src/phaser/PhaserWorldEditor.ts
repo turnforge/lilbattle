@@ -80,11 +80,9 @@ export class PhaserWorldEditor {
             
             // Resolve the scene ready promise
             if (this.sceneReadyResolver) {
-                console.log('[PhaserWorldEditor] Scene is ready, resolving promise');
                 this.sceneReadyResolver(this.scene);
             }
             
-            console.log('[PhaserWorldEditor] Phaser game initialized successfully');
         });
     }
     
@@ -125,7 +123,6 @@ export class PhaserWorldEditor {
             throw new Error('[PhaserWorldEditor] Scene ready promise not initialized');
         }
         
-        console.log('[PhaserWorldEditor] Waiting for scene to be ready...');
         return this.sceneReadyPromise;
     }
 
@@ -147,7 +144,6 @@ export class PhaserWorldEditor {
     public setBrushSize(size: number) {
         this.brushSize = size;
         this.scene?.setBrushSize(size);
-        console.log(`[PhaserWorldEditor] Brush size set to: ${size}`);
     }
     
     public setShowGrid(show: boolean) {
@@ -230,20 +226,16 @@ export class PhaserWorldEditor {
     }
     
     public async setTilesData(tiles: Array<Tile>) {
-            const scene = await this.waitForSceneReady();
-            console.log(`[PhaserWorldEditor] Setting tiles data: ${tiles.length} tiles`);
-            
-            // Wait for assets to be ready before placing tiles
-            await scene.waitForAssetsReady();
-            console.log(`[PhaserWorldEditor] Assets ready, placing tiles`);
-            
-            scene.clearAllTiles();
-            
-            tiles.forEach(tile => {
-                scene.setTile(tile);
-            });
-            
-            console.log(`[PhaserWorldEditor] Successfully loaded ${tiles.length} tiles`);
+        const scene = await this.waitForSceneReady();
+        
+        // Wait for assets to be ready before placing tiles
+        await scene.waitForAssetsReady();
+        
+        scene.clearAllTiles();
+        
+        tiles.forEach(tile => {
+            scene.setTile(tile);
+        });
     }
     
     // Event callbacks
@@ -410,8 +402,6 @@ export class PhaserWorldEditor {
         if (this.onWorldChangeCallback) {
             this.onWorldChangeCallback();
         }
-        
-        console.log(`[PhaserWorldEditor] Removed unit at Q=${q}, R=${r}`);
     }
     
     // Cleanup
@@ -431,29 +421,23 @@ export class PhaserWorldEditor {
      * Load reference image from clipboard
      */
     public async loadReferenceFromClipboard(): Promise<boolean> {
-            const scene = await this.waitForSceneReady();
-            return scene.loadReferenceFromClipboard();
+        const scene = await this.waitForSceneReady();
+        return scene.loadReferenceFromClipboard();
     }
     
     /**
      * Load reference image from file
      */
     public async loadReferenceFromFile(file: File): Promise<boolean> {
-        console.log(`[PhaserWorldEditor] loadReferenceFromFile called with: ${file.name}`);
+        const scene = await this.waitForSceneReady();
         
-            const scene = await this.waitForSceneReady();
-            console.log(`[PhaserWorldEditor] Scene ready, type: ${scene.constructor.name}`);
-            
-            // Check if the method exists
-            if (typeof scene.loadReferenceFromFile !== 'function') {
-                console.error('[PhaserWorldEditor] loadReferenceFromFile method not found on scene');
-                return false;
-            }
-            
-            console.log(`[PhaserWorldEditor] Method exists, calling scene.loadReferenceFromFile`);
-            const result = await scene.loadReferenceFromFile(file);
-            console.log(`[PhaserWorldEditor] Scene loadReferenceFromFile returned: ${result}`);
-            return result;
+        // Check if the method exists
+        if (typeof scene.loadReferenceFromFile !== 'function') {
+            console.error('[PhaserWorldEditor] loadReferenceFromFile method not found on scene');
+            return false;
+        }
+        
+        return await scene.loadReferenceFromFile(file);
     }
     
     /**

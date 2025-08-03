@@ -278,8 +278,6 @@ export class TileStatsPanel extends BaseComponent {
             return;
         }
         
-        console.log('[TileStatsPanel] Refreshing stats from World data');
-        
         // Get data directly from World
         const tilesData = this.world.getAllTiles();
         const unitsData = this.world.getAllUnits();

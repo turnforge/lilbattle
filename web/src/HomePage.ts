@@ -16,8 +16,6 @@ class HomePage {
         this.modal = Modal.getInstance();
         this.toastManager = ToastManager.getInstance();
         this.createNewButton = document.getElementById('create-new-design-btn') as HTMLButtonElement | null; // Get the button
-
-        console.log("HomePage initialized");
         this.bindEvents(); // Bind events
     }
 
@@ -39,7 +37,6 @@ class HomePage {
      * Handles the click on the main "Create New Design" button.
      */
     private handleCreateNewClick(): void {
-        console.log("Create New button clicked, showing modal.");
         this.modal.show('create-design-modal'); // Show the new modal
     }
 

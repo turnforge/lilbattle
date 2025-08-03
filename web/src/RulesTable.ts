@@ -53,17 +53,11 @@ export class RulesTable {
         // Look up the TerrainDefinition using the tile's tileType
         const terrainDefinition = this.terrainDefinitions[tileId];
         if (!terrainDefinition) {
-            console.log(`No terrain definition found for tile type ${tileId}`);
             return null;
         }
 
         // Create and return TerrainStats instance
         const terrainStats = new TerrainStats(terrainDefinition, 0, 0, player);
-        console.log(`Created terrain stats for tile type: ${tileId}, player: ${player}`, {
-            name: terrainStats.name,
-            baseMoveCost: terrainStats.baseMoveCost,
-            defenseBonus: terrainStats.defenseBonus
-        });
 
         return terrainStats;
     }
@@ -77,7 +71,6 @@ export class RulesTable {
         if (terrainElement && terrainElement.textContent) {
             const terrainData = JSON.parse(terrainElement.textContent);
             this.terrainDefinitions = terrainData;
-            console.log('Loaded terrain definitions:', { count: Object.keys(this.terrainDefinitions).length });
         }
 
         // Load unit definitions  
@@ -85,14 +78,12 @@ export class RulesTable {
         if (unitElement && unitElement.textContent) {
             const unitData = JSON.parse(unitElement.textContent);
             this.unitDefinitions = unitData;
-            console.log('Loaded unit definitions:', { count: Object.keys(this.unitDefinitions).length });
         }
 
         // Load movement matrix
         const movementElement = document.getElementById('movement-matrix-json');
         if (movementElement && movementElement.textContent) {
             this.movementMatrix = JSON.parse(movementElement.textContent);
-            console.log('Loaded movement matrix with', { unitTypes: Object.keys(this.movementMatrix?.costs || {}).length });
         }
     }
 }

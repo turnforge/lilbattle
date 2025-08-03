@@ -1910,11 +1910,11 @@ func (*WorldChange_PlayerChanged) isWorldChange_ChangeType() {}
 // *
 // A unit moved from one position to another
 type UnitMovedChange struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FromQ         int32                  `protobuf:"varint,2,opt,name=from_q,json=fromQ,proto3" json:"from_q,omitempty"`
-	FromR         int32                  `protobuf:"varint,3,opt,name=from_r,json=fromR,proto3" json:"from_r,omitempty"`
-	ToQ           int32                  `protobuf:"varint,4,opt,name=to_q,json=toQ,proto3" json:"to_q,omitempty"`
-	ToR           int32                  `protobuf:"varint,5,opt,name=to_r,json=toR,proto3" json:"to_r,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Complete unit state before the move
+	PreviousUnit *Unit `protobuf:"bytes,6,opt,name=previous_unit,json=previousUnit,proto3" json:"previous_unit,omitempty"`
+	// Complete unit state after the move (includes updated position, distanceLeft, etc.)
+	UpdatedUnit   *Unit `protobuf:"bytes,7,opt,name=updated_unit,json=updatedUnit,proto3" json:"updated_unit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1949,44 +1949,30 @@ func (*UnitMovedChange) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *UnitMovedChange) GetFromQ() int32 {
+func (x *UnitMovedChange) GetPreviousUnit() *Unit {
 	if x != nil {
-		return x.FromQ
+		return x.PreviousUnit
 	}
-	return 0
+	return nil
 }
 
-func (x *UnitMovedChange) GetFromR() int32 {
+func (x *UnitMovedChange) GetUpdatedUnit() *Unit {
 	if x != nil {
-		return x.FromR
+		return x.UpdatedUnit
 	}
-	return 0
-}
-
-func (x *UnitMovedChange) GetToQ() int32 {
-	if x != nil {
-		return x.ToQ
-	}
-	return 0
-}
-
-func (x *UnitMovedChange) GetToR() int32 {
-	if x != nil {
-		return x.ToR
-	}
-	return 0
+	return nil
 }
 
 // *
 // A unit took damage
 type UnitDamagedChange struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	PreviousHealth int32                  `protobuf:"varint,2,opt,name=previous_health,json=previousHealth,proto3" json:"previous_health,omitempty"`
-	NewHealth      int32                  `protobuf:"varint,3,opt,name=new_health,json=newHealth,proto3" json:"new_health,omitempty"`
-	Q              int32                  `protobuf:"varint,4,opt,name=q,proto3" json:"q,omitempty"`
-	R              int32                  `protobuf:"varint,5,opt,name=r,proto3" json:"r,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Complete unit state before taking damage
+	PreviousUnit *Unit `protobuf:"bytes,6,opt,name=previous_unit,json=previousUnit,proto3" json:"previous_unit,omitempty"`
+	// Complete unit state after taking damage
+	UpdatedUnit   *Unit `protobuf:"bytes,7,opt,name=updated_unit,json=updatedUnit,proto3" json:"updated_unit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UnitDamagedChange) Reset() {
@@ -2019,42 +2005,26 @@ func (*UnitDamagedChange) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_proto_rawDescGZIP(), []int{25}
 }
 
-func (x *UnitDamagedChange) GetPreviousHealth() int32 {
+func (x *UnitDamagedChange) GetPreviousUnit() *Unit {
 	if x != nil {
-		return x.PreviousHealth
+		return x.PreviousUnit
 	}
-	return 0
+	return nil
 }
 
-func (x *UnitDamagedChange) GetNewHealth() int32 {
+func (x *UnitDamagedChange) GetUpdatedUnit() *Unit {
 	if x != nil {
-		return x.NewHealth
+		return x.UpdatedUnit
 	}
-	return 0
-}
-
-func (x *UnitDamagedChange) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *UnitDamagedChange) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
+	return nil
 }
 
 // *
 // A unit was killed
 type UnitKilledChange struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Player        int32                  `protobuf:"varint,2,opt,name=player,proto3" json:"player,omitempty"`
-	UnitType      int32                  `protobuf:"varint,3,opt,name=unit_type,json=unitType,proto3" json:"unit_type,omitempty"`
-	Q             int32                  `protobuf:"varint,4,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,5,opt,name=r,proto3" json:"r,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Complete unit state before being killed
+	PreviousUnit  *Unit `protobuf:"bytes,6,opt,name=previous_unit,json=previousUnit,proto3" json:"previous_unit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2089,32 +2059,11 @@ func (*UnitKilledChange) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_proto_rawDescGZIP(), []int{26}
 }
 
-func (x *UnitKilledChange) GetPlayer() int32 {
+func (x *UnitKilledChange) GetPreviousUnit() *Unit {
 	if x != nil {
-		return x.Player
+		return x.PreviousUnit
 	}
-	return 0
-}
-
-func (x *UnitKilledChange) GetUnitType() int32 {
-	if x != nil {
-		return x.UnitType
-	}
-	return 0
-}
-
-func (x *UnitKilledChange) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *UnitKilledChange) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
+	return nil
 }
 
 // *
@@ -2125,8 +2074,10 @@ type PlayerChangedChange struct {
 	NewPlayer      int32                  `protobuf:"varint,2,opt,name=new_player,json=newPlayer,proto3" json:"new_player,omitempty"`
 	PreviousTurn   int32                  `protobuf:"varint,3,opt,name=previous_turn,json=previousTurn,proto3" json:"previous_turn,omitempty"`
 	NewTurn        int32                  `protobuf:"varint,4,opt,name=new_turn,json=newTurn,proto3" json:"new_turn,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Units that had their movement/health reset for the new turn
+	ResetUnits    []*Unit `protobuf:"bytes,5,rep,name=reset_units,json=resetUnits,proto3" json:"reset_units,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlayerChangedChange) Reset() {
@@ -2185,6 +2136,13 @@ func (x *PlayerChangedChange) GetNewTurn() int32 {
 		return x.NewTurn
 	}
 	return 0
+}
+
+func (x *PlayerChangedChange) GetResetUnits() []*Unit {
+	if x != nil {
+		return x.ResetUnits
+	}
+	return nil
 }
 
 var File_weewar_v1_models_proto protoreflect.FileDescriptor
@@ -2362,29 +2320,23 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\vunit_killed\x18\x03 \x01(\v2\x1b.weewar.v1.UnitKilledChangeH\x00R\n" +
 	"unitKilled\x12G\n" +
 	"\x0eplayer_changed\x18\x04 \x01(\v2\x1e.weewar.v1.PlayerChangedChangeH\x00R\rplayerChangedB\r\n" +
-	"\vchange_type\"e\n" +
-	"\x0fUnitMovedChange\x12\x15\n" +
-	"\x06from_q\x18\x02 \x01(\x05R\x05fromQ\x12\x15\n" +
-	"\x06from_r\x18\x03 \x01(\x05R\x05fromR\x12\x11\n" +
-	"\x04to_q\x18\x04 \x01(\x05R\x03toQ\x12\x11\n" +
-	"\x04to_r\x18\x05 \x01(\x05R\x03toR\"w\n" +
-	"\x11UnitDamagedChange\x12'\n" +
-	"\x0fprevious_health\x18\x02 \x01(\x05R\x0epreviousHealth\x12\x1d\n" +
-	"\n" +
-	"new_health\x18\x03 \x01(\x05R\tnewHealth\x12\f\n" +
-	"\x01q\x18\x04 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x05 \x01(\x05R\x01r\"c\n" +
-	"\x10UnitKilledChange\x12\x16\n" +
-	"\x06player\x18\x02 \x01(\x05R\x06player\x12\x1b\n" +
-	"\tunit_type\x18\x03 \x01(\x05R\bunitType\x12\f\n" +
-	"\x01q\x18\x04 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x05 \x01(\x05R\x01r\"\x9d\x01\n" +
+	"\vchange_type\"{\n" +
+	"\x0fUnitMovedChange\x124\n" +
+	"\rprevious_unit\x18\x06 \x01(\v2\x0f.weewar.v1.UnitR\fpreviousUnit\x122\n" +
+	"\fupdated_unit\x18\a \x01(\v2\x0f.weewar.v1.UnitR\vupdatedUnit\"}\n" +
+	"\x11UnitDamagedChange\x124\n" +
+	"\rprevious_unit\x18\x06 \x01(\v2\x0f.weewar.v1.UnitR\fpreviousUnit\x122\n" +
+	"\fupdated_unit\x18\a \x01(\v2\x0f.weewar.v1.UnitR\vupdatedUnit\"H\n" +
+	"\x10UnitKilledChange\x124\n" +
+	"\rprevious_unit\x18\x06 \x01(\v2\x0f.weewar.v1.UnitR\fpreviousUnit\"\xcf\x01\n" +
 	"\x13PlayerChangedChange\x12'\n" +
 	"\x0fprevious_player\x18\x01 \x01(\x05R\x0epreviousPlayer\x12\x1d\n" +
 	"\n" +
 	"new_player\x18\x02 \x01(\x05R\tnewPlayer\x12#\n" +
 	"\rprevious_turn\x18\x03 \x01(\x05R\fpreviousTurn\x12\x19\n" +
-	"\bnew_turn\x18\x04 \x01(\x05R\anewTurnB\x9d\x01\n" +
+	"\bnew_turn\x18\x04 \x01(\x05R\anewTurn\x120\n" +
+	"\vreset_units\x18\x05 \x03(\v2\x0f.weewar.v1.UnitR\n" +
+	"resetUnitsB\x9d\x01\n" +
 	"\rcom.weewar.v1B\vModelsProtoP\x01Z:github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
@@ -2465,12 +2417,18 @@ var file_weewar_v1_models_proto_depIdxs = []int32{
 	25, // 27: weewar.v1.WorldChange.unit_damaged:type_name -> weewar.v1.UnitDamagedChange
 	26, // 28: weewar.v1.WorldChange.unit_killed:type_name -> weewar.v1.UnitKilledChange
 	27, // 29: weewar.v1.WorldChange.player_changed:type_name -> weewar.v1.PlayerChangedChange
-	10, // 30: weewar.v1.MovementMatrix.CostsEntry.value:type_name -> weewar.v1.TerrainCostMap
-	31, // [31:31] is the sub-list for method output_type
-	31, // [31:31] is the sub-list for method input_type
-	31, // [31:31] is the sub-list for extension type_name
-	31, // [31:31] is the sub-list for extension extendee
-	0,  // [0:31] is the sub-list for field type_name
+	6,  // 30: weewar.v1.UnitMovedChange.previous_unit:type_name -> weewar.v1.Unit
+	6,  // 31: weewar.v1.UnitMovedChange.updated_unit:type_name -> weewar.v1.Unit
+	6,  // 32: weewar.v1.UnitDamagedChange.previous_unit:type_name -> weewar.v1.Unit
+	6,  // 33: weewar.v1.UnitDamagedChange.updated_unit:type_name -> weewar.v1.Unit
+	6,  // 34: weewar.v1.UnitKilledChange.previous_unit:type_name -> weewar.v1.Unit
+	6,  // 35: weewar.v1.PlayerChangedChange.reset_units:type_name -> weewar.v1.Unit
+	10, // 36: weewar.v1.MovementMatrix.CostsEntry.value:type_name -> weewar.v1.TerrainCostMap
+	37, // [37:37] is the sub-list for method output_type
+	37, // [37:37] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_proto_init() }

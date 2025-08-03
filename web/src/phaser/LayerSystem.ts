@@ -126,9 +126,7 @@ export class LayerManager {
             console.warn(`[LayerManager] Layer '${layer.name}' already exists, replacing`);
             this.removeLayer(layer.name);
         }
-        
         this.layers.set(layer.name, layer);
-        console.log(`[LayerManager] Added layer '${layer.name}' (${layer.coordinateSpace} space, depth: ${layer.depth})`);
     }
     
     /**
@@ -143,7 +141,6 @@ export class LayerManager {
         
         layer.destroy();
         this.layers.delete(name);
-        console.log(`[LayerManager] Removed layer '${name}'`);
         return true;
     }
     
@@ -226,8 +223,6 @@ export class LayerManager {
             button: pointer.button
         };
         
-        console.log(`[LayerManager] Processing click at screen(${context.screenX}, ${context.screenY}) world(${context.worldX}, ${context.worldY}) hex(${context.hexQ}, ${context.hexR})`);
-        
         // Process interactive layers by depth (highest first)
         const interactiveLayers = this.getInteractiveLayers();
         
@@ -235,18 +230,15 @@ export class LayerManager {
             const hitResult = layer.hitTest(context);
             
             if (hitResult === LayerHitResult.CONSUME) {
-                console.log(`[LayerManager] Layer '${layer.name}' consuming click event`);
                 if (layer.handleClick && layer.handleClick(context)) {
                     return true; // Event handled
                 }
             } else if (hitResult === LayerHitResult.BLOCK) {
-                console.log(`[LayerManager] Layer '${layer.name}' blocking click event`);
                 return true; // Event blocked but not handled
             }
             // TRANSPARENT continues to next layer
         }
         
-        console.log(`[LayerManager] Click event not handled by any layer`);
         return false; // No layer handled the event
     }
     
@@ -254,7 +246,6 @@ export class LayerManager {
      * Clean up all layers
      */
     public destroy(): void {
-        console.log(`[LayerManager] Destroying all layers`);
         for (const layer of this.layers.values()) {
             layer.destroy();
         }
@@ -293,8 +284,6 @@ export abstract class BaseLayer implements Layer {
         this.container.setDepth(this.depth);
         this.container.setAlpha(config.alpha ?? 1.0);
         this.container.setVisible(this.visible);
-        
-        console.log(`[BaseLayer] Created layer '${this.name}' in ${this.coordinateSpace} space`);
     }
     
     public abstract hitTest(context: ClickContext): LayerHitResult | null;
@@ -327,7 +316,6 @@ export abstract class BaseLayer implements Layer {
     }
     
     public destroy(): void {
-        console.log(`[BaseLayer] Destroying layer '${this.name}'`);
         this.container.destroy();
     }
 }

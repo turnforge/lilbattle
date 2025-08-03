@@ -123,7 +123,8 @@ export abstract class BaseComponent implements Component, LCMComponent, EventSub
      * Log messages with component identification
      */
     protected log(message: string, data: any = null): void {
-        if (this.debugMode) { console.log(`[${this.componentId}] ${message}`, data);
+        if (this.debugMode) {
+            console.log(`[${this.componentId}] ${message}`, data);
         }
     }
     

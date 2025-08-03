@@ -39,28 +39,22 @@ export class BaseMapLayer extends BaseLayer {
     }
     
     public handleClick(context: ClickContext): boolean {
-        console.log(`[BaseMapLayer] Handling default click at hex (${context.hexQ}, ${context.hexR})`);
-        
         // Determine what was clicked and call appropriate callback
         if (context.unit) {
-            console.log(`[BaseMapLayer] Unit click detected`);
             if (this.callbacks.onUnitClicked) {
                 return this.callbacks.onUnitClicked(context.hexQ, context.hexR);
             }
         } else if (context.tile) {
-            console.log(`[BaseMapLayer] Tile click detected`);
             if (this.callbacks.onTileClicked) {
                 return this.callbacks.onTileClicked(context.hexQ, context.hexR);
             }
         } else {
-            console.log(`[BaseMapLayer] Empty space click detected`);
             if (this.callbacks.onEmptySpaceClicked) {
                 return this.callbacks.onEmptySpaceClicked(context.hexQ, context.hexR);
             }
         }
         
         // Default behavior if no specific callback handled the event
-        console.log(`[BaseMapLayer] No specific handler for click, using default behavior`);
         return true; // Event handled
     }
     
@@ -68,7 +62,6 @@ export class BaseMapLayer extends BaseLayer {
      * Update the callbacks used by this layer
      */
     public setCallbacks(callbacks: MapLayerCallbacks): void {
-        console.log(`[BaseMapLayer] Updating callbacks`);
         this.callbacks = { ...callbacks };
     }
     

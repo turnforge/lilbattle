@@ -340,10 +340,10 @@ export interface WorldChange {
  A unit moved from one position to another
  */
 export interface UnitMovedChange {
-  fromQ: number;
-  fromR: number;
-  toQ: number;
-  toR: number;
+  /** Complete unit state before the move */
+  previousUnit?: Unit;
+  /** Complete unit state after the move (includes updated position, distanceLeft, etc.) */
+  updatedUnit?: Unit;
 }
 
 
@@ -352,10 +352,10 @@ export interface UnitMovedChange {
  A unit took damage
  */
 export interface UnitDamagedChange {
-  previousHealth: number;
-  newHealth: number;
-  q: number;
-  r: number;
+  /** Complete unit state before taking damage */
+  previousUnit?: Unit;
+  /** Complete unit state after taking damage */
+  updatedUnit?: Unit;
 }
 
 
@@ -364,10 +364,8 @@ export interface UnitDamagedChange {
  A unit was killed
  */
 export interface UnitKilledChange {
-  player: number;
-  unitType: number;
-  q: number;
-  r: number;
+  /** Complete unit state before being killed */
+  previousUnit?: Unit;
 }
 
 
@@ -380,6 +378,8 @@ export interface PlayerChangedChange {
   newPlayer: number;
   previousTurn: number;
   newTurn: number;
+  /** Units that had their movement/health reset for the new turn */
+  resetUnits?: Unit[];
 }
 
 

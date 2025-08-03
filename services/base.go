@@ -276,8 +276,12 @@ func (b *BaseGamesServiceImpl) applyWorldChange(change *v1.WorldChange, rtGame *
 
 // applyUnitMoved moves a unit in the runtime game
 func (b *BaseGamesServiceImpl) applyUnitMoved(change *v1.UnitMovedChange, rtGame *weewar.Game) error {
-	fromCoord := weewar.AxialCoord{Q: int(change.FromQ), R: int(change.FromR)}
-	toCoord := weewar.AxialCoord{Q: int(change.ToQ), R: int(change.ToR)}
+	if change.PreviousUnit == nil || change.UpdatedUnit == nil {
+		return fmt.Errorf("missing unit data in UnitMovedChange")
+	}
+
+	fromCoord := weewar.AxialCoord{Q: int(change.PreviousUnit.Q), R: int(change.PreviousUnit.R)}
+	toCoord := weewar.AxialCoord{Q: int(change.UpdatedUnit.Q), R: int(change.UpdatedUnit.R)}
 
 	// Move unit in runtime game
 	unit := rtGame.World.UnitAt(fromCoord)
@@ -285,26 +289,42 @@ func (b *BaseGamesServiceImpl) applyUnitMoved(change *v1.UnitMovedChange, rtGame
 		return fmt.Errorf("unit not found at %v", fromCoord)
 	}
 
+	// Update unit with complete state from the change
+	unit.AvailableHealth = change.UpdatedUnit.AvailableHealth
+	unit.DistanceLeft = change.UpdatedUnit.DistanceLeft
+	unit.TurnCounter = change.UpdatedUnit.TurnCounter
+
 	// Remove from old position and add to new position
 	return rtGame.World.MoveUnit(unit, toCoord)
 }
 
 // applyUnitDamaged updates unit health in the runtime game
 func (b *BaseGamesServiceImpl) applyUnitDamaged(change *v1.UnitDamagedChange, rtGame *weewar.Game) error {
-	coord := weewar.AxialCoord{Q: int(change.Q), R: int(change.R)}
+	if change.UpdatedUnit == nil {
+		return fmt.Errorf("missing updated unit data in UnitDamagedChange")
+	}
+	
+	coord := weewar.AxialCoord{Q: int(change.UpdatedUnit.Q), R: int(change.UpdatedUnit.R)}
 
 	unit := rtGame.World.UnitAt(coord)
 	if unit == nil {
 		return fmt.Errorf("unit not found at %v", coord)
 	}
 
-	unit.AvailableHealth = change.NewHealth
+	// Update unit with complete state from the change
+	unit.AvailableHealth = change.UpdatedUnit.AvailableHealth
+	unit.DistanceLeft = change.UpdatedUnit.DistanceLeft
+	unit.TurnCounter = change.UpdatedUnit.TurnCounter
 	return nil
 }
 
 // applyUnitKilled removes a unit from the runtime game
 func (b *BaseGamesServiceImpl) applyUnitKilled(change *v1.UnitKilledChange, rtGame *weewar.Game) error {
-	coord := weewar.AxialCoord{Q: int(change.Q), R: int(change.R)}
+	if change.PreviousUnit == nil {
+		return fmt.Errorf("missing previous unit data in UnitKilledChange")
+	}
+	
+	coord := weewar.AxialCoord{Q: int(change.PreviousUnit.Q), R: int(change.PreviousUnit.R)}
 	unit := rtGame.World.UnitAt(coord)
 
 	err := rtGame.World.RemoveUnit(unit)
@@ -318,11 +338,11 @@ func (b *BaseGamesServiceImpl) applyUnitKilled(change *v1.UnitKilledChange, rtGa
 func (b *BaseGamesServiceImpl) applyPlayerChanged(change *v1.PlayerChangedChange, rtGame *weewar.Game, state *v1.GameState) error {
 	rtGame.CurrentPlayer = change.NewPlayer
 	rtGame.TurnCounter = change.NewTurn
-	
+
 	// Also update the protobuf GameState
 	state.CurrentPlayer = change.NewPlayer
 	state.TurnCounter = change.NewTurn
-	
+
 	return nil
 }
 

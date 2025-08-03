@@ -828,24 +828,16 @@ export const UnitMovedChangeSchema: MessageSchema = {
   name: "UnitMovedChange",
   fields: [
     {
-      name: "fromQ",
-      type: FieldType.NUMBER,
-      id: 2,
+      name: "previousUnit",
+      type: FieldType.MESSAGE,
+      id: 6,
+      messageType: "weewar.v1.Unit",
     },
     {
-      name: "fromR",
-      type: FieldType.NUMBER,
-      id: 3,
-    },
-    {
-      name: "toQ",
-      type: FieldType.NUMBER,
-      id: 4,
-    },
-    {
-      name: "toR",
-      type: FieldType.NUMBER,
-      id: 5,
+      name: "updatedUnit",
+      type: FieldType.MESSAGE,
+      id: 7,
+      messageType: "weewar.v1.Unit",
     },
   ],
 };
@@ -858,24 +850,16 @@ export const UnitDamagedChangeSchema: MessageSchema = {
   name: "UnitDamagedChange",
   fields: [
     {
-      name: "previousHealth",
-      type: FieldType.NUMBER,
-      id: 2,
+      name: "previousUnit",
+      type: FieldType.MESSAGE,
+      id: 6,
+      messageType: "weewar.v1.Unit",
     },
     {
-      name: "newHealth",
-      type: FieldType.NUMBER,
-      id: 3,
-    },
-    {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 4,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 5,
+      name: "updatedUnit",
+      type: FieldType.MESSAGE,
+      id: 7,
+      messageType: "weewar.v1.Unit",
     },
   ],
 };
@@ -888,24 +872,10 @@ export const UnitKilledChangeSchema: MessageSchema = {
   name: "UnitKilledChange",
   fields: [
     {
-      name: "player",
-      type: FieldType.NUMBER,
-      id: 2,
-    },
-    {
-      name: "unitType",
-      type: FieldType.NUMBER,
-      id: 3,
-    },
-    {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 4,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 5,
+      name: "previousUnit",
+      type: FieldType.MESSAGE,
+      id: 6,
+      messageType: "weewar.v1.Unit",
     },
   ],
 };
@@ -936,6 +906,13 @@ export const PlayerChangedChangeSchema: MessageSchema = {
       name: "newTurn",
       type: FieldType.NUMBER,
       id: 4,
+    },
+    {
+      name: "resetUnits",
+      type: FieldType.MESSAGE,
+      id: 5,
+      messageType: "weewar.v1.Unit",
+      repeated: true,
     },
   ],
 };

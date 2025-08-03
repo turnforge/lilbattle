@@ -36,8 +36,6 @@ class UserDetailsPage {
         if (!this.themeToggleButton || !this.themeToggleIcon) {
             console.warn("Theme toggle button or icon element not found in Header.");
         }
-
-        console.log('LeetCoach application initialized');
     }
 
     private bindEvents(): void {
@@ -72,7 +70,6 @@ class UserDetailsPage {
 
         if (designId) {
             this.currentUserId = designId;
-            console.log(`Found User ID: ${this.currentUserId}. Loading data...`);
             this.loadUserData(this.currentUserId);
         } else {
             console.error("User ID input element not found or has no value. Cannot load document.");
@@ -85,8 +82,6 @@ class UserDetailsPage {
      */
     private async loadUserData(designId: string): Promise<void> {
         // TODO: Show global loading indicator
-        console.log(`UserDetailsPage: Loading design ${designId}...`);
-
         // here is where we would do "reload" via ajax - this coul dbe via ajax or via htmx
     }
 
@@ -118,7 +113,6 @@ class UserDetailsPage {
 
     /** Save document (Placeholder - needs full implementation later) */
     private saveDocument(): void {
-        console.log("Save button clicked (Placeholder - Requires API integration for full save)");
         // This full save logic will be replaced by incremental saves triggered by component callbacks
         this.toastManager?.showToast('Save Action', 'Incremental saves handle updates. Full save TBD.', 'info');
     }

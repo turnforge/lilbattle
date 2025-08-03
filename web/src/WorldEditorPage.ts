@@ -65,8 +65,6 @@ class WorldEditorPage extends BasePage {
         this.subscribeToEditorEvents();
 
         this.initializeSpecificComponents();
-
-        console.log('WorldEditorPage: Starting DOM initialization phase');
         
         // Create child components that implement LCMComponent
         const childComponents: LCMComponent[] = [];
@@ -83,7 +81,6 @@ class WorldEditorPage extends BasePage {
             });
             
             childComponents.push(this.referenceImagePanel);
-            console.log('WorldEditorPage: Created ReferenceImagePanel child component using template directly');
         }
         
         // Create EditorToolsPanel as a lifecycle-managed component using template
@@ -96,7 +93,6 @@ class WorldEditorPage extends BasePage {
             this.editorToolsPanel.setPageState(this.pageState);
             
             childComponents.push(this.editorToolsPanel);
-            console.log('WorldEditorPage: Created EditorToolsPanel child component using template directly');
         }
         
         // Create TileStatsPanel as a lifecycle-managed component using template
@@ -114,7 +110,6 @@ class WorldEditorPage extends BasePage {
         }
         
         childComponents.push(this.tileStatsPanel);
-        console.log('WorldEditorPage: Created TileStatsPanel child component with dependencies');
         
         // Create PhaserEditorComponent as a lifecycle-managed component using template
         const canvasTemplate = document.getElementById('canvas-panel-template');
@@ -130,11 +125,9 @@ class WorldEditorPage extends BasePage {
         // this.phaserEditorComponent.setWorld(this.world);
         
         childComponents.push(this.phaserEditorComponent);
-        console.log('WorldEditorPage: Created PhaserEditorComponent child component using template');
         // Initialize dockview now that all child components are ready
         this.initializeDockview();
         
-        console.log(`WorldEditorPage: DOM initialization complete, discovered ${childComponents.length} child components`);
         return childComponents;
     }
     
@@ -146,7 +139,6 @@ class WorldEditorPage extends BasePage {
         const worldIdInput = document.getElementById("worldIdInput") as HTMLInputElement | null;
         const worldId = worldIdInput?.value.trim() || null;
         this.loadWorld(worldId);
-        console.log('WorldEditorPage: World instance created and configured');
     }
 
     private async loadWorld(worldId: string | null): Promise<void> {
@@ -168,7 +160,6 @@ class WorldEditorPage extends BasePage {
      * Phase 2: Inject dependencies from lifecycle controller
      */
     public setupDependencies(): void {
-        console.log('WorldEditorPage: Dependencies injection complete');
         // World is now created in performLocalInit, just update status
         this.updateEditorStatus('Initializing...');
     }
@@ -177,8 +168,6 @@ class WorldEditorPage extends BasePage {
      * Phase 3: Activate the component when all dependencies are ready
      */
     public activate(): void {
-        console.log('WorldEditorPage: Starting activation phase');
-        
         // Bind events now that all components are ready
         this.bindSpecificEvents();
         this.initializeKeyboardShortcuts();
@@ -186,20 +175,14 @@ class WorldEditorPage extends BasePage {
         
         // Update UI state
         this.updateEditorStatus('Ready');
-        
-        console.log('WorldEditorPage: Activation complete');
     }
     
     /**
      * Phase 4: Deactivate and cleanup
      */
     public deactivate(): void {
-        console.log('WorldEditorPage: Starting deactivation');
-        
         // Use existing destroy method for cleanup
         this.destroy();
-        
-        console.log('WorldEditorPage: Deactivation complete');
     }
     
     // Dependencies are set directly using explicit setters - no ComponentDependencyDeclaration needed
@@ -232,8 +215,6 @@ class WorldEditorPage extends BasePage {
      * This prevents race conditions where components emit events before subscribers are ready
      */
     private subscribeToEditorEvents(): void {
-        console.log('WorldEditorPage: Subscribing to editor events');
-
         // Subscribe to World events via EventBus
         this.addSubscription(WorldEventType.WORLD_LOADED, this);
         this.addSubscription(WorldEventType.WORLD_SAVED, this);
@@ -252,8 +233,6 @@ class WorldEditorPage extends BasePage {
         this.addSubscription(EditorEventTypes.PHASER_READY, this);
         
         // World changes are automatically tracked by World class via Observer pattern
-        
-        console.log('WorldEditorPage: Editor event subscriptions complete');
     }
 
     /**

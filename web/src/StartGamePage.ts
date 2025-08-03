@@ -42,8 +42,6 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Phase 1: Initialize DOM and discover child components
      */
     performLocalInit(): Promise<LCMComponent[]> | LCMComponent[] {
-        console.log('StartGamePage: performLocalInit() - Phase 1');
-
         this.loadInitialState(); // Load initial state here since constructor calls this
 
         this.loadWorldData()
@@ -54,8 +52,6 @@ class StartGamePage extends BasePage implements LCMComponent {
         // Create child components
         this.createComponents();
         
-        console.log('StartGamePage: DOM initialized, returning child components');
-        
         // Return child components for lifecycle management
         return [this.worldViewer];
     }
@@ -64,12 +60,8 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Phase 3: Activate component when all dependencies are ready
      */
     async activate(): Promise<void> {
-        console.log('StartGamePage: activate() - Phase 3');
-        
         // Bind events now that all components are ready
         this.bindPageSpecificEvents();
-        
-        console.log('StartGamePage: activation complete');
     }
 
     /**
@@ -78,7 +70,6 @@ class StartGamePage extends BasePage implements LCMComponent {
     public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
         switch(eventType) {
             case WorldEventTypes.WORLD_VIEWER_READY:
-                console.log('StartGamePage: WorldViewer is ready, loading world data...');
                 if (this.currentWorldId) {
                     this.worldViewer.loadWorld(this.world);
                     this.showToast('Success', 'World loaded successfully', 'success');
@@ -95,8 +86,6 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Cleanup phase (called by lifecycle controller if needed)
      */
     deactivate(): void {
-        console.log('StartGamePage: deactivate() - cleanup');
-        
         // Remove event subscriptions
         this.removeSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
         
@@ -108,7 +97,6 @@ class StartGamePage extends BasePage implements LCMComponent {
      */
     private subscribeToWorldViewerEvents(): void {
         // Subscribe to WorldViewer ready event BEFORE creating the component
-        console.log('StartGamePage: Subscribing to WORLD_VIEWER_READY event');
         this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, null);
     }
 
@@ -118,10 +106,7 @@ class StartGamePage extends BasePage implements LCMComponent {
     private createComponents(): void {
         // Create WorldViewer component for preview
         const worldViewerRoot = this.ensureElement('[data-component="world-viewer"]', 'world-viewer-root');
-        console.log('StartGamePage: Creating WorldViewer with eventBus:', this.eventBus);
         this.worldViewer = new WorldViewer(worldViewerRoot, this.eventBus, true);
-        
-        console.log('StartGamePage: Components created');
     }
 
     /**
@@ -148,7 +133,6 @@ class StartGamePage extends BasePage implements LCMComponent {
 
         if (worldId) {
             this.currentWorldId = worldId;
-            console.log(`Found World ID: ${this.currentWorldId}. Will load data after Phaser initialization.`);
         } else {
             console.error("World ID input element not found or has no value. Cannot load world.");
             this.showToast("Error", "Could not load world: World ID missing.", "error");
@@ -159,19 +143,14 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Load world data and coordinate between components
      */
     private loadWorldData(): void {
-        console.log(`StartGamePage: Loading world data...`);
-        
         // Load world data from the hidden JSON element
         const worldMetadataElement = document.getElementById('world-data-json');
         const worldTilesElement = document.getElementById('world-tiles-data-json');
         this.world = new World(this.eventBus).loadFromElement(worldMetadataElement!, worldTilesElement!);
         
-        console.log('World data loaded successfully');
-        
         // Calculate player count from world units
         this.playerCount = this.world.playerCount
-        console.log('Detected player count:', this.playerCount);
-        
+
         // Initialize game configuration based on world
         this.initializeGameConfiguration();
         
@@ -331,10 +310,8 @@ class StartGamePage extends BasePage implements LCMComponent {
         if (player) {
             if (configType === 'type') {
                 player.type = value as PlayerType;
-                console.log(`Player ${playerId} type changed to: ${value}`);
             } else if (configType === 'team') {
                 player.team = value as number;
-                console.log(`Player ${playerId} team changed to: ${value}`);
             }
         }
         
@@ -353,14 +330,12 @@ class StartGamePage extends BasePage implements LCMComponent {
             this.gameConfig.allowedUnits = this.gameConfig.allowedUnits.filter(unit => unit !== unitId);
         }
         
-        console.log('Allowed units updated:', this.gameConfig.allowedUnits);
         this.validateGameConfiguration();
     }
 
     private handleTurnLimitChange(event: Event): void {
         const select = event.target as HTMLSelectElement;
         this.gameConfig.turnTimeLimit = parseInt(select.value);
-        console.log('Turn time limit changed to:', this.gameConfig.turnTimeLimit);
         this.validateGameConfiguration();
     }
 
@@ -402,22 +377,19 @@ class StartGamePage extends BasePage implements LCMComponent {
             return;
         }
 
-            console.log('Starting game with configuration:', this.gameConfig);
-            this.showToast('Success', 'Creating game...', 'success');
-            
-            // Call the CreateGame API
-            const result = await this.callCreateGameAPI();
-            
-            // Redirect to the newly created game
-            const gameViewerUrl = `/games/${result.gameId}/view`;
-            console.log('Game created successfully, redirecting to:', gameViewerUrl);
-            
-            this.showToast('Success', 'Game created! Redirecting...', 'success');
-            
-            // Small delay to show the toast
-            setTimeout(() => {
-                window.location.href = gameViewerUrl;
-            }, 500);
+        this.showToast('Success', 'Creating game...', 'success');
+        
+        // Call the CreateGame API
+        const result = await this.callCreateGameAPI();
+        
+        // Redirect to the newly created game
+        const gameViewerUrl = `/games/${result.gameId}/view`;
+        this.showToast('Success', 'Game created! Redirecting...', 'success');
+        
+        // Small delay to show the toast
+        setTimeout(() => {
+            window.location.href = gameViewerUrl;
+        }, 500);
     }
 
     // Call CreateGame API via gRPC gateway
@@ -453,8 +425,6 @@ class StartGamePage extends BasePage implements LCMComponent {
             }
         };
 
-        console.log('CreateGame API request:', gameRequest);
-        
         // Make the gRPC gateway call
         const response = await fetch('/api/v1/games', {
             method: 'POST',
@@ -470,7 +440,6 @@ class StartGamePage extends BasePage implements LCMComponent {
         }
 
         const result = await response.json();
-        console.log('CreateGame API response:', result);
         
         if (!result.game || !result.game.id) {
             throw new Error('No game ID returned from server');
@@ -511,8 +480,6 @@ type PlayerType = 'human' | 'ai' | 'open' | 'none';
 
 // Initialize page when DOM is ready using LifecycleController
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, starting StartGamePage initialization...');
-
     // Create page instance (just basic setup)
     const page = new StartGamePage("StartGamePage");
     
@@ -521,6 +488,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start breadth-first initialization
     await lifecycleController.initializeFromRoot(page);
-    
-    console.log('StartGamePage fully initialized via LifecycleController');
 });

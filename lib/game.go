@@ -118,10 +118,12 @@ func (g *Game) initializeStartingUnits() error {
 	}
 
 	// Initialize stats for existing units in the world
+	fmt.Printf("initializeStartingUnits: PlayerCount=%d, TurnCounter=%d\n", g.World.PlayerCount(), g.TurnCounter)
 	for playerID := int32(1); playerID <= g.World.PlayerCount(); playerID++ {
+		fmt.Printf("initializeStartingUnits: Player %d has %d units\n", playerID, len(g.World.unitsByPlayer[playerID]))
 		for _, unit := range g.World.unitsByPlayer[playerID] {
 			// Get unit data from rules engine
-			// fmt.Println("Player ID, Unit: ", playerID, unit)
+			fmt.Printf("initializeStartingUnits: Processing unit type %d, current DistanceLeft=%d\n", unit.UnitType, unit.DistanceLeft)
 			unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
 			if err != nil {
 				return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)
@@ -131,6 +133,7 @@ func (g *Game) initializeStartingUnits() error {
 			unit.AvailableHealth = unitData.Health
 			unit.DistanceLeft = unitData.MovementPoints
 			unit.TurnCounter = g.TurnCounter
+			fmt.Printf("initializeStartingUnits: Set unit DistanceLeft to %d (from rules engine MovementPoints %d)\n", unit.DistanceLeft, unitData.MovementPoints)
 		}
 	}
 
@@ -147,6 +150,7 @@ func (g *Game) resetPlayerUnits(playerID int32) error {
 		return fmt.Errorf("rules engine not set - required for unit reset")
 	}
 
+	fmt.Printf("resetPlayerUnits: Resetting player %d units, PlayerCount=%d, TurnCounter=%d\n", playerID, g.World.PlayerCount(), g.TurnCounter)
 	for _, unit := range g.World.unitsByPlayer[playerID] {
 		// Get unit data from rules engine
 		unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
@@ -155,8 +159,11 @@ func (g *Game) resetPlayerUnits(playerID int32) error {
 		}
 
 		// Reset movement points from rules data
+		fmt.Printf("resetPlayerUnits: Unit type %d, current DistanceLeft=%d, rules MovementPoints=%d\n", 
+			unit.UnitType, unit.DistanceLeft, unitData.MovementPoints)
 		unit.DistanceLeft = int32(unitData.MovementPoints)
 		unit.TurnCounter = int32(g.TurnCounter)
+		fmt.Printf("resetPlayerUnits: Set unit DistanceLeft to %d\n", unit.DistanceLeft)
 	}
 
 	return nil

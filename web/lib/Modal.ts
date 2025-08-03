@@ -84,7 +84,6 @@ export class Modal {
             // Handle generic close/cancel buttons
             const closeButton = target.closest('button[id$="-cancel"], button[id$="-close"]');
             if (closeButton) {
-                console.log(`Modal cancel/close button clicked: ${closeButton.id}`);
                 this.hide();
                 return; // Stop further processing
             }
@@ -93,7 +92,6 @@ export class Modal {
             const actionButton = target.closest('button[data-modal-action]');
             if (actionButton) {
                 const action = actionButton.getAttribute('data-modal-action');
-                console.log(`Modal action button clicked: ${action}`);
 
                 if (action === 'submit' && this.onSubmitCallback) {
                     this.onSubmitCallback(this.currentData); // Call the stored callback

@@ -413,8 +413,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             }
         );
         
-        console.log('[PhaserEditorComponent] Layer callbacks set up successfully');
-        
         // Handle world changes
         this.phaserEditor.onWorldChange(() => {
             this.log('World changed in Phaser');

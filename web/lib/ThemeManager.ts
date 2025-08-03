@@ -48,7 +48,6 @@ export class ThemeManager {
             document.documentElement.classList.remove('dark');
         }
         // Inform about potential TinyMCE redraw needed (optional, depends on how sensitive TinyMCE is)
-        // console.log("Theme set, TinyMCE might need skin update if active editors exist.");
     }
 
     /**

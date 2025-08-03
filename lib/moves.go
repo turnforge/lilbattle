@@ -74,10 +74,41 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 	previousPlayer := g.CurrentPlayer
 	previousTurn := g.TurnCounter
 
-	// Reset unit movement for current player
-	if err := g.resetPlayerUnits(g.CurrentPlayer); err != nil {
+	fmt.Printf("ProcessEndTurn: BEFORE turn advance - previousPlayer=%d, numPlayers=%d\n", previousPlayer, g.World.PlayerCount())
+
+	// Reset unit movement for the PREVIOUS player (the one whose turn just ended)
+	fmt.Printf("ProcessEndTurn: Resetting units for PREVIOUS player %d (whose turn just ended)\n", previousPlayer)
+	if err := g.resetPlayerUnits(previousPlayer); err != nil {
 		return nil, fmt.Errorf("failed to reset player units: %w", err)
 	}
+
+	// Capture the reset units AFTER reset (with refreshed movement points)
+	var resetUnits []*v1.Unit
+	playerUnits := g.World.GetPlayerUnits(int(previousPlayer))
+	fmt.Printf("ProcessEndTurn: Found %d units for PREVIOUS player %d\n", len(playerUnits), previousPlayer)
+
+	// Debug: Print all unit positions in the world before capturing resetUnits
+	fmt.Printf("ProcessEndTurn: DEBUG - All units in world before capturing resetUnits:\n")
+	allUnits := g.World.unitsByCoord
+	for _, unit := range allUnits {
+		fmt.Printf("  Unit at (%d, %d) player=%d, distanceLeft=%d\n", unit.Q, unit.R, unit.Player, unit.DistanceLeft)
+	}
+
+	for _, unit := range playerUnits {
+		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%d\n",
+			unit.Q, unit.R, unit.Player, unit.DistanceLeft)
+		resetUnit := &v1.Unit{
+			Q:               unit.Q,
+			R:               unit.R,
+			Player:          unit.Player,
+			UnitType:        unit.UnitType,
+			AvailableHealth: unit.AvailableHealth,
+			DistanceLeft:    unit.DistanceLeft,
+			TurnCounter:     unit.TurnCounter,
+		}
+		resetUnits = append(resetUnits, resetUnit)
+	}
+	fmt.Printf("ProcessEndTurn: Captured %d resetUnits for PREVIOUS player %d\n", len(resetUnits), previousPlayer)
 
 	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
 	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
@@ -91,6 +122,8 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 		// Move to next player
 		g.CurrentPlayer++
 	}
+
+	fmt.Printf("ProcessEndTurn: AFTER turn advance - newCurrentPlayer=%d, turnCounter=%d\n", g.CurrentPlayer, g.TurnCounter)
 
 	// Check for victory conditions
 	if winner, hasWinner := g.checkVictoryConditions(); hasWinner {
@@ -111,6 +144,7 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 				NewPlayer:      int32(g.CurrentPlayer),
 				PreviousTurn:   int32(previousTurn),
 				NewTurn:        int32(g.TurnCounter),
+				ResetUnits:     resetUnits,
 			},
 		},
 	}
@@ -197,9 +231,16 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 		return nil, fmt.Errorf("insufficient movement points: need %d, have %d", cost, unit.DistanceLeft)
 	}
 
-	// Store original position for event
-	fromPos := unitCoord
-	toPos := to
+	// Capture unit state before move
+	previousUnit := &v1.Unit{
+		Q:               unit.Q,
+		R:               unit.R,
+		Player:          unit.Player,
+		UnitType:        unit.UnitType,
+		AvailableHealth: unit.AvailableHealth,
+		DistanceLeft:    unit.DistanceLeft,
+		TurnCounter:     unit.TurnCounter,
+	}
 
 	// Move unit using World unit management
 	err = g.World.MoveUnit(unit, to)
@@ -210,6 +251,17 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 	// Update unit stats
 	unit.DistanceLeft -= int32(cost)
 
+	// Capture unit state after move
+	updatedUnit := &v1.Unit{
+		Q:               unit.Q,
+		R:               unit.R,
+		Player:          unit.Player,
+		UnitType:        unit.UnitType,
+		AvailableHealth: unit.AvailableHealth,
+		DistanceLeft:    unit.DistanceLeft,
+		TurnCounter:     unit.TurnCounter,
+	}
+
 	// Update timestamp
 	g.LastActionAt = time.Now()
 
@@ -217,10 +269,8 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 	change := &v1.WorldChange{
 		ChangeType: &v1.WorldChange_UnitMoved{
 			UnitMoved: &v1.UnitMovedChange{
-				FromQ: int32(fromPos.Q),
-				FromR: int32(fromPos.R),
-				ToQ:   int32(toPos.Q),
-				ToR:   int32(toPos.R),
+				PreviousUnit: previousUnit,
+				UpdatedUnit:  updatedUnit,
 			},
 		},
 	}
@@ -294,13 +344,33 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 
 	// Add damage changes to world changes
 	if defenderDamage > 0 {
+		// Capture defender state before damage
+		defenderPreviousUnit := &v1.Unit{
+			Q:               defender.Q,
+			R:               defender.R,
+			Player:          defender.Player,
+			UnitType:        defender.UnitType,
+			AvailableHealth: defenderOriginalHealth,
+			DistanceLeft:    defender.DistanceLeft,
+			TurnCounter:     defender.TurnCounter,
+		}
+
+		// Capture defender state after damage
+		defenderUpdatedUnit := &v1.Unit{
+			Q:               defender.Q,
+			R:               defender.R,
+			Player:          defender.Player,
+			UnitType:        defender.UnitType,
+			AvailableHealth: defender.AvailableHealth,
+			DistanceLeft:    defender.DistanceLeft,
+			TurnCounter:     defender.TurnCounter,
+		}
+
 		change := &v1.WorldChange{
 			ChangeType: &v1.WorldChange_UnitDamaged{
 				UnitDamaged: &v1.UnitDamagedChange{
-					Q:              action.DefenderQ,
-					R:              action.DefenderR,
-					PreviousHealth: defenderOriginalHealth,
-					NewHealth:      defender.AvailableHealth,
+					PreviousUnit: defenderPreviousUnit,
+					UpdatedUnit:  defenderUpdatedUnit,
 				},
 			},
 		}
@@ -308,13 +378,33 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 	}
 
 	if attackerDamage > 0 {
+		// Capture attacker state before damage
+		attackerPreviousUnit := &v1.Unit{
+			Q:               attacker.Q,
+			R:               attacker.R,
+			Player:          attacker.Player,
+			UnitType:        attacker.UnitType,
+			AvailableHealth: attackerOriginalHealth,
+			DistanceLeft:    attacker.DistanceLeft,
+			TurnCounter:     attacker.TurnCounter,
+		}
+
+		// Capture attacker state after damage
+		attackerUpdatedUnit := &v1.Unit{
+			Q:               attacker.Q,
+			R:               attacker.R,
+			Player:          attacker.Player,
+			UnitType:        attacker.UnitType,
+			AvailableHealth: attacker.AvailableHealth,
+			DistanceLeft:    attacker.DistanceLeft,
+			TurnCounter:     attacker.TurnCounter,
+		}
+
 		change := &v1.WorldChange{
 			ChangeType: &v1.WorldChange_UnitDamaged{
 				UnitDamaged: &v1.UnitDamagedChange{
-					Q:              action.AttackerQ,
-					R:              action.AttackerR,
-					PreviousHealth: attackerOriginalHealth,
-					NewHealth:      attacker.AvailableHealth,
+					PreviousUnit: attackerPreviousUnit,
+					UpdatedUnit:  attackerUpdatedUnit,
 				},
 			},
 		}
@@ -323,13 +413,21 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 
 	// Add kill changes if units were killed
 	if defenderKilled {
+		// Capture defender state before being killed (use original health before damage)
+		defenderPreviousUnit := &v1.Unit{
+			Q:               defender.Q,
+			R:               defender.R,
+			Player:          defender.Player,
+			UnitType:        defender.UnitType,
+			AvailableHealth: defenderOriginalHealth,
+			DistanceLeft:    defender.DistanceLeft,
+			TurnCounter:     defender.TurnCounter,
+		}
+
 		change := &v1.WorldChange{
 			ChangeType: &v1.WorldChange_UnitKilled{
 				UnitKilled: &v1.UnitKilledChange{
-					Player:   defender.Player,
-					UnitType: defender.UnitType,
-					Q:        action.DefenderQ,
-					R:        action.DefenderR,
+					PreviousUnit: defenderPreviousUnit,
 				},
 			},
 		}
@@ -338,13 +436,21 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 	}
 
 	if attackerKilled {
+		// Capture attacker state before being killed (use original health before damage)
+		attackerPreviousUnit := &v1.Unit{
+			Q:               attacker.Q,
+			R:               attacker.R,
+			Player:          attacker.Player,
+			UnitType:        attacker.UnitType,
+			AvailableHealth: attackerOriginalHealth,
+			DistanceLeft:    attacker.DistanceLeft,
+			TurnCounter:     attacker.TurnCounter,
+		}
+
 		change := &v1.WorldChange{
 			ChangeType: &v1.WorldChange_UnitKilled{
 				UnitKilled: &v1.UnitKilledChange{
-					Player:   attacker.Player,
-					UnitType: attacker.UnitType,
-					Q:        action.AttackerQ,
-					R:        action.AttackerR,
+					PreviousUnit: attackerPreviousUnit,
 				},
 			},
 		}

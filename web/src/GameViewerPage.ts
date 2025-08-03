@@ -48,8 +48,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Phase 1: Initialize DOM and discover child components
      */
     performLocalInit(): LCMComponent[] {
-        console.log('GameViewerPage: performLocalInit() - Phase 1');
-
         // Load game config first
         this.loadGameConfiguration();
         
@@ -68,9 +66,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
         
         // Start WASM and game data loading early (parallel to WorldViewer initialization)
         if (this.currentGameId) {
-            console.log('GameViewerPage: Starting early WASM initialization for gameId:', this.currentGameId);
             this.initializeGameWithWASM().then(() => {
-                console.log('GameViewerPage: WASM initialization completed');
                 // Emit event to indicate game data is ready
                 this.eventBus.emit(GameEventTypes.GAME_DATA_LOADED, { gameId: this.currentGameId }, this, this);
             }).catch(error => {
@@ -78,8 +74,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 this.updateGameStatus('WASM initialization failed');
             });
         }
-        
-        console.log('GameViewerPage: DOM initialized, returning child components');
 
         console.assert(this.worldViewer != null, "World viewer could not be created")
         console.assert(this.gameState != null, "gameState could not be created")
@@ -98,12 +92,8 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Phase 3: Activate component when all dependencies are ready
      */
     async activate(): Promise<void> {
-        console.log('GameViewerPage: activate() - Phase 3');
-        
         // Bind events now that all components are ready
         this.bindGameSpecificEvents();
-        
-        console.log('GameViewerPage: activation complete');
     }
 
     public destroy(): void {
@@ -139,8 +129,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         // Get gameId from hidden input
         const gameIdInput = document.getElementById("gameIdInput") as HTMLInputElement | null;
         this.currentGameId = gameIdInput?.value.trim() || null;
-
-        console.log('Game ID loaded:', this.currentGameId);
     }
 
     /**
@@ -169,13 +157,10 @@ class GameViewerPage extends BasePage implements LCMComponent {
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
             case WorldEventTypes.WORLD_VIEWER_READY:
-                console.log('GameViewerPage: GameViewer ready event received', data);
-                
                 this.worldViewerReady = true;
                 
                 // Set up interaction callbacks when viewer is ready
                 if (this.worldViewer) {
-                    console.log('GameViewerPage: Setting interaction callbacks after scene ready');
                     this.worldViewer.setInteractionCallbacks(
                         this.onTileClicked,
                         this.onUnitClicked
@@ -183,8 +168,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                     
                     // Set up movement callback for game-specific move execution
                     this.worldViewer.setMovementCallback(this.onMovementClicked);
-                    
-                    console.log('GameViewerPage: Interaction callbacks set after scene ready');
                 }
                 
                 // Check if both viewer and game data are ready
@@ -192,8 +175,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 break;
             
             case GameEventTypes.GAME_DATA_LOADED:
-                console.log('GameViewerPage: Game data ready event received', data);
-                
                 this.gameDataReady = true;
                 
                 // Check if both viewer and game data are ready
@@ -201,17 +182,14 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 break;
             
             case 'unit-moved':
-                console.log('GameViewerPage: Unit moved notification', data);
                 // Could trigger animations, sound effects, etc.
                 break;
             
             case 'unit-attacked':
-                console.log('GameViewerPage: Unit attacked notification', data);
                 // Could trigger combat animations, sound effects, etc.
                 break;
             
             case 'turn-ended':
-                console.log('GameViewerPage: Turn ended notification', data);
                 // Could trigger end-of-turn animations, notifications, etc.
                 break;
             
@@ -237,7 +215,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         gameStateContainer.style.display = 'none'; // Hidden data component
         document.body.appendChild(gameStateContainer);
         this.gameState = new GameState(gameStateContainer, this.eventBus, true);
-        console.log('GameViewerPage: GameState created:', this.gameState);
 
         // Create TerrainStatsPanel component
         const terrainStatsContainer = document.getElementById('terrain-stats-container');
@@ -245,7 +222,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             throw new Error('GameViewerPage: terrain-stats-container not found');
         }
         this.terrainStatsPanel = new TerrainStatsPanel(terrainStatsContainer, this.eventBus, true);
-        console.log('GameViewerPage: TerrainStatsPanel created:', this.terrainStatsPanel);
     }
 
     /**
@@ -253,14 +229,12 @@ class GameViewerPage extends BasePage implements LCMComponent {
      */
     private async checkAndLoadWorldIntoViewer(): Promise<void> {
         if (!this.worldViewerReady || !this.gameDataReady) {
-            console.log('GameViewerPage: Waiting for both viewer and game data to be ready', {
+            console.warn('GameViewerPage: Waiting for both viewer and game data to be ready', {
                 worldViewerReady: this.worldViewerReady,
                 gameDataReady: this.gameDataReady
             });
             return;
         }
-
-        console.log('GameViewerPage: Both WorldViewer and game data are ready, loading world into viewer');
         
         try {
             // Get the World object from GameState (GameState owns it now)
@@ -276,8 +250,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 const gameState = this.gameState.getGameState();
                 this.updateGameUIFromState(gameState);
                 this.logGameEvent(`Game loaded: ${gameState.gameId}`);
-                
-                console.log('GameViewerPage: World successfully loaded into viewer');
             } else {
                 throw new Error('WorldViewer or World not available');
             }
@@ -303,7 +275,12 @@ class GameViewerPage extends BasePage implements LCMComponent {
         // Load game data into WASM singletons and create World object in GameState
         await this.gameState.loadGameDataToWasm();
         
-        console.log('Game initialized with WASM engine - data loaded into WASM singletons and World created');
+        // Refresh unit labels in Phaser scene with the loaded World data
+        const world = this.gameState.getWorld();
+        const worldScene = this.worldViewer?.getScene();
+        if (worldScene && world) {
+            worldScene.refreshUnitLabels(world);
+        }
     }
 
     /**
@@ -312,7 +289,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * so we make this a no-op and handle event binding in LCMComponent.activate()
      */
     protected bindSpecificEvents(): void {
-        console.log('GameViewerPage: bindSpecificEvents() called by BasePage - deferred to activate() phase');
     }
 
     /**
@@ -364,8 +340,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             this.showToast('Error', 'Game not ready', 'error');
             return;
         }
-
-        console.log('Ending current player\'s turn...');
         
         // Async WASM call
         await this.gameState.endTurn(this.gameState.getGameState().currentPlayer);
@@ -380,8 +354,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 
     private undoMove(): void {
-        console.log('Undo move requested');
-        // TODO: Implement undo functionality with WASM
         this.showToast('Info', 'Undo not yet implemented', 'info');
     }
 
@@ -390,8 +362,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             this.showToast('Warning', 'Select a unit first', 'warning');
             return;
         }
-        console.log('Move mode selected for unit:', this.selectedUnit);
-        // Movement options are already loaded from unit selection
         // TODO: Integrate with Phaser to highlight valid move tiles
         this.showToast('Info', 'Click on a highlighted tile to move', 'info');
     }
@@ -401,7 +371,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             this.showToast('Warning', 'Select a unit first', 'warning');
             return;
         }
-        console.log('Attack mode selected for unit:', this.selectedUnit);
         // Attack options are already loaded from unit selection
         // TODO: Integrate with Phaser to highlight valid attack targets
         this.showToast('Info', 'Click on a highlighted enemy to attack', 'info');
@@ -415,13 +384,11 @@ class GameViewerPage extends BasePage implements LCMComponent {
         // Synchronous WASM call
         const gameData = this.gameState.getGameState();
         
-        console.log(`Showing all units for Player ${gameData.currentPlayer}`);
         // TODO: Highlight all player units and center camera
         this.showToast('Info', `Showing all Player ${gameData.currentPlayer} units`, 'info');
     }
 
     private centerOnAction(): void {
-        console.log('Centering on action');
         // TODO: Center camera on the most recent action or selected unit
         this.showToast('Info', 'Centering view', 'info');
     }
@@ -504,8 +471,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * @returns false to suppress event emission (we handle it completely)
      */
     private onTileClicked = (q: number, r: number): boolean => {
-        console.log(`[GameViewerPage] Tile clicked callback: Q=${q}, R=${r}`);
-
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for tile clicks');
             return false; // Suppress event emission
@@ -543,7 +508,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * @returns false to suppress event emission (we handle it completely)
      */
     private onUnitClicked = (q: number, r: number): boolean => {
-        console.log(`[GameViewerPage] Unit clicked callback: Q=${q}, R=${r}`);
+        // console.log(`[GameViewerPage] Unit clicked callback: Q=${q}, R=${r}`);
 
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for unit clicks');
@@ -556,12 +521,8 @@ class GameViewerPage extends BasePage implements LCMComponent {
             const world = this.gameState.getWorld();
             const unit = world?.getUnitAt(q, r);
             
-            console.log(`[GameViewerPage] Options at (${q}, ${r}):`, response);
-            console.log(`[GameViewerPage] Current player: ${currentGameState.currentPlayer}`);
-            console.log(`[GameViewerPage] Unit at position:`, unit);
-            console.log(`[GameViewerPage] Unit player: ${unit?.player}`);
-            
             const options = response.options || [];
+            
             const hasMovementOptions = options.some((opt: any) => opt.move !== undefined);
             const hasAttackOptions = options.some((opt: any) => opt.attack !== undefined);
             const hasOnlyEndTurn = options.length === 1 && options[0].endTurn !== undefined;
@@ -571,7 +532,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 this.selectUnitAt(q, r, options);
             } else if (hasOnlyEndTurn) {
                 // This position only has endTurn option - could be empty tile, enemy unit, or friendly unit with no actions
-                console.log(`[GameViewerPage] Non-actionable position at Q=${q}, R=${r}`);
                 
                 // Get basic tile info to determine what's actually there
                 this.gameState?.getTileInfo(q, r).then(tileInfo => {
@@ -607,7 +567,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * @returns false to suppress event emission (we handle it completely)
      */
     private onMovementClicked = (q: number, r: number, moveOption: MoveOption): void => {
-        console.log(`[GameViewerPage] Movement clicked at (${q}, ${r}) with option:`, moveOption);
+        // console.log(`[GameViewerPage] Movement clicked at (${q}, ${r}) with option:`, moveOption);
 
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for movement');
@@ -633,7 +593,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Select unit and show movement/attack highlights
      */
     private selectUnitAt(q: number, r: number, options: any[]): void {
-        console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r} with ${options.length} options`);
+        // console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r} with ${options.length} options`);
         
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for unit selection');
