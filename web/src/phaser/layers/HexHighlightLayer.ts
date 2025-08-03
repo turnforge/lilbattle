@@ -155,7 +155,6 @@ export class SelectionHighlightLayer extends HexHighlightLayer {
      */
     public clearSelection(): void {
         if (this.selectedCoord) {
-            console.log(`[SelectionHighlightLayer] Clearing selection`);
             this.removeHighlight(this.selectedCoord.q, this.selectedCoord.r);
             this.selectedCoord = null;
         }

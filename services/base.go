@@ -268,7 +268,7 @@ func (b *BaseGamesServiceImpl) applyWorldChange(change *v1.WorldChange, rtGame *
 	case *v1.WorldChange_UnitKilled:
 		return b.applyUnitKilled(changeType.UnitKilled, rtGame)
 	case *v1.WorldChange_PlayerChanged:
-		return b.applyPlayerChanged(changeType.PlayerChanged, rtGame)
+		return b.applyPlayerChanged(changeType.PlayerChanged, rtGame, state)
 	default:
 		return fmt.Errorf("unknown world change type")
 	}
@@ -315,9 +315,14 @@ func (b *BaseGamesServiceImpl) applyUnitKilled(change *v1.UnitKilledChange, rtGa
 }
 
 // applyPlayerChanged updates game state for turn/player changes
-func (b *BaseGamesServiceImpl) applyPlayerChanged(change *v1.PlayerChangedChange, rtGame *weewar.Game) error {
+func (b *BaseGamesServiceImpl) applyPlayerChanged(change *v1.PlayerChangedChange, rtGame *weewar.Game, state *v1.GameState) error {
 	rtGame.CurrentPlayer = change.NewPlayer
 	rtGame.TurnCounter = change.NewTurn
+	
+	// Also update the protobuf GameState
+	state.CurrentPlayer = change.NewPlayer
+	state.TurnCounter = change.NewTurn
+	
 	return nil
 }
 

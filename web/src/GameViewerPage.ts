@@ -552,7 +552,14 @@ class GameViewerPage extends BasePage implements LCMComponent {
 
         // Handle async unit interaction using unified getOptionsAt
         this.gameState.getOptionsAt(q, r).then(response => {
+            const currentGameState = this.gameState.getGameState();
+            const world = this.gameState.getWorld();
+            const unit = world?.getUnitAt(q, r);
+            
             console.log(`[GameViewerPage] Options at (${q}, ${r}):`, response);
+            console.log(`[GameViewerPage] Current player: ${currentGameState.currentPlayer}`);
+            console.log(`[GameViewerPage] Unit at position:`, unit);
+            console.log(`[GameViewerPage] Unit player: ${unit?.player}`);
             
             const options = response.options || [];
             const hasMovementOptions = options.some((opt: any) => opt.move !== undefined);
@@ -563,13 +570,24 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 // This unit has actionable options - select it
                 this.selectUnitAt(q, r, options);
             } else if (hasOnlyEndTurn) {
-                // This is either an empty tile or enemy unit - just show info
+                // This position only has endTurn option - could be empty tile, enemy unit, or friendly unit with no actions
                 console.log(`[GameViewerPage] Non-actionable position at Q=${q}, R=${r}`);
                 
-                // Get basic tile info to show details (async)
+                // Get basic tile info to determine what's actually there
                 this.gameState?.getTileInfo(q, r).then(tileInfo => {
                     if (tileInfo?.hasUnit) {
-                        this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
+                        // There is a unit - check if it belongs to current player
+                        const world = this.gameState.getWorld();
+                        const unit = world?.getUnitAt(q, r);
+                        const currentPlayer = this.gameState.getGameState().currentPlayer;
+                        
+                        if (unit && unit.player === currentPlayer) {
+                            // This is our unit but it has no available actions
+                            this.showToast('Info', `No actions available for unit at (${q}, ${r})`, 'info');
+                        } else {
+                            // This is an enemy unit
+                            this.showToast('Info', `Enemy unit at (${q}, ${r})`, 'info');
+                        }
                     } else {
                         this.showToast('Info', `Empty tile at (${q}, ${r})`, 'info');
                     }

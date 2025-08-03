@@ -42,7 +42,7 @@ func (m *DefaultMoveProcessor) ProcessMove(game *Game, move *v1.GameMove) (resul
 	if move.MoveType == nil {
 		return nil, fmt.Errorf("move type is nil")
 	}
-	
+
 	switch a := move.MoveType.(type) {
 	case *v1.GameMove_MoveUnit:
 		fmt.Printf("Processing MoveUnit: %+v\n", a.MoveUnit)
@@ -79,12 +79,17 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 		return nil, fmt.Errorf("failed to reset player units: %w", err)
 	}
 
-	// Advance to next player
-	g.CurrentPlayer = (g.CurrentPlayer + 1) % g.World.PlayerCount()
+	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
+	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
+	maxPlayerID := int(g.World.PlayerCount())
 
-	// If we've cycled back to player 0, increment turn counter
-	if g.CurrentPlayer == 0 {
+	if g.CurrentPlayer == int32(maxPlayerID) {
+		// Last player completes their turn, go back to player 1 and increment turn counter
+		g.CurrentPlayer = 1
 		g.TurnCounter++
+	} else {
+		// Move to next player
+		g.CurrentPlayer++
 	}
 
 	// Check for victory conditions
