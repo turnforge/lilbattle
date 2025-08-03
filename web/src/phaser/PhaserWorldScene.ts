@@ -694,10 +694,15 @@ export class PhaserWorldScene extends Phaser.Scene {
             healthText: null as any
         };
         
-        // Create health label if enabled
+        // Create combined label if enabled
         if (this.showUnitHealth) {
             const health = unit.availableHealth || 100;
-            const healthText = this.add.text(position.x, position.y - 40, health.toString(), {
+            const movementPoints = unit.distanceLeft || 0;
+            
+            // Format: "Movement/Health" (e.g., "3/85")
+            const labelText = `${movementPoints}/${health}`;
+            
+            const healthText = this.add.text(position.x, position.y - 40, labelText, {
                 fontSize: '12px',
                 color: '#ffffff',
                 stroke: '#000000',
