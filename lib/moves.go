@@ -81,9 +81,9 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 
 	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
 	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
-	maxPlayerID := int(g.World.PlayerCount())
+	numPlayers := g.World.PlayerCount()
 
-	if g.CurrentPlayer == int32(maxPlayerID) {
+	if g.CurrentPlayer == numPlayers {
 		// Last player completes their turn, go back to player 1 and increment turn counter
 		g.CurrentPlayer = 1
 		g.TurnCounter++

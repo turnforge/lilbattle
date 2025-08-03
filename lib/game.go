@@ -15,7 +15,7 @@ import (
 
 // PlayerInfo contains game-specific information about a player
 type PlayerInfo struct {
-	Player   int32  `json:"playerID"` // 0-based player index
+	Player   int32  `json:"playerID"` // 1-based player index
 	Name     string `json:"name"`     // Player display name
 	TeamID   int    `json:"teamID"`   // Which team this player belongs to
 	IsActive bool   `json:"isActive"` // Whether player is still in the game
@@ -118,7 +118,7 @@ func (g *Game) initializeStartingUnits() error {
 	}
 
 	// Initialize stats for existing units in the world
-	for playerID := range g.World.PlayerCount() {
+	for playerID := int32(1); playerID <= g.World.PlayerCount(); playerID++ {
 		for _, unit := range g.World.unitsByPlayer[playerID] {
 			// Get unit data from rules engine
 			// fmt.Println("Player ID, Unit: ", playerID, unit)
@@ -168,7 +168,7 @@ func (g *Game) checkVictoryConditions() (winner int32, hasWinner bool) {
 	playersWithUnits := 0
 	lastPlayerWithUnits := int32(-1)
 
-	for playerID := range g.World.PlayerCount() {
+	for playerID := int32(1); playerID <= g.World.PlayerCount(); playerID++ {
 		if len(g.World.unitsByPlayer[playerID]) > 0 {
 			playersWithUnits++
 			lastPlayerWithUnits = playerID
@@ -210,25 +210,9 @@ func (g *Game) GetUnitID(unit *v1.Unit) string {
 		return ""
 	}
 
-	// Convert player ID to letter (0=A, 1=B, etc.)
-	playerLetter := string(rune('A' + unit.Player))
-
-	// Count units for this player to determine unit number
-	unitNumber := 0
-	for _, playerUnits := range g.World.unitsByPlayer {
-		for _, playerUnit := range playerUnits {
-			if playerUnit.Player == unit.Player {
-				unitNumber++
-				if playerUnit == unit {
-					// Found our unit, return the ID
-					return fmt.Sprintf("%s%d", playerLetter, unitNumber)
-				}
-			}
-		}
-	}
-
-	// Fallback - shouldn't happen but handle gracefully
-	return fmt.Sprintf("%s?", playerLetter)
+	// This method was only used for cli - we can come back to this when needed
+	panic("to be deprecated")
+	// return unit.unitID
 }
 
 // GetAssetManager returns the current AssetManager instance (legacy compatibility)

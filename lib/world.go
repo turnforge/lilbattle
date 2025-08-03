@@ -93,7 +93,7 @@ func (w *World) PlayerCount() int32 {
 	if w.parent != nil {
 		return w.PlayerCount()
 	}
-	return int32(len(w.unitsByPlayer))
+	return int32(len(w.unitsByPlayer) - 1)
 }
 
 func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
@@ -203,6 +203,8 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	w.unitDeleted[coord] = false
 	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
 	w.unitsByCoord[coord] = unit
+
+	// Now give this unit a unique ID
 	return
 }
 
