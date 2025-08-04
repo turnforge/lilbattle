@@ -1,9 +1,8 @@
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import Weewar_v1_servicesClient from '../gen/wasm-clients/weewar_v1_servicesClient.client';
-import { ProcessMovesRequest, ProcessMovesResponse, GetGameRequest, GetGameStateRequest, GetOptionsAtRequest, GameMove, WorldChange, MoveUnitAction, AttackUnitAction, EndTurnAction, GameState as ProtoGameState, Game as ProtoGame } from '../gen/wasm-clients/weewar/v1/models'
+import { ProcessMovesRequest, ProcessMovesResponse, GetGameRequest, GetGameStateRequest, GetOptionsAtRequest, GameMove, WorldChange, MoveUnitAction, AttackUnitAction, EndTurnAction, GameState as ProtoGameState, Game as ProtoGame, WorldData } from '../gen/wasm-clients/weewar/v1/models'
 import { create } from '@bufbuild/protobuf';
-import { World, Unit } from './World';
 
 /**
  * Legacy interface for backward compatibility with GameViewerPage  

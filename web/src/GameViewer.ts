@@ -12,7 +12,6 @@ import { SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer }
  * - Game-specific helper methods
  */
 export class GameViewer extends WorldViewer<PhaserGameScene> {
-
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super(rootElement, eventBus, debugMode);
     }
