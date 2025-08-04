@@ -291,14 +291,6 @@ export class PhaserPanel {
         return this.phaserEditor.getTilesData();
     }
     
-    public getUnitsData(): Array<Unit> {
-        if (!this.isInitialized || !this.phaserEditor) {
-            return [];
-        }
-        
-        return this.phaserEditor.getUnitsData();
-    }
-    
     /**
      * Get the current viewport center in hex coordinates
      */

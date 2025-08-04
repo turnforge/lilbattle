@@ -221,10 +221,6 @@ export class PhaserWorldEditor {
         return this.scene?.getTilesData() || [];
     }
     
-    public getUnitsData(): Array<Unit> {
-        return this.scene?.getUnitsData() || [];
-    }
-    
     public async setTilesData(tiles: Array<Tile>) {
         const scene = await this.waitForSceneReady();
         

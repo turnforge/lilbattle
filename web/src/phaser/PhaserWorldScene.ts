@@ -1180,29 +1180,6 @@ export class PhaserWorldScene extends Phaser.Scene {
         return tilesData;
     }
     
-    // Get all units data (for integration with WASM)
-    public getUnitsData(): Array<Unit> {
-        const unitsData: Array<Unit> = [];
-        
-        this.unitSprites.forEach((unit, key) => {
-            const [q, r] = key.split(',').map(Number);
-            // Extract unitType and playerId from texture key
-            const textureKey = unit.texture.key;
-            const match = textureKey.match(/unit_(\d+)_(\d+)/);
-            
-            if (match) {
-                unitsData.push(Unit.from({
-                    q,
-                    r,
-                    unitType: parseInt(match[1]),
-                    player: parseInt(match[2])
-                }));
-            }
-        });
-        
-        return unitsData;
-    }
-    
     /**
      * Get access to the layer manager for external layer management
      */

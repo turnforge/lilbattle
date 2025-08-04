@@ -28,7 +28,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
     private gameState: GameState
     private world: World  // ✅ Shared World component
     private terrainStatsPanel: TerrainStatsPanel
-    private rulesTable: RulesTable
+    private rulesTable: RulesTable = new RulesTable();
     
     // Game configuration accessed directly from WASM-cached Game proto
     
@@ -50,10 +50,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
      */
     performLocalInit(): LCMComponent[] {
         // Load game config first
-        this.loadGameConfiguration();
-        
-        // Create shared RulesTable instance
-        this.rulesTable = new RulesTable();
+        this.currentGameId = (document.getElementById("gameIdInput") as HTMLInputElement).value.trim()
         
         // Subscribe to events BEFORE creating components
         this.subscribeToGameStateEvents();
@@ -66,15 +63,16 @@ class GameViewerPage extends BasePage implements LCMComponent {
         this.initializeGameLog();
         
         // Start WASM and game data loading early (parallel to WorldViewer initialization)
-        if (this.currentGameId) {
-            this.initializeGameWithWASM().then(() => {
-                // Emit event to indicate game data is ready
-                this.eventBus.emit(GameEventTypes.GAME_DATA_LOADED, { gameId: this.currentGameId }, this, this);
-            }).catch(error => {
-                console.error('GameViewerPage: WASM initialization failed:', error);
-                this.updateGameStatus('WASM initialization failed');
-            });
+        if (!this.currentGameId) {
+          throw new Error("Game Id Not Found")
         }
+        this.initializeGameWithWASM().then(() => {
+            // Emit event to indicate game data is ready
+            this.eventBus.emit(GameEventTypes.GAME_DATA_LOADED, { gameId: this.currentGameId }, this, this);
+        }).catch(error => {
+            console.error('GameViewerPage: WASM initialization failed:', error);
+            this.updateGameStatus('WASM initialization failed');
+        });
 
         console.assert(this.worldViewer != null, "World viewer could not be created")
         console.assert(this.gameState != null, "gameState could not be created")
@@ -121,16 +119,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         this.currentGameId = null;
         this.selectedUnit = null;
         this.gameLog = [];
-    }
-
-    /**
-     * Load basic game initialization data (just gameId from DOM)
-     * Game configuration is now accessed directly from WASM-cached Game proto
-     */
-    private loadGameConfiguration(): void {
-        // Get gameId from hidden input
-        const gameIdInput = document.getElementById("gameIdInput") as HTMLInputElement | null;
-        this.currentGameId = gameIdInput?.value.trim() || null;
     }
 
     /**
