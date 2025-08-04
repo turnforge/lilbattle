@@ -15,26 +15,20 @@ export interface UnitSelectionData {
 }
 
 /**
- * GameState component - Minimal controller for ProcessMoves and world state management
+ * GameState component - Pure WASM interface for game operations
  * 
  * Core responsibilities:
- * 1. Process game moves via ProcessMoves service
- * 2. Apply world changes to internal state
- * 3. Notify observers (UI components) of state changes
+ * 1. Load and manage WASM module
+ * 2. Process game moves via ProcessMoves service  
+ * 3. Provide query interface to WASM game data
  * 
- * This replaces the previous 13+ manual WASM methods with a clean service-based approach.
+ * No longer caches state - components query WASM directly when needed.
  */
 export class GameState extends BaseComponent {
     private client: Weewar_v1_servicesClient;
     private wasmLoadPromise: Promise<void> | null;
     private wasmLoaded: boolean = false;
-    private world: World;
-    status: string
-    
-    // Local cache of Game and GameState protos for query optimization (avoid WASM calls)
-    // Source of truth is WASM, this is just a performance cache
-    private cachedGame: ProtoGame;
-    private cachedGameState: ProtoGameState;
+    private gameId: string = '';
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('game-state', rootElement, eventBus, debugMode);
