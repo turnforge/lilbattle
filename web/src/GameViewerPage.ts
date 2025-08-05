@@ -93,7 +93,40 @@ class GameViewerPage extends BasePage implements LCMComponent {
      */
     setupDependencies(): void {
         // Set up scene click callback now that gameScene is initialized
-        this.gameScene.sceneClickedCallback = this.onSceneClicked;
+        this.gameScene.sceneClickedCallback = (context: any, layer: string, extra?: any): void => {
+            if (!this.gameState?.isReady()) {
+                console.warn('[GameViewerPage] Game not ready for map clicks');
+                return;
+            }
+
+            const { hexQ: q, hexR: r } = context;
+            
+            // Get tile and unit data from World using coordinates
+            const tile = this.world?.getTileAt(q, r);
+            const unit = this.world?.getUnitAt(q, r);
+
+            console.log(`[GameViewerPage] Map clicked at (${q}, ${r}) on layer '${layer}'`, { tile, unit, extra });
+
+            switch (layer) {
+                case 'movement-highlight':
+                    // Get moveOption from the layer itself
+                    const movementLayer = this.gameScene.movementHighlightLayer;
+                    const moveOption = movementLayer?.getMoveOptionAt(q, r);
+                    this.handleMovementClick(q, r, moveOption);
+                    break;
+                    
+                case 'base-map':
+                    if (unit) {
+                        this.handleUnitClick(q, r);
+                    } else {
+                        this.handleTileClick(q, r, tile);
+                    }
+                    break;
+                    
+                default:
+                    console.log(`[GameViewerPage] Unhandled layer click: ${layer}`);
+            }
+        };
     }
 
     /**
@@ -446,51 +479,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             }
         }
     }
-
-    /**
-     * Callback methods for Phaser scene interactions
-     */
-
-    /**
-     * Unified map click handler - handles all clicks with context about what was clicked
-     */
-    private onSceneClicked = (context: any, layer: string, extra?: any): void => {
-        if (!this.gameState?.isReady()) {
-            console.warn('[GameViewerPage] Game not ready for map clicks');
-            return;
-        }
-
-        const { hexQ: q, hexR: r } = context;
-        
-        // Get tile and unit data from World using coordinates
-        const tile = this.world?.getTileAt(q, r);
-        const unit = this.world?.getUnitAt(q, r);
-
-        console.log(`[GameViewerPage] Map clicked at (${q}, ${r}) on layer '${layer}'`, { tile, unit, extra });
-
-        switch (layer) {
-            case 'movement-highlight':
-                // Get moveOption from the layer itself
-                let moveOption = null;
-                if (this.gameScene && 'getMovementHighlightLayer' in this.gameScene) {
-                    const movementLayer = (this.gameScene as any).getMovementHighlightLayer();
-                    moveOption = movementLayer?.getMoveOptionAt(q, r);
-                }
-                this.handleMovementClick(q, r, moveOption);
-                break;
-                
-            case 'base-map':
-                if (unit) {
-                    this.handleUnitClick(q, r);
-                } else {
-                    this.handleTileClick(q, r, tile);
-                }
-                break;
-                
-            default:
-                console.log(`[GameViewerPage] Unhandled layer click: ${layer}`);
-        }
-    };
 
     /**
      * Handle unit clicks - select unit or show unit info
