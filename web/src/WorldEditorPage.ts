@@ -2002,7 +2002,7 @@ class WorldEditorPage extends BasePage {
         if (this.world && this.phaserEditorComponent) {
             console.log('WorldEditorPage: Loading world data into Phaser editor');
             // Give Phaser time to fully initialize webgl context and scene
-            await this.phaserEditorComponent.loadWorld(this.world);
+            await this.phaserEditorComponent.editorScene.loadWorld(this.world);
             this.hasPendingWorldDataLoad = false;
             this.refreshTileStats();
         }
