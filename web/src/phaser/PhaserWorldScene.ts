@@ -305,10 +305,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private setupCameraControls() {
         // Create cursor keys for camera movement
         // this.cursors = this.input.keyboard!.createCursorKeys();
-        
-        // Add WASD keys  
+        // Add WASD keys    
         // this.wasdKeys = this.input.keyboard!.addKeys('W,S,A,D');
-        
         // Set up document-level keydown listener to handle input context properly
         /*
         document.addEventListener('keydown', (event: KeyboardEvent) => {
@@ -321,7 +319,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 }
             }
         }, true); // Use capture phase to intercept before Phaser
-       */
+         */
         
         // Mouse wheel zoom - zoom around cursor position
         this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[], deltaX: number, deltaY: number) => {
@@ -403,7 +401,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                     // Use layer system for hit testing, then send to mapCallback
                     if (this.layerManager) {
                         const clickContext = this.layerManager.getClickContext(pointer);
-                        if (clickContext) {  // && this.sceneClickedCallback) {
+                        if (clickContext) {    // && this.sceneClickedCallback) {
                             // For now dont check sceneClickedCallback to be nil to see who exactly is calling this
                             // without setting it
                             this.sceneClickedCallback(clickContext, clickContext.layer || 'unknown');
@@ -419,37 +417,36 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         });
         
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.isMouseDown && this.lastPointerPosition) {
-                const deltaX = pointer.x - this.lastPointerPosition.x;
-                const deltaY = pointer.y - this.lastPointerPosition.y;
-                
-                // Check if we've moved enough to consider it a drag
-                const dragThreshold = 5; // pixels
-                if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-                    this.hasDragged = true;
-                }
-                
-                // Capture camera state before pan
-                const camera = this.cameras.main;
-                const oldScrollX = camera.scrollX;
-                const oldScrollY = camera.scrollY;
-                
-                // Pan camera
-                camera.scrollX -= deltaX / camera.zoom;
-                camera.scrollY -= deltaY / camera.zoom;
-                
-                // Emit camera moved event if position changed
-                if (oldScrollX !== camera.scrollX || oldScrollY !== camera.scrollY) {
-                    this.events.emit('camera-moved', { 
-                        scrollX: camera.scrollX, 
-                        scrollY: camera.scrollY,
-                        deltaX: camera.scrollX - oldScrollX,
-                        deltaY: camera.scrollY - oldScrollY
-                    });
-                }
-                
-                this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+            if (!this.isMouseDown || !this.lastPointerPosition) return
+            const deltaX = pointer.x - this.lastPointerPosition.x;
+            const deltaY = pointer.y - this.lastPointerPosition.y;
+            
+            // Check if we've moved enough to consider it a drag
+            const dragThreshold = 5; // pixels
+            if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+                this.hasDragged = true;
             }
+            
+            // Capture camera state before pan
+            const camera = this.cameras.main;
+            const oldScrollX = camera.scrollX;
+            const oldScrollY = camera.scrollY;
+            
+            // Pan camera
+            camera.scrollX -= deltaX / camera.zoom;
+            camera.scrollY -= deltaY / camera.zoom;
+            
+            // Emit camera moved event if position changed
+            if (oldScrollX !== camera.scrollX || oldScrollY !== camera.scrollY) {
+                this.events.emit('camera-moved', { 
+                    scrollX: camera.scrollX, 
+                    scrollY: camera.scrollY,
+                    deltaX: camera.scrollX - oldScrollX,
+                    deltaY: camera.scrollY - oldScrollY
+                });
+            }
+            
+            this.lastPointerPosition = { x: pointer.x, y: pointer.y };
         });
     }
     
@@ -914,7 +911,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             { x: position.x + halfWidth * 0.866, y: position.y + halfHeight * 0.5 }, // Bottom-right
             { x: position.x, y: position.y + halfHeight },                    // Bottom
             { x: position.x - halfWidth * 0.866, y: position.y + halfHeight * 0.5 }, // Bottom-left
-            { x: position.x - halfWidth * 0.866, y: position.y - halfHeight * 0.5 }  // Top-left
+            { x: position.x - halfWidth * 0.866, y: position.y - halfHeight * 0.5 }    // Top-left
         ];
         
         this.gridGraphics.moveTo(vertices[0].x, vertices[0].y);
@@ -980,13 +977,13 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         
         // Create a simple pattern with different terrain types
         const patterns = [
-            { q: 0, r: 0, tileType: 1, player: 0 },   // Grass
-            { q: 1, r: 0, tileType: 2, player: 0 },   // Desert
-            { q: -1, r: 0, tileType: 3, player: 0 },  // Water
-            { q: 0, r: 1, tileType: 16, player: 0 },  // Mountain
+            { q: 0, r: 0, tileType: 1, player: 0 },     // Grass
+            { q: 1, r: 0, tileType: 2, player: 0 },     // Desert
+            { q: -1, r: 0, tileType: 3, player: 0 },    // Water
+            { q: 0, r: 1, tileType: 16, player: 0 },    // Mountain
             { q: 0, r: -1, tileType: 20, player: 0 }, // Rock
-            { q: 1, r: -1, tileType: 1, player: 1 },  // Grass (different player)
-            { q: -1, r: 1, tileType: 2, player: 2 },  // Desert (different player)
+            { q: 1, r: -1, tileType: 1, player: 1 },    // Grass (different player)
+            { q: -1, r: 1, tileType: 2, player: 2 },    // Desert (different player)
         ];
         
         patterns.forEach(pattern => { this.setTile(pattern); });
