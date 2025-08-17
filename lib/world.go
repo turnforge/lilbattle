@@ -261,6 +261,20 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 		delete(w.unitDeleted, coord)
 	}
 	
+	// Remove old unit from player's unit list if replacing
+	if oldunit != nil {
+		oldPlayerID := int(oldunit.Player)
+		if oldPlayerID < len(w.unitsByPlayer) && w.unitsByPlayer[oldPlayerID] != nil {
+			for i, u := range w.unitsByPlayer[oldPlayerID] {
+				if u == oldunit {
+					// Remove old unit from slice
+					w.unitsByPlayer[oldPlayerID] = append(w.unitsByPlayer[oldPlayerID][:i], w.unitsByPlayer[oldPlayerID][i+1:]...)
+					break
+				}
+			}
+		}
+	}
+	
 	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
 	w.unitsByCoord[coord] = unit
 
@@ -311,16 +325,36 @@ func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 		return fmt.Errorf("unit is nil")
 	}
 
+	// For transaction layers: ensure copy-on-write semantics
+	// If we're in a transaction and the unit comes from parent layer, make a copy
+	unitToMove := unit
+	if w.parent != nil {
+		currentCoord := UnitGetCoord(unit)
+		// Check if unit exists in current layer or comes from parent
+		if _, existsInCurrentLayer := w.unitsByCoord[currentCoord]; !existsInCurrentLayer {
+			// Unit comes from parent layer - make a copy to avoid modifying parent objects
+			unitToMove = &v1.Unit{
+				Q:               unit.Q,
+				R:               unit.R,
+				Player:          unit.Player,
+				UnitType:        unit.UnitType,
+				AvailableHealth: unit.AvailableHealth,
+				DistanceLeft:    unit.DistanceLeft,
+				TurnCounter:     unit.TurnCounter,
+			}
+		}
+	}
+
 	// Remove unit from current position (handles transaction deletion flags)
 	if err := w.RemoveUnit(unit); err != nil {
 		return fmt.Errorf("failed to remove unit: %w", err)
 	}
 
-	// Update unit position
-	UnitSetCoord(unit, newCoord)
+	// Update unit position (now safe to modify copy)
+	UnitSetCoord(unitToMove, newCoord)
 
 	// Add unit at new position (handles transaction addition flags)
-	_, err := w.AddUnit(unit)
+	_, err := w.AddUnit(unitToMove)
 	if err != nil {
 		return fmt.Errorf("failed to add unit at new position: %w", err)
 	}

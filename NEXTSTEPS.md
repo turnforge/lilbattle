@@ -1,15 +1,21 @@
 # Next Steps - WeeWar Development
 
-## 🎉 Major Milestone Completed: Interactive Unit Movement
+## 🎉 Major Milestone Completed: Unit Duplication Bug Fixed
 
 ### ✅ Recently Completed (Current Session)
 
-**EventBus Architecture Refactor - COMPLETED**
-- **GameState Simplification**: Reduced from cached state manager to lightweight WASM wrapper
-- **World as Change Coordinator**: World subscribes to server-changes and coordinates updates
-- **EventBus Flow**: Clean server-changes → world-updated event pipeline
-- **Metadata Management**: GameState maintains currentPlayer/turnCounter from game changes
-- **Initial Data Loading**: Pre-elements data properly loaded into WASM and extracted as metadata
+**Critical Bug Resolution - COMPLETED**
+- **🐛 FIXED Unit Duplication Bug**: Resolved critical issue where units appeared at both old and new positions after moves
+- **🔧 Root Cause Analysis**: Transaction layer shared unit objects with parent layer, causing coordinate corruption
+- **⚡ Copy-on-Write Implementation**: Added proper copy-on-write semantics to prevent parent object mutation
+- **✅ Comprehensive Testing**: Created unit tests validating World behavior with and without transactions
+- **🛡️ Transaction Safety**: Ensured ApplyChangeResults process maintains data integrity
+
+**Architecture Improvements - COMPLETED**
+- **AddUnit Bug Fix**: Fixed player list management when replacing units at same coordinate
+- **MoveUnit Refactoring**: Enhanced to use RemoveUnit/AddUnit for proper transaction handling
+- **World Test Coverage**: Added comprehensive tests for basic moves, replacements, and transaction isolation
+- **Integration Testing**: Created end-to-end ProcessMoves tests using WasmGamesService
 
 **Previous Achievements - SOLID FOUNDATION**
 - **Core Unit Movement System**: Click units → see options → execute moves → visual updates
@@ -18,9 +24,14 @@
 
 ### 🔄 In Progress / Next Sprint
 
+**Bug Resolution Follow-up**
+- [ ] **Fix UnitMovedChange Coordinates**: Move processor generates incorrect coordinates in change data
+- [ ] **Verify ProcessMoves Integration**: Ensure end-to-end ProcessMoves flow works correctly after copy-on-write fix
+- [ ] **Performance Testing**: Validate transaction layer performance with copy-on-write semantics
+
 **Architecture Validation & Testing**
-- [ ] **End-to-End Testing**: Test the new EventBus architecture with actual gameplay
-- [ ] **Load Testing**: Verify initial data loading from pre-elements works correctly
+- [ ] **End-to-End Testing**: Test the complete move processing pipeline with real game scenarios
+- [ ] **Transaction Stress Testing**: Verify transaction rollback behavior under complex scenarios
 - [ ] **Change Coordination**: Validate World updates are properly distributed to GameViewer
 
 **UI Polish & User Experience**
@@ -73,6 +84,7 @@
 - **Action Object Pattern**: Server provides ready-to-use actions, eliminating client reconstruction
 
 **Known Issues**: 🟡 MINOR POLISH ITEMS
+- UnitMovedChange coordinates need fixing in move processor
 - Visual updates use full scene reload (not targeted updates)
 - No loading states during move processing
 - Missing move animations and audio feedback
