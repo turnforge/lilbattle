@@ -122,17 +122,17 @@ func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, wo
 		return WorldRenderOptions{
 			CanvasWidth:  canvasWidth,
 			CanvasHeight: canvasHeight,
-			TileWidth:    DefaultTileWidth,
-			TileHeight:   DefaultTileHeight,
-			YIncrement:   DefaultYIncrement,
+			TileWidth:    weewar.DefaultTileWidth,
+			TileHeight:   weewar.DefaultTileHeight,
+			YIncrement:   weewar.DefaultYIncrement,
 			ShowGrid:     true,
 		}
 	}
 
 	// Use standard tile dimensions from Game class, then calculate proper scaling
-	baseTileWidth := DefaultTileWidth
-	baseTileHeight := DefaultTileHeight
-	baseYIncrement := DefaultYIncrement
+	baseTileWidth := weewar.DefaultTileWidth
+	baseTileHeight := weewar.DefaultTileHeight
+	baseYIncrement := weewar.DefaultYIncrement
 
 	// Calculate actual map bounds using the privateMap's proper hex geometry
 	// minX, minY, maxX, maxY := world.privateMap.getprivateMapBounds(baseTileWidth, baseTileHeight, baseYIncrement)
@@ -180,7 +180,7 @@ func (br *BaseRenderer) CalculateRenderOptions(canvasWidth, canvasHeight int, wo
 }
 
 // formatCoordinate formats cube coordinates for display
-func formatCoordinate(coord AxialCoord) string {
+func formatCoordinate(coord weewar.AxialCoord) string {
 	return ""
 	// Simplified - return empty string to avoid text rendering complexity for now
 	// Can be enhanced later: return fmt.Sprintf("%d,%d", coord.Q, coord.R)

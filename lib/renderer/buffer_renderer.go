@@ -46,7 +46,7 @@ func (br *BufferRenderer) RenderTerrain(world *weewar.World, viewState *weewar.V
 	}
 
 	// Render each terrain tile directly using s coordinate system
-	for coord, tile := range world.tilesByCoord {
+	for coord, tile := range world.TilesByCoord() {
 		if tile == nil {
 			continue
 		}
@@ -91,7 +91,7 @@ func (br *BufferRenderer) RenderUnitsWithAssets(world *weewar.World, viewState *
 			}
 
 			// Use s CenterXYForTile method with the s origin
-			coord := UnitGetCoord(unit)
+			coord := weewar.UnitGetCoord(unit)
 			x, y := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 
 			// Try to load real unit asset first if weewar.AssetProvider is available
@@ -171,7 +171,7 @@ func (br *BufferRenderer) RenderUI(world *weewar.World, viewState *weewar.ViewSt
 		textColor := Color{R: 255, G: 255, B: 255, A: 255}
 		backgroundColor := Color{R: 0, G: 0, B: 0, A: 128}
 
-		for coord, tile := range world.tilesByCoord {
+		for coord, tile := range world.TilesByCoord() {
 			if tile == nil {
 				continue
 			}

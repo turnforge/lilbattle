@@ -5,6 +5,7 @@ import (
 	"image"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	lib "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 // =============================================================================
@@ -26,18 +27,18 @@ func NewTileLayer(width, height int, scheduler LayerScheduler) *TileLayer {
 }
 
 // Render renders terrain tiles to the layer buffer
-func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
+func (tl *TileLayer) Render(world *lib.World, options LayerRenderOptions) {
 	if world == nil {
 		return
 	}
 
-	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.tilesByCoord)
+	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.TilesByCoord())
 	// Clear buffer if full rebuild needed
 	if tl.allDirty {
 		tl.buffer.Clear()
 
 		// Render all tiles
-		for coord, tile := range world.tilesByCoord {
+		for coord, tile := range world.TilesByCoord() {
 			if tile != nil {
 				tl.renderTile(world, coord, tile, options)
 			}
@@ -57,7 +58,7 @@ func (tl *TileLayer) Render(world *World, options LayerRenderOptions) {
 }
 
 // renderTile renders a single terrain tile
-func (tl *TileLayer) renderTile(world *World, coord AxialCoord, tile *v1.Tile, options LayerRenderOptions) {
+func (tl *TileLayer) renderTile(world *lib.World, coord lib.AxialCoord, tile *v1.Tile, options LayerRenderOptions) {
 	if tile == nil {
 		return
 	}

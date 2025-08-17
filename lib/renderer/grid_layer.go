@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"image/draw"
 	"log"
+	"math"
+
+	lib "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 // =============================================================================
@@ -19,7 +22,7 @@ func NewGridLayer(width, height int, scheduler LayerScheduler) *GridLayer {
 }
 
 // Render renders hex grid lines and coordinates
-func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
+func (gl *GridLayer) Render(world *lib.World, options LayerRenderOptions) {
 	if world == nil {
 		return
 	}
@@ -42,13 +45,13 @@ func (gl *GridLayer) Render(world *World, options LayerRenderOptions) {
 	// Simple - get top left r/c and render row by row
 	topLeftCoord := world.XYToQR(float64(gl.X), float64(gl.Y), options.TileWidth, options.TileHeight, options.YIncrement)
 	bottomRightCoord := world.XYToQR(float64(gl.X+gl.Width), float64(gl.Y+gl.Height), options.TileWidth, options.TileHeight, options.YIncrement)
-	tlrow, tlcol := HexToRowCol(topLeftCoord)
-	brrow, brcol := HexToRowCol(bottomRightCoord)
+	tlrow, tlcol := lib.HexToRowCol(topLeftCoord)
+	brrow, brcol := lib.HexToRowCol(bottomRightCoord)
 	log.Println("TopLeft: ", topLeftCoord, tlrow, tlcol)
 	log.Println("BottomRight: ", bottomRightCoord, brrow, brcol)
 	for row := tlrow; row <= brrow; row++ {
 		for col := tlcol; col <= brcol; col++ {
-			coord := RowColToHex(row, col)
+			coord := lib.RowColToHex(row, col)
 			currX, currY := world.CenterXYForTile(coord, options.TileWidth, options.TileHeight, options.YIncrement)
 			currX -= float64(gl.X)
 			currY -= float64(gl.Y)
@@ -86,7 +89,7 @@ func (gl *GridLayer) drawHexGrid(centerX, centerY float64, options LayerRenderOp
 }
 
 // drawCoordinates draws Q,R coordinates in the center of a hex
-func (gl *GridLayer) drawCoordinates(coord AxialCoord, centerX, centerY float64, options LayerRenderOptions) {
+func (gl *GridLayer) drawCoordinates(coord lib.AxialCoord, centerX, centerY float64, options LayerRenderOptions) {
 	// Format coordinate text
 	text := fmt.Sprintf("%d,%d", coord.Q, coord.R)
 
@@ -109,8 +112,8 @@ func (gl *GridLayer) drawCoordinates(coord AxialCoord, centerX, centerY float64,
 
 // drawLine draws a line between two points using Bresenham's algorithm
 func (gl *GridLayer) drawLine(img draw.Image, x1, y1, x2, y2 int, c color.RGBA) {
-	dx := abs(x2 - x1)
-	dy := abs(y2 - y1)
+	dx := int(math.Abs(float64(x2 - x1)))
+	dy := int(math.Abs(float64(y2 - y1)))
 
 	x, y := x1, y1
 

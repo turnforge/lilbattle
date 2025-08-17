@@ -6,6 +6,7 @@ import (
 	"image/color"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	lib "github.com/panyam/turnengine/games/weewar/lib"
 )
 
 // =============================================================================
@@ -32,7 +33,7 @@ func NewUnitLayer(width, height int, scheduler LayerScheduler) *UnitLayer {
 }
 
 // Render renders units to the layer buffer
-func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
+func (ul *UnitLayer) Render(world *lib.World, options LayerRenderOptions) {
 	if world == nil {
 		return
 	}
@@ -42,7 +43,7 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 		ul.buffer.Clear()
 
 		// Render all units from all players
-		for _, playerUnits := range world.unitsByPlayer {
+		for _, playerUnits := range world.AllUnits() {
 			for _, unit := range playerUnits {
 				if unit != nil {
 					ul.renderUnit(world, unit, options)
@@ -69,9 +70,9 @@ func (ul *UnitLayer) Render(world *World, options LayerRenderOptions) {
 }
 
 // renderUnit renders a single unit
-func (ul *UnitLayer) renderUnit(world *World, unit *v1.Unit, options LayerRenderOptions) {
+func (ul *UnitLayer) renderUnit(world *lib.World, unit *v1.Unit, options LayerRenderOptions) {
 	// Get pixel position using privateMap's coordinate system
-	x, y := world.CenterXYForTile(AxialCoord{int(unit.Q), int(unit.R)}, options.TileWidth, options.TileHeight, options.YIncrement)
+	x, y := world.CenterXYForTile(lib.AxialCoord{int(unit.Q), int(unit.R)}, options.TileWidth, options.TileHeight, options.YIncrement)
 
 	// Apply viewport offset
 	x -= float64(ul.X)
@@ -145,7 +146,7 @@ func (ul *UnitLayer) drawSimpleUnitToBuffer(x, y float64, playerID int32, option
 }
 
 // clearHexArea clears a hexagonal area at the given coordinate
-func (ul *UnitLayer) clearHexArea(coord AxialCoord, options LayerRenderOptions) {
+func (ul *UnitLayer) clearHexArea(coord lib.AxialCoord, options LayerRenderOptions) {
 	// For now, just clear the entire buffer - can optimize later
 	ul.buffer.Clear()
 }

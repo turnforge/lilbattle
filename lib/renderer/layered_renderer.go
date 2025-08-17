@@ -41,7 +41,7 @@ type LayeredRenderer struct {
 
 // NewLayeredRenderer creates a new layered renderer with default tile dimensions
 func NewLayeredRenderer(drawable Drawable, width, height int) (*LayeredRenderer, error) {
-	return NewLayeredRendererWithTileSize(drawable, width, height, DefaultTileWidth, DefaultTileHeight, DefaultYIncrement)
+	return NewLayeredRendererWithTileSize(drawable, width, height, weewar.DefaultTileWidth, weewar.DefaultTileHeight, weewar.DefaultYIncrement)
 }
 
 // NewLayeredRendererWithTileSize creates a new layered renderer with specified tile dimensions
@@ -79,7 +79,7 @@ func (r *LayeredRenderer) SetWorld(w *weewar.World) {
 }
 
 // SetAssetProvider updates the asset provider for all layers
-func (r *LayeredRenderer) SetAssetProvider(provider AssetProvider) {
+func (r *LayeredRenderer) SetAssetProvider(provider weewar.AssetProvider) {
 	for _, layer := range r.Layers {
 		layer.SetAssetProvider(provider)
 	}
