@@ -3,6 +3,8 @@ package weewar
 import (
 	"math/rand"
 	"testing"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 func TestRulesEngineLoading(t *testing.T) {
@@ -116,8 +118,8 @@ func TestRulesEngineMovementCosts(t *testing.T) {
 
 	// Test some other combinations
 	testCases := []struct {
-		unitID    int
-		terrainID int
+		unitID    int32
+		terrainID int32
 		desc      string
 	}{
 		{1, 2, "Soldier on terrain 2"},
@@ -219,10 +221,26 @@ func TestRulesEngineMovementMatrix(t *testing.T) {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
 
+	// Check that MovementMatrix is properly loaded
+	if rulesEngine.MovementMatrix == nil {
+		t.Fatal("MovementMatrix is nil - rules loading failed")
+	}
+	if rulesEngine.MovementMatrix.Costs == nil {
+		t.Fatal("MovementMatrix.Costs is nil - rules loading failed")
+	}
+
 	// Count how many movement cost entries we have
 	totalCosts := 0
 	for unitID, costs := range rulesEngine.MovementMatrix.Costs {
-		for terrainID, cost := range costs {
+		if costs == nil {
+			t.Errorf("TerrainCostMap for unit %d is nil", unitID)
+			continue
+		}
+		if costs.TerrainCosts == nil {
+			t.Errorf("TerrainCosts for unit %d is nil", unitID)
+			continue
+		}
+		for terrainID, cost := range costs.TerrainCosts {
 			totalCosts++
 
 			// Test one example in detail
@@ -266,9 +284,10 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 
 	// Create a test unit (Soldier - unit type 1)
 	startCoord := AxialCoord{Q: 2, R: 2} // Center of map
-	unit := &Unit{
+	unit := &v1.Unit{
 		UnitType: 1,
-		Coord:    startCoord,
+		Q:        int32(startCoord.Q),
+		R:        int32(startCoord.R),
 		Player:   0,
 	}
 
@@ -337,7 +356,7 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 				for tID := range rulesEngine.Terrains {
 					if terrain, err := rulesEngine.GetTerrainData(tID); err == nil {
 						if terrain.BaseMoveCost > 1.5 { // More expensive than grass
-							terrainID = tID
+							terrainID = int(tID)
 							break
 						}
 					}
@@ -353,9 +372,10 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 	world := NewWorld("test")
 
 	// Test unit at corner
-	unit := &Unit{
+	unit := &v1.Unit{
 		UnitType: 1, // Soldier
-		Coord:    AxialCoord{Q: 0, R: 0},
+		Q:        0,
+		R:        0,
 		Player:   0,
 	}
 
