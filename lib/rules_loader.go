@@ -79,11 +79,39 @@ func LoadRulesEngineFromJSON(jsonData []byte) (*RulesEngine, error) {
 		}
 	}
 
-	// Load other fields using regular JSON marshaling
-	if movementMatrixData, ok := rawData["movementMatrix"]; ok {
-		movementBytes, _ := json.Marshal(movementMatrixData)
-		movementMatrix := &v1.MovementMatrix{}
-		if err := protojson.Unmarshal(movementBytes, movementMatrix); err == nil {
+	// Load MovementMatrix with special handling for JSON format
+	if movementMatrixData, ok := rawData["movementMatrix"].(map[string]interface{}); ok {
+		if costsData, ok := movementMatrixData["costs"].(map[string]interface{}); ok {
+			movementMatrix := &v1.MovementMatrix{
+				Costs: make(map[int32]*v1.TerrainCostMap),
+			}
+			
+			for unitIDStr, terrainCostsRaw := range costsData {
+				unitID, err := strconv.ParseInt(unitIDStr, 10, 32)
+				if err != nil {
+					continue
+				}
+				
+				if terrainCosts, ok := terrainCostsRaw.(map[string]interface{}); ok {
+					terrainCostMap := &v1.TerrainCostMap{
+						TerrainCosts: make(map[int32]float64),
+					}
+					
+					for terrainIDStr, costRaw := range terrainCosts {
+						terrainID, err := strconv.ParseInt(terrainIDStr, 10, 32)
+						if err != nil {
+							continue
+						}
+						
+						if cost, ok := costRaw.(float64); ok {
+							terrainCostMap.TerrainCosts[int32(terrainID)] = cost
+						}
+					}
+					
+					movementMatrix.Costs[int32(unitID)] = terrainCostMap
+				}
+			}
+			
 			rulesEngine.MovementMatrix = movementMatrix
 		}
 	}

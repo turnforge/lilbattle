@@ -47,6 +47,10 @@ type World struct {
 	// Same as above but for tiles
 	tileDeleted map[AxialCoord]bool `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
 
+	// Transaction layer counters for efficient NumUnits calculation
+	unitsAdded   int32 `json:"-"` // Number of units added in this layer
+	unitsDeleted int32 `json:"-"` // Number of units deleted from parent in this layer
+
 	// Coordinate bounds - These can be evaluated.
 	minQ int `json:"-"` // Minimum Q coordinate (inclusive)
 	maxQ int `json:"-"` // Maximum Q coordinate (inclusive)
@@ -96,7 +100,7 @@ func (w *World) Pop() *World {
 
 func (w *World) PlayerCount() int32 {
 	if w.parent != nil {
-		return w.parent.PlayerCount()  // FIX: Call parent.PlayerCount(), not w.PlayerCount()
+		return w.parent.PlayerCount() // FIX: Call parent.PlayerCount(), not w.PlayerCount()
 	}
 	return int32(len(w.unitsByPlayer) - 1)
 }
@@ -105,7 +109,7 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 	// Merged iteration: child tiles override parent tiles, respect deletions
 	return func(yield func(AxialCoord, *v1.Tile) bool) {
 		seen := make(map[AxialCoord]bool)
-		
+
 		// First iterate current layer (child overrides parent)
 		for coord, tile := range w.tilesByCoord {
 			seen[coord] = true
@@ -113,7 +117,7 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 				return
 			}
 		}
-		
+
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, tile := range w.parent.TilesByCoord() {
@@ -130,6 +134,11 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 }
 
 func (w *World) NumUnits() int32 {
+	if w.parent != nil {
+		// Transaction layer: parent count + added - deleted
+		return w.parent.NumUnits() + w.unitsAdded - w.unitsDeleted
+	}
+	// Root layer: just count the units in this layer
 	return int32(len(w.unitsByCoord))
 }
 
@@ -137,7 +146,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 	// Merged iteration: child units override parent units, respect deletions
 	return func(yield func(AxialCoord, *v1.Unit) bool) {
 		seen := make(map[AxialCoord]bool)
-		
+
 		// First iterate current layer (child overrides parent)
 		for coord, unit := range w.unitsByCoord {
 			seen[coord] = true
@@ -145,7 +154,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 				return
 			}
 		}
-		
+
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, unit := range w.parent.UnitsByCoord() {
@@ -161,10 +170,10 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 	}
 }
 
-// Getize returns the dimensions of the world map
+// UnitAt returns the unit at the specified coordinate, respecting transaction deletions
 func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
 	out = w.unitsByCoord[coord]
-	if out == nil && w.parent != nil {
+	if out == nil && w.parent != nil && !w.unitDeleted[coord] {
 		out = w.parent.UnitAt(coord)
 	}
 	return
@@ -240,8 +249,18 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	coord := UnitGetCoord(unit)
 	oldunit = w.UnitAt(coord)
 
-	// make sure to replace a unit here
-	w.unitDeleted[coord] = false
+	// Update transaction counters
+	if w.parent != nil {
+		// Transaction layer: track if this is a new unit or replacing a parent unit
+		if oldunit == nil {
+			w.unitsAdded++
+		}
+		w.unitDeleted[coord] = false
+	} else {
+		// Root layer: clear any deletion marks
+		delete(w.unitDeleted, coord)
+	}
+	
 	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
 	w.unitsByCoord[coord] = unit
 
@@ -256,18 +275,31 @@ func (w *World) RemoveUnit(unit *v1.Unit) error {
 	}
 
 	coord := UnitGetCoord(unit)
-	tile := w.TileAt(coord)
-	if tile == nil {
-		return fmt.Errorf("invalid tile")
-	}
 	p := int(unit.Player)
-	w.unitDeleted[coord] = true
+	
+	// Update transaction counters
+	if w.parent != nil {
+		// Transaction layer: check if we're deleting a unit from current layer or parent
+		if _, existsInThisLayer := w.unitsByCoord[coord]; existsInThisLayer {
+			// Deleting from current layer
+			w.unitsAdded--
+		} else {
+			// Deleting from parent layer
+			w.unitsDeleted++
+		}
+		w.unitDeleted[coord] = true
+	}
+	
 	delete(w.unitsByCoord, coord)
-	for i, u := range w.unitsByPlayer[p] {
-		if u == unit {
-			// Remove unit from slice
-			w.unitsByPlayer[p] = append(w.unitsByPlayer[p][:i], w.unitsByPlayer[p][i+1:]...)
-			break
+
+	// Remove from player's unit list if it exists
+	if p < len(w.unitsByPlayer) && w.unitsByPlayer[p] != nil {
+		for i, u := range w.unitsByPlayer[p] {
+			if u == unit {
+				// Remove unit from slice
+				w.unitsByPlayer[p] = append(w.unitsByPlayer[p][:i], w.unitsByPlayer[p][i+1:]...)
+				break
+			}
 		}
 	}
 	return nil
@@ -279,15 +311,19 @@ func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 		return fmt.Errorf("unit is nil")
 	}
 
-	// Remove from old position
-	oldCoord := UnitGetCoord(unit)
-	delete(w.unitsByCoord, oldCoord)
+	// Remove unit from current position (handles transaction deletion flags)
+	if err := w.RemoveUnit(unit); err != nil {
+		return fmt.Errorf("failed to remove unit: %w", err)
+	}
 
 	// Update unit position
 	UnitSetCoord(unit, newCoord)
 
-	// Add to new position
-	w.unitsByCoord[newCoord] = unit
+	// Add unit at new position (handles transaction addition flags)
+	_, err := w.AddUnit(unit)
+	if err != nil {
+		return fmt.Errorf("failed to add unit at new position: %w", err)
+	}
 
 	return nil
 }

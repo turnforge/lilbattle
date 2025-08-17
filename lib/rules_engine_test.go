@@ -267,20 +267,17 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
 
-	// Create a simple test map
-	gameMap := NewWorld("test")
+	// Create a world with tiles for the test
+	world := NewWorld("test")
 
 	// Fill with grass terrain (terrain ID 1 - should have reasonable movement cost)
 	for q := range 5 {
 		for r := range 5 {
 			coord := AxialCoord{Q: q, R: r}
 			tile := NewTile(coord, 1) // Grass terrain
-			gameMap.AddTile(tile)
+			world.AddTile(tile)
 		}
 	}
-
-	// Create a world for the test
-	world := NewWorld("test")
 
 	// Create a test unit (Soldier - unit type 1)
 	startCoord := AxialCoord{Q: 2, R: 2} // Center of map
@@ -341,8 +338,8 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
 
-	// Create a map with different terrain costs
-	gameMap := NewWorld("test")
+	// Create a world with different terrain costs for the test
+	world := NewWorld("test")
 
 	// Set up terrain: expensive terrain in middle, cheap around edges
 	for q := range 3 {
@@ -364,12 +361,9 @@ func TestRulesEngineDijkstraTerrainCosts(t *testing.T) {
 			}
 
 			tile := NewTile(coord, terrainID)
-			gameMap.AddTile(tile)
+			world.AddTile(tile)
 		}
 	}
-
-	// Create a world for the test
-	world := NewWorld("test")
 
 	// Test unit at corner
 	unit := &v1.Unit{
