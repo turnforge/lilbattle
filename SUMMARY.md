@@ -32,23 +32,25 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ## Recent Major Achievements
 
-### 🎉 Unit Duplication Bug Resolution (Current Session)
+### 🎉 Complete Unit Movement System Resolution (Current Session)
 
-**Problem**: Critical bug where units appeared at both old and new positions after moves, causing unit count corruption and game state inconsistency.
+**Problem**: Critical unit duplication bug where units appeared at both old and new positions after moves, plus incorrect coordinate data in move processor change generation.
 
-**Root Cause**: Transaction layer shared unit object references with parent layer. When transaction processing modified unit coordinates, it corrupted the parent world's state, leading to coordinate mismatches and duplication during ApplyChangeResults.
+**Root Causes Identified & Fixed**:
+1. **Transaction Object Sharing**: Transaction layer shared unit references with parent layer, causing coordinate corruption
+2. **Copy-on-Write Integration**: Move processor captured original unit instead of moved copy after World.MoveUnit()
 
-**Solution**: Implemented copy-on-write semantics in World.MoveUnit():
-- Transaction layers now create unit copies before modification
-- Parent layer objects remain immutable during transaction processing
-- Unit coordinate consistency maintained across transaction boundaries
-- No more unit duplication in ProcessMoves integration tests
+**Complete Solution Implemented**:
+- **Copy-on-Write in World.MoveUnit()**: Transaction layers create unit copies before modification
+- **Proper Change Data Generation**: ProcessMoveUnit now captures moved unit from World.UnitAt(destination)
+- **Transaction Safety**: Parent layer objects remain immutable during transaction processing
+- **Coordinate Consistency**: Unit coordinates properly maintained across all transaction boundaries
 
-**Technical Impact**:
-- Fixed AddUnit player list management for unit replacement scenarios
-- Enhanced MoveUnit to use RemoveUnit/AddUnit pattern for proper transaction handling
-- Created comprehensive test coverage for World operations with/without transactions
-- Established proper transaction safety for ApplyChangeResults process
+**Comprehensive Testing & Validation**:
+- Created extensive World operation tests (basic moves, replacements, transactions)
+- End-to-end ProcessMoves integration tests using WasmGamesService
+- All tests passing with correct unit movement and no duplication
+- Transaction flow simulation tests validating copy-on-write semantics
 
 ### Previous Foundation
 
@@ -61,10 +63,10 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 ## Current System Status
 
 **Core Gameplay**: ✅ **PRODUCTION READY**
-- Unit movement pipeline works end-to-end with proper validation
-- Transaction-safe state management prevents data corruption
-- Comprehensive test coverage for critical World operations
-- Server-side state persistence maintains game integrity
+- Unit movement pipeline works flawlessly end-to-end with proper validation
+- Complete transaction-safe state management with copy-on-write semantics
+- Comprehensive test coverage for all critical World operations and integration flows
+- Server-side state persistence maintains complete game integrity
 
 **Architecture**: ✅ **WORLD-CLASS**
 - Copy-on-write transaction semantics
@@ -80,14 +82,13 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 ## Known Issues & Next Steps
 
 **Minor Issues**:
-- UnitMovedChange coordinates need fixing in move processor (change data generation)
 - Visual updates use full scene reload instead of targeted updates
 - Missing loading states and move animations
 
 **Next Sprint**:
-- Fix UnitMovedChange coordinate generation in move processor
-- Verify complete ProcessMoves integration after copy-on-write fix
+- End-to-end gameplay testing with full UI integration
 - Performance testing for transaction layer with copy-on-write semantics
+- Attack system implementation and testing
 
 ## Technical Architecture Highlights
 

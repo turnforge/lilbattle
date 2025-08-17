@@ -24,8 +24,6 @@ rules:
           - "lib/**/*.go"
           - "cmd/**/*.go"
           - "services/**/*.go"
-          - "go.mod"
-          - "go.sum"
     commands:
       - "echo '🔧 Running WeeWar Tests...'"
       - "make test"

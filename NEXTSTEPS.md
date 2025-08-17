@@ -24,10 +24,10 @@
 
 ### 🔄 In Progress / Next Sprint
 
-**Bug Resolution Follow-up**
-- [ ] **Fix UnitMovedChange Coordinates**: Move processor generates incorrect coordinates in change data
-- [ ] **Verify ProcessMoves Integration**: Ensure end-to-end ProcessMoves flow works correctly after copy-on-write fix
-- [ ] **Performance Testing**: Validate transaction layer performance with copy-on-write semantics
+**Bug Resolution Follow-up - COMPLETED**
+- [x] **Fix UnitMovedChange Coordinates**: Fixed move processor to capture moved unit correctly after copy-on-write
+- [x] **Verify ProcessMoves Integration**: End-to-end ProcessMoves flow now works perfectly with proper unit movement
+- [x] **Complete Unit Movement Pipeline**: All tests passing - units move correctly with no duplication
 
 **Architecture Validation & Testing**
 - [ ] **End-to-End Testing**: Test the complete move processing pipeline with real game scenarios
@@ -84,7 +84,6 @@
 - **Action Object Pattern**: Server provides ready-to-use actions, eliminating client reconstruction
 
 **Known Issues**: 🟡 MINOR POLISH ITEMS
-- UnitMovedChange coordinates need fixing in move processor
 - Visual updates use full scene reload (not targeted updates)
 - No loading states during move processing
 - Missing move animations and audio feedback

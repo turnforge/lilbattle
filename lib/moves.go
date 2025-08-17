@@ -248,18 +248,24 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 		return nil, fmt.Errorf("failed to move unit: %w", err)
 	}
 
-	// Update unit stats
-	unit.DistanceLeft -= int32(cost)
+	// Get the moved unit from the world (handles copy-on-write correctly)
+	movedUnit := g.World.UnitAt(to)
+	if movedUnit == nil {
+		return nil, fmt.Errorf("moved unit not found at destination %v", to)
+	}
 
-	// Capture unit state after move
+	// Update unit stats on the moved unit
+	movedUnit.DistanceLeft -= int32(cost)
+
+	// Capture unit state after move (using the moved unit, not the original)
 	updatedUnit := &v1.Unit{
-		Q:               unit.Q,
-		R:               unit.R,
-		Player:          unit.Player,
-		UnitType:        unit.UnitType,
-		AvailableHealth: unit.AvailableHealth,
-		DistanceLeft:    unit.DistanceLeft,
-		TurnCounter:     unit.TurnCounter,
+		Q:               movedUnit.Q,
+		R:               movedUnit.R,
+		Player:          movedUnit.Player,
+		UnitType:        movedUnit.UnitType,
+		AvailableHealth: movedUnit.AvailableHealth,
+		DistanceLeft:    movedUnit.DistanceLeft,
+		TurnCounter:     movedUnit.TurnCounter,
 	}
 
 	// Update timestamp
