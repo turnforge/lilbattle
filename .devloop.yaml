@@ -8,6 +8,27 @@ settings:
 
 rules:
   # Go Backend Development & Testing
+  - name: "betests"
+    watch:
+      - action: "exclude"
+        patterns:
+          - "**/*/*.log"
+      - action: "include"
+        patterns:
+          - "web/**/*.go"
+      - action: "exclude"
+        patterns:
+          - "web"
+      - action: "include"
+        patterns:
+          - "lib/**/*.go"
+          - "cmd/**/*.go"
+          - "services/**/*.go"
+          - "go.mod"
+          - "go.sum"
+    commands:
+      - "echo '🔧 Running WeeWar Tests...'"
+      - "make test"
   - name: "backend"
     color: "blue"
     watch:
@@ -31,12 +52,10 @@ rules:
       - "echo '🔧 Building WeeWar Binary...'"
       - "make wasm"
       - "make binlocal"
-      # - "go test -short ./..."
       - "echo '✅ Backend build and tests complete'"
       - "pkill weewar || true"
       # - "kill -9 `ps -ef | grep weewar  | sed -e \"s/  */:/g\" | cut -d ':' -f 3`"
       - "./bin/weewar serve"
-
   - name: "cli"
     color: "red"
     watch:
@@ -49,7 +68,6 @@ rules:
           - "go.sum"
     commands:
       - "echo '🔧 Building WeeWar Binary...'"
-      # - "make test"
       - "make wasm"
       - "make binlocal"
       - "make cli"
