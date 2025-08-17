@@ -2,7 +2,7 @@
 import { EventBus } from '../lib/EventBus';
 import { PhaserGameScene } from './phaser/PhaserGameScene';
 import { Unit, Tile, World } from './World';
-import { GameState, UnitSelectionData } from './GameState';
+import { GameState } from './GameState';
 import { GameState as ProtoGameState, Game as ProtoGame, GameConfiguration as ProtoGameConfiguration, MoveOption, AttackOption, GameMove } from '../gen/wasm-clients/weewar/v1/models';
 import { WeewarV1Deserializer } from '../gen/wasm-clients/weewar/v1/deserializer';
 import { create } from '@bufbuild/protobuf';
@@ -104,8 +104,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             // Get tile and unit data from World using coordinates
             const tile = this.world?.getTileAt(q, r);
             const unit = this.world?.getUnitAt(q, r);
-
-            console.log(`[GameViewerPage] Map clicked at (${q}, ${r}) on layer '${layer}'`, { tile, unit, extra });
 
             switch (layer) {
                 case 'movement-highlight':
@@ -576,8 +574,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Select unit and show movement/attack highlights
      */
     private selectUnitAt(q: number, r: number, options: any[]): void {
-        // console.log(`[GameViewerPage] Selecting unit at Q=${q}, R=${r} with ${options.length} options`);
-        
         if (!this.gameState?.isReady()) {
             console.warn('[GameViewerPage] Game not ready for unit selection');
             return;
@@ -596,8 +592,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         const movementOptions = options.filter(opt => opt.move !== undefined);
         const attackOptions = options.filter(opt => opt.attack !== undefined);
         
-        console.log(`[GameViewerPage] Unit selected: ${movementOptions.length} moves, ${attackOptions.length} attacks available`);
-        
         // Extract MoveOption and AttackOption objects from the unified options
         const moveOptionObjects = movementOptions.map((option: any) => option.move);
         const attackOptionObjects = attackOptions.map((option: any) => option.attack);
@@ -606,13 +600,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         this.selectedUnitCoord = { q, r };
         this.availableMovementOptions = moveOptionObjects;
         
-        console.log('[GameViewerPage] Extracted protobuf objects:', {
-            moveOptionObjects,
-            attackOptionObjects,
-            sampleMoveOption: moveOptionObjects[0],
-            sampleAttackOption: attackOptionObjects[0]
-        });
-
         // Update GameViewer to show highlights using layer-based approach  
         if (this.gameScene) {
             // Clear previous selection
@@ -630,8 +617,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
                 // Show attack options (convert to coordinates for now)
                 const attackCoords = attackOptionObjects.map(attackOpt => ({ q: attackOpt.q, r: attackOpt.r }));
                 attackLayer.showAttackOptions(attackCoords);
-                
-                console.log('[GameViewerPage] Highlights sent to layers');
             } else {
                 console.warn('[GameViewerPage] Some highlight layers not available');
             }
@@ -644,9 +629,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
      * Execute a unit move using ProcessMoves API
      */
     private async executeMove(fromCoord: { q: number, r: number }, toCoord: { q: number, r: number }, moveOption: MoveOption, validateStates=true): Promise<void> {
-        console.log(`[GameViewerPage.executeMove] Starting move execution from (${fromCoord.q}, ${fromCoord.r}) to (${toCoord.q}, ${toCoord.r})`);
-        console.log(`[GameViewerPage.executeMove] MoveOption:`, moveOption);
-
         // Set processing state to prevent concurrent moves
         this.isProcessingMove = true;
         this.showToast('Info', 'Processing move...', 'info');
@@ -659,22 +641,14 @@ class GameViewerPage extends BasePage implements LCMComponent {
 
             // ✅ Get current player from move option or query WASM
             const currentGameState = await this.gameState!.getCurrentGameState();
-            console.log(`[GameViewerPage.executeMove] Current game state:`, {
-                currentPlayer: currentGameState.currentPlayer,
-                turnCounter: currentGameState.turnCounter,
-                unitCount: currentGameState.worldData?.units?.length || 0
-            });
             
             const gameMove= GameMove.from({
                 player: currentGameState.currentPlayer,
                 moveUnit: moveOption.action,
             })!;
-            console.log(`[GameViewerPage.executeMove] Created GameMove:`, gameMove);
 
             if (validateStates) { // as debug check our state with the server is in sync before making moves
-              console.log(`[GameViewerPage.executeMove] ⚡ BEFORE move - validating sync with server...`);
               await this.ensureInSyncWithServer()
-              console.log(`[GameViewerPage.executeMove] ✅ BEFORE move - sync validation passed`);
             }
 
             // Log World state before move
@@ -689,17 +663,10 @@ class GameViewerPage extends BasePage implements LCMComponent {
                     });
                 }
             }
-            console.log(`[GameViewerPage.executeMove] World state BEFORE move:`, {
-                unitCount: Object.keys(this.world.units).length,
-                units: unitsBefore
-            });
 
             // ✅ Call ProcessMoves API - this will trigger World updates via EventBus
-            console.log(`[GameViewerPage.executeMove] 🚀 Calling GameState.processMoves...`);
             const worldChanges = await this.gameState!.processMoves([gameMove]);
             
-            console.log('[GameViewerPage.executeMove] Move executed successfully, world changes received:', worldChanges);
-
             // Log World state after move
             const unitsAfter = [];
             for (const key in this.world.units) {
@@ -712,14 +679,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
                     });
                 }
             }
-            console.log(`[GameViewerPage.executeMove] World state AFTER move:`, {
-                unitCount: Object.keys(this.world.units).length,
-                units: unitsAfter
-            });
-
             if (validateStates) { // as debug check our state with the server is in sync before making moves
-              console.log(`[GameViewerPage.executeMove] ⚡ AFTER move - validating sync with server...`);
-              
               // Add a small delay to ensure all async operations complete
               await new Promise(resolve => setTimeout(resolve, 100));
               
@@ -734,14 +694,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
                       });
                   }
               }
-              console.log(`[GameViewerPage.executeMove] Final World state before validation:`, {
-                unitCount: Object.keys(this.world.units).length,
-                unitKeys: Object.keys(this.world.units),
-                units: unitsFinal
-              });
-              
               await this.ensureInSyncWithServer()
-              console.log(`[GameViewerPage.executeMove] ✅ AFTER move - sync validation passed`);
             }
 
             // Clear selection and highlights after successful move
@@ -769,14 +722,7 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 
     protected async ensureInSyncWithServer() {
-      console.log('[ensureInSyncWithServer] Starting sync validation...');
       const backendState = await this.gameState.getCurrentGameState();
-      
-      // Enhanced metadata validation with detailed logging
-      console.log('[ensureInSyncWithServer] Metadata comparison:', {
-        backend: { currentPlayer: backendState.currentPlayer, turnCounter: backendState.turnCounter },
-        frontend: { currentPlayer: this.gameState.currentPlayer, turnCounter: this.gameState.turnCounter }
-      });
       
       if (backendState.currentPlayer != this.gameState.currentPlayer) {
         throw new Error(`Backend State (${backendState.currentPlayer}) != this.currentPlayer (${this.gameState.currentPlayer})`)
@@ -790,20 +736,12 @@ class GameViewerPage extends BasePage implements LCMComponent {
       const backendTiles = backendWorldData.tiles
       const backendUnits = backendWorldData.units
       
-      console.log('[ensureInSyncWithServer] World data counts:', {
-        backend: { tiles: backendTiles.length, units: backendUnits.length },
-        frontend: { tiles: Object.keys(this.world.tiles).length, units: Object.keys(this.world.units).length }
-      });
-      
       if (backendTiles.length != Object.keys(this.world.tiles).length) {
         throw new Error(`Backend Tile Count (${backendTiles.length}) != this.tileCount(${Object.keys(this.world.tiles).length})`)
       }
       if (backendUnits.length != Object.keys(this.world.units).length) {
         throw new Error(`Backend Unit Count (${backendUnits.length}) != this.unitCount(${Object.keys(this.world.units).length})`)
       }
-
-      // ✅ NEW APPROACH: Use coordinate-based validation instead of array index matching
-      console.log('[ensureInSyncWithServer] Coordinate-based unit validation:');
       
       // Create coordinate map for backend units
       const backendUnitMap = new Map<string, Unit>();
@@ -815,12 +753,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
       // Validate each frontend unit by coordinate lookup
       for (const [coord, frontendUnit] of Object.entries(this.world.units)) {
         const backendUnit = backendUnitMap.get(coord);
-        
-        console.log(`[ensureInSyncWithServer] Validating unit at ${coord}:`, {
-          frontendUnit: frontendUnit,
-          backendUnit: backendUnit,
-          backendExists: backendUnitMap.has(coord)
-        });
         
         if (!backendUnit) {
           throw new Error(`Frontend unit at ${coord} not found in backend state`);
@@ -850,8 +782,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
           throw new Error(`Backend unit at ${coord} not found in frontend state`);
         }
       }
-      
-      console.log('[ensureInSyncWithServer] ✅ All validation checks passed!');
     }
 
     /**

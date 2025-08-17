@@ -57,7 +57,6 @@ class HomePage {
             const action = cardButton.dataset.action;
             const templateId = cardButton.dataset.templateId; // Might be undefined for blank
 
-            console.log(`Modal card clicked: Action=${action}, TemplateID=${templateId}`);
             this.modal.hide(); // Hide modal before redirecting
 
             let redirectUrl = '/designs/new';
@@ -79,7 +78,6 @@ class HomePage {
         const cancelButton = (event.target as HTMLElement).closest('#create-design-cancel');
         if (cancelButton) {
             event.preventDefault();
-            console.log("Modal Cancel button clicked.");
             this.modal.hide();
             return; // Handled
         }

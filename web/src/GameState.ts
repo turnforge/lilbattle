@@ -60,16 +60,12 @@ export class GameState {
      * Load the WASM module using generated client
      */
     private async loadWASMModule(): Promise<void> {
-        console.log('[GameState] Loading WASM module with generated client...');
-    
         await this.client.loadWasm('/static/wasm/weewar-cli.wasm');
         
         // Wait for Go-exported functions to be available on window.weewar
         await this.waitForGoFunctions();
         
         this.wasmLoaded = true;
-
-        console.log('[GameState] WASM module loaded successfully via generated client');
         this.eventBus.emit('wasm-loaded', { success: true }, this, this);
     }
     
@@ -84,7 +80,6 @@ export class GameState {
         while (elapsed < maxWaitTime) {
             const weewar = (window as any).weewar;
             if (weewar && weewar.loadGameData) {
-                console.log('[GameState] Go functions are now available on window.weewar');
                 return;
             }
             
@@ -174,17 +169,9 @@ export class GameState {
             throw new Error('Game ID not set. Call setGameId() first.');
         }
 
-        console.log('[GameState.processMoves] Processing moves:', moves);
-
         // Get the current WASM state before processing moves (for comparison)
         const preState = await this.getCurrentGameState();
         const preWorldData = preState.worldData;
-        console.log('[GameState.processMoves] Pre-move WASM state:', {
-            currentPlayer: preState.currentPlayer,
-            turnCounter: preState.turnCounter,
-            unitCount: preWorldData?.units?.length || 0,
-            units: preWorldData?.units || []
-        });
 
         // Create request for ProcessMoves service
         const request = ProcessMovesRequest.from({
@@ -198,55 +185,13 @@ export class GameState {
         // Extract world changes from move results (each move result contains its own changes)
         const worldChanges: WorldChange[] = [];
         for (const moveResult of response.moveResults || []) {
-            console.log('[GameState.processMoves] Move result:', {
-                sequenceNum: moveResult.sequenceNum,
-                isPermanent: moveResult.isPermanent,
-                changesCount: moveResult.changes?.length || 0,
-                changes: moveResult.changes
-            });
             worldChanges.push(...(moveResult.changes || []));
         }
-        
-        console.log('[GameState.processMoves] Extracted WorldChanges from WASM:', {
-            moveResultsCount: response.moveResults?.length || 0,
-            totalWorldChanges: worldChanges.length,
-            worldChanges: worldChanges
-        });
 
         // Get the actual WASM state after processing moves to ensure synchronization
         const postState = await this.getCurrentGameState();
         const postWorldData = postState.worldData;
-        
-        console.log('[GameState.processMoves] Post-move WASM state:', {
-            currentPlayer: postState.currentPlayer,
-            turnCounter: postState.turnCounter,
-            unitCount: postWorldData?.units?.length || 0,
-            units: postWorldData?.units || []
-        });
-        
-        console.log('[GameState.processMoves] State transition summary:', {
-            preState: {
-                currentPlayer: preState.currentPlayer,
-                turnCounter: preState.turnCounter,
-                unitCount: preWorldData?.units?.length || 0
-            },
-            postState: {
-                currentPlayer: postState.currentPlayer,
-                turnCounter: postState.turnCounter,
-                unitCount: postWorldData?.units?.length || 0
-            },
-            changesReported: worldChanges.length
-        });
-
-        // ✅ Direct EventBus emit for World to coordinate
-        // Use the actual changes returned by processMoves, trusting the WASM implementation
-        console.log('[GameState.processMoves] 🔥 EMITTING server-changes event:', {
-            changesCount: worldChanges.length,
-            changes: worldChanges,
-            eventBusExists: !!this.eventBus
-        });
         this.eventBus.emit('server-changes', { changes: worldChanges }, this, this);
-        console.log('[GameState.processMoves] ✅ server-changes event emitted');
         
         // Return changes for any components that still need them
         return worldChanges;
@@ -304,11 +249,6 @@ export class GameState {
             throw new Error('No game data found in page elements');
         }
         
-        // Debug: Log the actual content to understand what we're getting
-        console.log(`[GameState] Raw game data from page:`, gameElement.textContent?.substring(0, 100) + '...');
-        console.log(`[GameState] Raw game state from page:`, (gameStateElement?.textContent || 'null').substring(0, 100) + '...');
-        console.log(`[GameState] Raw history from page:`, (historyElement?.textContent || 'null').substring(0, 100) + '...');
-        
         // Convert JSON strings to Uint8Array for WASM
         const gameBytes = new TextEncoder().encode(gameElement.textContent);
         const gameStateBytes = new TextEncoder().encode(
@@ -328,41 +268,25 @@ export class GameState {
             throw new Error('WASM loadGameData function not available. WASM module may not be fully loaded.');
         }
         
-        console.log(`[GameState] Calling WASM loadGameData with game data bytes`);
         const wasmResult = weewar.loadGameData(gameBytes, gameStateBytes, historyBytes);
         
         if (!wasmResult.success) {
             throw new Error(`WASM load failed: ${wasmResult.error}`);
         }
         
-        console.log('[GameState] Game data loaded into WASM singletons:', wasmResult.message);
-        
         // Extract game ID and initial metadata from loaded data
         if (gameElement?.textContent) {
-            try {
-                const gameData = JSON.parse(gameElement.textContent);
-                this.gameId = gameData.id || 'test';
-                this.gameName = gameData.name || 'Untitled Game';
-                console.log('[GameState] Extracted game ID:', this.gameId);
-            } catch (error) {
-                console.log('[GameState] Could not parse game ID from JSON, using default');
-                this.gameId = 'test';
-            }
+            this.gameId = 'test';
+            const gameData = JSON.parse(gameElement.textContent);
+            this.gameId = gameData.id || 'test';
+            this.gameName = gameData.name || 'Untitled Game';
         }
         
         // ✅ Extract initial game state metadata (currentPlayer, turnCounter)
         if (gameStateElement?.textContent && gameStateElement.textContent.trim() !== 'null') {
-            try {
-                const gameStateData = JSON.parse(gameStateElement.textContent);
-                this.currentPlayer = gameStateData.currentPlayer || 1;
-                this.turnCounter = gameStateData.turnCounter || 1;
-                console.log('[GameState] Extracted initial game state:', {
-                    currentPlayer: this.currentPlayer,
-                    turnCounter: this.turnCounter
-                });
-            } catch (error) {
-                console.log('[GameState] Could not parse game state from JSON, using defaults');
-            }
+            const gameStateData = JSON.parse(gameStateElement.textContent);
+            this.currentPlayer = gameStateData.currentPlayer || 1;
+            this.turnCounter = gameStateData.turnCounter || 1;
         }
         
         // Emit event to indicate WASM data is loaded and ready for queries
@@ -410,31 +334,20 @@ export class GameState {
      * ✅ Get all options at a position (core WASM method)
      */
     public async getOptionsAt(q: number, r: number): Promise<any> {
-        console.log(`[GameState] getOptionsAt called with q=${q}, r=${r}`);
         const client = await this.ensureWASMLoaded();
         
-        try {
-            if (!this.gameId) {
-                console.log('[GameState] No game ID available for getOptionsAt');
-                return { options: [], currentPlayer: 0, gameInitialized: false };
-            }
-
-            const request = GetOptionsAtRequest.from({
-                gameId: this.gameId,
-                q: q,
-                r: r
-            });
-            console.log('[GameState] getOptionsAt request:', request);
-
-            const response = await client.gamesService.getOptionsAt(request);
-            console.log('[GameState] getOptionsAt response:', response);
-            
-            console.log(`[GameState] getOptionsAt(${q}, ${r}): ${response.options?.length || 0} options, currentPlayer: ${response.currentPlayer}`);
-            return response;
-        } catch (error) {
-            console.log(`[GameState] Error in getOptionsAt: ${error}`);
+        if (!this.gameId) {
             return { options: [], currentPlayer: 0, gameInitialized: false };
         }
+
+        const request = GetOptionsAtRequest.from({
+            gameId: this.gameId,
+            q: q,
+            r: r
+        });
+
+        const response = await client.gamesService.getOptionsAt(request);
+        return response;
     }
 
     /**
@@ -459,7 +372,5 @@ export class GameState {
             const result = await response.json();
             return JSON.stringify({ success: true, sessionId: result.sessionId });
         };
-        
-        console.log('Game save/load bridge functions initialized');
     }
 }

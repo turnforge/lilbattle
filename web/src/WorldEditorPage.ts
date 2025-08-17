@@ -515,35 +515,27 @@ class WorldEditorPage extends BasePage {
             
             switch (action) {
                 case 'fill-all-grass':
-                    console.log('Fill All Grass clicked via delegation');
                     this.fillAllGrass();
                     break;
                 case 'create-island-world':
-                    console.log('Create Island World clicked via delegation');
                     this.createIslandWorld();
                     break;
                 case 'create-mountain-ridge':
-                    console.log('Create Mountain Ridge clicked via delegation');
                     this.createMountainRidge();
                     break;
                 case 'show-terrain-stats':
-                    console.log('Show Terrain Stats clicked via delegation');
                     this.showTerrainStats();
                     break;
                 case 'randomize-terrain':
-                    console.log('Randomize Terrain clicked via delegation');
                     this.randomizeTerrain();
                     break;
                 case 'clear-world':
-                    console.log('Clear World clicked via delegation');
                     this.clearWorld();
                     break;
                 case 'download-image':
-                    console.log('Download Image clicked via delegation');
                     this.downloadImage();
                     break;
                 case 'download-game-data':
-                    console.log('Download Game Data clicked via delegation');
                     this.downloadGameData();
                     break;
             }
@@ -861,16 +853,13 @@ class WorldEditorPage extends BasePage {
     }
 
     public clearWorld(): void {
-        console.log('clearWorld() method called');
         this.logToConsole('Clearing entire world...');
         
         // Clear world data - this will trigger observer notifications to update Phaser
         if (this.world) {
-            console.log('World instance exists, calling clearAll()');
             this.world.clearAll();
             this.logToConsole('World data cleared - Phaser will update via observer pattern');
         } else {
-            console.log('World instance is null!');
             this.logToConsole('World instance not available');
         }
         
@@ -975,7 +964,6 @@ class WorldEditorPage extends BasePage {
             this.editorOutput.innerHTML = currentContent + (currentContent ? '<br>' : '') + this.escapeHtml(logEntry);
             this.editorOutput.scrollTop = this.editorOutput.scrollHeight;
         }
-        console.log(`[WorldEditor] ${message}`);
     }
 
     private escapeHtml(text: string): string {
@@ -1995,12 +1983,10 @@ class WorldEditorPage extends BasePage {
     // Old EventBus handlers removed - components now use pageState directly
     
     private async handlePhaserReady() {
-        console.log('WorldEditorPage: Phaser ready via EventBus');
         this.logToConsole('EventBus: Phaser editor is ready');
         
         // Load world data if available
         if (this.world && this.phaserEditorComponent) {
-            console.log('WorldEditorPage: Loading world data into Phaser editor');
             // Give Phaser time to fully initialize webgl context and scene
             await this.phaserEditorComponent.editorScene.loadWorld(this.world);
             this.hasPendingWorldDataLoad = false;
@@ -2011,8 +1997,6 @@ class WorldEditorPage extends BasePage {
 
 // Initialize the editor when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, starting WorldEditorPage initialization...');
-
     // Create page instance (just basic setup)
     const page = new WorldEditorPage("WorldEditorPage");
     
@@ -2021,6 +2005,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Start breadth-first initialization
     await lifecycleController.initializeFromRoot(page);
-    
-    console.log('WorldEditorPage fully initialized via LifecycleController');
 });
