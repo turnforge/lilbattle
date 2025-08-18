@@ -22,7 +22,7 @@ import { RulesTable, TerrainStats } from './RulesTable';
  * - Handling player interactions (unit selection, movement, attacks)
  * - Providing game controls and UI feedback
  */
-class GameViewerPage extends BasePage implements LCMComponent {
+export class GameViewerPage extends BasePage implements LCMComponent {
     private currentGameId: string | null;
     private gameScene: PhaserGameScene
     private gameState: GameState
