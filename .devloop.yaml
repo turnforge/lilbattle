@@ -1,5 +1,6 @@
 settings:
   project_id: "weewar"
+  max_parallel_rules: 1
   color_logs: true
   color_scheme: "dark"
   prefix_logs: true
@@ -12,7 +13,8 @@ rules:
     watch:
       - action: "exclude"
         patterns:
-          - "**/*/*.log"
+          - "**/*.log"
+          - "web/node_modules/**"
       - action: "include"
         patterns:
           - "web/**/*.go"
@@ -32,7 +34,8 @@ rules:
     watch:
       - action: "exclude"
         patterns:
-          - "**/*/*.log"
+          - "web/node_modules/**"
+          - "**/*.log"
       - action: "include"
         patterns:
           - "web/**/*.go"
@@ -101,6 +104,32 @@ rules:
       - "echo '🧪 Running frontend tests...'"
       # - "npm run test:unit"
       - "echo '✅ Frontend build complete and tests disabled'"
+  - name: "fetests"
+    skip_run_on_init: true
+    workdir: "./web"
+    watch:
+      - action: "exclude"
+        patterns:
+          - "frontend/gen/**"
+          - "**/*.log"
+          - "node_modules/**"
+          - "dist/**"
+          - "test-results/**"
+          - "playwright-report/**"
+          - "node_modules"
+      - action: "include"
+        patterns:
+          - "**/*.ts"
+          - "**/*.css"
+          - "**/*.html"
+          - "**/*.spec.ts"
+          - "**/*.test.ts"
+          - "package.json"
+          - "vite.config.ts"
+          - "tsconfig.json"
+    commands:
+      - "echo '🧪 Running frontend tests...'"
+      - "npm run test"
 
   # Protocol Buffers (affects both Go and Web)
   - name: "protobuf"
