@@ -7,6 +7,39 @@ import { createTestGameState, validateMovementOptions, validateAttackOptions } f
 import { SMALL_TEST_MAP, MEDIUM_TEST_MAP, COMBAT_TEST_MAP, TEST_MAPS, testMapToJSON } from './fixtures/testMaps';
 import { GameState } from '../src/GameState';
 
+// Helper to setup test game data in DOM elements
+function setupTestGameDOM(testMap: any) {
+  // Mock the DOM elements that GameState.loadGameDataToWasm() expects
+  const mockGetElementById = jest.fn((id: string) => {
+    const mockElements: { [key: string]: any } = {
+      'game.data-json': { 
+        textContent: JSON.stringify({
+          id: 'test-game', 
+          name: testMap.name,
+          tiles: testMap.tiles,
+          units: testMap.units 
+        })
+      },
+      'game-state-data-json': { 
+        textContent: JSON.stringify({
+          currentPlayer: 1, 
+          turnCounter: 1,
+          worldData: {
+            tiles: testMap.tiles,
+            units: testMap.units
+          }
+        })
+      },
+      'game-history-data-json': { 
+        textContent: JSON.stringify({gameId: 'test-game', groups: []})
+      },
+    };
+    return mockElements[id] || null;
+  });
+  
+  (global.document as any).getElementById = mockGetElementById;
+}
+
 describe('Rules Engine Validation', () => {
   
   describe('Movement Rules Consistency', () => {
@@ -15,20 +48,35 @@ describe('Rules Engine Validation', () => {
       const results: Array<{ mapName: string; unitMovement: any; valid: boolean }> = [];
       
       // Test movement rules on different map sizes
-      for (const [mapName, testMap] of Object.entries(TEST_MAPS)) {
+      for (const testMap of TEST_MAPS) {
         const { gameState, cleanup } = await createTestGameState();
         
         try {
-          const mapData = testMapToJSON(testMap);
-          await gameState.createGameFromMap(mapData);
+          // Setup DOM with test map data
+          setupTestGameDOM(testMap);
           
-          // Test movement for first unit
+          // Load game data using current GameState API
+          gameState.setGameId('test-game');
+          await gameState.loadGameDataToWasm();
+          
+          // Test movement for first unit using getOptionsAt
           const unit = testMap.units[0];
-          const movementResponse = gameState.getMovementOptions(unit.q, unit.r);
+          const optionsResponse = await gameState.getOptionsAt(unit.q, unit.r);
+          
+          // Extract movement options from unified options response
+          const movementOptions = (optionsResponse.options || [])
+            .filter((option: any) => option.move !== undefined)
+            .map((option: any) => option.move);
+          
+          const movementResponse = {
+            success: true,
+            data: movementOptions
+          };
+          
           const validation = validateMovementOptions(movementResponse);
           
           results.push({
-            mapName,
+            mapName: testMap.name,
             unitMovement: movementResponse,
             valid: validation.isValid
           });
@@ -57,27 +105,39 @@ describe('Rules Engine Validation', () => {
       const { gameState, cleanup } = await createTestGameState();
       
       try {
-        const mapData = testMapToJSON(MEDIUM_TEST_MAP);
-        await gameState.createGameFromMap(mapData);
+        // Setup DOM with test map data
+        setupTestGameDOM(MEDIUM_TEST_MAP);
+        
+        // Load game data using current GameState API
+        gameState.setGameId('test-game');
+        await gameState.loadGameDataToWasm();
         
         // Test movement options for a unit
         const unit = MEDIUM_TEST_MAP.units[0];
-        const movementResponse = gameState.getMovementOptions(unit.q, unit.r);
+        const optionsResponse = await gameState.getOptionsAt(unit.q, unit.r);
         
-        if (movementResponse.success) {
+        // Extract movement options from unified options response
+        const movementOptions = (optionsResponse.options || [])
+          .filter((option: any) => option.move !== undefined)
+          .map((option: any) => option.move);
+        
+        if (movementOptions.length > 0) {
           // Movement should be within reasonable range (not the entire map)
-          const moveCount = movementResponse.data.length;
-          const totalTiles = Object.keys(MEDIUM_TEST_MAP.tiles).length;
+          const moveCount = movementOptions.length;
+          const totalTiles = MEDIUM_TEST_MAP.tiles.length;
           
           // Movement options should be less than total tiles (reasonable constraint)
           expect(moveCount).toBeLessThan(totalTiles);
           
-          console.log("mrp: ", movementResponse.data)
+          console.log("Movement options: ", movementOptions);
+          
           // All movement coordinates should be valid tile positions
-          movementResponse.data.forEach((move: any) => {
+          movementOptions.forEach((move: any) => {
             // All movement coordinates should be valid tile positions
-            const foundIndex = MEDIUM_TEST_MAP.tiles.findIndex((tile) => tile.q == move.coord.q && tile.r == move.coord.r)
-            expect(foundIndex >= 0).toBe(true)
+            const foundIndex = MEDIUM_TEST_MAP.tiles.findIndex((tile) => 
+              tile.q == move.toQ && tile.r == move.toR
+            );
+            expect(foundIndex >= 0).toBe(true);
           });
         }
         
@@ -90,21 +150,30 @@ describe('Rules Engine Validation', () => {
       const { gameState, cleanup } = await createTestGameState();
       
       try {
-        const mapData = testMapToJSON(COMBAT_TEST_MAP);
-        await gameState.createGameFromMap(mapData);
+        // Setup DOM with test map data
+        setupTestGameDOM(COMBAT_TEST_MAP);
         
-        // Get movement options for first unit
+        // Load game data using current GameState API
+        gameState.setGameId('test-game');
+        await gameState.loadGameDataToWasm();
+        
+        // Get movement options for first unit using getOptionsAt
         const unit = COMBAT_TEST_MAP.units[0];
-        const movementResponse = gameState.getMovementOptions(unit.q, unit.r);
+        const optionsResponse = await gameState.getOptionsAt(unit.q, unit.r);
         
-        if (movementResponse.success) {
+        // Extract movement options from unified options response
+        const movementOptions = (optionsResponse.options || [])
+          .filter((option: any) => option.move !== undefined)
+          .map((option: any) => option.move);
+        
+        if (movementOptions.length > 0) {
           // Check that movement options don't include tiles occupied by other units
           const occupiedPositions = COMBAT_TEST_MAP.units
             .filter(u => u.q !== unit.q || u.r !== unit.r) // Exclude the moving unit itself
             .map(u => `${u.q},${u.r}`);
           
-          const movementPositions = movementResponse.data.map((move: any) => 
-            `${move.coord.q},${move.coord.r}`
+          const movementPositions = movementOptions.map((move: any) => 
+            `${move.toQ},${move.toR}`
           );
           
           occupiedPositions.forEach(occupied => {

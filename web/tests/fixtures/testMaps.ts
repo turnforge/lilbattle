@@ -3,7 +3,7 @@
  * Contains standardized test maps for rules engine validation
  */
 
-import { Tile, Unit } from "../../frontend/components/World"
+import { Unit, Tile } from "../../src/World"
 
 export interface TestMap {
   name: string;
@@ -32,8 +32,8 @@ export const SMALL_TEST_MAP: TestMap = {
     { q: 2, r: 2, player: 0, tileType: 1 },   // Plains
   ],
   units: [
-    { unitType: 1, q: 0, r: 0, player: 1,  }, // Player 1 soldier
-    { unitType: 1, q: 2, r: 2, player: 2,  }, // Player 2 soldier
+    { unitType: 1, q: 0, r: 0, player: 1, availableHealth: 100, distanceLeft: 3, turnCounter: 1 }, // Player 1 soldier
+    { unitType: 1, q: 2, r: 2, player: 2, availableHealth: 100, distanceLeft: 3, turnCounter: 1 }, // Player 2 soldier
   ],
   players: [1, 2],
   expectedDimensions: { rows: 3, cols: 3 }
@@ -53,10 +53,10 @@ export const MEDIUM_TEST_MAP: TestMap = {
     {q: 0, r: 4,  player: 0, tileType: 1 }, {q: 1, r: 4,  player: 0, tileType: 1 }, {q: 2, r: 4,  player: 0, tileType: 3 }, {q: 3, r: 4,  player: 0, tileType: 1 }, {q: 4, r: 4,  player: 0, tileType: 1 },
   ],
   units: [
-    { unitType: 1, q: 0, r: 0, player: 1,  },
-    { unitType: 1, q: 1, r: 0, player: 1,  },
-    { unitType: 1, q: 3, r: 4, player: 2,  },
-    { unitType: 1, q: 4, r: 4, player: 2,  },
+    { unitType: 1, q: 0, r: 0, player: 1, availableHealth: 100, distanceLeft: 3, turnCounter: 1 },
+    { unitType: 1, q: 1, r: 0, player: 1, availableHealth: 100, distanceLeft: 3, turnCounter: 1 },
+    { unitType: 1, q: 3, r: 4, player: 2, availableHealth: 100, distanceLeft: 3, turnCounter: 1 },
+    { unitType: 1, q: 4, r: 4, player: 2, availableHealth: 100, distanceLeft: 3, turnCounter: 1 },
   ],
   players: [1, 2],
   expectedDimensions: { rows: 5, cols: 5 }
@@ -74,9 +74,9 @@ export const COMBAT_TEST_MAP: TestMap = {
     {q: 0, r: 2,  player: 0, tileType: 1 }, {q: 1, r: 2,  player: 0, tileType: 1 }, {q: 2, r: 2,  player: 0, tileType: 1 },
   ],
   units: [
-    { unitType: 1, q: 0, r: 0, player: 1,  }, // Player 1 soldier
-    { unitType: 1, q: 1, r: 0, player: 2,  }, // Player 2 soldier (adjacent)
-    { unitType: 1, q: 2, r: 2, player: 2, },  // Damaged enemy unit
+    { unitType: 1, q: 0, r: 0, player: 1, availableHealth: 100, distanceLeft: 3, turnCounter: 1 }, // Player 1 soldier
+    { unitType: 1, q: 1, r: 0, player: 2, availableHealth: 100, distanceLeft: 3, turnCounter: 1 }, // Player 2 soldier (adjacent)
+    { unitType: 1, q: 2, r: 2, player: 2, availableHealth: 80, distanceLeft: 3, turnCounter: 1 },  // Damaged enemy unit
   ],
   players: [1, 2],
   expectedDimensions: { rows: 3, cols: 3 }

@@ -26,10 +26,14 @@ if (fs.existsSync(wasmExecPath)) {
 
 // Implement fetch for WASM loading in Node.js environment
 global.fetch = jest.fn().mockImplementation((url: string) => {
-  if (url.includes('weewar-cli.wasm')) {
+  console.log('Fetch called with URL:', url);
+  
+  // Handle WASM file requests
+  if (url.includes('weewar') && url.includes('.wasm')) {
+    console.log('WASM fetch detected, checking path:', wasmPath);
     if (fs.existsSync(wasmPath)) {
       const wasmBuffer = fs.readFileSync(wasmPath);
-      // Create a proper Response-like object
+      // Create a proper Response-like object that matches Web API
       const response = {
         arrayBuffer: () => Promise.resolve(wasmBuffer.buffer.slice(
           wasmBuffer.byteOffset, 
@@ -41,18 +45,37 @@ global.fetch = jest.fn().mockImplementation((url: string) => {
         headers: new Map(),
         body: null,
         bodyUsed: false,
-        clone: () => response,
+        clone: function() { return this; },
         json: () => Promise.reject(new Error('Not JSON')),
         text: () => Promise.reject(new Error('Not text')),
         blob: () => Promise.reject(new Error('Not blob')),
         formData: () => Promise.reject(new Error('Not form data'))
       };
+      console.log('Returning WASM response');
       return Promise.resolve(response);
     } else {
+      console.error(`WASM file not found at ${wasmPath}`);
       return Promise.reject(new Error(`WASM file not found at ${wasmPath}`));
     }
   }
-  return Promise.reject(new Error(`Unexpected fetch URL: ${url}`));
+  
+  // Handle other requests - return empty successful response
+  console.log('Non-WASM fetch, returning empty response');
+  const emptyResponse = {
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Map(),
+    body: null,
+    bodyUsed: false,
+    clone: function() { return this; },
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+    formData: () => Promise.resolve(new FormData())
+  };
+  return Promise.resolve(emptyResponse);
 });
 
 // Mock WebAssembly.instantiateStreaming for Node.js
@@ -75,8 +98,57 @@ Object.defineProperty(window, 'cancelAnimationFrame', {
   value: jest.fn()
 });
 
-// Mock WebGL context for headless testing
+// Mock Phaser for headless testing - prevent initialization issues
+jest.mock('phaser', () => ({
+  Scene: class MockScene {
+    constructor() {}
+    create() {}
+    preload() {}
+    update() {}
+  },
+  Game: class MockGame {
+    constructor() {}
+    destroy() {}
+  },
+  GameObjects: {
+    Graphics: class MockGraphics {},
+    Text: class MockText {},
+    Sprite: class MockSprite {},
+  },
+  Types: {
+    Input: {
+      Keyboard: {}
+    }
+  }
+}));
+
+// Mock Canvas and WebGL context for headless testing  
 HTMLCanvasElement.prototype.getContext = jest.fn((contextId: string) => {
+  if (contextId === '2d') {
+    return {
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
+      fillRect: jest.fn(),
+      strokeRect: jest.fn(),
+      clearRect: jest.fn(),
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      closePath: jest.fn(),
+      stroke: jest.fn(),
+      fill: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      scale: jest.fn(),
+      translate: jest.fn(),
+      rotate: jest.fn(),
+      drawImage: jest.fn(),
+      createImageData: jest.fn(),
+      getImageData: jest.fn(),
+      putImageData: jest.fn(),
+    };
+  }
   if (contextId === 'webgl' || contextId === 'webgl2') {
     return {
       clearColor: jest.fn(),

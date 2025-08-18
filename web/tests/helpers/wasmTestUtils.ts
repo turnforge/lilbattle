@@ -3,8 +3,8 @@
  * Helper functions for testing with real WASM binary
  */
 
-import { GameState } from '../../frontend/components/GameState';
-import { EventBus } from '../../frontend/components/EventBus';
+import { GameState } from '../../src/GameState';
+import { EventBus } from '../../lib/EventBus';
 
 /**
  * Create a minimal DOM environment for testing GameState
@@ -85,7 +85,7 @@ export async function createTestGameState(): Promise<{ gameState: GameState; eve
   const eventBus = new EventBus(false); // Disable debug mode for cleaner test output
   const container = createMinimalDOM();
   
-  const gameState = new GameState(container, eventBus, false);
+  const gameState = new GameState(eventBus);
   
   // Since WASM is pre-loaded, GameState should recognize it immediately
   // But we still call waitUntilReady() to ensure the component is properly initialized
@@ -98,7 +98,7 @@ export async function createTestGameState(): Promise<{ gameState: GameState; eve
   }
   
   const cleanup = () => {
-    gameState.destroy();
+    // GameState doesn't have a destroy method, but we can clean up DOM
     cleanupDOM(container);
   };
   
@@ -110,17 +110,23 @@ export async function createTestGameState(): Promise<{ gameState: GameState; eve
  */
 export function waitForEvent(eventBus: EventBus, eventName: string, timeoutMs: number = 5000): Promise<any> {
   return new Promise((resolve, reject) => {
-    const handler = (data: any) => {
-      clearTimeout(timeout);
-      resolve(data);
+    // Create a temporary subscriber for testing
+    const testSubscriber = {
+      handleBusEvent: (eventType: string, data: any, target: any, emitter: any) => {
+        if (eventType === eventName) {
+          clearTimeout(timeout);
+          resolve(data);
+        }
+      }
     };
     
     const timeout = setTimeout(() => {
-      eventBus.unsubscribe(eventName, 'test-waiter', handler);
+      // Note: EventBus doesn't have unsubscribe, so we can't clean up
+      // For test purposes, this is acceptable since tests are short-lived
       reject(new Error(`Timeout waiting for event: ${eventName}`));
     }, timeoutMs);
     
-    eventBus.subscribe(eventName, handler, 'test-waiter');
+    eventBus.addSubscription(eventName, null, testSubscriber);
   });
 }
 
