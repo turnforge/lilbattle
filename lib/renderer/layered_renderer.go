@@ -131,20 +131,15 @@ func (r *LayeredRenderer) scheduleRender() {
 
 // ForceRender immediately renders all dirty layers (for synchronous updates)
 func (r *LayeredRenderer) ForceRender() {
-	// fmt.Printf("LayeredRenderer.ForceRender called - terrain dirty: %d, units dirty: %d, UI dirty: %v\n")
-
 	if r.batchTimer != nil {
 		r.batchTimer.Stop()
 	}
 	r.performRender()
 	r.renderPending = false
-	// fmt.Printf("DEBUG: ForceRender() completed successfully\n")
 }
 
 // performRender executes the actual rendering of dirty layers
 func (r *LayeredRenderer) performRender() {
-	// fmt.Printf("LayeredRenderer.performRender called\n")
-
 	for _, layer := range r.Layers {
 		if layer.IsDirty() {
 			layer.Render(r.currentWorld, r.renderOptions)
@@ -186,7 +181,6 @@ func (r *LayeredRenderer) blendBuffers(dst, src *Buffer) {
 
 // Resize updates the layer buffer sizes
 func (r *LayeredRenderer) SetViewPort(x, y, width, height int) error {
-	// fmt.Printf("LayeredRenderer.SetViewPort called with: x=%d, y=%d, width=%d, height=%d\n", x, y, width, height)
 	r.x = x
 	r.y = y
 	r.width = width
@@ -194,7 +188,6 @@ func (r *LayeredRenderer) SetViewPort(x, y, width, height int) error {
 
 	// Recreate all layer buffers with new size
 	for _, layer := range r.Layers {
-		// fmt.Printf("LayeredRenderer updating layer: %s\n", layer.GetName())
 		layer.SetViewPort(x, y, width, height)
 	}
 	return nil

@@ -173,22 +173,5 @@ func (g *Game) GetGameStateForUI() map[string]any {
 		"hasUnits":    len(allUnits) > 0,
 		"hasWinner":   g.hasWinner, // Whether game has ended
 	}
-	// fmt.Print("GameStateForUI: ", out)
-	/** sample
-	  GameData for Validation:  {
-	    allUnits: {
-	      '0,0': { player: 1, q: 0, r: 0, unit_type: 1 },
-	      '2,2': { player: 2, q: 2, r: 2, unit_type: 1 }
-	    },
-	    currentPlayer: 1,
-	    hasWinner: false,
-	    mapSize: { cols: 1, rows: 1 },
-	    players: null,
-	    status: 0,
-	    teams: null,
-	    turnCounter: 1,
-	    winner: -1
-	  }
-	*/
 	return out
 }

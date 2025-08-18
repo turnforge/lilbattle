@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
@@ -34,33 +33,8 @@ func NewWasmGamesServiceImpl() *WasmGamesServiceImpl {
 }
 
 func (w *WasmGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
-	fmt.Printf("GetRuntimeGame: Called - RuntimeGame cached: %t\n", w.RuntimeGame != nil)
 	if w.RuntimeGame == nil {
-		fmt.Printf("GetRuntimeGame: Creating new runtime game via ProtoToRuntimeGame\n")
 		w.RuntimeGame, err = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
-		
-		// Debug: Log runtime game units after creation
-		if w.RuntimeGame != nil && w.RuntimeGame.World != nil {
-			unitCount := 0
-			for coord, unit := range w.RuntimeGame.World.UnitsByCoord() {
-				fmt.Printf("GetRuntimeGame: Runtime unit at (%d,%d) player=%d type=%d distanceLeft=%d\n", 
-					coord.Q, coord.R, unit.Player, unit.UnitType, unit.DistanceLeft)
-				unitCount++
-			}
-			fmt.Printf("GetRuntimeGame: Total runtime units created: %d\n", unitCount)
-		}
-	} else {
-		fmt.Printf("GetRuntimeGame: Using cached runtime game\n")
-		// Debug: Log cached runtime game units  
-		if w.RuntimeGame != nil && w.RuntimeGame.World != nil {
-			unitCount := 0
-			for coord, unit := range w.RuntimeGame.World.UnitsByCoord() {
-				fmt.Printf("GetRuntimeGame: Cached runtime unit at (%d,%d) player=%d type=%d distanceLeft=%d\n", 
-					coord.Q, coord.R, unit.Player, unit.UnitType, unit.DistanceLeft)
-				unitCount++
-			}
-			fmt.Printf("GetRuntimeGame: Total cached runtime units: %d\n", unitCount)
-		}
 	}
 	return w.RuntimeGame, err
 }
@@ -101,49 +75,24 @@ func (w *WasmGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameReque
 }
 
 func (w *WasmGamesServiceImpl) GetGameState(ctx context.Context, req *v1.GetGameStateRequest) (*v1.GetGameStateResponse, error) {
-	fmt.Printf("GetGameState: Called for gameId=%s\n", req.GameId)
-	fmt.Printf("GetGameState: SingletonGameState unit count: %d\n", len(w.SingletonGameState.WorldData.Units))
-	if len(w.SingletonGameState.WorldData.Units) > 0 {
-		fmt.Printf("GetGameState: First unit: q=%d, r=%d, player=%d\n", 
-			w.SingletonGameState.WorldData.Units[0].Q, 
-			w.SingletonGameState.WorldData.Units[0].R,
-			w.SingletonGameState.WorldData.Units[0].Player)
-	}
 	return &v1.GetGameStateResponse{
 		State: w.SingletonGameState,
 	}, nil
 }
 
 func (w *WasmGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest) (*v1.UpdateGameResponse, error) {
-	fmt.Printf("UpdateGame: Called - this will invalidate RuntimeGame cache!\n")
-	fmt.Printf("UpdateGame: NewGame provided: %t\n", req.NewGame != nil)
-	fmt.Printf("UpdateGame: NewState provided: %t\n", req.NewState != nil)
-	fmt.Printf("UpdateGame: NewHistory provided: %t\n", req.NewHistory != nil)
-
 	// Update singleton instances with new data
 	if req.NewGame != nil {
 		w.SingletonGame = req.NewGame
-		fmt.Printf("UpdateGame: Updated SingletonGame\n")
 	}
 	if req.NewState != nil {
-		fmt.Printf("UpdateGame: BEFORE - SingletonGameState unit count: %d\n", len(w.SingletonGameState.WorldData.Units))
 		w.SingletonGameState = req.NewState
-		fmt.Printf("UpdateGame: AFTER - SingletonGameState unit count: %d\n", len(w.SingletonGameState.WorldData.Units))
-		if len(w.SingletonGameState.WorldData.Units) > 0 {
-			fmt.Printf("UpdateGame: First unit in new state: q=%d, r=%d, player=%d\n", 
-				w.SingletonGameState.WorldData.Units[0].Q, 
-				w.SingletonGameState.WorldData.Units[0].R,
-				w.SingletonGameState.WorldData.Units[0].Player)
-		}
 	}
 	if req.NewHistory != nil {
 		w.SingletonGameMoveHistory = req.NewHistory
-		fmt.Printf("UpdateGame: Updated SingletonGameMoveHistory\n")
 	}
 
 	// Don't invalidate runtime game cache for WASM singleton - keep it alive
-	// The runtime game is the source of truth and should persist across moves
-	fmt.Printf("UpdateGame: Keeping RuntimeGame alive (not invalidating cache)\n")
 	// w.RuntimeGame = nil  // COMMENTED OUT - keep runtime game alive
 
 	return &v1.UpdateGameResponse{

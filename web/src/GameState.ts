@@ -40,6 +40,7 @@ export class GameState {
      */
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         if (eventType === 'server-changes') {
+            console.log("Came here 11111")
             this.updateMetadataFromChanges(data.changes);
         }
     }
@@ -348,29 +349,5 @@ export class GameState {
 
         const response = await client.gamesService.getOptionsAt(request);
         return response;
-    }
-
-    /**
-     * Initialize game save/load bridge functions for WASM BrowserSaveHandler
-     * These functions are called by the Go BrowserSaveHandler implementation
-     */
-    public static initializeSaveBridge2(): void {
-        // Set up bridge functions that WASM BrowserSaveHandler expects
-        (window as any).gameSaveHandler = async (sessionData: string): Promise<string> => {
-            const response = await fetch('/api/v1/games/sessions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: sessionData
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Save failed: ${response.statusText}`);
-            }
-            
-            const result = await response.json();
-            return JSON.stringify({ success: true, sessionId: result.sessionId });
-        };
     }
 }

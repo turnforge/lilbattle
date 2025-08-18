@@ -256,13 +256,9 @@ func (cb *CanvasBuffer) DrawImage(x, y, width, height float64, img image.Image) 
 	canvasX := x / PixelsPerMM
 	canvasY := y / PixelsPerMM
 
-	// fmt.Printf("DEBUG: DrawImage called with buffer coords (%.2f, %.2f) -> canvas coords (%.2f, %.2f), image size: %dx%d\n", x, y, canvasX, canvasY, img.Bounds().Dx(), img.Bounds().Dy())
-
 	// Draw the actual image using the canvas context
 	// Note: tdewolff/canvas DrawImage uses image's natural size, scaling handled by resolution
 	cb.context.DrawImage(canvasX, canvasY, img, canvas.Resolution(PixelsPerMM))
-
-	// fmt.Printf("DEBUG: DrawImage completed\n")
 }
 
 // DrawTextDirect uses the HTML Canvas 2D API directly for text rendering

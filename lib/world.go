@@ -260,7 +260,7 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 		// Root layer: clear any deletion marks
 		delete(w.unitDeleted, coord)
 	}
-	
+
 	// Remove old unit from player's unit list if replacing
 	if oldunit != nil {
 		oldPlayerID := int(oldunit.Player)
@@ -274,7 +274,7 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 			}
 		}
 	}
-	
+
 	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
 	w.unitsByCoord[coord] = unit
 
@@ -290,7 +290,7 @@ func (w *World) RemoveUnit(unit *v1.Unit) error {
 
 	coord := UnitGetCoord(unit)
 	p := int(unit.Player)
-	
+
 	// Update transaction counters
 	if w.parent != nil {
 		// Transaction layer: check if we're deleting a unit from current layer or parent
@@ -303,7 +303,7 @@ func (w *World) RemoveUnit(unit *v1.Unit) error {
 		}
 		w.unitDeleted[coord] = true
 	}
-	
+
 	delete(w.unitsByCoord, coord)
 
 	// Remove from player's unit list if it exists
@@ -600,7 +600,6 @@ func (m *World) CenterXYForTile(coord AxialCoord, tileWidth, tileHeight, yIncrem
 		y = size * 1.5 * r
 	} else {
 		row, col := HexToRowCol(coord)
-		// fmt.Printf("HexToRow, QR: %s, RowCol: (%d, %d)\n", coord, row, col)
 		y = yIncrement * float64(row)  // + (tileHeight / 2)
 		x = tileWidth * (float64(col)) //  + 0.5)
 		if (row & 1) == 1 {
@@ -643,9 +642,6 @@ func (m *World) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord A
 		// Round to nearest integer coordinates using cube coordinate rounding
 		// This ensures we get the correct hex tile even for coordinates near boundaries
 		coord = roundAxialCoord(fractionalQ, fractionalR)
-
-		fmt.Println("X,Y: ", x, y)
-		fmt.Println("FQ, FR, FQ+FR: ", fractionalQ, fractionalR, fractionalQ+fractionalR)
 	} else { // given we can have non "equal" side length hexagons, easier to do this by converting to row/col first
 		row := int((y + tileHeight/2) / yIncrement)
 
@@ -653,18 +649,13 @@ func (m *World) XYToQR(x, y, tileWidth, tileHeight, yIncrement float64) (coord A
 		if (row & 1) != 0 {
 			halfDists = int(1 + math.Abs((x-tileWidth/2)*2/tileWidth))
 		}
-		// log.Println("Half Dists: ", halfDists)
 		col := halfDists / 2
 		if x < 0 {
 			col = -col
 		}
 		// col := int((x + tileWidth/2) / tileWidth)
 		coord = RowColToHex(row, col)
-		// fmt.Println("X,Y: ", x, y)
-		// fmt.Println("Row, Col: ", row, col)
 	}
-	// fmt.Println("Final Coord: ", coord)
-	// fmt.Println("======")
 	return
 }
 
@@ -718,7 +709,6 @@ func (m *World) GetWorldBounds(tileWidth, tileHeight, yIncrement float64) WorldB
 		for coord := range m.tilesByCoord {
 			// Use origin at (0,0) for bounds calculation
 			x, y := m.CenterXYForTile(coord, tileWidth, tileHeight, yIncrement)
-			// fmt.Printf("Tile Coords: QR: %s, XY: (%f, %f)\n", coord, x, y)
 
 			if coord.Q < minQ {
 				minQ = coord.Q
@@ -783,7 +773,6 @@ func (m *World) GetWorldBounds(tileWidth, tileHeight, yIncrement float64) WorldB
 			startingX += tileWidth / 2.0
 		}
 		// startingX, _ = m.CenterXYForTile(startingCoord, tileWidth, tileHeight, yIncrement)
-		// fmt.Printf("StartingX, StartingCoord: ", startingX, startingCoord)
 
 		m.lastWorldBounds.MinX = minX
 		m.lastWorldBounds.MinY = minY

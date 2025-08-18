@@ -24,7 +24,6 @@ type ClientMgr struct {
 }
 
 func NewClientMgr(svc_addr string) *ClientMgr {
-	log.Println("Client Mgr Svc Addr: ", svc_addr)
 	if svc_addr == "" {
 		panic("Service Address is nil")
 	}
@@ -52,7 +51,6 @@ func (c *ClientMgr) GetAuthService() *AuthService {
 // We will have one client per service here
 func (c *ClientMgr) GetWorldsSvcClient() (out protos.WorldsServiceClient, err error) {
 	if c.worldsSvcClient == nil {
-		log.Println("Addr: ", c.svcAddr)
 		worldsSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("cannot connect with server %v", err)
@@ -67,7 +65,6 @@ func (c *ClientMgr) GetWorldsSvcClient() (out protos.WorldsServiceClient, err er
 // We will have one client per service here
 func (c *ClientMgr) GetGamesSvcClient() (out protos.GamesServiceClient, err error) {
 	if c.gamesSvcClient == nil {
-		log.Println("Addr: ", c.svcAddr)
 		gamesSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("cannot connect with server %v", err)

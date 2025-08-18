@@ -38,20 +38,16 @@ func (m *DefaultMoveProcessor) ProcessMoves(game *Game, moves []*v1.GameMove) (r
 // and then they attack another unit.  Here If we treat it as a single unit attacking it
 // will have different outcomes than a "combined" attack.
 func (m *DefaultMoveProcessor) ProcessMove(game *Game, move *v1.GameMove) (results *v1.GameMoveResult, err error) {
-	fmt.Printf("ProcessMove: move.Player=%d, move.MoveType=%T\n", move.Player, move.MoveType)
 	if move.MoveType == nil {
 		return nil, fmt.Errorf("move type is nil")
 	}
 
 	switch a := move.MoveType.(type) {
 	case *v1.GameMove_MoveUnit:
-		fmt.Printf("Processing MoveUnit: %+v\n", a.MoveUnit)
 		return m.ProcessMoveUnit(game, move, a.MoveUnit)
 	case *v1.GameMove_AttackUnit:
-		fmt.Printf("Processing AttackUnit: %+v\n", a.AttackUnit)
 		return m.ProcessAttackUnit(game, move, a.AttackUnit)
 	case *v1.GameMove_EndTurn:
-		fmt.Printf("Processing EndTurn: %+v\n", a.EndTurn)
 		return m.ProcessEndTurn(game, move, a.EndTurn)
 	default:
 		return nil, fmt.Errorf("unknown move type: %T", move.MoveType)
@@ -74,10 +70,6 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 	previousPlayer := g.CurrentPlayer
 	previousTurn := g.TurnCounter
 
-	fmt.Printf("ProcessEndTurn: BEFORE turn advance - previousPlayer=%d, numPlayers=%d\n", previousPlayer, g.World.PlayerCount())
-
-	// Reset unit movement for the PREVIOUS player (the one whose turn just ended)
-	fmt.Printf("ProcessEndTurn: Resetting units for PREVIOUS player %d (whose turn just ended)\n", previousPlayer)
 	if err := g.resetPlayerUnits(previousPlayer); err != nil {
 		return nil, fmt.Errorf("failed to reset player units: %w", err)
 	}
@@ -85,14 +77,6 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 	// Capture the reset units AFTER reset (with refreshed movement points)
 	var resetUnits []*v1.Unit
 	playerUnits := g.World.GetPlayerUnits(int(previousPlayer))
-	fmt.Printf("ProcessEndTurn: Found %d units for PREVIOUS player %d\n", len(playerUnits), previousPlayer)
-
-	// Debug: Print all unit positions in the world before capturing resetUnits
-	fmt.Printf("ProcessEndTurn: DEBUG - All units in world before capturing resetUnits:\n")
-	allUnits := g.World.unitsByCoord
-	for _, unit := range allUnits {
-		fmt.Printf("  Unit at (%d, %d) player=%d, distanceLeft=%d\n", unit.Q, unit.R, unit.Player, unit.DistanceLeft)
-	}
 
 	for _, unit := range playerUnits {
 		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%d\n",
@@ -108,7 +92,6 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 		}
 		resetUnits = append(resetUnits, resetUnit)
 	}
-	fmt.Printf("ProcessEndTurn: Captured %d resetUnits for PREVIOUS player %d\n", len(resetUnits), previousPlayer)
 
 	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
 	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
@@ -122,8 +105,6 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 		// Move to next player
 		g.CurrentPlayer++
 	}
-
-	fmt.Printf("ProcessEndTurn: AFTER turn advance - newCurrentPlayer=%d, turnCounter=%d\n", g.CurrentPlayer, g.TurnCounter)
 
 	// Check for victory conditions
 	if winner, hasWinner := g.checkVictoryConditions(); hasWinner {

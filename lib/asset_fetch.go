@@ -56,7 +56,6 @@ func (fam *FetchAssetManager) GetTileImage(tileType int) (image.Image, error) {
 
 	// Construct URL for tile asset
 	tileURL := fmt.Sprintf("%s/data/Tiles/%d_files/0.png", fam.baseURL, tileType)
-	fmt.Printf("🔍 Fetching tile asset: %s\n", tileURL)
 
 	img, err := fam.fetchImage(tileURL)
 	if err != nil {
@@ -68,7 +67,6 @@ func (fam *FetchAssetManager) GetTileImage(tileType int) (image.Image, error) {
 	fam.tileCache[tileType] = img
 	fam.cacheMutex.Unlock()
 
-	fmt.Printf("✅ Successfully loaded tile %d\n", tileType)
 	return img, nil
 }
 
@@ -85,7 +83,6 @@ func (fam *FetchAssetManager) GetUnitImage(unitType int, playerColor int) (image
 
 	// Construct URL for unit asset
 	unitURL := fmt.Sprintf("%s/data/Units/%d_files/%d.png", fam.baseURL, unitType, playerColor)
-	fmt.Printf("🔍 Fetching unit asset: %s\n", unitURL)
 
 	img, err := fam.fetchImage(unitURL)
 	if err != nil {
@@ -97,7 +94,6 @@ func (fam *FetchAssetManager) GetUnitImage(unitType int, playerColor int) (image
 	fam.unitCache[key] = img
 	fam.cacheMutex.Unlock()
 
-	fmt.Printf("✅ Successfully loaded unit %d, player %d\n", unitType, playerColor)
 	return img, nil
 }
 
@@ -179,7 +175,6 @@ func (fam *FetchAssetManager) HasUnitAsset(unitType int, playerColor int) bool {
 
 // PreloadCommonAssets preloads commonly used assets for better performance
 func (fam *FetchAssetManager) PreloadCommonAssets() error {
-	fmt.Println("🚀 Starting preload of common assets...")
 
 	// Preload common tile types (1-26)
 	for i := 1; i <= 26; i++ {
@@ -201,7 +196,6 @@ func (fam *FetchAssetManager) PreloadCommonAssets() error {
 	}
 
 	fam.loaded = true
-	fmt.Println("✅ Asset preloading complete!")
 	return nil
 }
 
@@ -220,7 +214,6 @@ func (fam *FetchAssetManager) ClearCache() {
 
 	fam.tileCache = make(map[int]image.Image)
 	fam.unitCache = make(map[string]image.Image)
-	fmt.Println("🗑️ Asset cache cleared")
 }
 
 // IsLoaded returns whether assets have been preloaded

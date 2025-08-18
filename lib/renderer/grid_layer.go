@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"image/draw"
-	"log"
 	"math"
 
 	lib "github.com/panyam/turnengine/games/weewar/lib"
@@ -47,8 +46,6 @@ func (gl *GridLayer) Render(world *lib.World, options LayerRenderOptions) {
 	bottomRightCoord := world.XYToQR(float64(gl.X+gl.Width), float64(gl.Y+gl.Height), options.TileWidth, options.TileHeight, options.YIncrement)
 	tlrow, tlcol := lib.HexToRowCol(topLeftCoord)
 	brrow, brcol := lib.HexToRowCol(bottomRightCoord)
-	log.Println("TopLeft: ", topLeftCoord, tlrow, tlcol)
-	log.Println("BottomRight: ", bottomRightCoord, brrow, brcol)
 	for row := tlrow; row <= brrow; row++ {
 		for col := tlcol; col <= brcol; col++ {
 			coord := lib.RowColToHex(row, col)
@@ -105,9 +102,6 @@ func (gl *GridLayer) drawCoordinates(coord lib.AxialCoord, centerX, centerY floa
 
 	// Draw text at hex center with background
 	gl.buffer.DrawTextWithStyle(centerX, centerY, text, fontSize, textColor, false, backgroundColor)
-
-	// Log the coordinate for debugging
-	// fmt.Printf("DEBUG: Drew coordinate text '%s' at (%.1f, %.1f)\n", text, centerX, centerY)
 }
 
 // drawLine draws a line between two points using Bresenham's algorithm

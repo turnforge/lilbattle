@@ -33,7 +33,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
     // Game configuration accessed directly from WASM-cached Game proto
     
     // UI state
-    private selectedUnit: any = null;
     private gameLog: string[] = [];
     
     // Move execution state
@@ -102,9 +101,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
             const { hexQ: q, hexR: r } = context;
             
             // Get tile and unit data from World using coordinates
-            const tile = this.world?.getTileAt(q, r);
-            const unit = this.world?.getUnitAt(q, r);
-
             switch (layer) {
                 case 'movement-highlight':
                     // Get moveOption from the layer itself
@@ -114,9 +110,11 @@ class GameViewerPage extends BasePage implements LCMComponent {
                     break;
                     
                 case 'base-map':
+                    const unit = this.world?.getUnitAt(q, r);
                     if (unit) {
                         this.handleUnitClick(q, r);
                     } else {
+                        const tile = this.world?.getTileAt(q, r);
                         this.handleTileClick(q, r, tile);
                     }
                     break;
@@ -157,7 +155,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
         }
         
         this.currentGameId = null;
-        this.selectedUnit = null;
         this.gameLog = [];
     }
 
@@ -374,21 +371,10 @@ class GameViewerPage extends BasePage implements LCMComponent {
     }
 
     private selectMoveMode(): void {
-        if (!this.selectedUnit) {
-            this.showToast('Warning', 'Select a unit first', 'warning');
-            return;
-        }
-        // TODO: Integrate with Phaser to highlight valid move tiles
         this.showToast('Info', 'Click on a highlighted tile to move', 'info');
     }
 
     private selectAttackMode(): void {
-        if (!this.selectedUnit) {
-            this.showToast('Warning', 'Select a unit first', 'warning');
-            return;
-        }
-        // Attack options are already loaded from unit selection
-        // TODO: Integrate with Phaser to highlight valid attack targets
         this.showToast('Info', 'Click on a highlighted enemy to attack', 'info');
     }
 
@@ -446,7 +432,6 @@ class GameViewerPage extends BasePage implements LCMComponent {
    */
 
     private clearUnitSelection(): void {
-        this.selectedUnit = null;
         this.selectedUnitCoord = null;
         this.availableMovementOptions = [];
         
@@ -651,49 +636,11 @@ class GameViewerPage extends BasePage implements LCMComponent {
               await this.ensureInSyncWithServer()
             }
 
-            // Log World state before move
-            const unitsBefore = [];
-            for (const key in this.world.units) {
-                const u = this.world.units[key];
-                if (u) {
-                    unitsBefore.push({
-                        key: key,
-                        q: u.q, r: u.r, player: u.player, unitType: u.unitType,
-                        availableHealth: u.availableHealth, distanceLeft: u.distanceLeft, turnCounter: u.turnCounter
-                    });
-                }
-            }
-
             // ✅ Call ProcessMoves API - this will trigger World updates via EventBus
             const worldChanges = await this.gameState!.processMoves([gameMove]);
-            
-            // Log World state after move
-            const unitsAfter = [];
-            for (const key in this.world.units) {
-                const u = this.world.units[key];
-                if (u) {
-                    unitsAfter.push({
-                        key: key,
-                        q: u.q, r: u.r, player: u.player, unitType: u.unitType,
-                        availableHealth: u.availableHealth, distanceLeft: u.distanceLeft, turnCounter: u.turnCounter
-                    });
-                }
-            }
             if (validateStates) { // as debug check our state with the server is in sync before making moves
               // Add a small delay to ensure all async operations complete
               await new Promise(resolve => setTimeout(resolve, 100));
-              
-              const unitsFinal = [];
-              for (const key in this.world.units) {
-                  const u = this.world.units[key];
-                  if (u) {
-                      unitsFinal.push({
-                          key: key,
-                          q: u.q, r: u.r, player: u.player, unitType: u.unitType,
-                          availableHealth: u.availableHealth, distanceLeft: u.distanceLeft, turnCounter: u.turnCounter
-                      });
-                  }
-              }
               await this.ensureInSyncWithServer()
             }
 

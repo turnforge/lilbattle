@@ -32,7 +32,6 @@ type BaseWorldsServiceImpl struct {
 // ProcessMoves processes moves for an existing game on the wasm side.
 // Unlike the service side games service - it wont persist any changes - it only will return the diffs.
 func (s *BaseGamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.ProcessMovesRequest) (resp *v1.ProcessMovesResponse, err error) {
-	fmt.Printf("ProcessMoves: Called with %d moves for gameId=%s\n", len(req.Moves), req.GameId)
 	if len(req.Moves) == 0 {
 		return nil, fmt.Errorf("at least one move is required")
 	}
@@ -54,23 +53,17 @@ func (s *BaseGamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.Process
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// TRANSACTIONAL FIX: Create transaction snapshot for move processing
 	// ProcessMoves will operate on the snapshot, ApplyChangeResults will apply to original
 	originalWorld := rtGame.World
-	rtGame.World = originalWorld.Push()  // Create transaction layer
-	fmt.Printf("ProcessMoves: Created transaction snapshot - originalWorld=%p, transactionWorld=%p\n", 
-		originalWorld, rtGame.World)
-
+	rtGame.World = originalWorld.Push() // Create transaction layer
 	// Get the moves validted by the move processor, it is upto the move processor
 	// to decide how "transactional" it wants to be - ie fail after  N moves,
 	// success only if all moves succeeds etc.  Note that at this point the game
 	// state has not changed and neither has the Runtime Game object.  Both the
 	// GameState and the Runtime Game are checkpointed at before the moves started
 	var dmp weewar.DefaultMoveProcessor
-	for _, move := range req.Moves {
-		fmt.Print("Found Move: ", move, move.MoveType)
-	}
 	results, err := dmp.ProcessMoves(rtGame, req.Moves)
 	if err != nil {
 		return nil, err
@@ -96,7 +89,6 @@ func (s *BaseGamesServiceImpl) ProcessMoves(ctx context.Context, req *v1.Process
 	// It is upto the storage to see how the runtime game is also updated.  For example
 	// a storage that persists the gameState may just not do anythign and let it be
 	// reconstructed on the next load
-	fmt.Printf("ProcessMoves: Calling ApplyChangeResults with %d results...\n", len(results))
 	s.ApplyChangeResults(results, rtGame, gameresp.Game, gameresp.State, gameresp.History)
 
 	// Update the end time after processing is complete
@@ -250,50 +242,23 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 }
 
 func (b *BaseGamesServiceImpl) ApplyChangeResults(changes []*v1.GameMoveResult, rtGame *weewar.Game, game *v1.Game, state *v1.GameState, history *v1.GameMoveHistory) error {
-	fmt.Printf("ApplyChangeResults: ENTRY - changes=%d, rtGame=%t, game=%t, state=%t, history=%t\n", 
-		len(changes), rtGame != nil, game != nil, state != nil, history != nil)
-	
+
 	// TRANSACTIONAL FIX: Temporary rollback to original world for ordered application
 	if parent := rtGame.World.Pop(); parent != nil {
-		fmt.Printf("ApplyChangeResults: Rolling back to parent world for ordered change application\n")
-		rtGame.World = parent  // Switch back to original world
+		rtGame.World = parent // Switch back to original world
 	}
-	
+
 	// Apply each change to runtime game (now the original, not the transaction snapshot)
-	for i, moveResult := range changes {
-		fmt.Printf("ApplyChangeResults: Processing moveResult %d with %d changes\n", i, len(moveResult.Changes))
-		for j, change := range moveResult.Changes {
-			fmt.Printf("ApplyChangeResults: Applying change %d.%d of type %T\n", i, j, change.ChangeType)
+	for _, moveResult := range changes {
+		for _, change := range moveResult.Changes {
 			err := b.applyWorldChange(change, rtGame, state)
 			if err != nil {
-				fmt.Printf("ApplyChangeResults: ERROR applying change %d.%d: %v\n", i, j, err)
 				return fmt.Errorf("failed to apply world change: %w", err)
 			}
-			fmt.Printf("ApplyChangeResults: Successfully applied change %d.%d\n", i, j)
 		}
 	}
 
-	// Update protobuf GameState with final runtime world state
-	fmt.Printf("ApplyChangeResults: Converting runtime world to proto...\n")
-	
-	// Count and log runtime world units
-	unitCount := 0
-	for coord, unit := range rtGame.World.UnitsByCoord() {
-		fmt.Printf("ApplyChangeResults: Runtime unit at (%d,%d) player=%d type=%d distanceLeft=%d\n", 
-			coord.Q, coord.R, unit.Player, unit.UnitType, unit.DistanceLeft)
-		unitCount++
-	}
-	fmt.Printf("ApplyChangeResults: Runtime world unit count: %d\n", unitCount)
-	
 	state.WorldData = b.convertRuntimeWorldToProto(rtGame.World)
-	
-	fmt.Printf("ApplyChangeResults: Converted proto world unit count: %d\n", len(state.WorldData.Units))
-	if len(state.WorldData.Units) > 0 {
-		fmt.Printf("ApplyChangeResults: First proto unit: q=%d, r=%d, player=%d, distanceLeft=%d\n", 
-			state.WorldData.Units[0].Q, state.WorldData.Units[0].R, 
-			state.WorldData.Units[0].Player, state.WorldData.Units[0].DistanceLeft)
-	}
-	
 	state.UpdatedAt = timestamppb.New(time.Now())
 
 	return nil
@@ -323,26 +288,12 @@ func (b *BaseGamesServiceImpl) applyUnitMoved(change *v1.UnitMovedChange, rtGame
 
 	fromCoord := weewar.AxialCoord{Q: int(change.PreviousUnit.Q), R: int(change.PreviousUnit.R)}
 	toCoord := weewar.AxialCoord{Q: int(change.UpdatedUnit.Q), R: int(change.UpdatedUnit.R)}
-	
-	fmt.Printf("applyUnitMoved: Looking for unit at fromCoord (%d,%d)\n", fromCoord.Q, fromCoord.R)
-	fmt.Printf("applyUnitMoved: PreviousUnit raw coords: Q=%d, R=%d\n", change.PreviousUnit.Q, change.PreviousUnit.R)
-	
-	// Debug: List all units in runtime game before lookup
-	fmt.Printf("applyUnitMoved: Current runtime game units:\n")
-	for coord, unit := range rtGame.World.UnitsByCoord() {
-		fmt.Printf("applyUnitMoved:   Unit at (%d,%d) player=%d type=%d\n", 
-			coord.Q, coord.R, unit.Player, unit.UnitType)
-	}
 
 	// Move unit in runtime game
 	unit := rtGame.World.UnitAt(fromCoord)
 	if unit == nil {
-		fmt.Printf("applyUnitMoved: UnitAt(%d,%d) returned nil!\n", fromCoord.Q, fromCoord.R)
 		return fmt.Errorf("unit not found at %v", fromCoord)
 	}
-	
-	fmt.Printf("applyUnitMoved: Found unit at (%d,%d), moving to (%d,%d)\n", 
-		fromCoord.Q, fromCoord.R, toCoord.Q, toCoord.R)
 
 	// Update unit with complete state from the change
 	unit.AvailableHealth = change.UpdatedUnit.AvailableHealth
@@ -358,7 +309,7 @@ func (b *BaseGamesServiceImpl) applyUnitDamaged(change *v1.UnitDamagedChange, rt
 	if change.UpdatedUnit == nil {
 		return fmt.Errorf("missing updated unit data in UnitDamagedChange")
 	}
-	
+
 	coord := weewar.AxialCoord{Q: int(change.UpdatedUnit.Q), R: int(change.UpdatedUnit.R)}
 
 	unit := rtGame.World.UnitAt(coord)
@@ -378,7 +329,7 @@ func (b *BaseGamesServiceImpl) applyUnitKilled(change *v1.UnitKilledChange, rtGa
 	if change.PreviousUnit == nil {
 		return fmt.Errorf("missing previous unit data in UnitKilledChange")
 	}
-	
+
 	coord := weewar.AxialCoord{Q: int(change.PreviousUnit.Q), R: int(change.PreviousUnit.R)}
 	unit := rtGame.World.UnitAt(coord)
 

@@ -92,7 +92,6 @@ func (gl *BaseLayer) GetHexVertices(centerX, centerY, tileWidth, tileHeight floa
 	vertices[3][0], vertices[3][1] = centerX, centerY+radiusY
 	vertices[4][0], vertices[4][1] = centerX-radiusX, centerY+h4
 	vertices[5][0], vertices[5][1] = centerX-radiusX, centerY-h4
-	// fmt.Println("VERTS: ", centerX, centerY, vertices)
 
 	return vertices
 }
@@ -112,7 +111,6 @@ func (bl *BaseLayer) MarkDirty(coord weewar.AxialCoord) {
 func (bl *BaseLayer) MarkAllDirty() {
 	bl.allDirty = true
 	bl.dirtyCoords = make(map[weewar.AxialCoord]bool)
-	// fmt.Println("Layer, Scheduler: ", bl.GetName(), bl.scheduler)
 	if bl.scheduler != nil {
 		bl.scheduler.ScheduleRender()
 	}
@@ -128,7 +126,6 @@ func (bl *BaseLayer) IsDirty() bool {
 }
 
 func (bl *BaseLayer) SetViewPort(x, y, width, height int) {
-	// fmt.Printf("BaseLayer.SetViewPort called on layer '%s' with: x=%d, y=%d, width=%d, height=%d\n", bl.name, x, y, width, height)
 	bl.X = x
 	bl.Y = y
 	bl.Width = width

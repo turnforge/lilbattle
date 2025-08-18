@@ -1,7 +1,6 @@
 package rendering
 
 import (
-	"fmt"
 	"image"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
@@ -32,7 +31,6 @@ func (tl *TileLayer) Render(world *lib.World, options LayerRenderOptions) {
 		return
 	}
 
-	fmt.Println("0. Dirty, Changed Tiles: ", tl.allDirty, world.TilesByCoord())
 	// Clear buffer if full rebuild needed
 	if tl.allDirty {
 		tl.buffer.Clear()
@@ -74,7 +72,6 @@ func (tl *TileLayer) renderTile(world *lib.World, coord lib.AxialCoord, tile *v1
 	playerID := tile.Player // -1 means neutral/no player
 
 	// Try to use real terrain sprite if available
-	// log.Println("Has Tile: ", tile.TileType, playerID, tl.assetProvider.HasTileAsset(tile.TileType, playerID))
 	if tl.assetProvider != nil && tl.assetProvider.HasTileAsset(tile.TileType, playerID) {
 		tl.renderTerrainSprite(tile.TileType, playerID, x, y, options)
 	} else {
