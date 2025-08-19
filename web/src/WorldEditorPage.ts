@@ -122,7 +122,7 @@ class WorldEditorPage extends BasePage {
         
         // Set dependencies directly using explicit setters
         this.phaserEditorComponent.setPageState(this.pageState);
-        // this.phaserEditorComponent.setWorld(this.world);
+        this.phaserEditorComponent.setWorld(this.world);
         
         childComponents.push(this.phaserEditorComponent);
         // Initialize dockview now that all child components are ready

@@ -79,7 +79,7 @@ rules:
     watch:
       - action: "exclude"
         patterns:
-          - "frontend/gen/**"
+          - "gen/**"
           - "**/*.log"
           - "node_modules/**"
           - "dist/**"
