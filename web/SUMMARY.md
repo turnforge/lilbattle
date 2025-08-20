@@ -49,7 +49,7 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 
 ### Recent Achievements (Session 2025-08-20)
 
-#### World Event Architecture Refactoring (Complete)
+#### World Event Architecture Refactoring & Input System Fixes (Complete)
 - **PhaserWorldScene Event Integration**: Moved world synchronization logic to base scene class
   - All Phaser scenes now automatically sync with World changes through EventBus
   - Eliminated duplicate world event handling between editor and viewer scenes
@@ -59,6 +59,13 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
   - GameState emits server-changes after processMoves() and subscribes for metadata extraction
   - World applies actual world changes and re-emits as specific world events
   - PhaserWorldScene base class handles TILES_CHANGED/UNITS_CHANGED/WORLD_LOADED/WORLD_CLEARED
+- **Input System Refactoring**: Replaced manual drag detection with proper Phaser patterns
+  - Separated tap detection (tile painting) from drag detection (camera panning)
+  - Used time/distance thresholds for robust tap detection instead of manual mouse tracking
+  - Eliminated camera panning during normal tile clicks
+- **Critical Bug Fix**: Fixed tile clearing visual issue due to sprite key mismatch
+  - setTile() was storing sprites with texture keys, removeTile() was looking up by coordinate keys
+  - Unified sprite storage to use coordinate keys (q,r) for consistent lookup
 
 #### Previous Session: Command Interface and Advanced E2E Testing (Complete)
 - **Command Interface Implementation**: High-level game action API for testing and accessibility

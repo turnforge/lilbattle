@@ -57,10 +57,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Game interaction callback (unified, only used by GameViewerPage)
     public sceneClickedCallback: (context: ClickContext, layer: string, extra?: any) => void;
     
-    // Mouse interaction
-    protected isMouseDown: boolean = false;
-    protected lastPointerPosition: { x: number; y: number } | null = null;
-    protected hasDragged: boolean = false;
+    // Mouse interaction - removed manual tracking, using Phaser's built-in events
     
     // Asset loading
     private terrainsLoaded: boolean = false;
@@ -538,54 +535,64 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     }
     
     private setupInputHandling() {
-        // Mouse/touch interaction handling
+        // Separate tap detection from drag detection using Phaser's built-in approach
+        
+        // Track pointer state for tap detection
+        let pointerDownPosition: { x: number, y: number } | null = null;
+        let pointerDownTime: number = 0;
+        const TAP_TIME_THRESHOLD = 300; // ms - max time for a tap
+        const TAP_DISTANCE_THRESHOLD = 10; // pixels - max movement for a tap
+        
+        // Handle pointer down - start tracking for tap vs drag
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (pointer.button === 0) { // Left click only
-                this.isMouseDown = true;
-                this.hasDragged = false;
-                this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+                pointerDownPosition = { x: pointer.x, y: pointer.y };
+                pointerDownTime = Date.now();
             }
         });
         
+        // Handle pointer up - determine if this was a tap
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-            if (pointer.button === 0) { // Left click only
-                // Only handle click if we didn't drag
-                if (!this.hasDragged) {
-                    // Use layer system for hit testing, then send to mapCallback
-                    if (this.layerManager) {
-                        const clickContext = this.layerManager.getClickContext(pointer);
-                        if (clickContext) {    // && this.sceneClickedCallback) {
-                            // For now dont check sceneClickedCallback to be nil to see who exactly is calling this
-                            // without setting it
-                            this.sceneClickedCallback(clickContext, clickContext.layer || 'unknown');
-                        }
-                    }
+            if (pointer.button === 0 && pointerDownPosition) { // Left click only
+                const timeDelta = Date.now() - pointerDownTime;
+                const distance = Math.sqrt(
+                    Math.pow(pointer.x - pointerDownPosition.x, 2) + 
+                    Math.pow(pointer.y - pointerDownPosition.y, 2)
+                );
+                
+                // This is a tap if it's quick and doesn't move much
+                if (timeDelta < TAP_TIME_THRESHOLD && distance < TAP_DISTANCE_THRESHOLD) {
+                    this.handleTap(pointer);
                 }
                 
-                // Reset state
-                this.isMouseDown = false;
-                this.lastPointerPosition = null;
-                this.hasDragged = false;
+                // Reset tracking
+                pointerDownPosition = null;
+                pointerDownTime = 0;
             }
         });
         
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (!this.isMouseDown || !this.lastPointerPosition) return
-            const deltaX = pointer.x - this.lastPointerPosition.x;
-            const deltaY = pointer.y - this.lastPointerPosition.y;
+        // Set up camera drag using Phaser's built-in drag detection
+        // Create an invisible full-screen zone for drag detection
+        const dragZone = this.add.zone(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2);
+        dragZone.setOrigin(0.5, 0.5);
+        dragZone.setInteractive({ draggable: true });
+        
+        // Position drag zone at camera center and make it follow camera
+        this.cameras.main.on('cameramove', () => {
+            dragZone.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+        });
+        
+        // Handle camera panning via drag zone
+        dragZone.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            // Calculate drag delta
+            const deltaX = pointer.x - pointer.prevPosition.x;
+            const deltaY = pointer.y - pointer.prevPosition.y;
             
-            // Check if we've moved enough to consider it a drag
-            const dragThreshold = 5; // pixels
-            if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-                this.hasDragged = true;
-            }
-            
-            // Capture camera state before pan
+            // Pan camera opposite to drag direction
             const camera = this.cameras.main;
             const oldScrollX = camera.scrollX;
             const oldScrollY = camera.scrollY;
             
-            // Pan camera
             camera.scrollX -= deltaX / camera.zoom;
             camera.scrollY -= deltaY / camera.zoom;
             
@@ -599,8 +606,22 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 });
             }
             
-            this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+            // Keep drag zone centered on camera
+            dragZone.setPosition(camera.centerX, camera.centerY);
         });
+    }
+    
+    /**
+     * Handle tap events (clicks without drag)
+     */
+    private handleTap(pointer: Phaser.Input.Pointer): void {
+        // Use layer system for hit testing, then send to callback
+        if (this.layerManager && this.sceneClickedCallback) {
+            const clickContext = this.layerManager.getClickContext(pointer);
+            if (clickContext) {
+                this.sceneClickedCallback(clickContext, clickContext.layer || 'unknown');
+            }
+        }
     }
     
     update() {
@@ -690,7 +711,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         if (this.textures.exists(textureKey)) {
             const tileSprite = this.add.sprite(position.x, position.y, textureKey);
             tileSprite.setOrigin(0.5, 0.5);
-            this.tileSprites.set(textureKey, tileSprite);
+            this.tileSprites.set(key, tileSprite); // Use coordinate key, not texture key
         } else {
             // console.warn(`[PhaserWorldScene] Texture not found: ${textureKey}`);
             // console.warn(`[PhaserWorldScene] Available textures:`, this.textures.list);
@@ -700,7 +721,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             if (this.textures.exists(fallbackKey)) {
                 const tileSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 tileSprite.setOrigin(0.5, 0.5);
-                this.tileSprites.set(fallbackKey, tileSprite);
+                this.tileSprites.set(key, tileSprite); // Use coordinate key, not texture key
             } else {
                 console.error(`[PhaserWorldScene] Fallback texture also not found: ${fallbackKey}`);
             }
