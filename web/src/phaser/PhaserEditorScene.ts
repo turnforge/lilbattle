@@ -303,31 +303,6 @@ export class PhaserEditorScene extends PhaserWorldScene {
     }
 
     /**
-     * Get tiles data - compatibility method
-     */
-    public getTilesData(): Array<Tile> {
-        const tilesData: Array<Tile> = [];
-        
-        this.tileSprites.forEach((tile, key) => {
-            const [q, r] = key.split(',').map(Number);
-            // Extract terrain and color from texture key
-            const textureKey = tile.texture.key;
-            const match = textureKey.match(/terrain_(\d+)_(\d+)/);
-            
-            if (match) {
-                tilesData.push({
-                    q,
-                    r,
-                    tileType: parseInt(match[1]),
-                    player: parseInt(match[2])
-                });
-            }
-        });
-        
-        return tilesData;
-    }
-
-    /**
      * Set callback for tile click events
      */
     public onTileClick(callback: (q: number, r: number) => void): void {

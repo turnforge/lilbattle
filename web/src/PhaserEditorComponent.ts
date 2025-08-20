@@ -1,10 +1,10 @@
 import { BaseComponent } from '../lib/Component';
 import { LCMComponent } from '../lib/LCMComponent';
 import { EventBus } from '../lib/EventBus';
-import { EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
 import { PhaserEditorScene } from './phaser/PhaserEditorScene';
 import { WorldEditorPageState, PageStateEventType } from './WorldEditorPageState';
-import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World , TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 
 /**
  * PhaserEditorComponent - Manages the Phaser.js-based world editor interface using BaseComponent architecture
@@ -137,11 +137,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         // Subscribe to tool state changes via EventBus
         this.addSubscription(PageStateEventType.TOOL_STATE_CHANGED, this);
         
-        // Subscribe to World events via EventBus
-        this.addSubscription(WorldEventType.WORLD_LOADED, this);
-        this.addSubscription(WorldEventType.TILES_CHANGED, this);
-        this.addSubscription(WorldEventType.UNITS_CHANGED, this);
-        this.addSubscription(WorldEventType.WORLD_CLEARED, this);
+        // World events are now handled by PhaserWorldScene directly
         
         this.log('EventBus subscriptions complete');
     }
@@ -187,21 +183,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
                 this.handleToolStateChanged(data);
                 break;
             
-            case WorldEventType.WORLD_LOADED:
-                this.handleWorldLoaded(data);
-                break;
-            
-            case WorldEventType.TILES_CHANGED:
-                this.handleTilesChanged(data);
-                break;
-            
-            case WorldEventType.UNITS_CHANGED:
-                this.handleUnitsChanged(data);
-                break;
-            
-            case WorldEventType.WORLD_CLEARED:
-                this.handleWorldCleared();
-                break;
+            // World events are now handled by PhaserWorldScene directly
             
             default:
                 // Call parent implementation for unhandled events
@@ -399,71 +381,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         }
     }
     
-    /**
-     * Handle World event handlers
-     */
-    private handleWorldLoaded(data: WorldLoadedEventData): void {
-        if (!this.editorScene || !this.isInitialized) {
-            return;
-        }
-        
-        this.log('World loaded, updating Phaser display');
-        
-        // Load tile data from World into Phaser
-        if (this.world) {
-            this.editorScene?.setTilesData(this.world.getAllTiles());
-            
-            const unitsData = this.world.getAllUnits();
-            // Load units into Phaser (if we add this method later)
-            // this.editorScene?.setUnitsData(unitsData);
-        }
-    }
-    
-    private handleTilesChanged(data: TilesChangedEventData): void {
-        if (!this.editorScene || !this.isInitialized) {
-            return;
-        }
-        
-        this.log(`Updating ${data.changes.length} tile changes in Phaser`);
-        
-        // Update individual tiles in Phaser based on World changes
-        for (const change of data.changes) {
-            if (change.tile) {
-                this.editorScene?.setTile(change.tile); // No brush size for individual updates
-            } else {
-                // Tile was removed
-                this.editorScene?.removeTile(change.q, change.r);
-            }
-        }
-    }
-    
-    private handleUnitsChanged(data: UnitsChangedEventData): void {
-        if (!this.editorScene || !this.isInitialized) {
-            return;
-        }
-        
-        this.log(`Updating ${data.changes.length} unit changes in Phaser`);
-        
-        // Update individual units in Phaser based on World changes
-        for (const change of data.changes) {
-            if (change.unit) {
-                this.editorScene?.setUnit(change.unit)
-            } else {
-                // Unit was removed
-                this.editorScene?.removeUnit(change.q, change.r);
-            }
-        }
-    }
-    
-    private handleWorldCleared(): void {
-        if (!this.editorScene || !this.isInitialized) {
-            return;
-        }
-        
-        this.log('World cleared, clearing Phaser display');
-        this.editorScene.clearAllTiles();
-        this.editorScene.clearAllUnits();
-    }
+    // World event handlers removed - now handled by PhaserWorldScene directly
     
     /**
      * Handle grid visibility set event from WorldEditorPage
@@ -691,10 +609,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         }
     }
     
-    // Old EventBus handlers removed - tool changes now handled via PageState Observer pattern
-    
-    // Public API methods (for external access)
-    
     /**
      * Check if Phaser editor is initialized
      */
@@ -730,28 +644,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             this.editorScene.setShowCoordinates(show);
             this.log(`Coordinate visibility set to: ${show}`);
         }
-    }
-    
-    /**
-     * Load world tiles data
-     */
-    public async setTilesData(tiles: Array<Tile>): Promise<void> {
-        if (this.editorScene && this.isInitialized) {
-            await this.editorScene.setTilesData(tiles);
-            this.log(`Loaded ${tiles.length} tiles into Phaser`);
-        }
-    }
-    
-    /**
-     * Paint a unit at specific coordinates
-     */
-    public setUnit(unit: Unit): boolean {
-        if (this.editorScene && this.isInitialized) {
-              this.editorScene.setUnit(unit);
-              this.log(`Painted unit ${unit.unitType} (player ${unit.player}) at Q=${unit.q}, R=${unit.r}`);
-              return true;
-        }
-        return false;
     }
     
     /**
@@ -795,38 +687,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         if (this.editorScene && this.isInitialized) {
             this.editorScene.createIslandPattern(centerQ, centerR, radius);
             this.log(`Created island pattern at Q=${centerQ}, R=${centerR} with radius ${radius}`);
-        }
-    }
-    
-    public clearAllTiles(): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.clearAllTiles();
-            this.log('All tiles cleared');
-        }
-    }
-    
-    public clearAllUnits(): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.clearAllUnits();
-            this.log('All units cleared');
-        }
-    }
-    
-    public setTile(tile: Tile, brushSize: number = 0): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.setTile(tile, brushSize);
-        }
-    }
-    
-    public removeTile(q: number, r: number): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.removeTile(q, r);
-        }
-    }
-    
-    public removeUnit(q: number, r: number): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.removeUnit(q, r);
         }
     }
     
@@ -904,26 +764,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         if (this.editorScene && this.isInitialized) {
             this.editorScene.clearReferenceImage();
             this.log('Reference image cleared');
-        }
-    }
-    
-    /**
-     * Set callback for when Phaser scene is ready
-     */
-    public onSceneReady(callback: () => void): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.onSceneReady(callback);
-        } else {
-            this.log('Cannot set scene ready callback - Phaser not initialized');
-        }
-    }
-    
-    /**
-     * Register world change callback
-     */
-    public onWorldChange(callback: () => void): void {
-        if (this.editorScene && this.isInitialized) {
-            this.editorScene.onWorldChange(callback);
         }
     }
     

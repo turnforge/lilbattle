@@ -1,4 +1,5 @@
-import { Unit, Tile, World, WorldEvent, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { WorldEventType, WorldEventTypes } from './events';
+import { Unit, Tile, World, WorldEvent, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
@@ -70,9 +71,9 @@ export class TileStatsPanel extends BaseComponent {
     public setWorld(world: World): void {
         // Unsubscribe from previous world if it exists
         if (this.world) {
-            this.removeSubscription(WorldEventType.TILES_CHANGED, this.world);
-            this.removeSubscription(WorldEventType.UNITS_CHANGED, this.world);
-            this.removeSubscription(WorldEventType.WORLD_LOADED, this.world);
+            this.removeSubscription(WorldEventTypes.TILES_CHANGED, this.world);
+            this.removeSubscription(WorldEventTypes.UNITS_CHANGED, this.world);
+            this.removeSubscription(WorldEventTypes.WORLD_LOADED, this.world);
         }
         
         this.world = world;
@@ -80,9 +81,9 @@ export class TileStatsPanel extends BaseComponent {
         
         // Subscribe to world events via EventBus immediately when world is set
         if (world) {
-            this.addSubscription(WorldEventType.TILES_CHANGED, world);
-            this.addSubscription(WorldEventType.UNITS_CHANGED, world);
-            this.addSubscription(WorldEventType.WORLD_LOADED, world);
+            this.addSubscription(WorldEventTypes.TILES_CHANGED, world);
+            this.addSubscription(WorldEventTypes.UNITS_CHANGED, world);
+            this.addSubscription(WorldEventTypes.WORLD_LOADED, world);
         }
     }
     
@@ -115,16 +116,16 @@ export class TileStatsPanel extends BaseComponent {
      */
     public handleBusEvent(eventType: string, data: any, subject: any, emitter: any): void {
         switch(eventType) {
-            case WorldEventType.TILES_CHANGED:
-                this.onWorldEvent({ type: WorldEventType.TILES_CHANGED, data });
+            case WorldEventTypes.TILES_CHANGED:
+                this.onWorldEvent({ type: WorldEventTypes.TILES_CHANGED, data });
                 break;
                 
-            case WorldEventType.UNITS_CHANGED:
-                this.onWorldEvent({ type: WorldEventType.UNITS_CHANGED, data });
+            case WorldEventTypes.UNITS_CHANGED:
+                this.onWorldEvent({ type: WorldEventTypes.UNITS_CHANGED, data });
                 break;
                 
-            case WorldEventType.WORLD_LOADED:
-                this.onWorldEvent({ type: WorldEventType.WORLD_LOADED, data });
+            case WorldEventTypes.WORLD_LOADED:
+                this.onWorldEvent({ type: WorldEventTypes.WORLD_LOADED, data });
                 break;
                 
             default:
@@ -139,9 +140,9 @@ export class TileStatsPanel extends BaseComponent {
         
         // Unsubscribe from World events
         if (this.world) {
-            this.removeSubscription(WorldEventType.TILES_CHANGED, this.world);
-            this.removeSubscription(WorldEventType.UNITS_CHANGED, this.world);
-            this.removeSubscription(WorldEventType.WORLD_LOADED, this.world);
+            this.removeSubscription(WorldEventTypes.TILES_CHANGED, this.world);
+            this.removeSubscription(WorldEventTypes.UNITS_CHANGED, this.world);
+            this.removeSubscription(WorldEventTypes.WORLD_LOADED, this.world);
         }
         
         // Clear any pending operations
@@ -259,10 +260,10 @@ export class TileStatsPanel extends BaseComponent {
     // WorldObserver implementation
     public onWorldEvent(event: WorldEvent): void {
         switch (event.type) {
-            case WorldEventType.WORLD_LOADED:
-            case WorldEventType.TILES_CHANGED:
-            case WorldEventType.UNITS_CHANGED:
-            case WorldEventType.WORLD_CLEARED:
+            case WorldEventTypes.WORLD_LOADED:
+            case WorldEventTypes.TILES_CHANGED:
+            case WorldEventTypes.UNITS_CHANGED:
+            case WorldEventTypes.WORLD_CLEARED:
                 // Auto-refresh stats when world data changes
                 this.refreshStats();
                 break;

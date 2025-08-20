@@ -47,9 +47,20 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Error Isolation**: Component failures don't cascade through synchronization barriers
 - **Race Condition Prevention**: Synchronization barriers eliminate timing dependencies
 
-### Recent Achievements (Session 2025-08-19)
+### Recent Achievements (Session 2025-08-20)
 
-#### Command Interface and Advanced E2E Testing (Complete)
+#### World Event Architecture Refactoring (Complete)
+- **PhaserWorldScene Event Integration**: Moved world synchronization logic to base scene class
+  - All Phaser scenes now automatically sync with World changes through EventBus
+  - Eliminated duplicate world event handling between editor and viewer scenes
+  - Cleaner separation: PhaserEditorComponent handles editor events, PhaserWorldScene handles world sync
+  - Automatic rendering updates when World state changes via server-changes → world events flow
+- **Event Flow Optimization**: Clarified dual subscription pattern in GameState
+  - GameState emits server-changes after processMoves() and subscribes for metadata extraction
+  - World applies actual world changes and re-emits as specific world events
+  - PhaserWorldScene base class handles TILES_CHANGED/UNITS_CHANGED/WORLD_LOADED/WORLD_CLEARED
+
+#### Previous Session: Command Interface and Advanced E2E Testing (Complete)
 - **Command Interface Implementation**: High-level game action API for testing and accessibility
   - Unified methods used by both UI interactions and programmatic testing
   - Structured ActionResult responses with success/failure reporting
@@ -193,8 +204,8 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Layout**: DockView for professional panel management
 
 ## Status
-**Current Version**: 8.2 (Command Interface and Advanced E2E Testing)  
-**Status**: Production-ready with complete command interface and advanced testing infrastructure  
+**Current Version**: 8.3 (World Event Architecture Refactoring)  
+**Status**: Production-ready with unified world synchronization architecture  
 **Build Status**: Clean compilation with all TypeScript errors resolved  
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds  
-**Next Milestone**: Complete test world setup validation and expand test scenarios
+**Architecture**: Automatic world-to-rendering synchronization via PhaserWorldScene base class

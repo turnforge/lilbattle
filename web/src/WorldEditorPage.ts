@@ -4,10 +4,10 @@ import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { TileStatsPanel } from './TileStatsPanel';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from '../lib/KeyboardShortcutManager';
 import { shouldIgnoreShortcut } from '../lib/DOMUtils';
-import { Unit, Tile, World, WorldEventType, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
+import { Unit, Tile, World, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { WorldEditorPageState, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
 import { EventBus } from '../lib/EventBus';
-import { EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
 import { EditorToolsPanel } from './EditorToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
 import { LCMComponent } from '../lib/LCMComponent';
@@ -216,12 +216,12 @@ class WorldEditorPage extends BasePage {
      */
     private subscribeToEditorEvents(): void {
         // Subscribe to World events via EventBus
-        this.addSubscription(WorldEventType.WORLD_LOADED, this);
-        this.addSubscription(WorldEventType.WORLD_SAVED, this);
-        this.addSubscription(WorldEventType.TILES_CHANGED, this);
-        this.addSubscription(WorldEventType.UNITS_CHANGED, this);
-        this.addSubscription(WorldEventType.WORLD_CLEARED, this);
-        this.addSubscription(WorldEventType.WORLD_METADATA_CHANGED, this);
+        this.addSubscription(WorldEventTypes.WORLD_LOADED, this);
+        this.addSubscription(WorldEventTypes.WORLD_SAVED, this);
+        this.addSubscription(WorldEventTypes.TILES_CHANGED, this);
+        this.addSubscription(WorldEventTypes.UNITS_CHANGED, this);
+        this.addSubscription(WorldEventTypes.WORLD_CLEARED, this);
+        this.addSubscription(WorldEventTypes.WORLD_METADATA_CHANGED, this);
         
         // Note: Tool state changes now handled via PageState Observer pattern
         // EditorToolsPanel directly updates pageState, which notifies observers
@@ -237,18 +237,18 @@ class WorldEditorPage extends BasePage {
      */
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
-            case WorldEventType.WORLD_LOADED:
+            case WorldEventTypes.WORLD_LOADED:
                 this.handleWorldLoaded(data);
                 break;
             
-            case WorldEventType.WORLD_SAVED:
+            case WorldEventTypes.WORLD_SAVED:
                 this.handleWorldSaved(data);
                 break;
             
-            case WorldEventType.TILES_CHANGED:
-            case WorldEventType.UNITS_CHANGED:
-            case WorldEventType.WORLD_CLEARED:
-            case WorldEventType.WORLD_METADATA_CHANGED:
+            case WorldEventTypes.TILES_CHANGED:
+            case WorldEventTypes.UNITS_CHANGED:
+            case WorldEventTypes.WORLD_CLEARED:
+            case WorldEventTypes.WORLD_METADATA_CHANGED:
                 this.handleWorldDataChanged();
                 break;
             

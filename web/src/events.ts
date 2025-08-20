@@ -7,6 +7,12 @@ export const WorldEventTypes = {
     WORLD_STATS_UPDATED: 'world-stats-updated',
     WORLD_VIEWER_READY: 'world-viewer-ready',
     WORLD_VIEWER_ERROR: 'world-viewer-error',
+    TILES_CHANGED: 'tiles-changed',      // Batch tile operations
+    UNITS_CHANGED: 'units-changed',      // Batch unit operations
+    WORLD_LOADED: 'world-loaded',
+    WORLD_SAVED: 'world-saved',
+    WORLD_CLEARED: 'world-cleared',
+    WORLD_METADATA_CHANGED: 'world-metadata-changed'
 } as const;
 
 export const GameEventTypes = {

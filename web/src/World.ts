@@ -1,4 +1,5 @@
 import { EventBus } from '../lib/EventBus';
+import { WorldEventTypes, WorldEventType } from './events';
 import { BaseComponent } from '../lib/Component';
 import { HexCoord } from './phaser/hexUtils';
 import { 
@@ -16,15 +17,6 @@ import { create, toJson } from '@bufbuild/protobuf';
 export interface WorldEvent {
     type: WorldEventType;
     data: any;
-}
-
-export enum WorldEventType {
-    TILES_CHANGED = 'tiles-changed',      // Batch tile operations
-    UNITS_CHANGED = 'units-changed',      // Batch unit operations
-    WORLD_LOADED = 'world-loaded',
-    WORLD_SAVED = 'world-saved',
-    WORLD_CLEARED = 'world-cleared',
-    WORLD_METADATA_CHANGED = 'world-metadata-changed'
 }
 
 // Using proto-generated Tile and Unit types directly
@@ -115,8 +107,6 @@ export class World {
     constructor(eventBus: EventBus, public name: string = 'New World', width: number = 40, height: number = 40) {
         this.eventBus = eventBus;
         this.metadata = { name, width, height };
-        
-        // ✅ Subscribe to server changes to coordinate updates
         this.subscribeToServerChanges();
     }
     
@@ -208,14 +198,14 @@ export class World {
         
         // Emit batched changes
         if (this.pendingTileChanges.length > 0) {
-            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+            this.emitStateChange(WorldEventTypes.TILES_CHANGED, {
                 changes: [...this.pendingTileChanges]
             } as TilesChangedEventData);
             this.pendingTileChanges = [];
         }
         
         if (this.pendingUnitChanges.length > 0) {
-            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+            this.emitStateChange(WorldEventTypes.UNITS_CHANGED, {
                 changes: [...this.pendingUnitChanges]
             } as UnitsChangedEventData);
             this.pendingUnitChanges = [];
@@ -238,7 +228,7 @@ export class World {
             this.pendingTileChanges.push({ q, r, tile });
         } else {
             // Emit immediately
-            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+            this.emitStateChange(WorldEventTypes.TILES_CHANGED, {
                 changes: [{ q, r, tile }]
             } as TilesChangedEventData);
         }
@@ -252,7 +242,7 @@ export class World {
             this.pendingUnitChanges.push({ q, r, unit });
         } else {
             // Emit immediately
-            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+            this.emitStateChange(WorldEventTypes.UNITS_CHANGED, {
                 changes: [{ q, r, unit }]
             } as UnitsChangedEventData);
         }
@@ -290,7 +280,7 @@ export class World {
         if (this.metadata.name !== name) {
             this.metadata.name = name;
             this.hasUnsavedChanges = true;
-            this.emitStateChange(WorldEventType.WORLD_METADATA_CHANGED, {
+            this.emitStateChange(WorldEventTypes.WORLD_METADATA_CHANGED, {
                 name, width: this.metadata.width, height: this.metadata.height
             });
         }
@@ -451,7 +441,7 @@ export class World {
         this.clearAllTiles();
         this.clearAllUnits();
         
-        this.emitStateChange(WorldEventType.WORLD_CLEARED, {});
+        this.emitStateChange(WorldEventTypes.WORLD_CLEARED, {});
     }
     
     public fillAllTerrain(tileType: number, player: number, viewport?: { minQ: number, maxQ: number, minR: number, maxR: number }): void {
@@ -581,7 +571,7 @@ export class World {
             
             this.markAsSaved();
             
-            this.emitStateChange(WorldEventType.WORLD_SAVED, {
+            this.emitStateChange(WorldEventTypes.WORLD_SAVED, {
                 worldId: this.worldId, success: true
             });
             
@@ -724,20 +714,20 @@ export class World {
         
         // Emit batched changes immediately
         if (tileChanges.length > 0) {
-            this.emitStateChange(WorldEventType.TILES_CHANGED, {
+            this.emitStateChange(WorldEventTypes.TILES_CHANGED, {
                 changes: tileChanges
             } as TilesChangedEventData);
         }
         
         if (unitChanges.length > 0) {
-            this.emitStateChange(WorldEventType.UNITS_CHANGED, {
+            this.emitStateChange(WorldEventTypes.UNITS_CHANGED, {
                 changes: unitChanges
             } as UnitsChangedEventData);
         }
         
         this.hasUnsavedChanges = false;
         
-        this.emitStateChange(WorldEventType.WORLD_LOADED, {
+        this.emitStateChange(WorldEventTypes.WORLD_LOADED, {
             worldId: this.worldId,
             isNewWorld: this.isNewWorld,
             tileCount: this.getTileCount(),

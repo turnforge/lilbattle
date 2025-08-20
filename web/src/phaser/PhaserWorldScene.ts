@@ -6,7 +6,8 @@ import { BaseMapLayer } from './layers/BaseMapLayer';
 import { ClickContext } from './LayerSystem';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { EventBus } from '../../lib/EventBus';
-import { WorldEventTypes } from '../events';
+import { WorldEventType, WorldEventTypes } from '../events';
+import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../World';
 
 export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Container element and lifecycle management
@@ -79,6 +80,135 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     }
 
     // =========================================================
+    // EventBus Integration for World Synchronization
+    // =========================================================
+
+    /**
+     * Handle events from the EventBus
+     */
+    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
+        switch(eventType) {
+            case WorldEventTypes.WORLD_LOADED:
+                this.handleWorldLoaded(data);
+                break;
+            
+            case WorldEventTypes.TILES_CHANGED:
+                this.handleTilesChanged(data);
+                break;
+            
+            case WorldEventTypes.UNITS_CHANGED:
+                this.handleUnitsChanged(data);
+                break;
+            
+            case WorldEventTypes.WORLD_CLEARED:
+                this.handleWorldCleared();
+                break;
+            
+            default:
+                if (this.debugMode) {
+                    console.log(`[PhaserWorldScene] Unhandled event: ${eventType}`);
+                }
+        }
+    }
+
+    /**
+     * Subscribe to World change events for automatic synchronization
+     */
+    private subscribeToWorldEvents(): void {
+        if (this.debugMode) {
+            console.log('[PhaserWorldScene] Subscribing to World events');
+        }
+        
+        // Subscribe to World events for automatic synchronization
+        this.eventBus.addSubscription(WorldEventTypes.WORLD_LOADED, null, this);
+        this.eventBus.addSubscription(WorldEventTypes.TILES_CHANGED, null, this);
+        this.eventBus.addSubscription(WorldEventTypes.UNITS_CHANGED, null, this);
+        this.eventBus.addSubscription(WorldEventTypes.WORLD_CLEARED, null, this);
+    }
+
+    /**
+     * Unsubscribe from all EventBus events
+     */
+    private unsubscribeFromWorldEvents(): void {
+        this.eventBus.removeSubscription(WorldEventTypes.WORLD_LOADED, null, this);
+        this.eventBus.removeSubscription(WorldEventTypes.TILES_CHANGED, null, this);
+        this.eventBus.removeSubscription(WorldEventTypes.UNITS_CHANGED, null, this);
+        this.eventBus.removeSubscription(WorldEventTypes.WORLD_CLEARED, null, this);
+    }
+
+    /**
+     * Handle world loaded event - sync all data
+     */
+    private handleWorldLoaded(data: WorldLoadedEventData): void {
+        if (this.debugMode) {
+            console.log('[PhaserWorldScene] World loaded, updating scene display');
+        }
+        
+        // Load tile data from World into scene
+        if (this.world) {
+            const tiles = this.world.getAllTiles();
+            if (tiles.length > 0) {
+                tiles.forEach(tile => this.setTile(tile));
+            }
+            
+            const units = this.world.getAllUnits();
+            if (units.length > 0) {
+                units.forEach(unit => this.setUnit(unit));
+            }
+        }
+    }
+    
+    /**
+     * Handle tiles changed event - sync tile updates
+     */
+    private handleTilesChanged(data: TilesChangedEventData): void {
+        if (this.debugMode) {
+            console.log(`[PhaserWorldScene] Updating ${data.changes.length} tile changes in scene`);
+        }
+        
+        // Update individual tiles in scene based on World changes
+        for (const change of data.changes) {
+            if (change.tile) {
+                this.setTile(change.tile);
+            } else {
+                // Tile was removed
+                this.removeTile(change.q, change.r);
+            }
+        }
+    }
+    
+    /**
+     * Handle units changed event - sync unit updates
+     */
+    private handleUnitsChanged(data: UnitsChangedEventData): void {
+        if (this.debugMode) {
+            console.log(`[PhaserWorldScene] Updating ${data.changes.length} unit changes in scene`);
+        }
+        
+        // Update individual units in scene based on World changes
+        for (const change of data.changes) {
+            if (change.unit) {
+                this.setUnit(change.unit);
+            } else {
+                // Unit was removed
+                this.removeUnit(change.q, change.r);
+            }
+        }
+    }
+    
+    /**
+     * Handle world cleared event - clear all display
+     */
+    private handleWorldCleared(): void {
+        if (this.debugMode) {
+            console.log('[PhaserWorldScene] World cleared, clearing scene display');
+        }
+        
+        this.clearAllTiles();
+        this.clearAllUnits();
+    }
+
+    // =========================================================
     // LCMComponent Interface Implementation
     // =========================================================
 
@@ -92,6 +222,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         if (this.debugMode) {
             console.log('[PhaserWorldScene] DOM validation complete');
         }
+        
+        // Subscribe to world events for automatic synchronization
+        this.subscribeToWorldEvents();
+        
         await this.initializePhaser();
         return []; // Leaf component - no children
     }
@@ -107,6 +241,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         if (this.debugMode) {
             console.log('[PhaserWorldScene] Deactivating');
         }
+        
+        // Unsubscribe from world events
+        this.unsubscribeFromWorldEvents();
+        
         this.destroyPhaser();
     }
     
@@ -1173,29 +1311,6 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         }
         
         return this.assetsReadyPromise;
-    }
-    
-    // Get all tiles data (for integration with WASM)
-    public getTilesData(): Array<Tile> {
-        const tilesData: Array<Tile> = [];
-        
-        this.tileSprites.forEach((tile, key) => {
-            const [q, r] = key.split(',').map(Number);
-            // Extract terrain and color from texture key
-            const textureKey = tile.texture.key;
-            const match = textureKey.match(/terrain_(\d+)_(\d+)/);
-            
-            if (match) {
-                tilesData.push({
-                    q,
-                    r,
-                    tileType: parseInt(match[1]),
-                    player: parseInt(match[2])
-                });
-            }
-        });
-        
-        return tilesData;
     }
     
     /**
