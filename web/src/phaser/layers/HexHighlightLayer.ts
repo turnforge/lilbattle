@@ -175,6 +175,8 @@ export class SelectionHighlightLayer extends HexHighlightLayer {
  */
 export class MovementHighlightLayer extends HexHighlightLayer {
     private movementOptions: Map<string, MoveOption> = new Map();
+    private coordinateTexts: Map<string, Phaser.GameObjects.Text> = new Map();
+    private showDebugCoordinates: boolean = true;
     
     constructor(scene: Phaser.Scene, tileWidth: number) {
         super(scene, {
@@ -204,6 +206,7 @@ export class MovementHighlightLayer extends HexHighlightLayer {
     public showMovementOptions(moveOptions: MoveOption[]): void {
         // Clear existing highlights and stored options
         this.clearHighlights();
+        this.clearCoordinateTexts();
         this.movementOptions.clear();
         
         // Add highlights for each valid movement position and store the MoveOption data
@@ -214,6 +217,11 @@ export class MovementHighlightLayer extends HexHighlightLayer {
             // Store the move option for click handling
             const coordKey = `${moveOption.q},${moveOption.r}`;
             this.movementOptions.set(coordKey, moveOption);
+            
+            // Add debug coordinate text if enabled
+            if (this.showDebugCoordinates) {
+                this.addCoordinateText(moveOption.q, moveOption.r, moveOption);
+            }
         });
     }
     
@@ -222,7 +230,58 @@ export class MovementHighlightLayer extends HexHighlightLayer {
      */
     public clearMovementOptions(): void {
         this.clearHighlights();
+        this.clearCoordinateTexts();
         this.movementOptions.clear();
+    }
+    
+    /**
+     * Toggle debug coordinate display on movement options
+     */
+    public setShowDebugCoordinates(show: boolean): void {
+        this.showDebugCoordinates = show;
+        
+        // If currently showing movement options, refresh them to show/hide coordinates
+        if (this.movementOptions.size > 0) {
+            const currentOptions = Array.from(this.movementOptions.values());
+            this.showMovementOptions(currentOptions);
+        }
+    }
+    
+    /**
+     * Add coordinate text overlay at hex position
+     */
+    private addCoordinateText(q: number, r: number, moveOption: MoveOption): void {
+        const key = `${q},${r}`;
+        const position = hexToPixel(q, r);
+        
+        // Create text showing Q/R coordinates and movement cost
+        const coordText = `Q:${q} R:${r}`;
+        const costText = moveOption.movementCost ? `Cost:${moveOption.movementCost}` : '';
+        const displayText = costText ? `${coordText}\n${costText}` : coordText;
+        
+        const text = this.scene.add.text(position.x, position.y, displayText, {
+            fontSize: '10px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            align: 'center',
+            fontFamily: 'Arial'
+        });
+        
+        text.setOrigin(0.5, 0.5);
+        text.setDepth(this.depth + 1); // Above the highlight
+        
+        this.coordinateTexts.set(key, text);
+    }
+    
+    /**
+     * Clear all coordinate text overlays
+     */
+    private clearCoordinateTexts(): void {
+        for (const text of this.coordinateTexts.values()) {
+            text.destroy();
+        }
+        this.coordinateTexts.clear();
     }
     
     /**
@@ -231,6 +290,15 @@ export class MovementHighlightLayer extends HexHighlightLayer {
     public getMoveOptionAt(q: number, r: number): MoveOption | undefined {
         const coordKey = `${q},${r}`;
         return this.movementOptions.get(coordKey);
+    }
+    
+    /**
+     * Override destroy to clean up coordinate texts
+     */
+    public destroy(): void {
+        this.clearHighlights();
+        this.clearCoordinateTexts();
+        super.destroy();
     }
 }
 
