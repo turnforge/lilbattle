@@ -36,19 +36,17 @@ rules:
       - action: "include"
         patterns:
           - "web/server/*.go"
+          - "lib/**/*.go"
+          - "cmd/**/*.go"
+          - "services/**/*.go"
+          - "go.mod"
+          - "go.sum"
       - action: "exclude"
         patterns:
           - "**/*.log"
           - "**/*.log"
           - "web/**/*"
           - "web"
-      - action: "include"
-        patterns:
-          - "lib/**/*.go"
-          - "cmd/**/*.go"
-          - "services/**/*.go"
-          - "go.mod"
-          - "go.sum"
     commands:
       - "echo '🔧 Building WeeWar Binary...'"
       - "make wasm"

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *WasmGamesServiceImpl {
+func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *SingletonGamesServiceImpl {
 	// 1. Create test world with 3 units
 	world := weewar.NewWorld("test")
 	// Add some tiles for movement
@@ -36,12 +36,12 @@ func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *WasmGamesServiceImpl
 	if err != nil {
 		t.Fatalf("Failed to create game: %v", err)
 	}
-	
+
 	// Set current player to 1 for move validation
 	rtGame.CurrentPlayer = 1
-	
+
 	t.Logf("Game setup: CurrentPlayer=%d, TurnCounter=%d", rtGame.CurrentPlayer, rtGame.TurnCounter)
-	
+
 	// Debug: Check if destination tile exists
 	destTile := world.TileAt(weewar.AxialCoord{Q: 2, R: 3})
 	if destTile == nil {
@@ -49,8 +49,8 @@ func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *WasmGamesServiceImpl
 	} else {
 		t.Logf("Destination tile (2,3) exists: type=%d", destTile.TileType)
 	}
-	// Create WasmGamesService and set up singleton data
-	wasmService := NewWasmGamesServiceImpl()
+	// Create SingletonGamesService and set up singleton data
+	wasmService := NewSingletonGamesServiceImpl()
 
 	// Set up the singleton objects
 	wasmService.SingletonGame = &v1.Game{
@@ -82,7 +82,7 @@ func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *WasmGamesServiceImpl
 	return wasmService
 }
 
-// Test that reproduces the unit duplication bug using real ProcessMoves with WasmGamesService
+// Test that reproduces the unit duplication bug using real ProcessMoves with SingletonGamesService
 func TestProcessMovesNoDuplication(t *testing.T) {
 	// Add 3 test units
 	units := []*v1.Unit{
