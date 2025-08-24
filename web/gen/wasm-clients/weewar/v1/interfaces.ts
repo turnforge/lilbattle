@@ -133,6 +133,7 @@ export interface TerrainDefinition {
 export interface UnitDefinition {
   id: number;
   name: string;
+  description: string;
   movementPoints: number;
   attackRange: number;
   health: number;

@@ -43,3 +43,18 @@ wasmexecjs:
 	# echo "Warning: wasm_exec.js not found in Go installation"
 	echo "File sizes:"
 	du -h web/static/wasm/*.wasm web/static/wasm/*.js
+
+install-tools:
+	@echo "Installing required Go tools..."
+	go install golang.org/x/tools/cmd/goyacc@latest
+	go install github.com/bufbuild/buf/cmd/buf@latest
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
+	go get  google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go get honnef.co/go/tools/cmd/staticcheck
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+	go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+	npm install --force -g  @bufbuild/buf @bufbuild/protobuf @bufbuild/protoc-gen-es @bufbuild/protoc-gen-connect-es
+	@echo "✓ Go tools installed"

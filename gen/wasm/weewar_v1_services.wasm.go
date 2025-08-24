@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"syscall/js"
 	"time"
 
@@ -116,7 +117,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceCreateGame(this js
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -165,7 +166,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetGames(this js.V
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -214,7 +215,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceListGames(this js.
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -263,7 +264,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetGame(this js.Va
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -312,7 +313,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceDeleteGame(this js
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -361,7 +362,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceUpdateGame(this js
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -410,7 +411,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetGameState(this 
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -459,7 +460,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceListMoves(this js.
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -508,7 +509,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceProcessMoves(this 
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -557,7 +558,7 @@ func (exports *Weewar_v1_servicesServicesExports) gamesServiceGetOptionsAt(this 
 	if exports.GamesService == nil {
 		return createJSResponse(false, "GamesService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -606,7 +607,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceCreateUser(this js
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -655,7 +656,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceGetUsers(this js.V
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -704,7 +705,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceListUsers(this js.
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -753,7 +754,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceGetUser(this js.Va
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -802,7 +803,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceDeleteUser(this js
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -851,7 +852,7 @@ func (exports *Weewar_v1_servicesServicesExports) usersServiceUpdateUser(this js
 	if exports.UsersService == nil {
 		return createJSResponse(false, "UsersService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -900,7 +901,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceCreateWorld(this 
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -949,7 +950,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceGetWorlds(this js
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -998,7 +999,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceListWorlds(this j
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -1047,7 +1048,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceGetWorld(this js.
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -1096,7 +1097,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceDeleteWorld(this 
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}
@@ -1145,7 +1146,7 @@ func (exports *Weewar_v1_servicesServicesExports) worldsServiceUpdateWorld(this 
 	if exports.WorldsService == nil {
 		return createJSResponse(false, "WorldsService not initialized", nil)
 	}
-
+	// Synchronous method
 	if len(args) < 1 {
 		return createJSResponse(false, "Request JSON required", nil)
 	}

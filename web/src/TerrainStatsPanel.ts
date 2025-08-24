@@ -131,6 +131,9 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         
         if (noSelectionDiv) noSelectionDiv.classList.remove('hidden');
         if (terrainDetailsDiv) terrainDetailsDiv.classList.add('hidden');
+        
+        // Also clear unit info
+        this.clearUnitInfo();
     }
 
     /**
@@ -292,6 +295,181 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
      */
     public getTerrainData(tileType: number): TerrainStats | null {
         return this.rulesTable.getTerrainStatsAt(tileType, 0);
+    }
+
+    /**
+     * Update unit information display when a unit is present on the tile
+     */
+    public updateUnitInfo(unit: any): void {
+        if (!this.isActivated) {
+            return;
+        }
+
+        this.log('Updating unit info:', unit);
+
+        // Show unit details section
+        const unitDetailsDiv = this.findElement('#unit-details');
+        if (unitDetailsDiv) unitDetailsDiv.classList.remove('hidden');
+
+        // Update unit header
+        this.updateUnitHeader(unit);
+        
+        // Update unit stats
+        this.updateUnitStats(unit);
+        
+        // Update unit properties
+        this.updateUnitProperties(unit);
+    }
+
+    /**
+     * Clear unit information display
+     */
+    public clearUnitInfo(): void {
+        if (!this.isActivated) {
+            return;
+        }
+
+        this.log('Clearing unit info');
+
+        // Hide unit details section
+        const unitDetailsDiv = this.findElement('#unit-details');
+        if (unitDetailsDiv) unitDetailsDiv.classList.add('hidden');
+    }
+
+    /**
+     * Update unit header (icon, name, player, description)
+     */
+    private updateUnitHeader(unit: any): void {
+        const iconElement = this.findElement('#unit-icon');
+        const nameElement = this.findElement('#unit-name');
+        const playerElement = this.findElement('#unit-player');
+        const descElement = this.findElement('#unit-description');
+
+        if (iconElement) {
+            // Get unit definition from rules table
+            const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+            iconElement.textContent = unitDef?.icon || '⚔️';
+        }
+
+        if (nameElement) {
+            const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+            nameElement.textContent = unitDef?.name || `Unit ${unit.unitType}`;
+        }
+
+        if (playerElement) {
+            playerElement.textContent = `Player ${unit.player}`;
+        }
+
+        if (descElement) {
+            const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+            descElement.textContent = unitDef?.description || 'Military unit';
+        }
+    }
+
+    /**
+     * Update unit stats (health, movement, range, status)
+     */
+    private updateUnitStats(unit: any): void {
+        const healthElement = this.findElement('#unit-health');
+        const movementElement = this.findElement('#unit-movement');
+        const rangeElement = this.findElement('#unit-range');
+        const statusElement = this.findElement('#unit-status');
+
+        if (healthElement) {
+            healthElement.textContent = unit.health?.toString() || '100';
+        }
+
+        if (movementElement) {
+            const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+            movementElement.textContent = unitDef?.movementPoints?.toString() || unit.movementPoints?.toString() || '3';
+        }
+
+        if (rangeElement) {
+            const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+            rangeElement.textContent = unitDef?.attackRange?.toString() || unit.attackRange?.toString() || '1';
+        }
+
+        if (statusElement) {
+            // Determine status based on unit state
+            let status = 'Ready';
+            if (unit.hasActed) {
+                status = 'Used';
+            } else if (unit.health < 50) {
+                status = 'Damaged';
+            }
+            statusElement.textContent = status;
+        }
+    }
+
+    /**
+     * Update unit properties list
+     */
+    private updateUnitProperties(unit: any): void {
+        const propertiesList = this.findElement('#unit-properties-list');
+        if (!propertiesList) return;
+
+        const properties: Array<{name: string, value: string}> = [];
+
+        // Add basic unit properties
+        properties.push({
+            name: 'Unit ID',
+            value: unit.id?.toString() || 'N/A'
+        });
+
+        properties.push({
+            name: 'Unit Type',
+            value: unit.unitType?.toString() || 'N/A'
+        });
+
+        properties.push({
+            name: 'Owner',
+            value: `Player ${unit.player}`
+        });
+
+        if (unit.health !== undefined) {
+            properties.push({
+                name: 'Health',
+                value: `${unit.health}/100`
+            });
+        }
+
+        // Add unit definition properties if available
+        const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
+        if (unitDef) {
+            if (unitDef.movementPoints !== undefined) {
+                properties.push({
+                    name: 'Max Movement',
+                    value: unitDef.movementPoints.toString()
+                });
+            }
+
+            if (unitDef.attackRange !== undefined) {
+                properties.push({
+                    name: 'Attack Range',
+                    value: unitDef.attackRange.toString()
+                });
+            }
+
+            if (unitDef.properties && unitDef.properties.length > 0) {
+                properties.push({
+                    name: 'Special Abilities',
+                    value: unitDef.properties.join(', ')
+                });
+            }
+        }
+
+        // Generate HTML
+        let propertiesHTML = '';
+        properties.forEach(property => {
+            propertiesHTML += `
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                    <span class="font-medium">${property.name}:</span> ${property.value}
+                </div>
+            `;
+        });
+
+        propertiesList.innerHTML = propertiesHTML || 
+            '<div class="text-sm text-gray-500 dark:text-gray-400 italic">No unit properties available</div>';
     }
 
     protected destroyComponent(): void {

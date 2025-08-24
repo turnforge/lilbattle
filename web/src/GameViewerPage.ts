@@ -146,11 +146,23 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                     
                 case 'base-map':
                     const unit = this.world?.getUnitAt(q, r);
+                    const tile = this.world?.getTileAt(q, r);
+                    
+                    // Always show terrain info (even when unit is present)
+                    this.handleTileClick(q, r, tile);
+                    
+                    // If there's a unit, also handle unit logic and show unit info in terrain panel
                     if (unit) {
                         this.handleUnitClick(q, r);
+                        // Update terrain panel to also show unit info
+                        if (this.terrainStatsPanel) {
+                            this.terrainStatsPanel.updateUnitInfo(unit);
+                        }
                     } else {
-                        const tile = this.world?.getTileAt(q, r);
-                        this.handleTileClick(q, r, tile);
+                        // Clear unit info from terrain panel when no unit
+                        if (this.terrainStatsPanel) {
+                            this.terrainStatsPanel.clearUnitInfo();
+                        }
                     }
                     break;
                     
@@ -403,6 +415,16 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                     error: 'No unit at coordinates'
                 } as ActionResult;
                 return error;
+            }
+
+            // Check if this unit is already selected - if so, deselect it
+            if (this.selectedUnitCoord && this.selectedUnitCoord.q === q && this.selectedUnitCoord.r === r) {
+                this.clearSelection();
+                return {
+                    success: true,
+                    message: `Unit deselected at (${q}, ${r})`,
+                    data: { action: 'deselected' }
+                } as ActionResult;
             }
 
             // Get options for this position to see if unit is selectable

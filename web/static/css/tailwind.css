@@ -2331,6 +2331,10 @@ select {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -2663,6 +2667,11 @@ select {
   background-color: rgb(255 237 213 / var(--tw-bg-opacity, 1));
 }
 
+.bg-orange-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 247 237 / var(--tw-bg-opacity, 1));
+}
+
 .bg-orange-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
@@ -2691,6 +2700,11 @@ select {
 .bg-red-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
 }
 
 .bg-red-500 {
@@ -3570,6 +3584,10 @@ html, body {
   background-color: rgb(124 45 18 / var(--tw-bg-opacity, 1));
 }
 
+.dark\:bg-orange-900\/20:is(.dark *) {
+  background-color: rgb(124 45 18 / 0.2);
+}
+
 .dark\:bg-pink-900:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(131 24 67 / var(--tw-bg-opacity, 1));
@@ -3587,6 +3605,10 @@ html, body {
 .dark\:bg-red-900:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(127 29 29 / var(--tw-bg-opacity, 1));
+}
+
+.dark\:bg-red-900\/20:is(.dark *) {
+  background-color: rgb(127 29 29 / 0.2);
 }
 
 .dark\:bg-red-900\/30:is(.dark *) {

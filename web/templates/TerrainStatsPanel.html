@@ -82,5 +82,71 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Unit Info (when unit is present on tile) -->
+        <div id="unit-details" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-3">⚔️ Unit Info</h4>
+            
+            <!-- Unit Header -->
+            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="unit-icon" class="text-2xl">🔱</span>
+                    <span id="unit-player" class="text-xs text-gray-500 dark:text-gray-400">
+                        Player 1
+                    </span>
+                </div>
+                <h5 id="unit-name" class="font-medium text-gray-900 dark:text-white">
+                    Infantry
+                </h5>
+                <p id="unit-description" class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Basic ground unit
+                </p>
+            </div>
+            
+            <!-- Unit Stats -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <!-- Health -->
+                <div class="bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">❤️ Health</div>
+                    <div id="unit-health" class="text-lg font-semibold text-red-600 dark:text-red-400">
+                        100
+                    </div>
+                </div>
+                
+                <!-- Movement -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">⚡ Movement</div>
+                    <div id="unit-movement" class="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        3
+                    </div>
+                </div>
+                
+                <!-- Attack Range -->
+                <div class="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">🎯 Range</div>
+                    <div id="unit-range" class="text-lg font-semibold text-orange-600 dark:text-orange-400">
+                        1
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">📍 Status</div>
+                    <div id="unit-status" class="text-sm font-semibold text-green-600 dark:text-green-400">
+                        Ready
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Unit Properties -->
+            <div id="unit-properties" class="mb-4">
+                <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    ⚙️ Unit Properties  
+                </h6>
+                <div id="unit-properties-list" class="space-y-1">
+                    <!-- Unit properties will be populated dynamically -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>

@@ -141,6 +141,75 @@ export class Weewar_v1_servicesClient {
     }
 
     /**
+     * Internal method to call async WASM functions with callback
+     */
+    public callMethodWithCallback<TRequest>(
+        methodPath: string,
+        request: TRequest,
+        callback: (response: any, error?: string) => void
+    ): Promise<void> {
+        this.ensureWASMLoaded();
+
+        try {
+            // Convert request to JSON
+            const jsonReq = JSON.parse(JSON.stringify(request));
+            const wasmMethod = this.getWasmMethod(methodPath);
+            
+            // Call WASM method with callback function
+            const wasmResponse = wasmMethod(JSON.stringify(jsonReq), callback);
+
+            if (!wasmResponse.success) {
+                throw new WasmError(wasmResponse.message, methodPath);
+            }
+
+            // Async methods return immediately
+            return Promise.resolve();
+        } catch (error) {
+            if (error instanceof WasmError) {
+                throw error;
+            }
+            throw new WasmError(
+                `Call error: ${error instanceof Error ? error.message : String(error)}`,
+                methodPath
+            );
+        }
+    }
+
+    /**
+     * Internal method to call server streaming WASM functions
+     */
+    public callStreamingMethod<TRequest, TResponse>(
+        methodPath: string,
+        request: TRequest,
+        callback: (response: TResponse | null, error: string | null, done: boolean) => boolean
+    ): void {
+        this.ensureWASMLoaded();
+
+        try {
+            // Convert request to JSON
+            const jsonReq = JSON.parse(JSON.stringify(request));
+            const wasmMethod = this.getWasmMethod(methodPath);
+            
+            // Call WASM streaming method with callback function
+            const wasmResponse = wasmMethod(JSON.stringify(jsonReq), callback);
+
+            if (!wasmResponse.success) {
+                throw new WasmError(wasmResponse.message, methodPath);
+            }
+
+            // Streaming methods return immediately
+        } catch (error) {
+            if (error instanceof WasmError) {
+                throw error;
+            }
+            throw new WasmError(
+                `Streaming call error: ${error instanceof Error ? error.message : String(error)}`,
+                methodPath
+            );
+        }
+    }
+
+    /**
      * Load the WASM module implementation
      */
     private async loadWASMModule(wasmPath: string): Promise<void> {

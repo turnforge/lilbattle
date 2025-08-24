@@ -250,6 +250,7 @@ export class UnitDefinition implements UnitDefinitionInterface {
 
   id: number = 0;
   name: string = "";
+  description: string = "";
   movementPoints: number = 0;
   attackRange: number = 0;
   health: number = 0;

@@ -148,10 +148,11 @@ message TerrainDefinition {
 message UnitDefinition {
   int32 id = 1;                  // Unit type ID
   string name = 2;               // Display name (e.g., "Infantry", "Tank")
-  int32 movement_points = 3;     // Maximum movement per turn
-  int32 attack_range = 4;        // Attack range in tiles
-  int32 health = 5;             // Maximum health points
-  repeated string properties = 6; // Special properties/abilities
+  string description = 3;        //
+  int32 movement_points = 4;     // Maximum movement per turn
+  int32 attack_range = 5;        // Attack range in tiles
+  int32 health = 6;             // Maximum health points
+  repeated string properties = 7; // Special properties/abilities
 }
 
 // Movement cost matrix for unit types on terrain types
