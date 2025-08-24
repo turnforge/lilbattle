@@ -22,7 +22,7 @@ func main() {
 	fmt.Println("WeeWar WASM module loading...")
 
 	// Create WASM singleton services (data will be loaded via Load() calls from JS)
-	wasmGamesService := services.NewWasmGamesServiceImpl()
+	wasmGamesService := services.NewSingletonGamesServiceImpl()
 	wasmWorldsService := services.NewWasmWorldsServiceImpl()
 
 	// Wire service implementations to generated WASM exports
@@ -62,7 +62,7 @@ func main() {
 		gameMoveHistoryBytes := make([]byte, args[2].Get("length").Int())
 		js.CopyBytesToGo(gameMoveHistoryBytes, args[2])
 
-		// Call the Load method on WasmGamesServiceImpl
+		// Call the Load method on SingletonGamesServiceImpl
 		wasmGamesService.Load(gameBytes, gameStateBytes, gameMoveHistoryBytes)
 
 		fmt.Printf("WASM singleton data loaded: game=%d bytes, state=%d bytes, history=%d bytes\n",
