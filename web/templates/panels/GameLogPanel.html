@@ -1,0 +1,90 @@
+<!-- GameLogPanel Template for DockView -->
+<div class="game-log-panel h-full bg-white dark:bg-gray-800 p-4 flex flex-col">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Game Log</h3>
+        <button id="clear-log-btn" type="button" 
+            class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+            Clear
+        </button>
+    </div>
+    
+    <!-- Log Filters -->
+    <div class="mb-3 flex flex-wrap gap-1">
+        <button class="log-filter-btn active" data-filter="all" 
+            class="px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100">
+            All
+        </button>
+        <button class="log-filter-btn" data-filter="moves" 
+            class="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">
+            Moves
+        </button>
+        <button class="log-filter-btn" data-filter="combat" 
+            class="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">
+            Combat
+        </button>
+        <button class="log-filter-btn" data-filter="system" 
+            class="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">
+            System
+        </button>
+    </div>
+    
+    <!-- Log Content -->
+    <div id="game-log" class="flex-1 overflow-y-auto space-y-1 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded p-2">
+        <!-- Log entries will be populated by JavaScript -->
+        <div class="log-entry system-log" data-timestamp="00:00:00">
+            <span class="timestamp text-gray-500 dark:text-gray-400">[00:00:00]</span>
+            <span class="message">Game started with <span class="font-medium" id="player-count-log">2</span> players</span>
+        </div>
+        <div class="log-entry system-log" data-timestamp="00:00:01">
+            <span class="timestamp text-gray-500 dark:text-gray-400">[00:00:01]</span>
+            <span class="message">Player 1's turn begins</span>
+        </div>
+    </div>
+    
+    <!-- Log Stats Footer -->
+    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span id="log-entry-count">2 entries</span>
+        <span id="log-last-update">Just now</span>
+    </div>
+</div>
+
+<!-- Log Entry Template (hidden) -->
+<template id="log-entry-template">
+    <div class="log-entry" data-timestamp="" data-type="">
+        <span class="timestamp text-gray-500 dark:text-gray-400"></span>
+        <span class="message"></span>
+    </div>
+</template>
+
+<style>
+/* Log entry type styles */
+.log-entry.move-log .message::before {
+    content: "🚶 ";
+}
+
+.log-entry.combat-log .message::before {
+    content: "⚔️ ";
+}
+
+.log-entry.system-log .message::before {
+    content: "⚙️ ";
+}
+
+/* Filter button active state */
+.log-filter-btn.active {
+    @apply bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100;
+}
+
+.log-filter-btn:not(.active) {
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
+}
+
+.log-filter-btn:not(.active):hover {
+    @apply bg-gray-200 dark:bg-gray-600;
+}
+
+/* Hidden log entries for filtering */
+.log-entry.hidden {
+    display: none !important;
+}
+</style>

@@ -115,61 +115,22 @@
             </div>
         </div>
 
-        <!-- Main Game Container - BorderLayout: West (Actions) | Center (World) | East (TerrainStats) -->
-        <div id="game-viewer-container" class="flex-1 min-h-0 flex">
-            <!-- West Panel: Game Actions/Info -->
-            <div class="action-panel w-64 flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                <div class="p-4">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Game Actions</h3>
-                    
-                    <!-- Selected Unit Info -->
-                    <div id="selected-unit-info" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hidden">
-                        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Selected Unit</h4>
-                        <div id="unit-details" class="text-sm text-gray-600 dark:text-gray-300">
-                            <!-- Unit details will be populated by JS -->
-                        </div>
-                        <div class="mt-2 space-y-1">
-                            <button id="move-unit-btn" type="button" class="w-full text-left px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">
-                                Select Move Target
-                            </button>
-                            <button id="attack-unit-btn" type="button" class="w-full text-left px-3 py-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100 rounded hover:bg-red-200 dark:hover:bg-red-900/50">
-                                Select Attack Target
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Turn Actions -->
-                    <div class="space-y-2">
-                        <button id="select-all-units-btn" type="button" 
-                            class="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-600">
-                            Show All My Units
-                        </button>
-                        <button id="center-on-action-btn" type="button" 
-                            class="w-full px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-600">
-                            Center on Action
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Game Log -->
-                <div class="border-t border-gray-200 dark:border-gray-700 p-4 flex-1">
-                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">Game Log</h4>
-                    <div id="game-log" class="text-xs text-gray-600 dark:text-gray-300 space-y-1 h-32 overflow-y-auto">
-                        <div>Game started with {{ .PlayerCount }} players</div>
-                        <div>Player 1's turn begins</div>
-                    </div>
-                </div>
+        <!-- Main Dockview Container -->
+        <div id="dockview-container" class="flex-1 min-h-0"></div>
+        
+        <!-- Hidden Panel Templates for Dockview -->
+        <div style="display: none;">
+            <div id="main-game-panel-template">
+                {{# include "panels/MainGamePanel.html" #}}
             </div>
-            
-            <!-- Center: Main Phaser Game Area -->
-            <div class="flex-1 min-h-0">
-                <div id="phaser-viewer-container" class="w-full h-full"></div>
-            </div>
-            
-            <!-- East Panel: Terrain Stats -->
-            <div id="terrain-stats-container" class="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
-                <!-- TerrainStatsPanel will bind to the template below -->
+            <div id="terrain-stats-panel-template">
                 {{# include "TerrainStatsPanel.html" #}}
+            </div>
+            <div id="game-actions-panel-template">
+                {{# include "panels/GameActionsPanel.html" #}}
+            </div>
+            <div id="game-log-panel-template">
+                {{# include "panels/GameLogPanel.html" #}}
             </div>
         </div>
         

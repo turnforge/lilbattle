@@ -12,6 +12,7 @@ import { PLAYER_BG_COLORS } from './ColorsAndNames';
 import { TerrainStatsPanel } from './TerrainStatsPanel';
 import { GameEventTypes, WorldEventTypes } from './events';
 import { RulesTable, TerrainStats } from './RulesTable';
+import { DockviewApi, DockviewComponent } from 'dockview-core';
 
 /**
  * Result of a game action command - used for testing and accessibility
@@ -64,6 +65,9 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     private world: World  // ✅ Shared World component
     private terrainStatsPanel: TerrainStatsPanel
     private rulesTable: RulesTable = new RulesTable();
+    
+    // Dockview interface
+    private dockview: DockviewApi;
     
     // Game configuration accessed directly from WASM-cached Game proto
     
@@ -261,22 +265,323 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         // ✅ Create shared World component first (subscribes first to server-changes)
         this.world = new World(this.eventBus, 'Game World');
 
-        const gameViewerContainer = document.getElementById('phaser-viewer-container');
-        if (!gameViewerContainer) {
-            throw new Error('GameViewerPage: phaser-viewer-container not found');
-        }
-        // Create PhaserGameScene as LCMComponent with container element
-        this.gameScene = new PhaserGameScene(gameViewerContainer, this.eventBus, true);
-
         // ✅ Create GameState with direct EventBus connection (no DOM element needed)
         this.gameState = new GameState(this.eventBus);
 
-        // Create TerrainStatsPanel component
-        const terrainStatsContainer = document.getElementById('terrain-stats-container');
-        if (!terrainStatsContainer) {
-            throw new Error('GameViewerPage: terrain-stats-container not found');
+        // Initialize DockView layout
+        this.initializeDockView();
+    }
+
+    /**
+     * Initialize DockView layout with game panels
+     */
+    private initializeDockView(): void {
+        const container = document.getElementById('dockview-container');
+        if (!container) {
+            throw new Error('GameViewerPage: dockview-container not found');
         }
-        this.terrainStatsPanel = new TerrainStatsPanel(terrainStatsContainer, this.eventBus, true);
+
+        const dockviewComponent = new DockviewComponent(container, {
+            createComponent: (options: any) => {
+                switch (options.name) {
+                    case 'main-game':
+                        return this.createMainGameComponent();
+                    case 'terrain-stats':
+                        return this.createTerrainStatsComponent();
+                    case 'game-actions':
+                        return this.createGameActionsComponent();
+                    case 'game-log':
+                        return this.createGameLogComponent();
+                    default:
+                        return {
+                            element: document.createElement('div'),
+                            init: () => {},
+                            dispose: () => {}
+                        };
+                }
+            }
+        });
+
+        this.dockview = dockviewComponent.api;
+
+        // Configure default layout for game viewing
+        this.configureDefaultGameLayout();
+    }
+
+    /**
+     * Configure the default DockView layout for optimal game viewing
+     */
+    private configureDefaultGameLayout(): void {
+        // Add main game panel (center)
+        this.dockview.addPanel({
+            id: 'main-game-panel',
+            component: 'main-game',
+            title: 'Game',
+            position: { direction: 'right' }
+        });
+
+        // Add terrain stats panel (right side)
+        this.dockview.addPanel({
+            id: 'terrain-stats-panel', 
+            component: 'terrain-stats',
+            title: 'Terrain Info',
+            position: { 
+                direction: 'right',
+                referencePanel: 'main-game-panel'
+            }
+        });
+
+        // Add game actions panel (left side)
+        this.dockview.addPanel({
+            id: 'game-actions-panel',
+            component: 'game-actions', 
+            title: 'Actions',
+            position: { 
+                direction: 'left',
+                referencePanel: 'main-game-panel'
+            }
+        });
+
+        // Add game log panel (bottom of actions panel)
+        this.dockview.addPanel({
+            id: 'game-log-panel',
+            component: 'game-log',
+            title: 'Game Log', 
+            position: { 
+                direction: 'below',
+                referencePanel: 'game-actions-panel'
+            }
+        });
+
+        // Set panel sizes for optimal viewing
+        this.dockview.getPanel('terrain-stats-panel')?.api.setSize({ width: 320 });
+        this.dockview.getPanel('game-actions-panel')?.api.setSize({ width: 280 });
+        this.dockview.getPanel('game-log-panel')?.api.setSize({ height: 200 });
+    }
+
+    /**
+     * Create main game (Phaser) component
+     */
+    private createMainGameComponent() {
+        const template = document.getElementById('main-game-panel-template');
+        if (!template) {
+            throw new Error('main-game-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+        element.id = 'main-game-panel-instance';
+
+        return {
+            element,
+            init: () => {
+                // Find the Phaser container within the cloned template
+                const phaserContainer = element.querySelector('#phaser-viewer-container') as HTMLElement;
+                if (phaserContainer) {
+                    // Create PhaserGameScene with the container
+                    this.gameScene = new PhaserGameScene(phaserContainer, this.eventBus, true);
+                }
+            },
+            dispose: () => {
+                // PhaserGameScene cleanup will be handled by LCM lifecycle
+                // Component disposal is managed by DockView
+            }
+        };
+    }
+
+    /**
+     * Create terrain stats component
+     */
+    private createTerrainStatsComponent() {
+        const template = document.getElementById('terrain-stats-panel-template');
+        if (!template) {
+            throw new Error('terrain-stats-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+        element.id = 'terrain-stats-panel-instance';
+
+        return {
+            element,
+            init: () => {
+                // Create TerrainStatsPanel with the cloned element
+                this.terrainStatsPanel = new TerrainStatsPanel(element, this.eventBus, true);
+            },
+            dispose: () => {
+                // TerrainStatsPanel cleanup will be handled by LCM lifecycle
+                // Component disposal is managed by DockView
+            }
+        };
+    }
+
+    /**
+     * Create game actions component
+     */
+    private createGameActionsComponent() {
+        const template = document.getElementById('game-actions-panel-template');
+        if (!template) {
+            throw new Error('game-actions-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+        element.id = 'game-actions-panel-instance';
+
+        return {
+            element,
+            init: () => {
+                // Set up event listeners for game action buttons
+                this.initializeGameActionsPanel(element);
+            },
+            dispose: () => {
+                // Clean up any listeners if needed
+            }
+        };
+    }
+
+    /**
+     * Create game log component
+     */
+    private createGameLogComponent() {
+        const template = document.getElementById('game-log-panel-template');
+        if (!template) {
+            throw new Error('game-log-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+        element.id = 'game-log-panel-instance';
+
+        return {
+            element,
+            init: () => {
+                // Set up event listeners for log filtering and management
+                this.initializeGameLogPanel(element);
+            },
+            dispose: () => {
+                // Clean up any listeners if needed
+            }
+        };
+    }
+
+    /**
+     * Initialize game actions panel event handlers
+     */
+    private initializeGameActionsPanel(element: HTMLElement): void {
+        // Wire up the action buttons to the same handlers as the original implementation
+        const moveUnitBtn = element.querySelector('#move-unit-btn');
+        const attackUnitBtn = element.querySelector('#attack-unit-btn');
+        const selectAllUnitsBtn = element.querySelector('#select-all-units-btn');
+        const centerOnActionBtn = element.querySelector('#center-on-action-btn');
+        const endTurnBtn = element.querySelector('#end-turn-action-btn');
+        const undoBtn = element.querySelector('#undo-action-btn');
+
+        // Set up the same event handlers as before
+        // These will be implemented when we migrate the existing button logic
+        if (endTurnBtn) {
+            endTurnBtn.addEventListener('click', () => this.handleEndTurn());
+        }
+        
+        if (selectAllUnitsBtn) {
+            selectAllUnitsBtn.addEventListener('click', () => this.handleShowAllUnits());
+        }
+        
+        if (centerOnActionBtn) {
+            centerOnActionBtn.addEventListener('click', () => this.handleCenterOnAction());
+        }
+    }
+
+    /**
+     * Initialize game log panel event handlers
+     */
+    private initializeGameLogPanel(element: HTMLElement): void {
+        // Set up log filtering buttons
+        const filterBtns = element.querySelectorAll('.log-filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                const filter = target.dataset.filter;
+                this.handleLogFilter(filter || 'all', element);
+            });
+        });
+
+        // Set up clear log button
+        const clearBtn = element.querySelector('#clear-log-btn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.handleClearLog(element));
+        }
+    }
+
+    /**
+     * Handle log filtering
+     */
+    private handleLogFilter(filter: string, logPanel: HTMLElement): void {
+        // Update active filter button
+        const filterBtns = logPanel.querySelectorAll('.log-filter-btn');
+        filterBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+        });
+
+        // Show/hide log entries based on filter
+        const logEntries = logPanel.querySelectorAll('.log-entry');
+        logEntries.forEach(entry => {
+            const entryType = entry.getAttribute('data-type') || 'system';
+            const shouldShow = filter === 'all' || entryType === filter;
+            entry.classList.toggle('hidden', !shouldShow);
+        });
+    }
+
+    /**
+     * Handle clearing the game log
+     */
+    private handleClearLog(logPanel: HTMLElement): void {
+        const logContainer = logPanel.querySelector('#game-log');
+        if (logContainer) {
+            logContainer.innerHTML = '';
+            this.gameLog = [];
+            this.updateLogStats(logPanel);
+        }
+    }
+
+    /**
+     * Update log statistics display
+     */
+    private updateLogStats(logPanel: HTMLElement): void {
+        const entryCountEl = logPanel.querySelector('#log-entry-count');
+        const lastUpdateEl = logPanel.querySelector('#log-last-update');
+        
+        if (entryCountEl) {
+            entryCountEl.textContent = `${this.gameLog.length} entries`;
+        }
+        
+        if (lastUpdateEl) {
+            lastUpdateEl.textContent = 'Just now';
+        }
+    }
+
+    /**
+     * Handle end turn button click
+     */
+    private handleEndTurn(): void {
+        // Implementation will be connected to existing end turn logic
+        console.log('End turn clicked');
+    }
+
+    /**
+     * Handle show all units button click
+     */
+    private handleShowAllUnits(): void {
+        // Implementation will be connected to existing unit selection logic
+        console.log('Show all units clicked');
+    }
+
+    /**
+     * Handle center on action button click
+     */
+    private handleCenterOnAction(): void {
+        // Implementation will be connected to existing camera centering logic
+        console.log('Center on action clicked');
     }
 
     /**
