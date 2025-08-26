@@ -72,6 +72,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     
     // Dockview interface
     private dockview: DockviewApi;
+    private themeObserver: MutationObserver | null = null;
     
     // Game configuration accessed directly from WASM-cached Game proto
     
@@ -200,6 +201,12 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             this.dockview.dispose();
         }
         
+        // Clean up theme observer
+        if (this.themeObserver) {
+            this.themeObserver.disconnect();
+            this.themeObserver = null;
+        }
+        
         if (this.gameScene) {
             this.gameScene.destroy();
             this.gameScene = null as any;
@@ -304,6 +311,25 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         if (!container) {
             throw new Error('GameViewerPage: dockview-container not found');
         }
+
+        // Apply theme class based on current theme
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        container.className = isDarkMode ? 'dockview-theme-dark flex-1' : 'dockview-theme-light flex-1';
+        
+        // Listen for theme changes
+        this.themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    container.className = isDarkMode ? 'dockview-theme-dark flex-1' : 'dockview-theme-light flex-1';
+                }
+            });
+        });
+        
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
 
         const dockviewComponent = new DockviewComponent(container, {
             createComponent: (options: any) => {
