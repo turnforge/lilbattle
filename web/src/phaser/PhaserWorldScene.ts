@@ -68,6 +68,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
     // Dynamic resizing
     private resizeObserver: ResizeObserver | null = null;
+    
+    // Camera drag zone
+    private dragZone: Phaser.GameObjects.Zone | null = null;
 
     constructor(containerElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('phaser-world-scene');
@@ -572,18 +575,11 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         });
         
         // Set up camera drag using Phaser's built-in drag detection
-        // Create an invisible full-screen zone for drag detection
-        const dragZone = this.add.zone(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2);
-        dragZone.setOrigin(0.5, 0.5);
-        dragZone.setInteractive({ draggable: true });
-        
-        // Position drag zone at camera center and make it follow camera
-        this.cameras.main.on('cameramove', () => {
-            dragZone.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
-        });
+        this.setupDragZone();
         
         // Handle camera panning via drag zone
-        dragZone.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        if (this.dragZone) {
+            this.dragZone.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             // Calculate drag delta
             const deltaX = pointer.x - pointer.prevPosition.x;
             const deltaY = pointer.y - pointer.prevPosition.y;
@@ -607,8 +603,38 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             }
             
             // Keep drag zone centered on camera
-            dragZone.setPosition(camera.centerX, camera.centerY);
+            if (this.dragZone) {
+                this.dragZone.setPosition(camera.centerX, camera.centerY);
+            }
         });
+        }
+    }
+    
+    /**
+     * Set up drag zone for camera panning
+     */
+    private setupDragZone(): void {
+        // Create an invisible full-screen zone for drag detection
+        this.dragZone = this.add.zone(0, 0, this.cameras.main.width * 2, this.cameras.main.height * 2);
+        this.dragZone.setOrigin(0.5, 0.5);
+        this.dragZone.setInteractive({ draggable: true });
+        
+        // Position drag zone at camera center and make it follow camera
+        this.cameras.main.on('cameramove', () => {
+            if (this.dragZone) {
+                this.dragZone.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+            }
+        });
+    }
+    
+    /**
+     * Update drag zone size when scene is resized
+     */
+    private updateDragZoneSize(): void {
+        if (this.dragZone) {
+            this.dragZone.setSize(this.cameras.main.width * 2, this.cameras.main.height * 2);
+            this.dragZone.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+        }
     }
     
     /**
@@ -1308,6 +1334,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             const h = height || this.containerElement.clientHeight;
             
             this.phaserGame.scale.resize(w, h);
+            
+            // Update drag zone size to match new camera dimensions
+            this.updateDragZoneSize();
         }
     }
 

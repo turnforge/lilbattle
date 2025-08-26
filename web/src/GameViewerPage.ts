@@ -604,6 +604,9 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                 // Hide the loading overlay now that the game is loaded
                 this.hideLoadingOverlay();
                 
+                // Center camera on the world after loading
+                this.gameScene.centerCameraOnWorld();
+                
                 // Ensure the game canvas is properly sized after loading
                 this.resizeGameCanvas();
                 
