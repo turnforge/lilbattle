@@ -4,5 +4,5 @@ import (
 	_ "embed"
 )
 
-//go:embed rules-data.json
+//go:embed weewar-rules.json
 var RulesDataJSON []byte

@@ -43,10 +43,12 @@ type TerrainDefinition struct {
 
 // TerrainUnitProperties matches our proto (centralized version)
 type TerrainUnitProperties struct {
-	MovementCost float64 `json:"movementCost"`
-	HealingBonus int32   `json:"healingBonus,omitempty"`
-	CanBuild     bool    `json:"canBuild,omitempty"`
-	CanCapture   bool    `json:"canCapture,omitempty"`
+	MovementCost    float64 `json:"movementCost"`
+	AttackModifier  int32   `json:"attackModifier,omitempty"`
+	DefenseModifier int32   `json:"defenseModifier,omitempty"`
+	HealingBonus    int32   `json:"healingBonus,omitempty"`
+	CanBuild        bool    `json:"canBuild,omitempty"`
+	CanCapture      bool    `json:"canCapture,omitempty"`
 }
 
 // UnitUnitProperties represents unit-vs-unit combat data
@@ -302,6 +304,14 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 				switch columnName {
 				case "unit":
 					unitID = extractUnitIDFromCell(cell)
+				case "attack":
+					if attack := parseModifierValue(cellText); attack != 0 {
+						properties.AttackModifier = attack
+					}
+				case "defense":
+					if defense := parseModifierValue(cellText); defense != 0 {
+						properties.DefenseModifier = defense
+					}
 				case "movement":
 					properties.MovementCost = parseMovementCost(cellText)
 				case "heal":
@@ -312,8 +322,6 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 					properties.CanCapture = containsCheckmark(cell)
 				case "builds":
 					properties.CanBuild = containsCheckmark(cell)
-				// Note: We're not extracting Attack and Defense here as they're 
-				// terrain modifiers, not movement/interaction properties
 				}
 			}
 			cellIndex++
