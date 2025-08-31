@@ -9,58 +9,16 @@ import (
 	"strconv"
 	"strings"
 
+	weewarv1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"golang.org/x/net/html"
 )
 
 // RulesData represents the complete rules data structure matching our proto schema
 type RulesData struct {
-	Units                 map[string]UnitDefinition        `json:"units"`
-	Terrains              map[string]TerrainDefinition     `json:"terrains"`
-	TerrainUnitProperties map[string]TerrainUnitProperties `json:"terrainUnitProperties"`
-	UnitUnitProperties    map[string]UnitUnitProperties    `json:"unitUnitProperties"`
-}
-
-// UnitDefinition matches our proto UnitDefinition
-type UnitDefinition struct {
-	ID             int32    `json:"id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	Health         int32    `json:"health"`         // Maximum health points
-	Coins          int32    `json:"coins"`          // Cost to build
-	MovementPoints int32    `json:"movementPoints"` // Movement per turn
-	AttackRange    int32    `json:"attackRange"`    // Max attack range
-	MinAttackRange int32    `json:"minAttackRange"` // Min attack range
-	Properties     []string `json:"properties"`     // Special properties/abilities
-}
-
-// TerrainDefinition matches our proto TerrainDefinition
-type TerrainDefinition struct {
-	ID          int32  `json:"id"`
-	Name        string `json:"name"`
-	Type        int32  `json:"type"`
-	Description string `json:"description"`
-}
-
-// TerrainUnitProperties matches our proto (centralized version)
-type TerrainUnitProperties struct {
-	MovementCost    float64 `json:"movementCost"`
-	AttackModifier  int32   `json:"attackModifier,omitempty"`
-	DefenseModifier int32   `json:"defenseModifier,omitempty"`
-	HealingBonus    int32   `json:"healingBonus,omitempty"`
-	CanBuild        bool    `json:"canBuild,omitempty"`
-	CanCapture      bool    `json:"canCapture,omitempty"`
-}
-
-// UnitUnitProperties represents unit-vs-unit combat data
-type UnitUnitProperties struct {
-	Damage *DamageDistribution `json:"damage,omitempty"`
-}
-
-// DamageDistribution represents damage probability distribution
-type DamageDistribution struct {
-	Min     int32              `json:"min"`
-	Max     int32              `json:"max"`
-	Buckets map[string]float64 `json:"buckets"` // damage_value -> probability
+	Units                 map[string]*weewarv1.UnitDefinition        `json:"units"`
+	Terrains              map[string]*weewarv1.TerrainDefinition     `json:"terrains"`
+	TerrainUnitProperties map[string]*weewarv1.TerrainUnitProperties `json:"terrainUnitProperties"`
+	UnitUnitProperties    map[string]*weewarv1.UnitUnitProperties    `json:"unitUnitProperties"`
 }
 
 func main() {
@@ -83,10 +41,10 @@ func main() {
 
 	// Initialize rules data
 	rulesData := RulesData{
-		Units:                 make(map[string]UnitDefinition),
-		Terrains:              make(map[string]TerrainDefinition),
-		TerrainUnitProperties: make(map[string]TerrainUnitProperties),
-		UnitUnitProperties:    make(map[string]UnitUnitProperties),
+		Units:                 make(map[string]*weewarv1.UnitDefinition),
+		Terrains:              make(map[string]*weewarv1.TerrainDefinition),
+		TerrainUnitProperties: make(map[string]*weewarv1.TerrainUnitProperties),
+		UnitUnitProperties:    make(map[string]*weewarv1.UnitUnitProperties),
 	}
 
 	// Extract terrain data
@@ -152,8 +110,8 @@ func extractTerrainsData(tilesDir string, rulesData *RulesData) error {
 		}
 
 		// Extract terrain definition
-		terrainDef := TerrainDefinition{
-			ID:   int32(terrainID),
+		terrainDef := &weewarv1.TerrainDefinition{
+			Id:   int32(terrainID),
 			Name: extractTerrainName(doc),
 			Type: 1, // Default terrain type - could be enhanced to parse from HTML
 		}
@@ -289,7 +247,8 @@ func extractTerrainUnitInteractions(doc *html.Node, terrainID int32, rulesData *
 
 func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string, rulesData *RulesData) {
 	var unitID int32 = -1
-	properties := TerrainUnitProperties{
+	properties := &weewarv1.TerrainUnitProperties{
+		TerrainId:    terrainID,
 		MovementCost: 1.0, // Default movement cost
 	}
 
@@ -306,11 +265,11 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 					unitID = extractUnitIDFromCell(cell)
 				case "attack":
 					if attack := parseModifierValue(cellText); attack != 0 {
-						properties.AttackModifier = attack
+						properties.AttackBonus = attack
 					}
 				case "defense":
 					if defense := parseModifierValue(cellText); defense != 0 {
-						properties.DefenseModifier = defense
+						properties.DefenseBonus = defense
 					}
 				case "movement":
 					properties.MovementCost = parseMovementCost(cellText)
@@ -330,14 +289,15 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 
 	// Create terrain-unit property key using our centralized format
 	if unitID > 0 {
+		properties.UnitId = unitID
 		key := fmt.Sprintf("%d:%d", terrainID, unitID)
 		rulesData.TerrainUnitProperties[key] = properties
 	}
 }
 
-func extractUnitDefinition(doc *html.Node, unitID int32) (UnitDefinition, error) {
-	unitDef := UnitDefinition{
-		ID:             unitID,
+func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefinition, error) {
+	unitDef := &weewarv1.UnitDefinition{
+		Id:             unitID,
 		Health:         100, // Always 100 in WeeWar
 		MinAttackRange: 1,   // Default minimum attack range
 	}
@@ -423,8 +383,10 @@ func extractUnitCombatProperties(doc *html.Node, attackerID int32, rulesData *Ru
 					if defenderID := extractDefenderIDFromCard(n); defenderID > 0 {
 						if damage := extractDamageDistribution(n); damage != nil {
 							key := fmt.Sprintf("%d:%d", attackerID, defenderID)
-							rulesData.UnitUnitProperties[key] = UnitUnitProperties{
-								Damage: damage,
+							rulesData.UnitUnitProperties[key] = &weewarv1.UnitUnitProperties{
+								AttackerId: attackerID,
+								DefenderId: defenderID,
+								Damage:     damage,
 							}
 						}
 					}
@@ -559,9 +521,9 @@ func extractDefenderIDFromCard(card *html.Node) int32 {
 	return traverse(card)
 }
 
-func extractDamageDistribution(card *html.Node) *DamageDistribution {
-	damage := &DamageDistribution{
-		Buckets: make(map[string]float64),
+func extractDamageDistribution(card *html.Node) *weewarv1.DamageDistribution {
+	damage := &weewarv1.DamageDistribution{
+		Ranges: []*weewarv1.DamageRange{},
 	}
 
 	// Extract damage probabilities from tooltip data
@@ -574,12 +536,17 @@ func extractDamageDistribution(card *html.Node) *DamageDistribution {
 					if matches := regexp.MustCompile(`(\d+(?:\.\d+)?)% of the time.*?deals (\d+) damage`).FindStringSubmatch(attr.Val); len(matches) > 2 {
 						if prob, err := strconv.ParseFloat(matches[1], 64); err == nil {
 							if dmg, err := strconv.Atoi(matches[2]); err == nil {
-								damage.Buckets[matches[2]] = prob / 100.0 // Convert percentage to decimal
-								if damage.Min == 0 || int32(dmg) < damage.Min {
-									damage.Min = int32(dmg)
+								dmgFloat := float64(dmg)
+								damage.Ranges = append(damage.Ranges, &weewarv1.DamageRange{
+									MinValue:    dmgFloat,
+									MaxValue:    dmgFloat,
+									Probability: prob / 100.0, // Convert percentage to decimal
+								})
+								if damage.MinDamage == 0 || dmgFloat < damage.MinDamage {
+									damage.MinDamage = dmgFloat
 								}
-								if int32(dmg) > damage.Max {
-									damage.Max = int32(dmg)
+								if dmgFloat > damage.MaxDamage {
+									damage.MaxDamage = dmgFloat
 								}
 							}
 						}
@@ -593,7 +560,7 @@ func extractDamageDistribution(card *html.Node) *DamageDistribution {
 	}
 	traverse(card)
 
-	if len(damage.Buckets) == 0 {
+	if len(damage.Ranges) == 0 {
 		return nil // No damage data found
 	}
 
