@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,23 +14,23 @@ import (
 
 // RulesData represents the complete rules data structure matching our proto schema
 type RulesData struct {
-	Units                  map[string]UnitDefinition         `json:"units"`
-	Terrains              map[string]TerrainDefinition      `json:"terrains"`
-	TerrainUnitProperties map[string]TerrainUnitProperties  `json:"terrainUnitProperties"`
-	UnitUnitProperties    map[string]UnitUnitProperties     `json:"unitUnitProperties"`
+	Units                 map[string]UnitDefinition        `json:"units"`
+	Terrains              map[string]TerrainDefinition     `json:"terrains"`
+	TerrainUnitProperties map[string]TerrainUnitProperties `json:"terrainUnitProperties"`
+	UnitUnitProperties    map[string]UnitUnitProperties    `json:"unitUnitProperties"`
 }
 
 // UnitDefinition matches our proto UnitDefinition
 type UnitDefinition struct {
-	ID              int32    `json:"id"`
-	Name            string   `json:"name"`
-	Description     string   `json:"description"`
-	Health          int32    `json:"health"`          // Maximum health points
-	Coins           int32    `json:"coins"`           // Cost to build
-	MovementPoints  int32    `json:"movementPoints"`  // Movement per turn
-	AttackRange     int32    `json:"attackRange"`     // Max attack range
-	MinAttackRange  int32    `json:"minAttackRange"`  // Min attack range
-	Properties      []string `json:"properties"`      // Special properties/abilities
+	ID             int32    `json:"id"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	Health         int32    `json:"health"`         // Maximum health points
+	Coins          int32    `json:"coins"`          // Cost to build
+	MovementPoints int32    `json:"movementPoints"` // Movement per turn
+	AttackRange    int32    `json:"attackRange"`    // Max attack range
+	MinAttackRange int32    `json:"minAttackRange"` // Min attack range
+	Properties     []string `json:"properties"`     // Special properties/abilities
 }
 
 // TerrainDefinition matches our proto TerrainDefinition
@@ -44,10 +43,10 @@ type TerrainDefinition struct {
 
 // TerrainUnitProperties matches our proto (centralized version)
 type TerrainUnitProperties struct {
-	MovementCost   float64 `json:"movementCost"`
-	HealingBonus   int32   `json:"healingBonus,omitempty"`
-	CanBuild       bool    `json:"canBuild,omitempty"`
-	CanCapture     bool    `json:"canCapture,omitempty"`
+	MovementCost float64 `json:"movementCost"`
+	HealingBonus int32   `json:"healingBonus,omitempty"`
+	CanBuild     bool    `json:"canBuild,omitempty"`
+	CanCapture   bool    `json:"canCapture,omitempty"`
 }
 
 // UnitUnitProperties represents unit-vs-unit combat data
@@ -57,9 +56,9 @@ type UnitUnitProperties struct {
 
 // DamageDistribution represents damage probability distribution
 type DamageDistribution struct {
-	Min     int32                `json:"min"`
-	Max     int32                `json:"max"`
-	Buckets map[string]float64   `json:"buckets"` // damage_value -> probability
+	Min     int32              `json:"min"`
+	Max     int32              `json:"max"`
+	Buckets map[string]float64 `json:"buckets"` // damage_value -> probability
 }
 
 func main() {
@@ -69,12 +68,12 @@ func main() {
 	// Check for required directories
 	tilesDir := os.Getenv("HOME") + "/dev-app-data/weewar/data/Tiles"
 	unitsDir := os.Getenv("HOME") + "/dev-app-data/weewar/data/Units"
-	
+
 	if _, err := os.Stat(tilesDir); os.IsNotExist(err) {
 		fmt.Printf("Tiles directory not found: %s\n", tilesDir)
 		os.Exit(1)
 	}
-	
+
 	if _, err := os.Stat(unitsDir); os.IsNotExist(err) {
 		fmt.Printf("Units directory not found: %s\n", unitsDir)
 		os.Exit(1)
@@ -82,7 +81,7 @@ func main() {
 
 	// Initialize rules data
 	rulesData := RulesData{
-		Units:                  make(map[string]UnitDefinition),
+		Units:                 make(map[string]UnitDefinition),
 		Terrains:              make(map[string]TerrainDefinition),
 		TerrainUnitProperties: make(map[string]TerrainUnitProperties),
 		UnitUnitProperties:    make(map[string]UnitUnitProperties),
@@ -95,7 +94,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Extract unit data  
+	// Extract unit data
 	fmt.Println("Extracting unit data...")
 	if err := extractUnitsData(unitsDir, &rulesData); err != nil {
 		fmt.Printf("Error extracting unit data: %v\n", err)
@@ -110,7 +109,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := ioutil.WriteFile(outputPath, jsonData, 0644); err != nil {
+	if err := os.WriteFile(outputPath, jsonData, 0644); err != nil {
 		fmt.Printf("Error writing output file: %v\n", err)
 		os.Exit(1)
 	}
@@ -138,9 +137,9 @@ func extractTerrainsData(tilesDir string, rulesData *RulesData) error {
 		}
 
 		fmt.Printf("Processing terrain %d...\n", terrainID)
-		
+
 		// Read HTML
-		content, err := ioutil.ReadFile(file)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("error reading file %s: %v", file, err)
 		}
@@ -183,9 +182,9 @@ func extractUnitsData(unitsDir string, rulesData *RulesData) error {
 		}
 
 		fmt.Printf("Processing unit %d...\n", unitID)
-		
+
 		// Read HTML
-		content, err := ioutil.ReadFile(file)
+		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("error reading file %s: %v", file, err)
 		}
@@ -229,7 +228,7 @@ func extractTerrainName(doc *html.Node) string {
 		}
 	}
 	traverse(doc)
-	
+
 	// Clean up name
 	name = strings.TrimSpace(name)
 	name = regexp.MustCompile(`\s+`).ReplaceAllString(name, " ")
@@ -253,7 +252,7 @@ func extractTerrainUnitInteractions(doc *html.Node, terrainID int32, rulesData *
 		}
 	}
 	traverse(doc)
-	
+
 	return nil
 }
 
@@ -262,12 +261,12 @@ func extractUnitRowData(row *html.Node, terrainID int32, rulesData *RulesData) {
 	properties := TerrainUnitProperties{
 		MovementCost: 1.0, // Default movement cost
 	}
-	
+
 	cellIndex := 0
 	for cell := row.FirstChild; cell != nil; cell = cell.NextSibling {
 		if cell.Type == html.ElementNode && cell.Data == "td" {
 			cellText := getTextContent(cell)
-			
+
 			switch cellIndex {
 			case 0: // Unit name and ID extraction
 				unitID = extractUnitIDFromCell(cell)
@@ -285,7 +284,7 @@ func extractUnitRowData(row *html.Node, terrainID int32, rulesData *RulesData) {
 			cellIndex++
 		}
 	}
-	
+
 	// Create terrain-unit property key using our centralized format
 	if unitID > 0 {
 		key := fmt.Sprintf("%d:%d", terrainID, unitID)
@@ -299,13 +298,13 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (UnitDefinition, error)
 		Health:         100, // Always 100 in WeeWar
 		MinAttackRange: 1,   // Default minimum attack range
 	}
-	
+
 	// Extract basic properties from the sidebar
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "p" {
 			text := getTextContent(n)
-			
+
 			// Extract different properties based on <strong> labels
 			if strings.Contains(text, "Movement") && !strings.Contains(text, "Build Percentage") {
 				// Extract movement points - the number appears after <br>
@@ -349,7 +348,7 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (UnitDefinition, error)
 				}
 			}
 		}
-		
+
 		// Extract name from page title
 		if n.Type == html.ElementNode && n.Data == "title" {
 			title := getTextContent(n)
@@ -360,13 +359,13 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (UnitDefinition, error)
 				}
 			}
 		}
-		
+
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			traverse(c)
 		}
 	}
 	traverse(doc)
-	
+
 	return unitDef, nil
 }
 
@@ -394,7 +393,7 @@ func extractUnitCombatProperties(doc *html.Node, attackerID int32, rulesData *Ru
 		}
 	}
 	traverse(doc)
-	
+
 	return nil
 }
 
@@ -444,14 +443,14 @@ func parseModifierValue(text string) int32 {
 	if text == "" || strings.Contains(text, "muted") || text == "0" {
 		return 0
 	}
-	
+
 	// Parse values like "+2", "-1", "6"
 	if matches := regexp.MustCompile(`([+-]?\d+)`).FindStringSubmatch(text); len(matches) > 1 {
 		if val, err := strconv.Atoi(matches[1]); err == nil {
 			return int32(val)
 		}
 	}
-	
+
 	return 0
 }
 
@@ -460,14 +459,14 @@ func parseMovementCost(text string) float64 {
 	if text == "" {
 		return 1.0 // Default movement cost
 	}
-	
+
 	// Parse values like "1", "1.25", "2"
 	if matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(text); len(matches) > 1 {
 		if val, err := strconv.ParseFloat(matches[1], 64); err == nil {
 			return val
 		}
 	}
-	
+
 	return 1.0
 }
 
@@ -521,7 +520,7 @@ func extractDamageDistribution(card *html.Node) *DamageDistribution {
 	damage := &DamageDistribution{
 		Buckets: make(map[string]float64),
 	}
-	
+
 	// Extract damage probabilities from tooltip data
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
@@ -550,10 +549,10 @@ func extractDamageDistribution(card *html.Node) *DamageDistribution {
 		}
 	}
 	traverse(card)
-	
+
 	if len(damage.Buckets) == 0 {
 		return nil // No damage data found
 	}
-	
+
 	return damage
 }
