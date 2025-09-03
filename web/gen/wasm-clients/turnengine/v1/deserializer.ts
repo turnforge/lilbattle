@@ -6,9 +6,6 @@ import { FieldType, FieldSchema, MessageSchema } from "./deserializer_schemas";
 import { TurnengineV1Factory } from "./factory";
 import { TurnengineV1SchemaRegistry } from "./schemas";
 
-// Shared factory instance to avoid creating new instances on every deserializer construction
-const DEFAULT_FACTORY = new TurnengineV1Factory();
-
 /**
  * Factory interface that deserializer expects
  */
@@ -32,9 +29,21 @@ export interface FactoryResult<T> {
  * Schema-aware deserializer for turnengine.v1 package
  */
 export class TurnengineV1Deserializer {
+  private static _defaultFactory: TurnengineV1Factory | undefined;
+
+  /**
+   * Get the default factory instance (lazy initialization)
+   */
+  private static getDefaultFactory(): TurnengineV1Factory {
+    if (!TurnengineV1Deserializer._defaultFactory) {
+      TurnengineV1Deserializer._defaultFactory = new TurnengineV1Factory();
+    }
+    return TurnengineV1Deserializer._defaultFactory;
+  }
+
   constructor(
     private schemaRegistry: Record<string, MessageSchema> = TurnengineV1SchemaRegistry,
-    private factory: FactoryInterface = DEFAULT_FACTORY
+    private factory: FactoryInterface = TurnengineV1Deserializer.getDefaultFactory()
   ) {}
 
   /**

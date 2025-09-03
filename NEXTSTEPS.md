@@ -58,6 +58,7 @@
 - **🔧 Rules Data Extraction**: Created comprehensive tool extracting 38 units, 23 terrains, 558 terrain-unit properties, 1,146 combat properties
 - **🎨 Frontend Integration**: Updated RulesTable.ts and TerrainStatsPanel.ts with template-based terrain-unit properties table
 - **🚀 Performance**: Fast lookup with populated reference maps while maintaining centralized data integrity
+- **🔧 JSON Serialization Fix**: Fixed protobuf JSON serialization to use camelCase for JavaScript compatibility
 
 ### 🔄 In Progress / Next Sprint
 

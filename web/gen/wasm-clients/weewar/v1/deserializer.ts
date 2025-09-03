@@ -6,9 +6,6 @@ import { FieldType, FieldSchema, MessageSchema } from "./deserializer_schemas";
 import { WeewarV1Factory } from "./factory";
 import { WeewarV1SchemaRegistry } from "./schemas";
 
-// Shared factory instance to avoid creating new instances on every deserializer construction
-const DEFAULT_FACTORY = new WeewarV1Factory();
-
 /**
  * Factory interface that deserializer expects
  */
@@ -32,9 +29,21 @@ export interface FactoryResult<T> {
  * Schema-aware deserializer for weewar.v1 package
  */
 export class WeewarV1Deserializer {
+  private static _defaultFactory: WeewarV1Factory | undefined;
+
+  /**
+   * Get the default factory instance (lazy initialization)
+   */
+  private static getDefaultFactory(): WeewarV1Factory {
+    if (!WeewarV1Deserializer._defaultFactory) {
+      WeewarV1Deserializer._defaultFactory = new WeewarV1Factory();
+    }
+    return WeewarV1Deserializer._defaultFactory;
+  }
+
   constructor(
     private schemaRegistry: Record<string, MessageSchema> = WeewarV1SchemaRegistry,
-    private factory: FactoryInterface = DEFAULT_FACTORY
+    private factory: FactoryInterface = WeewarV1Deserializer.getDefaultFactory()
   ) {}
 
   /**

@@ -280,12 +280,16 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
                     // Fill in the row data
                     const unitNameCell = row.querySelector('[data-unit-name]');
                     const movementCostCell = row.querySelector('[data-movement-cost]');
+                    const attackCell = row.querySelector('[data-attack]');
+                    const defenseCell = row.querySelector('[data-defense]');
                     const healingCell = row.querySelector('[data-healing]');
                     const captureCell = row.querySelector('[data-capture]');
                     const buildCell = row.querySelector('[data-build]');
                     
                     if (unitNameCell) unitNameCell.textContent = unitDef.name;
                     if (movementCostCell) movementCostCell.textContent = movementCost.toFixed(1);
+                    if (attackCell) attackCell.textContent = properties?.attackBonus && properties.attackBonus !== 0 ? `${properties.attackBonus > 0 ? '+' : ''}${properties.attackBonus}` : '-';
+                    if (defenseCell) defenseCell.textContent = properties?.defenseBonus && properties.defenseBonus !== 0 ? `${properties.defenseBonus > 0 ? '+' : ''}${properties.defenseBonus}` : '-';
                     if (healingCell) healingCell.textContent = properties?.healingBonus && properties.healingBonus > 0 ? `+${properties.healingBonus}` : '-';
                     if (captureCell) captureCell.textContent = properties?.canCapture ? '✓' : '-';
                     if (buildCell) buildCell.textContent = properties?.canBuild ? '✓' : '-';
