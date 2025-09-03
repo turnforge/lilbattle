@@ -24,10 +24,10 @@ type RulesEngine struct {
 func NewRulesEngine() *RulesEngine {
 	return &RulesEngine{
 		RulesEngine: &v1.RulesEngine{
-			Units:                  make(map[int32]*v1.UnitDefinition),
-			Terrains:               make(map[int32]*v1.TerrainDefinition),
-			TerrainUnitProperties:  make(map[string]*v1.TerrainUnitProperties),
-			UnitUnitProperties:     make(map[string]*v1.UnitUnitProperties),
+			Units:                 make(map[int32]*v1.UnitDefinition),
+			Terrains:              make(map[int32]*v1.TerrainDefinition),
+			TerrainUnitProperties: make(map[string]*v1.TerrainUnitProperties),
+			UnitUnitProperties:    make(map[string]*v1.UnitUnitProperties),
 		},
 	}
 }
@@ -73,8 +73,8 @@ func (re *RulesEngine) PopulateReferenceMaps() {
 		if unit := re.Units[props.UnitId]; unit != nil {
 			unit.TerrainProperties[props.TerrainId] = props
 		}
-		
-		// Add to terrain's unit map  
+
+		// Add to terrain's unit map
 		if terrain := re.Terrains[props.TerrainId]; terrain != nil {
 			terrain.UnitProperties[props.UnitId] = props
 		}
@@ -136,12 +136,12 @@ func (re *RulesEngine) GetMovementCost(world *World, unit *v1.Unit, to AxialCoor
 
 	// Use dijkstraMovement to get accurate costs
 	distances, _ := re.dijkstraMovement(world, unit.UnitType, from, float64(unit.DistanceLeft))
-	
+
 	cost, exists := distances[to]
 	if !exists {
 		return 0, fmt.Errorf("destination %v is not reachable from %v", to, from)
 	}
-	
+
 	return cost, nil
 }
 
@@ -152,17 +152,17 @@ func (re *RulesEngine) calculatePathCost(world *World, unitType int32, from, to 
 	if err != nil {
 		return 0, fmt.Errorf("failed to get unit data: %w", err)
 	}
-	
+
 	// Use the unit's maximum movement points as limit
 	maxMovement := float64(unitData.MovementPoints)
-	
+
 	distances, _ := re.dijkstraMovement(world, unitType, from, maxMovement)
-	
+
 	cost, exists := distances[to]
 	if !exists {
 		return 0, fmt.Errorf("destination %v is not reachable from %v with %d movement points", to, from, unitData.MovementPoints)
 	}
-	
+
 	return cost, nil
 }
 
@@ -305,7 +305,6 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 	for len(queue) > 0 {
 		// Find minimum cost item (simple O(n) for now, could use heap)
 		current := popMinCoord()
-		fmt.Println("111111 - Here???", len(queue), "Current: ", current)
 
 		// Skip if we've already processed this with lower cost
 		if cost, exists := distances[current.coord]; exists && current.cost > cost {
@@ -327,8 +326,8 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 
 			newCost := current.cost + moveCost
 
-			terrain, _ := re.GetTerrainData(tile.TileType)
-			fmt.Printf("From: %s, To: %s, TileType: %s, Cost: %f, Error: %v\n", current.coord, neighborCoord, terrain.Name, moveCost, err)
+			// terrain, _ := re.GetTerrainData(tile.TileType)
+			// fmt.Printf("From: %s, To: %s, TileType: %s, Cost: %f, Error: %v\n", current.coord, neighborCoord, terrain.Name, moveCost, err)
 			if newCost <= maxMovement {
 				// Check if this is a better path to the neighbor
 				if existingCost, exists := distances[neighborCoord]; !exists || newCost < existingCost {
@@ -349,7 +348,7 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int32) (float64, error) {
 	// Create key for centralized properties lookup
 	key := fmt.Sprintf("%d:%d", terrainID, unitID)
-	
+
 	// First, try centralized properties (source of truth)
 	if props, exists := re.TerrainUnitProperties[key]; exists {
 		if props.MovementCost > 0 {

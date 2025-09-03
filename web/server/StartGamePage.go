@@ -10,6 +10,8 @@ import (
 	weewar "github.com/panyam/turnengine/games/weewar/lib"
 )
 
+var AllowedUnitIDs = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44}
+
 type StartGamePage struct {
 	BasePage
 	Header    Header
@@ -63,10 +65,9 @@ func (p *StartGamePage) loadUnitTypes() {
 
 	// Get all available unit types from the rules engine
 	rulesEngine := weewar.DefaultRulesEngine()
-	unitIDs := []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44}
 
 	// Use units from rules engine
-	for _, unitID := range unitIDs {
+	for _, unitID := range AllowedUnitIDs {
 		unitData, err := rulesEngine.GetUnitData(unitID)
 		if unitData != nil && err == nil {
 			// Use web-accessible static URL path for the unit asset
