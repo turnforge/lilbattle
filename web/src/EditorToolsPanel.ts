@@ -432,14 +432,25 @@ export class EditorToolsPanel extends BaseComponent {
                 const target = e.target as HTMLSelectElement;
                 this.executeWhenReady(() => {
                     const brushSize = parseInt(target.value);
-                    const sizeName = BRUSH_SIZE_NAMES[brushSize] || `Size ${brushSize}`;
+                    
+                    // Map brush size value to index for name lookup
+                    const brushSizeToIndex: { [key: number]: number } = {
+                        0: 0,  // Single
+                        1: 1,  // Small
+                        3: 2,  // Medium
+                        5: 3,  // Large
+                        10: 4, // X-Large
+                        15: 5  // XX-Large
+                    };
+                    const nameIndex = brushSizeToIndex[brushSize] ?? 0;
+                    const sizeName = BRUSH_SIZE_NAMES[nameIndex] || `Size ${brushSize}`;
                     
                     // Update page state directly
                     if (this.pageState) {
                         this.pageState.setBrushSize(brushSize);
                     }
                     
-                    this.log(`Brush size changed to: ${sizeName}`);
+                    this.log(`Brush size changed to: ${brushSize} (${sizeName})`);
                 });
             });
             
