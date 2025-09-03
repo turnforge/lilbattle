@@ -13,6 +13,26 @@ import (
 // =============================================================================
 // Asset Management System
 // =============================================================================
+type UnitStats struct {
+	Cost       int  `json:"cost"`
+	Health     int  `json:"health"`
+	Movement   int  `json:"movement"`
+	Attack     int  `json:"attack"`
+	Defense    int  `json:"defense"`
+	SightRange int  `json:"sightRange"`
+	CanCapture bool `json:"canCapture"`
+}
+
+type UnitData struct {
+	BaseStats      UnitStats `json:"baseStats"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	MovementPoints int32     `json:"movementPoints"`
+	AttackRange    int       `json:"attackRange"`
+	Health         int32     `json:"health"`
+	Properties     []string  `json:"properties,omitempty"`
+	// Note: Movement costs and attack data managed separately by RulesEngine
+}
 
 // AssetManager handles loading and caching of game assets
 type AssetManager struct {

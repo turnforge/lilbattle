@@ -31,8 +31,7 @@ type TerrainType struct {
 }
 
 type UnitType struct {
-	ID          int32  `json:"id"`
-	Name        string `json:"name"`
+	*protos.UnitDefinition
 	IconDataURL string `json:"iconDataURL"`
 }
 
@@ -90,12 +89,12 @@ func (v *WorldEditorPage) SetupDefaults() {
 			// Calculate base movement cost from terrain-unit properties (use average or default)
 			baseMoveCost := 1.0 // Default
 			// TODO: Could calculate average movement cost across all units for this terrain
-			
+
 			terrain := TerrainType{
 				TerrainData: weewar.TerrainData{
-					ID:           terrainData.Id,                       
+					ID:           terrainData.Id,
 					Name:         terrainData.Name,
-					BaseMoveCost: baseMoveCost,    
+					BaseMoveCost: baseMoveCost,
 					DefenseBonus: 0.0, // Defense bonus is now calculated per unit-terrain combination
 				},
 				IconDataURL:     iconDataURL,
@@ -104,10 +103,10 @@ func (v *WorldEditorPage) SetupDefaults() {
 
 			// Use heuristic to determine terrain type based on ID
 			// TODO: Add terrain type field to proto definition
-			isPlayerTerrain := terrainData.Id == 1 || terrainData.Id == 2 || terrainData.Id == 3 || 
-				terrainData.Id == 6 || terrainData.Id == 16 || terrainData.Id == 20 || 
+			isPlayerTerrain := terrainData.Id == 1 || terrainData.Id == 2 || terrainData.Id == 3 ||
+				terrainData.Id == 6 || terrainData.Id == 16 || terrainData.Id == 20 ||
 				terrainData.Id == 21 || terrainData.Id == 25 // Base, Hospital, Silo, Mines, City, Tower
-			
+
 			if isPlayerTerrain {
 				terrain.HasPlayerColors = true
 				v.CityTerrains = append(v.CityTerrains, terrain)
@@ -137,18 +136,17 @@ func (v *WorldEditorPage) SetupDefaults() {
 
 	// Load unit types with icons
 	v.UnitTypes = []UnitType{}
-	unitIDs := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29}
+	unitIDs := []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44}
 
 	for _, unitID := range unitIDs {
-		unitData := weewar.GetUnitData(unitID)
-		if unitData != nil {
+		unitData, err := rulesEngine.GetUnitData(unitID)
+		if unitData != nil && err == nil {
 			// Use web-accessible static URL path for the unit asset
 			iconDataURL := fmt.Sprintf("/static/assets/v1/Units/%d/0.png", unitID)
 
 			v.UnitTypes = append(v.UnitTypes, UnitType{
-				ID:          int32(unitData.ID),
-				Name:        unitData.Name,
-				IconDataURL: iconDataURL,
+				UnitDefinition: unitData,
+				IconDataURL:    iconDataURL,
 			})
 		}
 	}

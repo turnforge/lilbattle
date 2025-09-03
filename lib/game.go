@@ -51,9 +51,6 @@ type Game struct {
 	// Random number generator
 	rng *rand.Rand `json:"-"` // RNG for deterministic gameplay
 
-	// Asset management
-	assetProvider AssetProvider `json:"-"` // Asset provider for tiles and units (interface for platform flexibility)
-
 	// Rules engine for data-driven game mechanics
 	rulesEngine *RulesEngine `json:"-"` // Rules engine for movement costs, combat, unit data
 
@@ -214,30 +211,6 @@ func (g *Game) GetUnitID(unit *v1.Unit) string {
 	// return unit.unitID
 }
 
-// GetAssetManager returns the current AssetManager instance (legacy compatibility)
-func (g *Game) GetAssetManager() *AssetManager {
-	// Try to cast the AssetProvider to *AssetManager for backward compatibility
-	if am, ok := g.assetProvider.(*AssetManager); ok {
-		return am
-	}
-	return nil
-}
-
-// SetAssetManager sets the AssetManager instance for tile and unit rendering (legacy compatibility)
-func (g *Game) SetAssetManager(assetManager *AssetManager) {
-	g.assetProvider = assetManager
-}
-
-// GetAssetProvider returns the current AssetProvider instance
-func (g *Game) GetAssetProvider() AssetProvider {
-	return g.assetProvider
-}
-
-// SetAssetProvider sets the AssetProvider instance for tile and unit rendering
-func (g *Game) SetAssetProvider(provider AssetProvider) {
-	g.assetProvider = provider
-}
-
 // GetRulesEngine returns the current RulesEngine instance
 func (g *Game) GetRulesEngine() *RulesEngine {
 	return g.rulesEngine
@@ -267,7 +240,6 @@ func NewGame(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) 
 		CreatedAt:     time.Now(),
 		LastActionAt:  time.Now(),
 		rng:           rand.New(rand.NewSource(seed)),
-		assetProvider: NewAssetManager("data"),
 		rulesEngine:   rulesEngine,
 	}
 
@@ -293,7 +265,6 @@ func LoadGame(saveData []byte) (*Game, error) {
 
 	// Restore transient state
 	game.rng = rand.New(rand.NewSource(game.Seed))
-	game.assetProvider = NewAssetManager("data")
 	game.rulesEngine = nil // Will be set by caller
 
 	// Note: Neighbor connections are no longer stored, calculated on-demand
@@ -363,21 +334,4 @@ func (g *Game) GetUnitsForPlayer(playerID int) []*v1.Unit {
 	units := make([]*v1.Unit, len(g.World.unitsByPlayer[playerID]))
 	copy(units, g.World.unitsByPlayer[playerID])
 	return units
-}
-
-// GetUnitTypeName returns the display name for a unit type
-func (g *Game) GetUnitTypeName(unitType int) string {
-	if g.assetProvider != nil {
-		// Try to get unit data from JSON if asset provider is loaded
-		if am, ok := g.assetProvider.(*AssetManager); ok {
-			if err := am.LoadGameData(); err == nil {
-				if unitData, err := am.GetUnitData(unitType); err == nil {
-					return unitData.Name
-				}
-			}
-		}
-	}
-
-	// Fallback to generic name
-	return fmt.Sprintf("Unit Type %d", unitType)
 }

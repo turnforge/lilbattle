@@ -7,18 +7,12 @@ import (
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
-// AttackMatrix defines combat outcomes between unit types using IDs
-type AttackMatrix struct {
-	// attacks[attackerID][defenderID] = damage distribution
-	Attacks map[int32]map[int32]*DamageDistribution `json:"attacks"`
-}
-
 // CalculateCombatDamage calculates damage using the new proto-based system
 // Returns (damage, canAttack, error) where canAttack indicates if the attack is possible
 func (re *RulesEngine) CalculateCombatDamage(attackerID, defenderID int32, rng *rand.Rand) (int, bool, error) {
 	// Create key for unit-unit combat properties
 	key := fmt.Sprintf("%d:%d", attackerID, defenderID)
-	
+
 	props, exists := re.UnitUnitProperties[key]
 	if !exists || props.Damage == nil {
 		// Attack is not possible between these unit types
@@ -34,7 +28,7 @@ func (re *RulesEngine) CalculateCombatDamage(attackerID, defenderID int32, rng *
 func (re *RulesEngine) GetCombatPrediction(attackerID, defenderID int32) (*v1.DamageDistribution, bool) {
 	// Create key for unit-unit combat properties
 	key := fmt.Sprintf("%d:%d", attackerID, defenderID)
-	
+
 	props, exists := re.UnitUnitProperties[key]
 	if !exists || props.Damage == nil {
 		// Attack is not possible between these unit types
