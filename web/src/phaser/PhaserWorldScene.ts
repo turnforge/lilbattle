@@ -7,6 +7,7 @@ import { ClickContext } from './LayerSystem';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { EventBus } from '../../lib/EventBus';
 import { WorldEventType, WorldEventTypes } from '../events';
+import { AllowedUnitIDs } from "../ColorsAndNames";
 import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../World';
 
 export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
@@ -434,7 +435,6 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     
     private loadUnitAssets() {
         // Load all available unit assets with player colors
-        const AllowedUnitIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44]
         AllowedUnitIDs.forEach(type => {
             for (let color = 0; color <= 12; color++) {
                 const assetPath = `/static/assets/v1/Units/${type}/${color}.png`;

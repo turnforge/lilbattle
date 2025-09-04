@@ -1,7 +1,7 @@
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
-import { TERRAIN_NAMES } from './ColorsAndNames';
+import { CityTerrainIds, AllowedUnitIDs, TERRAIN_NAMES } from './ColorsAndNames';
 import { TerrainStats , RulesTable } from './RulesTable';
 
 
@@ -262,8 +262,7 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
         
         // Determine if this is a city terrain (can be captured/built on)
-        const cityTerrainIds = [1, 2, 3, 6, 16, 20, 21, 25]; // Base, Hospital, Silo, Mines, City, Tower
-        const isCityTerrain = cityTerrainIds.includes(terrainId);
+        const isCityTerrain = CityTerrainIds.includes(terrainId);
         
         // Hide capture and build columns for nature terrains
         const table = tableElement.querySelector('table');
@@ -278,19 +277,17 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
         
         // Get all available units (common unit IDs)
-        const commonUnitIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let hasAnyUnits = false;
-        
-        commonUnitIds.forEach(unitId => {
+        AllowedUnitIDs.forEach(unitId => {
             const unitDef = this.rulesTable.getUnitDefinition(unitId);
-            if (unitDef && unitDef.name) {
+            const properties = this.rulesTable.getTerrainUnitProperties(terrainId, unitId);
+            if (properties && unitDef && unitDef.name) {
                 // Clone the row template
                 const rowElement = rowTemplate.content.cloneNode(true) as DocumentFragment;
                 const row = rowElement.querySelector('tr');
                 
                 if (row) {
                     // Get terrain-unit properties
-                    const properties = this.rulesTable.getTerrainUnitProperties(terrainId, unitId);
                     const movementCost = this.rulesTable.getMovementCost(terrainId, unitId);
                     
                     // Fill in the row data

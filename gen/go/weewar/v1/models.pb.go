@@ -817,17 +817,19 @@ func (x *UnitDefinition) GetProperties() []string {
 
 // Properties that are specific to unit on a particular terrain
 type TerrainUnitProperties struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TerrainId     int32                  `protobuf:"varint,1,opt,name=terrain_id,json=terrainId,proto3" json:"terrain_id,omitempty"` // Renamed from tile_id for clarity
-	UnitId        int32                  `protobuf:"varint,2,opt,name=unit_id,json=unitId,proto3" json:"unit_id,omitempty"`
-	MovementCost  float64                `protobuf:"fixed64,3,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"` // Movement cost for this unit on this terrain
-	HealingBonus  int32                  `protobuf:"varint,4,opt,name=healing_bonus,json=healingBonus,proto3" json:"healing_bonus,omitempty"`  // How much healing per turn this tile would offer this unit
-	CanBuild      bool                   `protobuf:"varint,5,opt,name=can_build,json=canBuild,proto3" json:"can_build,omitempty"`              // Whether this particular terrain can build this given unit
-	CanCapture    bool                   `protobuf:"varint,6,opt,name=can_capture,json=canCapture,proto3" json:"can_capture,omitempty"`        // Whether this particular unit can capture this terrain/building type
-	AttackBonus   int32                  `protobuf:"varint,7,opt,name=attack_bonus,json=attackBonus,proto3" json:"attack_bonus,omitempty"`     // How much more attack this terrain gives to this unit
-	DefenseBonus  int32                  `protobuf:"varint,8,opt,name=defense_bonus,json=defenseBonus,proto3" json:"defense_bonus,omitempty"`  // How much more defense this terrain gives to this unit
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TerrainId      int32                  `protobuf:"varint,1,opt,name=terrain_id,json=terrainId,proto3" json:"terrain_id,omitempty"` // Renamed from tile_id for clarity
+	UnitId         int32                  `protobuf:"varint,2,opt,name=unit_id,json=unitId,proto3" json:"unit_id,omitempty"`
+	MovementCost   float64                `protobuf:"fixed64,3,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"`         // Movement cost for this unit on this terrain
+	HealingBonus   int32                  `protobuf:"varint,4,opt,name=healing_bonus,json=healingBonus,proto3" json:"healing_bonus,omitempty"`          // How much healing per turn this tile would offer this unit
+	CanBuild       bool                   `protobuf:"varint,5,opt,name=can_build,json=canBuild,proto3" json:"can_build,omitempty"`                      // Whether this particular terrain can build this given unit
+	CanCapture     bool                   `protobuf:"varint,6,opt,name=can_capture,json=canCapture,proto3" json:"can_capture,omitempty"`                // Whether this particular unit can capture this terrain/building type
+	AttackBonus    int32                  `protobuf:"varint,7,opt,name=attack_bonus,json=attackBonus,proto3" json:"attack_bonus,omitempty"`             // How much more attack this terrain gives to this unit
+	DefenseBonus   int32                  `protobuf:"varint,8,opt,name=defense_bonus,json=defenseBonus,proto3" json:"defense_bonus,omitempty"`          // How much more defense this terrain gives to this unit
+	AttackRange    int32                  `protobuf:"varint,9,opt,name=attack_range,json=attackRange,proto3" json:"attack_range,omitempty"`             // Max Attack range in tiles
+	MinAttackRange int32                  `protobuf:"varint,10,opt,name=min_attack_range,json=minAttackRange,proto3" json:"min_attack_range,omitempty"` // Minimum attack range in tile radius if specified (otherwise - will be 1
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *TerrainUnitProperties) Reset() {
@@ -912,6 +914,20 @@ func (x *TerrainUnitProperties) GetAttackBonus() int32 {
 func (x *TerrainUnitProperties) GetDefenseBonus() int32 {
 	if x != nil {
 		return x.DefenseBonus
+	}
+	return 0
+}
+
+func (x *TerrainUnitProperties) GetAttackRange() int32 {
+	if x != nil {
+		return x.AttackRange
+	}
+	return 0
+}
+
+func (x *TerrainUnitProperties) GetMinAttackRange() int32 {
+	if x != nil {
+		return x.MinAttackRange
 	}
 	return 0
 }
@@ -2561,7 +2577,7 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"properties\x1af\n" +
 	"\x16TerrainPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x126\n" +
-	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\"\x9f\x02\n" +
+	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\"\xec\x02\n" +
 	"\x15TerrainUnitProperties\x12\x1d\n" +
 	"\n" +
 	"terrain_id\x18\x01 \x01(\x05R\tterrainId\x12\x17\n" +
@@ -2572,7 +2588,10 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\vcan_capture\x18\x06 \x01(\bR\n" +
 	"canCapture\x12!\n" +
 	"\fattack_bonus\x18\a \x01(\x05R\vattackBonus\x12#\n" +
-	"\rdefense_bonus\x18\b \x01(\x05R\fdefenseBonus\"\x8d\x01\n" +
+	"\rdefense_bonus\x18\b \x01(\x05R\fdefenseBonus\x12!\n" +
+	"\fattack_range\x18\t \x01(\x05R\vattackRange\x12(\n" +
+	"\x10min_attack_range\x18\n" +
+	" \x01(\x05R\x0eminAttackRange\"\x8d\x01\n" +
 	"\x12UnitUnitProperties\x12\x1f\n" +
 	"\vattacker_id\x18\x01 \x01(\x05R\n" +
 	"attackerId\x12\x1f\n" +

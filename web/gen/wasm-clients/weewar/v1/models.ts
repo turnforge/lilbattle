@@ -290,6 +290,8 @@ export class TerrainUnitProperties implements TerrainUnitPropertiesInterface {
   canCapture: boolean = false;
   attackBonus: number = 0;
   defenseBonus: number = 0;
+  attackRange: number = 0;
+  minAttackRange: number = 0;
 
   /**
    * Create and deserialize an instance from raw data

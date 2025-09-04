@@ -299,19 +299,19 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         }
         
         // Get all available terrains
-        const commonTerrainIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+        const commonTerrainIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
         let hasAnyTerrain = false;
         
         commonTerrainIds.forEach(terrainId => {
             const terrainDef = this.rulesTable.getTerrainDefinition(terrainId);
-            if (terrainDef && terrainDef.name) {
+            const properties = this.rulesTable.getTerrainUnitProperties(terrainId, unitId);
+            if (properties && terrainDef && terrainDef.name) {
                 // Clone the row template
                 const rowElement = rowTemplate.content.cloneNode(true) as DocumentFragment;
                 const row = rowElement.querySelector('tr');
                 
                 if (row) {
                     // Get terrain-unit properties
-                    const properties = this.rulesTable.getTerrainUnitProperties(terrainId, unitId);
                     const movementCost = this.rulesTable.getMovementCost(terrainId, unitId);
                     
                     // Fill in the row data

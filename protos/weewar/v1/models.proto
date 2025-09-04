@@ -172,6 +172,8 @@ message TerrainUnitProperties {
   bool can_capture = 6;              // Whether this particular unit can capture this terrain/building type
   int32 attack_bonus = 7;            // How much more attack this terrain gives to this unit
   int32 defense_bonus = 8;           // How much more defense this terrain gives to this unit
+  int32 attack_range = 9;             // Max Attack range in tiles
+  int32 min_attack_range = 10;        // Minimum attack range in tile radius if specified (otherwise - will be 1
 }
 
 // Properties for unit-vs-unit combat interactions

@@ -1,6 +1,9 @@
 
 export const BRUSH_SIZE_NAMES = ['Single (1 hex)', 'Small (3 hexes)', 'Medium (5 hexes)', 'Large (9 hexes)', 'X-Large (15 hexes)', 'XX-Large (25 hexes)'];
 
+export const AllowedUnitIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44];
+export const CityTerrainIds = [1, 2, 3, 6, 16, 20, 21, 25]; // Base, Hospital, Silo, Mines, City, Tower
+
 // Terrain type names mapping
 export const TERRAIN_NAMES: { [key: number]: { name: string, icon: string, color: string } } = {
     0: { name: 'Clear', icon: ' ', color: 'text-black-600 dark:text-green-400' },

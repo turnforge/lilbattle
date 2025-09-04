@@ -420,6 +420,16 @@ export const TerrainUnitPropertiesSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 8,
     },
+    {
+      name: "attackRange",
+      type: FieldType.NUMBER,
+      id: 9,
+    },
+    {
+      name: "minAttackRange",
+      type: FieldType.NUMBER,
+      id: 10,
+    },
   ],
 };
 

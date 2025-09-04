@@ -159,6 +159,8 @@ export interface TerrainUnitProperties {
   canCapture: boolean;
   attackBonus: number;
   defenseBonus: number;
+  attackRange: number;
+  minAttackRange: number;
 }
 
 
