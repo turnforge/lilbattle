@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#a1887f"/>
       <stop offset="50%" stop-color="#8d6e63"/>
@@ -20,7 +25,7 @@
   <!-- Ballista - Artillery Level 3 (Quick) -->
   
   <!-- Wheeled base platform -->
-  <rect x="25" y="60" width="50" height="8" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2" rx="2"/>
+  <rect x="25" y="60" width="50" height="8" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2" rx="2"/>
   <!-- Platform reinforcements -->
   <rect x="27" y="61" width="46" height="2" fill="#6d4c41"/>
   <rect x="27" y="65" width="46" height="2" fill="#6d4c41"/>
@@ -29,8 +34,8 @@
   <rect x="72" y="60" width="3" height="8" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
   
   <!-- Quick-deploy wheels -->
-  <circle cx="32" cy="75" r="7" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
-  <circle cx="68" cy="75" r="7" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <circle cx="32" cy="75" r="7" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
+  <circle cx="68" cy="75" r="7" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Wheel spokes for fast movement -->
   <line x1="32" y1="68" x2="32" y2="82" stroke="#3e2723" stroke-width="2"/>
   <line x1="25" y1="75" x2="39" y2="75" stroke="#3e2723" stroke-width="2"/>
@@ -41,14 +46,14 @@
   <circle cx="68" cy="75" r="7" fill="none" stroke="url(#metalGrad)" stroke-width="1"/>
   
   <!-- Main ballista frame -->
-  <rect x="35" y="35" width="30" height="6" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="35" y="35" width="30" height="6" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Frame details -->
   <rect x="36" y="36" width="28" height="2" fill="#6d4c41"/>
   <rect x="36" y="39" width="28" height="2" fill="#6d4c41"/>
   
   <!-- Bow arms (flexible design) -->
-  <path d="M35 38 Q20 25 15 35 Q25 45 35 41" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
-  <path d="M65 38 Q80 25 85 35 Q75 45 65 41" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <path d="M35 38 Q20 25 15 35 Q25 45 35 41" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
+  <path d="M65 38 Q80 25 85 35 Q75 45 65 41" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Bow string tension -->
   <path d="M15 35 Q50 20 85 35" stroke="#8d6e63" stroke-width="2" fill="none"/>
   <path d="M15 35 Q50 22 85 35" stroke="#6d4c41" stroke-width="1" fill="none"/>

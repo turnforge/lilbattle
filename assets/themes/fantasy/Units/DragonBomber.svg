@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="dragonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#d32f2f"/>
       <stop offset="50%" stop-color="#c62828"/>
@@ -29,7 +34,7 @@
   <!-- Dragon Bomber - Bomber equivalent -->
   
   <!-- Massive dragon body -->
-  <ellipse cx="50" cy="50" rx="25" ry="12" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="3"/>
+  <ellipse cx="50" cy="50" rx="25" ry="12" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="3"/>
   <!-- Dragon belly -->
   <ellipse cx="50" cy="55" rx="20" ry="8" fill="url(#bellyGrad)" stroke="#d84315" stroke-width="2"/>
   
@@ -50,13 +55,13 @@
   <ellipse cx="65" cy="52" rx="3" ry="2" fill="#f44336"/>
   
   <!-- Dragon head -->
-  <ellipse cx="80" cy="45" rx="12" ry="8" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="80" cy="45" rx="12" ry="8" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Head details -->
   <path d="M75 40 Q80 35 85 40" fill="#f44336"/>
   <path d="M75 50 Q80 55 85 50" fill="#f44336"/>
   
   <!-- Dragon snout -->
-  <ellipse cx="92" cy="45" rx="5" ry="4" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="92" cy="45" rx="5" ry="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Nostrils with smoke -->
   <circle cx="95" cy="43" r="1" fill="#212121"/>
   <circle cx="95" cy="47" r="1" fill="#212121"/>
@@ -80,8 +85,8 @@
   <polygon points="92,48 94,50 90,50" fill="#f5f5f5"/>
   
   <!-- Massive wings spread -->
-  <path d="M30 35 Q10 15 5 25 Q8 45 25 55 Q30 50 35 45" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="3"/>
-  <path d="M70 35 Q90 15 95 25 Q92 45 75 55 Q70 50 65 45" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="3"/>
+  <path d="M30 35 Q10 15 5 25 Q8 45 25 55 Q30 50 35 45" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="3"/>
+  <path d="M70 35 Q90 15 95 25 Q92 45 75 55 Q70 50 65 45" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="3"/>
   
   <!-- Wing membrane details -->
   <path d="M25 40 Q15 25 8 30" stroke="#d84315" stroke-width="2" fill="none"/>
@@ -96,21 +101,21 @@
   <polygon points="95,25 98,23 92,20" fill="#212121"/>
   
   <!-- Dragon neck -->
-  <ellipse cx="65" cy="47" rx="8" ry="5" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="65" cy="47" rx="8" ry="5" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <path d="M60 45 Q65 42 70 45" stroke="#f44336" stroke-width="1" fill="none"/>
   <path d="M60 49 Q65 52 70 49" stroke="#f44336" stroke-width="1" fill="none"/>
   
   <!-- Dragon tail -->
-  <ellipse cx="25" cy="52" rx="8" ry="5" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
-  <ellipse cx="12" cy="55" rx="6" ry="4" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="25" cy="52" rx="8" ry="5" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="12" cy="55" rx="6" ry="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Tail spikes -->
   <polygon points="15,52 12,50 18,47" fill="#212121"/>
   <polygon points="10,54 7,52 13,49" fill="#212121"/>
   <polygon points="8,57 5,55 11,52" fill="#212121"/>
   
   <!-- Dragon legs with bomb attachments -->
-  <ellipse cx="40" cy="65" rx="4" ry="8" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
-  <ellipse cx="60" cy="65" rx="4" ry="8" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="40" cy="65" rx="4" ry="8" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="60" cy="65" rx="4" ry="8" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   
   <!-- Powerful talons -->
   <polygon points="38,73 35,75 41,75" fill="#212121"/>

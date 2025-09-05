@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="bellGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#a1887f"/>
       <stop offset="50%" stop-color="#8d6e63"/>
@@ -24,7 +29,7 @@
   
   <!-- Bell-shaped hull -->
   <path d="M30 40 Q30 25 50 25 Q70 25 70 40 L70 65 Q70 75 50 75 Q30 75 30 65 Z" 
-        fill="url(#bellGrad)" stroke="#3e2723" stroke-width="3"/>
+        fill="url(#playerColor)" stroke="#3e2723" stroke-width="3"/>
   
   <!-- Metal reinforcement bands -->
   <rect x="30" y="35" width="40" height="3" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
@@ -81,7 +86,7 @@
   <circle cx="15" cy="7" r="1.5" fill="#424242"/>
   
   <!-- Surface air pump -->
-  <rect x="5" y="3" width="8" height="10" fill="url(#bellGrad)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="5" y="3" width="8" height="10" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <circle cx="9" cy="8" r="2" fill="url(#metalGrad)"/>
   <line x1="9" y1="6" x2="9" y2="10" stroke="#424242" stroke-width="2"/>
   

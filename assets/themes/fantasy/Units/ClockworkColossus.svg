@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="brassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#ffb74d"/>
       <stop offset="50%" stop-color="#ff9800"/>
@@ -29,7 +34,7 @@
   <!-- Clockwork Colossus - Goliath RC Tank equivalent -->
   
   <!-- Massive main chassis -->
-  <rect x="25" y="40" width="50" height="30" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="3" rx="4"/>
+  <rect x="25" y="40" width="50" height="30" fill="url(#playerColor)" stroke="#bf360c" stroke-width="3" rx="4"/>
   <!-- Detailed panel lines -->
   <rect x="27" y="42" width="46" height="26" fill="url(#copperGrad)" stroke="#5d4037" stroke-width="1"/>
   
@@ -64,7 +69,7 @@
   <circle cx="68" cy="66" r="1.5" fill="#e65100"/>
   
   <!-- Massive head dome -->
-  <circle cx="50" cy="25" r="12" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="3"/>
+  <circle cx="50" cy="25" r="12" fill="url(#playerColor)" stroke="#bf360c" stroke-width="3"/>
   <!-- Head panel details -->
   <circle cx="50" cy="25" r="9" fill="url(#copperGrad)" stroke="#5d4037" stroke-width="1"/>
   
@@ -98,8 +103,8 @@
   <circle cx="62" cy="25" r="1" fill="#e65100"/>
   
   <!-- Enormous articulated arms -->
-  <rect x="10" y="30" width="15" height="12" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="2" rx="3"/>
-  <rect x="75" y="30" width="15" height="12" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="2" rx="3"/>
+  <rect x="10" y="30" width="15" height="12" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2" rx="3"/>
+  <rect x="75" y="30" width="15" height="12" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2" rx="3"/>
   
   <!-- Shoulder joints -->
   <circle cx="25" cy="36" r="6" fill="url(#steelGrad)" stroke="#000" stroke-width="2"/>
@@ -123,8 +128,8 @@
   <rect x="85" y="33" width="3" height="6" fill="url(#steelGrad)" stroke="#000" stroke-width="1"/>
   
   <!-- Massive crushing fists -->
-  <circle cx="17" cy="50" r="8" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="2"/>
-  <circle cx="83" cy="50" r="8" fill="url(#brassGrad)" stroke="#bf360c" stroke-width="2"/>
+  <circle cx="17" cy="50" r="8" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
+  <circle cx="83" cy="50" r="8" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
   <!-- Fist details -->
   <circle cx="17" cy="50" r="5" fill="url(#copperGrad)"/>
   <circle cx="83" cy="50" r="5" fill="url(#copperGrad)"/>
