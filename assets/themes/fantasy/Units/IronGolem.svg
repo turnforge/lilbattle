@@ -1,8 +1,15 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- Iron Golem - Level 3 Tank -->
   
   <!-- Main body -->
-  <rect x="30" y="40" width="40" height="25" fill="#616161" stroke="#424242" stroke-width="2" rx="3"/>
+  <rect x="30" y="40" width="40" height="25" fill="url(#playerColor)" stroke="#424242" stroke-width="2" rx="3"/>
   <!-- Metal plating details -->
   <rect x="32" y="42" width="36" height="4" fill="#757575"/>
   <rect x="32" y="48" width="36" height="4" fill="#757575"/>
@@ -10,7 +17,7 @@
   <rect x="32" y="60" width="36" height="3" fill="#757575"/>
   
   <!-- Golem head -->
-  <rect x="40" y="20" width="20" height="20" fill="#616161" stroke="#424242" stroke-width="2" rx="2"/>
+  <rect x="40" y="20" width="20" height="20" fill="url(#playerColor)" stroke="#424242" stroke-width="2" rx="2"/>
   <!-- Glowing eyes -->
   <circle cx="45" cy="28" r="3" fill="#ff5722"/>
   <circle cx="55" cy="28" r="3" fill="#ff5722"/>

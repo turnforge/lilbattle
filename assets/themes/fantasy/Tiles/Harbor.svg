@@ -11,7 +11,7 @@
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#waterGrad)" stroke="#0d47a1" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#waterGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Dock -->
   <rect x="20" y="45" width="60" height="8" fill="url(#playerColor)"/>
   <rect x="25" y="47" width="50" height="4" fill="#8d6e63"/>

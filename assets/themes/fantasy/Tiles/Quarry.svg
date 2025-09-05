@@ -12,7 +12,7 @@
     </linearGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#mountainGrad)" stroke="#3e2723" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#mountainGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Mine entrance -->
   <rect x="35" y="45" width="30" height="20" fill="#212121"/>
   <path d="M35 45 Q50 35 65 45" fill="#424242"/>

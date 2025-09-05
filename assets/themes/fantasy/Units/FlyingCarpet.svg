@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="carpetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#7b1fa2"/>
       <stop offset="50%" stop-color="#9c27b0"/>
@@ -18,7 +23,7 @@
   <!-- Flying Carpet - Helicopter equivalent -->
   
   <!-- Main carpet with rich pattern -->
-  <ellipse cx="50" cy="50" rx="30" ry="15" fill="url(#carpetGrad)" stroke="#4a148c" stroke-width="2"/>
+  <ellipse cx="50" cy="50" rx="30" ry="15" fill="url(#playerColor)" stroke="#4a148c" stroke-width="2"/>
   
   <!-- Ornate carpet patterns -->
   <!-- Central medallion -->

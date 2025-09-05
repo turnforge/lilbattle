@@ -1,8 +1,15 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- War Cart - Level 1 Tank -->
   
   <!-- Cart body -->
-  <rect x="25" y="40" width="50" height="20" fill="#8d6e63" stroke="#5d4037" stroke-width="2" rx="3"/>
+  <rect x="25" y="40" width="50" height="20" fill="url(#playerColor)" stroke="#5d4037" stroke-width="2" rx="3"/>
   <!-- Wood planks -->
   <line x1="30" y1="42" x2="30" y2="58" stroke="#6d4c41" stroke-width="1"/>
   <line x1="35" y1="42" x2="35" y2="58" stroke="#6d4c41" stroke-width="1"/>

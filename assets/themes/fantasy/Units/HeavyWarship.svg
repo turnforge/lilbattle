@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#5d4037"/>
       <stop offset="50%" stop-color="#4a2c20"/>
@@ -24,7 +29,7 @@
   <!-- Heavy Warship - Cruiser equivalent -->
   
   <!-- Massive reinforced hull -->
-  <path d="M10 57 Q50 47 90 57 Q90 67 85 72 Q50 77 15 72 Q10 67 10 57" fill="url(#hullGrad)" stroke="#212121" stroke-width="3"/>
+  <path d="M10 57 Q50 47 90 57 Q90 67 85 72 Q50 77 15 72 Q10 67 10 57" fill="url(#playerColor)" stroke="#212121" stroke-width="3"/>
   
   <!-- Hull armor plating -->
   <path d="M12 59 Q50 51 88 59" stroke="#3e2723" stroke-width="2" fill="none"/>
@@ -51,9 +56,9 @@
   <line x1="75" y1="15" x2="75" y2="54" stroke="#5d4037" stroke-width="4"/>
   
   <!-- Large battle sails -->
-  <rect x="15" y="18" width="20" height="28" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
-  <rect x="40" y="15" width="20" height="30" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
-  <rect x="65" y="18" width="20" height="28" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="15" y="18" width="20" height="28" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="40" y="15" width="20" height="30" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="65" y="18" width="20" height="28" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   
   <!-- War banners on sails -->
   <polygon points="25,25 22,28 25,31 28,28" fill="#f44336"/>

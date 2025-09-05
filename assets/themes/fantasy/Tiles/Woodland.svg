@@ -6,7 +6,7 @@
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#forestGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#forestGrad)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Trees -->
   <circle cx="30" cy="40" r="8" fill="#4caf50"/>
   <rect x="28" y="48" width="4" height="12" fill="#5d4037"/>

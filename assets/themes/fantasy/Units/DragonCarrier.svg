@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#6d4c41"/>
       <stop offset="50%" stop-color="#5d4037"/>
@@ -30,7 +35,7 @@
   <!-- Dragon Carrier - Aircraft Carrier equivalent -->
   
   <!-- Massive ship hull -->
-  <path d="M5 60 Q50 50 95 60 Q95 70 90 75 Q50 80 10 75 Q5 70 5 60" fill="url(#hullGrad)" stroke="#212121" stroke-width="3"/>
+  <path d="M5 60 Q50 50 95 60 Q95 70 90 75 Q50 80 10 75 Q5 70 5 60" fill="url(#playerColor)" stroke="#212121" stroke-width="3"/>
   <!-- Hull reinforcement bands -->
   <path d="M8 62 Q50 54 92 62" stroke="#3e2723" stroke-width="2" fill="none"/>
   <path d="M8 66 Q50 58 92 66" stroke="#3e2723" stroke-width="2" fill="none"/>
@@ -143,8 +148,8 @@
   <line x1="75" y1="20" x2="75" y2="45" stroke="#6d4c41" stroke-width="3"/>
   
   <!-- Navigation sails -->
-  <rect x="15" y="22" width="20" height="15" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
-  <rect x="65" y="22" width="20" height="15" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="15" y="22" width="20" height="15" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="65" y="22" width="20" height="15" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   <!-- Dragon heraldry on sails -->
   <path d="M25 29 Q27 26 29 29 Q27 32 25 29" fill="#d32f2f"/>
   <path d="M75 29 Q77 26 79 29 Q77 32 75 29" fill="#2e7d32"/>

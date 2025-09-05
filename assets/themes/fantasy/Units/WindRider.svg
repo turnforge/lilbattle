@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="platformGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#8d6e63"/>
       <stop offset="50%" stop-color="#6d4c41"/>
@@ -24,7 +29,7 @@
   <!-- Wind Rider - Hovercraft equivalent -->
   
   <!-- Floating platform base -->
-  <ellipse cx="50" cy="60" rx="25" ry="8" fill="url(#platformGrad)" stroke="#212121" stroke-width="2"/>
+  <ellipse cx="50" cy="60" rx="25" ry="8" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
   <!-- Platform details -->
   <ellipse cx="50" cy="58" rx="20" ry="6" fill="#a1887f"/>
   <line x1="35" y1="58" x2="65" y2="58" stroke="#6d4c41" stroke-width="1"/>

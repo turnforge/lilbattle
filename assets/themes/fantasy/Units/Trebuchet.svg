@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#a1887f"/>
       <stop offset="50%" stop-color="#8d6e63"/>
@@ -19,7 +24,7 @@
   <!-- Trebuchet - Artillery Level 2 -->
   
   <!-- Base platform with rich wood texture -->
-  <rect x="20" y="65" width="60" height="10" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2" rx="2"/>
+  <rect x="20" y="65" width="60" height="10" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2" rx="2"/>
   <!-- Wood grain details -->
   <line x1="25" y1="67" x2="75" y2="67" stroke="#6d4c41" stroke-width="1"/>
   <line x1="25" y1="70" x2="75" y2="70" stroke="#6d4c41" stroke-width="1"/>
@@ -31,8 +36,8 @@
   <rect x="67" y="66" width="4" height="8" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
   
   <!-- Heavy wheels with detailed spokes -->
-  <circle cx="30" cy="80" r="8" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="3"/>
-  <circle cx="70" cy="80" r="8" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="3"/>
+  <circle cx="30" cy="80" r="8" fill="url(#playerColor)" stroke="#3e2723" stroke-width="3"/>
+  <circle cx="70" cy="80" r="8" fill="url(#playerColor)" stroke="#3e2723" stroke-width="3"/>
   <!-- Metal wheel rims -->
   <circle cx="30" cy="80" r="8" fill="none" stroke="url(#metalGrad)" stroke-width="2"/>
   <circle cx="70" cy="80" r="8" fill="none" stroke="url(#metalGrad)" stroke-width="2"/>
@@ -47,16 +52,16 @@
   <line x1="75" y1="75" x2="65" y2="85" stroke="#3e2723" stroke-width="1.5"/>
   
   <!-- Massive support frame -->
-  <rect x="37" y="20" width="6" height="45" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
-  <rect x="57" y="20" width="6" height="45" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="37" y="20" width="6" height="45" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="57" y="20" width="6" height="45" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Cross beam -->
-  <rect x="35" y="18" width="30" height="4" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="35" y="18" width="30" height="4" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Metal brackets -->
   <rect x="35" y="19" width="4" height="6" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
   <rect x="61" y="19" width="4" height="6" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
   
   <!-- Throwing arm with detailed texture -->
-  <rect x="25" y="8" width="30" height="4" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2" transform="rotate(-25 50 22)"/>
+  <rect x="25" y="8" width="30" height="4" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2" transform="rotate(-25 50 22)"/>
   <!-- Arm reinforcements -->
   <rect x="27" y="9" width="26" height="2" fill="url(#metalGrad)" stroke="#000" stroke-width="0.5" transform="rotate(-25 50 22)"/>
   
@@ -70,7 +75,7 @@
   <line x1="23" y1="15" x2="23" y2="27" stroke="#8d6e63" stroke-width="1"/>
   
   <!-- Projectile sling -->
-  <ellipse cx="60" cy="5" rx="6" ry="4" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="2"/>
+  <ellipse cx="60" cy="5" rx="6" ry="4" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Sling details -->
   <circle cx="58" cy="4" r="1" fill="#3e2723"/>
   <circle cx="62" cy="4" r="1" fill="#3e2723"/>
@@ -121,7 +126,7 @@
   <ellipse cx="84" cy="45" rx="3" ry="6" fill="#ffdbcb" stroke="#d4a574" stroke-width="1"/>
   
   <!-- Control mechanisms -->
-  <rect x="45" y="55" width="10" height="4" fill="url(#woodGrad)" stroke="#3e2723" stroke-width="1"/>
+  <rect x="45" y="55" width="10" height="4" fill="url(#playerColor)" stroke="#3e2723" stroke-width="1"/>
   <circle cx="57" cy="57" r="2" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
   <!-- Trigger rope -->
   <path d="M75 45 Q65 50 57 57" stroke="#8d6e63" stroke-width="2" fill="none"/>

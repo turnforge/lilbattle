@@ -1,15 +1,22 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- War Galleon - Battleship equivalent -->
   
   <!-- Ship hull -->
-  <path d="M15 55 Q50 45 85 55 Q85 65 80 70 Q50 75 20 70 Q15 65 15 55" fill="#8d6e63" stroke="#6d4c41" stroke-width="2"/>
+  <path d="M15 55 Q50 45 85 55 Q85 65 80 70 Q50 75 20 70 Q15 65 15 55" fill="url(#playerColor)" stroke="#6d4c41" stroke-width="2"/>
   <!-- Hull planks -->
   <path d="M20 58 Q50 50 80 58" stroke="#6d4c41" stroke-width="1" fill="none"/>
   <path d="M20 62 Q50 54 80 62" stroke="#6d4c41" stroke-width="1" fill="none"/>
   <path d="M20 66 Q50 58 80 66" stroke="#6d4c41" stroke-width="1" fill="none"/>
   
   <!-- Ship deck -->
-  <ellipse cx="50" cy="52" rx="32" ry="6" fill="#a1887f" stroke="#8d6e63" stroke-width="1"/>
+  <ellipse cx="50" cy="52" rx="32" ry="6" fill="url(#playerColor)" stroke="#8d6e63" stroke-width="1"/>
   
   <!-- Main mast -->
   <line x1="50" y1="15" x2="50" y2="52" stroke="#6d4c41" stroke-width="3"/>

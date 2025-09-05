@@ -35,7 +35,7 @@
     "40": { "old": "Miner", "name": "Miner", "image": "Units/Prospector.svg" },
     "41": { "old": "Paratrooper", "name": "Sky Warrior", "image": "Units/SkyWarrior.svg" },
     "44": { "old": "Anti-aircraft (Advanced)", "name": "Crossbow Tower", "image": "Units/Crossbow Tower.svg" },
-    "5": { "old": "Striker", "name": "Armored Charriot", "image": "Units/AromredCharriot.svg" },
+    "5": { "old": "Striker", "name": "Armored Charriot", "image": "Units/ArmoredCharriot.svg" },
     "6": { "old": "Anti-aircraft (Basic)", "name": "Archer Tower", "image": "Units/ArcherTower.svg" },
     "7": { "old": "Hovercraft", "name": "Wind Rider", "image": "Units/WindRider.svg" },
     "8": { "old": "Artillery (Basic)", "name": "Catapult", "image": "Units/Catapult.svg" },
@@ -62,7 +62,7 @@
     "4": { "old": "Desert", "name": "Desert", "image": "Tiles/Dessert.svg"},
     "5": { "old": "Grass", "name": "Meadow", "image": "Tiles/Meadow.svg"},
     "6": { "old": "Hospital", "name": "Sanctuary", "image": "Tiles/Sanctuary.svg"},
-    "7": { "old": "Mountains", "name": "Mountains", "image": "Tiles/Mountains.svg"},
+    "7": { "old": "Mountains", "name": "Mountains", "image": "Tiles/Mountain.svg"},
     "8": { "old": "Swamp", "name": "Bog", "image": "Tiles/Bog.svg"},
     "9": { "old": "Forest", "name": "Forest", "image": "Tiles/Woodland.svg"}
   }

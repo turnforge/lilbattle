@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#8d6e63"/>
       <stop offset="50%" stop-color="#6d4c41"/>
@@ -23,7 +28,7 @@
   <!-- Swift Galley - Speedboat equivalent -->
   
   <!-- Sleek hull design -->
-  <path d="M20 55 Q50 45 80 55 Q82 60 78 65 Q50 70 22 65 Q18 60 20 55" fill="url(#hullGrad)" stroke="#212121" stroke-width="2"/>
+  <path d="M20 55 Q50 45 80 55 Q82 60 78 65 Q50 70 22 65 Q18 60 20 55" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
   <!-- Hull planks for speed -->
   <path d="M22 57 Q50 49 78 57" stroke="#5d4037" stroke-width="1" fill="none"/>
   <path d="M22 61 Q50 53 78 61" stroke="#5d4037" stroke-width="1" fill="none"/>
@@ -36,14 +41,14 @@
   <line x1="50" y1="20" x2="50" y2="52" stroke="#6d4c41" stroke-width="3"/>
   
   <!-- Large triangular sail for speed -->
-  <polygon points="30,25 50,20 50,45 30,50" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <polygon points="30,25 50,20 50,45 30,50" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   <!-- Sail stress lines -->
   <path d="M35 30 Q42 25 50 30" stroke="#bdbdbd" stroke-width="1" fill="none"/>
   <path d="M35 35 Q42 30 50 35" stroke="#bdbdbd" stroke-width="1" fill="none"/>
   <path d="M35 40 Q42 35 50 40" stroke="#bdbdbd" stroke-width="1" fill="none"/>
   
   <!-- Forward jib sail -->
-  <polygon points="25,30 35,25 50,20 25,40" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <polygon points="25,30 35,25 50,20 25,40" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   
   <!-- Rigging -->
   <path d="M25 30 Q37 22 50 20" stroke="#8d6e63" stroke-width="1" fill="none"/>

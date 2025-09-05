@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="mineGrad" cx="50%" cy="30%">
       <stop offset="0%" stop-color="#616161"/>
       <stop offset="50%" stop-color="#424242"/>
@@ -24,7 +29,7 @@
   <!-- Floating Explosive - Sea Mine equivalent -->
   
   <!-- Main spherical mine body -->
-  <circle cx="50" cy="50" r="18" fill="url(#mineGrad)" stroke="#000" stroke-width="3"/>
+  <circle cx="50" cy="50" r="18" fill="url(#playerColor)" stroke="#000" stroke-width="3"/>
   
   <!-- Metal seams -->
   <path d="M32 40 Q50 35 68 40" stroke="#757575" stroke-width="2" fill="none"/>
@@ -70,7 +75,7 @@
   <circle cx="50" cy="84" r="1.5" fill="#424242"/>
   
   <!-- Anchor weight -->
-  <rect x="45" y="85" width="10" height="6" fill="url(#mineGrad)" stroke="#000" stroke-width="2"/>
+  <rect x="45" y="85" width="10" height="6" fill="url(#playerColor)" stroke="#000" stroke-width="2"/>
   <circle cx="47" cy="88" r="1" fill="#757575"/>
   <circle cx="53" cy="88" r="1" fill="#757575"/>
   

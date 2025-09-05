@@ -1,8 +1,15 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- Wyvern Rider - Jetfighter equivalent -->
   
   <!-- Wyvern body -->
-  <ellipse cx="50" cy="45" rx="20" ry="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="50" cy="45" rx="20" ry="8" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Body scales -->
   <circle cx="45" cy="42" r="1" fill="#4caf50"/>
   <circle cx="50" cy="42" r="1" fill="#4caf50"/>
@@ -11,7 +18,7 @@
   <circle cx="53" cy="47" r="1" fill="#4caf50"/>
   
   <!-- Wyvern head -->
-  <ellipse cx="70" cy="40" rx="8" ry="6" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="70" cy="40" rx="8" ry="6" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Wyvern eye -->
   <circle cx="72" cy="38" r="2" fill="#ff5722"/>
   <circle cx="72" cy="38" r="1" fill="#000"/>

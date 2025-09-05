@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#8d6e63"/>
       <stop offset="70%" stop-color="#6d4c41"/>
@@ -25,7 +30,7 @@
   <!-- Fire Arrow - Standard Missile equivalent -->
   
   <!-- Arrow shaft -->
-  <rect x="20" y="48" width="60" height="4" fill="url(#arrowGrad)" stroke="#3e2723" stroke-width="1" rx="2"/>
+  <rect x="20" y="48" width="60" height="4" fill="url(#playerColor)" stroke="#3e2723" stroke-width="1" rx="2"/>
   <!-- Shaft wood grain -->
   <line x1="22" y1="49" x2="78" y2="49" stroke="#5d4037" stroke-width="0.5"/>
   <line x1="22" y1="51" x2="78" y2="51" stroke="#5d4037" stroke-width="0.5"/>

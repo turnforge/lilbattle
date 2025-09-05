@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#6d4c41"/>
       <stop offset="50%" stop-color="#5d4037"/>
@@ -23,7 +28,7 @@
   <!-- Harbor Tugger - Tugboat equivalent -->
   
   <!-- Compact sturdy hull -->
-  <path d="M20 55 Q50 50 80 55 Q80 65 75 70 Q50 75 25 70 Q20 65 20 55" fill="url(#hullGrad)" stroke="#212121" stroke-width="2"/>
+  <path d="M20 55 Q50 50 80 55 Q80 65 75 70 Q50 75 25 70 Q20 65 20 55" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
   <!-- Hull reinforcement -->
   <path d="M22 57 Q50 52 78 57" stroke="#3e2723" stroke-width="2" fill="none"/>
   <path d="M22 62 Q50 57 78 62" stroke="#3e2723" stroke-width="2" fill="none"/>

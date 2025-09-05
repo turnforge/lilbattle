@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="featherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#ff8f00"/>
       <stop offset="50%" stop-color="#ef6c00"/>
@@ -33,7 +38,7 @@
   <path d="M45 60 Q50 58 55 60" stroke="#5d4037" stroke-width="1" fill="none"/>
   
   <!-- Griffin chest (eagle front) -->
-  <ellipse cx="55" cy="40" rx="12" ry="8" fill="url(#featherGrad)" stroke="#bf360c" stroke-width="2"/>
+  <ellipse cx="55" cy="40" rx="12" ry="8" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
   <!-- Chest feather pattern -->
   <path d="M48 35 Q52 33 56 35" stroke="#d84315" stroke-width="1" fill="none"/>
   <path d="M48 38 Q52 36 56 38" stroke="#d84315" stroke-width="1" fill="none"/>
@@ -44,7 +49,7 @@
   <path d="M56 41 Q60 39 64 41" stroke="#d84315" stroke-width="1" fill="none"/>
   
   <!-- Griffin head -->
-  <ellipse cx="70" cy="30" rx="8" ry="6" fill="url(#featherGrad)" stroke="#bf360c" stroke-width="2"/>
+  <ellipse cx="70" cy="30" rx="8" ry="6" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
   <!-- Head crest feathers -->
   <polygon points="70,22 68,25 70,28 72,25" fill="#ff5722"/>
   <polygon points="72,20 70,23 72,26 74,23" fill="#ff5722"/>
@@ -64,8 +69,8 @@
   <circle cx="68" cy="29" r="0.5" fill="#f5f5f5"/>
   
   <!-- Large wings spread for flight -->
-  <path d="M40 35 Q20 20 10 30 Q15 45 30 50 Q35 45 40 40" fill="url(#featherGrad)" stroke="#bf360c" stroke-width="2"/>
-  <path d="M60 35 Q80 20 90 30 Q85 45 70 50 Q65 45 60 40" fill="url(#featherGrad)" stroke="#bf360c" stroke-width="2"/>
+  <path d="M40 35 Q20 20 10 30 Q15 45 30 50 Q35 45 40 40" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
+  <path d="M60 35 Q80 20 90 30 Q85 45 70 50 Q65 45 60 40" fill="url(#playerColor)" stroke="#bf360c" stroke-width="2"/>
   
   <!-- Wing feather details -->
   <path d="M35 40 Q25 30 18 35" stroke="#d84315" stroke-width="1" fill="none"/>

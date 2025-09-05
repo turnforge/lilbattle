@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="dragonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#d32f2f"/>
       <stop offset="50%" stop-color="#c62828"/>
@@ -26,8 +31,8 @@
   <!-- Massive reinforced base -->
   <rect x="15" y="65" width="70" height="12" fill="url(#woodGrad)" stroke="#212121" stroke-width="3" rx="3"/>
   <!-- Heavy metal reinforcements -->
-  <rect x="17" y="67" width="66" height="3" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="1"/>
-  <rect x="17" y="73" width="66" height="3" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="17" y="67" width="66" height="3" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="17" y="73" width="66" height="3" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
   <!-- Decorative metal studs -->
   <circle cx="25" cy="71" r="1.5" fill="#ffc107"/>
   <circle cx="35" cy="71" r="1.5" fill="#ffc107"/>
@@ -53,9 +58,9 @@
   <line x1="81" y1="76" x2="69" y2="88" stroke="#ffc107" stroke-width="2"/>
   
   <!-- Dragon-shaped cannon barrel -->
-  <ellipse cx="50" cy="45" rx="25" ry="8" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="50" cy="45" rx="25" ry="8" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Dragon head at muzzle -->
-  <ellipse cx="75" cy="45" rx="8" ry="6" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <ellipse cx="75" cy="45" rx="8" ry="6" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Dragon features -->
   <circle cx="78" cy="42" r="2" fill="#ff5722"/>
   <circle cx="78" cy="42" r="1" fill="#ffeb3b"/>
@@ -76,7 +81,7 @@
   <ellipse cx="70" cy="49" rx="2" ry="1" fill="#f44336"/>
   
   <!-- Ornate cannon mount -->
-  <rect x="35" y="50" width="30" height="15" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <rect x="35" y="50" width="30" height="15" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Decorative dragon reliefs -->
   <polygon points="38,53 42,50 46,53 42,56" fill="#d32f2f"/>
   <polygon points="54,53 58,50 62,53 58,56" fill="#d32f2f"/>
@@ -85,7 +90,7 @@
   <circle cx="50" cy="57" r="1.5" fill="#ff8f00"/>
   
   <!-- Magical fire chamber -->
-  <rect x="25" y="40" width="15" height="10" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="2"/>
+  <rect x="25" y="40" width="15" height="10" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="2"/>
   <!-- Fire glow from chamber -->
   <circle cx="32" cy="45" r="4" fill="url(#fireGrad)" opacity="0.8"/>
   <circle cx="32" cy="45" r="6" fill="#ff5722" opacity="0.4"/>
@@ -119,11 +124,11 @@
   <!-- Dragon handler -->
   <circle cx="70" cy="25" r="4" fill="#ffdbcb" stroke="#d4a574" stroke-width="1"/>
   <!-- Dragon scale armor -->
-  <path d="M66 20 Q70 17 74 20 Q74 25 70 25 Q66 25 66 20" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="1"/>
+  <path d="M66 20 Q70 17 74 20 Q74 25 70 25 Q66 25 66 20" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
   <circle cx="68" cy="23" r="1" fill="#1976d2"/>
   <circle cx="72" cy="23" r="1" fill="#1976d2"/>
   <!-- Armored body -->
-  <rect x="66" y="29" width="8" height="15" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="66" y="29" width="8" height="15" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
   <!-- Scale pattern -->
   <circle cx="68" cy="32" r="1" fill="#f44336"/>
   <circle cx="72" cy="32" r="1" fill="#f44336"/>
@@ -136,9 +141,9 @@
   <path d="M70 29 Q60 35 50 40" stroke="#ffc107" stroke-width="2" fill="none"/>
   
   <!-- Ammunition (dragon eggs) -->
-  <ellipse cx="10" cy="70" rx="3" ry="4" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="1"/>
-  <ellipse cx="15" cy="67" rx="3" ry="4" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="1"/>
-  <ellipse cx="20" cy="64" rx="3" ry="4" fill="url(#dragonGrad)" stroke="#b71c1c" stroke-width="1"/>
+  <ellipse cx="10" cy="70" rx="3" ry="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
+  <ellipse cx="15" cy="67" rx="3" ry="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
+  <ellipse cx="20" cy="64" rx="3" ry="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
   <!-- Egg patterns -->
   <circle cx="10" cy="69" r="1" fill="#ff5722"/>
   <circle cx="15" cy="66" r="1" fill="#ff5722"/>

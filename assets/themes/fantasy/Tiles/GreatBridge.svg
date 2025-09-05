@@ -1,5 +1,5 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="#0d47a1" stroke="#01579b" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="#0d47a1" stroke="#01579b" stroke-width="2"/>
   <!-- Deep water base -->
   <ellipse cx="50" cy="50" rx="20" ry="15" fill="#000051" opacity="0.3"/>
   <path d="M20 35 Q30 30 40 35 Q50 40 60 35 Q70 30 80 35" stroke="#1565c0" stroke-width="2" fill="none"/>

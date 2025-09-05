@@ -6,7 +6,7 @@
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#waterGrad)" stroke="#0d47a1" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#waterGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Waves -->
   <path d="M20 40 Q30 35 40 40 Q50 45 60 40 Q70 35 80 40" stroke="#81d4fa" stroke-width="2" fill="none"/>
   <path d="M15 55 Q25 50 35 55 Q45 60 55 55 Q65 50 75 55" stroke="#81d4fa" stroke-width="2" fill="none"/>

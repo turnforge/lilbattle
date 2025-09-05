@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="armorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#9e9e9e"/>
       <stop offset="50%" stop-color="#616161"/>
@@ -31,7 +36,7 @@
   <!-- Warrior head with detailed helm -->
   <circle cx="50" cy="25" r="5" fill="#ffdbcb" stroke="#d4a574" stroke-width="1"/>
   <!-- Winged helmet -->
-  <path d="M45 18 Q50 15 55 18 Q55 25 50 25 Q45 25 45 18" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
+  <path d="M45 18 Q50 15 55 18 Q55 25 50 25 Q45 25 45 18" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Helmet wings -->
   <path d="M45 20 Q40 17 38 20 Q42 23 45 21" fill="#ffc107" stroke="#ff8f00" stroke-width="1"/>
   <path d="M55 20 Q60 17 62 20 Q58 23 55 21" fill="#ffc107" stroke="#ff8f00" stroke-width="1"/>
@@ -44,7 +49,7 @@
   <circle cx="52" cy="24" r="0.8" fill="#1976d2"/>
   
   <!-- Armored torso -->
-  <rect x="45" y="30" width="10" height="18" fill="url(#armorGrad)" stroke="#000" stroke-width="2" rx="2"/>
+  <rect x="45" y="30" width="10" height="18" fill="url(#playerColor)" stroke="#000" stroke-width="2" rx="2"/>
   <!-- Chest plate details -->
   <rect x="46" y="32" width="8" height="2" fill="#757575"/>
   <rect x="46" y="40" width="8" height="2" fill="#757575"/>
@@ -73,14 +78,14 @@
   <circle cx="78" cy="35" r="1.5" fill="#e1bee7" opacity="0.6"/>
   
   <!-- Armored arms -->
-  <ellipse cx="38" cy="36" rx="4" ry="7" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
-  <ellipse cx="62" cy="36" rx="4" ry="7" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
+  <ellipse cx="38" cy="36" rx="4" ry="7" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
+  <ellipse cx="62" cy="36" rx="4" ry="7" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Shoulder pauldrons -->
   <circle cx="38" cy="32" r="3" fill="#757575" stroke="#424242" stroke-width="1"/>
   <circle cx="62" cy="32" r="3" fill="#757575" stroke="#424242" stroke-width="1"/>
   <!-- Gauntlets -->
-  <circle cx="35" cy="43" r="3" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
-  <circle cx="65" cy="43" r="3" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
+  <circle cx="35" cy="43" r="3" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
+  <circle cx="65" cy="43" r="3" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Gauntlet spikes -->
   <polygon points="33,41 31,42 35,42" fill="#424242"/>
   <polygon points="67,41 65,42 69,42" fill="#424242"/>
@@ -101,8 +106,8 @@
   <circle cx="75" cy="40" r="9" fill="none" stroke="#e3f2fd" stroke-width="1" opacity="0.5"/>
   
   <!-- Armored legs -->
-  <rect x="47" y="48" width="3" height="18" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
-  <rect x="50" y="48" width="3" height="18" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
+  <rect x="47" y="48" width="3" height="18" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
+  <rect x="50" y="48" width="3" height="18" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Leg armor details -->
   <rect x="47" y="52" width="3" height="2" fill="#757575"/>
   <rect x="50" y="52" width="3" height="2" fill="#757575"/>
@@ -113,8 +118,8 @@
   <circle cx="51.5" cy="56" r="2" fill="#616161" stroke="#424242" stroke-width="1"/>
   
   <!-- Winged boots -->
-  <ellipse cx="48.5" cy="68" rx="3" ry="2" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
-  <ellipse cx="51.5" cy="68" rx="3" ry="2" fill="url(#armorGrad)" stroke="#000" stroke-width="1"/>
+  <ellipse cx="48.5" cy="68" rx="3" ry="2" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
+  <ellipse cx="51.5" cy="68" rx="3" ry="2" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Boot wings -->
   <path d="M45 67 Q42 65 44 69" fill="#e3f2fd" stroke="#2196f3" stroke-width="1"/>
   <path d="M55 67 Q58 65 56 69" fill="#e3f2fd" stroke="#2196f3" stroke-width="1"/>

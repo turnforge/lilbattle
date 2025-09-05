@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="coreGrad" cx="50%" cy="50%">
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="20%" stop-color="#ffeb3b"/>

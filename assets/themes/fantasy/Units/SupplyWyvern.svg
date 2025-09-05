@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="wyvernGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#4caf50"/>
       <stop offset="50%" stop-color="#388e3c"/>
@@ -23,7 +28,7 @@
   <!-- Supply Wyvern - Stratotanker equivalent -->
   
   <!-- Robust wyvern body -->
-  <ellipse cx="50" cy="50" rx="20" ry="10" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="50" cy="50" rx="20" ry="10" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Belly -->
   <ellipse cx="50" cy="55" rx="16" ry="7" fill="url(#bellyGrad)" stroke="#2e7d32" stroke-width="1"/>
   
@@ -37,13 +42,13 @@
   <ellipse cx="62" cy="46" rx="2" ry="1.5" fill="#66bb6a"/>
   
   <!-- Wyvern head -->
-  <ellipse cx="75" cy="42" rx="10" ry="6" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="75" cy="42" rx="10" ry="6" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Head crest -->
   <polygon points="75,35 73,37 75,39 77,37" fill="#388e3c"/>
   <polygon points="77,33 75,35 77,37 79,35" fill="#388e3c"/>
   
   <!-- Wyvern snout -->
-  <ellipse cx="85" cy="42" rx="4" ry="3" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="1"/>
+  <ellipse cx="85" cy="42" rx="4" ry="3" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="1"/>
   <!-- Nostrils -->
   <circle cx="87" cy="41" r="0.8" fill="#1b5e20"/>
   <circle cx="87" cy="43" r="0.8" fill="#1b5e20"/>
@@ -57,8 +62,8 @@
   <circle cx="74" cy="43" r="0.8" fill="#f5f5f5"/>
   
   <!-- Strong wings for cargo carrying -->
-  <path d="M35 40 Q15 25 10 35 Q15 50 30 55 Q35 50 40 45" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
-  <path d="M65 40 Q85 25 90 35 Q85 50 70 55 Q65 50 60 45" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <path d="M35 40 Q15 25 10 35 Q15 50 30 55 Q35 50 40 45" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
+  <path d="M65 40 Q85 25 90 35 Q85 50 70 55 Q65 50 60 45" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   
   <!-- Wing membrane details -->
   <path d="M30 43 Q20 30 13 38" stroke="#2e7d32" stroke-width="1.5" fill="none"/>
@@ -75,18 +80,18 @@
   <line x1="80" y1="45" x2="70" y2="50" stroke="#1b5e20" stroke-width="2"/>
   
   <!-- Wyvern neck -->
-  <ellipse cx="62" cy="45" rx="6" ry="4" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="1"/>
+  <ellipse cx="62" cy="45" rx="6" ry="4" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="1"/>
   
   <!-- Wyvern tail -->
-  <ellipse cx="30" cy="53" rx="6" ry="4" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="1"/>
-  <ellipse cx="18" cy="56" rx="4" ry="3" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="1"/>
+  <ellipse cx="30" cy="53" rx="6" ry="4" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="1"/>
+  <ellipse cx="18" cy="56" rx="4" ry="3" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="1"/>
   <!-- Tail fin -->
   <polygon points="15,54 10,52 15,50 18,52" fill="#388e3c"/>
   <polygon points="12,58 7,56 12,54 15,56" fill="#388e3c"/>
   
   <!-- Strong cargo-carrying legs -->
-  <ellipse cx="45" cy="65" rx="4" ry="8" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
-  <ellipse cx="55" cy="65" rx="4" ry="8" fill="url(#wyvernGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="45" cy="65" rx="4" ry="8" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
+  <ellipse cx="55" cy="65" rx="4" ry="8" fill="url(#playerColor)" stroke="#1b5e20" stroke-width="2"/>
   
   <!-- Talons with cargo hooks -->
   <polygon points="43,73 40,75 46,75" fill="#3e2723"/>
@@ -97,8 +102,8 @@
   <polygon points="57,73 54,75 60,75" fill="#3e2723"/>
   
   <!-- Large cargo containers -->
-  <rect x="35" y="58" width="12" height="8" fill="url(#cargoGrad)" stroke="#212121" stroke-width="2"/>
-  <rect x="53" y="58" width="12" height="8" fill="url(#cargoGrad)" stroke="#212121" stroke-width="2"/>
+  <rect x="35" y="58" width="12" height="8" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
+  <rect x="53" y="58" width="12" height="8" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
   <!-- Container reinforcements -->
   <rect x="36" y="59" width="10" height="2" fill="#5d4037"/>
   <rect x="36" y="63" width="10" height="2" fill="#5d4037"/>
@@ -115,8 +120,8 @@
   <rect x="68" y="56" width="3" height="3" fill="#424242"/>
   
   <!-- Supply crates hanging -->
-  <rect x="25" y="70" width="6" height="5" fill="url(#cargoGrad)" stroke="#212121" stroke-width="1"/>
-  <rect x="69" y="70" width="6" height="5" fill="url(#cargoGrad)" stroke="#212121" stroke-width="1"/>
+  <rect x="25" y="70" width="6" height="5" fill="url(#playerColor)" stroke="#212121" stroke-width="1"/>
+  <rect x="69" y="70" width="6" height="5" fill="url(#playerColor)" stroke="#212121" stroke-width="1"/>
   <!-- Hanging chains -->
   <line x1="28" y1="70" x2="28" y2="65" stroke="#424242" stroke-width="2"/>
   <line x1="72" y1="70" x2="72" y2="65" stroke="#424242" stroke-width="2"/>

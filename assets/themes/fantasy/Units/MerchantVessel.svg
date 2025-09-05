@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#8d6e63"/>
       <stop offset="50%" stop-color="#6d4c41"/>
@@ -23,7 +28,7 @@
   <!-- Merchant Vessel - Sailboat equivalent -->
   
   <!-- Wide merchant hull -->
-  <path d="M15 58 Q50 48 85 58 Q85 68 80 73 Q50 78 20 73 Q15 68 15 58" fill="url(#hullGrad)" stroke="#212121" stroke-width="2"/>
+  <path d="M15 58 Q50 48 85 58 Q85 68 80 73 Q50 78 20 73 Q15 68 15 58" fill="url(#playerColor)" stroke="#212121" stroke-width="2"/>
   <!-- Hull reinforcement planks -->
   <path d="M18 60 Q50 52 82 60" stroke="#5d4037" stroke-width="1" fill="none"/>
   <path d="M18 64 Q50 56 82 64" stroke="#5d4037" stroke-width="1" fill="none"/>
@@ -41,7 +46,7 @@
   <line x1="50" y1="18" x2="50" y2="55" stroke="#6d4c41" stroke-width="4"/>
   
   <!-- Large merchant sail -->
-  <rect x="30" y="20" width="40" height="30" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <rect x="30" y="20" width="40" height="30" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   <!-- Sail patches and repairs -->
   <rect x="35" y="25" width="8" height="6" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
   <rect x="52" y="35" width="6" height="8" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/>
@@ -57,7 +62,7 @@
   <polygon points="50,29 52,34 47,31 53,31 48,34" fill="#ff8f00"/>
   
   <!-- Forward sail -->
-  <polygon points="25,25 35,22 50,18 25,35" fill="url(#sailGrad)" stroke="#bdbdbd" stroke-width="1"/>
+  <polygon points="25,25 35,22 50,18 25,35" fill="url(#playerColor)" stroke="#bdbdbd" stroke-width="1"/>
   
   <!-- Cargo holds -->
   <rect x="25" y="50" width="12" height="8" fill="url(#cargoGrad)" stroke="#3e2723" stroke-width="1"/>

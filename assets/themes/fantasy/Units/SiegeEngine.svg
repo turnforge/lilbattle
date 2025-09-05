@@ -1,8 +1,15 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- Siege Engine - Level 2 Tank -->
   
   <!-- Main body platform -->
-  <rect x="20" y="45" width="60" height="15" fill="#6d4c41" stroke="#5d4037" stroke-width="2" rx="2"/>
+  <rect x="20" y="45" width="60" height="15" fill="url(#playerColor)" stroke="#5d4037" stroke-width="2" rx="2"/>
   <!-- Platform supports -->
   <rect x="25" y="55" width="3" height="8" fill="#5d4037"/>
   <rect x="35" y="55" width="3" height="8" fill="#5d4037"/>
