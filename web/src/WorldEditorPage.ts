@@ -7,7 +7,7 @@ import { shouldIgnoreShortcut } from '../lib/DOMUtils';
 import { Unit, Tile, World, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
 import { WorldEditorPageState, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './WorldEditorPageState';
 import { EventBus } from '../lib/EventBus';
-import { WorldEventType, WorldEventTypes, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload } from './events';
 import { EditorToolsPanel } from './EditorToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
 import { LCMComponent } from '../lib/LCMComponent';
@@ -578,6 +578,18 @@ class WorldEditorPage extends BasePage {
         } else {
             this.logToConsole('Coordinates checkbox not found in Phaser panel');
         }
+        
+        const showHealthCheckbox = container.querySelector('#show-health') as HTMLInputElement;
+        if (showHealthCheckbox) {
+            showHealthCheckbox.addEventListener('change', (e) => {
+                const checked = (e.target as HTMLInputElement).checked;
+                this.setShowHealth(checked);
+                this.logToConsole(`Health checkbox changed to: ${checked}`);
+            });
+            this.logToConsole('Health checkbox event handler bound');
+        } else {
+            this.logToConsole('Health checkbox not found in Phaser panel');
+        }
     }
 
     private initializeKeyboardShortcuts(): void {
@@ -740,6 +752,22 @@ class WorldEditorPage extends BasePage {
             this.pageState
         );
         this.logToConsole(`Coordinates visibility set to: ${showCoordinates}`);
+    }
+    
+    public setShowHealth(showHealth: boolean): void {
+        // Update page state - this will emit visual state changed event
+        if (this.pageState) {
+            this.pageState.setShowHealth(showHealth);
+        }
+        
+        // Emit event to PhaserEditorComponent via EventBus
+        this.eventBus.emit<HealthSetVisibilityPayload>(
+            EditorEventTypes.HEALTH_SET_VISIBILITY,
+            { show: showHealth },
+            this,
+            this.pageState
+        );
+        this.logToConsole(`Health visibility set to: ${showHealth}`);
     }
 
     public downloadImage(): void {

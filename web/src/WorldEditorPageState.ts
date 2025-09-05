@@ -7,7 +7,7 @@
  */
 
 import { EventBus } from '../lib/EventBus';
-import { EditorEventTypes, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload } from './events';
+import { EditorEventTypes, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload } from './events';
 
 // Event type constants for EventBus communication
 export enum PageStateEventType {
@@ -28,6 +28,7 @@ export interface ToolState {
 export interface VisualState {
     showGrid: boolean;
     showCoordinates: boolean;
+    showHealth: boolean;
     // Note: theme is application-level, not page-level
 }
 
@@ -100,7 +101,8 @@ export class WorldEditorPageState {
         
         this.visualState = {
             showGrid: false,
-            showCoordinates: false
+            showCoordinates: false,
+            showHealth: false
         };
         
         this.workflowState = {
@@ -218,6 +220,18 @@ export class WorldEditorPageState {
         // Emit specific event for interested components
         this.eventBus.emit<CoordinatesSetVisibilityPayload>(
             EditorEventTypes.COORDINATES_SET_VISIBILITY,
+            { show },
+            this,
+            this
+        );
+    }
+    
+    public setShowHealth(show: boolean): void {
+        this.updateVisualState({ showHealth: show });
+        
+        // Emit specific event for interested components
+        this.eventBus.emit<HealthSetVisibilityPayload>(
+            EditorEventTypes.HEALTH_SET_VISIBILITY,
             { show },
             this,
             this

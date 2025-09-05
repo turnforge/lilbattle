@@ -74,6 +74,13 @@ export class PhaserEditorScene extends PhaserWorldScene {
     public setEditorMode(mode: 'terrain' | 'unit' | 'erase'): void {
         this.editorMode = mode;
     }
+    
+    /**
+     * Set health label visibility
+     */
+    public setShowHealth(show: boolean): void {
+        this.setShowUnitHealth(show);
+    }
 
     /**
      * Reference image functionality

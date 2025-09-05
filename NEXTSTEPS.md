@@ -71,6 +71,7 @@
 - **🎯 Self-Contained Providers**: WorldScene agnostic to provider type implementation
 - **🔍 Provider-Specific Display Sizing**: SVG and PNG providers use different display dimensions to handle hex overlap correctly
 - **🏷️ Unit Label Repositioning**: Moved health/movement labels below units with smaller font to prevent row overlap
+- **🎮 Show Health Toggle**: Added checkbox in WorldEditorPage toolbar to toggle unit health/movement display
 
 **UnitStatsPanel Visual Enhancement - COMPLETED**
 - **📊 Damage Distribution Histogram**: Replaced boring min/max/avg damage columns with interactive visual histograms

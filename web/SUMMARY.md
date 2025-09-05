@@ -221,10 +221,11 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Provider Independence**: PhaserWorldScene agnostic to specific provider implementations
 - **Provider-Specific Display Sizing**: SVG and PNG providers use different display dimensions for proper hex overlap
 - **Unit Label Repositioning**: Moved health/movement labels below units with smaller font to prevent row overlap
+- **Show Health Toggle**: Added checkbox control in editor toolbar to toggle unit health/movement display visibility
 
 ## Status
-**Current Version**: 8.5 (SVG Asset Loading with Display Optimization)  
-**Status**: Production-ready with theme-based asset loading and proper SVG/PNG display sizing  
+**Current Version**: 8.6 (SVG Asset Loading with Health Toggle)  
+**Status**: Production-ready with theme-based assets and configurable unit label display  
 **Build Status**: Clean compilation with all TypeScript errors resolved  
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds  
-**Architecture**: Flexible AssetProvider system with provider-specific display dimensions
+**Architecture**: Flexible AssetProvider system with full UI visibility controls

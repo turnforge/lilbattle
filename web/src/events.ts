@@ -64,6 +64,7 @@ export const EditorEventTypes = {
     COORDINATES_TOGGLE: 'coordinates-toggle',
     GRID_SET_VISIBILITY: 'grid-set-visibility',
     COORDINATES_SET_VISIBILITY: 'coordinates-set-visibility',
+    HEALTH_SET_VISIBILITY: 'health-set-visibility',
     
     // Page state events (centralized state management)
     PAGE_STATE_CHANGED: 'page-state-changed',
@@ -160,6 +161,10 @@ export interface GridSetVisibilityPayload {
 }
 
 export interface CoordinatesSetVisibilityPayload {
+    show: boolean;
+}
+
+export interface HealthSetVisibilityPayload {
     show: boolean;
 }
 

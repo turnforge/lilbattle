@@ -1,7 +1,7 @@
 import { BaseComponent } from '../lib/Component';
 import { LCMComponent } from '../lib/LCMComponent';
 import { EventBus } from '../lib/EventBus';
-import { WorldEventType, WorldEventTypes, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from './events';
 import { PhaserEditorScene } from './phaser/PhaserEditorScene';
 import { WorldEditorPageState, PageStateEventType } from './WorldEditorPageState';
 import { Unit, Tile, World , TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from './World';
@@ -127,6 +127,9 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         // Subscribe to coordinates visibility events from WorldEditorPage
         this.addSubscription(EditorEventTypes.COORDINATES_SET_VISIBILITY, this);
         
+        // Subscribe to health visibility events from WorldEditorPage
+        this.addSubscription(EditorEventTypes.HEALTH_SET_VISIBILITY, this);
+        
         // Subscribe to reference image control events from ReferenceImagePanel
         this.addSubscription(EditorEventTypes.REFERENCE_SET_MODE, this);
         this.addSubscription(EditorEventTypes.REFERENCE_SET_ALPHA, this);
@@ -157,6 +160,10 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             
             case EditorEventTypes.COORDINATES_SET_VISIBILITY:
                 this.handleCoordinatesSetVisibility(data);
+                break;
+            
+            case EditorEventTypes.HEALTH_SET_VISIBILITY:
+                this.handleHealthSetVisibility(data);
                 break;
             
             case EditorEventTypes.REFERENCE_SET_MODE:
@@ -412,6 +419,19 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         
         this.editorScene.setShowCoordinates(data.show);
         this.log(`Coordinates visibility set to: ${data.show}`);
+    }
+    
+    /**
+     * Handle health visibility set event from WorldEditorPage
+     */
+    private handleHealthSetVisibility(data: HealthSetVisibilityPayload): void {
+        if (!this.editorScene || !this.isInitialized) {
+            this.log('Phaser not ready, cannot set health visibility');
+            return;
+        }
+        
+        this.editorScene.setShowHealth(data.show);
+        this.log(`Health visibility set to: ${data.show}`);
     }
     
     /**
