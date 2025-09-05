@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { hexToRowCol, hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
+import { TILE_HEIGHT, TILE_WIDTH, Y_INCREMENT, hexToRowCol, hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
 import { Unit, Tile, World } from '../World';
 import { LayerManager } from './LayerSystem';
 import { BaseMapLayer } from './layers/BaseMapLayer';
@@ -25,9 +25,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private phaserGame: Phaser.Game | null = null;
     private isInitialized: boolean = false;
 
-    protected tileWidth: number = 64;
-    protected tileHeight: number = 64;
-    protected yIncrement: number = 48; // 3/4 * tileHeight for pointy-topped hexes
+    protected tileWidth: number = TILE_WIDTH;
+    protected tileHeight: number = TILE_HEIGHT;
+    // protected yIncrement: number = Y_INCREMENT; // 3/4 * tileHeight for pointy-topped hexes
     
     // World as single source of truth for game data
     public world: World | null = null;
@@ -97,21 +97,21 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private createDefaultAssetProvider(): AssetProvider {
         // Check URL parameters for asset configuration
         const urlParams = new URLSearchParams(window.location.search);
-        const useSVG = true // urlParams.get('useSVG') === 'true';
+        const usePNG = urlParams.get('usePNG') === 'true';
         const themeName = urlParams.get('theme') || 'fantasy';
         const svgSize = urlParams.get('svgSize');
         
-        if (useSVG) {
+        if (usePNG) {
+            if (this.debugMode) {
+                console.log('[PhaserWorldScene] Using PNGAssetProvider');
+            }
+            return new PNGAssetProvider();
+        } else {
             const rasterSize = svgSize ? parseInt(svgSize) : 160;
             if (this.debugMode) {
                 console.log(`[PhaserWorldScene] Using TemplateSVGAssetProvider with theme '${themeName}' and size ${rasterSize}`);
             }
             return new TemplateSVGAssetProvider(themeName, rasterSize, true);
-        } else {
-            if (this.debugMode) {
-                console.log('[PhaserWorldScene] Using PNGAssetProvider');
-            }
-            return new PNGAssetProvider();
         }
     }
     
@@ -802,8 +802,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         if (this.textures.exists(textureKey)) {
             const tileSprite = this.add.sprite(position.x, position.y, textureKey);
             tileSprite.setOrigin(0.5, 0.5);
-            // Scale sprite to match hex tile size
-            tileSprite.setDisplaySize(this.tileWidth, this.tileHeight);
+            // Scale sprite to match hex tile size - use provider's display size
+            const displaySize = this.assetProvider.getDisplaySize();
+            tileSprite.setDisplaySize(displaySize.width, displaySize.height);
             this.tileSprites.set(key, tileSprite); // Use coordinate key, not texture key
         } else {
             // Try fallback without player color
@@ -811,7 +812,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             if (this.textures.exists(fallbackKey)) {
                 const tileSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 tileSprite.setOrigin(0.5, 0.5);
-                tileSprite.setDisplaySize(this.tileWidth, this.tileHeight);
+                const displaySize = this.assetProvider.getDisplaySize();
+                tileSprite.setDisplaySize(displaySize.width, displaySize.height);
                 this.tileSprites.set(key, tileSprite);
             } else {
                 console.error(`[PhaserWorldScene] Texture not found: ${textureKey} or ${fallbackKey}`);
@@ -869,8 +871,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             const unitSprite = this.add.sprite(position.x, position.y, textureKey);
             unitSprite.setOrigin(0.5, 0.5);
             unitSprite.setDepth(10); // Units render above tiles
-            // Scale sprite to match hex tile size
-            unitSprite.setDisplaySize(this.tileWidth * UNIT_TILE_RATIO, this.tileHeight * UNIT_TILE_RATIO);
+            // Scale sprite to match hex tile size - use provider's display size
+            const displaySize = this.assetProvider.getDisplaySize();
+            unitSprite.setDisplaySize(displaySize.width * UNIT_TILE_RATIO, displaySize.height * UNIT_TILE_RATIO);
             this.unitSprites.set(key, unitSprite);
         } else {
             // Try fallback without player color
@@ -879,7 +882,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 const unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 unitSprite.setOrigin(0.5, 0.5);
                 unitSprite.setDepth(10);
-                unitSprite.setDisplaySize(this.tileWidth * UNIT_TILE_RATIO, this.tileHeight * UNIT_TILE_RATIO);
+                const displaySize = this.assetProvider.getDisplaySize();
+                unitSprite.setDisplaySize(displaySize.width * UNIT_TILE_RATIO, displaySize.height * UNIT_TILE_RATIO);
                 this.unitSprites.set(key, unitSprite);
             } else {
                 console.error(`[PhaserWorldScene] Unit texture not found: ${textureKey} or ${fallbackKey}`);
@@ -918,8 +922,12 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             // Format: "Movement/Health" (e.g., "3/85")
             const labelText = `${movementPoints}/${health}`;
             
-            const healthText = this.add.text(position.x, position.y - 40, labelText, {
-                fontSize: '12px',
+            // Position label below the unit, aligned with bottom of tile
+            const displaySize = this.assetProvider.getDisplaySize();
+            const labelY = position.y + (displaySize.height / 2) - 5; // Just inside bottom edge of tile
+            
+            const healthText = this.add.text(position.x, labelY, labelText, {
+                fontSize: '10px',
                 color: '#ffffff',
                 stroke: '#000000',
                 strokeThickness: 2,
@@ -937,8 +945,12 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 this.selectedUnitCoord.q, this.selectedUnitCoord.r
             );
             
-            const distanceText = this.add.text(position.x, position.y - 55, distance.toString(), {
-                fontSize: '10px',
+            // Position distance label below the unit, above the health label
+            const displaySize = this.assetProvider.getDisplaySize();
+            const labelY = position.y + (displaySize.height / 2) - 15; // Above health label
+            
+            const distanceText = this.add.text(position.x, labelY, distance.toString(), {
+                fontSize: '9px',
                 color: '#00aaff',
                 stroke: '#000000',
                 strokeThickness: 2,

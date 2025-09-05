@@ -91,7 +91,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 		if err == nil && terrainData != nil {
 			// Get the appropriate icon URL from theme manager
 			iconDataURL := tm.GetTerrainIconURL(i, useTheme, themeName)
-			
+
 			// Get the themed name or use default
 			terrainName := tm.GetTerrainName(i, terrainData.Name, useTheme, themeName)
 
@@ -153,7 +153,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 		if unitData != nil && err == nil {
 			// Get the appropriate icon URL from theme manager
 			iconDataURL := tm.GetUnitIconURL(unitID, useTheme, themeName)
-			
+
 			// Create a copy of unitData with themed name
 			themedUnitData := *unitData
 			themedUnitData.Name = tm.GetUnitName(unitID, unitData.Name, useTheme, themeName)

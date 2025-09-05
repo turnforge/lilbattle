@@ -1,4 +1,6 @@
 import * as Phaser from 'phaser';
+import { TILE_WIDTH, TILE_HEIGHT } from "./hexUtils"
+import { CityTerrainIds } from "../ColorsAndNames"
 
 /**
  * Interface for providing game assets to the WorldScene
@@ -38,6 +40,11 @@ export interface AssetProvider {
     getAssetSize(): { width: number, height: number };
     
     /**
+     * Get display dimensions for sprites (may differ from asset size for hex alignment)
+     */
+    getDisplaySize(): { width: number, height: number };
+    
+    /**
      * Check if all assets are loaded and ready
      */
     isReady(): boolean;
@@ -65,10 +72,10 @@ export abstract class BaseAssetProvider implements AssetProvider {
     protected loader: Phaser.Loader.LoaderPlugin;
     protected scene: Phaser.Scene;
     protected ready: boolean = false;
-    protected assetSize: { width: number, height: number } = { width: 64, height: 64 };
+    protected assetSize: { width: number, height: number } = { width: TILE_WIDTH, height: TILE_HEIGHT };
     
     // Terrain and unit type definitions
-    protected readonly cityTerrains = [1, 2, 3, 16, 20]; // Land Base, Naval Base, Airport Base, Missile Silo, Mines
+    protected readonly cityTerrains = CityTerrainIds;
     protected readonly natureTerrains = [4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 21, 22, 23, 25, 26];
     protected readonly maxPlayers = 12;
     
@@ -104,6 +111,11 @@ export abstract class BaseAssetProvider implements AssetProvider {
     
     getAssetSize(): { width: number, height: number } {
         return this.assetSize;
+    }
+    
+    getDisplaySize(): { width: number, height: number } {
+        // Default implementation - providers can override
+        return { width: TILE_WIDTH, height: TILE_HEIGHT};
     }
     
     isReady(): boolean {

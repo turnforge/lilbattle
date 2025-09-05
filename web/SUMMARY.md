@@ -219,10 +219,12 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Phaser Integration**: Fixed async loading issues using Phaser's JSON loader for mapping files
 - **Memory Optimization**: 160x160 rasterization for rendering 1000+ tiles efficiently
 - **Provider Independence**: PhaserWorldScene agnostic to specific provider implementations
+- **Provider-Specific Display Sizing**: SVG and PNG providers use different display dimensions for proper hex overlap
+- **Unit Label Repositioning**: Moved health/movement labels below units with smaller font to prevent row overlap
 
 ## Status
-**Current Version**: 8.4 (SVG Asset Loading System)  
-**Status**: Production-ready with theme-based asset loading and SVG support  
+**Current Version**: 8.5 (SVG Asset Loading with Display Optimization)  
+**Status**: Production-ready with theme-based asset loading and proper SVG/PNG display sizing  
 **Build Status**: Clean compilation with all TypeScript errors resolved  
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds  
-**Architecture**: Flexible AssetProvider system with PNG and SVG template support
+**Architecture**: Flexible AssetProvider system with provider-specific display dimensions

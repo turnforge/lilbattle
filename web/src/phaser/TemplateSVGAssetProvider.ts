@@ -1,5 +1,6 @@
 import { BaseAssetProvider } from './AssetProvider';
 import { AllowedUnitIDs } from '../ColorsAndNames';
+import { TILE_WIDTH, TILE_HEIGHT } from './hexUtils';
 
 /**
  * Player color definitions for SVG templating
@@ -64,6 +65,12 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         this.fallbackToPNG = fallbackToPNG;
         this.debugMode = debugMode;
         this.assetSize = { width: rasterSize, height: rasterSize };
+    }
+    
+    getDisplaySize(): { width: number, height: number } {
+        // SVG assets need adjusted height to account for their full viewBox usage
+        // Use 48 (Y_INCREMENT) for height to maintain proper hex overlap
+        return { width: TILE_WIDTH, height: TILE_HEIGHT - 4 };
     }
     
     async preloadAssets(): Promise<void> {
