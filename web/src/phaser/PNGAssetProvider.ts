@@ -22,7 +22,7 @@ export class PNGAssetProvider extends BaseAssetProvider {
         return `terrain_${tileType}_${player}`;
     }
     
-    preloadAssets(): void {
+    async preloadAssets(): Promise<void> {
         if (!this.loader) {
             console.error('[PNGAssetProvider] Loader not configured');
             return;

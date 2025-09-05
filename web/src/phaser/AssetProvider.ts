@@ -12,8 +12,9 @@ export interface AssetProvider {
     
     /**
      * Queue all assets for loading (called during Phaser preload)
+     * Returns a promise that resolves when all assets are queued
      */
-    preloadAssets(): void;
+    preloadAssets(): Promise<void>;
     
     /**
      * Post-process assets after loading (e.g., apply color templates)
@@ -99,7 +100,7 @@ export abstract class BaseAssetProvider implements AssetProvider {
         }
     }
     
-    abstract preloadAssets(): void;
+    abstract preloadAssets(): Promise<void>;
     
     getAssetSize(): { width: number, height: number } {
         return this.assetSize;

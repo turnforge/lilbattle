@@ -95,15 +95,16 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private createDefaultAssetProvider(): AssetProvider {
         // Check URL parameters for asset configuration
         const urlParams = new URLSearchParams(window.location.search);
-        const useSVG = urlParams.get('useSVG') === 'true';
+        const useSVG = true // urlParams.get('useSVG') === 'true';
+        const themeName = urlParams.get('theme') || 'fantasy';
         const svgSize = urlParams.get('svgSize');
         
         if (useSVG) {
             const rasterSize = svgSize ? parseInt(svgSize) : 160;
             if (this.debugMode) {
-                console.log(`[PhaserWorldScene] Using TemplateSVGAssetProvider with size ${rasterSize}`);
+                console.log(`[PhaserWorldScene] Using TemplateSVGAssetProvider with theme '${themeName}' and size ${rasterSize}`);
             }
-            return new TemplateSVGAssetProvider(rasterSize, true);
+            return new TemplateSVGAssetProvider(themeName, rasterSize, true);
         } else {
             if (this.debugMode) {
                 console.log('[PhaserWorldScene] Using PNGAssetProvider');
@@ -187,9 +188,16 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     /**
      * Handle world loaded event - sync all data
      */
-    private handleWorldLoaded(data: WorldLoadedEventData): void {
+    private async handleWorldLoaded(data: WorldLoadedEventData): Promise<void> {
         if (this.debugMode) {
-            console.log('[PhaserWorldScene] World loaded, updating scene display');
+            console.log('[PhaserWorldScene] World loaded, waiting for assets before updating scene');
+        }
+        
+        // Wait for assets to be ready before trying to create sprites
+        await this.waitForAssetsReady();
+        
+        if (this.debugMode) {
+            console.log('[PhaserWorldScene] Assets ready, updating scene display');
         }
         
         // Load tile data from World into scene
@@ -209,7 +217,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     /**
      * Handle tiles changed event - sync tile updates
      */
-    private handleTilesChanged(data: TilesChangedEventData): void {
+    private async handleTilesChanged(data: TilesChangedEventData): Promise<void> {
+        // Ensure assets are ready
+        await this.waitForAssetsReady();
+        
         if (this.debugMode) {
             console.log(`[PhaserWorldScene] Updating ${data.changes.length} tile changes in scene`);
         }
@@ -228,7 +239,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     /**
      * Handle units changed event - sync unit updates
      */
-    private handleUnitsChanged(data: UnitsChangedEventData): void {
+    private async handleUnitsChanged(data: UnitsChangedEventData): Promise<void> {
+        // Ensure assets are ready
+        await this.waitForAssetsReady();
+        
         if (this.debugMode) {
             console.log(`[PhaserWorldScene] Updating ${data.changes.length} unit changes in scene`);
         }
@@ -404,7 +418,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         this.world = world;
     }
     
-    preload() {
+    async preload() {
         // Configure asset provider
         this.assetProvider.configure(this.load, this);
         
@@ -432,8 +446,12 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             }
         });
         
-        // Load assets through provider
-        this.assetProvider.preloadAssets();
+        // Load assets through provider - await to ensure all assets are queued
+        await this.assetProvider.preloadAssets();
+        
+        if (this.debugMode) {
+            console.log('[PhaserWorldScene] All assets queued for loading');
+        }
     }
     
     create() {

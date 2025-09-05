@@ -305,6 +305,11 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         this.editorScene.setupDependencies();
         await this.editorScene.activate();
         
+        // Wait for assets to be ready before considering the scene ready
+        this.log('Waiting for assets to be ready...');
+        await this.editorScene.waitForAssetsReady();
+        this.log('Assets are ready');
+        
         // Set up event handlers
         await this.setupPhaserEventHandlers();
         
@@ -315,7 +320,7 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         this.isInitialized = true;
         this.log('Phaser editor initialized successfully');
         
-        // Emit ready event for other components
+        // Emit ready event for other components - now assets are actually ready
         this.emit(EditorEventTypes.PHASER_READY, {}, this, this);
     }
     

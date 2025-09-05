@@ -11,13 +11,32 @@ interface PlayerColors {
 }
 
 /**
+ * Theme mapping structure from mapping.json
+ */
+interface ThemeMapping {
+    units: Record<string, {
+        old: string;
+        name: string;
+        image: string;
+    }>;
+    terrains: Record<string, {
+        old: string;
+        name: string;
+        image: string;
+    }>;
+}
+
+/**
  * Asset provider that uses SVG templates with color replacement
  * Loads base SVG templates and generates color variations for each player
  */
 export class TemplateSVGAssetProvider extends BaseAssetProvider {
+    private themeName: string;
+    private themePath: string;
     private rasterSize: number;
     private fallbackToPNG: boolean;
     private processedAssets: Set<string> = new Set();
+    private themeMapping: ThemeMapping | null = null;
     
     // Player color schemes
     private playerColors: PlayerColors[] = [
@@ -36,26 +55,52 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         { primary: '#8888ff', secondary: '#6666cc', accent: '#ccccff' }, // Player 12 - Light Blue
     ];
     
-    constructor(rasterSize: number = 160, fallbackToPNG: boolean = true) {
+    constructor(themeName: string = 'fantasy', rasterSize: number = 160, fallbackToPNG: boolean = true) {
         super();
+        this.themeName = themeName;
+        this.themePath = `/static/assets/themes/${themeName}/`;
         this.rasterSize = rasterSize;
         this.fallbackToPNG = fallbackToPNG;
         this.assetSize = { width: rasterSize, height: rasterSize };
     }
     
-    preloadAssets(): void {
+    async preloadAssets(): Promise<void> {
         if (!this.loader) {
             console.error('[TemplateSVGAssetProvider] Loader not configured');
             return;
         }
         
-        // Load base SVG templates as text
-        this.loadTerrainTemplates();
-        this.loadUnitTemplates();
+        console.log(`[TemplateSVGAssetProvider] Loading theme: ${this.themeName}`);
+        
+        // Load the mapping.json file using Phaser's loader
+        const mappingPath = `${this.themePath}mapping.json`;
+        console.log(`[TemplateSVGAssetProvider] Queuing mapping.json for loading: ${mappingPath}`);
+        
+        // Use Phaser's JSON loader to load the mapping
+        this.loader.json('themeMapping', mappingPath);
+        
+        // Set up a one-time handler for when the mapping loads
+        this.loader.once('filecomplete-json-themeMapping', (key: string, type: string, data: any) => {
+            console.log(`[TemplateSVGAssetProvider] Mapping loaded via Phaser`);
+            this.themeMapping = data as ThemeMapping;
+            
+            if (this.themeMapping) {
+                console.log(`[TemplateSVGAssetProvider] Mapping contains: ${Object.keys(this.themeMapping.terrains).length} terrains, ${Object.keys(this.themeMapping.units).length} units`);
+                
+                // Now queue all SVG files based on the mapping
+                // These will be added to the loader queue dynamically
+                this.loadMappedTerrainTemplates();
+                this.loadMappedUnitTemplates();
+                
+                const totalAssets = Object.keys(this.themeMapping.terrains).length + 
+                                   Object.keys(this.themeMapping.units).length;
+                console.log(`[TemplateSVGAssetProvider] Queued ${totalAssets} SVG files for loading`);
+            }
+        });
         
         // Set up error handling
         this.loader.on('loaderror', (file: any) => {
-            console.warn(`[TemplateSVGAssetProvider] Failed to load template: ${file.key}`);
+            console.warn(`[TemplateSVGAssetProvider] Failed to load: ${file.key} from ${file.url}`);
             
             if (this.fallbackToPNG && file.key.includes('_template')) {
                 // Try to load PNG fallback
@@ -64,25 +109,47 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         });
     }
     
-    private loadTerrainTemplates(): void {
-        // Load city terrain templates
-        this.cityTerrains.forEach(type => {
-            const templatePath = `/static/assets/v1/Tiles/${type}/template.svg`;
-            this.loader.text(`terrain_${type}_template`, templatePath);
-        });
+    private loadMappedTerrainTemplates(): void {
+        if (!this.themeMapping) {
+            console.error('[TemplateSVGAssetProvider] No theme mapping loaded');
+            return;
+        }
         
-        // Load nature terrain templates
-        this.natureTerrains.forEach(type => {
-            const templatePath = `/static/assets/v1/Tiles/${type}/template.svg`;
-            this.loader.text(`terrain_${type}_template`, templatePath);
+        // Load terrain templates based on mapping
+        Object.entries(this.themeMapping.terrains).forEach(([id, terrain]) => {
+            // The image path in mapping is relative to theme folder (e.g., "Tiles/Castle.svg")
+            const svgPath = `${this.themePath}${terrain.image}`;
+            const templateKey = `terrain_${id}_template`;
+            
+            // Load the SVG as text for template processing
+            this.loader.text(templateKey, svgPath);
+            
+            console.log(`[TemplateSVGAssetProvider] Loading terrain ${id}: ${terrain.name} from ${svgPath}`);
         });
     }
     
-    private loadUnitTemplates(): void {
-        // Load unit templates
-        AllowedUnitIDs.forEach(type => {
-            const templatePath = `/static/assets/v1/Units/${type}/template.svg`;
-            this.loader.text(`unit_${type}_template`, templatePath);
+    private loadMappedUnitTemplates(): void {
+        if (!this.themeMapping) {
+            console.error('[TemplateSVGAssetProvider] No theme mapping loaded');
+            return;
+        }
+        
+        // Load unit templates based on mapping
+        Object.entries(this.themeMapping.units).forEach(([id, unit]) => {
+            // Skip units with empty image paths
+            if (!unit.image || unit.image === 'Units/.svg') {
+                console.warn(`[TemplateSVGAssetProvider] Skipping unit ${id}: ${unit.name} (no image)`);
+                return;
+            }
+            
+            // The image path in mapping is relative to theme folder (e.g., "Units/Knight.svg")
+            const svgPath = `${this.themePath}${unit.image}`;
+            const templateKey = `unit_${id}_template`;
+            
+            // Load the SVG as text for template processing
+            this.loader.text(templateKey, svgPath);
+            
+            console.log(`[TemplateSVGAssetProvider] Loading unit ${id}: ${unit.name} from ${svgPath}`);
         });
     }
     
@@ -107,57 +174,96 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
     
     protected onLoadComplete(): void {
         // Don't mark as ready yet - we need to post-process
-        // The scene will call postProcessAssets() after load completes
+        // The ready flag will be set after postProcessAssets() completes
+        console.log('[TemplateSVGAssetProvider] Assets loaded, awaiting post-processing');
     }
     
     async postProcessAssets(): Promise<void> {
         console.log('[TemplateSVGAssetProvider] Starting post-processing of SVG templates');
         
-        const promises: Promise<void>[] = [];
-        
-        // Process terrain templates
-        for (const type of [...this.cityTerrains, ...this.natureTerrains]) {
-            const templateKey = `terrain_${type}_template`;
-            const svgTemplate = this.scene.cache.text.get(templateKey);
-            
-            if (svgTemplate) {
-                // For nature terrains, only create neutral variant
-                const maxColor = this.natureTerrains.includes(type) ? 0 : this.maxPlayers;
-                
-                for (let player = 0; player <= maxColor; player++) {
-                    const textureKey = `terrain_${type}_${player}`;
-                    promises.push(this.createColorVariant(svgTemplate, textureKey, player));
-                    
-                    // For nature terrains, create aliases for all players
-                    if (this.natureTerrains.includes(type) && player === 0) {
-                        for (let p = 1; p <= this.maxPlayers; p++) {
-                            this.processedAssets.add(`terrain_${type}_${p}`);
-                        }
-                    }
-                }
+        // If mapping wasn't set during loading, try to get it from cache
+        if (!this.themeMapping) {
+            const cachedMapping = this.scene.cache.json.get('themeMapping');
+            if (cachedMapping) {
+                this.themeMapping = cachedMapping as ThemeMapping;
+                console.log('[TemplateSVGAssetProvider] Retrieved mapping from Phaser cache');
             }
         }
         
-        // Process unit templates
-        for (const unitType of AllowedUnitIDs) {
-            const templateKey = `unit_${unitType}_template`;
+        console.log('[TemplateSVGAssetProvider] themeMapping status:', this.themeMapping ? 'loaded' : 'null');
+        
+        if (!this.themeMapping) {
+            console.error('[TemplateSVGAssetProvider] No theme mapping available for post-processing');
+            console.error('[TemplateSVGAssetProvider] This should not happen - preloadAssets should have loaded the mapping');
+            return;
+        }
+        
+        const promises: Promise<void>[] = [];
+        
+        // Process terrain templates based on mapping
+        Object.entries(this.themeMapping.terrains).forEach(([id, terrain]) => {
+            const templateKey = `terrain_${id}_template`;
+            const svgTemplate = this.scene.cache.text.get(templateKey);
+            
+            if (svgTemplate) {
+                const typeId = parseInt(id);
+                // For nature terrains, only create neutral variant
+                const maxColor = this.natureTerrains.includes(typeId) ? 0 : this.maxPlayers;
+                
+                console.log(`[TemplateSVGAssetProvider] Processing terrain ${id} (${terrain.name}), nature=${this.natureTerrains.includes(typeId)}, maxColor=${maxColor}`);
+                
+                for (let player = 0; player <= maxColor; player++) {
+                    const textureKey = `terrain_${id}_${player}`;
+                    promises.push(this.createColorVariant(svgTemplate, textureKey, player));
+                    
+                    // For nature terrains, create aliases for all players
+                    if (this.natureTerrains.includes(typeId) && player === 0) {
+                        for (let p = 1; p <= this.maxPlayers; p++) {
+                            this.processedAssets.add(`terrain_${id}_${p}`);
+                        }
+                    }
+                }
+            } else {
+                console.warn(`[TemplateSVGAssetProvider] No SVG template found for terrain ${id} (${terrain.name})`);
+            }
+        });
+        
+        // Process unit templates based on mapping
+        Object.entries(this.themeMapping.units).forEach(([id, unit]) => {
+            // Skip units with no image
+            if (!unit.image || unit.image === 'Units/.svg') {
+                return;
+            }
+            
+            const templateKey = `unit_${id}_template`;
             const svgTemplate = this.scene.cache.text.get(templateKey);
             
             if (svgTemplate) {
                 for (let player = 0; player <= this.maxPlayers; player++) {
-                    const textureKey = `unit_${unitType}_${player}`;
+                    const textureKey = `unit_${id}_${player}`;
                     promises.push(this.createColorVariant(svgTemplate, textureKey, player));
                 }
             }
-        }
+        });
         
         // Wait for all processing to complete
+        console.log(`[TemplateSVGAssetProvider] Waiting for ${promises.length} texture creation promises...`);
         await Promise.all(promises);
         
         // Create aliases for nature terrains
         this.createNatureTerrainAliases();
         
         console.log(`[TemplateSVGAssetProvider] Post-processing complete. Processed ${this.processedAssets.size} assets`);
+        
+        // List some created textures for debugging
+        const sampleTextures = ['terrain_23_0', 'terrain_26_0', 'terrain_1_0', 'terrain_5_0'];
+        sampleTextures.forEach(key => {
+            if (this.scene.textures.exists(key)) {
+                console.log(`[TemplateSVGAssetProvider] ✓ Texture exists: ${key}`);
+            } else {
+                console.log(`[TemplateSVGAssetProvider] ✗ Texture missing: ${key}`);
+            }
+        });
         
         // Now mark as ready
         this.ready = true;
@@ -173,13 +279,21 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
     ): Promise<void> {
         const colors = this.playerColors[player] || this.playerColors[0];
         
-        // Replace color placeholders in SVG
-        let processedSVG = svgTemplate
-            .replace(/\{\{PRIMARY_COLOR\}\}/g, colors.primary)
-            .replace(/\{\{SECONDARY_COLOR\}\}/g, colors.secondary)
-            .replace(/\{\{ACCENT_COLOR\}\}/g, colors.accent || colors.primary)
-            .replace(/\{\{PLAYER_ID\}\}/g, player.toString())
-            .replace(/\{\{PLAYER_NUMBER\}\}/g, (player + 1).toString());
+        // Check if the SVG has template variables
+        const hasTemplateVars = svgTemplate.includes('{{');
+        
+        let processedSVG = svgTemplate;
+        
+        if (hasTemplateVars) {
+            // Replace color placeholders in SVG
+            processedSVG = svgTemplate
+                .replace(/\{\{PRIMARY_COLOR\}\}/g, colors.primary)
+                .replace(/\{\{SECONDARY_COLOR\}\}/g, colors.secondary)
+                .replace(/\{\{ACCENT_COLOR\}\}/g, colors.accent || colors.primary)
+                .replace(/\{\{PLAYER_ID\}\}/g, player.toString())
+                .replace(/\{\{PLAYER_NUMBER\}\}/g, (player + 1).toString());
+        }
+        // For SVGs without templates, we'll apply tinting after rendering
         
         // Add gradient definitions if not present
         if (processedSVG.includes('{{PLAYER_GRADIENT}}')) {
@@ -202,12 +316,12 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
                 .replace(/\{\{PLAYER_RADIAL_GRADIENT\}\}/g, `url(#playerRadialGradient${player})`);
         }
         
-        // Convert processed SVG to texture
-        await this.svgToTexture(processedSVG, textureKey);
+        // Convert processed SVG to texture (with optional tinting for player colors)
+        await this.svgToTexture(processedSVG, textureKey, player, !hasTemplateVars);
         this.processedAssets.add(textureKey);
     }
     
-    private async svgToTexture(svgString: string, textureKey: string): Promise<void> {
+    private async svgToTexture(svgString: string, textureKey: string, player: number = 0, applyTint: boolean = false): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 // Create blob from SVG string
@@ -236,8 +350,34 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
                         // Draw the SVG to canvas at the target size
                         ctx.drawImage(img, 0, 0, this.rasterSize, this.rasterSize);
                         
+                        // Apply player color tinting if needed (for city terrains without template vars)
+                        if (applyTint && player > 0) {
+                            // Get the terrain ID from the texture key (e.g., "terrain_1_2" -> "1")
+                            const match = textureKey.match(/terrain_(\d+)_/);
+                            if (match) {
+                                const terrainId = parseInt(match[1]);
+                                // Only apply tint to city terrains
+                                if (this.cityTerrains.includes(terrainId)) {
+                                    const colors = this.playerColors[player];
+                                    // Apply color multiply effect
+                                    ctx.globalCompositeOperation = 'multiply';
+                                    ctx.fillStyle = colors.primary;
+                                    ctx.fillRect(0, 0, this.rasterSize, this.rasterSize);
+                                    ctx.globalCompositeOperation = 'destination-in';
+                                    ctx.drawImage(canvas, 0, 0);
+                                }
+                            }
+                        }
+                        
                         // Add to Phaser's texture manager
                         this.scene.textures.addCanvas(textureKey, canvas);
+                        
+                        // Verify the texture was actually created
+                        if (this.scene.textures.exists(textureKey)) {
+                            console.log(`[TemplateSVGAssetProvider] Successfully created texture: ${textureKey}`);
+                        } else {
+                            console.error(`[TemplateSVGAssetProvider] Failed to create texture: ${textureKey}`);
+                        }
                         
                         // Clean up
                         URL.revokeObjectURL(url);
@@ -267,9 +407,17 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         // For nature terrains, we'll handle the aliasing in the getTerrainTexture method
         // Since Phaser doesn't support addTexture, we can't create true aliases
         // Instead, getTerrainTexture will return the base texture for all players
+        console.log('[TemplateSVGAssetProvider] Nature terrain aliases will be handled via getTerrainTexture');
     }
     
     getTerrainTexture(tileType: number, player: number): string {
+        // Check if this terrain exists in the mapping
+        if (this.themeMapping && !this.themeMapping.terrains[tileType.toString()]) {
+            // Terrain not in theme, return a fallback or null
+            console.warn(`[TemplateSVGAssetProvider] Terrain ${tileType} not found in theme ${this.themeName}`);
+            return `terrain_${tileType}_${player}`; // Return expected key anyway for fallback
+        }
+        
         const textureKey = `terrain_${tileType}_${player}`;
         
         // For nature terrains, always use the neutral texture
@@ -278,6 +426,17 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         }
         
         return textureKey;
+    }
+    
+    getUnitTexture(unitType: number, player: number): string {
+        // Check if this unit exists in the mapping
+        if (this.themeMapping && !this.themeMapping.units[unitType.toString()]) {
+            // Unit not in theme, return a fallback or null
+            console.warn(`[TemplateSVGAssetProvider] Unit ${unitType} not found in theme ${this.themeName}`);
+            return `unit_${unitType}_${player}`; // Return expected key anyway for fallback
+        }
+        
+        return `unit_${unitType}_${player}`;
     }
     
     dispose(): void {
