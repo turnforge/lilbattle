@@ -77,14 +77,23 @@ func (v *WorldEditorPage) SetupDefaults() {
 	v.CityTerrains = []TerrainType{}
 	v.PlayerCount = 4 // Default player count for world editor
 
-	// No longer need hardcoded world - terrain type is now in TerrainData struct
+	// Determine whether to use theme-based assets or PNG assets
+	// Set useTheme = true to use theme assets, false for PNG assets
+	useTheme := true       // Set to true to use theme-based assets
+	themeName := "fantasy" // Which theme to use
+
+	// Get the theme manager
+	tm := GetThemeManager()
 
 	rulesEngine := weewar.DefaultRulesEngine()
-	for i := int32(0); i <= 26; i++ {
+	for i := int32(0); i <= 30; i++ {
 		terrainData, err := rulesEngine.GetTerrainData(i)
 		if err == nil && terrainData != nil {
-			// Use web-accessible static URL path for the tile asset
-			iconDataURL := fmt.Sprintf("/static/assets/v1/Tiles/%d/0.png", i)
+			// Get the appropriate icon URL from theme manager
+			iconDataURL := tm.GetTerrainIconURL(i, useTheme, themeName)
+			
+			// Get the themed name or use default
+			terrainName := tm.GetTerrainName(i, terrainData.Name, useTheme, themeName)
 
 			// Calculate base movement cost from terrain-unit properties (use average or default)
 			baseMoveCost := 1.0 // Default
@@ -93,7 +102,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 			terrain := TerrainType{
 				TerrainData: weewar.TerrainData{
 					ID:           terrainData.Id,
-					Name:         terrainData.Name,
+					Name:         terrainName,
 					BaseMoveCost: baseMoveCost,
 					DefenseBonus: 0.0, // Defense bonus is now calculated per unit-terrain combination
 				},
@@ -142,11 +151,15 @@ func (v *WorldEditorPage) SetupDefaults() {
 	for _, unitID := range AllowedUnitIDs {
 		unitData, err := rulesEngine.GetUnitData(unitID)
 		if unitData != nil && err == nil {
-			// Use web-accessible static URL path for the unit asset
-			iconDataURL := fmt.Sprintf("/static/assets/v1/Units/%d/0.png", unitID)
+			// Get the appropriate icon URL from theme manager
+			iconDataURL := tm.GetUnitIconURL(unitID, useTheme, themeName)
+			
+			// Create a copy of unitData with themed name
+			themedUnitData := *unitData
+			themedUnitData.Name = tm.GetUnitName(unitID, unitData.Name, useTheme, themeName)
 
 			v.UnitTypes = append(v.UnitTypes, UnitType{
-				UnitDefinition: unitData,
+				UnitDefinition: &themedUnitData,
 				IconDataURL:    iconDataURL,
 			})
 		}
