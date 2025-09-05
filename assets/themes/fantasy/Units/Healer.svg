@@ -1,4 +1,11 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- Healer - Medic equivalent -->
   
   <!-- Head -->
@@ -11,14 +18,14 @@
   <path d="M48 27 Q50 28 52 27" stroke="#8d4a47" stroke-width="1" fill="none"/>
   
   <!-- Robes -->
-  <path d="M43 32 Q50 30 57 32 Q60 50 57 68 Q50 70 43 68 Q40 50 43 32" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
+  <path d="M43 32 Q50 30 57 32 Q60 50 57 68 Q50 70 43 68 Q40 50 43 32" fill="url(#playerColor)" stroke="#e0e0e0" stroke-width="1"/>
   <!-- Robe trim -->
   <path d="M43 35 Q50 33 57 35" stroke="#ffc107" stroke-width="2" fill="none"/>
   <path d="M43 65 Q50 67 57 65" stroke="#ffc107" stroke-width="2" fill="none"/>
   
   <!-- Arms -->
-  <ellipse cx="38" cy="40" rx="4" ry="8" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
-  <ellipse cx="62" cy="40" rx="4" ry="8" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
+  <ellipse cx="38" cy="40" rx="4" ry="8" fill="url(#playerColor)" stroke="#e0e0e0" stroke-width="1"/>
+  <ellipse cx="62" cy="40" rx="4" ry="8" fill="url(#playerColor)" stroke="#e0e0e0" stroke-width="1"/>
   <!-- Hands -->
   <circle cx="36" cy="48" r="3" fill="#ffdbcb"/>
   <circle cx="64" cy="48" r="3" fill="#ffdbcb"/>

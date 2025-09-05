@@ -6,7 +6,7 @@
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#swampGrad)" stroke="#1b5e20" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#swampGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Water patches -->
   <ellipse cx="30" cy="55" rx="8" ry="4" fill="#006064" opacity="0.7"/>
   <ellipse cx="60" cy="45" rx="10" ry="5" fill="#006064" opacity="0.7"/>

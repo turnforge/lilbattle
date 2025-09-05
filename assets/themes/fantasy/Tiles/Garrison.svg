@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="grassGrad" cx="50%" cy="30%">
       <stop offset="0%" stop-color="#7dd857"/>
       <stop offset="100%" stop-color="#4a9c2d"/>
@@ -8,9 +13,9 @@
   
   <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Barracks building -->
-  <rect x="25" y="35" width="50" height="25" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+  <rect x="25" y="35" width="50" height="25" fill="url(#playerColor)" stroke="#5d4037" stroke-width="1"/>
   <!-- Roof -->
-  <polygon points="25,35 50,25 75,35" fill="#5d4037"/>
+  <polygon points="25,35 50,25 75,35" fill="url(#playerColor)"/>
   <!-- Entrance -->
   <rect x="45" y="55" width="10" height="5" fill="#3e2723"/>
   <!-- Windows -->

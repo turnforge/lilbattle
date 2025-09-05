@@ -13,6 +13,8 @@ import { AssetProvider } from './AssetProvider';
 import { PNGAssetProvider } from './PNGAssetProvider';
 import { TemplateSVGAssetProvider } from './TemplateSVGAssetProvider';
 
+const UNIT_TILE_RATIO = 0.8
+
 export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Container element and lifecycle management
     private containerElement: HTMLElement;
@@ -380,6 +382,34 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         return this.isInitialized;
     }
 
+    /**
+     * Clear all cached assets (useful for debugging/reloading themes)
+     */
+    public clearCache(): void {
+        if (!this.textures || !this.cache) {
+            console.warn('[PhaserWorldScene] Scene not initialized');
+            return;
+        }
+        
+        console.log('[PhaserWorldScene] Clearing all caches...');
+        
+        // Clear texture cache (except system textures)
+        const textureKeys = this.textures.getTextureKeys();
+        textureKeys.forEach(key => {
+            // Don't remove system textures
+            if (key !== '__DEFAULT' && key !== '__MISSING' && key !== '__WHITE') {
+                this.textures.remove(key);
+            }
+        });
+        
+        // Clear other caches
+        this.cache.json.destroy();
+        this.cache.text.destroy();
+        this.cache.binary.destroy();
+        
+        console.log('[PhaserWorldScene] Cache cleared');
+    }
+    
     /**
      * Destroy Phaser game instance and clean up
      */
@@ -840,7 +870,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             unitSprite.setOrigin(0.5, 0.5);
             unitSprite.setDepth(10); // Units render above tiles
             // Scale sprite to match hex tile size
-            unitSprite.setDisplaySize(this.tileWidth, this.tileHeight);
+            unitSprite.setDisplaySize(this.tileWidth * UNIT_TILE_RATIO, this.tileHeight * UNIT_TILE_RATIO);
             this.unitSprites.set(key, unitSprite);
         } else {
             // Try fallback without player color
@@ -849,7 +879,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 const unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
                 unitSprite.setOrigin(0.5, 0.5);
                 unitSprite.setDepth(10);
-                unitSprite.setDisplaySize(this.tileWidth, this.tileHeight);
+                unitSprite.setDisplaySize(this.tileWidth * UNIT_TILE_RATIO, this.tileHeight * UNIT_TILE_RATIO);
                 this.unitSprites.set(key, unitSprite);
             } else {
                 console.error(`[PhaserWorldScene] Unit texture not found: ${textureKey} or ${fallbackKey}`);

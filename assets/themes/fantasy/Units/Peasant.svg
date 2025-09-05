@@ -1,4 +1,11 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
+  </defs>
   <!-- Peasant Militia - Level 1 Soldier -->
   
   <!-- Head -->
@@ -14,16 +21,16 @@
   <path d="M48 28 Q50 29 52 28" stroke="#8d4a47" stroke-width="1" fill="none"/>
   
   <!-- Body -->
-  <rect x="45" y="33" width="10" height="20" fill="#8d6e63" rx="2"/>
+  <rect x="45" y="33" width="10" height="20" fill="url(#playerColor)" rx="2"/>
   <!-- Tunic details -->
   <rect x="46" y="35" width="8" height="3" fill="#5d4037"/>
   <circle cx="50" cy="40" r="1" fill="#795548"/>
   
   <!-- Arms -->
   <circle cx="42" cy="38" r="3" fill="#ffdbcb"/>
-  <rect x="39" y="35" width="6" height="8" fill="#8d6e63"/>
+  <rect x="39" y="35" width="6" height="8" fill="url(#playerColor)"/>
   <circle cx="58" cy="38" r="3" fill="#ffdbcb"/>
-  <rect x="55" y="35" width="6" height="8" fill="#8d6e63"/>
+  <rect x="55" y="35" width="6" height="8" fill="url(#playerColor)"/>
   
   <!-- Legs -->
   <rect x="47" y="53" width="3" height="15" fill="#795548"/>
@@ -37,7 +44,7 @@
   <polygon points="35,15 37,18 33,18" fill="#616161"/>
   
   <!-- Shield -->
-  <path d="M60 30 Q65 25 70 30 Q70 40 65 45 Q60 40 60 30" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+  <path d="M60 30 Q65 25 70 30 Q70 40 65 45 Q60 40 60 30" fill="url(#playerColor)" stroke="#5d4037" stroke-width="1"/>
   <circle cx="65" cy="35" r="2" fill="#424242"/>
   
   <!-- Simple helmet -->

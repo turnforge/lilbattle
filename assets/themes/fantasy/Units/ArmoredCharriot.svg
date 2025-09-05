@@ -17,6 +17,11 @@
       <stop offset="0%" stop-color="#d7ccc8"/>
       <stop offset="100%" stop-color="#bcaaa4"/>
     </radialGradient>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
   </defs>
   
   <!-- Armored Chariot - Stryker equivalent -->
@@ -24,7 +29,7 @@
   <!-- Main chariot body with armor plating -->
   <rect x="25" y="35" width="50" height="20" fill="url(#woodGrad)" stroke="#212121" stroke-width="2" rx="3"/>
   <!-- Metal armor reinforcement -->
-  <rect x="27" y="37" width="46" height="16" fill="url(#metalGrad)" stroke="#000" stroke-width="1"/>
+  <rect x="27" y="37" width="46" height="16" fill="url(#playerColor)" stroke="#000" stroke-width="1"/>
   <!-- Armor plate rivets -->
   <circle cx="32" cy="40" r="1" fill="#424242"/>
   <circle cx="38" cy="40" r="1" fill="#424242"/>
@@ -42,7 +47,7 @@
   <circle cx="68" cy="47" r="1" fill="#424242"/>
   
   <!-- Armored front with ram -->
-  <polygon points="75,35 85,42.5 75,50" fill="url(#metalGrad)" stroke="#000" stroke-width="2"/>
+  <polygon points="75,35 85,42.5 75,50" fill="url(#playerColor)" stroke="#000" stroke-width="2"/>
   <!-- Ram spikes -->
   <polygon points="85,40 88,42.5 85,45" fill="#424242"/>
   <polygon points="85,37 88,39.5 85,42" fill="#424242"/>

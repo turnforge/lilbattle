@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#8b7355"/>
       <stop offset="70%" stop-color="#654832"/>
@@ -17,7 +22,7 @@
   <line x1="47" y1="60" x2="47" y2="64" stroke="#795548" stroke-width="1"/>
   <line x1="57" y1="60" x2="57" y2="64" stroke="#795548" stroke-width="1"/>
   <!-- Mine cart -->
-  <rect x="40" y="58" width="8" height="4" fill="#3e2723"/>
+  <rect x="40" y="58" width="8" height="4" fill="url(#playerColor)"/>
   <!-- Ore pile -->
   <circle cx="25" cy="60" r="4" fill="#ffc107"/>
   <circle cx="75" cy="55" r="3" fill="#ff5722"/>

@@ -35,6 +35,7 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
     private themePath: string;
     private rasterSize: number;
     private fallbackToPNG: boolean;
+    private debugMode: boolean;
     private processedAssets: Set<string> = new Set();
     private themeMapping: ThemeMapping | null = null;
     
@@ -55,12 +56,13 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         { primary: '#8888ff', secondary: '#6666cc', accent: '#ccccff' }, // Player 12 - Light Blue
     ];
     
-    constructor(themeName: string = 'fantasy', rasterSize: number = 160, fallbackToPNG: boolean = true) {
+    constructor(themeName: string = 'fantasy', rasterSize: number = 160, fallbackToPNG: boolean = true, debugMode: boolean = true) {
         super();
         this.themeName = themeName;
         this.themePath = `/static/assets/themes/${themeName}/`;
         this.rasterSize = rasterSize;
         this.fallbackToPNG = fallbackToPNG;
+        this.debugMode = debugMode;
         this.assetSize = { width: rasterSize, height: rasterSize };
     }
     
@@ -73,7 +75,9 @@ export class TemplateSVGAssetProvider extends BaseAssetProvider {
         console.log(`[TemplateSVGAssetProvider] Loading theme: ${this.themeName}`);
         
         // Load the mapping.json file using Phaser's loader
-        const mappingPath = `${this.themePath}mapping.json`;
+        // Add timestamp to force reload during development
+        const timestamp = this.debugMode ? `?t=${Date.now()}` : '';
+        const mappingPath = `${this.themePath}mapping.json${timestamp}`;
         console.log(`[TemplateSVGAssetProvider] Queuing mapping.json for loading: ${mappingPath}`);
         
         // Use Phaser's JSON loader to load the mapping

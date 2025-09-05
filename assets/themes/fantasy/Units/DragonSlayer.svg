@@ -24,6 +24,11 @@
       <stop offset="0%" stop-color="#ffeb3b"/>
       <stop offset="100%" stop-color="#ff9800"/>
     </radialGradient>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
   </defs>
   
   <!-- Dragon Slayer - Anti Aircraft Level 3 -->
@@ -45,11 +50,11 @@
   <polygon points="55,62 58,59 55,56 52,59" fill="url(#runeGrad)" opacity="0.8"/>
   
   <!-- Tall mystical tower -->
-  <rect x="35" y="15" width="30" height="35" fill="url(#stoneGrad)" stroke="#3e2723" stroke-width="2"/>
+  <rect x="35" y="15" width="30" height="35" fill="url(#playerColor)" stroke="#3e2723" stroke-width="2"/>
   <!-- Tower magical reinforcements -->
-  <rect x="33" y="20" width="34" height="4" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="1"/>
-  <rect x="33" y="30" width="34" height="4" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="1"/>
-  <rect x="33" y="40" width="34" height="4" fill="url(#metalGrad)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="33" y="20" width="34" height="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="33" y="30" width="34" height="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
+  <rect x="33" y="40" width="34" height="4" fill="url(#playerColor)" stroke="#b71c1c" stroke-width="1"/>
   
   <!-- Crystal power core -->
   <polygon points="50,10 45,15 50,20 55,15" fill="url(#crystalGrad)" stroke="#4a148c" stroke-width="2"/>

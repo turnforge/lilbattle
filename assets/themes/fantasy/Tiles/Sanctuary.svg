@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="grassGrad" cx="50%" cy="30%">
       <stop offset="0%" stop-color="#7dd857"/>
       <stop offset="100%" stop-color="#4a9c2d"/>
@@ -8,9 +13,9 @@
   
   <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Temple building -->
-  <rect x="30" y="35" width="40" height="30" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="1"/>
+  <rect x="30" y="35" width="40" height="30" fill="url(#playerColor)" stroke="#e0e0e0" stroke-width="1"/>
   <!-- Temple roof -->
-  <polygon points="28,35 50,25 72,35" fill="#8d6e63"/>
+  <polygon points="28,35 50,25 72,35" fill="url(#playerColor)"/>
   <!-- Holy symbol (ankh/cross variant) -->
   <circle cx="50" cy="45" r="4" fill="none" stroke="#ffc107" stroke-width="2"/>
   <line x1="50" y1="49" x2="50" y2="58" stroke="#ffc107" stroke-width="2"/>

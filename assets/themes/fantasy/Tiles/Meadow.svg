@@ -6,7 +6,7 @@
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Grass tufts -->
   <path d="M25 60 Q30 50 35 60" stroke="#4caf50" stroke-width="2" fill="none"/>
   <path d="M40 65 Q45 55 50 65" stroke="#4caf50" stroke-width="2" fill="none"/>

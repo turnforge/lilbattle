@@ -1,16 +1,21 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="grassGrad" cx="50%" cy="30%">
       <stop offset="0%" stop-color="#7dd857"/>
       <stop offset="100%" stop-color="#4a9c2d"/>
     </radialGradient>
   </defs>
   
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#grassGrad)" stroke="#2e7d32" stroke-width="2"/>
   <!-- Large perch/roost structure -->
-  <rect x="40" y="40" width="20" height="25" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+  <rect x="40" y="40" width="20" height="25" fill="url(#playerColor)" stroke="#5d4037" stroke-width="1"/>
   <!-- Peaked roof -->
-  <polygon points="40,40 50,25 60,40" fill="#5d4037"/>
+  <polygon points="40,40 50,25 60,40" fill="url(#playerColor)"/>
   <!-- Tall perch posts -->
   <line x1="25" y1="65" x2="25" y2="35" stroke="#5d4037" stroke-width="3"/>
   <line x1="75" y1="65" x2="75" y2="35" stroke="#5d4037" stroke-width="3"/>

@@ -1,5 +1,10 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Player color definition - this will be replaced dynamically -->
+    <linearGradient id="playerColor">
+      <stop offset="0%" stop-color="#888888"/>
+      <stop offset="100%" stop-color="#666666"/>
+    </linearGradient>
     <radialGradient id="forestGrad" cx="50%" cy="30%">
       <stop offset="0%" stop-color="#388e3c"/>
       <stop offset="100%" stop-color="#1b5e20"/>
@@ -8,7 +13,7 @@
   
   <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#forestGrad)" stroke="#1b5e20" stroke-width="2"/>
   <!-- Mill building -->
-  <rect x="35" y="40" width="30" height="20" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+  <rect x="35" y="40" width="30" height="20" fill="url(#playerColor)" stroke="#5d4037" stroke-width="1"/>
   <!-- Water wheel -->
   <circle cx="30" cy="50" r="8" fill="#5d4037" stroke="#3e2723" stroke-width="1"/>
   <rect x="27" y="42" width="6" height="2" fill="#3e2723"/>
@@ -16,7 +21,7 @@
   <rect x="22" y="47" width="2" height="6" fill="#3e2723"/>
   <rect x="34" y="47" width="2" height="6" fill="#3e2723"/>
   <!-- Roof -->
-  <polygon points="35,40 50,30 65,40" fill="#5d4037"/>
+  <polygon points="35,40 50,30 65,40" fill="url(#playerColor)"/>
   <!-- Chimney -->
   <rect x="55" y="28" width="3" height="8" fill="#424242"/>
   <!-- Smoke -->
