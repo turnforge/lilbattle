@@ -126,7 +126,7 @@ export class SelectionHighlightLayer extends HexHighlightLayer {
             name: 'selection-highlight',
             coordinateSpace: 'hex',
             interactive: false, // Selection highlights don't consume clicks
-            depth: 10, // High priority visual
+            depth: 12, // Above units (depth 10) and below labels (depth 15)
             tileWidth
         });
     }
@@ -183,7 +183,7 @@ export class MovementHighlightLayer extends HexHighlightLayer {
             name: 'movement-highlight',
             coordinateSpace: 'hex',
             interactive: true, // Movement highlights consume clicks
-            depth: 5, // Below selection, above base map
+            depth: 11, // Above units (depth 10), below selection (depth 12)
             tileWidth
         });
     }
@@ -315,7 +315,7 @@ export class AttackHighlightLayer extends HexHighlightLayer {
             name: 'attack-highlight',
             coordinateSpace: 'hex',
             interactive: true, // Attack highlights consume clicks
-            depth: 6, // Same level as movement, both are action highlights
+            depth: 11, // Above units (depth 10), same as movement highlights
             tileWidth
         });
     }
