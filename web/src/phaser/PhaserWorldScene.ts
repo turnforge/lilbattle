@@ -11,7 +11,7 @@ import { AllowedUnitIDs } from "../ColorsAndNames";
 import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../World';
 import { AssetProvider } from '../../assets/providers/AssetProvider';
 
-const UNIT_TILE_RATIO = 0.8
+const UNIT_TILE_RATIO = 0.9
 
 export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Container element and lifecycle management
@@ -119,6 +119,13 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         if (this.debugMode) {
             console.log('[PhaserWorldScene] Asset provider changed. Scene reload required.');
         }
+    }
+
+    /**
+     * Get the current asset provider
+     */
+    public getAssetProvider(): AssetProvider {
+        return this.assetProvider;
     }
 
     // =========================================================

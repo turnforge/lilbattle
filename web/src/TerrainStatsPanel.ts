@@ -3,6 +3,7 @@ import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
 import { CityTerrainIds, AllowedUnitIDs } from './ColorsAndNames';
 import { TerrainStats , RulesTable } from './RulesTable';
+import { ITheme } from '../assets/themes/BaseTheme';
 
 
 /**
@@ -24,6 +25,7 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
     private isActivated = false;
     private currentTerrain: TerrainStats | null = null;
     public rulesTable: RulesTable
+    private theme: ITheme | null = null;
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('terrain-stats-panel', rootElement, eventBus, debugMode);
@@ -68,6 +70,13 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         this.currentTerrain = null;
         this.isActivated = false;
         this.log('TerrainStatsPanel deactivated');
+    }
+
+    /**
+     * Set the theme for getting terrain and unit names
+     */
+    public setTheme(theme: ITheme): void {
+        this.theme = theme;
     }
 
     /**
@@ -140,8 +149,8 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
 
         if (nameElement) {
-            // Use rules engine name if available, fallback to terrainStats name
-            const displayName = terrainStats.name;
+            // Use theme-specific name if available, otherwise fallback to rules engine name
+            const displayName = this.theme?.getTerrainName(terrainStats.id) || terrainStats.name;
             nameElement.textContent = displayName;
         }
 
@@ -299,7 +308,9 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
                     const captureCell = row.querySelector('[data-capture]');
                     const buildCell = row.querySelector('[data-build]');
                     
-                    if (unitNameCell) unitNameCell.textContent = unitDef.name;
+                    // Use theme-specific unit name if available
+                    const unitName = this.theme?.getUnitName(unitId) || unitDef.name;
+                    if (unitNameCell) unitNameCell.textContent = unitName;
                     if (movementCostCell) movementCostCell.textContent = movementCost.toFixed(2);
                     if (attackCell) attackCell.textContent = properties?.attackBonus && properties.attackBonus !== 0 ? `${properties.attackBonus > 0 ? '+' : ''}${properties.attackBonus}` : '-';
                     if (defenseCell) defenseCell.textContent = properties?.defenseBonus && properties.defenseBonus !== 0 ? `${properties.defenseBonus > 0 ? '+' : ''}${properties.defenseBonus}` : '-';

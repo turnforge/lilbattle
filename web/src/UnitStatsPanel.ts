@@ -2,6 +2,7 @@ import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
 import { RulesTable } from './RulesTable';
+import { ITheme } from '../assets/themes/BaseTheme';
 
 interface UnitData {
     id?: number;
@@ -32,6 +33,7 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
     private isActivated = false;
     private currentUnit: UnitData | null = null;
     public rulesTable: RulesTable;
+    private theme: ITheme | null = null;
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('unit-stats-panel', rootElement, eventBus, debugMode);
@@ -76,6 +78,13 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         this.currentUnit = null;
         this.isActivated = false;
         this.log('UnitStatsPanel deactivated');
+    }
+
+    /**
+     * Set the theme for getting unit names
+     */
+    public setTheme(theme: ITheme): void {
+        this.theme = theme;
     }
 
     /**
@@ -148,8 +157,9 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         }
 
         if (nameElement) {
+            // Use theme-specific name if available, otherwise fallback to rules engine name
             const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
-            const unitName = unitDef?.name || `Unit ${unit.unitType}`;
+            const unitName = this.theme?.getUnitName(unit.unitType) || unitDef?.name || `Unit ${unit.unitType}`;
             nameElement.textContent = unitName;
         }
 
@@ -322,7 +332,9 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
                     const captureCell = row.querySelector('[data-capture]');
                     const buildCell = row.querySelector('[data-build]');
                     
-                    if (terrainNameCell) terrainNameCell.textContent = terrainDef.name;
+                    // Use theme-specific terrain name if available
+                    const terrainName = this.theme?.getTerrainName(terrainId) || terrainDef.name;
+                    if (terrainNameCell) terrainNameCell.textContent = terrainName;
                     if (movementCostCell) {
                         if (movementCost >= 999) {
                             movementCostCell.textContent = 'Impassable';
@@ -488,7 +500,9 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
                         const targetNameCell = row.querySelector('[data-target-name]');
                         const damageHistogramCell = row.querySelector('[data-damage-histogram]');
                         
-                        if (targetNameCell) targetNameCell.textContent = targetUnitDef.name;
+                        // Use theme-specific unit name if available
+                        const targetUnitName = this.theme?.getUnitName(targetUnitId) || targetUnitDef.name;
+                        if (targetNameCell) targetNameCell.textContent = targetUnitName;
                         
                         // Create histogram visualization
                         if (damageHistogramCell) {

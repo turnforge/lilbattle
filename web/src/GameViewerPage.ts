@@ -140,6 +140,18 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
      * Phase 2: Inject dependencies
      */
     setupDependencies(): void {
+        // Pass the theme to the stats panels
+        const assetProvider = this.gameScene.getAssetProvider();
+        if (assetProvider) {
+            const theme = assetProvider.getTheme();
+            if (this.terrainStatsPanel) {
+                this.terrainStatsPanel.setTheme(theme);
+            }
+            if (this.unitStatsPanel) {
+                this.unitStatsPanel.setTheme(theme);
+            }
+        }
+
         // Set up scene click callback now that gameScene is initialized
         this.gameScene.sceneClickedCallback = (context: any, layer: string, extra?: any): void => {
             if (!this.gameState?.isReady()) {
