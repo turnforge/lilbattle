@@ -4,6 +4,16 @@
 import { ProposalTrackingInfo } from "../../turnengine/v1/interfaces";
 
 
+/**
+ * /////// Game related models
+ */
+export enum GameStatus {
+  GAME_STATUS_UNSPECIFIED = 0,
+  GAME_STATUS_PLAYING = 1,
+  GAME_STATUS_PAUSED = 2,
+  GAME_STATUS_ENDED = 3,
+}
+
 
 
 export interface User {
@@ -239,6 +249,8 @@ export interface Game {
 export interface GameConfiguration {
   /** Player configuration */
   players?: GamePlayer[];
+  /** Team configuration */
+  teams?: GameTeam[];
   /** Game settings */
   settings?: GameSettings;
 }
@@ -254,6 +266,23 @@ export interface GamePlayer {
   color: string;
   /** Team ID (0 = no team, 1+ = team number) */
   teamId: number;
+  /** Nickname for the player in this game */
+  name: string;
+  /** Whether play is still in the game - can this just be inferred? */
+  isActive: boolean;
+}
+
+
+
+export interface GameTeam {
+  /** ID of the team within the game (unique to the game) */
+  teamId: number;
+  /** Name of the team - in a game */
+  name: string;
+  /** Just a color for this team */
+  color: string;
+  /** Whether team has active players - can also be inferred */
+  isActive: boolean;
 }
 
 
@@ -287,6 +316,11 @@ export interface GameState {
   stateHash: string;
   /** Version number for optimistic locking */
   version: number;
+  status: GameStatus;
+  /** Only set after a win has been possible */
+  finished: boolean;
+  winningPlayer: number;
+  winningTeam: number;
 }
 
 

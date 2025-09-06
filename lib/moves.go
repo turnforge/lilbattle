@@ -5,6 +5,7 @@ import (
 	"time"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type MoveProcessor interface {
@@ -108,16 +109,16 @@ func (m *DefaultMoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action
 
 	// Check for victory conditions
 	if winner, hasWinner := g.checkVictoryConditions(); hasWinner {
-		g.winner = winner
-		g.hasWinner = true
-		g.Status = GameStatusEnded
+		g.GameState.WinningPlayer = winner
+		g.GameState.Finished = true
+		g.GameState.Status = v1.GameStatus_GAME_STATUS_ENDED
 
 		// Update GameLog status when game ends
 		// TODO - g.SetGameLogStatus("completed")
 	}
 
 	// Update timestamp
-	g.LastActionAt = time.Now()
+	g.GameState.UpdatedAt = tspb.New(time.Now())
 	change := &v1.WorldChange{
 		ChangeType: &v1.WorldChange_PlayerChanged{
 			PlayerChanged: &v1.PlayerChangedChange{
@@ -234,7 +235,7 @@ func (m *DefaultMoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, actio
 	}
 
 	// Update timestamp
-	g.LastActionAt = time.Now()
+	g.GameState.UpdatedAt = tspb.New(time.Now())
 
 	// Record action in GameLog
 	change := &v1.WorldChange{
@@ -435,7 +436,7 @@ func (m *DefaultMoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, act
 	}
 
 	// Update timestamp
-	g.LastActionAt = time.Now()
+	g.GameState.UpdatedAt = tspb.New(time.Now())
 
 	return result, nil
 }
@@ -481,6 +482,7 @@ func (g *Game) CanAttackUnit(attacker, defender *v1.Unit) bool {
 }
 
 // AttackUnitAt executes combat between units at the given coordinates
+/* TODO -
 func (g *Game) AttackUnitAt(attackerPos, targetPos AxialCoord) (*CombatResult, error) {
 	// Find attacker unit using World
 	attacker := g.World.UnitAt(attackerPos)
@@ -497,6 +499,7 @@ func (g *Game) AttackUnitAt(attackerPos, targetPos AxialCoord) (*CombatResult, e
 	// Use existing AttackUnit method
 	return nil, nil // g.AttackUnit(attacker, target)
 }
+*/
 
 // CanAttack validates potential attack using position coordinates
 func (g *Game) CanAttack(from, to AxialCoord) (bool, error) {

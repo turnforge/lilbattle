@@ -634,9 +634,16 @@ export const GameConfigurationSchema: MessageSchema = {
       repeated: true,
     },
     {
-      name: "settings",
+      name: "teams",
       type: FieldType.MESSAGE,
       id: 2,
+      messageType: "weewar.v1.GameTeam",
+      repeated: true,
+    },
+    {
+      name: "settings",
+      type: FieldType.MESSAGE,
+      id: 3,
       messageType: "weewar.v1.GameSettings",
     },
   ],
@@ -667,6 +674,46 @@ export const GamePlayerSchema: MessageSchema = {
     {
       name: "teamId",
       type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
+      name: "name",
+      type: FieldType.STRING,
+      id: 5,
+    },
+    {
+      name: "isActive",
+      type: FieldType.BOOLEAN,
+      id: 6,
+    },
+  ],
+};
+
+
+/**
+ * Schema for GameTeam message
+ */
+export const GameTeamSchema: MessageSchema = {
+  name: "GameTeam",
+  fields: [
+    {
+      name: "teamId",
+      type: FieldType.NUMBER,
+      id: 1,
+    },
+    {
+      name: "name",
+      type: FieldType.STRING,
+      id: 2,
+    },
+    {
+      name: "color",
+      type: FieldType.STRING,
+      id: 3,
+    },
+    {
+      name: "isActive",
+      type: FieldType.BOOLEAN,
       id: 4,
     },
   ],
@@ -752,6 +799,26 @@ export const GameStateSchema: MessageSchema = {
       name: "version",
       type: FieldType.NUMBER,
       id: 9,
+    },
+    {
+      name: "status",
+      type: FieldType.STRING,
+      id: 10,
+    },
+    {
+      name: "finished",
+      type: FieldType.BOOLEAN,
+      id: 11,
+    },
+    {
+      name: "winningPlayer",
+      type: FieldType.NUMBER,
+      id: 12,
+    },
+    {
+      name: "winningTeam",
+      type: FieldType.NUMBER,
+      id: 13,
     },
   ],
 };
@@ -2440,6 +2507,7 @@ export const WeewarV1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.Game": GameSchema,
   "weewar.v1.GameConfiguration": GameConfigurationSchema,
   "weewar.v1.GamePlayer": GamePlayerSchema,
+  "weewar.v1.GameTeam": GameTeamSchema,
   "weewar.v1.GameSettings": GameSettingsSchema,
   "weewar.v1.GameState": GameStateSchema,
   "weewar.v1.GameMoveHistory": GameMoveHistorySchema,

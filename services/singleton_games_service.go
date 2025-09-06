@@ -34,7 +34,7 @@ func NewSingletonGamesServiceImpl() *SingletonGamesServiceImpl {
 
 func (w *SingletonGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
 	if w.RuntimeGame == nil {
-		w.RuntimeGame, err = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
+		w.RuntimeGame = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
 	}
 	return w.RuntimeGame, err
 }

@@ -1322,6 +1322,14 @@
           },
           "title": "Player configuration"
         },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1GameTeam"
+          },
+          "title": "Team configuration"
+        },
         "settings": {
           "$ref": "#/definitions/v1GameSettings",
           "title": "Game settings"
@@ -1471,6 +1479,14 @@
           "type": "integer",
           "format": "int32",
           "title": "Team ID (0 = no team, 1+ = team number)"
+        },
+        "name": {
+          "type": "string",
+          "title": "Nickname for the player in this game"
+        },
+        "isActive": {
+          "type": "boolean",
+          "title": "Whether play is still in the game - can this just be inferred?"
         }
       }
     },
@@ -1537,9 +1553,57 @@
           "type": "string",
           "format": "int64",
           "title": "Version number for optimistic locking"
+        },
+        "status": {
+          "$ref": "#/definitions/v1GameStatus"
+        },
+        "finished": {
+          "type": "boolean",
+          "title": "Only set after a win has been possible"
+        },
+        "winningPlayer": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "winningTeam": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "Holds the game's Active/Current state (eg world state)"
+    },
+    "v1GameStatus": {
+      "type": "string",
+      "enum": [
+        "GAME_STATUS_UNSPECIFIED",
+        "GAME_STATUS_PLAYING",
+        "GAME_STATUS_PAUSED",
+        "GAME_STATUS_ENDED"
+      ],
+      "default": "GAME_STATUS_UNSPECIFIED",
+      "title": "/////// Game related models"
+    },
+    "v1GameTeam": {
+      "type": "object",
+      "properties": {
+        "teamId": {
+          "type": "integer",
+          "format": "int32",
+          "title": "ID of the team within the game (unique to the game)"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of the team - in a game"
+        },
+        "color": {
+          "type": "string",
+          "title": "Just a color for this team"
+        },
+        "isActive": {
+          "type": "boolean",
+          "title": "Whether team has active players - can also be inferred"
+        }
+      }
     },
     "v1GetGameResponse": {
       "type": "object",

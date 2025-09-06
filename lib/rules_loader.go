@@ -96,7 +96,7 @@ func LoadRulesEngineFromJSON(jsonData []byte) (*RulesEngine, error) {
 			if err != nil {
 				continue
 			}
-			
+
 			props := &v1.TerrainUnitProperties{}
 			unmarshaler := protojson.UnmarshalOptions{
 				DiscardUnknown: true,
@@ -114,7 +114,7 @@ func LoadRulesEngineFromJSON(jsonData []byte) (*RulesEngine, error) {
 			if err != nil {
 				continue
 			}
-			
+
 			props := &v1.UnitUnitProperties{}
 			unmarshaler := protojson.UnmarshalOptions{
 				DiscardUnknown: true,
@@ -155,21 +155,4 @@ func SaveRulesEngineToFile(rulesEngine *RulesEngine, filename string) error {
 	}
 
 	return nil
-}
-
-// CreateGameWithRules creates a new game instance with a loaded RulesEngine
-func CreateGameWithRules(world *World, rulesFile string, seed int64) (*Game, error) {
-	// Load rules engine
-	rulesEngine, err := LoadRulesEngineFromFile(rulesFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load rules: %w", err)
-	}
-
-	// Create game with rules engine
-	game, err := NewGame(world, rulesEngine, seed)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create game: %w", err)
-	}
-
-	return game, nil
 }

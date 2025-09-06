@@ -7,43 +7,21 @@ import (
 	"time"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // =============================================================================
 // Core Types (from core.go)
 // =============================================================================
 
-// PlayerInfo contains game-specific information about a player
-type PlayerInfo struct {
-	Player   int32  `json:"playerID"` // 1-based player index
-	Name     string `json:"name"`     // Player display name
-	TeamID   int    `json:"teamID"`   // Which team this player belongs to
-	IsActive bool   `json:"isActive"` // Whether player is still in the game
-	Color    string `json:"color"`    // Player's display color
-}
-
-// TeamInfo contains information about a team
-type TeamInfo struct {
-	TeamID      int    `json:"teamID"`      // 0-based team index
-	Name        string `json:"name"`        // Team display name
-	Color       string `json:"color"`       // Team color
-	IsActive    bool   `json:"isActive"`    // Whether team has active players
-	PlayerCount int    `json:"playerCount"` // Number of players in this team
-}
-
 // Game represents the unified game state and implements GameInterface
 type Game struct {
-	// Pure game state
+	*v1.Game
+	*v1.GameState
+	*v1.GameMoveHistory
+
+	// Pure game state - this is a "view" over the GameState so we can do a lot more native ops on this
 	World *World `json:"world"` // Contains the pure state (map, units, entities)
-
-	// Game flow control
-	CurrentPlayer int32      `json:"currentPlayer"` // 0-based player index
-	TurnCounter   int32      `json:"turnCounter"`   // 1-based turn number
-	Status        GameStatus `json:"status"`        // Game status
-
-	// Player and team information
-	Players []PlayerInfo `json:"players"` // Information about each player
-	Teams   []TeamInfo   `json:"teams"`   // Information about each team
 
 	// Game systems and configuration
 	Seed int64 `json:"seed"` // Random seed for deterministic gameplay
@@ -53,42 +31,65 @@ type Game struct {
 
 	// Rules engine for data-driven game mechanics
 	rulesEngine *RulesEngine `json:"-"` // Rules engine for movement costs, combat, unit data
+}
 
-	// Game metadata
-	CreatedAt    time.Time `json:"createdAt"`    // When game was created
-	LastActionAt time.Time `json:"lastActionAt"` // When last action was taken
+// NewGame creates a new game instance with the specified parameters
+func NewGame(game *v1.Game, state *v1.GameState, world *World, rulesEngine *RulesEngine, seed int64) *Game {
+	// Validate parameters
+	if rulesEngine == nil {
+		panic("rules engine is required")
+	}
 
-	// Internal state
-	winner    int32 `json:"winner"`    // Winner player ID (-1 if no winner)
-	hasWinner bool  `json:"hasWinner"` // Whether game has ended with winner
+	// Create the game struct
+	out := &Game{
+		Game:        game,
+		GameState:   state,
+		World:       world,
+		Seed:        seed,
+		rng:         rand.New(rand.NewSource(seed)),
+		rulesEngine: rulesEngine,
+	}
+
+	// Debug: Check unit movement points after NewGame initialization
+	if out.World != nil {
+		for playerId := 1; playerId <= int(out.World.PlayerCount()); playerId++ {
+			units := out.World.GetPlayerUnits(playerId)
+			fmt.Printf("NewGame: After NewGame - Player %d has %d units\n", playerId, len(units))
+			for _, unit := range units {
+				fmt.Printf("NewGame: Player %d unit at (%d, %d) - DistanceLeft=%d, AvailableHealth=%d\n",
+					playerId, unit.Q, unit.R, unit.DistanceLeft, unit.AvailableHealth)
+			}
+		}
+	}
+	return out
 }
 
 // =============================================================================
 // Convenience methods to access World fields
 // =============================================================================
 
-// GetPlayerInfo returns information about a specific player
-func (g *Game) GetPlayerInfo(playerID int) (*PlayerInfo, error) {
-	if playerID < 0 || playerID >= len(g.Players) {
+// GetGamePlayer returns information about a specific player
+func (g *Game) GetGamePlayer(playerID int) (*v1.GamePlayer, error) {
+	if playerID < 0 || playerID >= len(g.Game.Config.Players) {
 		return nil, fmt.Errorf("invalid player ID: %d", playerID)
 	}
-	return &g.Players[playerID], nil
+	return g.Game.Config.Players[playerID], nil
 }
 
-// GetTeamInfo returns information about a specific team
-func (g *Game) GetTeamInfo(teamID int) (*TeamInfo, error) {
-	if teamID < 0 || teamID >= len(g.Teams) {
+// GetGameTeam returns information about a specific team
+func (g *Game) GetGameTeam(teamID int) (*v1.GameTeam, error) {
+	if teamID < 0 || teamID >= len(g.Game.Config.Teams) {
 		return nil, fmt.Errorf("invalid team ID: %d", teamID)
 	}
-	return &g.Teams[teamID], nil
+	return g.Game.Config.Teams[teamID], nil
 }
 
 // GetPlayersOnTeam returns all players belonging to a specific team
-func (g *Game) GetPlayersOnTeam(teamID int) []*PlayerInfo {
-	var teamPlayers []*PlayerInfo
-	for i := range g.Players {
-		if g.Players[i].TeamID == teamID {
-			teamPlayers = append(teamPlayers, &g.Players[i])
+func (g *Game) GetPlayersOnTeam(teamID int32) []*v1.GamePlayer {
+	var teamPlayers []*v1.GamePlayer
+	for i := range g.Game.Config.Players {
+		if g.Game.Config.Players[i].TeamId == teamID {
+			teamPlayers = append(teamPlayers, g.Game.Config.Players[i])
 		}
 	}
 	return teamPlayers
@@ -96,11 +97,11 @@ func (g *Game) GetPlayersOnTeam(teamID int) []*PlayerInfo {
 
 // ArePlayersOnSameTeam checks if two players are on the same team
 func (g *Game) ArePlayersOnSameTeam(playerID1, playerID2 int) bool {
-	if playerID1 < 0 || playerID1 >= len(g.Players) ||
-		playerID2 < 0 || playerID2 >= len(g.Players) {
+	if playerID1 < 0 || playerID1 >= len(g.Game.Config.Players) ||
+		playerID2 < 0 || playerID2 >= len(g.Game.Config.Players) {
 		return false
 	}
-	return g.Players[playerID1].TeamID == g.Players[playerID2].TeamID
+	return g.Game.Config.Players[playerID1].TeamId == g.Game.Config.Players[playerID2].TeamId
 }
 
 // =============================================================================
@@ -184,7 +185,7 @@ func (g *Game) validateGameState() error {
 		return fmt.Errorf("game has no world")
 	}
 
-	if g.CurrentPlayer < 0 || g.CurrentPlayer > g.World.PlayerCount() {
+	if g.GameState.CurrentPlayer < 0 || g.CurrentPlayer > g.World.PlayerCount() {
 		return fmt.Errorf("invalid current player: %d", g.CurrentPlayer)
 	}
 
@@ -221,68 +222,6 @@ func (g *Game) SetRulesEngine(rulesEngine *RulesEngine) {
 	g.rulesEngine = rulesEngine
 }
 
-// NewGame creates a new game instance with the specified parameters
-func NewGame(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) {
-	// Validate parameters
-	if rulesEngine == nil {
-		return nil, fmt.Errorf("rules engine is required")
-	}
-
-	// Create the game struct
-	game := &Game{
-		World:         world,
-		Seed:          seed,
-		CurrentPlayer: 1,
-		TurnCounter:   1,
-		Status:        GameStatusPlaying,
-		winner:        -1,
-		hasWinner:     false,
-		CreatedAt:     time.Now(),
-		LastActionAt:  time.Now(),
-		rng:           rand.New(rand.NewSource(seed)),
-		rulesEngine:   rulesEngine,
-	}
-
-	// Initialize units storage for compatibility (will be migrated)
-	// privateMap is already assigned in the struct initialization above
-	// Initialize starting units (simplified for now)
-	// TODO: Replace with actual unit placement from map data
-	if err := game.initializeStartingUnits(); err != nil {
-		return nil, fmt.Errorf("failed to initialize starting units: %w", err)
-	}
-
-	return game, nil
-}
-
-// NewGameFromState creates a Game from existing state without re-initializing units
-// This is used when loading a saved game state where units already have their stats set
-func NewGameFromState(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) {
-	// Validate parameters
-	if rulesEngine == nil {
-		return nil, fmt.Errorf("rules engine is required")
-	}
-
-	// Create the game struct
-	game := &Game{
-		World:         world,
-		Seed:          seed,
-		CurrentPlayer: 1,
-		TurnCounter:   1,
-		Status:        GameStatusPlaying,
-		winner:        -1,
-		hasWinner:     false,
-		CreatedAt:     time.Now(),
-		LastActionAt:  time.Now(),
-		rng:           rand.New(rand.NewSource(seed)),
-		rulesEngine:   rulesEngine,
-	}
-
-	// IMPORTANT: Do NOT call initializeStartingUnits() here
-	// Units already have their stats (DistanceLeft, AvailableHealth, etc) from saved state
-
-	return game, nil
-}
-
 // LoadGame restores a game from saved JSON data
 func LoadGame(saveData []byte) (*Game, error) {
 	var game Game
@@ -316,7 +255,7 @@ func (g *Game) LoadGame(saveData []byte) (*Game, error) {
 // SaveGame serializes current game state
 func (g *Game) SaveGame() ([]byte, error) {
 	// Update last action time
-	g.LastActionAt = time.Now()
+	g.Game.UpdatedAt = tspb.New(time.Now())
 
 	// Serialize to JSON
 	data, err := json.MarshalIndent(g, "", "  ")
@@ -335,16 +274,6 @@ func (g *Game) GetCurrentPlayer() int32 {
 // GetTurnNumber returns current turn count
 func (g *Game) GetTurnNumber() int32 {
 	return g.TurnCounter
-}
-
-// GetGameStatus returns current game state
-func (g *Game) GetGameStatus() GameStatus {
-	return g.Status
-}
-
-// GetWinner returns winning player if game ended
-func (g *Game) GetWinner() (int32, bool) {
-	return g.winner, g.hasWinner
 }
 
 // =============================================================================

@@ -2,6 +2,9 @@ package weewar
 
 import "fmt"
 
+// Position represents a coordinate position (row, col)
+type Position = AxialCoord
+
 // NeighborDirection represents the 6 directions in a hex grid
 type NeighborDirection int
 

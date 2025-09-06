@@ -212,6 +212,13 @@ message RulesEngine {
 }
 
 ///////// Game related models
+//
+enum GameStatus {
+	GAME_STATUS_UNSPECIFIED = 0;
+	GAME_STATUS_PLAYING = 1;
+	GAME_STATUS_PAUSED = 2;
+	GAME_STATUS_ENDED = 3;
+}
 
 // Describes a game and its metadata
 message Game {
@@ -250,8 +257,11 @@ message GameConfiguration {
   // Player configuration
   repeated GamePlayer players = 1;
 
+  // Team configuration
+  repeated GameTeam teams = 2;
+
   // Game settings
-  GameSettings settings = 2;
+  GameSettings settings = 3;
 }
 
 message GamePlayer {
@@ -266,6 +276,26 @@ message GamePlayer {
 
   // Team ID (0 = no team, 1+ = team number)
   int32 team_id = 4;
+
+  // Nickname for the player in this game
+  string name = 5;
+
+  // Whether play is still in the game - can this just be inferred?
+  bool is_active = 6;
+}
+
+message GameTeam {
+  // ID of the team within the game (unique to the game)
+  int32 team_id = 1;
+
+  // Name of the team - in a game
+  string name = 2;
+
+  // Just a color for this team
+  string color = 3;
+
+  // Whether team has active players - can also be inferred
+  bool is_active = 4;
 }
 
 message GameSettings {
@@ -304,6 +334,13 @@ message GameState {
 
   // Version number for optimistic locking
   int64 version = 9;
+
+  GameStatus status = 10;
+
+  // Only set after a win has been possible
+  bool finished = 11;
+  int32 winning_player = 12;
+  int32 winning_team = 13;
 }
 
 // Holds the game's move history (can be used as a replay log)

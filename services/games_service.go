@@ -207,7 +207,7 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 }
 
 func (w *FSGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
-	return ProtoToRuntimeGame(game, gameState)
+	return ProtoToRuntimeGame(game, gameState), nil
 }
 
 // Helper functions for serialization

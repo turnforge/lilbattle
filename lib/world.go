@@ -71,7 +71,7 @@ type World struct {
 // =============================================================================
 
 // NewWorld creates a new game world with the specified parameters
-func NewWorld(name string) *World {
+func NewWorld(name string, protoWorld *v1.WorldData) *World {
 	w := &World{
 		Name:         name,
 		tilesByCoord: map[AxialCoord]*v1.Tile{},
@@ -80,11 +80,36 @@ func NewWorld(name string) *World {
 		unitDeleted:  map[AxialCoord]bool{},
 	}
 
+	// Convert protobuf tiles to runtime tiles
+	if protoWorld != nil {
+		for _, protoTile := range protoWorld.Tiles {
+			coord := AxialCoord{Q: int(protoTile.Q), R: int(protoTile.R)}
+			w.SetTileType(coord, int(protoTile.TileType))
+		}
+
+		// Convert protobuf units to runtime units
+		for _, protoUnit := range protoWorld.Units {
+			coord := AxialCoord{Q: int(protoUnit.Q), R: int(protoUnit.R)}
+			fmt.Printf("NewWorld: Converting unit at (%d, %d), saved DistanceLeft=%d, AvailableHealth=%d\n",
+				coord.Q, coord.R, protoUnit.DistanceLeft, protoUnit.AvailableHealth)
+			unit := &v1.Unit{
+				UnitType:        protoUnit.UnitType,
+				Q:               int32(coord.Q),
+				R:               int32(coord.R),
+				Player:          protoUnit.Player,
+				AvailableHealth: protoUnit.AvailableHealth,
+				DistanceLeft:    protoUnit.DistanceLeft, // Preserve saved movement points
+				TurnCounter:     protoUnit.TurnCounter,
+			}
+			w.AddUnit(unit)
+		}
+	}
+
 	return w
 }
 
 func (w *World) Push() *World {
-	out := NewWorld(w.Name)
+	out := NewWorld(w.Name, nil)
 	out.parent = w
 	return out
 }
@@ -390,7 +415,7 @@ func (w *World) Clone() *World {
 		return nil
 	}
 
-	out := NewWorld(w.Name)
+	out := NewWorld(w.Name, nil)
 	// Clone map
 	for _, tile := range w.tilesByCoord {
 		if tile != nil {
