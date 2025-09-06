@@ -47,6 +47,8 @@ export interface ITheme {
   getThemeInfo(): ThemeInfo;
   getUnitName(unitId: number): string | undefined;
   getTerrainName(terrainId: number): string | undefined;
+  getUnitDescription?(unitId: number): string | undefined;
+  getTerrainDescription?(terrainId: number): string | undefined;
   applyPlayerColors?(svgContent: string, playerId: number): string;
 }
 
@@ -66,6 +68,7 @@ export interface ThemeMapping {
       old: string;
       name: string;
       image: string;
+      description?: string;
     };
   };
   terrains: {
@@ -73,6 +76,7 @@ export interface ThemeMapping {
       old: string;
       name: string;
       image: string;
+      description?: string;
     };
   };
 }
@@ -241,6 +245,22 @@ export abstract class BaseTheme implements ITheme {
   getTerrainName(terrainId: number): string | undefined {
     const terrain = this.terrainMapping[terrainId.toString()];
     return terrain?.name;
+  }
+
+  /**
+   * Helper method to get unit description by ID
+   */
+  getUnitDescription(unitId: number): string | undefined {
+    const unit = this.unitMapping[unitId.toString()];
+    return unit?.description;
+  }
+
+  /**
+   * Helper method to get terrain description by ID
+   */
+  getTerrainDescription(terrainId: number): string | undefined {
+    const terrain = this.terrainMapping[terrainId.toString()];
+    return terrain?.description;
   }
 
   /**
