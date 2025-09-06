@@ -1,4 +1,4 @@
-import { ITheme, ThemeInfo, PLAYER_COLORS, CITY_TERRAIN_IDS } from './BaseTheme';
+import { ITheme, ThemeInfo, BRIDGE_TERRAIN_IDS, NATURE_TERRAIN_IDS, PLAYER_COLORS, CITY_TERRAIN_IDS } from './BaseTheme';
 
 /**
  * Default theme using the original PNG assets from v1
@@ -93,6 +93,27 @@ export default class DefaultTheme implements ITheme {
             playerColors: PLAYER_COLORS,
         };
     }
+
+  /**
+   * Checks if a terrain ID is a city/building tile that should be tinted
+   */
+  isCityTile(terrainId: number): boolean {
+    return CITY_TERRAIN_IDS.includes(terrainId);
+  }
+
+  /**
+   * Checks if a terrain ID is a nature tile
+   */
+  isNatureTile(terrainId: number): boolean {
+    return NATURE_TERRAIN_IDS.includes(terrainId);
+  }
+
+  /**
+   * Checks if a terrain ID is a bridge
+   */
+  isBridgeTile(terrainId: number): boolean {
+    return BRIDGE_TERRAIN_IDS.includes(terrainId);
+  }
     
     getUnitName(unitId: number): string | undefined {
         return this.unitNames[unitId];

@@ -35,7 +35,7 @@ export class AssetProvider {
     onProgress?: (progress: number) => void;
     onComplete?: () => void;
     
-    constructor(themeName: string = 'fantasy', rasterSize: number = 160, debugMode: boolean = false) {
+    constructor(themeName: string = 'default', rasterSize: number = 160, debugMode: boolean = false) {
         this.themeName = themeName;
         this.rasterSize = rasterSize;
         this.debugMode = debugMode;
@@ -44,6 +44,8 @@ export class AssetProvider {
         const ThemeClass = THEME_REGISTRY[themeName];
         if (!ThemeClass) {
             console.warn(`[AssetProvider] Theme "${themeName}" not found, defaulting to fantasy`);
+            // this.theme = new FantasyTheme();
+            // this.themeName = 'fantasy';
             this.theme = new FantasyTheme();
             this.themeName = 'fantasy';
         } else {

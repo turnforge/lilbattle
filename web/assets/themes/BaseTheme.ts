@@ -13,6 +13,8 @@ export const ROAD_TERRAIN_ID = 22;
 // All valid unit IDs from ColorsAndNames.ts
 export const UNIT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44];
 
+export const ALLOWED_UNIT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44];
+
 // Player color definitions - matches ColorsAndNames.ts and original Weewar colors
 // Based on the PLAYER_COLORS text classes in dark mode (which is what's typically shown)
 // These also need to match the PNG asset player colors (1.png = red, 2.png = blue, etc.)
@@ -38,6 +40,7 @@ export const PLAYER_COLORS = {
 export interface ITheme {
   loadUnit(unitId: number, playerId: number): Promise<string>;
   loadTile(terrainId: number, playerId?: number): Promise<string>;
+  isCityTile(tileId: number): boolean
   getUnitPath(unitId: number): string | undefined;
   getTilePath(terrainId: number): string | undefined;
   getUnitAssetPath?(unitId: number, playerId: number): string | undefined;
@@ -200,21 +203,21 @@ export abstract class BaseTheme implements ITheme {
   /**
    * Checks if a terrain ID is a city/building tile that should be tinted
    */
-  protected isCityTile(terrainId: number): boolean {
+  isCityTile(terrainId: number): boolean {
     return CITY_TERRAIN_IDS.includes(terrainId);
   }
 
   /**
    * Checks if a terrain ID is a nature tile
    */
-  protected isNatureTile(terrainId: number): boolean {
+  isNatureTile(terrainId: number): boolean {
     return NATURE_TERRAIN_IDS.includes(terrainId);
   }
 
   /**
    * Checks if a terrain ID is a bridge
    */
-  protected isBridgeTile(terrainId: number): boolean {
+  isBridgeTile(terrainId: number): boolean {
     return BRIDGE_TERRAIN_IDS.includes(terrainId);
   }
 

@@ -7,7 +7,6 @@ import { ClickContext } from './LayerSystem';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { EventBus } from '../../lib/EventBus';
 import { WorldEventType, WorldEventTypes } from '../events';
-import { AllowedUnitIDs } from "../ColorsAndNames";
 import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../World';
 import { AssetProvider } from '../../assets/providers/AssetProvider';
 

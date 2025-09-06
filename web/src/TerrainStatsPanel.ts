@@ -1,9 +1,8 @@
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
-import { CityTerrainIds, AllowedUnitIDs } from './ColorsAndNames';
 import { TerrainStats , RulesTable } from './RulesTable';
-import { ITheme } from '../assets/themes/BaseTheme';
+import { ALLOWED_UNIT_IDS, ITheme } from '../assets/themes/BaseTheme';
 
 
 /**
@@ -279,7 +278,7 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
         
         // Determine if this is a city terrain (can be captured/built on)
-        const isCityTerrain = CityTerrainIds.includes(terrainId);
+        const isCityTerrain = this.theme?.isCityTile(terrainId) || false
         
         // Hide capture and build columns for nature terrains
         const table = tableElement.querySelector('table');
@@ -295,7 +294,7 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         
         // Get all available units (common unit IDs)
         let hasAnyUnits = false;
-        AllowedUnitIDs.forEach(unitId => {
+        ALLOWED_UNIT_IDS.forEach(unitId => {
             const unitDef = this.rulesTable.getUnitDefinition(unitId);
             const properties = this.rulesTable.getTerrainUnitProperties(terrainId, unitId);
             if (properties && unitDef && unitDef.name) {
