@@ -23,6 +23,7 @@ buf:
 	rm -Rf gen 
 	rm -Rf web/gen
 	buf generate
+	goimports -w `find gen | grep "\.go"`
 
 cli:
 	mkdir -p bin
@@ -52,6 +53,7 @@ install-tools:
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
 	go get  google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	go get honnef.co/go/tools/cmd/staticcheck
+	go install golang.org/x/tools/cmd/goimports@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
