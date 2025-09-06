@@ -1,11 +1,15 @@
 # Next Steps - WeeWar Development
 
-## Immediate Issues to Fix
+## ✅ Recent Bug Fixes (Current Session)
 
-### Highlight Layer Visibility Bug
-- **Issue**: Highlight layer not showing after recent refactoring
-- **Impact**: Cannot see movement options when selecting units
-- **Investigation Needed**: Check layer ordering and asset provider changes
+### Movement Points Preservation Bug - FIXED
+- **Issue**: Units lost movement points when loading saved game state
+- **Root Cause**: `NewGame()` always called `initializeStartingUnits()` which reset movement to max
+- **Solution**: Created `NewGameFromState()` that preserves unit stats from saved state
+- **Files Changed**: 
+  - `services/utils.go`: Now preserves `DistanceLeft` from protobuf
+  - `lib/game.go`: Added `NewGameFromState()` function
+- **Result**: Units now correctly show movement options when clicked
 
 ## 🎉 Major Milestone Completed: Theme and Asset Architecture Refactoring
 

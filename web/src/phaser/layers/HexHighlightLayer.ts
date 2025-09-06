@@ -52,8 +52,8 @@ export abstract class HexHighlightLayer extends BaseLayer {
         highlight.setPosition(position.x, position.y);
 
         const points: Phaser.Geom.Point[] = [];
-        const halfWidth = 32
-        const halfHeight = 32
+        const halfWidth = this.tileWidth / 2;
+        const halfHeight = this.tileWidth / 2;  // Use tileWidth for both to maintain aspect ratio
         const halfWidth2 = halfWidth;
         
         // Pointy-topped hexagon vertices (starting from top point, going clockwise)

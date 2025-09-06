@@ -1130,6 +1130,14 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             // ✅ Use shared World for fast unit query
             const unit = this.world?.getUnitAt(q, r);
             
+            // Debug logging
+            console.log(`[GameViewerPage] Unit click at (${q}, ${r}):`, {
+                unit: unit,
+                response: response,
+                currentPlayer: this.gameState.getCurrentPlayer(),
+                turnCounter: this.gameState.getTurnCounter()
+            });
+            
             const options = response.options || [];
             
             const hasMovementOptions = options.some((opt: any) => opt.move !== undefined);
@@ -1149,6 +1157,15 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                     // Get current player to check ownership
                     this.gameState.getCurrentGameState().then(gameState => {
                         const currentPlayer = gameState.currentPlayer;
+                        
+                        console.log(`[GameViewerPage] Unit details:`, {
+                            unitPlayer: tileUnit.player,
+                            currentPlayer: currentPlayer,
+                            distanceLeft: tileUnit.distanceLeft,
+                            availableHealth: tileUnit.availableHealth,
+                            turnCounter: tileUnit.turnCounter,
+                            gameTurnCounter: gameState.turnCounter
+                        });
                         
                         if (tileUnit.player === currentPlayer) {
                             // This is our unit but it has no available actions

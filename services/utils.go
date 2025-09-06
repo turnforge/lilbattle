@@ -31,7 +31,7 @@ func ProtoToRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, e
 				R:               int32(coord.R),
 				Player:          protoUnit.Player,
 				AvailableHealth: protoUnit.AvailableHealth,
-				DistanceLeft:    0, // Will be initialized by initializeStartingUnits()
+				DistanceLeft:    protoUnit.DistanceLeft, // Preserve saved movement points
 				TurnCounter:     protoUnit.TurnCounter,
 			}
 			world.AddUnit(unit)
@@ -40,7 +40,9 @@ func ProtoToRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, e
 	
 	// Create the runtime game with loaded default rules engine
 	rulesEngine := weewar.DefaultRulesEngine()            // Use loaded default rules engine
-	out, err := weewar.NewGame(world, rulesEngine, 12345) // Default seed
+	
+	// Use NewGameFromState instead of NewGame to preserve unit stats
+	out, err := weewar.NewGameFromState(world, rulesEngine, 12345) // Default seed
 	if err != nil {
 		return nil, err
 	}

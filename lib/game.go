@@ -244,14 +244,41 @@ func NewGame(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) 
 	}
 
 	// Initialize units storage for compatibility (will be migrated)
-
 	// privateMap is already assigned in the struct initialization above
-
 	// Initialize starting units (simplified for now)
 	// TODO: Replace with actual unit placement from map data
 	if err := game.initializeStartingUnits(); err != nil {
 		return nil, fmt.Errorf("failed to initialize starting units: %w", err)
 	}
+
+	return game, nil
+}
+
+// NewGameFromState creates a Game from existing state without re-initializing units
+// This is used when loading a saved game state where units already have their stats set
+func NewGameFromState(world *World, rulesEngine *RulesEngine, seed int64) (*Game, error) {
+	// Validate parameters
+	if rulesEngine == nil {
+		return nil, fmt.Errorf("rules engine is required")
+	}
+
+	// Create the game struct
+	game := &Game{
+		World:         world,
+		Seed:          seed,
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+		Status:        GameStatusPlaying,
+		winner:        -1,
+		hasWinner:     false,
+		CreatedAt:     time.Now(),
+		LastActionAt:  time.Now(),
+		rng:           rand.New(rand.NewSource(seed)),
+		rulesEngine:   rulesEngine,
+	}
+
+	// IMPORTANT: Do NOT call initializeStartingUnits() here
+	// Units already have their stats (DistanceLeft, AvailableHealth, etc) from saved state
 
 	return game, nil
 }
