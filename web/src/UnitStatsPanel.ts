@@ -146,14 +146,18 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         const descElement = this.findElement('#unit-description');
 
         if (iconElement) {
-            // Use the same image path pattern as Phaser
             const unitType = unit.unitType;
-            const color = unit.player || 0;
-            const imagePath = `/static/assets/v1/Units/${unitType}/${color}.png`;
+            const playerId = unit.player || 0;
             
-            // Create an img element instead of using text content
-            iconElement.innerHTML = `<img src="${imagePath}" alt="Unit ${unitType}" class="w-8 h-8 object-contain" style="image-rendering: pixelated;" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
-                                     <span style="display:none;">⚔️</span>`;
+            if (this.theme) {
+                // Use the theme's setUnitImage method to handle all the complexity
+                this.theme.setUnitImage(unitType, playerId, iconElement);
+            } else {
+                // Fallback to default PNG assets
+                const imagePath = `/static/assets/v1/Units/${unitType}/${playerId}.png`;
+                iconElement.innerHTML = `<img src="${imagePath}" alt="Unit ${unitType}" class="w-8 h-8 object-contain" style="image-rendering: pixelated;" onerror="this.style.display='none'; this.nextSibling.style.display='inline';">
+                                         <span style="display:none;">⚔️</span>`;
+            }
         }
 
         if (nameElement) {
@@ -168,8 +172,10 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         }
 
         if (descElement) {
+            // Use theme-specific description if available, otherwise fallback to rules engine description
             const unitDef = this.rulesTable.getUnitDefinition(unit.unitType);
-            descElement.textContent = unitDef?.description || 'Military unit';
+            const description = this.theme?.getUnitDescription?.(unit.unitType) || unitDef?.description || 'Military unit';
+            descElement.textContent = description;
         }
     }
 

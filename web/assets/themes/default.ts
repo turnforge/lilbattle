@@ -102,6 +102,16 @@ export default class DefaultTheme implements ITheme {
         return this.terrainNames[terrainId];
     }
     
+    getUnitDescription(unitId: number): string | undefined {
+        // Return undefined - no custom descriptions for default theme
+        return undefined;
+    }
+    
+    getTerrainDescription(terrainId: number): string | undefined {
+        // Return undefined - no custom descriptions for default theme
+        return undefined;
+    }
+    
     getUnitPath(unitId: number): string | undefined {
         // PNG assets don't use templates, return undefined
         return undefined;
@@ -151,5 +161,53 @@ export default class DefaultTheme implements ITheme {
     async loadTile(terrainId: number, playerId?: number): Promise<string> {
         // PNG assets are loaded directly, not as SVG templates
         throw new Error('Default theme uses pre-colored PNG assets. Use getTileAssetPath() instead.');
+    }
+    
+    /**
+     * Sets a unit PNG image in the target HTML element
+     */
+    async setUnitImage(unitId: number, playerId: number, targetElement: HTMLElement): Promise<void> {
+        const path = this.getUnitAssetPath(unitId, playerId);
+        if (!path) {
+            targetElement.innerHTML = '⚔️';
+            return;
+        }
+        
+        targetElement.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = this.getUnitName(unitId) || `Unit ${unitId}`;
+        img.className = 'w-full h-full object-contain';
+        img.style.imageRendering = 'pixelated';
+        
+        img.onerror = () => {
+            targetElement.innerHTML = '⚔️';
+        };
+        
+        targetElement.appendChild(img);
+    }
+    
+    /**
+     * Sets a tile PNG image in the target HTML element
+     */
+    async setTileImage(tileId: number, playerId: number, targetElement: HTMLElement): Promise<void> {
+        const path = this.getTileAssetPath(tileId, playerId);
+        if (!path) {
+            targetElement.innerHTML = '🏞️';
+            return;
+        }
+        
+        targetElement.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = this.getTerrainName(tileId) || `Terrain ${tileId}`;
+        img.className = 'w-full h-full object-contain';
+        img.style.imageRendering = 'pixelated';
+        
+        img.onerror = () => {
+            targetElement.innerHTML = '🏞️';
+        };
+        
+        targetElement.appendChild(img);
     }
 }

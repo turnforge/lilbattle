@@ -49,6 +49,8 @@ export interface ITheme {
   getTerrainName(terrainId: number): string | undefined;
   getUnitDescription?(unitId: number): string | undefined;
   getTerrainDescription?(terrainId: number): string | undefined;
+  setUnitImage(unitId: number, playerId: number, targetElement: HTMLElement): Promise<void>;
+  setTileImage(tileId: number, playerId: number, targetElement: HTMLElement): Promise<void>;
   applyPlayerColors?(svgContent: string, playerId: number): string;
 }
 
@@ -289,5 +291,79 @@ export abstract class BaseTheme implements ITheme {
    */
   getAvailableTerrains(): number[] {
     return Object.keys(this.terrainMapping).map(id => parseInt(id)).sort((a, b) => a - b);
+  }
+
+  /**
+   * Sets a unit image in the target HTML element with player colors applied
+   */
+  async setUnitImage(unitId: number, playerId: number, targetElement: HTMLElement): Promise<void> {
+    try {
+      // Load the SVG content with player colors
+      const svgContent = await this.loadUnit(unitId, playerId);
+      
+      // Create a data URL from the SVG
+      const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      // Clear the target element and add the image
+      targetElement.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = this.getUnitName(unitId) || `Unit ${unitId}`;
+      img.className = 'w-full h-full object-contain';
+      
+      // Clean up the blob URL after the image loads
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        // Fallback to emoji or text
+        targetElement.innerHTML = '⚔️';
+      };
+      
+      targetElement.appendChild(img);
+    } catch (error) {
+      console.error(`Failed to set unit image for unit ${unitId}, player ${playerId}:`, error);
+      targetElement.innerHTML = '⚔️';
+    }
+  }
+
+  /**
+   * Sets a tile image in the target HTML element with optional player colors
+   */
+  async setTileImage(tileId: number, playerId: number, targetElement: HTMLElement): Promise<void> {
+    try {
+      // Load the SVG content with player colors (if applicable)
+      const svgContent = await this.loadTile(tileId, playerId);
+      
+      // Create a data URL from the SVG
+      const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      // Clear the target element and add the image
+      targetElement.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = this.getTerrainName(tileId) || `Terrain ${tileId}`;
+      img.className = 'w-full h-full object-contain';
+      
+      // Clean up the blob URL after the image loads
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        // Fallback to emoji or text
+        targetElement.innerHTML = '🏞️';
+      };
+      
+      targetElement.appendChild(img);
+    } catch (error) {
+      console.error(`Failed to set tile image for tile ${tileId}, player ${playerId}:`, error);
+      targetElement.innerHTML = '🏞️';
+    }
   }
 }

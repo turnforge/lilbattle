@@ -144,8 +144,16 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         const descElement = this.findElement('#terrain-description');
 
         if (iconElement) {
-            const terrainData = { icon: '🎨' };
-            iconElement.textContent = terrainData.icon;
+            const terrainId = terrainStats.id;
+            const playerId = terrainStats.player || 0;
+            
+            if (this.theme) {
+                // Use the theme's setTileImage method to handle all the complexity
+                this.theme.setTileImage(terrainId, playerId, iconElement);
+            } else {
+                // Fallback to emoji
+                iconElement.textContent = '🏞️';
+            }
         }
 
         if (nameElement) {
@@ -159,8 +167,8 @@ export class TerrainStatsPanel extends BaseComponent implements LCMComponent {
         }
 
         if (descElement) {
-            // Use rules engine description if available, fallback to terrainStats description
-            const description = terrainStats.description;
+            // Use theme-specific description if available, otherwise fallback to rules engine description
+            const description = this.theme?.getTerrainDescription?.(terrainStats.id) || terrainStats.description;
             descElement.textContent = description;
         }
     }
