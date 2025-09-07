@@ -27,7 +27,7 @@ buf:
 
 cli:
 	mkdir -p bin
-	# go build  -o ./bin/weewar-cli cmd/weewar-cli/*.go
+	go build  -o ./bin/weewar-cli cmd/weewar-cli/*.go
 	# go build  -o ./bin/weewar-convert cmd/weewar-convert/*.go
 
 wasm: 

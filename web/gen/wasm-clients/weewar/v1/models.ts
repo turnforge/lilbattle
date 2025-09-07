@@ -173,6 +173,7 @@ export class Tile implements TileInterface {
   tileType: number = 0;
   /** Whether the tile itself belongs to a player */
   player: number = 0;
+  shortcut: string = "";
 
   /**
    * Create and deserialize an instance from raw data
@@ -197,6 +198,7 @@ export class Unit implements UnitInterface {
   r: number = 0;
   player: number = 0;
   unitType: number = 0;
+  shortcut: string = "";
   /** Runtime state fields */
   availableHealth: number = 0;
   distanceLeft: number = 0;

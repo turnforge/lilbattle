@@ -108,6 +108,7 @@ export interface Tile {
   tileType: number;
   /** Whether the tile itself belongs to a player */
   player: number;
+  shortcut: string;
 }
 
 
@@ -118,6 +119,7 @@ export interface Unit {
   r: number;
   player: number;
   unitType: number;
+  shortcut: string;
   /** Runtime state fields */
   availableHealth: number;
   distanceLeft: number;

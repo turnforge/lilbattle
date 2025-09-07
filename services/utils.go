@@ -17,3 +17,14 @@ func ProtoToRuntimeGame(game *v1.Game, gameState *v1.GameState) *weewar.Game {
 	// Use NewGameFromState instead of NewGame to preserve unit stats
 	return weewar.NewGame(game, gameState, world, rulesEngine, 12345) // Default seed
 }
+
+// RuntimeGameToProto returns the proto state from a runtime game
+// Since runtime game already embeds the proto objects, we just return the pointer
+func RuntimeGameToProto(rtGame *weewar.Game) *v1.GameState {
+	if rtGame == nil || rtGame.GameState == nil {
+		return nil
+	}
+
+	// Just return the embedded proto state - it's already being updated by the runtime game
+	return rtGame.GameState
+}

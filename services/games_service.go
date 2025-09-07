@@ -23,6 +23,12 @@ type FSGamesServiceImpl struct {
 	BaseGamesServiceImpl
 	WorldsService v1.WorldsServiceServer
 	storage       *storage.FileStorage // Storage area for all files
+	
+	// Simple caches - maps with game ID as key
+	gameCache     map[string]*v1.Game
+	stateCache    map[string]*v1.GameState
+	historyCache  map[string]*v1.GameMoveHistory
+	runtimeCache  map[string]*weewar.Game
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
@@ -34,6 +40,10 @@ func NewFSGamesService() *FSGamesServiceImpl {
 		BaseGamesServiceImpl: BaseGamesServiceImpl{},
 		WorldsService:        NewFSWorldsService(),
 		storage:              storage.NewFileStorage(GAMES_STORAGE_DIR),
+		gameCache:            make(map[string]*v1.Game),
+		stateCache:           make(map[string]*v1.GameState),
+		historyCache:         make(map[string]*v1.GameMoveHistory),
+		runtimeCache:         make(map[string]*weewar.Game),
 	}
 	service.Self = service
 
@@ -134,6 +144,20 @@ func (s *FSGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest
 		return nil, fmt.Errorf("game ID is required")
 	}
 
+	// Check cache first
+	if game, ok := s.gameCache[req.Id]; ok {
+		if state, ok := s.stateCache[req.Id]; ok {
+			if history, ok := s.historyCache[req.Id]; ok {
+				return &v1.GetGameResponse{
+					Game:    game,
+					State:   state,
+					History: history,
+				}, nil
+			}
+		}
+	}
+
+	// Load from disk
 	game, err := storage.LoadFSArtifact[*v1.Game](s.storage, req.Id, "metadata")
 	if err != nil {
 		return nil, fmt.Errorf("game metadata not found: %w", err)
@@ -148,6 +172,11 @@ func (s *FSGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest
 	if err != nil {
 		return nil, fmt.Errorf("game state not found: %w", err)
 	}
+
+	// Cache everything
+	s.gameCache[req.Id] = game
+	s.stateCache[req.Id] = gameState
+	s.historyCache[req.Id] = gameHistory
 
 	resp = &v1.GetGameResponse{
 		Game:    game,
@@ -164,7 +193,9 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		return nil, fmt.Errorf("game ID is required")
 	}
 
-	// Load existing metadata
+	resp = &v1.UpdateGameResponse{}
+
+	// Load existing metadata if updating
 	if req.NewGame != nil {
 		game, err := storage.LoadFSArtifact[*v1.Game](s.storage, req.GameId, "metadata")
 		if err != nil {
@@ -186,28 +217,62 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		}
 		game.UpdatedAt = tspb.New(time.Now())
 
-		if err := s.storage.SaveArtifact(req.NewGame.Id, "metadata", game); err != nil {
+		if err := s.storage.SaveArtifact(req.GameId, "metadata", game); err != nil {
 			return nil, fmt.Errorf("failed to update game metadata: %w", err)
 		}
+		
+		// Update cache
+		s.gameCache[req.GameId] = game
+		resp.Game = game
 	}
 
 	if req.NewState != nil {
 		if err := s.storage.SaveArtifact(req.GameId, "state", req.NewState); err != nil {
 			return nil, fmt.Errorf("failed to update game state: %w", err)
 		}
+		
+		// Update cache and invalidate runtime game
+		s.stateCache[req.GameId] = req.NewState
+		delete(s.runtimeCache, req.GameId)
 	}
 
 	if req.NewHistory != nil {
 		if err := s.storage.SaveArtifact(req.GameId, "history", req.NewHistory); err != nil {
 			return nil, fmt.Errorf("failed to update game history: %w", err)
 		}
+		
+		// Update cache
+		s.historyCache[req.GameId] = req.NewHistory
 	}
 
 	return resp, err
 }
 
-func (w *FSGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
+// GetRuntimeGame implements the interface method (for compatibility)
+func (s *FSGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*weewar.Game, error) {
 	return ProtoToRuntimeGame(game, gameState), nil
+}
+
+// GetRuntimeGameByID returns a cached runtime game instance for the given game ID
+func (s *FSGamesServiceImpl) GetRuntimeGameByID(ctx context.Context, gameID string) (*weewar.Game, error) {
+	// Check runtime cache first
+	if rtGame, ok := s.runtimeCache[gameID]; ok {
+		return rtGame, nil
+	}
+
+	// Load proto data (will use cache if available)
+	resp, err := s.GetGame(ctx, &v1.GetGameRequest{Id: gameID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get game: %w", err)
+	}
+
+	// Convert to runtime game
+	rtGame := ProtoToRuntimeGame(resp.Game, resp.State)
+	
+	// Cache it
+	s.runtimeCache[gameID] = rtGame
+	
+	return rtGame, nil
 }
 
 // Helper functions for serialization

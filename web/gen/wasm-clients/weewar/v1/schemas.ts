@@ -227,6 +227,11 @@ export const TileSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 4,
     },
+    {
+      name: "shortcut",
+      type: FieldType.STRING,
+      id: 5,
+    },
   ],
 };
 
@@ -258,19 +263,24 @@ export const UnitSchema: MessageSchema = {
       id: 4,
     },
     {
-      name: "availableHealth",
-      type: FieldType.NUMBER,
+      name: "shortcut",
+      type: FieldType.STRING,
       id: 5,
     },
     {
-      name: "distanceLeft",
+      name: "availableHealth",
       type: FieldType.NUMBER,
       id: 6,
     },
     {
-      name: "turnCounter",
+      name: "distanceLeft",
       type: FieldType.NUMBER,
       id: 7,
+    },
+    {
+      name: "turnCounter",
+      type: FieldType.NUMBER,
+      id: 8,
     },
   ],
 };

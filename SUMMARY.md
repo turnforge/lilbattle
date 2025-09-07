@@ -96,6 +96,14 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ## Current System Status
 
+**CLI Tools**: ✅ **PRODUCTION READY**
+- **weewar-cli**: Headless REPL for game state manipulation
+  - Interactive options menu system with numbered selections
+  - Direct integration with FSGamesServiceImpl with caching
+  - Supports both coordinate (3,4) and unit shortcut (A1) formats
+  - All actions go through ProcessMoves RPC for consistency
+  - Auto-saves state for immediate browser visibility
+
 **Multiplayer Coordination**: 🔄 **90% COMPLETE**
 - Core coordination protocol implemented in TurnEngine
 - File-based storage with atomic operations ready
@@ -115,11 +123,13 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 - Clean service layer abstraction across transports
 - Event-driven UI updates with proper separation of concerns
 - Generated WASM client with type-safe protobuf integration
+- Unified caching layer in FSGamesServiceImpl for performance
 
 **Testing**: ✅ **COMPREHENSIVE**
 - Unit tests for World operations (basic moves, replacements, transactions)
 - Integration tests for ProcessMoves pipeline
 - End-to-end tests using WasmGamesService
+- CLI tool for manual testing and game state manipulation
 
 ## Known Issues & Next Steps
 
