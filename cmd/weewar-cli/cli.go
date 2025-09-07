@@ -491,19 +491,19 @@ func (cli *CLI) handleStatus() string {
 func (cli *CLI) handleUnits() string {
 	ctx := context.Background()
 
-	// Get game state
-	resp, err := cli.service.GetGame(ctx, &v1.GetGameRequest{Id: cli.gameID})
+	// Get runtime game to get units with shortcuts
+	rtGame, err := cli.service.GetRuntimeGameByID(ctx, cli.gameID)
 	if err != nil {
 		return fmt.Sprintf("Failed to get game: %v", err)
 	}
 
-	if resp.State.WorldData == nil || len(resp.State.WorldData.Units) == 0 {
+	if rtGame.World.NumUnits() == 0 {
 		return "No units found"
 	}
 
-	// Group units by player
+	// Group units by player from runtime world
 	unitsByPlayer := make(map[int32][]*v1.Unit)
-	for _, unit := range resp.State.WorldData.Units {
+	for _, unit := range rtGame.World.UnitsByCoord() {
 		if unit != nil {
 			unitsByPlayer[unit.Player] = append(unitsByPlayer[unit.Player], unit)
 		}
