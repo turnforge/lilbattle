@@ -223,9 +223,19 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Unit Label Repositioning**: Moved health/movement labels below units with smaller font to prevent row overlap
 - **Show Health Toggle**: Added checkbox control in editor toolbar to toggle unit health/movement display visibility
 
+### Recent Achievements (Session 2025-09-08)
+
+#### Damage Distribution Panel Refactoring (Complete)
+- **Component Extraction**: Separated damage distribution visualization from UnitStatsPanel into dedicated DamageDistributionPanel
+- **Independent Dockview Panel**: Damage distribution now appears as its own dockable panel in GameViewerPage
+- **Code Organization**: Removed createDamageHistogram() and generateUnitCombatTable() from UnitStatsPanel
+- **Template Separation**: Moved combat table templates to DamageDistributionPanel.html
+- **Event Integration**: Both panels receive unit selection events independently for synchronization
+- **UI Flexibility**: Users can now show/hide damage distribution independently from unit stats
+
 ## Status
-**Current Version**: 8.6 (SVG Asset Loading with Health Toggle)  
-**Status**: Production-ready with theme-based assets and configurable unit label display  
+**Current Version**: 8.7 (Damage Distribution Panel Refactoring)  
+**Status**: Production-ready with modular panel architecture and independent damage visualization  
 **Build Status**: Clean compilation with all TypeScript errors resolved  
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds  
-**Architecture**: Flexible AssetProvider system with full UI visibility controls
+**Architecture**: Flexible AssetProvider system with independent dockable panels

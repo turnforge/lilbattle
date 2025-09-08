@@ -11,6 +11,7 @@ import { LifecycleController } from '../lib/LifecycleController';
 import { PLAYER_BG_COLORS } from './ColorsAndNames';
 import { TerrainStatsPanel } from './TerrainStatsPanel';
 import { UnitStatsPanel } from './UnitStatsPanel';
+import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { GameActionsPanel, GameActionsCallbacks } from './GameActionsPanel';
 import { GameEventTypes, WorldEventTypes } from './events';
@@ -68,6 +69,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     private world: World  // ✅ Shared World component
     private terrainStatsPanel: TerrainStatsPanel
     private unitStatsPanel: UnitStatsPanel
+    private damageDistributionPanel: DamageDistributionPanel
     private gameLogPanel: GameLogPanel
     private gameActionsPanel: GameActionsPanel
     private rulesTable: RulesTable = new RulesTable();
@@ -121,6 +123,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         console.assert(this.world != null, "World could not be created")
         console.assert(this.terrainStatsPanel != null, "terrainStatsPanel could not be created")
         console.assert(this.unitStatsPanel != null, "unitStatsPanel could not be created")
+        console.assert(this.damageDistributionPanel != null, "damageDistributionPanel could not be created")
         console.assert(this.gameLogPanel != null, "gameLogPanel could not be created")
         console.assert(this.gameActionsPanel != null, "gameActionsPanel could not be created")
         console.assert(this.rulesTable != null, "rulesTable could not be created")
@@ -131,6 +134,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             this.gameScene,
             this.terrainStatsPanel,
             this.unitStatsPanel,
+            this.damageDistributionPanel,
             this.gameLogPanel,
             this.gameActionsPanel,
         ]
@@ -149,6 +153,9 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             }
             if (this.unitStatsPanel) {
                 this.unitStatsPanel.setTheme(theme);
+            }
+            if (this.damageDistributionPanel) {
+                this.damageDistributionPanel.setTheme(theme);
             }
         }
 
@@ -184,12 +191,20 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                         if (this.unitStatsPanel) {
                             this.unitStatsPanel.updateUnitInfo(unit);
                         }
+                        // Update damage distribution panel with unit info
+                        if (this.damageDistributionPanel) {
+                            this.damageDistributionPanel.updateUnitInfo(unit);
+                        }
                     } else {
                         // Empty tile clicked - clear selection
                         this.clearSelection();
                         // Clear unit info from unit stats panel when no unit
                         if (this.unitStatsPanel) {
                             this.unitStatsPanel.clearUnitInfo();
+                        }
+                        // Clear unit info from damage distribution panel when no unit
+                        if (this.damageDistributionPanel) {
+                            this.damageDistributionPanel.clearUnitInfo();
                         }
                     }
                     break;
@@ -358,6 +373,8 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                         return this.createTerrainStatsComponent();
                     case 'unit-stats':
                         return this.createUnitStatsComponent();
+                    case 'damage-distribution':
+                        return this.createDamageDistributionComponent();
                     case 'game-actions':
                         return this.createGameActionsComponent();
                     case 'game-log':
@@ -424,6 +441,17 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             position: { 
                 direction: 'below',
                 referencePanel: 'terrain-stats-panel'
+            }
+        });
+
+        // Add damage distribution panel (below unit stats panel)
+        this.dockview.addPanel({
+            id: 'damage-distribution-panel',
+            component: 'damage-distribution',
+            title: 'Damage Distribution',
+            position: { 
+                direction: 'below',
+                referencePanel: 'unit-stats-panel'
             }
         });
 
@@ -566,6 +594,31 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             },
             dispose: () => {
                 // UnitStatsPanel cleanup will be handled by LCM lifecycle
+                // Component disposal is managed by DockView
+            }
+        };
+    }
+
+    /**
+     * Create damage distribution component
+     */
+    private createDamageDistributionComponent() {
+        const template = document.getElementById('damage-distribution-panel-template');
+        if (!template) {
+            throw new Error('damage-distribution-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+
+        return {
+            element,
+            init: () => {
+                // Create DamageDistributionPanel with the cloned element
+                this.damageDistributionPanel = new DamageDistributionPanel(element, this.eventBus, true);
+            },
+            dispose: () => {
+                // DamageDistributionPanel cleanup will be handled by LCM lifecycle
                 // Component disposal is managed by DockView
             }
         };

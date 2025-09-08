@@ -109,11 +109,6 @@
     <div id="unit-terrain-properties" class="mb-4">
       <!-- Table will be populated dynamically -->
     </div>
-
-    <!-- Unit-Unit Combat Properties Section -->
-    <div id="unit-combat-properties" class="mb-4">
-      <!-- Combat table will be populated dynamically -->
-    </div>
   </div>
 </div>
 
@@ -217,60 +212,6 @@
     </td>
     <td class="px-2 py-2 text-center text-gray-900 dark:text-white" data-build>
       -
-    </td>
-  </tr>
-</template>
-
-<!-- Unit Combat Table Template -->
-<template id="unit-combat-table-template">
-  <div class="mt-4">
-    <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-      ⚔️ Combat vs Units
-    </h6>
-    <div class="overflow-x-auto">
-      <table
-        class="min-w-full text-xs border border-gray-200 dark:border-gray-600 rounded-lg"
-      >
-        <thead class="bg-gray-50 dark:bg-gray-700">
-          <tr>
-            <th
-              class="px-2 py-2 text-left font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600"
-              style="width: 30%"
-            >
-              Target
-            </th>
-            <th
-              class="px-2 py-2 text-left font-medium text-gray-900 dark:text-white"
-              style="width: 70%"
-            >
-              Damage Distribution
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600"
-        >
-          <!-- Rows will be populated dynamically -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-</template>
-
-<!-- Combat Row Template for Unit Combat Table -->
-<template id="combat-row-template">
-  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-    <td
-      class="px-2 py-2 text-left text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 font-medium align-top"
-      data-target-name
-    >
-      Target Unit
-    </td>
-    <td
-      class="px-2 py-3 text-left text-gray-900 dark:text-white"
-      data-damage-histogram
-    >
-      <!-- Histogram will be populated here -->
     </td>
   </tr>
 </template>

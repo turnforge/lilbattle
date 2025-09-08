@@ -1,0 +1,88 @@
+<!-- DamageDistributionPanel Template -->
+<div
+  id="damage-distribution-panel-template"
+  class="damage-distribution-panel h-full bg-white dark:bg-gray-800 p-4 overflow-y-auto"
+>
+  <h4 class="font-medium text-gray-900 dark:text-white mb-3">⚔️ Damage Distribution</h4>
+
+  <!-- No Selection State -->
+  <div id="no-unit-selected" class="text-center py-8">
+    <div class="text-gray-400 dark:text-gray-500 mb-2">
+      <svg class="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h2a1 1 0 100-2H6V7h8v6h-2a1 1 0 100 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a1 1 0 100-2 2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"
+        />
+      </svg>
+    </div>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Select a unit to view<br />damage distributions
+    </p>
+  </div>
+
+  <!-- Selected Unit Damage Distributions -->
+  <div id="damage-distributions" class="hidden">
+    <!-- Current Unit Header -->
+    <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Damage dealt by:</div>
+      <h5 id="selected-unit-name" class="font-medium text-gray-900 dark:text-white">
+        Unit Name
+      </h5>
+    </div>
+
+    <!-- Unit-Unit Combat Properties Section -->
+    <div id="unit-combat-properties" class="mb-4">
+      <!-- Combat table will be populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Unit Combat Table Template -->
+<template id="unit-combat-table-template">
+  <div class="mt-4">
+    <div class="overflow-x-auto">
+      <table
+        class="min-w-full text-xs border border-gray-200 dark:border-gray-600 rounded-lg"
+      >
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th
+              class="px-2 py-2 text-left font-medium text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600"
+              style="width: 30%"
+            >
+              vs Target
+            </th>
+            <th
+              class="px-2 py-2 text-left font-medium text-gray-900 dark:text-white"
+              style="width: 70%"
+            >
+              Damage Distribution
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600"
+        >
+          <!-- Rows will be populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
+<!-- Combat Row Template for Unit Combat Table -->
+<template id="combat-row-template">
+  <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+    <td
+      class="px-2 py-2 text-left text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 font-medium align-top"
+      data-target-name
+    >
+      Target Unit
+    </td>
+    <td
+      class="px-2 py-3 text-left text-gray-900 dark:text-white"
+      data-damage-histogram
+    >
+      <!-- Histogram will be populated here -->
+    </td>
+  </tr>
+</template>

@@ -1,6 +1,13 @@
-# Next Steps for Web Module (v8.0)
+# Next Steps for Web Module (v8.7)
 
 ## Recent Accomplishments ✅
+- **Damage Distribution Panel Refactoring**: Extracted damage visualization into independent component
+  - Created DamageDistributionPanel component with histogram visualization
+  - Added as separate dockable panel in GameViewerPage
+  - Improved UI modularity and reduced UnitStatsPanel complexity
+  - Both panels synchronize via unit selection events
+
+## Previous Accomplishments ✅
 - **Command Interface Implementation**: Complete high-level game action API for testing and accessibility
   - `selectUnitAt(q, r)` - Unified unit selection with validation and error reporting
   - `moveSelectedUnitTo(q, r)` - Unit movement with path validation 
