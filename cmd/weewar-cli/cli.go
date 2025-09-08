@@ -40,6 +40,7 @@ func NewCLI(gameID string) (*CLI, error) {
 	// Configure readline with auto-complete for commands
 	completer := readline.NewPrefixCompleter(
 		readline.PcItem("options"),
+		readline.PcItem("optionsd"),
 		readline.PcItem("move"),
 		readline.PcItem("attack"),
 		readline.PcItem("end"),
@@ -104,6 +105,8 @@ func (cli *CLI) ExecuteCommand(command string) string {
 	switch cmd {
 	case "options":
 		return cli.handleOptions(args)
+	case "optionsd":
+		return cli.handleOptionsDetailed(args)
 	case "move":
 		return cli.handleMove(args)
 	case "attack":
@@ -130,7 +133,19 @@ func (cli *CLI) handleOptions(args []string) string {
 	if len(args) != 1 {
 		return "Usage: options <position>\nExample: options 3,4 or options A1"
 	}
+	return cli.showOptions(args[0], false)
+}
 
+// handleOptionsDetailed shows available options with detailed path information
+func (cli *CLI) handleOptionsDetailed(args []string) string {
+	if len(args) != 1 {
+		return "Usage: optionsd <position>\nExample: optionsd 3,4 or optionsd A1"
+	}
+	return cli.showOptions(args[0], true)
+}
+
+// showOptions is the shared implementation for showing options
+func (cli *CLI) showOptions(position string, detailed bool) string {
 	ctx := context.Background()
 
 	// Get runtime game for parsing
@@ -140,7 +155,7 @@ func (cli *CLI) handleOptions(args []string) string {
 	}
 
 	// Parse position (could be coordinate or unit ID)
-	target, err := ParsePositionOrUnit(rtGame, args[0])
+	target, err := ParsePositionOrUnit(rtGame, position)
 	if err != nil {
 		return fmt.Sprintf("Invalid position: %v", err)
 	}
@@ -168,8 +183,26 @@ func (cli *CLI) handleOptions(args []string) string {
 		case *v1.GameOption_Move:
 			moveOpt := opt.Move
 			targetCoord := weewar.CoordFromInt32(moveOpt.Q, moveOpt.R)
-			menuItems = append(menuItems, fmt.Sprintf("%d. move to %s (cost: %d)",
-				menuIndex, targetCoord.String(), moveOpt.MovementCost))
+			
+			// Build the menu item with path if available
+			menuItem := fmt.Sprintf("%d. move to %s (cost: %d)",
+				menuIndex, targetCoord.String(), moveOpt.MovementCost)
+			
+			// Add path visualization if AllPaths is available
+			if resp.AllPaths != nil {
+				path, err := weewar.ReconstructPath(resp.AllPaths, moveOpt.Q, moveOpt.R)
+				if err == nil && path != nil {
+					if detailed {
+						pathStr := FormatPathDetailed(path, "   ")
+						menuItem += "\n" + pathStr
+					} else {
+						pathStr := FormatPathCompact(path)
+						menuItem += fmt.Sprintf("\n   Path: %s", pathStr)
+					}
+				}
+			}
+			
+			menuItems = append(menuItems, menuItem)
 
 			// Create the move action using the provided action
 			move := &v1.GameMove{
@@ -231,7 +264,11 @@ func (cli *CLI) handleOptions(args []string) string {
 		fmt.Printf("\nPosition %s:\n", coord.String())
 	}
 
-	fmt.Println("\nAvailable options:")
+	if detailed {
+		fmt.Println("\nAvailable options (detailed):")
+	} else {
+		fmt.Println("\nAvailable options:")
+	}
 	for _, item := range menuItems {
 		fmt.Println(item)
 	}
@@ -581,6 +618,7 @@ func (cli *CLI) handlePlayer(args []string) string {
 func (cli *CLI) handleHelp() string {
 	return `Available commands:
   options <pos>        - Show available actions at position (interactive menu)
+  optionsd <pos>       - Show available actions with detailed path info
   move <from> <to>     - Move unit (e.g. "move A1 5,6" or "move 3,4 5,6")
   attack <att> <tgt>   - Attack target (e.g. "attack A1 B2" or "attack 3,4 5,6")  
   end                  - End current player's turn
@@ -597,6 +635,7 @@ Position formats:
 
 Examples:
   options A1           # Show menu of available actions for unit A1
+  optionsd A1          # Show detailed menu with path breakdowns
   options 3,4          # Show menu of available actions at position 3,4
   move A1 5,6          # Move unit A1 to position 5,6
   attack A1 B2         # Attack unit B2 with unit A1

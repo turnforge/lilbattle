@@ -143,6 +143,89 @@ func (c AxialCoord) Ring(radius int) []AxialCoord {
 // =============================================================================
 
 // =============================================================================
+// Direction Utilities
+// =============================================================================
+
+// GetDirection determines the direction from one hex coordinate to an adjacent hex
+// Returns -1 if the coordinates are not adjacent
+func GetDirection(from, to AxialCoord) NeighborDirection {
+	// Calculate the difference
+	dq := to.Q - from.Q
+	dr := to.R - from.R
+	
+	// Check each possible direction
+	for dir := 0; dir < 6; dir++ {
+		neighbor := AxialCoordNeighbors[dir]
+		if neighbor.Q == dq && neighbor.R == dr {
+			return NeighborDirection(dir)
+		}
+	}
+	
+	// Not adjacent
+	return NeighborDirection(-1)
+}
+
+// DirectionToString converts a NeighborDirection to an ASCII arrow
+func DirectionToString(dir NeighborDirection) string {
+	switch dir {
+	case LEFT:
+		return "←"
+	case TOP_LEFT:
+		return "↖"
+	case TOP_RIGHT:
+		return "↗"
+	case RIGHT:
+		return "→"
+	case BOTTOM_RIGHT:
+		return "↘"
+	case BOTTOM_LEFT:
+		return "↙"
+	default:
+		return "?"
+	}
+}
+
+// DirectionToCode converts a NeighborDirection to a short code (L, LU, etc)
+func DirectionToCode(dir NeighborDirection) string {
+	switch dir {
+	case LEFT:
+		return "L"
+	case TOP_LEFT:
+		return "LU"
+	case TOP_RIGHT:
+		return "RU"
+	case RIGHT:
+		return "R"
+	case BOTTOM_RIGHT:
+		return "RD"
+	case BOTTOM_LEFT:
+		return "LD"
+	default:
+		return "?"
+	}
+}
+
+// DirectionToLongString converts a NeighborDirection to a descriptive string
+func DirectionToLongString(dir NeighborDirection) string {
+	switch dir {
+	case LEFT:
+		return "Left"
+	case TOP_LEFT:
+		return "Top-Left"
+	case TOP_RIGHT:
+		return "Top-Right"
+	case RIGHT:
+		return "Right"
+	case BOTTOM_RIGHT:
+		return "Bottom-Right"
+	case BOTTOM_LEFT:
+		return "Bottom-Left"
+	default:
+		return "Unknown"
+	}
+}
+
+// =============================================================================
 // Debugging and Display Helpers
 // =============================================================================
 
