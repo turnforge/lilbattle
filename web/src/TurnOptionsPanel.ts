@@ -235,12 +235,12 @@ export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
             let details = '';
             
             if (option.move) {
-                description = `Move to (${option.move.q}, ${option.move.r})`;
+                description = `Move to (${option.move.q || 0}, ${option.move.r || 0})`;
                 if (option.move.movementCost !== undefined) {
                     details += `<span class="text-xs text-gray-500 dark:text-gray-400">Cost: ${option.move.movementCost}</span>`;
                 }
             } else if (option.attack) {
-                description = `Attack unit at (${option.attack.q}, ${option.attack.r})`;
+                description = `Attack unit at (${option.attack.q || 0}, ${option.attack.r || 0})`;
                 if (option.attack.damageEstimate !== undefined) {
                     details += `<span class="text-xs text-red-500 dark:text-red-400">Damage: ~${option.attack.damageEstimate}</span>`;
                 }
