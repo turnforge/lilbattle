@@ -22,14 +22,17 @@ func main() {
 	fmt.Println("WeeWar WASM module loading...")
 
 	// Create WASM singleton services (data will be loaded via Load() calls from JS)
-	wasmGamesService := services.NewSingletonGamesServiceImpl()
 	wasmWorldsService := services.NewSingletonWorldsServiceImpl()
+	wasmGamesService := services.NewSingletonGamesServiceImpl()
+	wasmGameViewPresenterService := services.NewSingletonGameViewPresenterServiceImpl()
+	wasmGameViewPresenterService.GamesService = wasmGamesService
 
 	// Wire service implementations to generated WASM exports
 	exports := &weewar_v1_services.ServicesServicesExports{
-		GamesService:  wasmGamesService,
-		UsersService:  services.NewUsersService(),
-		WorldsService: wasmWorldsService,
+		GamesService:             wasmGamesService,
+		GameViewPresenterService: wasmGameViewPresenterService,
+		UsersService:             services.NewUsersService(),
+		WorldsService:            wasmWorldsService,
 	}
 
 	// Register the JavaScript API using generated exports
