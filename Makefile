@@ -19,10 +19,6 @@ test:
 	cd lib && go test . -cover
 	# cd cmd/weewar-cli && go test ./...
 
-buf: ensureenv clean
-	buf generate
-	goimports -w `find gen | grep "\.go"`
-
 cli:
 	mkdir -p bin
 	go build  -o ./bin/weewar-cli cmd/weewar-cli/*.go
@@ -67,6 +63,11 @@ clean:
 cleanall: clean remove-proto-symlinks
 	rm -f buf.yaml
 	rm -f buf.gen.yaml
+
+buf: ensureenv clean
+	buf dep update
+	buf generate
+	goimports -w `find gen | grep "\.go"`
 
 setupdev: cleanall symlink-protos
 	ln -s buf.gen.yaml.dev buf.gen.yaml
