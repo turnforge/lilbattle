@@ -12,7 +12,7 @@ import (
 	"syscall/js"
 
 	// Generated WASM exports
-	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/weewar/v1"
+	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1"
 
 	// Service implementations
 	"github.com/panyam/turnengine/games/weewar/services"
@@ -28,7 +28,7 @@ func main() {
 	wasmGameViewPresenterService.GamesService = wasmGamesService
 
 	// Wire service implementations to generated WASM exports
-	exports := &weewar_v1_services.ServicesServicesExports{
+	exports := &weewar_v1_services.Weewar_v1ServicesExports{
 		GamesService:             wasmGamesService,
 		GameViewPresenterService: wasmGameViewPresenterService,
 		UsersService:             services.NewUsersService(),
