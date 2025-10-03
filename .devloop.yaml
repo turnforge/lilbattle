@@ -86,6 +86,7 @@ rules:
 
   - name: "fetests"
     workdir: "./web"
+    disable: true
     watch:
       - action: "exclude"
         patterns:

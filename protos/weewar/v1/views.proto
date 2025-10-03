@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-package browser.v1;
+package weewar.v1;
 
 import "wasmjs/v1/annotations.proto";
 

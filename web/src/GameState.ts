@@ -1,5 +1,6 @@
 import { EventBus } from '../lib/EventBus';
-import Weewar_v1_servicesClient from '../gen/wasm-clients/weewar/v1/servicesClient.client';
+import WeewarBundle from '../gen/wasmjs';
+import { GamesServiceServiceClient } from '../gen/wasmjs/weewar/v1/gamesServiceClient';
 import { 
     ProcessMovesRequest, 
     ProcessMovesResponse, 
@@ -15,8 +16,9 @@ import {
     GameState as ProtoGameState, 
     Game as ProtoGame, 
     WorldData 
-} from '../gen/wasm-clients/weewar/v1/models'
-import { create } from '@bufbuild/protobuf';
+} from '../gen/wasmjs/weewar/v1/interfaces'
+
+import * as models from '../gen/wasmjs/weewar/v1/models'
 
 /**
  * GameState - Lightweight WASM interface and game metadata manager
@@ -28,10 +30,9 @@ import { create } from '@bufbuild/protobuf';
  * 4. Direct EventBus integration
  */
 export class GameState {
-    private client: Weewar_v1_servicesClient;
+    private wasmBundle: WeewarBundle;
+    private gamesServiceClient: GamesServiceServiceClient;
     private eventBus: EventBus;
-    private wasmLoadPromise: Promise<void> | null;
-    private wasmLoaded: boolean = false;
     
     // ✅ Lightweight game metadata only
     private gameId: string = '';
@@ -42,9 +43,16 @@ export class GameState {
     constructor(eventBus: EventBus) {
         this.eventBus = eventBus;
         
-        // Initialize WASM client with Go compatibility enabled
-        this.client = new Weewar_v1_servicesClient();
-        this.wasmLoadPromise = this.loadWASMModule();
+        // Create base bundle with module configuration
+        this.wasmBundle  = new WeewarBundle();
+
+        // Create service clients using composition
+        this.gamesServiceClient = new GamesServiceServiceClient(this.wasmBundle);
+        // Register browser API implementation when ready
+        // const browserAPI = new BrowserAPIServiceClient(wasmBundle);
+        // this.wasmBundle.registerBrowserService('BrowserAPI', new BrowserAPIImpl());
+
+        this.loadWASMModule();
         
         // ✅ Subscribe to server-changes to keep metadata in sync
         this.eventBus.addSubscription('server-changes', null, this);
@@ -76,12 +84,11 @@ export class GameState {
      * Load the WASM module using generated client
      */
     private async loadWASMModule(): Promise<void> {
-        await this.client.loadWasm('/static/wasm/weewar-cli.wasm');
+        await this.wasmBundle.loadWasm('/static/wasm/weewar-cli.wasm');
         
         // Wait for Go-exported functions to be available on window.weewar
         await this.waitForGoFunctions();
         
-        this.wasmLoaded = true;
         this.eventBus.emit('wasm-loaded', { success: true }, this, this);
     }
     
@@ -104,40 +111,6 @@ export class GameState {
         }
         
         throw new Error('Timeout waiting for Go-exported functions to be available');
-    }
-
-    /**
-     * Ensure WASM module is loaded before API calls
-     */
-    private async ensureWASMLoaded(): Promise<Weewar_v1_servicesClient> {
-        if (this.wasmLoaded && this.client.isReady()) {
-            return this.client;
-        }
-
-        if (!this.wasmLoadPromise) {
-            throw new Error('WASM loading not started');
-        }
-
-        await this.wasmLoadPromise;
-
-        if (!this.wasmLoaded || !this.client.isReady()) {
-            throw new Error('WASM module failed to load');
-        }
-        return this.client;
-    }
-
-    /**
-     * Check if WASM is ready for operations
-     */
-    public isReady(): boolean {
-        return this.wasmLoaded;
-    }
-
-    /**
-     * Wait for WASM to be ready (use during initialization)
-     */
-    public async waitUntilReady(): Promise<void> {
-        await this.ensureWASMLoaded();
     }
     
     /**
@@ -179,8 +152,6 @@ export class GameState {
      * - Any other game state modifications
      */
     public async processMoves(moves: GameMove[]): Promise<WorldChange[]> {
-        const client = await this.ensureWASMLoaded();
-
         if (!this.gameId) {
             throw new Error('Game ID not set. Call setGameId() first.');
         }
@@ -190,13 +161,13 @@ export class GameState {
         const preWorldData = preState.worldData;
 
         // Create request for ProcessMoves service
-        const request = ProcessMovesRequest.from({
+        const request = {
             gameId: this.gameId,
             moves: moves
-        });
+        };
 
         // Call the ProcessMoves service  
-        const response: ProcessMovesResponse = await client.gamesService.processMoves(request);
+        const response: ProcessMovesResponse = await this.gamesServiceClient.processMoves(request);
 
         // Extract world changes from move results (each move result contains its own changes)
         const worldChanges: WorldChange[] = [];
@@ -217,36 +188,36 @@ export class GameState {
      * Helper function to create GameMove for unit movement
      */
     public static createMoveUnitAction(fromQ: number, fromR: number, toQ: number, toR: number, playerId: number): GameMove {
-        const moveAction = MoveUnitAction.from({
+        const moveAction = models.MoveUnitAction.from({
             fromQ: fromQ,
             fromR: fromR,
             toQ: toQ,
             toR: toR
         });
 
-        return GameMove.from({ player: playerId, moveUnit: moveAction, });
+        return models.GameMove.from({ player: playerId, moveUnit: moveAction, });
     }
 
     /**
      * Helper function to create GameMove for unit attack
      */
     public static createAttackUnitAction(attackerQ: number, attackerR: number, defenderQ: number, defenderR: number, playerId: number): GameMove {
-        const attackAction = AttackUnitAction.from({
+        const attackAction = models.AttackUnitAction.from({
             attackerQ: attackerQ,
             attackerR: attackerR,
             defenderQ: defenderQ,
             defenderR: defenderR
         });
 
-        return GameMove.from({ player: playerId, attackUnit: attackAction });
+        return models.GameMove.from({ player: playerId, attackUnit: attackAction });
     }
 
     /**
      * Helper function to create GameMove for end turn
      */
     public static createEndTurnAction(playerId: number): GameMove {
-        const endTurnAction = EndTurnAction.from({});
-        return GameMove.from({ player: playerId, endTurn: endTurnAction });
+        const endTurnAction = models.EndTurnAction.from({});
+        return models.GameMove.from({ player: playerId, endTurn: endTurnAction });
     }
 
     /**
@@ -254,7 +225,7 @@ export class GameState {
      * This populates the WASM singleton objects that serve as the source of truth
      */
     public async loadGameDataToWasm(): Promise<void> {
-        await this.ensureWASMLoaded();
+        await this.wasmBundle.ensureReady();
         
         // Get raw JSON data from page elements
         const gameElement = document.getElementById('game.data-json');
@@ -313,20 +284,20 @@ export class GameState {
      * Query current game state from WASM (no caching)
      */
     public async getCurrentGameState(): Promise<ProtoGameState> {
-        const client = await this.ensureWASMLoaded();
-        const request = GetGameStateRequest.from({ gameId: this.gameId });
-        const response = await client.gamesService.getGameState(request);
-        return response.state || ProtoGameState.from({});
+        await this.wasmBundle.ensureReady();
+        const request = models.GetGameStateRequest.from({ gameId: this.gameId });
+        const response = await this.gamesServiceClient.getGameState(request);
+        return response.state || models.GameState.from({});
     }
 
     /**
      * Query current game data from WASM (no caching)
      */
     public async getCurrentGame(): Promise<ProtoGame> {
-        const client = await this.ensureWASMLoaded();
-        const request = GetGameRequest.from({ id: this.gameId });
-        const response = await client.gamesService.getGame(request);
-        return response.game || ProtoGame.from({});
+        const client = await this.wasmBundle.ensureReady();
+        const request = models.GetGameRequest.from({ id: this.gameId });
+        const response = await this.gamesServiceClient.getGame(request);
+        return response.game || models.Game.from({});
     }
 
     /**
@@ -334,7 +305,7 @@ export class GameState {
      */
     public async getWorldData(): Promise<WorldData> {
         const gameState = await this.getCurrentGameState();
-        return gameState.worldData || WorldData.from({ tiles: [], units: [] });
+        return gameState.worldData || models.WorldData.from({ tiles: [], units: [] });
     }
 
     /**
@@ -350,23 +321,21 @@ export class GameState {
      * ✅ Get all options at a position (core WASM method)
      */
     public async getOptionsAt(q: number, r: number): Promise<GetOptionsAtResponse> {
-        const client = await this.ensureWASMLoaded();
-        
         if (!this.gameId) {
-            return GetOptionsAtResponse.from({ 
+            return models.GetOptionsAtResponse.from({ 
                 options: [], 
                 currentPlayer: 0, 
                 gameInitialized: false 
             });
         }
 
-        const request = GetOptionsAtRequest.from({
+        const request = models.GetOptionsAtRequest.from({
             gameId: this.gameId,
             q: q,
             r: r
         });
 
-        const response = await client.gamesService.getOptionsAt(request);
+        const response = await this.gamesServiceClient.getOptionsAt(request);
         return response;
     }
 }

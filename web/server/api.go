@@ -9,7 +9,7 @@ import (
 	gfn "github.com/panyam/goutils/fn"
 	oa "github.com/panyam/oneauth"
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
-	"github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/v1connect"
+	v1connect "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/weewarv1connect"
 	"github.com/panyam/turnengine/games/weewar/services"
 	svc "github.com/panyam/turnengine/games/weewar/services"
 	"google.golang.org/grpc"

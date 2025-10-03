@@ -11,7 +11,8 @@ import {
     UpdateWorldRequest,
     CreateWorldRequest,
     WorldChange,
-} from '../gen/wasm-clients/weewar/v1/models'
+} from '../gen/wasmjs/weewar/v1/interfaces'
+import * as models from '../gen/wasmjs/weewar/v1/models'
 import { create, toJson } from '@bufbuild/protobuf';
 
 export interface WorldEvent {
@@ -319,7 +320,7 @@ export class World {
     
     public setTileAt(q: number, r: number, tileType: number, player: number): void {
         const key = `${q},${r}`;
-        const tile = Tile.from({ q, r, tileType, player });
+        const tile = { q, r, tileType, player, number: 0, shortcut: "" } as Tile;
         this.tiles[key] = tile;
         this.addTileChange(q, r, tile);
     }
@@ -376,7 +377,7 @@ export class World {
         
         // Different unit type/player or no existing unit - place/replace the unit
         const key = `${q},${r}`;
-        const unit = Unit.from({ q, r, unitType, player });
+        const unit = models.Unit.from({ q, r, unitType, player });
         this.units[key] = unit;
         this.addUnitChange(q, r, unit);
     }
@@ -411,7 +412,7 @@ export class World {
         const result: Array<Unit> = [];
 
         Object.values(this.units).forEach((unitData: Unit) => {
-            result.push(Unit.from({
+            result.push(models.Unit.from({
                 q: unitData.q,
                 r: unitData.r,
                 unitType: unitData.unitType,
@@ -508,7 +509,7 @@ export class World {
         const units: Array<Unit> = Object.values(this.units)
 
         // Build World metadata (separate from WorldData)
-        const worldMetadata: ProtoWorld = ProtoWorld.from({
+        const worldMetadata: ProtoWorld = models.World.from({
             id: this.worldId || undefined,
             name: this.metadata.name || 'Untitled World',
             description: '',
@@ -518,7 +519,7 @@ export class World {
         });
 
         // Build WorldData (tiles and units)
-        const worldData: ProtoWorldData = ProtoWorldData.from({
+        const worldData: ProtoWorldData = models.WorldData.from({
             tiles: tiles,
             units: units
         });
@@ -530,7 +531,7 @@ export class World {
 
         if (this.isNewWorld) {
             // CreateWorldRequest
-            request = CreateWorldRequest.from({
+            request = models.CreateWorldRequest.from({
                 world: worldMetadata,
                 worldData: worldData
             });
@@ -538,8 +539,8 @@ export class World {
             method = 'POST';
         } else {
             // UpdateWorldRequest  
-            request = UpdateWorldRequest.from({
-                world: ProtoWorld.from({
+            request = models.UpdateWorldRequest.from({
+                world: models.World.from({
                     ...worldMetadata,
                     id: this.worldId!
                 }),
@@ -552,7 +553,7 @@ export class World {
         }
 
         // Convert protobuf request to JSON for HTTP call
-        const requestJson = this.isNewWorld ? CreateWorldRequest.from(request): UpdateWorldRequest.from(request);
+        const requestJson = this.isNewWorld ? models.CreateWorldRequest.from(request): models.UpdateWorldRequest.from(request);
 
         const response = await fetch(url, {
             method,
@@ -697,7 +698,7 @@ export class World {
             }
             
             // Pass all unit data from WASM, including runtime state (distanceLeft, availableHealth, etc.)
-            const unit: Unit = Unit.from({ 
+            const unit: Unit = models.Unit.from({ 
                 q, 
                 r, 
                 unitType, 

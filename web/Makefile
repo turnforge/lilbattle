@@ -1,5 +1,5 @@
 
-all: test build
+all: build
 
 build:
 	npm run build

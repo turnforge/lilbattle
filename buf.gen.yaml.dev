@@ -1,6 +1,15 @@
 version: v2
 managed:
   enabled: true
+  disable:
+    # Don't modify any files in buf.build/googleapis/googleapis
+    - module: buf.build/googleapis/googleapis
+    - module: buf.build/grpc-ecosystem/grpc-gateway
+    - module: buf.build/grpc-ecosystem/grpc-gateway
+    - module: buf.build/panyam/protoc-gen-go-wasmjs
+  override:
+    - file_option: go_package_prefix
+      value: github.com/panyam/turnengine/games/weewar/gen/go
 plugins:
   - remote: buf.build/protocolbuffers/go
     out: gen/go
@@ -24,12 +33,12 @@ plugins:
     opt: allow_merge=true,merge_file_name=services
 
   # This will invoke protoc-gen-es and write output to web/gen
-  - local: protoc-gen-es
-    out: web/gen
-    # Also generate any imported dependencies
-    include_imports: true
-    # Add more plugin options here
-    opt: target=ts
+  # - local: protoc-gen-es
+  #   out: web/gen
+  #   # Also generate any imported dependencies
+  #   include_imports: true
+  #   # Add more plugin options here
+  #   opt: target=ts
 
   # Generate Go WASM bindings with new Go generator
   - local: protoc-gen-go-wasmjs-go

@@ -1,9 +1,19 @@
 version: v2
+clean: true
 managed:
   enabled: true
-plugins:
+  disable:
+    # Don't modify any files in buf.build/googleapis/googleapis
+    - module: buf.build/googleapis/googleapis
+    - module: buf.build/grpc-ecosystem/grpc-gateway
+    - module: buf.build/panyam/protoc-gen-go-wasmjs
+    # - module: connectrpc.com/connect
+  override:
+    - file_option: go_package_prefix
+      value: github.com/panyam/turnengine/games/weewar/gen/go
+ plugins:
   - remote: buf.build/protocolbuffers/go
-    out: gen/go
+    out: ./gen/go
     opt: paths=source_relative
 
   - local: protoc-gen-connect-go
@@ -13,7 +23,7 @@ plugins:
     out: gen/go
     opt: paths=source_relative,require_unimplemented_servers=false
   - local: protoc-gen-grpc-gateway
-    out: gen/go
+    out: ./gen/go
     opt: paths=source_relative
   - remote: buf.build/protocolbuffers/python
     out: gen/python

@@ -12,7 +12,7 @@ import {
     BuildUnitOption,
     CaptureBuildingOption,
     GetOptionsAtResponse
-} from '../gen/wasm-clients/weewar/v1/models';
+} from '../gen/wasmjs/weewar/v1/interfaces'
 
 /**
  * TurnOptionsPanel displays available turn options at a selected position

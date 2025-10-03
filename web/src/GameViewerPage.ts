@@ -12,8 +12,7 @@ import {
     GameMove,
     GetOptionsAtResponse,
     GameOption
-} from '../gen/wasm-clients/weewar/v1/models';
-import { WeewarV1Deserializer } from '../gen/wasm-clients/weewar/v1/deserializer';
+} from '../gen/wasmjs/weewar/v1/interfaces';
 import { create } from '@bufbuild/protobuf';
 import { LCMComponent } from '../lib/LCMComponent';
 import { LifecycleController } from '../lib/LifecycleController';

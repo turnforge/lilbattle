@@ -1,6 +1,6 @@
 import { 
     TerrainDefinition, UnitDefinition, TerrainUnitProperties, UnitUnitProperties
-} from '../gen/weewar/v1/models_pb';
+} from '../gen/wasmjs/weewar/v1/interfaces'
 
 /**
  * Terrain stats class combining TerrainDefinition with tile coordinate data

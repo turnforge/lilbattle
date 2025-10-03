@@ -23,12 +23,12 @@ type FSGamesServiceImpl struct {
 	BaseGamesServiceImpl
 	WorldsService v1.WorldsServiceServer
 	storage       *storage.FileStorage // Storage area for all files
-	
+
 	// Simple caches - maps with game ID as key
-	gameCache     map[string]*v1.Game
-	stateCache    map[string]*v1.GameState
-	historyCache  map[string]*v1.GameMoveHistory
-	runtimeCache  map[string]*weewar.Game
+	gameCache    map[string]*v1.Game
+	stateCache   map[string]*v1.GameState
+	historyCache map[string]*v1.GameMoveHistory
+	runtimeCache map[string]*weewar.Game
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
@@ -220,7 +220,7 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		if err := s.storage.SaveArtifact(req.GameId, "metadata", game); err != nil {
 			return nil, fmt.Errorf("failed to update game metadata: %w", err)
 		}
-		
+
 		// Update cache
 		s.gameCache[req.GameId] = game
 		resp.Game = game
@@ -230,7 +230,7 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		if err := s.storage.SaveArtifact(req.GameId, "state", req.NewState); err != nil {
 			return nil, fmt.Errorf("failed to update game state: %w", err)
 		}
-		
+
 		// Update cache and invalidate runtime game
 		s.stateCache[req.GameId] = req.NewState
 		delete(s.runtimeCache, req.GameId)
@@ -240,7 +240,7 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		if err := s.storage.SaveArtifact(req.GameId, "history", req.NewHistory); err != nil {
 			return nil, fmt.Errorf("failed to update game history: %w", err)
 		}
-		
+
 		// Update cache
 		s.historyCache[req.GameId] = req.NewHistory
 	}
@@ -268,10 +268,10 @@ func (s *FSGamesServiceImpl) GetRuntimeGameByID(ctx context.Context, gameID stri
 
 	// Convert to runtime game
 	rtGame := ProtoToRuntimeGame(resp.Game, resp.State)
-	
+
 	// Cache it
 	s.runtimeCache[gameID] = rtGame
-	
+
 	return rtGame, nil
 }
 
@@ -374,14 +374,16 @@ func (s *FSGamesServiceImpl) OnProposalStarted(gameID string, proposal *turnengi
 	}
 
 	// Set the proposal tracking info
-	gameState.ProposalInfo = &turnengine.ProposalTrackingInfo{
-		ProposalId:     proposal.ProposalId,
-		ProposerId:     proposal.ProposerId,
-		Phase:          turnengine.ProposalPhase_PROPOSAL_PHASE_COLLECTING,
-		CreatedAt:      proposal.CreatedAt,
-		ValidatorCount: int32(len(proposal.AssignedValidators)),
-		VotesReceived:  0,
-	}
+	/*
+		gameState.ProposalInfo = &turnengine.ProposalTrackingInfo{
+			ProposalId:     proposal.ProposalId,
+			ProposerId:     proposal.ProposerId,
+			Phase:          turnengine.ProposalPhase_PROPOSAL_PHASE_COLLECTING,
+			CreatedAt:      proposal.CreatedAt,
+			ValidatorCount: int32(len(proposal.AssignedValidators)),
+			VotesReceived:  0,
+		}
+	*/
 
 	// Save the updated state
 	return s.storage.SaveArtifact(gameID, "state", gameState)

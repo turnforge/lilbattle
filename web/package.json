@@ -38,6 +38,7 @@
     "@bufbuild/protobuf": "^2.6.2",
     "@excalidraw/excalidraw": "^0.17.6",
     "@panyam/tsutils": "*",
+    "@protoc-gen-go-wasmjs/runtime": "*",
     "@toast-ui/editor": "^3.2.2",
     "@toast-ui/editor-plugin-code-syntax-highlight": "^3.1.0",
     "axios": "*",
