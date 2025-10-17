@@ -47,6 +47,13 @@ func (s *SingletonGameViewPresenterImpl) InitializeGame(ctx context.Context, req
 		s.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
 			InnerHtml: "<div class='text-center text-gray-500'>Click a tile to see terrain info</div>",
 		})
+		s.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
+			InnerHtml: "<div class='text-center text-gray-500'>Click a tile to see terrain info</div>",
+		})
+		s.GameViewerPage.SetGameState(ctx, &v1.SetGameStateRequest{
+			Game:  game,
+			State: gameState,
+		})
 	}()
 
 	// Response state

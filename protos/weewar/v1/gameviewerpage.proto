@@ -4,6 +4,7 @@ syntax = "proto3";
 package weewar.v1;
 
 import "wasmjs/v1/annotations.proto";
+import "weewar/v1/models.proto";
 
 option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
 
@@ -19,6 +20,8 @@ service GameViewerPage {
     rpc SetTerrainStatsContent(SetContentRequest) returns (SetContentResponse);
 
     rpc LogMessage(LogMessageRequest) returns (LogMessageResponse);
+
+    rpc SetGameState(SetGameStateRequest) returns (SetGameStateResponse);
 }
 
 message EmptyRequest {}
@@ -40,4 +43,14 @@ message LogMessageRequest {
 
 // Response from fetch
 message LogMessageResponse {
+}
+
+// Request to fetch data from a URL
+message SetGameStateRequest {
+  Game game = 1;
+  GameState state = 2;
+}
+
+// Response from fetch
+message SetGameStateResponse {
 }

@@ -16,6 +16,7 @@ import {
     GetOptionsAtResponse,
     GameOption,
     WorldData,
+    SetGameStateRequest, SetGameStateResponse,
     SetContentRequest, SetContentResponse,
 	  LogMessageRequest, LogMessageResponse,
 } from '../gen/wasmjs/weewar/v1/interfaces';
@@ -179,7 +180,6 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         this.eventBus.addSubscription('clear-path-visualization', null, this);
         
         // TODO _ this will be done by initialize WASM
-        // this.checkAndLoadWorldIntoViewer();
         this.wasmBundle.registerBrowserService('GameViewerPage', this)
         
         // Initialize the presenter by setting it game data now that all UI components are ready
@@ -216,55 +216,6 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         }
     }
 
-    /*
-    public destroy(): void {
-        // Save layout before destroying
-        this.saveDockviewLayout();
-        
-        // Dispose dockview
-        if (this.dockview) {
-            this.dockview.dispose();
-        }
-        
-        // Clean up theme observer
-        if (this.themeObserver) {
-            this.themeObserver.disconnect();
-            this.themeObserver = null;
-        }
-        
-        if (this.gameScene) {
-            this.gameScene.destroy();
-            this.gameScene = null as any;
-        }
-        
-        if (this.gameState) {
-            // GameState no longer has destroy method (not a BaseComponent)
-            this.gameState = null as any;
-        }
-
-        if (this.terrainStatsPanel) {
-            this.terrainStatsPanel.destroy();
-            this.terrainStatsPanel = null as any;
-        }
-
-        if (this.gameLogPanel) {
-            this.gameLogPanel.destroy();
-            this.gameLogPanel = null as any;
-        }
-
-        if (this.gameActionsPanel) {
-            this.gameActionsPanel.destroy();
-            this.gameActionsPanel = null as any;
-        }
-
-        if (this.rulesTable) {
-            this.rulesTable = null as any;
-        }
-        
-        this.currentGameId = null;
-    }
-   */
-
     /**
      * Subscribe to GameState events
      */
@@ -286,12 +237,6 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
      */
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
-            case GameEventTypes.GAME_DATA_LOADED:
-                // Check if both viewer and game data are ready
-                // TODO - Let the presenter load this when it is called with initialize
-                // this.checkAndLoadWorldIntoViewer();
-                break;
-            
             case 'show-path-visualization':
                 this.showPathVisualization(data.coords, data.color, data.thickness);
                 break;
@@ -739,17 +684,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         if (!response.success) {
             throw new Error(`WASM load failed: ${response.error}`);
         }
-
-        // Emit event to indicate WASM data is loaded and ready for queries
-        this.eventBus.emit('wasm-data-loaded', { gameId: this.currentGameId }, this, this);
     }
-
-    /**
-     * Bind page-specific events (required by BasePage)
-     * This method is called by BasePage constructor, but we're using external LifecycleController
-     * so we make this a no-op and handle event binding in LCMComponent.activate()
-     */
-    protected bindSpecificEvents(): void {}
 
     /**
      * Internal method to bind game-specific events (called from activate() phase)
@@ -762,28 +697,6 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                 // TODO call the presenter instead
                 // this.endCurrentPlayerTurn(); // Use unified method
             });
-        }
-
-        // Undo Move button
-        const undoBtn = document.getElementById('undo-move-btn');
-        if (undoBtn) {
-            undoBtn.addEventListener('click', this.undoMove.bind(this));
-        }
-
-        // Unit selection buttons
-        const moveUnitBtn = document.getElementById('move-unit-btn');
-        if (moveUnitBtn) {
-            moveUnitBtn.addEventListener('click', this.selectMoveMode.bind(this));
-        }
-
-        const attackUnitBtn = document.getElementById('attack-unit-btn');
-        if (attackUnitBtn) {
-            attackUnitBtn.addEventListener('click', this.selectAttackMode.bind(this));
-        }
-
-        const centerActionBtn = document.getElementById('center-on-action-btn');
-        if (centerActionBtn) {
-            centerActionBtn.addEventListener('click', this.centerOnAction.bind(this));
         }
     }
 
@@ -881,27 +794,6 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                 error: error instanceof Error ? error.message : String(error)
             };
         }
-    }
-
-    /**
-     * Game action handlers - all synchronous for immediate UI feedback
-     */
-
-    private undoMove(): void {
-        this.showToast('Info', 'Undo not yet implemented', 'info');
-    }
-
-    private selectMoveMode(): void {
-        this.showToast('Info', 'Click on a highlighted tile to move', 'info');
-    }
-
-    private selectAttackMode(): void {
-        this.showToast('Info', 'Click on a highlighted enemy to attack', 'info');
-    }
-
-    private centerOnAction(): void {
-        // TODO: Center camera on the most recent action or selected unit
-        this.showToast('Info', 'Centering view', 'info');
     }
 
     /*
@@ -1222,6 +1114,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         }
     }
 
+    // Presenter interface methods
   async setTurnOptionsContent(request: SetContentRequest) {
     console.log("setTurnOptionsContent called on the browser: ", request)
     this.turnOptionsPanel.innerHTML = request.innerHtml
@@ -1246,6 +1139,29 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
   }
 	async logMessage(request: LogMessageRequest) {
     console.log("logMessage called on the browser")
+    return {}
+  }
+	async setGameState(req: SetGameStateRequest) {
+    console.log("setGameState called on the browser")
+    const worldData = req.state!.worldData!
+    const game = req.game!
+    // Load data into shared World component
+    this.world.loadTilesAndUnits(worldData.tiles || [], worldData.units || []);
+    this.world.setName(game.name || 'Untitled Game');
+
+    // Load world into viewer using shared World
+    await this.gameScene.loadWorld(this.world);
+    this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
+
+    // Hide the loading overlay now that the game is loaded
+    this.hideLoadingOverlay();
+
+    // Ensure the game canvas is properly sized after loading
+    this.resizeGameCanvas();
+
+    // Update UI with loaded game state
+    this.updateGameUIFromState(req.state!);
+    this.gameLogPanel.logGameEvent(`Game loaded: ${req.state!.gameId}`, 'system');
     return {}
   }
 }

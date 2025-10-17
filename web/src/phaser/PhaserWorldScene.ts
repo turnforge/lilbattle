@@ -1244,31 +1244,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         text.setOrigin(0.5, 0.5);
         this.coordinateTexts.set(key, text);
     }
-    
-    // Test method to create a simple pattern
-    public createTestPattern() {
-        // Clear existing tiles
-        this.clearAllTiles();
-        
-        // Create a simple pattern with different terrain types
-        const patterns = [
-            { q: 0, r: 0, tileType: 1, player: 0, shortcut: "" },     // Grass
-            { q: 1, r: 0, tileType: 2, player: 0, shortcut: "" },     // Desert
-            { q: -1, r: 0, tileType: 3, player: 0, shortcut: "" },    // Water
-            { q: 0, r: 1, tileType: 16, player: 0, shortcut: "" },    // Mountain
-            { q: 0, r: -1, tileType: 20, player: 0, shortcut: "" }, // Rock
-            { q: 1, r: -1, tileType: 1, player: 1, shortcut: "" },    // Grass (different player)
-            { q: -1, r: 1, tileType: 2, player: 2, shortcut: "" },    // Desert (different player)
-        ];
-        
-        patterns.forEach(pattern => { this.setTile(pattern); });
-        
-        // Update grid display
-        this.updateGridDisplay();
-    }
-    
-    
-    
+
     /**
      * Load world data into the scene
      */
