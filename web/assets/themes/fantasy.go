@@ -1,0 +1,55 @@
+package themes
+
+import (
+	"fmt"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	"github.com/panyam/turnengine/games/weewar/web/assets"
+)
+
+// FantasyTheme implements the Theme interface for the Medieval Fantasy theme
+// Mirrors fantasy.ts and extends BaseTheme
+type FantasyTheme struct {
+	*BaseTheme
+}
+
+// NewFantasyTheme creates a new Fantasy theme instance
+// Loads the mapping.json from embedded files
+func NewFantasyTheme() (*FantasyTheme, error) {
+	manifest, err := assets.LoadThemeManifest("fantasy")
+	if err != nil {
+		return nil, fmt.Errorf("failed to load fantasy theme: %w", err)
+	}
+
+	// Ensure themeInfo is populated (if not in mapping.json, set defaults)
+	if manifest.ThemeInfo == nil {
+		manifest.ThemeInfo = &v1.ThemeInfo{
+			Name:                "Medieval Fantasy",
+			Version:             "1.0.0",
+			BasePath:            "/static/assets/themes/fantasy",
+			AssetType:           "svg",
+			NeedsPostProcessing: true,
+		}
+	}
+
+	return &FantasyTheme{
+		BaseTheme: NewBaseTheme(manifest),
+	}, nil
+}
+
+// GetUnitAssetPath returns the full path to a unit SVG template
+// For SVG themes, this returns the path to the template file
+func (f *FantasyTheme) GetUnitAssetPath(unitId int) string {
+	if path := f.GetUnitPath(unitId); path != "" {
+		return fmt.Sprintf("%s/%s", f.manifest.ThemeInfo.BasePath, path)
+	}
+	return ""
+}
+
+// GetTileAssetPath returns the full path to a terrain SVG template
+func (f *FantasyTheme) GetTileAssetPath(terrainId int) string {
+	if path := f.GetTilePath(terrainId); path != "" {
+		return fmt.Sprintf("%s/%s", f.manifest.ThemeInfo.BasePath, path)
+	}
+	return ""
+}
