@@ -90,7 +90,7 @@ func NewRootViewsHandler(middleware *oa.Middleware, clients *svc.ClientMgr) *Roo
 		"safeHTMLAttr": func(s string) template.HTMLAttr {
 			return template.HTMLAttr(s)
 		},
-		"ToJson": func(v interface{}) template.JS {
+		"ToJson": func(v any) template.JS {
 			if v == nil {
 				return template.JS("null")
 			}
@@ -188,7 +188,7 @@ func (n *RootViewsHandler) setupRoutes() {
 	// Then setup your "resource" specific endpoints
 	n.mux.Handle("/games/", http.StripPrefix("/games", n.setupGamesMux()))
 	n.mux.Handle("/worlds/", http.StripPrefix("/worlds", n.setupWorldsMux()))
-	
+
 	// Handle no-trailing-slash redirects for convenience
 	n.mux.HandleFunc("/games", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/games/", http.StatusMovedPermanently)

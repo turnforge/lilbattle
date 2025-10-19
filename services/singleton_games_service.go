@@ -32,6 +32,10 @@ func NewSingletonGamesServiceImpl() *SingletonGamesServiceImpl {
 	return w
 }
 
+func (w *SingletonGamesServiceImpl) WorldData() *v1.WorldData {
+	return w.SingletonGameState.WorldData
+}
+
 func (w *SingletonGamesServiceImpl) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *weewar.Game, err error) {
 	if w.RuntimeGame == nil {
 		w.RuntimeGame = ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
