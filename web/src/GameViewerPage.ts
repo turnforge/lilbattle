@@ -161,8 +161,8 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         this.gameScene.sceneClickedCallback = (context: any, layer: string, extra?: any): void => {
           this.gameViewPresenterClient.sceneClicked({
             gameId: this.currentGameId || "",
-            q: context.q,
-            r: context.r,
+            q: context.hexQ,
+            r: context.hexR,
             layer: layer,
           })
         };
@@ -1124,6 +1124,8 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
 	async setUnitStatsContent(request: SetContentRequest) {
     console.log("setUnitStatsContent called on the browser")
     this.unitStatsPanel.innerHTML = request.innerHtml
+    // Hydrate theme images after Go template renders HTML
+    await this.unitStatsPanel.hydrateThemeImages()
     return {}
   }
 
@@ -1135,6 +1137,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
 	async setTerrainStatsContent(request: SetContentRequest) {
     console.log("setTerrainStatsContent called on the browser")
     this.terrainStatsPanel.innerHTML = request.innerHtml
+    await this.terrainStatsPanel.hydrateThemeImages()
     return {}
   }
 	async logMessage(request: LogMessageRequest) {

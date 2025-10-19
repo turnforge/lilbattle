@@ -1,16 +1,22 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	lib "github.com/panyam/turnengine/games/weewar/lib"
+	"github.com/panyam/turnengine/games/weewar/web/assets/themes"
+	tmpls "github.com/panyam/turnengine/games/weewar/web/templates"
 )
 
 type SingletonGameViewPresenterImpl struct {
 	BaseGameViewPresenterImpl
 	GameViewerPage v1.GameViewerPageClient
 	GamesService   *SingletonGamesServiceImpl
+	RulesEngine    *v1.RulesEngine
+	Theme          themes.Theme
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -20,6 +26,8 @@ func NewSingletonGameViewPresenterImpl() *SingletonGameViewPresenterImpl {
 		BaseGameViewPresenterImpl: BaseGameViewPresenterImpl{
 			// WorldsService: SingletonWorldsService
 		},
+		RulesEngine: lib.DefaultRulesEngine().RulesEngine,
+		Theme:       themes.NewDefaultTheme(), // Start with default theme
 	}
 	return w
 }
@@ -35,25 +43,18 @@ func (s *SingletonGameViewPresenterImpl) InitializeGame(ctx context.Context, req
 	// Fire all the browser changes here - we dont really care about waiting for them
 	// And more importantly we cannot block for them on the thread that called us
 	go func() {
-		fmt.Println("Ok we shouldhave come here")
 		resp, err := s.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
 			InnerHtml: "<div class='text-center text-gray-500'>Select a unit to see options</div>",
 		})
 		fmt.Println("setTurnOpt Resp, Err: ", resp, err)
 
-		s.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
-			InnerHtml: "<div class='text-center text-gray-500'>No unit selected</div>",
-		})
-		s.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
-			InnerHtml: "<div class='text-center text-gray-500'>Click a tile to see terrain info</div>",
-		})
-		s.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
-			InnerHtml: "<div class='text-center text-gray-500'>Click a tile to see terrain info</div>",
-		})
 		s.GameViewerPage.SetGameState(ctx, &v1.SetGameStateRequest{
 			Game:  game,
 			State: gameState,
 		})
+		s.SetTerrainStats(ctx, nil)
+		s.SetUnitStats(ctx, nil)
+		s.SetUnitDamageDistribution(ctx, nil)
 	}()
 
 	// Response state
@@ -67,54 +68,100 @@ func (s *SingletonGameViewPresenterImpl) InitializeGame(ctx context.Context, req
 }
 
 func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *v1.SceneClickedRequest) (resp *v1.SceneClickedResponse, err error) {
-	/*
-	   const { hexQ: q, hexR: r } = context;
+	fmt.Println("Ok Scene Clicked", req)
+	resp = &v1.SceneClickedResponse{}
+	game := s.GamesService.SingletonGame
+	gameState := s.GamesService.SingletonGameState
+	q, r := req.Q, req.R
+	coord := lib.CoordFromInt32(q, r)
 
-	   // Get tile and unit data from World using coordinates
-	   switch (layer) {
-	       case 'movement-highlight':
-	           // Get moveOption from the layer itself
-	           const movementLayer = this.gameScene.movementHighlightLayer;
-	           const moveOption = movementLayer?.getMoveOptionAt(q, r);
-	           this.handleMovementClick(q, r, moveOption);
-	           break;
+	// Get tile and unit data from World using coordinates
+	switch req.Layer {
+	case "movement-highlight":
+		// Get moveOption from the layer itself
+		/*
+		   const movementLayer = this.gameScene.movementHighlightLayer;
+		   const moveOption = movementLayer?.getMoveOptionAt(q, r);
+		   this.handleMovementClick(q, r, moveOption);
+		*/
+		break
+	case "base-map":
+		go func() {
+			rg, err := s.GamesService.GetRuntimeGame(game, gameState)
+			wd := rg.World
+			if err != nil {
+				panic(err)
+			}
+			unit := wd.UnitAt(coord)
+			tile := wd.TileAt(coord)
 
-	       case 'base-map':
-	           const unit = this.world?.getUnitAt(q, r);
-	           const tile = this.world?.getTileAt(q, r);
+			// Always show terrain info (even when unit is present)
+			s.SetTerrainStats(ctx, tile)
+			s.SetUnitStats(ctx, unit)
+			s.SetUnitDamageDistribution(ctx, unit)
+		}()
 
-	           // Always show terrain info (even when unit is present)
-	           this.handleTileClick(q, r, tile);
-
-	           // If there's a unit, also handle unit logic and show unit info in unit panel
-	           if (unit) {
-	               this.handleUnitClick(q, r);
-	               // Update unit stats panel with unit info
-	               if (this.unitStatsPanel) {
-	                   this.unitStatsPanel.updateUnitInfo(unit);
-	               }
-	               // Update damage distribution panel with unit info
-	               if (this.damageDistributionPanel) {
-	                   this.damageDistributionPanel.updateUnitInfo(unit);
-	               }
-	           } else {
-	               // Empty tile clicked - clear selection
-	               this.clearSelection();
-	               // Clear unit info from unit stats panel when no unit
-	               if (this.unitStatsPanel) {
-	                   this.unitStatsPanel.clearUnitInfo();
-	               }
-	               // Clear unit info from damage distribution panel when no unit
-	               if (this.damageDistributionPanel) {
-	                   this.damageDistributionPanel.clearUnitInfo();
-	               }
-	           }
-	           break;
-
-	       default:
-	           console.log(`[GameViewerPage] Unhandled layer click: ${layer}`);
-	*/
+		// If there's a unit, also handle unit logic and show unit info in unit panel
+		/*
+			if unit != nil {
+				s.handleUnitClick(q, r)
+				// Update unit stats panel with unit info
+			} else {
+				// Empty tile clicked - clear selection
+				s.clearSelection()
+			}
+		*/
+	default:
+		fmt.Println("[GameViewerPage] Unhandled layer click: ", req.Layer)
+	}
 	return
+}
+
+func (s *SingletonGameViewPresenterImpl) renderPanelTemplate(_ context.Context, templatefile string, data any) (content string) {
+	tmpl, err := tmpls.Templates.Loader.Load(templatefile, "")
+	if err == nil {
+		buf := bytes.NewBufferString("")
+		err = tmpls.Templates.RenderHtmlTemplate(buf, tmpl[0], "", data, nil)
+		if err == nil {
+			content = buf.String()
+			fmt.Println("Contents: ", content)
+		}
+	}
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func (s *SingletonGameViewPresenterImpl) SetUnitStats(ctx context.Context, unit *v1.Unit) {
+	content := s.renderPanelTemplate(ctx, "UnitStatsPanel.templar.html", map[string]any{
+		"Unit":       unit,
+		"RulesTable": s.RulesEngine,
+		"Theme":      s.Theme, // Pass theme to template
+	})
+	s.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
+		InnerHtml: content,
+	})
+}
+
+func (s *SingletonGameViewPresenterImpl) SetUnitDamageDistribution(ctx context.Context, unit *v1.Unit) {
+	content := "<div class='text-center text-gray-500'>No unit selected.......</div>"
+	if unit != nil {
+	}
+	s.GameViewerPage.SetDamageDistributionContent(ctx, &v1.SetContentRequest{
+		InnerHtml: content,
+	})
+}
+
+func (s *SingletonGameViewPresenterImpl) SetTerrainStats(ctx context.Context, tile *v1.Tile) {
+	content := s.renderPanelTemplate(ctx, "TerrainStatsPanel.templar.html", map[string]any{
+		"Tile":       tile,
+		"RulesTable": s.RulesEngine,
+		"Theme":      s.Theme, // Pass theme to template
+	})
+	s.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
+		InnerHtml: content,
+	})
 }
 
 // Handle tile clicks - show terrain info in TerrainStatsPanel
@@ -335,46 +382,6 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
                message: 'Failed to end turn',
                error: errorMsg
            } as ActionResult;
-       }
-   }
-*/
-
-/**
- * Check if both WorldViewer and game data are ready, then load world into viewer
- */
-/*
-   private async checkAndLoadWorldIntoViewer(): Promise<void> {
-       try {
-           // ✅ Get world data from WASM and load into shared World component
-           const worldData = await this.gameState.getWorldData();
-           const game = await this.gameState.getCurrentGame();
-
-           // Load data into shared World component
-           this.world.loadTilesAndUnits(worldData.tiles || [], worldData.units || []);
-           this.world.setName(game.name || 'Untitled Game');
-
-           // Load world into viewer using shared World
-           if (this.gameScene && this.world) {
-               await this.gameScene.loadWorld(this.world);
-               this.showToast('Success', `Game loaded: ${game.name || this.world.getName() || 'Untitled'}`, 'success');
-
-               // Hide the loading overlay now that the game is loaded
-               this.hideLoadingOverlay();
-
-               // Ensure the game canvas is properly sized after loading
-               this.resizeGameCanvas();
-
-               // Update UI with loaded game state
-               const gameState = await this.gameState.getCurrentGameState();
-               this.updateGameUIFromState(gameState);
-               this.gameLogPanel.logGameEvent(`Game loaded: ${gameState.gameId}`, 'system');
-           } else {
-               throw new Error('GameScene or World not available');
-           }
-       } catch (error) {
-           console.error('GameViewerPage: Failed to load world into viewer:', error);
-           this.updateGameStatus('Failed to load world');
-           this.showToast('Error', 'Failed to load world', 'error');
        }
    }
 */
