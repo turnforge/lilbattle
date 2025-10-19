@@ -39,7 +39,7 @@ func NewModernTheme() (*ModernTheme, error) {
 
 // GetUnitAssetPath returns the full path to a unit SVG template
 // For SVG themes, this returns the path to the template file
-func (m *ModernTheme) GetUnitAssetPath(unitId int) string {
+func (m *ModernTheme) GetUnitAssetPath(unitId int32) string {
 	if path := m.GetUnitPath(unitId); path != "" {
 		return fmt.Sprintf("%s/%s", m.manifest.ThemeInfo.BasePath, path)
 	}
@@ -47,7 +47,7 @@ func (m *ModernTheme) GetUnitAssetPath(unitId int) string {
 }
 
 // GetTileAssetPath returns the full path to a terrain SVG template
-func (m *ModernTheme) GetTileAssetPath(terrainId int) string {
+func (m *ModernTheme) GetTileAssetPath(terrainId int32) string {
 	if path := m.GetTilePath(terrainId); path != "" {
 		return fmt.Sprintf("%s/%s", m.manifest.ThemeInfo.BasePath, path)
 	}

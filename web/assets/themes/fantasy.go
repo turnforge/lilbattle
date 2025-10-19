@@ -39,7 +39,7 @@ func NewFantasyTheme() (*FantasyTheme, error) {
 
 // GetUnitAssetPath returns the full path to a unit SVG template
 // For SVG themes, this returns the path to the template file
-func (f *FantasyTheme) GetUnitAssetPath(unitId int) string {
+func (f *FantasyTheme) GetUnitAssetPath(unitId int32) string {
 	if path := f.GetUnitPath(unitId); path != "" {
 		return fmt.Sprintf("%s/%s", f.manifest.ThemeInfo.BasePath, path)
 	}
@@ -47,7 +47,7 @@ func (f *FantasyTheme) GetUnitAssetPath(unitId int) string {
 }
 
 // GetTileAssetPath returns the full path to a terrain SVG template
-func (f *FantasyTheme) GetTileAssetPath(terrainId int) string {
+func (f *FantasyTheme) GetTileAssetPath(terrainId int32) string {
 	if path := f.GetTilePath(terrainId); path != "" {
 		return fmt.Sprintf("%s/%s", f.manifest.ThemeInfo.BasePath, path)
 	}

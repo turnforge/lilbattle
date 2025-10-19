@@ -12,15 +12,15 @@ type DefaultTheme struct {
 	basePath string
 
 	// Simple mappings for the default theme (no mapping.json for v1 assets)
-	unitNames      map[int]string
-	terrainNames   map[int]string
-	natureTerrains map[int]bool
+	unitNames      map[int32]string
+	terrainNames   map[int32]string
+	natureTerrains map[int32]bool
 }
 
 // NewDefaultTheme creates a new default theme instance
 func NewDefaultTheme() *DefaultTheme {
 	// Initialize unit names (matches default.ts)
-	unitNames := map[int]string{
+	unitNames := map[int32]string{
 		1: "Infantry", 2: "Mech", 3: "Recon", 4: "Tank", 5: "Medium Tank",
 		6: "Neo Tank", 7: "APC", 8: "Artillery", 9: "Rocket", 10: "Anti-Air",
 		12: "Fighter", 13: "Bomber", 14: "B-Copter", 15: "T-Copter",
@@ -34,7 +34,7 @@ func NewDefaultTheme() *DefaultTheme {
 	}
 
 	// Initialize terrain names (matches default.ts)
-	terrainNames := map[int]string{
+	terrainNames := map[int32]string{
 		0: "Clear", 1: "Land Base", 2: "Naval Base", 3: "Airport Base",
 		4: "Desert", 5: "Grass", 6: "Hospital", 7: "Mountains", 8: "Swamp",
 		9: "Forest", 10: "Water (Regular)", 12: "Lava", 14: "Water (Shallow)",
@@ -44,8 +44,8 @@ func NewDefaultTheme() *DefaultTheme {
 	}
 
 	// Nature terrains (matches default.ts)
-	natureTerrains := make(map[int]bool)
-	for _, id := range []int{4, 5, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 22, 23, 26} {
+	natureTerrains := make(map[int32]bool)
+	for _, id := range []int32{4, 5, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 22, 23, 26} {
 		natureTerrains[id] = true
 	}
 
@@ -57,33 +57,33 @@ func NewDefaultTheme() *DefaultTheme {
 	}
 }
 
-func (d *DefaultTheme) GetUnitName(unitId int) string {
+func (d *DefaultTheme) GetUnitName(unitId int32) string {
 	if name, ok := d.unitNames[unitId]; ok {
 		return name
 	}
 	return ""
 }
 
-func (d *DefaultTheme) GetTerrainName(terrainId int) string {
+func (d *DefaultTheme) GetTerrainName(terrainId int32) string {
 	if name, ok := d.terrainNames[terrainId]; ok {
 		return name
 	}
 	return ""
 }
 
-func (d *DefaultTheme) GetUnitDescription(unitId int) string {
+func (d *DefaultTheme) GetUnitDescription(unitId int32) string {
 	// Default theme has no custom descriptions
 	return ""
 }
 
-func (d *DefaultTheme) GetTerrainDescription(terrainId int) string {
+func (d *DefaultTheme) GetTerrainDescription(terrainId int32) string {
 	// Default theme has no custom descriptions
 	return ""
 }
 
 // GetUnitPath returns the directory path for a unit's assets
 // For PNG themes, this is the directory containing player-colored variants
-func (d *DefaultTheme) GetUnitPath(unitId int) string {
+func (d *DefaultTheme) GetUnitPath(unitId int32) string {
 	if _, ok := d.unitNames[unitId]; ok {
 		return fmt.Sprintf("%s/Units/%d", d.basePath, unitId)
 	}
@@ -91,7 +91,7 @@ func (d *DefaultTheme) GetUnitPath(unitId int) string {
 }
 
 // GetTilePath returns the directory path for a terrain's assets
-func (d *DefaultTheme) GetTilePath(terrainId int) string {
+func (d *DefaultTheme) GetTilePath(terrainId int32) string {
 	if _, ok := d.terrainNames[terrainId]; ok {
 		return fmt.Sprintf("%s/Tiles/%d", d.basePath, terrainId)
 	}
@@ -100,7 +100,7 @@ func (d *DefaultTheme) GetTilePath(terrainId int) string {
 
 // GetUnitAssetPath returns the full path to a specific unit+player PNG file
 // This is a helper method specific to PNG themes
-func (d *DefaultTheme) GetUnitAssetPath(unitId, playerId int) string {
+func (d *DefaultTheme) GetUnitAssetPath(unitId, playerId int32) string {
 	if _, ok := d.unitNames[unitId]; ok {
 		return fmt.Sprintf("%s/Units/%d/%d.png", d.basePath, unitId, playerId)
 	}
@@ -108,7 +108,7 @@ func (d *DefaultTheme) GetUnitAssetPath(unitId, playerId int) string {
 }
 
 // GetTileAssetPath returns the full path to a specific terrain+player PNG file
-func (d *DefaultTheme) GetTileAssetPath(terrainId, playerId int) string {
+func (d *DefaultTheme) GetTileAssetPath(terrainId, playerId int32) string {
 	if _, ok := d.terrainNames[terrainId]; ok {
 		// Nature terrains always use player 0 (neutral)
 		effectivePlayer := playerId
@@ -120,15 +120,15 @@ func (d *DefaultTheme) GetTileAssetPath(terrainId, playerId int) string {
 	return ""
 }
 
-func (d *DefaultTheme) IsCityTile(terrainId int) bool {
+func (d *DefaultTheme) IsCityTile(terrainId int32) bool {
 	return IsCityTerrain(terrainId)
 }
 
-func (d *DefaultTheme) IsNatureTile(terrainId int) bool {
+func (d *DefaultTheme) IsNatureTile(terrainId int32) bool {
 	return IsNatureTerrain(terrainId)
 }
 
-func (d *DefaultTheme) IsBridgeTile(terrainId int) bool {
+func (d *DefaultTheme) IsBridgeTile(terrainId int32) bool {
 	return IsBridgeTerrain(terrainId)
 }
 
@@ -142,35 +142,35 @@ func (d *DefaultTheme) GetThemeInfo() *v1.ThemeInfo {
 	}
 }
 
-func (d *DefaultTheme) GetAvailableUnits() []int {
-	units := make([]int, 0, len(d.unitNames))
+func (d *DefaultTheme) GetAvailableUnits() []int32 {
+	units := make([]int32, 0, len(d.unitNames))
 	for id := range d.unitNames {
 		units = append(units, id)
 	}
 	return units
 }
 
-func (d *DefaultTheme) GetAvailableTerrains() []int {
-	terrains := make([]int, 0, len(d.terrainNames))
+func (d *DefaultTheme) GetAvailableTerrains() []int32 {
+	terrains := make([]int32, 0, len(d.terrainNames))
 	for id := range d.terrainNames {
 		terrains = append(terrains, id)
 	}
 	return terrains
 }
 
-func (d *DefaultTheme) HasUnit(unitId int) bool {
+func (d *DefaultTheme) HasUnit(unitId int32) bool {
 	_, ok := d.unitNames[unitId]
 	return ok
 }
 
-func (d *DefaultTheme) HasTerrain(terrainId int) bool {
+func (d *DefaultTheme) HasTerrain(terrainId int32) bool {
 	_, ok := d.terrainNames[terrainId]
 	return ok
 }
 
 // GetAssetPathForTemplate is a helper for templates to get either unit or tile paths
 // Returns the full path to the PNG file
-func (d *DefaultTheme) GetAssetPathForTemplate(assetType string, assetId, playerId int) string {
+func (d *DefaultTheme) GetAssetPathForTemplate(assetType string, assetId, playerId int32) string {
 	switch assetType {
 	case "unit":
 		return d.GetUnitAssetPath(assetId, playerId)
