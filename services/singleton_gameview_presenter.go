@@ -105,10 +105,10 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 				R: r,
 			})
 			if err == nil && optionsResp != nil {
-				s.SetTurnOptions(ctx, optionsResp, unit, &v1.AxialCoord{Q: q, R: r})
+				s.SetTurnOptions(ctx, optionsResp, unit)
 			} else {
 				// Clear options panel if there's an error or no options
-				s.SetTurnOptions(ctx, &v1.GetOptionsAtResponse{Options: nil}, nil, &v1.AxialCoord{Q: q, R: r})
+				s.SetTurnOptions(ctx, &v1.GetOptionsAtResponse{Options: nil}, nil)
 			}
 		}()
 
@@ -176,12 +176,11 @@ func (s *SingletonGameViewPresenterImpl) SetTerrainStats(ctx context.Context, ti
 	})
 }
 
-func (s *SingletonGameViewPresenterImpl) SetTurnOptions(ctx context.Context, response *v1.GetOptionsAtResponse, unit *v1.Unit, position *v1.AxialCoord) {
+func (s *SingletonGameViewPresenterImpl) SetTurnOptions(ctx context.Context, response *v1.GetOptionsAtResponse, unit *v1.Unit) {
 	content := s.renderPanelTemplate(ctx, "TurnOptionsPanel.templar.html", map[string]any{
-		"Options":  response.GetOptions(),
-		"Unit":     unit,
-		"Position": position,
-		"Theme":    s.Theme,
+		"Options": response.GetOptions(),
+		"Unit":    unit,
+		"Theme":   s.Theme,
 	})
 	s.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
