@@ -106,9 +106,20 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 			})
 			if err == nil && optionsResp != nil {
 				s.SetTurnOptions(ctx, optionsResp, unit)
+
+				// Send visualization commands to show highlights
+				highlights := buildHighlightSpecs(optionsResp, q, r)
+				if len(highlights) > 0 {
+					s.GameViewerPage.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
+						Highlights: highlights,
+					})
+				}
 			} else {
-				// Clear options panel if there's an error or no options
+				// Clear options panel and highlights if there's an error or no options
 				s.SetTurnOptions(ctx, &v1.GetOptionsAtResponse{Options: nil}, nil)
+				s.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{
+					Types: []string{}, // Empty = clear all
+				})
 			}
 		}()
 
@@ -185,6 +196,44 @@ func (s *SingletonGameViewPresenterImpl) SetTurnOptions(ctx context.Context, res
 	s.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
+}
+
+// buildHighlightSpecs creates HighlightSpec array from GetOptionsAt response
+// Extracts selection, movement, and attack highlights from the options
+func buildHighlightSpecs(optionsResp *v1.GetOptionsAtResponse, selectedQ, selectedR int32) []*v1.HighlightSpec {
+	if optionsResp == nil || len(optionsResp.Options) == 0 {
+		return nil
+	}
+
+	highlights := []*v1.HighlightSpec{}
+
+	// Add selection highlight for the clicked position
+	highlights = append(highlights, &v1.HighlightSpec{
+		Q:    selectedQ,
+		R:    selectedR,
+		Type: "selection",
+	})
+
+	// Extract highlights from options
+	for _, option := range optionsResp.Options {
+		if moveOpt := option.GetMove(); moveOpt != nil {
+			// Add movement highlight
+			highlights = append(highlights, &v1.HighlightSpec{
+				Q:    moveOpt.Q,
+				R:    moveOpt.R,
+				Type: "movement",
+			})
+		} else if attackOpt := option.GetAttack(); attackOpt != nil {
+			// Add attack highlight
+			highlights = append(highlights, &v1.HighlightSpec{
+				Q:    attackOpt.Q,
+				R:    attackOpt.R,
+				Type: "attack",
+			})
+		}
+	}
+
+	return highlights
 }
 
 // Handle tile clicks - show terrain info in TerrainStatsPanel
