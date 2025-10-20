@@ -31,7 +31,6 @@ import {
  */
 export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
     private gameViewPresenterClient: GameViewPresenterClient;
-    private isActivated = false;
     private world: World | null = null;
     private theme: ITheme | null = null;
     private currentOptions: GameOption[] = [];
@@ -40,17 +39,6 @@ export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
 
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('turn-options-panel', rootElement, eventBus, debugMode);
-    }
-
-    // LCMComponent Phase 1: Initialize DOM structure
-    public performLocalInit(): LCMComponent[] {
-        // This is a leaf component - no children
-        return [];
-    }
-
-    // Phase 2: Setup dependencies
-    public setupDependencies(): void {
-        this.log('Setting up TurnOptionsPanel dependencies');
     }
     
     /**
@@ -105,18 +93,8 @@ export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
 
     // Phase 3: Activate component
     public activate(): void {
-        if (this.isActivated) {
-            this.log('Already activated, skipping');
-            return;
-        }
-
-        this.log('Activating TurnOptionsPanel');
-        this.isActivated = true;
-        
         // Show initial empty state
         this.showEmptyState();
-        
-        this.log('TurnOptionsPanel activated successfully');
     }
 
     // Phase 4: Deactivate component
@@ -125,7 +103,6 @@ export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
         this.currentOptions = [];
         this.selectedPosition = null;
         this.selectedUnit = null;
-        this.isActivated = false;
         this.log('TurnOptionsPanel deactivated');
     }
 
