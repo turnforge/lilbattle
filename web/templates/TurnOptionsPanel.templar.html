@@ -10,10 +10,10 @@
       data-player-id="{{ .Unit.Player }}"
       style="image-rendering: pixelated"
     />
-    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-      {{ $theme.GetUnitName .Unit.UnitType }} at ({{ .Unit.Q }}, {{ .Unit.R }})
-    </span>
   </div>
+  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+    {{ $theme.GetUnitName .Unit.UnitType }} at ({{ .Unit.Q }}, {{ .Unit.R }})
+  </span>
   {{ end }}
   <div class="text-xs text-gray-500 dark:text-gray-400">
     {{ len .Options }} option{{ if ne (len .Options) 1 }}s{{ end }} available
