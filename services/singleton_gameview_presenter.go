@@ -17,6 +17,11 @@ type SingletonGameViewPresenterImpl struct {
 	GamesService   *SingletonGamesServiceImpl
 	RulesEngine    *v1.RulesEngine
 	Theme          themes.Theme
+
+	// State tracking for current selection
+	selectedQ    *int32  // nil = no selection
+	selectedR    *int32  // nil = no selection
+	hasHighlights bool   // Track if highlights are currently shown
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -94,32 +99,40 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 			unit := wd.UnitAt(coord)
 			tile := wd.TileAt(coord)
 
-			// Always show terrain info (even when unit is present)
+			// Always show terrain and unit info (methods handle nil)
 			s.SetTerrainStats(ctx, tile)
 			s.SetUnitStats(ctx, unit)
 			s.SetUnitDamageDistribution(ctx, unit)
 
-			// Get options at this position and update TurnOptionsPanel
-			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-				Q: q,
-				R: r,
-			})
-			if err == nil && optionsResp != nil {
-				s.SetTurnOptions(ctx, optionsResp, unit)
+			// Only proceed with options and highlights if there's a unit
+			if unit != nil {
+				// Get options at this position and update TurnOptionsPanel
+				optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+					Q: q,
+					R: r,
+				})
+				if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
+					s.SetTurnOptions(ctx, optionsResp, unit)
 
-				// Send visualization commands to show highlights
-				highlights := buildHighlightSpecs(optionsResp, q, r)
-				if len(highlights) > 0 {
-					s.GameViewerPage.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
-						Highlights: highlights,
-					})
+					// Send visualization commands to show highlights
+					highlights := buildHighlightSpecs(optionsResp, q, r)
+					if len(highlights) > 0 {
+						s.GameViewerPage.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
+							Highlights: highlights,
+						})
+						s.hasHighlights = true
+						s.selectedQ = &q
+						s.selectedR = &r
+					}
+				} else {
+					// Unit exists but no options available
+					s.SetTurnOptions(ctx, &v1.GetOptionsAtResponse{Options: nil}, nil)
+					s.clearHighlightsAndSelection(ctx)
 				}
 			} else {
-				// Clear options panel and highlights if there's an error or no options
+				// No unit at clicked position - clear options and highlights
 				s.SetTurnOptions(ctx, &v1.GetOptionsAtResponse{Options: nil}, nil)
-				s.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{
-					Types: []string{}, // Empty = clear all
-				})
+				s.clearHighlightsAndSelection(ctx)
 			}
 		}()
 
@@ -196,6 +209,18 @@ func (s *SingletonGameViewPresenterImpl) SetTurnOptions(ctx context.Context, res
 	s.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
+}
+
+// clearHighlightsAndSelection clears highlights if any are currently shown
+func (s *SingletonGameViewPresenterImpl) clearHighlightsAndSelection(ctx context.Context) {
+	if s.hasHighlights {
+		s.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{
+			Types: []string{}, // Empty = clear all
+		})
+		s.hasHighlights = false
+		s.selectedQ = nil
+		s.selectedR = nil
+	}
 }
 
 // buildHighlightSpecs creates HighlightSpec array from GetOptionsAt response

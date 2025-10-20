@@ -445,6 +445,95 @@ export class PhaserGameScene extends PhaserWorldScene {
      * Get layer instances for direct manipulation
      */
 
+    // =========================================================================
+    // Visualization Command Methods (called by presenter via GameViewerPage)
+    // =========================================================================
+
+    /**
+     * Show highlights on the game board
+     * @param highlights Array of HighlightSpec from presenter
+     */
+    public showHighlights(highlights: any[]): void {
+        if (!highlights || highlights.length === 0) {
+            return;
+        }
+
+        // Group highlights by type
+        const selections = highlights.filter(h => h.type === 'selection');
+        const movements = highlights.filter(h => h.type === 'movement');
+        const attacks = highlights.filter(h => h.type === 'attack');
+
+        // Apply selection highlights (typically just one)
+        if (this._selectionHighlightLayer && selections.length > 0) {
+            selections.forEach(h => {
+                this._selectionHighlightLayer!.selectHex(h.q, h.r);
+            });
+        }
+
+        // Apply movement highlights
+        if (this._movementHighlightLayer && movements.length > 0) {
+            // Convert to MoveOption-like objects for the layer
+            const moveOptions = movements.map(h => ({
+                q: h.q,
+                r: h.r,
+                movementCost: 0, // Cost not available in HighlightSpec
+            }));
+            this._movementHighlightLayer.showMovementOptions(moveOptions);
+        }
+
+        // Apply attack highlights
+        if (this._attackHighlightLayer && attacks.length > 0) {
+            const attackCoords = attacks.map(h => ({ q: h.q, r: h.r }));
+            this._attackHighlightLayer.showAttackOptions(attackCoords);
+        }
+    }
+
+    /**
+     * Clear highlights from the game board
+     * @param types Array of highlight types to clear, empty = clear all
+     */
+    public clearHighlights(types: string[]): void {
+        const clearAll = !types || types.length === 0;
+
+        if ((clearAll || types.includes('selection')) && this._selectionHighlightLayer) {
+            this._selectionHighlightLayer.clearSelection();
+        }
+
+        if ((clearAll || types.includes('movement')) && this._movementHighlightLayer) {
+            this._movementHighlightLayer.clearMovementOptions();
+        }
+
+        if ((clearAll || types.includes('attack')) && this._attackHighlightLayer) {
+            this._attackHighlightLayer.clearAttackOptions();
+        }
+    }
+
+    /**
+     * Show a path on the game board
+     * @param coords Flat array of coordinates [q1, r1, q2, r2, ...]
+     * @param color Hex color (e.g., 0x00FF00)
+     * @param thickness Line thickness
+     */
+    public showPath(coords: number[], color: number, thickness: number): void {
+        if (!coords || coords.length < 4) {
+            return;
+        }
+
+        // Use movement layer for path drawing
+        if (this._movementHighlightLayer) {
+            this._movementHighlightLayer.addPath(coords, color, thickness);
+        }
+    }
+
+    /**
+     * Clear all paths from the game board
+     */
+    public clearPaths(): void {
+        if (this._movementHighlightLayer) {
+            this._movementHighlightLayer.clearAllPaths();
+        }
+    }
+
     /**
      * Manual cleanup when scene is destroyed
      */

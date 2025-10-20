@@ -23,6 +23,7 @@ import {
     ClearHighlightsRequest, ClearHighlightsResponse,
     ShowPathRequest, ShowPathResponse,
     ClearPathsRequest, ClearPathsResponse,
+    HighlightSpec,
 } from '../gen/wasmjs/weewar/v1/interfaces';
 import * as models from '../gen/wasmjs/weewar/v1/models';
 import { create } from '@bufbuild/protobuf';
@@ -1151,28 +1152,32 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     await this.terrainStatsPanel.hydrateThemeImages()
     return {}
   }
-	// Visualization command methods
+	// Visualization command methods - delegate to PhaserGameScene
   async showHighlights(request: ShowHighlightsRequest) {
     console.log("showHighlights called:", request);
-    // TODO Phase 4: Implement actual highlighting
+    if (request.highlights) {
+      this.gameScene.showHighlights(request.highlights);
+    }
     return {}
   }
 
   async clearHighlights(request: ClearHighlightsRequest) {
     console.log("clearHighlights called:", request);
-    // TODO Phase 4: Implement clearing
+    this.gameScene.clearHighlights(request.types || []);
     return {}
   }
 
   async showPath(request: ShowPathRequest) {
     console.log("showPath called:", request);
-    // TODO Phase 4: Implement path drawing
+    if (request.coords) {
+      this.gameScene.showPath(request.coords, request.color, request.thickness);
+    }
     return {}
   }
 
   async clearPaths(request: ClearPathsRequest) {
     console.log("clearPaths called:", request);
-    // TODO Phase 4: Implement path clearing
+    this.gameScene.clearPaths();
     return {}
   }
 
