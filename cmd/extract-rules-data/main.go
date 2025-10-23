@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -140,6 +141,7 @@ func extractUnitsData(unitsDir string, rulesData *RulesData) error {
 			fmt.Printf("Skipping invalid unit file: %s\n", filename)
 			continue
 		}
+		log.Println("Processing file: ", filename)
 
 		fmt.Printf("Processing unit %d...\n", unitID)
 
@@ -199,7 +201,7 @@ func extractTerrainUnitInteractions(doc *html.Node, terrainID int32, rulesData *
 	// First, find the table headers to understand column layout
 	var columnHeaders []string
 	var foundTable bool
-	
+
 	var findHeaders func(*html.Node)
 	findHeaders = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "thead" && !foundTable {
@@ -224,7 +226,7 @@ func extractTerrainUnitInteractions(doc *html.Node, terrainID int32, rulesData *
 		}
 	}
 	findHeaders(doc)
-	
+
 	// Now find the tbody and process rows with column header knowledge
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
@@ -259,7 +261,7 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 			if cellIndex < len(columnHeaders) {
 				columnName := columnHeaders[cellIndex]
 				cellText := getTextContent(cell)
-				
+
 				switch columnName {
 				case "unit":
 					unitID = extractUnitIDFromCell(cell)
@@ -311,13 +313,18 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 			// Extract different properties based on <strong> labels
 			if strings.Contains(text, "Movement") && !strings.Contains(text, "Build Percentage") {
 				// Extract movement points - the number appears after <br>
+				log.Println("Lines: ", text)
 				lines := strings.Split(text, "\n")
 				for i, line := range lines {
 					if strings.Contains(line, "Movement") && i+1 < len(lines) {
-						nextLine := strings.TrimSpace(lines[i+1])
-						if matches := regexp.MustCompile(`^(\d+)`).FindStringSubmatch(nextLine); len(matches) > 1 {
+						nextLine := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
+						matches := regexp.MustCompile(`^(\d+)`).FindStringSubmatch(nextLine)
+						log.Println("Here???, ", lines[i], "Next: ", nextLine, "Matches: ", matches)
+						if len(matches) > 1 {
 							if mov, err := strconv.Atoi(matches[1]); err == nil {
 								unitDef.MovementPoints = int32(mov)
+							} else {
+								panic(err)
 							}
 						}
 						break

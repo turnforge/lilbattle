@@ -56,7 +56,7 @@ func setupGetOptionsAtTest(t *testing.T, scenario GetOptionsAtTestScenario) *Sin
 	}
 
 	// Load rules engine
-	rulesEngine, err := LoadRulesEngineFromFile(DevDataPath("data/rules-data.json"))
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE)
 	if err != nil {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
