@@ -1,6 +1,3 @@
-//go:build js && wasm
-// +build js,wasm
-
 package services
 
 import (
@@ -9,11 +6,19 @@ import (
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"github.com/panyam/turnengine/games/weewar/web/assets/themes"
+	"google.golang.org/grpc"
 )
 
 type BasePanel interface {
 	SetTheme(t themes.Theme)
 	SetRulesEngine(t *v1.RulesEngine)
+}
+
+type GameState interface {
+	SetGameState(context.Context, *v1.SetGameStateRequest, ...grpc.CallOption) (*v1.SetGameStateResponse, error)
+	RemoveUnitAt(context.Context, *v1.RemoveUnitAtRequest, ...grpc.CallOption) (*v1.RemoveUnitAtResponse, error)
+	SetUnitAt(context.Context, *v1.SetUnitAtRequest, ...grpc.CallOption) (*v1.SetUnitAtResponse, error)
+	UpdateGameStatus(context.Context, *v1.UpdateGameStatusRequest, ...grpc.CallOption) (*v1.UpdateGameStatusResponse, error)
 }
 
 type TurnOptionsPanel interface {
@@ -56,7 +61,7 @@ type SingletonGameViewPresenterImpl struct {
 	Theme        themes.Theme
 
 	// All the "UI Elements" we will change state of
-	GameViewerPage          v1.GameViewerPageClient
+	GameState               GameState
 	TurnOptionsPanel        TurnOptionsPanel
 	UnitStatsPanel          UnitStatsPanel
 	DamageDistributionPanel DamageDistributionPanel
@@ -96,7 +101,7 @@ func (s *SingletonGameViewPresenterImpl) InitializeGame(ctx context.Context, req
 		s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 		fmt.Println("setTurnOpt Resp, Err: ", resp, err)
 
-		s.GameViewerPage.SetGameState(ctx, &v1.SetGameStateRequest{
+		s.GameState.SetGameState(ctx, &v1.SetGameStateRequest{
 			Game:  game,
 			State: gameState,
 		})
@@ -417,14 +422,14 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 			case *v1.WorldChange_UnitMoved:
 				// Remove unit from previous position
 				if changeType.UnitMoved.PreviousUnit != nil {
-					s.GameViewerPage.RemoveUnitAt(ctx, &v1.RemoveUnitAtRequest{
+					s.GameState.RemoveUnitAt(ctx, &v1.RemoveUnitAtRequest{
 						Q: changeType.UnitMoved.PreviousUnit.Q,
 						R: changeType.UnitMoved.PreviousUnit.R,
 					})
 				}
 				// Add unit at new position
 				if changeType.UnitMoved.UpdatedUnit != nil {
-					s.GameViewerPage.SetUnitAt(ctx, &v1.SetUnitAtRequest{
+					s.GameState.SetUnitAt(ctx, &v1.SetUnitAtRequest{
 						Q:    changeType.UnitMoved.UpdatedUnit.Q,
 						R:    changeType.UnitMoved.UpdatedUnit.R,
 						Unit: changeType.UnitMoved.UpdatedUnit,
@@ -434,7 +439,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 			case *v1.WorldChange_UnitDamaged:
 				// Update unit with new health
 				if changeType.UnitDamaged.UpdatedUnit != nil {
-					s.GameViewerPage.SetUnitAt(ctx, &v1.SetUnitAtRequest{
+					s.GameState.SetUnitAt(ctx, &v1.SetUnitAtRequest{
 						Q:    changeType.UnitDamaged.UpdatedUnit.Q,
 						R:    changeType.UnitDamaged.UpdatedUnit.R,
 						Unit: changeType.UnitDamaged.UpdatedUnit,
@@ -444,7 +449,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 			case *v1.WorldChange_UnitKilled:
 				// Remove killed unit
 				if changeType.UnitKilled.PreviousUnit != nil {
-					s.GameViewerPage.RemoveUnitAt(ctx, &v1.RemoveUnitAtRequest{
+					s.GameState.RemoveUnitAt(ctx, &v1.RemoveUnitAtRequest{
 						Q: changeType.UnitKilled.PreviousUnit.Q,
 						R: changeType.UnitKilled.PreviousUnit.R,
 					})
@@ -454,7 +459,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				// Reset all units for new turn (lazy top-up pattern)
 				if changeType.PlayerChanged.ResetUnits != nil {
 					for _, resetUnit := range changeType.PlayerChanged.ResetUnits {
-						s.GameViewerPage.SetUnitAt(ctx, &v1.SetUnitAtRequest{
+						s.GameState.SetUnitAt(ctx, &v1.SetUnitAtRequest{
 							Q:    resetUnit.Q,
 							R:    resetUnit.R,
 							Unit: resetUnit,
@@ -463,7 +468,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				}
 				// Update game UI status with new current player and turn counter
 				gameState := s.GamesService.SingletonGameState
-				s.GameViewerPage.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
+				s.GameState.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
 					CurrentPlayer: gameState.CurrentPlayer,
 					TurnCounter:   gameState.TurnCounter,
 				})

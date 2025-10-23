@@ -25,6 +25,68 @@ func (p *PanelBase) SetRulesEngine(r *v1.RulesEngine) {
 	p.RulesEngine = r
 }
 
+// BaseGameState is a non-UI implementation of GameState interface
+// Used for CLI and testing - stores game state without rendering
+type BaseGameState struct {
+	Game  *v1.Game
+	State *v1.GameState
+}
+
+func (b *BaseGameState) SetGameState(_ context.Context, req *v1.SetGameStateRequest) (*v1.SetGameStateRequest, error) {
+	b.Game = req.Game
+	b.State = req.State
+	return req, nil
+}
+
+func (b *BaseGameState) SetUnitAt(_ context.Context, req *v1.SetUnitAtRequest) (*v1.SetGameStateRequest, error) {
+	if b.State == nil || b.State.WorldData == nil {
+		return nil, fmt.Errorf("game state not initialized")
+	}
+
+	// Find and update or add unit
+	found := false
+	for i, unit := range b.State.WorldData.Units {
+		if unit.Q == req.Q && unit.R == req.R {
+			b.State.WorldData.Units[i] = req.Unit
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		b.State.WorldData.Units = append(b.State.WorldData.Units, req.Unit)
+	}
+
+	return nil, nil
+}
+
+func (b *BaseGameState) RemoveUnitAt(_ context.Context, req *v1.RemoveUnitAtRequest) (*v1.SetGameStateRequest, error) {
+	if b.State == nil || b.State.WorldData == nil {
+		return nil, fmt.Errorf("game state not initialized")
+	}
+
+	// Remove unit at coordinate
+	for i, unit := range b.State.WorldData.Units {
+		if unit.Q == req.Q && unit.R == req.R {
+			b.State.WorldData.Units = append(b.State.WorldData.Units[:i], b.State.WorldData.Units[i+1:]...)
+			break
+		}
+	}
+
+	return nil, nil
+}
+
+func (b *BaseGameState) UpdateGameStatus(_ context.Context, req *v1.UpdateGameStatusRequest) (*v1.SetGameStateRequest, error) {
+	if b.State == nil {
+		return nil, fmt.Errorf("game state not initialized")
+	}
+
+	b.State.CurrentPlayer = req.CurrentPlayer
+	b.State.TurnCounter = req.TurnCounter
+
+	return nil, nil
+}
+
 type BaseUnitPanel struct {
 	PanelBase
 	Unit *v1.Unit
