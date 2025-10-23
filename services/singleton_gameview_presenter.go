@@ -330,8 +330,10 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 
 	// Create GameMove with the ready-to-use action from moveOption
 	gameMove := &v1.GameMove{
-		Player:   gameState.CurrentPlayer,
-		MoveUnit: moveOption.Action,
+		Player: gameState.CurrentPlayer,
+		MoveType: &v1.GameMove_MoveUnit{
+			MoveUnit: moveOption.Action,
+		},
 	}
 
 	fmt.Printf("[Presenter] Executing move from (%d,%d) to (%d,%d) for player %d\n",
@@ -375,8 +377,10 @@ func (s *SingletonGameViewPresenterImpl) executeEndTurnAction(ctx context.Contex
 
 	// Create end turn move
 	gameMove := &v1.GameMove{
-		Player:  gameState.CurrentPlayer,
-		EndTurn: &v1.EndTurnAction{},
+		Player: gameState.CurrentPlayer,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
 	}
 
 	// Call ProcessMoves to execute end turn
