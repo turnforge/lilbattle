@@ -5,7 +5,7 @@
       <stop offset="100%" stop-color="#666666"/>
     </linearGradient>
     <clipPath id="hexClip">
-      <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5"/>
+      <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5"/>
     </clipPath>
   </defs>
   

@@ -26,7 +26,7 @@
   </defs>
   
   <!-- Hexagon base with gradient -->
-  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5" fill="url(#desertGrad)"/>
+  <polygon points="50,0 100,17.5 100,82.5 50,100 0,82.5 0,17.5" fill="url(#desertGrad)"/>
   
   <!-- Large sand dunes with shading -->
   <ellipse cx="35" cy="40" rx="18" ry="8" fill="url(#duneShade)" opacity="0.6" transform="rotate(-15 35 40)"/>
