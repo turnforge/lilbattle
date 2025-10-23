@@ -26,10 +26,10 @@
                                placeholder="Enter game name..."
                                maxlength="100">
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            {{ if .World.Name }}Configure your game on {{ .World.Name }}{{ else }}Select a world and configure your game{{ end }}
+                            {{ if and .World .World.Name }}Configure your game on {{ .World.Name }}{{ else }}Select a world and configure your game{{ end }}
                         </p>
                     </div>
-                    {{ if .World.Name }}
+                    {{ if and .World .World.Name }}
                     <div class="text-right">
                         <div class="text-sm text-gray-500 dark:text-gray-400">
                             World: <span class="font-mono">{{ .World.Name }}</span>
@@ -54,10 +54,10 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 w-full h-[400px] lg:h-full flex flex-col" data-component="world-viewer">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700 lg:flex-shrink-0">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">
-                            {{ if .World.Name }}World Preview{{ else }}World Selection{{ end }}
+                            {{ if and .World .World.Name }}World Preview{{ else }}World Selection{{ end }}
                         </h2>
                     </div>
-                    {{ if .World.Name }}
+                    {{ if and .World .World.Name }}
                     <!-- Phaser World Viewer Container: Fixed height on mobile, responsive on desktop -->
                     <div id="phaser-viewer-container" class="w-full flex-1 min-h-0 overflow-hidden">
                         <!-- Phaser canvas will be inserted here and sized to 100% width/height -->
@@ -154,7 +154,7 @@
         
         <!-- Hidden World Data for Frontend -->
         <pre id="world-data-json" style="display: none;">{{ if .World }}{{ .World | ToJson }}{{ else }}null{{ end }}</pre>
-        <pre id="world-tiles-data-json" style="display: none;">{{ if .World.WorldData }}{{ .World.WorldData | ToJson }}{{ else }}null{{ end }}</pre>
+        <pre id="world-tiles-data-json" style="display: none;">{{ if and .World .World.WorldData }}{{ .World.WorldData | ToJson }}{{ else }}null{{ end }}</pre>
     </main>
 {{ end }}
 
