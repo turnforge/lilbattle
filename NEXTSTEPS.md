@@ -1,10 +1,25 @@
 # Next Steps - WeeWar Development
 
-## ✅ Go Service Layer Testing (Current Session)
+## ✅ Code Organization and Theme Bug Fix (Current Session)
+
+### Code Simplification - DONE
+- **lib/ → services/ Merge**: Consolidated all library code into services package
+- **Package Structure**: Eliminated artificial separation between runtime and API layers
+- **Import Cleanup**: Updated all import paths from `.../weewar/lib` to `.../weewar/services`
+- **Subdirectories**: Preserved renderer/ and ai/ subdirectories under services/
+
+### WorldEditorPage Theme Bug - FIXED
+- **Issue**: Button panel icons always showed fantasy theme regardless of `?theme=` query parameter
+- **Root Cause**: Theme hardcoded to "fantasy", query parameter never read
+- **Solution**: Added Theme field to struct, read query param before SetupDefaults(), use v.Theme
+- **Files Changed**: `web/server/WorldEditorPage.go`
+- **Result**: Button panel now correctly responds to theme query parameter (default, fantasy, modern)
+
+## ✅ Go Service Layer Testing (Previous Session)
 
 ### Implementation Completed - DONE
 - **Test Suite Creation**: Created comprehensive tests for SingletonGamesService using real world data
-- **Test Utilities**: Enhanced lib/test_utils.go with LoadTestWorld() for loading worlds from JSON
+- **Test Utilities**: Enhanced services/test_utils.go with LoadTestWorld() for loading worlds from JSON
 - **Real Data Testing**: Tests load actual worlds from ~/dev-app-data/weewar/storage/worlds
 - **Panel Architecture**: Separated Base panels (data) from Browser panels (rendering) for better testability
 - **Build Integration**: Makefile fails builds if tests fail

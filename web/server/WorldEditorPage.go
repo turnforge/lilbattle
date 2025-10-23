@@ -48,6 +48,7 @@ type WorldEditorPage struct {
 	CityTerrains   []TerrainType
 	UnitTypes      []UnitType
 	PlayerCount    int
+	Theme          string // Theme name from query parameter (default, fantasy, modern)
 }
 
 func (g *WorldEditorPage) Copy() View { return &WorldEditorPage{} }
@@ -80,7 +81,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 	// Determine whether to use theme-based assets or PNG assets
 	// Set useTheme = true to use theme assets, false for PNG assets
 	useTheme := true       // Set to true to use theme-based assets
-	themeName := "fantasy" // Which theme to use
+	themeName := v.Theme   // Use theme from query parameter (set in Load method)
 
 	// Get the theme manager
 	tm := GetThemeManager()
@@ -198,8 +199,15 @@ func (v *WorldEditorPage) SetupDefaults() {
 
 func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
 	v.Header.Load(r, w, vc)
-	v.SetupDefaults()
+
+	// Read query parameters first (before SetupDefaults)
 	queryParams := r.URL.Query()
+	v.Theme = queryParams.Get("theme")
+	if v.Theme == "" {
+		v.Theme = "fantasy" // Default theme
+	}
+
+	v.SetupDefaults()
 	v.WorldId = r.PathValue("worldId")
 	templateName := queryParams.Get("template")
 	loggedInUserId := vc.AuthMiddleware.GetLoggedInUserId(r)

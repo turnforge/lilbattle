@@ -15,17 +15,15 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ### Key Components
 
-**Game Engine (`lib/`)**
-- **World**: Pure game state container with hex coordinate system
-- **Game**: Runtime game logic with rules engine integration
-- **Move Processor**: Validates and processes game moves with transaction support
-- **Rules Engine**: Configurable game rules loaded from JSON
-
-**Services (`services/`)**
-- **BaseGamesServiceImpl**: Core move processing with transactional semantics
-- **WasmGamesService**: WebAssembly-specific implementation for client integration
-- **CoordinatorGamesService**: Multiplayer coordination with K-of-N validation
-- **ProcessMoves Pipeline**: Transaction-safe move processing with rollback support
+**Services Layer (`services/`)**
+- **Core Game Logic**: World, Game, RulesEngine - Pure game state and runtime logic (formerly in `lib/`)
+- **Move Processing**: DefaultMoveProcessor validates and processes game moves with transaction support
+- **Service Implementations**: BaseGamesServiceImpl, FSGamesService, SingletonGamesService
+- **WASM Integration**: WasmGamesService for client-side game logic execution
+- **Multiplayer Coordination**: CoordinatorGamesService with K-of-N validation
+- **Utilities**: Hex coordinates, path finding, combat calculations, position parsing
+- **Rendering**: Canvas rendering layers and buffers (services/renderer/)
+- **AI**: Game advisors and strategies (services/ai/)
 
 **Frontend (`web/`)**
 - **GameState**: Lightweight controller managing WASM interactions
@@ -33,6 +31,40 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 - **Event System**: Clean separation between game logic and UI updates
 
 ## Recent Major Achievements
+
+### Code Organization Simplification (Current Session)
+
+**Achievement**: Merged `lib/` package into `services/` for cleaner project structure.
+
+**Rationale**:
+- Original separation between "runtime" (`lib/`) and "API layer" (`services/`) was unnecessary
+- Both packages contained library code that services depended on
+- Merging eliminates conceptual confusion and simplifies imports
+
+**Changes**:
+1. **Package Consolidation**: All `lib/*.go` files moved to `services/` with package name changed to `services`
+2. **Subdirectories Preserved**: `lib/renderer/` → `services/renderer/`, `lib/ai/` → `services/ai/`
+3. **Import Updates**: All imports updated from `.../weewar/lib` → `.../weewar/services`
+4. **Single Package**: ~7,700 lines of code now in unified `services` package
+
+**Benefits**:
+- Simpler mental model - everything is "services" or subdirectories
+- No artificial separation between runtime helpers and API implementations
+- Easier to navigate codebase
+- Cleaner import paths
+
+### Theme Query Parameter Bug Fix (Current Session)
+
+**Issue**: WorldEditorPage button panel always showed fantasy-themed assets regardless of `?theme=` query parameter.
+
+**Root Cause**: Theme was hardcoded to "fantasy" in `WorldEditorPage.go:83`, query parameter never read.
+
+**Solution**:
+1. Added `Theme` field to `WorldEditorPage` struct
+2. Read `?theme=` query parameter in `Load()` method with "fantasy" default fallback
+3. Use `v.Theme` in `SetupDefaults()` instead of hardcoded value
+
+**Result**: Button panel icons now correctly match the theme query parameter, consistent with PhaserEditorScene behavior.
 
 ### Theme and Asset Provider Architecture Refactoring
 
