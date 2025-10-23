@@ -34,7 +34,7 @@ func main() {
 		WorldsService:     wasmWorldsService,
 		GameViewerPage:    weewar_v1_services.NewGameViewerPageClient(),
 	}
-	wasmGameViewPresenter.GameViewerPage = exports.GameViewerPage
+	wasmGameViewPresenter.GameState = exports.GameViewerPage
 	wasmGameViewPresenter.DamageDistributionPanel = &services.BrowserDamageDistributionPanel{
 		GameViewerPage: exports.GameViewerPage,
 	}
