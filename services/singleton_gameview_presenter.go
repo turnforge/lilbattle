@@ -125,12 +125,10 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 	// Get tile and unit data from World using coordinates
 	switch req.Layer {
 	case "movement-highlight":
-		// Get moveOption from the layer itself
-		/*
-		   const movementLayer = this.gameScene.movementHighlightLayer;
-		   const moveOption = movementLayer?.getMoveOptionAt(q, r);
-		   this.handleMovementClick(q, r, moveOption);
-		*/
+		// User clicked on a movement highlight - execute the move
+		go func() {
+			s.executeMovementAction(ctx, q, r)
+		}()
 		break
 	case "base-map":
 		go func() {
@@ -290,4 +288,117 @@ func extractPathCoords(path *v1.Path) []int32 {
 	}
 
 	return coords
+}
+
+// executeMovementAction executes a movement when user clicks on a movement highlight
+func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Context, targetQ, targetR int32) {
+	// Get current options from TurnOptionsPanel
+	currentOptions := s.TurnOptionsPanel.CurrentOptions()
+	if currentOptions == nil || len(currentOptions.Options) == 0 {
+		fmt.Println("[Presenter] No options available for movement")
+		return
+	}
+
+	// Find the move option that matches the clicked coordinates
+	var moveOption *v1.MoveOption
+	for _, option := range currentOptions.Options {
+		if opt := option.GetMove(); opt != nil {
+			if opt.Q == targetQ && opt.R == targetR {
+				moveOption = opt
+				break
+			}
+		}
+	}
+
+	if moveOption == nil {
+		fmt.Printf("[Presenter] No move option found for coordinates (%d, %d)\n", targetQ, targetR)
+		return
+	}
+
+	// Verify the action is present
+	if moveOption.Action == nil {
+		fmt.Println("[Presenter] Move option does not contain action object")
+		return
+	}
+
+	// Get current game state
+	gameState := s.GamesService.SingletonGameState
+	if gameState == nil {
+		fmt.Println("[Presenter] Game state is nil")
+		return
+	}
+
+	// Create GameMove with the ready-to-use action from moveOption
+	gameMove := &v1.GameMove{
+		Player:   gameState.CurrentPlayer,
+		MoveUnit: moveOption.Action,
+	}
+
+	fmt.Printf("[Presenter] Executing move from (%d,%d) to (%d,%d) for player %d\n",
+		moveOption.Action.FromQ, moveOption.Action.FromR,
+		moveOption.Action.ToQ, moveOption.Action.ToR,
+		gameState.CurrentPlayer)
+
+	// Call ProcessMoves to execute the move
+	_, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
+		Moves: []*v1.GameMove{gameMove},
+	})
+
+	if err != nil {
+		fmt.Printf("[Presenter] Move execution failed: %v\n", err)
+		return
+	}
+
+	fmt.Println("[Presenter] Move executed successfully")
+
+	// Clear selection and highlights after successful move
+	s.clearHighlightsAndSelection(ctx)
+	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
+
+	// Update UI with fresh game state
+	updatedGameState := s.GamesService.SingletonGameState
+	s.GameViewerPage.SetGameState(ctx, &v1.SetGameStateRequest{
+		Game:  s.GamesService.SingletonGame,
+		State: updatedGameState,
+	})
+}
+
+// executeEndTurnAction executes the end turn action
+func (s *SingletonGameViewPresenterImpl) executeEndTurnAction(ctx context.Context) {
+	gameState := s.GamesService.SingletonGameState
+	if gameState == nil {
+		fmt.Println("[Presenter] Game state is nil")
+		return
+	}
+
+	fmt.Printf("[Presenter] Ending turn for player %d\n", gameState.CurrentPlayer)
+
+	// Create end turn move
+	gameMove := &v1.GameMove{
+		Player:  gameState.CurrentPlayer,
+		EndTurn: &v1.EndTurnAction{},
+	}
+
+	// Call ProcessMoves to execute end turn
+	_, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
+		Moves: []*v1.GameMove{gameMove},
+	})
+
+	if err != nil {
+		fmt.Printf("[Presenter] End turn failed: %v\n", err)
+		return
+	}
+
+	fmt.Printf("[Presenter] Turn ended, new current player: %d\n", s.GamesService.SingletonGameState.CurrentPlayer)
+
+	// Clear selection and highlights
+	s.clearHighlightsAndSelection(ctx)
+	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
+
+	// Update UI with fresh game state
+	updatedGameState := s.GamesService.SingletonGameState
+	s.GameViewerPage.SetGameState(ctx, &v1.SetGameStateRequest{
+		Game:  s.GamesService.SingletonGame,
+		State: updatedGameState,
+	})
 }
