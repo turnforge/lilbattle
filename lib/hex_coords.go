@@ -122,14 +122,14 @@ func (c AxialCoord) Ring(radius int) []AxialCoord {
 	coord := c
 
 	// Move to the starting point of the ring (go LEFT radius times)
-	for i := 0; i < radius; i++ {
+	for range radius {
 		coord = coord.Neighbor(LEFT)
 	}
 
 	// Walk around the ring in all 6 directions
 	directions := []NeighborDirection{TOP_RIGHT, RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, LEFT, TOP_LEFT}
 	for _, direction := range directions {
-		for i := 0; i < radius; i++ {
+		for range radius {
 			results = append(results, coord)
 			coord = coord.Neighbor(direction)
 		}
@@ -152,15 +152,15 @@ func GetDirection(from, to AxialCoord) NeighborDirection {
 	// Calculate the difference
 	dq := to.Q - from.Q
 	dr := to.R - from.R
-	
+
 	// Check each possible direction
-	for dir := 0; dir < 6; dir++ {
+	for dir := range 6 {
 		neighbor := AxialCoordNeighbors[dir]
 		if neighbor.Q == dq && neighbor.R == dr {
 			return NeighborDirection(dir)
 		}
 	}
-	
+
 	// Not adjacent
 	return NeighborDirection(-1)
 }
