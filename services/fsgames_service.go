@@ -130,14 +130,16 @@ func (s *FSGamesServiceImpl) GetGame(ctx context.Context, req *v1.GetGameRequest
 	}
 
 	// Check cache first
-	if game, ok := s.gameCache[req.Id]; ok {
-		if state, ok := s.stateCache[req.Id]; ok {
-			if history, ok := s.historyCache[req.Id]; ok {
-				return &v1.GetGameResponse{
-					Game:    game,
-					State:   state,
-					History: history,
-				}, nil
+	if false {
+		if game, ok := s.gameCache[req.Id]; ok {
+			if state, ok := s.stateCache[req.Id]; ok {
+				if history, ok := s.historyCache[req.Id]; ok {
+					return &v1.GetGameResponse{
+						Game:    game,
+						State:   state,
+						History: history,
+					}, nil
+				}
 			}
 		}
 	}
