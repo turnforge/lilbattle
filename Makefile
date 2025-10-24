@@ -26,7 +26,7 @@ test:
 
 cli:
 	mkdir -p bin
-	go build  -o ./bin/wwcli cmd/cli/*.go
+	go build  -o ${GOBIN}/ww cmd/cli/*.go
 	# go build  -o ./bin/weewar-convert cmd/weewar-convert/*.go
 
 wasm: # test

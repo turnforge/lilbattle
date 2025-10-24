@@ -1,6 +1,42 @@
 # Next Steps - WeeWar Development
 
-## ✅ Incremental UI Updates & Turn Management (Current Session - COMPLETED)
+## 🚧 CLI Tool with Presenter Integration (Current Session - IN PROGRESS)
+
+### Cobra/Viper CLI Implementation - MOSTLY COMPLETE
+- **New CLI Tool Structure**: Created cmd/cli/ with Cobra framework for command-line gameplay
+- **Global Flags**: Implemented --game-id, --json, --verbose, --dryrun flags with Viper configuration
+- **Environment Variables**: Support for WEEWAR_GAME_ID and other config via env vars (WEEWAR_ prefix)
+- **Commands Implemented**:
+  - `ww status`: Show game status (turn, current player)
+  - `ww units`: List all units with positions and stats
+  - `ww options <unit>`: Show available options for a unit
+  - `ww move <from> <to>`: Move unit with direction shortcuts (L, R, TL, TR, BL, BR)
+  - `ww attack <attacker> <target>`: Attack with direction shortcuts
+  - `ww endturn`: End current player's turn
+- **Presenter Integration**: CLI loads from FSGamesService → SingletonGamesService → Presenter
+- **Two-Click Pattern**: Commands simulate SceneClicked on base-map, then movement-highlight layers
+- **Dryrun Mode**: Preview moves without saving to disk
+
+### Bugs Fixed This Session
+- **Lazy Top-Up Bug**: Fixed units with DistanceLeft=0 failing to move even when options showed valid moves
+  - Added topUpUnitIfNeeded() calls in ProcessMoveUnit and ProcessAttackUnit before validation
+  - Units now properly refresh movement points based on current turn
+- **Layer Names**: Corrected CLI to use "base-map" and "movement-highlight" instead of "units" and "highlights"
+- **Viper Configuration**: Added SetEnvKeyReplacer to convert game-id flag to GAME_ID env var format
+
+### Known Issue - Async Panel Updates
+- **Problem**: SceneClicked runs in goroutines (async), returns immediately before panels are populated
+- **Impact**: Options command calls SceneClicked but TurnOptionsPanel not yet updated when we try to read it
+- **Next Step**: Create Cmd panel versions with channels for sync communication
+
+### Remaining Tasks
+- [ ] Implement CmdTurnOptionsPanel, CmdGameState, etc with channel-based callbacks
+- [ ] Wire up Cmd panels to presenter for CLI commands
+- [ ] Test full gameplay flow: move, attack, endturn with real game data
+- [ ] Add unit tests for CLI commands
+- [ ] Documentation for CLI usage
+
+## ✅ Incremental UI Updates & Turn Management (Previous Session - COMPLETED)
 
 ### Incremental Update Architecture - DONE
 - **SetTileAt/SetUnitAt Methods**: Added presenter interface methods for direct World updates
