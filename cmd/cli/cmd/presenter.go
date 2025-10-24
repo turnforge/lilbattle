@@ -10,14 +10,15 @@ import (
 
 // PresenterContext holds the presenter and associated panels for CLI operations
 type PresenterContext struct {
-	Presenter     *services.SingletonGameViewPresenterImpl
-	GameState     *services.BaseGameState
-	TurnOptions   *services.BaseTurnOptionsPanel
-	UnitStats     *services.BaseUnitPanel
-	TerrainStats  *services.BaseTilePanel
-	GameScene     *services.BaseGameScene
-	GameID        string
-	FSService     *services.FSGamesServiceImpl
+	Presenter          *services.SingletonGameViewPresenterImpl
+	GameState          *services.BaseGameState
+	TurnOptions        *services.BaseTurnOptionsPanel
+	UnitStats          *services.BaseUnitPanel
+	TerrainStats       *services.BaseTilePanel
+	DamageDistribution *services.BaseUnitPanel
+	GameScene          *services.BaseGameScene
+	GameID             string
+	FSService          *services.FSGamesServiceImpl
 }
 
 // createPresenter loads a game from disk into an in-memory presenter
@@ -49,6 +50,7 @@ func createPresenter(gameID string) (*PresenterContext, error) {
 	turnOptions := &services.BaseTurnOptionsPanel{}
 	unitStats := &services.BaseUnitPanel{}
 	terrainStats := &services.BaseTilePanel{}
+	damageDistribution := &services.BaseUnitPanel{}
 	gameScene := &services.BaseGameScene{}
 
 	// Wire up presenter with base panels
@@ -56,17 +58,19 @@ func createPresenter(gameID string) (*PresenterContext, error) {
 	presenter.TurnOptionsPanel = turnOptions
 	presenter.UnitStatsPanel = unitStats
 	presenter.TerrainStatsPanel = terrainStats
+	presenter.DamageDistributionPanel = damageDistribution
 	presenter.GameScene = gameScene
 
 	return &PresenterContext{
-		Presenter:    presenter,
-		GameState:    gameState,
-		TurnOptions:  turnOptions,
-		UnitStats:    unitStats,
-		TerrainStats: terrainStats,
-		GameScene:    gameScene,
-		GameID:       gameID,
-		FSService:    fsService,
+		Presenter:          presenter,
+		GameState:          gameState,
+		TurnOptions:        turnOptions,
+		UnitStats:          unitStats,
+		TerrainStats:       terrainStats,
+		DamageDistribution: damageDistribution,
+		GameScene:          gameScene,
+		GameID:             gameID,
+		FSService:          fsService,
 	}, nil
 }
 

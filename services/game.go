@@ -154,7 +154,8 @@ func (g *Game) checkVictoryConditions() (winner int32, hasWinner bool) {
 	lastPlayerWithUnits := int32(-1)
 
 	for playerID := int32(1); playerID <= g.World.PlayerCount(); playerID++ {
-		if len(g.World.unitsByPlayer[playerID]) > 0 {
+		units := g.World.GetPlayerUnits(int(playerID))
+		if len(units) > 0 {
 			playersWithUnits++
 			lastPlayerWithUnits = playerID
 		}
