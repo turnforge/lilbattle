@@ -8,7 +8,6 @@ import (
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"github.com/panyam/turnengine/games/weewar/web/assets/themes"
 	tmpls "github.com/panyam/turnengine/games/weewar/web/templates"
-	"google.golang.org/grpc"
 )
 
 // Data-Only panel implementations
@@ -33,13 +32,13 @@ type BaseGameState struct {
 	State *v1.GameState
 }
 
-func (b *BaseGameState) SetGameState(_ context.Context, req *v1.SetGameStateRequest, _ ...grpc.CallOption) (*v1.SetGameStateResponse, error) {
+func (b *BaseGameState) SetGameState(_ context.Context, req *v1.SetGameStateRequest) (*v1.SetGameStateResponse, error) {
 	b.Game = req.Game
 	b.State = req.State
 	return nil, nil
 }
 
-func (b *BaseGameState) SetUnitAt(_ context.Context, req *v1.SetUnitAtRequest, _ ...grpc.CallOption) (*v1.SetUnitAtResponse, error) {
+func (b *BaseGameState) SetUnitAt(_ context.Context, req *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
 	if b.State == nil || b.State.WorldData == nil {
 		return nil, fmt.Errorf("game state not initialized")
 	}
@@ -61,7 +60,7 @@ func (b *BaseGameState) SetUnitAt(_ context.Context, req *v1.SetUnitAtRequest, _
 	return nil, nil
 }
 
-func (b *BaseGameState) RemoveUnitAt(_ context.Context, req *v1.RemoveUnitAtRequest, _ ...grpc.CallOption) (*v1.RemoveUnitAtResponse, error) {
+func (b *BaseGameState) RemoveUnitAt(_ context.Context, req *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
 	if b.State == nil || b.State.WorldData == nil {
 		return nil, fmt.Errorf("game state not initialized")
 	}
@@ -77,7 +76,7 @@ func (b *BaseGameState) RemoveUnitAt(_ context.Context, req *v1.RemoveUnitAtRequ
 	return nil, nil
 }
 
-func (b *BaseGameState) UpdateGameStatus(_ context.Context, req *v1.UpdateGameStatusRequest, _ ...grpc.CallOption) (*v1.UpdateGameStatusResponse, error) {
+func (b *BaseGameState) UpdateGameStatus(_ context.Context, req *v1.UpdateGameStatusRequest) (*v1.UpdateGameStatusResponse, error) {
 	if b.State == nil {
 		return nil, fmt.Errorf("game state not initialized")
 	}
@@ -182,7 +181,7 @@ func (b *BrowserTurnOptionsPanel) SetCurrentUnit(ctx context.Context, unit *v1.U
 		"Unit":    unit,
 		"Theme":   b.Theme,
 	})
-	b.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
+	go b.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
 }
@@ -198,7 +197,7 @@ func (b *BrowserUnitStatsPanel) SetCurrentUnit(ctx context.Context, unit *v1.Uni
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	b.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
+	go b.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
 }
@@ -216,7 +215,7 @@ func (b *BrowserDamageDistributionPanel) SetCurrentUnit(ctx context.Context, uni
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	b.GameViewerPage.SetDamageDistributionContent(ctx, &v1.SetContentRequest{
+	go b.GameViewerPage.SetDamageDistributionContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
 	fmt.Println("After DDP Set")
@@ -235,7 +234,7 @@ func (b *BrowserTerrainStatsPanel) SetCurrentTile(ctx context.Context, tile *v1.
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	b.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
+	go b.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
 		InnerHtml: content,
 	})
 	fmt.Println("After TSP Set")
@@ -248,20 +247,51 @@ type BrowserGameScene struct {
 
 func (b *BrowserGameScene) ClearPaths(ctx context.Context) {
 	b.BaseGameScene.ClearPaths(ctx)
-	b.GameViewerPage.ClearPaths(ctx, &v1.ClearPathsRequest{})
+	go b.GameViewerPage.ClearPaths(ctx, &v1.ClearPathsRequest{})
 }
 
 func (b *BrowserGameScene) ClearHighlights(ctx context.Context) {
 	b.BaseGameScene.ClearHighlights(ctx)
-	b.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{})
+	go b.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{})
 }
 
 func (b *BrowserGameScene) ShowPath(ctx context.Context, p *v1.ShowPathRequest) {
 	b.BaseGameScene.ShowPath(ctx, p)
-	b.GameViewerPage.ShowPath(ctx, p)
+	go b.GameViewerPage.ShowPath(ctx, p)
 }
 
 func (b *BrowserGameScene) ShowHighlights(ctx context.Context, h *v1.ShowHighlightsRequest) {
 	b.BaseGameScene.ShowHighlights(ctx, h)
-	b.GameViewerPage.ShowHighlights(ctx, h)
+	go b.GameViewerPage.ShowHighlights(ctx, h)
+}
+
+// BrowserGameState is a non-UI implementation of GameState interface
+// Used for CLI and testing - stores game state without rendering
+type BrowserGameState struct {
+	BaseGameState
+	GameViewerPage v1.GameViewerPageClient
+}
+
+func (b *BrowserGameState) SetGameState(ctx context.Context, req *v1.SetGameStateRequest) (*v1.SetGameStateResponse, error) {
+	b.BaseGameState.SetGameState(ctx, req)
+	go b.GameViewerPage.SetGameState(ctx, req)
+	return nil, nil
+}
+
+func (b *BrowserGameState) SetUnitAt(ctx context.Context, req *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
+	b.BaseGameState.SetUnitAt(ctx, req)
+	go b.GameViewerPage.SetUnitAt(ctx, req)
+	return nil, nil
+}
+
+func (b *BrowserGameState) RemoveUnitAt(ctx context.Context, req *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
+	b.BaseGameState.RemoveUnitAt(ctx, req)
+	go b.GameViewerPage.RemoveUnitAt(ctx, req)
+	return nil, nil
+}
+
+func (b *BrowserGameState) UpdateGameStatus(ctx context.Context, req *v1.UpdateGameStatusRequest) (*v1.UpdateGameStatusResponse, error) {
+	b.BaseGameState.UpdateGameStatus(ctx, req)
+	go b.GameViewerPage.UpdateGameStatus(ctx, req)
+	return nil, nil
 }

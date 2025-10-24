@@ -6,7 +6,6 @@ import (
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"github.com/panyam/turnengine/games/weewar/web/assets/themes"
-	"google.golang.org/grpc"
 )
 
 type BasePanel interface {
@@ -15,10 +14,10 @@ type BasePanel interface {
 }
 
 type GameState interface {
-	SetGameState(context.Context, *v1.SetGameStateRequest, ...grpc.CallOption) (*v1.SetGameStateResponse, error)
-	RemoveUnitAt(context.Context, *v1.RemoveUnitAtRequest, ...grpc.CallOption) (*v1.RemoveUnitAtResponse, error)
-	SetUnitAt(context.Context, *v1.SetUnitAtRequest, ...grpc.CallOption) (*v1.SetUnitAtResponse, error)
-	UpdateGameStatus(context.Context, *v1.UpdateGameStatusRequest, ...grpc.CallOption) (*v1.UpdateGameStatusResponse, error)
+	SetGameState(context.Context, *v1.SetGameStateRequest) (*v1.SetGameStateResponse, error)
+	RemoveUnitAt(context.Context, *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error)
+	SetUnitAt(context.Context, *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error)
+	UpdateGameStatus(context.Context, *v1.UpdateGameStatusRequest) (*v1.UpdateGameStatusResponse, error)
 }
 
 type TurnOptionsPanel interface {
@@ -97,18 +96,16 @@ func (s *SingletonGameViewPresenterImpl) InitializeGame(ctx context.Context, req
 	// Now update the game state based on this
 	// Fire all the browser changes here - we dont really care about waiting for them
 	// And more importantly we cannot block for them on the thread that called us
-	go func() {
-		s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
-		fmt.Println("setTurnOpt Resp, Err: ", resp, err)
+	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
+	fmt.Println("setTurnOpt Resp, Err: ", resp, err)
 
-		s.GameState.SetGameState(ctx, &v1.SetGameStateRequest{
-			Game:  game,
-			State: gameState,
-		})
-		s.TerrainStatsPanel.SetCurrentTile(ctx, nil)
-		s.UnitStatsPanel.SetCurrentUnit(ctx, nil)
-		s.DamageDistributionPanel.SetCurrentUnit(ctx, nil)
-	}()
+	s.GameState.SetGameState(ctx, &v1.SetGameStateRequest{
+		Game:  game,
+		State: gameState,
+	})
+	s.TerrainStatsPanel.SetCurrentTile(ctx, nil)
+	s.UnitStatsPanel.SetCurrentUnit(ctx, nil)
+	s.DamageDistributionPanel.SetCurrentUnit(ctx, nil)
 
 	// Response state
 	resp = &v1.InitializeGameResponse{
@@ -131,55 +128,51 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 	switch req.Layer {
 	case "movement-highlight":
 		// User clicked on a movement highlight - execute the move
-		go func() {
-			s.executeMovementAction(ctx, q, r)
-		}()
+		s.executeMovementAction(ctx, q, r)
 	case "base-map":
-		go func() {
-			rg, err := s.GamesService.GetRuntimeGame(game, gameState)
-			wd := rg.World
-			if err != nil {
-				panic(err)
-			}
-			unit := wd.UnitAt(coord)
-			tile := wd.TileAt(coord)
+		rg, err := s.GamesService.GetRuntimeGame(game, gameState)
+		wd := rg.World
+		if err != nil {
+			panic(err)
+		}
+		unit := wd.UnitAt(coord)
+		tile := wd.TileAt(coord)
 
-			// Always show terrain and unit info (methods handle nil)
-			s.TerrainStatsPanel.SetCurrentTile(ctx, tile)
-			s.UnitStatsPanel.SetCurrentUnit(ctx, unit)
-			s.DamageDistributionPanel.SetCurrentUnit(ctx, unit)
+		// Always show terrain and unit info (methods handle nil)
+		s.TerrainStatsPanel.SetCurrentTile(ctx, tile)
+		s.UnitStatsPanel.SetCurrentUnit(ctx, unit)
+		s.DamageDistributionPanel.SetCurrentUnit(ctx, unit)
 
-			// Only proceed with options and highlights if there's a unit
-			if unit != nil {
-				// Get options at this position and update TurnOptionsPanel
-				optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-					Q: q,
-					R: r,
-				})
-				if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
-					s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
+		// Only proceed with options and highlights if there's a unit
+		if unit != nil {
+			// Get options at this position and update TurnOptionsPanel
+			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+				Q: q,
+				R: r,
+			})
+			if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
+				s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
 
-					// Send visualization commands to show highlights
-					highlights := buildHighlightSpecs(optionsResp, q, r)
-					if len(highlights) > 0 {
-						s.GameScene.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
-							Highlights: highlights,
-						})
-						s.hasHighlights = true
-						s.selectedQ = &q
-						s.selectedR = &r
-					}
-				} else {
-					// Unit exists but no options available
-					s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
-					s.clearHighlightsAndSelection(ctx)
+				// Send visualization commands to show highlights
+				highlights := buildHighlightSpecs(optionsResp, q, r)
+				if len(highlights) > 0 {
+					s.GameScene.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
+						Highlights: highlights,
+					})
+					s.hasHighlights = true
+					s.selectedQ = &q
+					s.selectedR = &r
 				}
 			} else {
-				// No unit at clicked position - clear options and highlights
+				// Unit exists but no options available
 				s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 				s.clearHighlightsAndSelection(ctx)
 			}
-		}()
+		} else {
+			// No unit at clicked position - clear options and highlights
+			s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
+			s.clearHighlightsAndSelection(ctx)
+		}
 	default:
 		fmt.Println("[GameViewerPage] Unhandled layer click: ", req.Layer)
 	}
@@ -241,34 +234,32 @@ func (s *SingletonGameViewPresenterImpl) TurnOptionClicked(ctx context.Context, 
 
 	// For now, just show path visualization for move options
 	// In the future, this could execute the actual move/attack
-	go func() {
-		// Always clear previous paths first
-		s.GameScene.ClearPaths(ctx)
+	// Always clear previous paths first
+	s.GameScene.ClearPaths(ctx)
 
-		if req.OptionType == "move" && s.selectedQ != nil && s.selectedR != nil {
-			// Get the options again to extract the path for this specific move
-			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-				Q: *s.selectedQ,
-				R: *s.selectedR,
-			})
+	if req.OptionType == "move" && s.selectedQ != nil && s.selectedR != nil {
+		// Get the options again to extract the path for this specific move
+		optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+			Q: *s.selectedQ,
+			R: *s.selectedR,
+		})
 
-			if err == nil && optionsResp != nil && int(req.OptionIndex) < len(optionsResp.Options) {
-				option := optionsResp.Options[req.OptionIndex]
-				if moveOpt := option.GetMove(); moveOpt != nil && moveOpt.ReconstructedPath != nil {
-					// Extract path coordinates from the reconstructed path
-					coords := extractPathCoords(moveOpt.ReconstructedPath)
-					if len(coords) >= 4 {
-						// Show green path for movement
-						s.GameScene.ShowPath(ctx, &v1.ShowPathRequest{
-							Coords:    coords,
-							Color:     0x00ff00, // Green for movement
-							Thickness: 4,
-						})
-					}
+		if err == nil && optionsResp != nil && int(req.OptionIndex) < len(optionsResp.Options) {
+			option := optionsResp.Options[req.OptionIndex]
+			if moveOpt := option.GetMove(); moveOpt != nil && moveOpt.ReconstructedPath != nil {
+				// Extract path coordinates from the reconstructed path
+				coords := extractPathCoords(moveOpt.ReconstructedPath)
+				if len(coords) >= 4 {
+					// Show green path for movement
+					s.GameScene.ShowPath(ctx, &v1.ShowPathRequest{
+						Coords:    coords,
+						Color:     0x00ff00, // Green for movement
+						Thickness: 4,
+					})
 				}
 			}
 		}
-	}()
+	}
 
 	return
 }
@@ -276,11 +267,7 @@ func (s *SingletonGameViewPresenterImpl) TurnOptionClicked(ctx context.Context, 
 // EndTurnButtonClicked handles when user clicks the end turn button
 func (s *SingletonGameViewPresenterImpl) EndTurnButtonClicked(ctx context.Context, req *v1.EndTurnButtonClickedRequest) (resp *v1.EndTurnButtonClickedResponse, err error) {
 	resp = &v1.EndTurnButtonClickedResponse{}
-
-	go func() {
-		s.executeEndTurnAction(ctx)
-	}()
-
+	s.executeEndTurnAction(ctx)
 	return
 }
 
