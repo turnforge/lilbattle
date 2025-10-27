@@ -150,24 +150,42 @@ func FormatUnits(state *v1.GameState) string {
 
 	// Group units by player
 	unitsByPlayer := make(map[int32][]*v1.Unit)
+	numPlayers := int32(0)
+
 	for _, unit := range state.WorldData.Units {
 		if unit != nil {
 			unitsByPlayer[unit.Player] = append(unitsByPlayer[unit.Player], unit)
+			if unit.Player > numPlayers {
+				numPlayers = unit.Player
+			}
 		}
 	}
 
 	var sb strings.Builder
-	for playerID, units := range unitsByPlayer {
-		playerLetter := string(rune('A' + playerID))
-		sb.WriteString(fmt.Sprintf("Player %s units:\n", playerLetter))
+	// Iterate starting from current player and wrap around
+	for i := int32(0); i < numPlayers; i++ {
+		playerID := (i + state.CurrentPlayer) % numPlayers
+		if playerID == 0 {
+			playerID = numPlayers
+		}
+		units := unitsByPlayer[playerID]
+		if len(units) == 0 {
+			continue
+		}
+		turnIndicator := ""
+		if playerID == state.CurrentPlayer {
+			turnIndicator = " *"
+		}
+		sb.WriteString(fmt.Sprintf("Player %d units%s:\n", playerID, turnIndicator))
 
 		for _, unit := range units {
 			coord := services.CoordFromInt32(unit.Q, unit.R)
 			unitID := unit.Shortcut
 			if unitID == "" {
+				playerLetter := string(rune('A' + playerID))
 				unitID = fmt.Sprintf("%s?", playerLetter)
 			}
-			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s (HP: %d, Moves: %d)\n",
+			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s (HP: %d, Moves: %f)\n",
 				unitID, unit.UnitType, coord.String(),
 				unit.AvailableHealth, unit.DistanceLeft))
 		}

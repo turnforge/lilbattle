@@ -227,6 +227,14 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
   - Command history with up/down arrow navigation (readline support)
   - All actions go through ProcessMoves RPC for consistency
   - Auto-saves state for immediate browser visibility
+- **ww**: Modern CLI with subcommands (status, units, options, move, attack, endturn)
+  - Units display shows player numbers instead of letters (Player 1, Player 2)
+  - Current player indicated with "*" in units listing
+  - Players ordered starting from current player with wraparound
+  - Direction shortcuts for movement (L/R/TL/TR/BL/BR)
+  - Unit shortcut-based commands (ww move B1 R, ww attack A1 B2)
+  - JSON output mode for scripting (--json flag)
+  - Dry-run mode for testing moves without applying (--dryrun flag)
 
 **Multiplayer Coordination**: 🔄 **90% COMPLETE**
 - Core coordination protocol implemented in TurnEngine
