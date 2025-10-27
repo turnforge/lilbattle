@@ -329,7 +329,6 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 				// Two formats:
 				//   1. Single value: "1 (adjacent enemy units)" -> AttackRange=1, MinAttackRange=1
 				//   2. Range: "2 - 3" -> AttackRange=3 (max), MinAttackRange=2
-				log.Println("Splash text: ", text)
 				lines := strings.Split(text, "\n")
 				for i, line := range lines {
 					if strings.Contains(line, "Splash Damage") && i+1 < len(lines) {
@@ -338,6 +337,22 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 						if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
 							if cost, err := strconv.Atoi(matches[0]); err == nil {
 								unitDef.SplashDamage = int32(cost)
+								break
+							}
+						}
+						break
+					}
+				}
+			} else if strings.Contains(text, "Defense") {
+				log.Println("Defense Text: ", text)
+				lines := strings.Split(text, "\n")
+				for i, line := range lines {
+					if strings.Contains(line, "Defense") && i+1 < len(lines) {
+						// nextLine := strings.TrimSpace(lines[i+1])
+						line := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
+						if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
+							if cost, err := strconv.Atoi(matches[0]); err == nil {
+								unitDef.Defense = int32(cost)
 								break
 							}
 						}
