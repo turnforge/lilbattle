@@ -75,6 +75,7 @@ func (re *RulesEngine) rollDamageFromDistribution(dist *v1.DamageDistribution, r
 
 // GetAttackOptions returns all positions a unit can attack from its current position
 // Only returns tiles with ENEMY units that are within attack range
+// Uses proper hex distance calculation and checks unit-to-unit combat compatibility
 func (re *RulesEngine) GetAttackOptions(world *World, unit *v1.Unit) ([]AxialCoord, error) {
 	if unit == nil {
 		return nil, fmt.Errorf("unit is nil")
@@ -88,32 +89,31 @@ func (re *RulesEngine) GetAttackOptions(world *World, unit *v1.Unit) ([]AxialCoo
 	var attackPositions []AxialCoord
 	attackRange := unitData.AttackRange
 
-	// Check all positions within attack range
+	// Get all coordinates within attack range using proper hex distance
 	unitCoord := UnitGetCoord(unit)
-	for dQ := -attackRange; dQ <= attackRange; dQ++ {
-		for dR := -attackRange; dR <= attackRange; dR++ {
-			if dQ == 0 && dR == 0 {
-				continue // Skip self
-			}
+	coordsInRange := unitCoord.Range(int(attackRange))
 
-			targetCoord := AxialCoord{Q: unitCoord.Q + int(dQ), R: unitCoord.R + int(dR)}
+	// Check each coordinate for valid attack targets
+	for _, targetCoord := range coordsInRange {
+		// Skip self
+		if targetCoord.Q == unitCoord.Q && targetCoord.R == unitCoord.R {
+			continue
+		}
 
-			// Check if there's an enemy unit at this position (attack rule: only enemy units)
-			tile := world.TileAt(targetCoord)
-			targetUnit := world.UnitAt(targetCoord)
-			if tile == nil || targetUnit == nil {
-				continue // No unit to attack
-			}
+		// Check if there's an enemy unit at this position
+		targetUnit := world.UnitAt(targetCoord)
+		if targetUnit == nil {
+			continue // No unit to attack
+		}
 
-			// Check if it's an enemy unit (different player)
-			if targetUnit.Player == unit.Player {
-				continue // Same player, can't attack
-			}
+		// Check if it's an enemy unit (different player)
+		if targetUnit.Player == unit.Player {
+			continue // Same player, can't attack
+		}
 
-			// Check if this unit can attack the target unit type
-			if _, canAttack := re.GetCombatPrediction(unit.UnitType, targetUnit.UnitType); canAttack {
-				attackPositions = append(attackPositions, targetCoord)
-			}
+		// Check if this unit can attack the target unit type (handles compatibility)
+		if _, canAttack := re.GetCombatPrediction(unit.UnitType, targetUnit.UnitType); canAttack {
+			attackPositions = append(attackPositions, targetCoord)
 		}
 	}
 
