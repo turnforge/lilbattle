@@ -150,6 +150,17 @@ message Unit {
   // needing a top up of its health/balance/movement etc
   int32 last_acted_turn = 8;      // Which turn this unit was created/last acted on (ie movemade)
   int32 last_toppedup_turn = 9;   // When the last top up happened
+
+  // Details around wound bonus tracking for this turn
+  int32 attacks_received_this_turn = 10;    // Total number of attacks received this turn
+  repeated AttackRecord attack_history = 11; // Detailed attack history for wound bonus calculation
+}
+
+message AttackRecord {
+  int32 q = 1;    // Attacker's Q coordinate
+  int32 r = 2;    // Attacker's R coordinate
+  bool is_ranged = 3; // Whether attacker is ranged 2+ tiles away
+  int32 turn_number = 4; // Which turn this attack occured
 }
 
 ///////// Rules Engine Definitions
@@ -172,14 +183,24 @@ message UnitDefinition {
   int32 id = 1;                  // Unit type ID
   string name = 2;               // Display name (e.g., "Infantry", "Tank")
   string description = 3;        //
-  int32 health = 4;             // Maximum health points
-  int32 coins = 5;              // how much it costs to build
-  double movement_points = 6;     // Maximum movement per turn
-  int32 attack_range = 7;        // Max Attack range in tiles
-  int32 min_attack_range = 8;        // Minimum attack range in tile radius if specified (otherwise - will be 1
-  int32 splash_damage = 9;
-  map<int32, TerrainUnitProperties> terrain_properties = 10;
-  repeated string properties = 11; // Special properties/abilities
+  int32 health = 4;              // Maximum health points
+  int32 coins = 5;               // how much it costs to build
+  double movement_points = 6;    // Maximum movement per turn
+  int32 defense = 7;             // Base defense value
+  int32 attack_range = 8;        // Max Attack range in tiles
+  int32 min_attack_range = 9;    // Minimum attack range in tile radius if specified (otherwise - will be 1
+  int32 splash_damage = 10;      // Splash damage amount
+  map<int32, TerrainUnitProperties> terrain_properties = 11;
+  repeated string properties = 12; // Special properties/abilities
+
+  // Unit classification for attack calculations
+  string unit_class = 13;        // "Light", "Heavy", or "Stealth"
+  string unit_terrain = 14;      // "Air", "Land", or "Water"
+
+  // Attack table: base attack values against different unit classes
+  // Key format: "Light:Air", "Heavy:Land", "Stealth:Water", etc.
+  // Value 0 or missing key means "n/a" (cannot attack)
+  map<string, int32> attack_vs_class = 15;
 }
 
 // Properties that are specific to unit on a particular terrain
@@ -200,7 +221,10 @@ message TerrainUnitProperties {
 message UnitUnitProperties {
   int32 attacker_id = 1;
   int32 defender_id = 2;
-  DamageDistribution damage = 3;
+  optional int32 attack_override = 3;    // Optional attack override for this Attacker/Defender combo
+  optional int32 defense_override = 4;   // Optional defense override for this Attacker/Defender combo
+
+  DamageDistribution damage = 5;
 }
 
 // Damage distribution for combat calculations
