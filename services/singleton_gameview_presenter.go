@@ -121,6 +121,7 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 	resp = &v1.SceneClickedResponse{}
 	game := s.GamesService.SingletonGame
 	gameState := s.GamesService.SingletonGameState
+	rg, err := s.GamesService.GetRuntimeGame(game, gameState)
 	q, r := req.Q, req.R
 	coord := CoordFromInt32(q, r)
 
@@ -130,7 +131,6 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 		// User clicked on a movement highlight - execute the move
 		s.executeMovementAction(ctx, q, r)
 	case "base-map":
-		rg, err := s.GamesService.GetRuntimeGame(game, gameState)
 		wd := rg.World
 		if err != nil {
 			panic(err)
@@ -145,6 +145,7 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 
 		// Only proceed with options and highlights if there's a unit
 		if unit != nil {
+			rg.TopUpUnitIfNeeded(unit)
 			// Get options at this position and update TurnOptionsPanel
 			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 				Q: q,

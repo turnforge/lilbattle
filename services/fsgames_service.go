@@ -181,14 +181,13 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 	}
 
 	resp = &v1.UpdateGameResponse{}
+	game, err := storage.LoadFSArtifact[*v1.Game](s.storage, req.GameId, "metadata")
+	if err != nil {
+		return nil, fmt.Errorf("game not found: %w", err)
+	}
 
 	// Load existing metadata if updating
 	if req.NewGame != nil {
-		game, err := storage.LoadFSArtifact[*v1.Game](s.storage, req.GameId, "metadata")
-		if err != nil {
-			return nil, fmt.Errorf("game not found: %w", err)
-		}
-
 		// Update metadata fields
 		if req.NewGame.Name != "" {
 			game.Name = req.NewGame.Name
@@ -214,6 +213,17 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 	}
 
 	if req.NewState != nil {
+		// Make sure to topup units
+		if req.NewState.WorldData != nil {
+			rg, err := s.GetRuntimeGame(game, req.NewState)
+			if err != nil {
+				panic(err)
+			}
+			for _, unit := range req.NewState.WorldData.Units {
+				rg.TopUpUnitIfNeeded(unit)
+			}
+		}
+
 		if err := s.storage.SaveArtifact(req.GameId, "state", req.NewState); err != nil {
 			return nil, fmt.Errorf("failed to update game state: %w", err)
 		}
