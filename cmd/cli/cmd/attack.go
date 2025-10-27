@@ -94,6 +94,27 @@ func runAttack(cmd *cobra.Command, args []string) error {
 		fmt.Printf("[VERBOSE] Attacker selected at %s\n", attackerCoord.String())
 	}
 
+	// Get combat diagnostics before executing attack
+	var combatDiagnostics string
+	if isVerbose() || isDryrun() {
+		attacker := rtGame.World.UnitAt(attackerCoord)
+		attackerTile := rtGame.World.TileAt(attackerCoord)
+		defender := rtGame.World.UnitAt(targetCoord)
+		defenderTile := rtGame.World.TileAt(targetCoord)
+
+		if attacker != nil && defender != nil {
+			combatDiagnostics, err = generateCombatDiagnostics(
+				rtGame.GetRulesEngine(),
+				attacker, attackerTile, attacker.AvailableHealth,
+				defender, defenderTile, defender.AvailableHealth)
+			if err != nil {
+				fmt.Printf("[WARNING] Failed to generate combat diagnostics: %v\n", err)
+			} else if combatDiagnostics != "" {
+				fmt.Print(combatDiagnostics)
+			}
+		}
+	}
+
 	// Click 2: Click target on movement-highlight layer to execute attack
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
@@ -142,4 +163,108 @@ func runAttack(cmd *cobra.Command, args []string) error {
 		pc.GameState.State.CurrentPlayer, pc.GameState.State.TurnCounter))
 
 	return formatter.PrintText(sb.String())
+}
+
+// generateCombatDiagnostics produces detailed combat calculation information
+// This is a static, testable function that allows testing with arbitrary health values
+func generateCombatDiagnostics(
+	rulesEngine *services.RulesEngine,
+	attacker *v1.Unit, attackerTile *v1.Tile, attackerHealth int32,
+	defender *v1.Unit, defenderTile *v1.Tile, defenderHealth int32) (string, error) {
+
+	if attacker == nil || defender == nil {
+		return "", fmt.Errorf("attacker or defender is nil")
+	}
+
+	var sb strings.Builder
+	sb.WriteString("\n[COMBAT DIAGNOSTICS]\n")
+	sb.WriteString(strings.Repeat("=", 60) + "\n")
+
+	// Unit information
+	attackerData, err := rulesEngine.GetUnitData(attacker.UnitType)
+	if err != nil {
+		return "", fmt.Errorf("failed to get attacker unit data: %w", err)
+	}
+	defenderData, err := rulesEngine.GetUnitData(defender.UnitType)
+	if err != nil {
+		return "", fmt.Errorf("failed to get defender unit data: %w", err)
+	}
+
+	attackerCoord := services.CoordFromInt32(attacker.Q, attacker.R)
+	defenderCoord := services.CoordFromInt32(defender.Q, defender.R)
+
+	sb.WriteString(fmt.Sprintf("\nAttacker: %s (Type %d) at %s\n", attacker.Shortcut, attacker.UnitType, attackerCoord.String()))
+	sb.WriteString(fmt.Sprintf("  Player: %d\n", attacker.Player))
+	sb.WriteString(fmt.Sprintf("  Health: %d/%d\n", attackerHealth, attackerData.Health))
+	sb.WriteString(fmt.Sprintf("  Unit Type: %s\n", attackerData.Name))
+
+	// Get attacker's terrain
+	if attackerTile != nil {
+		attackerTerrainData, _ := rulesEngine.GetTerrainData(attackerTile.TileType)
+		if attackerTerrainData != nil {
+			sb.WriteString(fmt.Sprintf("  Terrain: %s (Type %d)\n", attackerTerrainData.Name, attackerTile.TileType))
+		}
+	}
+
+	sb.WriteString(fmt.Sprintf("\nDefender: %s (Type %d) at %s\n", defender.Shortcut, defender.UnitType, defenderCoord.String()))
+	sb.WriteString(fmt.Sprintf("  Player: %d\n", defender.Player))
+	sb.WriteString(fmt.Sprintf("  Health: %d/%d\n", defenderHealth, defenderData.Health))
+	sb.WriteString(fmt.Sprintf("  Unit Type: %s\n", defenderData.Name))
+
+	// Get defender's terrain
+	if defenderTile != nil {
+		defenderTerrainData, _ := rulesEngine.GetTerrainData(defenderTile.TileType)
+		if defenderTerrainData != nil {
+			sb.WriteString(fmt.Sprintf("  Terrain: %s (Type %d)\n", defenderTerrainData.Name, defenderTile.TileType))
+		}
+	}
+
+	// Combat calculations
+	sb.WriteString("\n" + strings.Repeat("-", 60) + "\n")
+	sb.WriteString("Combat Calculations:\n")
+	sb.WriteString(strings.Repeat("-", 60) + "\n")
+
+	// Attacker -> Defender damage
+	attackDist, canAttack := rulesEngine.GetCombatPrediction(attacker.UnitType, defender.UnitType)
+	sb.WriteString(fmt.Sprintf("\nAttacker -> Defender:\n"))
+	if canAttack && attackDist != nil {
+		sb.WriteString(fmt.Sprintf("  Can Attack: YES\n"))
+		sb.WriteString(fmt.Sprintf("  Expected Damage: %.1f\n", attackDist.ExpectedDamage))
+		if len(attackDist.Ranges) > 0 {
+			sb.WriteString(fmt.Sprintf("  Damage Distribution:\n"))
+			for i, dr := range attackDist.Ranges {
+				sb.WriteString(fmt.Sprintf("    Range %d: %.0f-%.0f damage (%.1f%% probability)\n",
+					i+1, dr.MinValue, dr.MaxValue, dr.Probability*100))
+			}
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf("  Can Attack: NO\n"))
+	}
+
+	// Defender -> Attacker counter-attack
+	counterDist, canCounter := rulesEngine.GetCombatPrediction(defender.UnitType, attacker.UnitType)
+	sb.WriteString(fmt.Sprintf("\nDefender -> Attacker (Counter-attack):\n"))
+	if canCounter && counterDist != nil {
+		// Check if defender can actually reach attacker
+		canReach, _ := rulesEngine.CanUnitAttackTarget(defender, attacker)
+		if canReach {
+			sb.WriteString(fmt.Sprintf("  Can Counter: YES\n"))
+			sb.WriteString(fmt.Sprintf("  Expected Damage: %.1f\n", counterDist.ExpectedDamage))
+			if len(counterDist.Ranges) > 0 {
+				sb.WriteString(fmt.Sprintf("  Damage Distribution:\n"))
+				for i, dr := range counterDist.Ranges {
+					sb.WriteString(fmt.Sprintf("    Range %d: %.0f-%.0f damage (%.1f%% probability)\n",
+						i+1, dr.MinValue, dr.MaxValue, dr.Probability*100))
+				}
+			}
+		} else {
+			sb.WriteString(fmt.Sprintf("  Can Counter: NO (out of range)\n"))
+		}
+	} else {
+		sb.WriteString(fmt.Sprintf("  Can Counter: NO (unit type cannot counter-attack)\n"))
+	}
+
+	sb.WriteString("\n" + strings.Repeat("=", 60) + "\n\n")
+
+	return sb.String(), nil
 }

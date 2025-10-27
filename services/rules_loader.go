@@ -122,6 +122,8 @@ func LoadRulesEngineFromJSON(jsonData []byte) (*RulesEngine, error) {
 			if err := unmarshaler.Unmarshal(propBytes, props); err == nil {
 				// Deduplicate damage ranges (source data may have duplicates)
 				deduplicateDamageRanges(props.Damage)
+				// Calculate expected damage from distribution
+				calculateExpectedDamage(props.Damage)
 				rulesEngine.UnitUnitProperties[key] = props
 			}
 		}
@@ -185,4 +187,36 @@ func deduplicateDamageRanges(damage *v1.DamageDistribution) {
 	}
 
 	damage.Ranges = uniqueRanges
+}
+
+// calculateExpectedDamage calculates and sets the expected damage from the distribution ranges
+func calculateExpectedDamage(damage *v1.DamageDistribution) {
+	if damage == nil || len(damage.Ranges) == 0 {
+		return
+	}
+
+	expectedDamage := 0.0
+	totalProbability := 0.0
+
+	// Calculate expected value: sum of (damage * probability) for each range
+	for _, damageRange := range damage.Ranges {
+		if damageRange == nil {
+			continue
+		}
+
+		// For single-value ranges (min == max), use that value
+		// For ranges, use the midpoint
+		avgDamage := (damageRange.MinValue + damageRange.MaxValue) / 2.0
+		probability := damageRange.Probability
+
+		expectedDamage += avgDamage * probability
+		totalProbability += probability
+	}
+
+	// Normalize if probabilities don't sum to 1.0
+	if totalProbability > 0 && totalProbability != 1.0 {
+		expectedDamage = expectedDamage / totalProbability
+	}
+
+	damage.ExpectedDamage = expectedDamage
 }
