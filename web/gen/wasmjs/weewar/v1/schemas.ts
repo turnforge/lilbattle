@@ -1872,16 +1872,6 @@ export const MoveOptionSchema: MessageSchema = {
   name: "MoveOption",
   fields: [
     {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 1,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 2,
-    },
-    {
       name: "movementCost",
       type: FieldType.NUMBER,
       id: 3,
@@ -1908,16 +1898,6 @@ export const MoveOptionSchema: MessageSchema = {
 export const AttackOptionSchema: MessageSchema = {
   name: "AttackOption",
   fields: [
-    {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 1,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 2,
-    },
     {
       name: "targetUnitType",
       type: FieldType.NUMBER,

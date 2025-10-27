@@ -5,6 +5,7 @@ import { World } from '../World';
 import { SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer } from './layers/HexHighlightLayer';
 import { EventBus } from '../../lib/EventBus';
 import { GameViewPresenterServiceClient as  GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/gameViewPresenterClient';
+import { MoveOption, AttackOption } from '../../gen/wasmjs/weewar/v1/interfaces';
 
 /**
  * PhaserGameScene extends PhaserWorldScene with game-specific interactive features.
@@ -473,12 +474,22 @@ export class PhaserGameScene extends PhaserWorldScene {
         // Apply movement highlights
         if (this._movementHighlightLayer && movements.length > 0) {
             // Convert to MoveOption-like objects for the layer
-            const moveOptions = movements.map(h => ({
-                q: h.q,
-                r: h.r,
+            const moveOptions: MoveOption[] = movements.map(h => ({
+                action: {
+                    fromQ: h.q,
+                    fromR: h.r,
+                    toQ: h.q,
+                    toR: h.r,
+                },
                 movementCost: 0, // Cost not available in HighlightSpec
             }));
             this._movementHighlightLayer.showMovementOptions(moveOptions);
+           /*
+            const mhl = this._movementHighlightLayer;
+            movements.forEach(h => {
+                mhl.addHighlight(h.q, h.r, 0x00FF00, 0.2, 0x00FF00, 2);
+            })
+           */
         }
 
         // Apply attack highlights

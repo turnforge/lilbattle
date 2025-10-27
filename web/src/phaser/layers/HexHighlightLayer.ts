@@ -30,7 +30,7 @@ export abstract class HexHighlightLayer extends BaseLayer {
     /**
      * Add highlight at hex coordinate
      */
-    protected addHighlight(q: number, r: number, color: number, alpha: number = 0.3, strokeColor?: number, strokeWidth?: number): void {
+    public addHighlight(q: number, r: number, color: number, alpha: number = 0.3, strokeColor?: number, strokeWidth?: number): void {
         const key = `${q},${r}`;
         
         // Remove existing highlight if present
@@ -286,15 +286,15 @@ export class MovementHighlightLayer extends HexHighlightLayer {
         // Add highlights for each valid movement position and store the MoveOption data
         moveOptions.forEach(moveOption => {
             // Green highlight with subtle border
-            this.addHighlight(moveOption.q, moveOption.r, 0x00FF00, 0.2, 0x00FF00, 2);
+            this.addHighlight(moveOption.action!.fromQ, moveOption.action!.fromR, 0x00FF00, 0.2, 0x00FF00, 2);
             
             // Store the move option for click handling
-            const coordKey = `${moveOption.q},${moveOption.r}`;
+            const coordKey = `${moveOption.action!.fromQ},${moveOption.action!.fromR}`;
             this.movementOptions.set(coordKey, moveOption);
             
             // Add debug coordinate text if enabled
             if (this.showDebugCoordinates) {
-                this.addCoordinateText(moveOption.q, moveOption.r, moveOption);
+                this.addCoordinateText(moveOption.action!.fromQ, moveOption.action!.fromR, moveOption);
             }
         });
     }

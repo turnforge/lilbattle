@@ -7,22 +7,22 @@
     "Console": { "pos": "bottom", "height": 12 }
   },
   "configurations": {
-    "Launch": {
+    "Debug ww units": {
+      "adapter": "vscode-go",
+      "configuration": {
+        "request": "launch",
+        "program": "${workspaceRoot}/cmd/cli/main.go",
+        "mode": "debug",
+        "args": ["--game-id", "c5380903", "move", "b1", "BR,BR", "--dryrun"]
+      }
+    },
+    "Launch Web Server": {
       "adapter": "vscode-go",
       "configuration": {
         "request": "launch",
         "program": "${workspaceRoot}/main.go",
         "mode": "debug",
         "args": []
-      }
-    },
-    "Launch with args": {
-      "adapter": "vscode-go",
-      "configuration": {
-        "request": "launch",
-        "program": "${workspaceRoot}/main.go",
-        "mode": "debug",
-        "args": ["${arg1}", "${arg2}"]
       }
     },
     "Debug current file": {

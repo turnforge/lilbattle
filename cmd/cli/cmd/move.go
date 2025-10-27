@@ -17,13 +17,15 @@ var moveCmd = &cobra.Command{
 	Short: "Move a unit",
 	Long: `Move a unit from one position to another.
 Positions can be unit IDs (like A1) or coordinates (like 3,4).
-The <to> position can also be a direction: L, R, TL, TR, BL, BR.
+The <to> position can also be a direction or sequence of directions: L, R, TL, TR, BL, BR.
+Multiple directions can be chained with commas to move multiple steps: TL,TL,TR.
 
 Examples:
-  ww move A1 5,6       Move unit A1 to position 5,6
-  ww move A1 R         Move unit A1 to the right
-  ww move 3,4 TL       Move unit at 3,4 to top-left
-  ww move A1 R --dryrun Preview move without saving`,
+  ww move A1 5,6           Move unit A1 to position 5,6
+  ww move A1 R             Move unit A1 to the right
+  ww move A1 TL,TL,TR      Move unit A1: top-left, then top-left, then top-right
+  ww move 3,4 TL           Move unit at 3,4 to top-left
+  ww move A1 R --dryrun    Preview move without saving`,
 	Args: cobra.ExactArgs(2),
 	RunE: runMove,
 }
@@ -114,9 +116,10 @@ func runMove(cmd *cobra.Command, args []string) error {
 
 	// Format output
 	formatter := NewOutputFormatter()
+	defer formatter.PrintText("Done with this")
 
 	if formatter.JSON {
-		data := map[string]interface{}{
+		data := map[string]any{
 			"game_id": gameID,
 			"action":  "move",
 			"from": map[string]int{

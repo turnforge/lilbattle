@@ -17,13 +17,15 @@ var attackCmd = &cobra.Command{
 	Short: "Attack a unit",
 	Long: `Attack a target unit with your unit.
 Positions can be unit IDs (like A1) or coordinates (like 3,4).
-The <target> position can also be a direction: L, R, TL, TR, BL, BR.
+The <target> position can also be a direction or sequence of directions: L, R, TL, TR, BL, BR.
+Multiple directions can be chained with commas to target distant units: TL,TL,TR.
 
 Examples:
-  ww attack A1 B2         Attack unit B2 with unit A1
-  ww attack A1 TR         Attack top-right neighbor with A1
-  ww attack 3,4 5,6       Attack position 5,6 with unit at 3,4
-  ww attack A1 B2 --dryrun Preview attack outcome without saving`,
+  ww attack A1 B2              Attack unit B2 with unit A1
+  ww attack A1 TR              Attack top-right neighbor with A1
+  ww attack A1 TL,TL           Attack unit 2 steps top-left from A1
+  ww attack 3,4 5,6            Attack position 5,6 with unit at 3,4
+  ww attack A1 B2 --dryrun     Preview attack outcome without saving`,
 	Args: cobra.ExactArgs(2),
 	RunE: runAttack,
 }

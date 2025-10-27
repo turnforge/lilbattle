@@ -1669,8 +1669,6 @@ export class MoveOption implements MoveOptionInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.MoveOption";
 
-  q: number = 0;
-  r: number = 0;
   movementCost: number = 0;
   /** Ready-to-use action object for ProcessMoves */
   action?: MoveUnitAction;
@@ -1698,8 +1696,6 @@ export class AttackOption implements AttackOptionInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.AttackOption";
 
-  q: number = 0;
-  r: number = 0;
   /** Target unit type and health */
   targetUnitType: number = 0;
   targetUnitHealth: number = 0;

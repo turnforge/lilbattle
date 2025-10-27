@@ -211,15 +211,15 @@ func buildHighlightSpecs(optionsResp *v1.GetOptionsAtResponse, selectedQ, select
 		if moveOpt := option.GetMove(); moveOpt != nil {
 			// Add movement highlight
 			highlights = append(highlights, &v1.HighlightSpec{
-				Q:    moveOpt.Q,
-				R:    moveOpt.R,
+				Q:    moveOpt.Action.ToQ,
+				R:    moveOpt.Action.ToR,
 				Type: "movement",
 			})
 		} else if attackOpt := option.GetAttack(); attackOpt != nil {
 			// Add attack highlight
 			highlights = append(highlights, &v1.HighlightSpec{
-				Q:    attackOpt.Q,
-				R:    attackOpt.R,
+				Q:    attackOpt.Action.DefenderQ,
+				R:    attackOpt.Action.DefenderR,
 				Type: "attack",
 			})
 		}
@@ -305,7 +305,7 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 	var moveOption *v1.MoveOption
 	for _, option := range currentOptions.Options {
 		if opt := option.GetMove(); opt != nil {
-			if opt.Q == targetQ && opt.R == targetR {
+			if opt.Action.ToQ == targetQ && opt.Action.ToR == targetR {
 				moveOption = opt
 				break
 			}

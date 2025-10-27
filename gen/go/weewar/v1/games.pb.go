@@ -1840,8 +1840,6 @@ func (*EndTurnOption) Descriptor() ([]byte, []int) {
 // Option to move to a specific coordinate
 type MoveOption struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
-	Q            int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
-	R            int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
 	MovementCost int32                  `protobuf:"varint,3,opt,name=movement_cost,json=movementCost,proto3" json:"movement_cost,omitempty"`
 	// Ready-to-use action object for ProcessMoves
 	Action *MoveUnitAction `protobuf:"bytes,4,opt,name=action,proto3" json:"action,omitempty"`
@@ -1881,20 +1879,6 @@ func (*MoveOption) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_games_proto_rawDescGZIP(), []int{28}
 }
 
-func (x *MoveOption) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *MoveOption) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
-}
-
 func (x *MoveOption) GetMovementCost() int32 {
 	if x != nil {
 		return x.MovementCost
@@ -1920,8 +1904,6 @@ func (x *MoveOption) GetReconstructedPath() *Path {
 // A possible attack target
 type AttackOption struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Q     int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
-	R     int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
 	// Target unit type and health
 	TargetUnitType   int32 `protobuf:"varint,3,opt,name=target_unit_type,json=targetUnitType,proto3" json:"target_unit_type,omitempty"`
 	TargetUnitHealth int32 `protobuf:"varint,4,opt,name=target_unit_health,json=targetUnitHealth,proto3" json:"target_unit_health,omitempty"`
@@ -1961,20 +1943,6 @@ func (x *AttackOption) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AttackOption.ProtoReflect.Descriptor instead.
 func (*AttackOption) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_games_proto_rawDescGZIP(), []int{29}
-}
-
-func (x *AttackOption) GetQ() int32 {
-	if x != nil {
-		return x.Q
-	}
-	return 0
-}
-
-func (x *AttackOption) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
 }
 
 func (x *AttackOption) GetTargetUnitType() int32 {
@@ -2278,17 +2246,13 @@ const file_weewar_v1_games_proto_rawDesc = "" +
 	"\x05build\x18\x04 \x01(\v2\x1a.weewar.v1.BuildUnitOptionH\x00R\x05build\x12<\n" +
 	"\acapture\x18\x05 \x01(\v2 .weewar.v1.CaptureBuildingOptionH\x00R\acaptureB\r\n" +
 	"\voption_type\"\x0f\n" +
-	"\rEndTurnOption\"\xc0\x01\n" +
+	"\rEndTurnOption\"\xa4\x01\n" +
 	"\n" +
-	"MoveOption\x12\f\n" +
-	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x02 \x01(\x05R\x01r\x12#\n" +
+	"MoveOption\x12#\n" +
 	"\rmovement_cost\x18\x03 \x01(\x05R\fmovementCost\x121\n" +
 	"\x06action\x18\x04 \x01(\v2\x19.weewar.v1.MoveUnitActionR\x06action\x12>\n" +
-	"\x12reconstructed_path\x18\x05 \x01(\v2\x0f.weewar.v1.PathR\x11reconstructedPath\"\xff\x01\n" +
-	"\fAttackOption\x12\f\n" +
-	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x02 \x01(\x05R\x01r\x12(\n" +
+	"\x12reconstructed_path\x18\x05 \x01(\v2\x0f.weewar.v1.PathR\x11reconstructedPath\"\xe3\x01\n" +
+	"\fAttackOption\x12(\n" +
 	"\x10target_unit_type\x18\x03 \x01(\x05R\x0etargetUnitType\x12,\n" +
 	"\x12target_unit_health\x18\x04 \x01(\x05R\x10targetUnitHealth\x12\x1d\n" +
 	"\n" +

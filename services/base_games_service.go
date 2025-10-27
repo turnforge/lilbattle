@@ -194,8 +194,6 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 					options = append(options, &v1.GameOption{
 						OptionType: &v1.GameOption_Move{
 							Move: &v1.MoveOption{
-								Q:                 edge.ToQ,
-								R:                 edge.ToR,
 								MovementCost:      int32(edge.TotalCost),
 								Action:            moveAction,
 								ReconstructedPath: path,
@@ -229,8 +227,6 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 						options = append(options, &v1.GameOption{
 							OptionType: &v1.GameOption_Attack{
 								Attack: &v1.AttackOption{
-									Q:                int32(coord.Q),
-									R:                int32(coord.R),
 									TargetUnitType:   targetUnit.UnitType,
 									TargetUnitHealth: targetUnit.AvailableHealth,
 									CanAttack:        true,

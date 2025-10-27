@@ -38,7 +38,7 @@ func (f *OutputFormatter) prefix(text string) string {
 }
 
 // Print outputs text or JSON based on format setting
-func (f *OutputFormatter) Print(data interface{}) error {
+func (f *OutputFormatter) Print(data any) error {
 	if f.JSON {
 		return f.PrintJSON(data)
 	}
@@ -46,8 +46,8 @@ func (f *OutputFormatter) Print(data interface{}) error {
 }
 
 // PrintJSON outputs data as JSON
-func (f *OutputFormatter) PrintJSON(data interface{}) error {
-	output := map[string]interface{}{
+func (f *OutputFormatter) PrintJSON(data any) error {
+	output := map[string]any{
 		"data":   data,
 		"dryrun": f.Dryrun,
 	}
@@ -62,7 +62,7 @@ func (f *OutputFormatter) PrintJSON(data interface{}) error {
 }
 
 // PrintText outputs data as human-readable text
-func (f *OutputFormatter) PrintText(data interface{}) error {
+func (f *OutputFormatter) PrintText(data any) error {
 	var text string
 
 	switch v := data.(type) {
@@ -103,7 +103,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 		switch opt := option.OptionType.(type) {
 		case *v1.GameOption_Move:
 			moveOpt := opt.Move
-			targetCoord := services.CoordFromInt32(moveOpt.Q, moveOpt.R)
+			targetCoord := services.CoordFromInt32(moveOpt.Action.ToQ, moveOpt.Action.ToR)
 			sb.WriteString(fmt.Sprintf("%d. move to %s (cost: %d)\n",
 				i+1, targetCoord.String(), moveOpt.MovementCost))
 
@@ -115,7 +115,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 
 		case *v1.GameOption_Attack:
 			attackOpt := opt.Attack
-			targetCoord := services.CoordFromInt32(attackOpt.Q, attackOpt.R)
+			targetCoord := services.CoordFromInt32(attackOpt.Action.DefenderQ, attackOpt.Action.DefenderR)
 			sb.WriteString(fmt.Sprintf("%d. attack %s (damage est: %d)\n",
 				i+1, targetCoord.String(), attackOpt.DamageEstimate))
 

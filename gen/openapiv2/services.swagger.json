@@ -1230,14 +1230,6 @@
     "v1AttackOption": {
       "type": "object",
       "properties": {
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
-        },
         "targetUnitType": {
           "type": "integer",
           "format": "int32",
@@ -2010,14 +2002,6 @@
     "v1MoveOption": {
       "type": "object",
       "properties": {
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
-        },
         "movementCost": {
           "type": "integer",
           "format": "int32"

@@ -78,33 +78,33 @@ func runOptions(cmd *cobra.Command, args []string) error {
 
 	if formatter.JSON {
 		// JSON output
-		options := []map[string]interface{}{}
+		options := []map[string]any{}
 		if pc.TurnOptions.Options != nil {
 			for _, option := range pc.TurnOptions.Options.Options {
 				switch opt := option.OptionType.(type) {
 				case *v1.GameOption_Move:
-					options = append(options, map[string]interface{}{
+					options = append(options, map[string]any{
 						"type":          "move",
-						"q":             opt.Move.Q,
-						"r":             opt.Move.R,
+						"q":             opt.Move.Action.ToQ,
+						"r":             opt.Move.Action.ToR,
 						"movement_cost": opt.Move.MovementCost,
 					})
 				case *v1.GameOption_Attack:
-					options = append(options, map[string]interface{}{
-						"type":           "attack",
-						"q":              opt.Attack.Q,
-						"r":              opt.Attack.R,
+					options = append(options, map[string]any{
+						"type":            "attack",
+						"q":               opt.Attack.Action.DefenderQ,
+						"r":               opt.Attack.Action.DefenderR,
 						"damage_estimate": opt.Attack.DamageEstimate,
 					})
 				case *v1.GameOption_EndTurn:
-					options = append(options, map[string]interface{}{
+					options = append(options, map[string]any{
 						"type": "endturn",
 					})
 				}
 			}
 		}
 
-		data := map[string]interface{}{
+		data := map[string]any{
 			"game_id":  gameID,
 			"position": position,
 			"q":        coord.Q,

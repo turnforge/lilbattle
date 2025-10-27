@@ -853,8 +853,6 @@ export interface EndTurnOption {
  Option to move to a specific coordinate
  */
 export interface MoveOption {
-  q: number;
-  r: number;
   movementCost: number;
   /** Ready-to-use action object for ProcessMoves */
   action?: MoveUnitAction;
@@ -868,8 +866,6 @@ export interface MoveOption {
  A possible attack target
  */
 export interface AttackOption {
-  q: number;
-  r: number;
   /** Target unit type and health */
   targetUnitType: number;
   targetUnitHealth: number;

@@ -27,25 +27,43 @@ func ParsePositionOrUnit(game *Game, input string) (target *ParseTarget, err err
 // ParsePositionOrUnitWithContext parses position formats with optional base coordinate for relative directions
 // Supports all formats from ParsePositionOrUnit, plus:
 // - Direction: L, R, TL, TR, BL, BR (when baseCoord is provided)
+// - Multiple directions: TL,TL,TR (when baseCoord is provided, applies sequentially)
 func ParsePositionOrUnitWithContext(game *Game, input string, baseCoord *AxialCoord) (target *ParseTarget, err error) {
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return nil, fmt.Errorf("empty input")
 	}
 
-	// Check if it's a direction (only if baseCoord is provided)
+	// Check if it's a direction sequence (only if baseCoord is provided)
 	if baseCoord != nil {
-		dir, dirErr := ParseDirection(input)
-		if dirErr == nil {
-			// It's a valid direction, calculate neighbor
-			neighborCoord := baseCoord.Neighbor(dir)
+		parts := strings.Split(input, ",")
+		directions := make([]NeighborDirection, 0, len(parts))
+		allDirections := true
+
+		// Try to parse all parts as directions
+		for _, part := range parts {
+			dir, dirErr := ParseDirection(strings.TrimSpace(part))
+			if dirErr != nil {
+				allDirections = false
+				break
+			}
+			directions = append(directions, dir)
+		}
+
+		// If all parts are valid directions, apply them sequentially
+		if allDirections {
+			currentCoord := *baseCoord
+			for _, dir := range directions {
+				currentCoord = currentCoord.Neighbor(dir)
+			}
 			return &ParseTarget{
 				IsUnit:     false,
-				Unit:       game.World.UnitAt(neighborCoord),
-				Coordinate: neighborCoord,
+				Unit:       game.World.UnitAt(currentCoord),
+				Coordinate: currentCoord,
 				Raw:        input,
 			}, nil
 		}
+		// If not all directions, fall through to coordinate parsing
 	}
 
 	// Check if it's a row/col coordinate (starts with 'r')

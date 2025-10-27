@@ -436,8 +436,6 @@ message EndTurnOption {
  * Option to move to a specific coordinate
  */
 message MoveOption {
-  int32 q = 1;
-  int32 r = 2;
   int32 movement_cost = 3;
   // Ready-to-use action object for ProcessMoves
   MoveUnitAction action = 4;
@@ -450,8 +448,6 @@ message MoveOption {
  * A possible attack target
  */
 message AttackOption {
-  int32 q = 1;
-  int32 r = 2;
   // Target unit type and health
   int32 target_unit_type = 3;
   int32 target_unit_health = 4;
