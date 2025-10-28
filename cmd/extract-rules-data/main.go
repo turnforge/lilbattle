@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/antchfx/htmlquery"
 	weewarv1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 	"golang.org/x/net/html"
 )
@@ -173,24 +174,13 @@ func extractUnitsData(unitsDir string, rulesData *RulesData) error {
 }
 
 func extractTerrainName(doc *html.Node) string {
-	var name string
-	var traverse func(*html.Node)
-	traverse = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "h1" {
-			// Look for the main terrain name
-			for _, attr := range n.Attr {
-				if attr.Key == "class" && strings.Contains(attr.Val, "mb-3") {
-					name = getTextContent(n)
-					return
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			traverse(c)
-		}
+	// Use XPath to find h1 with class containing "mb-3"
+	node := htmlquery.FindOne(doc, "//h1[contains(@class, 'mb-3')]")
+	if node == nil {
+		return ""
 	}
-	traverse(doc)
 
+	name := getTextContent(node)
 	// Clean up name
 	name = strings.TrimSpace(name)
 	name = regexp.MustCompile(`\s+`).ReplaceAllString(name, " ")
@@ -198,51 +188,19 @@ func extractTerrainName(doc *html.Node) string {
 }
 
 func extractTerrainUnitInteractions(doc *html.Node, terrainID int32, rulesData *RulesData) error {
-	// First, find the table headers to understand column layout
+	// Use XPath to find column headers
 	var columnHeaders []string
-	var foundTable bool
-
-	var findHeaders func(*html.Node)
-	findHeaders = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "thead" && !foundTable {
-			// Extract column headers
-			for row := n.FirstChild; row != nil; row = row.NextSibling {
-				if row.Type == html.ElementNode && row.Data == "tr" {
-					for cell := row.FirstChild; cell != nil; cell = cell.NextSibling {
-						if cell.Type == html.ElementNode && cell.Data == "th" {
-							headerText := getTextContent(cell)
-							columnHeaders = append(columnHeaders, strings.ToLower(strings.TrimSpace(headerText)))
-						}
-					}
-					foundTable = true
-					break
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			if !foundTable {
-				findHeaders(c)
-			}
-		}
+	headerCells := htmlquery.Find(doc, "//thead/tr/th")
+	for _, cell := range headerCells {
+		headerText := getTextContent(cell)
+		columnHeaders = append(columnHeaders, strings.ToLower(strings.TrimSpace(headerText)))
 	}
-	findHeaders(doc)
 
-	// Now find the tbody and process rows with column header knowledge
-	var traverse func(*html.Node)
-	traverse = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "tbody" {
-			// Process each row in the table
-			for row := n.FirstChild; row != nil; row = row.NextSibling {
-				if row.Type == html.ElementNode && row.Data == "tr" {
-					extractUnitRowData(row, terrainID, columnHeaders, rulesData)
-				}
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			traverse(c)
-		}
+	// Use XPath to find all tbody rows
+	rows := htmlquery.Find(doc, "//tbody/tr")
+	for _, row := range rows {
+		extractUnitRowData(row, terrainID, columnHeaders, rulesData)
 	}
-	traverse(doc)
 
 	return nil
 }
@@ -344,7 +302,6 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 					}
 				}
 			} else if strings.Contains(text, "Defense") {
-				log.Println("Defense Text: ", text)
 				lines := strings.Split(text, "\n")
 				for i, line := range lines {
 					if strings.Contains(line, "Defense") && i+1 < len(lines) {
@@ -364,7 +321,6 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 				// Two formats:
 				//   1. Single value: "1 (adjacent enemy units)" -> AttackRange=1, MinAttackRange=1
 				//   2. Range: "2 - 3" -> AttackRange=3 (max), MinAttackRange=2
-				log.Println("Attack Range text: ", text)
 				lines := strings.Split(text, "\n")
 				for i, line := range lines {
 					if strings.Contains(line, "Attack Range") && i+1 < len(lines) {
@@ -421,6 +377,12 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 		}
 	}
 	traverse(doc)
+
+	// Extract unit classification (Type section)
+	extractUnitClassification(doc, unitDef)
+
+	// Extract attack table
+	extractAttackTable(doc, unitDef)
 
 	return unitDef, nil
 }
@@ -633,4 +595,95 @@ func extractDamageDistribution(card *html.Node) *weewarv1.DamageDistribution {
 	}
 
 	return damage
+}
+
+// extractUnitClassification extracts the unit type (Light/Heavy/Stealth) and terrain (Air/Land/Water)
+func extractUnitClassification(doc *html.Node, unitDef *weewarv1.UnitDefinition) {
+	// Use XPath to find the <p> element containing <strong>Type</strong>
+	// Format: <p><strong>Type</strong>...<br>Light\t\t\tLand\t\t</p>
+	node := htmlquery.FindOne(doc, "//p[strong[text()='Type'] and span[contains(@aria-label, 'influences')]]")
+	if node == nil {
+		return
+	}
+
+	text := getTextContent(node)
+
+	// Try to find "Light", "Heavy", or "Stealth" and "Air", "Land", or "Water"
+	classTypes := []string{"Light", "Heavy", "Stealth"}
+	terrainTypes := []string{"Air", "Land", "Water"}
+
+	var foundClass, foundTerrain string
+	for _, ct := range classTypes {
+		if strings.Contains(text, ct) {
+			foundClass = ct
+			break
+		}
+	}
+	for _, tt := range terrainTypes {
+		if strings.Contains(text, tt) {
+			foundTerrain = tt
+			break
+		}
+	}
+
+	if foundClass != "" && foundTerrain != "" {
+		unitDef.UnitClass = foundClass
+		unitDef.UnitTerrain = foundTerrain
+		log.Printf("  Unit Classification: %s %s\n", unitDef.UnitClass, unitDef.UnitTerrain)
+	}
+}
+
+// extractAttackTable extracts the attack table showing base attack values against different unit classes
+func extractAttackTable(doc *html.Node, unitDef *weewarv1.UnitDefinition) {
+	unitDef.AttackVsClass = make(map[string]int32)
+
+	// Use XPath to find the table following the "Attack" h3 heading
+	// XPath: find h3 containing "Attack", then get the following table
+	tableNode := htmlquery.FindOne(doc, "//h3[contains(., 'Attack')]/following-sibling::table[1]")
+	if tableNode == nil {
+		log.Printf("  No attack table found\n")
+		return
+	}
+
+	// Extract table using our utility
+	table := ExtractHtmlTable(tableNode)
+
+	// Parse the attack table
+	if !table.HasHeader || len(table.Rows) < 2 {
+		log.Printf("  No valid attack table found\n")
+		return
+	}
+
+	// Get headers from first row
+	headers := table.Rows[0]
+	log.Printf("  Attack Table Headers: %v\n", headers)
+
+	// Process data rows (skip first row which is headers)
+	for i := 1; i < len(table.Rows); i++ {
+		row := table.Rows[i]
+		if len(row) == 0 {
+			continue
+		}
+
+		// First cell is the row class (Light/Heavy/Stealth)
+		rowClass := row[0]
+
+		// Remaining cells correspond to column headers
+		for j := 1; j < len(row) && j < len(headers); j++ {
+			cellValue := row[j]
+			columnName := headers[j]
+
+			// Skip "n/a" or empty values
+			if strings.Contains(cellValue, "n/a") || cellValue == "" {
+				continue
+			}
+
+			// Parse attack value
+			if attackValue, err := strconv.Atoi(cellValue); err == nil {
+				key := fmt.Sprintf("%s:%s", rowClass, columnName)
+				unitDef.AttackVsClass[key] = int32(attackValue)
+				log.Printf("    Attack[%s] = %d\n", key, attackValue)
+			}
+		}
+	}
 }
