@@ -259,137 +259,124 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 	unitDef := &weewarv1.UnitDefinition{
 		Id:     unitID,
 		Health: 10, // Always 10 in WeeWar
-		// MinAttackRange and AttackRange will be extracted from HTML
 	}
 
-	// Extract basic properties from the sidebar
-	var traverse func(*html.Node)
-	traverse = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "p" {
-			text := getTextContent(n)
+	// Extract name from page title
+	if titleNode := htmlquery.FindOne(doc, "//title"); titleNode != nil {
+		title := getTextContent(titleNode)
+		if strings.Contains(title, " - Units - ") {
+			parts := strings.Split(title, " - Units - ")
+			if len(parts) > 0 {
+				unitDef.Name = strings.TrimSpace(parts[0])
+			}
+		}
+	}
 
-			// Extract different properties based on <strong> labels
-			if strings.Contains(text, "Movement") && !strings.Contains(text, "Build Percentage") {
-				// Extract movement points - the number appears after <br>
-				lines := strings.Split(text, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Movement") && i+1 < len(lines) {
-						nextLine := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
-						matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(nextLine)
-						if len(matches) > 1 {
-							unitDef.MovementPoints = parseMovementCost(matches[1])
-						}
-						break
+	// Extract Movement points
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Movement')] and not(contains(., 'Build Percentage'))]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "Movement") && i+1 < len(lines) {
+				nextLine := strings.TrimSpace(strings.Join(lines[i+1:], "\n"))
+				if matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(nextLine); len(matches) > 1 {
+					unitDef.MovementPoints = parseMovementCost(matches[1])
+				}
+				break
+			}
+		}
+	}
+
+	// Extract Retreat points
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Retreat')]]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "Retreat") && i+1 < len(lines) {
+				nextLine := strings.TrimSpace(strings.Join(lines[i+1:], "\n"))
+				if matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(nextLine); len(matches) > 1 {
+					unitDef.RetreatPoints = parseMovementCost(matches[1])
+				}
+				break
+			}
+		}
+	}
+
+	// Extract Splash Damage
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Splash Damage')]]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "Splash Damage") && i+1 < len(lines) {
+				nextLine := strings.TrimSpace(strings.Join(lines[i+1:], "\n"))
+				if matches := regexp.MustCompile(`^\d+`).FindStringSubmatch(nextLine); len(matches) > 0 {
+					if val, err := strconv.Atoi(matches[0]); err == nil {
+						unitDef.SplashDamage = int32(val)
 					}
 				}
-			} else if strings.Contains(text, "Retreat") {
-				// Extract retreat points - the number appears after <br>
-				lines := strings.Split(text, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Retreat") && i+1 < len(lines) {
-						nextLine := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
-						matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(nextLine)
-						if len(matches) > 1 {
-							unitDef.RetreatPoints = parseMovementCost(matches[1])
-						}
-						break
+				break
+			}
+		}
+	}
+
+	// Extract Defense
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Defense')]]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "Defense") && i+1 < len(lines) {
+				nextLine := strings.TrimSpace(strings.Join(lines[i+1:], "\n"))
+				if matches := regexp.MustCompile(`^\d+`).FindStringSubmatch(nextLine); len(matches) > 0 {
+					if val, err := strconv.Atoi(matches[0]); err == nil {
+						unitDef.Defense = int32(val)
 					}
 				}
-			} else if strings.Contains(text, "Splash Damage") {
-				// Extract attack range - the number appears after <br>
-				// Two formats:
-				//   1. Single value: "1 (adjacent enemy units)" -> AttackRange=1, MinAttackRange=1
-				//   2. Range: "2 - 3" -> AttackRange=3 (max), MinAttackRange=2
-				lines := strings.Split(text, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Splash Damage") && i+1 < len(lines) {
-						// nextLine := strings.TrimSpace(lines[i+1])
-						line := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
-						if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
-							if cost, err := strconv.Atoi(matches[0]); err == nil {
-								unitDef.SplashDamage = int32(cost)
-								break
-							}
-						}
-						break
+				break
+			}
+		}
+	}
+
+	// Extract Attack Range
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Attack Range')]]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "Attack Range") && i+1 < len(lines) {
+				nextLine := strings.TrimSpace(strings.Join(lines[i+1:], "\n"))
+				// Check for range format: "2 - 3"
+				if matches := regexp.MustCompile(`^(\d+)\s*-\s*(\d+)`).FindStringSubmatch(nextLine); len(matches) > 2 {
+					if minRng, err := strconv.Atoi(matches[1]); err == nil {
+						unitDef.MinAttackRange = int32(minRng)
+					}
+					if maxRng, err := strconv.Atoi(matches[2]); err == nil {
+						unitDef.AttackRange = int32(maxRng)
+					}
+				} else if matches := regexp.MustCompile(`^(\d+)`).FindStringSubmatch(nextLine); len(matches) > 1 {
+					// Single value format: "1 (adjacent...)"
+					if rng, err := strconv.Atoi(matches[1]); err == nil {
+						unitDef.AttackRange = int32(rng)
+						unitDef.MinAttackRange = int32(rng) // Min and max are the same
 					}
 				}
-			} else if strings.Contains(text, "Defense") {
-				lines := strings.Split(text, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Defense") && i+1 < len(lines) {
-						// nextLine := strings.TrimSpace(lines[i+1])
-						line := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
-						if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
-							if cost, err := strconv.Atoi(matches[0]); err == nil {
-								unitDef.Defense = int32(cost)
-								break
-							}
-						}
-						break
-					}
-				}
-			} else if strings.Contains(text, "Attack Range") {
-				// Extract attack range - the number appears after <br>
-				// Two formats:
-				//   1. Single value: "1 (adjacent enemy units)" -> AttackRange=1, MinAttackRange=1
-				//   2. Range: "2 - 3" -> AttackRange=3 (max), MinAttackRange=2
-				lines := strings.Split(text, "\n")
-				for i, line := range lines {
-					if strings.Contains(line, "Attack Range") && i+1 < len(lines) {
-						// nextLine := strings.TrimSpace(lines[i+1])
-						nextLine := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
-						// Check for range format: "2 - 3"
-						if matches := regexp.MustCompile(`^(\d+)\s*-\s*(\d+)`).FindStringSubmatch(nextLine); len(matches) > 2 {
-							if minRng, err := strconv.Atoi(matches[1]); err == nil {
-								unitDef.MinAttackRange = int32(minRng)
-							}
-							if maxRng, err := strconv.Atoi(matches[2]); err == nil {
-								unitDef.AttackRange = int32(maxRng)
-							}
-						} else if matches := regexp.MustCompile(`^(\d+)`).FindStringSubmatch(nextLine); len(matches) > 1 {
-							// Single value format: "1 (adjacent...)"
-							if rng, err := strconv.Atoi(matches[1]); err == nil {
-								unitDef.AttackRange = int32(rng)
-								unitDef.MinAttackRange = int32(rng) // Min and max are the same
-							}
-						} else {
-							log.Println("NO MATCH for Attack Range!")
-						}
-						break
-					}
-				}
-			} else if strings.Contains(text, "Coins") && !strings.Contains(text, "Coins Spent") {
-				// Extract coin cost - the number appears after the coin image
-				lines := strings.Split(text, "\n")
-				for _, line := range lines {
-					line = strings.Replace(strings.TrimSpace(line), ",", "", -1)
-					if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
-						if cost, err := strconv.Atoi(matches[0]); err == nil {
-							unitDef.Coins = int32(cost)
-							break
-						}
-					}
+				break
+			}
+		}
+	}
+
+	// Extract Coins
+	if node := htmlquery.FindOne(doc, "//p[strong[contains(text(), 'Coins')] and not(contains(., 'Coins Spent'))]"); node != nil {
+		text := getTextContent(node)
+		lines := strings.Split(text, "\n")
+		for _, line := range lines {
+			line = strings.Replace(strings.TrimSpace(line), ",", "", -1)
+			if matches := regexp.MustCompile(`^\d+$`).FindStringSubmatch(line); len(matches) > 0 {
+				if cost, err := strconv.Atoi(matches[0]); err == nil {
+					unitDef.Coins = int32(cost)
+					break
 				}
 			}
 		}
-
-		// Extract name from page title
-		if n.Type == html.ElementNode && n.Data == "title" {
-			title := getTextContent(n)
-			if strings.Contains(title, " - Units - ") {
-				parts := strings.Split(title, " - Units - ")
-				if len(parts) > 0 {
-					unitDef.Name = strings.TrimSpace(parts[0])
-				}
-			}
-		}
-
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			traverse(c)
-		}
 	}
-	traverse(doc)
 
 	// Extract unit classification (Type section)
 	extractUnitClassification(doc, unitDef)
