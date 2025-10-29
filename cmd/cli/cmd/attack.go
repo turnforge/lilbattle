@@ -103,15 +103,11 @@ func runAttack(cmd *cobra.Command, args []string) error {
 		defenderTile := rtGame.World.TileAt(targetCoord)
 
 		if attacker != nil && defender != nil {
-			combatDiagnostics, err = generateCombatDiagnostics(
+			combatDiagnostics = generateCombatDiagnostics(
 				rtGame.GetRulesEngine(),
 				attacker, attackerTile, attacker.AvailableHealth,
 				defender, defenderTile, defender.AvailableHealth)
-			if err != nil {
-				fmt.Printf("[WARNING] Failed to generate combat diagnostics: %v\n", err)
-			} else if combatDiagnostics != "" {
-				fmt.Print(combatDiagnostics)
-			}
+			fmt.Print(combatDiagnostics)
 		}
 	}
 
@@ -139,7 +135,7 @@ func runAttack(cmd *cobra.Command, args []string) error {
 	formatter := NewOutputFormatter()
 
 	if formatter.JSON {
-		data := map[string]interface{}{
+		data := map[string]any{
 			"game_id": gameID,
 			"action":  "attack",
 			"attacker": map[string]int{
@@ -170,11 +166,7 @@ func runAttack(cmd *cobra.Command, args []string) error {
 func generateCombatDiagnostics(
 	rulesEngine *services.RulesEngine,
 	attacker *v1.Unit, attackerTile *v1.Tile, attackerHealth int32,
-	defender *v1.Unit, defenderTile *v1.Tile, defenderHealth int32) (string, error) {
-
-	if attacker == nil || defender == nil {
-		return "", fmt.Errorf("attacker or defender is nil")
-	}
+	defender *v1.Unit, defenderTile *v1.Tile, defenderHealth int32) string {
 
 	var sb strings.Builder
 	sb.WriteString("\n[COMBAT DIAGNOSTICS]\n")
@@ -182,13 +174,7 @@ func generateCombatDiagnostics(
 
 	// Unit information
 	attackerData, err := rulesEngine.GetUnitData(attacker.UnitType)
-	if err != nil {
-		return "", fmt.Errorf("failed to get attacker unit data: %w", err)
-	}
 	defenderData, err := rulesEngine.GetUnitData(defender.UnitType)
-	if err != nil {
-		return "", fmt.Errorf("failed to get defender unit data: %w", err)
-	}
 
 	attackerCoord := services.CoordFromInt32(attacker.Q, attacker.R)
 	defenderCoord := services.CoordFromInt32(defender.Q, defender.R)
@@ -378,5 +364,5 @@ func generateCombatDiagnostics(
 
 	sb.WriteString("\n" + strings.Repeat("=", 60) + "\n\n")
 
-	return sb.String(), nil
+	return sb.String()
 }
