@@ -186,21 +186,22 @@ message UnitDefinition {
   int32 health = 4;              // Maximum health points
   int32 coins = 5;               // how much it costs to build
   double movement_points = 6;    // Maximum movement per turn
-  int32 defense = 7;             // Base defense value
-  int32 attack_range = 8;        // Max Attack range in tiles
-  int32 min_attack_range = 9;    // Minimum attack range in tile radius if specified (otherwise - will be 1
-  int32 splash_damage = 10;      // Splash damage amount
-  map<int32, TerrainUnitProperties> terrain_properties = 11;
-  repeated string properties = 12; // Special properties/abilities
+  double retreat_points = 7;    // Movement points available after attacking
+  int32 defense = 8;             // Base defense value
+  int32 attack_range = 9;        // Max Attack range in tiles
+  int32 min_attack_range = 10;    // Minimum attack range in tile radius if specified (otherwise - will be 1
+  int32 splash_damage = 11;      // Splash damage amount
+  map<int32, TerrainUnitProperties> terrain_properties = 12;
+  repeated string properties = 13; // Special properties/abilities
 
   // Unit classification for attack calculations
-  string unit_class = 13;        // "Light", "Heavy", or "Stealth"
-  string unit_terrain = 14;      // "Air", "Land", or "Water"
+  string unit_class = 14;        // "Light", "Heavy", or "Stealth"
+  string unit_terrain = 15;      // "Air", "Land", or "Water"
 
   // Attack table: base attack values against different unit classes
   // Key format: "Light:Air", "Heavy:Land", "Stealth:Water", etc.
   // Value 0 or missing key means "n/a" (cannot attack)
-  map<string, int32> attack_vs_class = 15;
+  map<string, int32> attack_vs_class = 16;
 }
 
 // Properties that are specific to unit on a particular terrain

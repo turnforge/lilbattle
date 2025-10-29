@@ -198,6 +198,7 @@ export interface UnitDefinition {
   health: number;
   coins: number;
   movementPoints: number;
+  retreatPoints: number;
   defense: number;
   attackRange: number;
   minAttackRange: number;

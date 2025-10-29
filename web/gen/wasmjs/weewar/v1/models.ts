@@ -300,6 +300,7 @@ export class UnitDefinition implements UnitDefinitionInterface {
   health: number = 0;
   coins: number = 0;
   movementPoints: number = 0;
+  retreatPoints: number = 0;
   defense: number = 0;
   attackRange: number = 0;
   minAttackRange: number = 0;

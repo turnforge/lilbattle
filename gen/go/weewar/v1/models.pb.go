@@ -891,25 +891,26 @@ func (x *TerrainDefinition) GetUnitProperties() map[int32]*TerrainUnitProperties
 // Rules engine unit definition
 type UnitDefinition struct {
 	state             protoimpl.MessageState           `protogen:"open.v1"`
-	Id                int32                            `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                                 // Unit type ID
-	Name              string                           `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                              // Display name (e.g., "Infantry", "Tank")
-	Description       string                           `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`                                //
-	Health            int32                            `protobuf:"varint,4,opt,name=health,proto3" json:"health,omitempty"`                                         // Maximum health points
-	Coins             int32                            `protobuf:"varint,5,opt,name=coins,proto3" json:"coins,omitempty"`                                           // how much it costs to build
-	MovementPoints    float64                          `protobuf:"fixed64,6,opt,name=movement_points,json=movementPoints,proto3" json:"movement_points,omitempty"`  // Maximum movement per turn
-	Defense           int32                            `protobuf:"varint,7,opt,name=defense,proto3" json:"defense,omitempty"`                                       // Base defense value
-	AttackRange       int32                            `protobuf:"varint,8,opt,name=attack_range,json=attackRange,proto3" json:"attack_range,omitempty"`            // Max Attack range in tiles
-	MinAttackRange    int32                            `protobuf:"varint,9,opt,name=min_attack_range,json=minAttackRange,proto3" json:"min_attack_range,omitempty"` // Minimum attack range in tile radius if specified (otherwise - will be 1
-	SplashDamage      int32                            `protobuf:"varint,10,opt,name=splash_damage,json=splashDamage,proto3" json:"splash_damage,omitempty"`        // Splash damage amount
-	TerrainProperties map[int32]*TerrainUnitProperties `protobuf:"bytes,11,rep,name=terrain_properties,json=terrainProperties,proto3" json:"terrain_properties,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Properties        []string                         `protobuf:"bytes,12,rep,name=properties,proto3" json:"properties,omitempty"` // Special properties/abilities
+	Id                int32                            `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                                  // Unit type ID
+	Name              string                           `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                               // Display name (e.g., "Infantry", "Tank")
+	Description       string                           `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`                                 //
+	Health            int32                            `protobuf:"varint,4,opt,name=health,proto3" json:"health,omitempty"`                                          // Maximum health points
+	Coins             int32                            `protobuf:"varint,5,opt,name=coins,proto3" json:"coins,omitempty"`                                            // how much it costs to build
+	MovementPoints    float64                          `protobuf:"fixed64,6,opt,name=movement_points,json=movementPoints,proto3" json:"movement_points,omitempty"`   // Maximum movement per turn
+	RetreatPoints     float64                          `protobuf:"fixed64,7,opt,name=retreat_points,json=retreatPoints,proto3" json:"retreat_points,omitempty"`      // Movement points available after attacking
+	Defense           int32                            `protobuf:"varint,8,opt,name=defense,proto3" json:"defense,omitempty"`                                        // Base defense value
+	AttackRange       int32                            `protobuf:"varint,9,opt,name=attack_range,json=attackRange,proto3" json:"attack_range,omitempty"`             // Max Attack range in tiles
+	MinAttackRange    int32                            `protobuf:"varint,10,opt,name=min_attack_range,json=minAttackRange,proto3" json:"min_attack_range,omitempty"` // Minimum attack range in tile radius if specified (otherwise - will be 1
+	SplashDamage      int32                            `protobuf:"varint,11,opt,name=splash_damage,json=splashDamage,proto3" json:"splash_damage,omitempty"`         // Splash damage amount
+	TerrainProperties map[int32]*TerrainUnitProperties `protobuf:"bytes,12,rep,name=terrain_properties,json=terrainProperties,proto3" json:"terrain_properties,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Properties        []string                         `protobuf:"bytes,13,rep,name=properties,proto3" json:"properties,omitempty"` // Special properties/abilities
 	// Unit classification for attack calculations
-	UnitClass   string `protobuf:"bytes,13,opt,name=unit_class,json=unitClass,proto3" json:"unit_class,omitempty"`       // "Light", "Heavy", or "Stealth"
-	UnitTerrain string `protobuf:"bytes,14,opt,name=unit_terrain,json=unitTerrain,proto3" json:"unit_terrain,omitempty"` // "Air", "Land", or "Water"
+	UnitClass   string `protobuf:"bytes,14,opt,name=unit_class,json=unitClass,proto3" json:"unit_class,omitempty"`       // "Light", "Heavy", or "Stealth"
+	UnitTerrain string `protobuf:"bytes,15,opt,name=unit_terrain,json=unitTerrain,proto3" json:"unit_terrain,omitempty"` // "Air", "Land", or "Water"
 	// Attack table: base attack values against different unit classes
 	// Key format: "Light:Air", "Heavy:Land", "Stealth:Water", etc.
 	// Value 0 or missing key means "n/a" (cannot attack)
-	AttackVsClass map[string]int32 `protobuf:"bytes,15,rep,name=attack_vs_class,json=attackVsClass,proto3" json:"attack_vs_class,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	AttackVsClass map[string]int32 `protobuf:"bytes,16,rep,name=attack_vs_class,json=attackVsClass,proto3" json:"attack_vs_class,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -982,6 +983,13 @@ func (x *UnitDefinition) GetCoins() int32 {
 func (x *UnitDefinition) GetMovementPoints() float64 {
 	if x != nil {
 		return x.MovementPoints
+	}
+	return 0
+}
+
+func (x *UnitDefinition) GetRetreatPoints() float64 {
+	if x != nil {
+		return x.RetreatPoints
 	}
 	return 0
 }
@@ -2947,27 +2955,28 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x0funit_properties\x18\a \x03(\v20.weewar.v1.TerrainDefinition.UnitPropertiesEntryR\x0eunitProperties\x1ac\n" +
 	"\x13UnitPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x126\n" +
-	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\"\xfc\x05\n" +
+	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\"\xa3\x06\n" +
 	"\x0eUnitDefinition\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x16\n" +
 	"\x06health\x18\x04 \x01(\x05R\x06health\x12\x14\n" +
 	"\x05coins\x18\x05 \x01(\x05R\x05coins\x12'\n" +
-	"\x0fmovement_points\x18\x06 \x01(\x01R\x0emovementPoints\x12\x18\n" +
-	"\adefense\x18\a \x01(\x05R\adefense\x12!\n" +
-	"\fattack_range\x18\b \x01(\x05R\vattackRange\x12(\n" +
-	"\x10min_attack_range\x18\t \x01(\x05R\x0eminAttackRange\x12#\n" +
-	"\rsplash_damage\x18\n" +
-	" \x01(\x05R\fsplashDamage\x12_\n" +
-	"\x12terrain_properties\x18\v \x03(\v20.weewar.v1.UnitDefinition.TerrainPropertiesEntryR\x11terrainProperties\x12\x1e\n" +
+	"\x0fmovement_points\x18\x06 \x01(\x01R\x0emovementPoints\x12%\n" +
+	"\x0eretreat_points\x18\a \x01(\x01R\rretreatPoints\x12\x18\n" +
+	"\adefense\x18\b \x01(\x05R\adefense\x12!\n" +
+	"\fattack_range\x18\t \x01(\x05R\vattackRange\x12(\n" +
+	"\x10min_attack_range\x18\n" +
+	" \x01(\x05R\x0eminAttackRange\x12#\n" +
+	"\rsplash_damage\x18\v \x01(\x05R\fsplashDamage\x12_\n" +
+	"\x12terrain_properties\x18\f \x03(\v20.weewar.v1.UnitDefinition.TerrainPropertiesEntryR\x11terrainProperties\x12\x1e\n" +
 	"\n" +
-	"properties\x18\f \x03(\tR\n" +
+	"properties\x18\r \x03(\tR\n" +
 	"properties\x12\x1d\n" +
 	"\n" +
-	"unit_class\x18\r \x01(\tR\tunitClass\x12!\n" +
-	"\funit_terrain\x18\x0e \x01(\tR\vunitTerrain\x12T\n" +
-	"\x0fattack_vs_class\x18\x0f \x03(\v2,.weewar.v1.UnitDefinition.AttackVsClassEntryR\rattackVsClass\x1af\n" +
+	"unit_class\x18\x0e \x01(\tR\tunitClass\x12!\n" +
+	"\funit_terrain\x18\x0f \x01(\tR\vunitTerrain\x12T\n" +
+	"\x0fattack_vs_class\x18\x10 \x03(\v2,.weewar.v1.UnitDefinition.AttackVsClassEntryR\rattackVsClass\x1af\n" +
 	"\x16TerrainPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x126\n" +
 	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\x1a@\n" +
