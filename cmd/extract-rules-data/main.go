@@ -282,6 +282,19 @@ func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefiniti
 						break
 					}
 				}
+			} else if strings.Contains(text, "Retreat") {
+				// Extract retreat points - the number appears after <br>
+				lines := strings.Split(text, "\n")
+				for i, line := range lines {
+					if strings.Contains(line, "Retreat") && i+1 < len(lines) {
+						nextLine := strings.TrimSpace(strings.TrimSpace(strings.Join(lines[i+1:], "\n")))
+						matches := regexp.MustCompile(`(\d+(?:\.\d+)?)`).FindStringSubmatch(nextLine)
+						if len(matches) > 1 {
+							unitDef.RetreatPoints = parseMovementCost(matches[1])
+						}
+						break
+					}
+				}
 			} else if strings.Contains(text, "Splash Damage") {
 				// Extract attack range - the number appears after <br>
 				// Two formats:
