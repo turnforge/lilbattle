@@ -412,3 +412,111 @@ func (b *BaseGamesServiceImpl) convertRuntimeWorldToProto(world *World) *v1.Worl
 
 	return worldData
 }
+
+// SimulateAttack simulates combat between two units and returns damage distributions
+func (s *BaseGamesServiceImpl) SimulateAttack(ctx context.Context, req *v1.SimulateAttackRequest) (resp *v1.SimulateAttackResponse, err error) {
+	resp = &v1.SimulateAttackResponse{}
+
+	// Set default number of simulations if not provided
+	numSims := req.NumSimulations
+	if numSims <= 0 {
+		numSims = 1000
+	}
+
+	// Create mock units and tiles for simulation
+	attackerUnit := &v1.Unit{
+		Q:               0,
+		R:               0,
+		Player:          1,
+		UnitType:        req.AttackerUnitType,
+		AvailableHealth: req.AttackerHealth,
+	}
+	attackerTile := &v1.Tile{
+		Q:        0,
+		R:        0,
+		TileType: req.AttackerTerrain,
+	}
+
+	defenderUnit := &v1.Unit{
+		Q:               1,
+		R:               0,
+		Player:          2,
+		UnitType:        req.DefenderUnitType,
+		AvailableHealth: req.DefenderHealth,
+	}
+	defenderTile := &v1.Tile{
+		Q:        1,
+		R:        0,
+		TileType: req.DefenderTerrain,
+	}
+
+	// Get rules engine
+	rulesEngine := DefaultRulesEngine()
+
+	// Simulate attacker -> defender
+	attackerCtx := &CombatContext{
+		Attacker:       attackerUnit,
+		AttackerTile:   attackerTile,
+		AttackerHealth: req.AttackerHealth,
+		Defender:       defenderUnit,
+		DefenderTile:   defenderTile,
+		DefenderHealth: req.DefenderHealth,
+		WoundBonus:     req.WoundBonus,
+	}
+
+	attackerDist, err := rulesEngine.GenerateDamageDistribution(attackerCtx, int(numSims))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate attacker damage distribution: %w", err)
+	}
+
+	// Convert attacker distribution to map
+	attackerDamageMap := make(map[int32]int32)
+	attackerMeanDamage := 0.0
+	attackerKillCount := int32(0)
+	for _, dmgRange := range attackerDist.Ranges {
+		damage := int32(dmgRange.MinValue)
+		count := int32(float64(numSims) * dmgRange.Probability)
+		attackerDamageMap[damage] = count
+		attackerMeanDamage += dmgRange.MinValue * dmgRange.Probability
+		if damage >= req.DefenderHealth {
+			attackerKillCount += count
+		}
+	}
+
+	// Simulate defender -> attacker (counter-attack)
+	defenderCtx := &CombatContext{
+		Attacker:       defenderUnit,
+		AttackerTile:   defenderTile,
+		AttackerHealth: req.DefenderHealth,
+		Defender:       attackerUnit,
+		DefenderTile:   attackerTile,
+		DefenderHealth: req.AttackerHealth,
+		WoundBonus:     0, // No wound bonus for counter-attack
+	}
+
+	defenderDist, err := rulesEngine.GenerateDamageDistribution(defenderCtx, int(numSims))
+	defenderDamageMap := make(map[int32]int32)
+	defenderMeanDamage := 0.0
+	defenderKillCount := int32(0)
+
+	if err == nil && defenderDist != nil {
+		for _, dmgRange := range defenderDist.Ranges {
+			damage := int32(dmgRange.MinValue)
+			count := int32(float64(numSims) * dmgRange.Probability)
+			defenderDamageMap[damage] = count
+			defenderMeanDamage += dmgRange.MinValue * dmgRange.Probability
+			if damage >= req.AttackerHealth {
+				defenderKillCount += count
+			}
+		}
+	}
+
+	resp.AttackerDamageDistribution = attackerDamageMap
+	resp.DefenderDamageDistribution = defenderDamageMap
+	resp.AttackerMeanDamage = attackerMeanDamage
+	resp.DefenderMeanDamage = defenderMeanDamage
+	resp.AttackerKillProbability = float64(attackerKillCount) / float64(numSims)
+	resp.DefenderKillProbability = float64(defenderKillCount) / float64(numSims)
+
+	return resp, nil
+}

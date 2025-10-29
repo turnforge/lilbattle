@@ -188,6 +188,7 @@ func (n *RootViewsHandler) setupRoutes() {
 	// Then setup your "resource" specific endpoints
 	n.mux.Handle("/games/", http.StripPrefix("/games", n.setupGamesMux()))
 	n.mux.Handle("/worlds/", http.StripPrefix("/worlds", n.setupWorldsMux()))
+	n.mux.Handle("/rules/", http.StripPrefix("/rules", n.setupRulesMux()))
 
 	// Handle no-trailing-slash redirects for convenience
 	n.mux.HandleFunc("/games", func(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +204,6 @@ func (n *RootViewsHandler) setupRoutes() {
 	// n.mux.HandleFunc("/logout", n.onLogout)
 	n.mux.HandleFunc("/privacy-policy", n.ViewRenderer(Copier(&PrivacyPolicy{}), ""))
 	n.mux.HandleFunc("/terms-of-service", n.ViewRenderer(Copier(&TermsOfService{}), ""))
-	log.Println("DEBUG: Registering root path handler")
 	n.mux.HandleFunc("/", n.ViewRenderer(Copier(&HomePage{}), ""))
 	n.mux.Handle("/{invalidbits}/", http.NotFoundHandler()) // <-- Default 404
 
@@ -231,5 +231,14 @@ func (n *RootViewsHandler) setupViewsMux() *http.ServeMux {
 	*/
 
 	// n.HandleView(Copier(&components.SelectTemplatePage{}), r, w)
+	return mux
+}
+
+func (n *RootViewsHandler) setupRulesMux() *http.ServeMux {
+	mux := http.NewServeMux()
+
+	// Attack simulator page
+	mux.HandleFunc("/attacksim", n.ViewRenderer(Copier(&AttackSimulatorPage{}), ""))
+
 	return mux
 }

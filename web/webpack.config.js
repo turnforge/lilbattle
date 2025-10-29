@@ -25,6 +25,7 @@ const components = [
   ["WorldEditorPage", 0, "ts"],
   ["StartGamePage", 0, "ts"],
   ["GameViewerPage", 0, "ts"],
+  ["AttackSimulatorPage", 0, "ts"],
 ];
 
 module.exports = (_env, options) => {

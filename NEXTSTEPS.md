@@ -53,6 +53,7 @@
 - [ ] Unit destruction and removal from game
 - [ ] Victory conditions (last player with units wins)
 - [ ] Game over screen and restart flow
+- [x] Attack simulator tool at /rules/attacksim (Monte Carlo simulation with damage distributions)
 
 ---
 

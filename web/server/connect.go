@@ -89,6 +89,14 @@ func (a *ConnectGamesServiceAdapter) ListMoves(ctx context.Context, req *connect
 	return connect.NewResponse(resp), nil
 }
 
+func (a *ConnectGamesServiceAdapter) SimulateAttack(ctx context.Context, req *connect.Request[v1.SimulateAttackRequest]) (*connect.Response[v1.SimulateAttackResponse], error) {
+	resp, err := a.svc.SimulateAttack(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (a *ConnectGamesServiceAdapter) GetGameState(ctx context.Context, req *connect.Request[v1.GetGameStateRequest]) (*connect.Response[v1.GetGameStateResponse], error) {
 	resp, err := a.svc.GetGameState(ctx, req.Msg)
 	if err != nil {
