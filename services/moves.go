@@ -91,7 +91,7 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 	playerUnits := g.World.GetPlayerUnits(int(previousPlayer))
 
 	for _, unit := range playerUnits {
-		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%d\n",
+		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%f\n",
 			unit.Q, unit.R, unit.Player, unit.DistanceLeft)
 		resetUnit := copyUnit(unit)
 		resetUnits = append(resetUnits, resetUnit)

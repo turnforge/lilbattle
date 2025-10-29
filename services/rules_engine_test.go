@@ -50,7 +50,7 @@ func TestRulesEngineUnitData(t *testing.T) {
 	}
 
 	t.Logf("Unit 1: %s", unit.Name)
-	t.Logf("  Health: %d, Movement: %d, Range: %d", unit.Health, unit.MovementPoints, unit.AttackRange)
+	t.Logf("  Health: %d, Movement: %f, Range: %d", unit.Health, unit.MovementPoints, unit.AttackRange)
 
 	if unit.Name == "" {
 		t.Error("Unit name is empty")
@@ -290,7 +290,7 @@ func TestRulesEngineDijkstraMovement(t *testing.T) {
 
 		// Verify all options are within budget and make sense
 		for key, edge := range allPaths.Edges {
-			if edge.TotalCost > float32(tc.movement) {
+			if edge.TotalCost > float64(tc.movement) {
 				t.Errorf("Option %s has cost %.1f > budget %d", key, edge.TotalCost, tc.movement)
 			}
 

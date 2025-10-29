@@ -326,7 +326,6 @@ func TestProcessMovesTransactionFlow(t *testing.T) {
 	}
 	originalWorld.AddUnit(unit)
 
-	t.Logf("Original world setup:")
 	t.Logf("  NumUnits: %d", originalWorld.NumUnits())
 	for coord, u := range originalWorld.UnitsByCoord() {
 		t.Logf("  Unit at (%d,%d) player=%d", coord.Q, coord.R, u.Player)
@@ -363,7 +362,7 @@ func TestProcessMovesTransactionFlow(t *testing.T) {
 	t.Logf("After rollback to original:")
 	t.Logf("  NumUnits: %d", currentWorld.NumUnits())
 	for coord, u := range currentWorld.UnitsByCoord() {
-		t.Logf("  Unit at (%d,%d) player=%d distanceLeft=%d unitCoords=(%d,%d)", coord.Q, coord.R, u.Player, u.DistanceLeft, u.Q, u.R)
+		t.Logf("  Unit at (%d,%d) player=%d distanceLeft=%f unitCoords=(%d,%d)", coord.Q, coord.R, u.Player, u.DistanceLeft, u.Q, u.R)
 	}
 
 	// Step 5: Apply changes to original world (simulates applyUnitMoved)
@@ -384,7 +383,7 @@ func TestProcessMovesTransactionFlow(t *testing.T) {
 	t.Logf("After final move application:")
 	t.Logf("  NumUnits: %d", currentWorld.NumUnits())
 	for coord, u := range currentWorld.UnitsByCoord() {
-		t.Logf("  Unit at (%d,%d) player=%d distanceLeft=%d", coord.Q, coord.R, u.Player, u.DistanceLeft)
+		t.Logf("  Unit at (%d,%d) player=%d distanceLeft=%f", coord.Q, coord.R, u.Player, u.DistanceLeft)
 	}
 
 	// CRITICAL TESTS: Should have 1 unit at new position

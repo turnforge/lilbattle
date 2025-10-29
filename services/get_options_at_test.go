@@ -103,7 +103,7 @@ func setupGetOptionsAtTest(t *testing.T, scenario GetOptionsAtTestScenario) *Sin
 
 	// Log units for debugging
 	for coord, unit := range rtGame.World.UnitsByCoord() {
-		t.Logf("  Unit at (%d,%d) player=%d type=%d health=%d movement=%d",
+		t.Logf("  Unit at (%d,%d) player=%d type=%d health=%d movement=%f",
 			coord.Q, coord.R, unit.Player, unit.UnitType, unit.AvailableHealth, unit.DistanceLeft)
 	}
 
@@ -149,14 +149,14 @@ func runGetOptionsAtTest(t *testing.T, svc *SingletonGamesServiceImpl, testCase 
 			case *v1.GameOption_Move:
 				moveCount++
 				moveCoords = append(moveCoords, AxialCoord{
-					Q: int(optionType.Move.Q),
-					R: int(optionType.Move.R),
+					Q: int(optionType.Move.Action.ToQ),
+					R: int(optionType.Move.Action.ToR),
 				})
 			case *v1.GameOption_Attack:
 				attackCount++
 				attackCoords = append(attackCoords, AxialCoord{
-					Q: int(optionType.Attack.Q),
-					R: int(optionType.Attack.R),
+					Q: int(optionType.Attack.Action.DefenderQ),
+					R: int(optionType.Attack.Action.DefenderR),
 				})
 			case *v1.GameOption_EndTurn:
 				endTurnCount++

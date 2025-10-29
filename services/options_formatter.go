@@ -34,7 +34,7 @@ func (f *OptionFormatter) FormatMoveOption(moveOpt *v1.MoveOption, allPaths *v1.
 	targetCoord := CoordFromInt32(moveOpt.Action.ToQ, moveOpt.Action.ToR)
 
 	// Basic format: "move to (q,r) (cost: X)"
-	result := fmt.Sprintf("move to %s (cost: %d)",
+	result := fmt.Sprintf("move to %s (cost: %f)",
 		targetCoord.String(), moveOpt.MovementCost)
 
 	// Add path visualization if available and requested

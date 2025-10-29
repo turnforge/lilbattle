@@ -164,7 +164,7 @@ func (re *RulesEngine) calculatePathCost(world *World, unitType int32, from, to 
 	key := fmt.Sprintf("%d,%d", to.Q, to.R)
 	edge, exists := allPaths.Edges[key]
 	if !exists {
-		return 0, fmt.Errorf("destination %v is not reachable from %v with %d movement points", to, from, unitData.MovementPoints)
+		return 0, fmt.Errorf("destination %v is not reachable from %v with %f movement points", to, from, unitData.MovementPoints)
 	}
 
 	return float64(edge.TotalCost), nil
@@ -238,7 +238,7 @@ func (re *RulesEngine) IsValidPath(unit *v1.Unit, path []AxialCoord, world *Worl
 
 	// 6. Check total movement cost against unit's remaining movement
 	if totalCost > float64(unit.DistanceLeft) {
-		return false, fmt.Errorf("path requires %.2f movement points, unit has %d remaining",
+		return false, fmt.Errorf("path requires %.2f movement points, unit has %f remaining",
 			totalCost, unit.DistanceLeft)
 	}
 
