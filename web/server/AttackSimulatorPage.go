@@ -51,8 +51,8 @@ func (p *AttackSimulatorPage) Load(r *http.Request, w http.ResponseWriter, vc *V
 }
 
 func (p *AttackSimulatorPage) loadTerrainAndUnitData() {
-	useTheme := true
 	themeName := p.Theme
+	useTheme := themeName != "default"
 	tm := GetThemeManager()
 	rulesEngine := weewar.DefaultRulesEngine()
 
