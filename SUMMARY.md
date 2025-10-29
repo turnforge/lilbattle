@@ -32,7 +32,49 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ## Recent Major Achievements
 
-### Code Organization Simplification (Current Session)
+### Formula-Based Combat System Implementation
+
+**Achievement**: Implemented complete formula-based combat system replacing pre-calculated damage tables with real-time probabilistic calculations.
+
+**Key Features**:
+1. **Combat Formula**: p = 0.05 * (((A + Ta) - (D + Td)) + B) + 0.5
+   - A = base attack from attack_vs_class table
+   - Ta/Td = terrain attack/defense bonuses
+   - B = wound bonus from attack history
+   - Dice rolling: 6 dice per health unit, hits where random < p
+
+2. **Wound Bonus System**:
+   - Tracks attack history per unit (Q, R, IsRanged, TurnNumber)
+   - Accumulates bonus based on attack geometry (+1 adjacent, +3 opposite side)
+   - Cleared automatically on turn change via TopUpUnitIfNeeded()
+
+3. **Splash Damage**:
+   - Affects all adjacent units (6 hex neighbors)
+   - Uses formula without wound bonus
+   - Only applies if damage > 4
+   - Air units immune to splash
+   - Friendly fire included
+
+4. **CLI Diagnostics**:
+   - Shows hit probability and damage distributions
+   - Runs 10,000 simulations for realistic outcomes
+   - Displays most likely damage values with probabilities
+   - Perfect validation: formula matches table-based system
+
+**Implementation**:
+- services/combat_formula.go: Formula calculations, wound bonus, splash damage
+- services/moves.go: ProcessAttackUnit() integrated with formula
+- services/game.go: Attack history clearing in TopUpUnitIfNeeded()
+- cmd/cli/cmd/attack.go: Rich diagnostics with distributions
+- services/splash_damage_test.go: Comprehensive test coverage
+
+**Benefits**:
+- More accurate combat than pre-calculated tables
+- Dynamic terrain and wound bonus support
+- Realistic probabilistic outcomes
+- Complete rule implementation from ATTACK.md
+
+### Code Organization Simplification
 
 **Achievement**: Merged `lib/` package into `services/` for cleaner project structure.
 

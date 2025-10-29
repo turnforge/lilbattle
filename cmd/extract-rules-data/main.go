@@ -258,7 +258,7 @@ func extractUnitRowData(row *html.Node, terrainID int32, columnHeaders []string,
 func extractUnitDefinition(doc *html.Node, unitID int32) (*weewarv1.UnitDefinition, error) {
 	unitDef := &weewarv1.UnitDefinition{
 		Id:     unitID,
-		Health: 100, // Always 100 in WeeWar
+		Health: 10, // Always 10 in WeeWar
 		// MinAttackRange and AttackRange will be extracted from HTML
 	}
 

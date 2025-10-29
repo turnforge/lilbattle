@@ -100,6 +100,7 @@ func (g *Game) ArePlayersOnSameTeam(playerID1, playerID2 int) bool {
 // This checks if unit.LastToppedupTurn < game.TurnCounter and if so:
 // - Restores movement points to max
 // - Sets available health to max (for new units) or applies healing
+// - Clears attack history and attacks received counter (wound bonus resets each turn)
 // - Updates unit.LastToppedupTurn to game.TurnCounter
 func (g *Game) TopUpUnitIfNeeded(unit *v1.Unit) error {
 	// Check if unit needs top-up (hasn't been refreshed this turn)
@@ -128,6 +129,11 @@ func (g *Game) TopUpUnitIfNeeded(unit *v1.Unit) error {
 		// Existing unit - apply healing from terrain (TODO: implement terrain healing)
 		// For now, keep current health
 	}
+
+	// Clear attack history and attacks received counter for new turn
+	// Wound bonus only accumulates within a single turn
+	unit.AttackHistory = nil
+	unit.AttacksReceivedThisTurn = 0
 
 	// Mark unit as topped-up for this turn
 	unit.LastToppedupTurn = g.TurnCounter

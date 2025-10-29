@@ -3,7 +3,7 @@
     "1": {
       "id": 1,
       "name": "Soldier (Basic)",
-      "health": 100,
+      "health": 10,
       "coins": 75,
       "movement_points": 3,
       "defense": 6,
@@ -21,7 +21,7 @@
     "10": {
       "id": 10,
       "name": "Speedboat",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "movement_points": 4,
       "defense": 6,
@@ -41,7 +41,7 @@
     "11": {
       "id": 11,
       "name": "Capturing",
-      "health": 100,
+      "health": 10,
       "defense": 2,
       "unit_class": "Light",
       "unit_terrain": "Land"
@@ -49,7 +49,7 @@
     "12": {
       "id": 12,
       "name": "Battleship",
-      "health": 100,
+      "health": 10,
       "coins": 2000,
       "movement_points": 2.25,
       "defense": 14,
@@ -70,7 +70,7 @@
     "13": {
       "id": 13,
       "name": "Destroyer",
-      "health": 100,
+      "health": 10,
       "coins": 900,
       "movement_points": 4,
       "defense": 12,
@@ -91,7 +91,7 @@
     "14": {
       "id": 14,
       "name": "Jetfighter",
-      "health": 100,
+      "health": 10,
       "coins": 800,
       "movement_points": 6,
       "defense": 10,
@@ -111,7 +111,7 @@
     "15": {
       "id": 15,
       "name": "Crop Duster",
-      "health": 100,
+      "health": 10,
       "coins": 400,
       "movement_points": 3,
       "defense": 8,
@@ -131,7 +131,7 @@
     "16": {
       "id": 16,
       "name": "Submarine",
-      "health": 100,
+      "health": 10,
       "coins": 1000,
       "movement_points": 3,
       "defense": 10,
@@ -147,7 +147,7 @@
     "17": {
       "id": 17,
       "name": "Helicopter",
-      "health": 100,
+      "health": 10,
       "coins": 600,
       "movement_points": 5,
       "defense": 10,
@@ -168,7 +168,7 @@
     "18": {
       "id": 18,
       "name": "Bomber",
-      "health": 100,
+      "health": 10,
       "coins": 900,
       "movement_points": 5,
       "defense": 10,
@@ -186,7 +186,7 @@
     "19": {
       "id": 19,
       "name": "Zeppelin",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "movement_points": 3,
       "defense": 8,
@@ -207,7 +207,7 @@
     "2": {
       "id": 2,
       "name": "Soldier (Advanced)",
-      "health": 100,
+      "health": 10,
       "coins": 150,
       "movement_points": 2,
       "defense": 8,
@@ -227,7 +227,7 @@
     "20": {
       "id": 20,
       "name": "Mech",
-      "health": 100,
+      "health": 10,
       "coins": 900,
       "movement_points": 2.25,
       "defense": 14,
@@ -245,7 +245,7 @@
     "21": {
       "id": 21,
       "name": "Missile (Standard)",
-      "health": 100,
+      "health": 10,
       "coins": 150,
       "defense": 3,
       "attack_range": 5,
@@ -263,7 +263,7 @@
     "22": {
       "id": 22,
       "name": "Missile (Nuclear)",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "defense": 4,
       "attack_range": 6,
@@ -281,7 +281,7 @@
     "24": {
       "id": 24,
       "name": "Sailboat",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "movement_points": 2.25,
       "defense": 6,
@@ -300,7 +300,7 @@
     "25": {
       "id": 25,
       "name": "Artillery (Mega)",
-      "health": 100,
+      "health": 10,
       "coins": 1200,
       "movement_points": 2.25,
       "defense": 4,
@@ -319,7 +319,7 @@
     "26": {
       "id": 26,
       "name": "Artillery (Quick)",
-      "health": 100,
+      "health": 10,
       "coins": 400,
       "movement_points": 4,
       "defense": 6,
@@ -340,7 +340,7 @@
     "27": {
       "id": 27,
       "name": "Medic",
-      "health": 100,
+      "health": 10,
       "coins": 125,
       "movement_points": 2,
       "defense": 4,
@@ -357,7 +357,7 @@
     "28": {
       "id": 28,
       "name": "Stratotanker",
-      "health": 100,
+      "health": 10,
       "coins": 700,
       "movement_points": 3,
       "defense": 8,
@@ -377,7 +377,7 @@
     "29": {
       "id": 29,
       "name": "Engineer",
-      "health": 100,
+      "health": 10,
       "coins": 175,
       "movement_points": 2,
       "defense": 4,
@@ -396,7 +396,7 @@
     "3": {
       "id": 3,
       "name": "Tank (Basic)",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "movement_points": 3,
       "defense": 10,
@@ -414,7 +414,7 @@
     "30": {
       "id": 30,
       "name": "Goliath RC",
-      "health": 100,
+      "health": 10,
       "coins": 50,
       "movement_points": 2,
       "defense": 2,
@@ -433,7 +433,7 @@
     "31": {
       "id": 31,
       "name": "Tugboat",
-      "health": 100,
+      "health": 10,
       "coins": 500,
       "movement_points": 3,
       "defense": 8,
@@ -451,7 +451,7 @@
     "32": {
       "id": 32,
       "name": "Sea Mine",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "movement_points": 2,
       "defense": 8,
@@ -469,7 +469,7 @@
     "33": {
       "id": 33,
       "name": "Drone",
-      "health": 100,
+      "health": 10,
       "coins": 150,
       "movement_points": 3,
       "defense": 6,
@@ -489,7 +489,7 @@
     "37": {
       "id": 37,
       "name": "Cruiser",
-      "health": 100,
+      "health": 10,
       "coins": 1000,
       "movement_points": 3,
       "defense": 12,
@@ -509,7 +509,7 @@
     "38": {
       "id": 38,
       "name": "Missile (Anti-aircraft)",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "defense": 4,
       "attack_range": 6,
@@ -528,7 +528,7 @@
     "39": {
       "id": 39,
       "name": "Aircraft Carrier",
-      "health": 100,
+      "health": 10,
       "coins": 900,
       "movement_points": 2.25,
       "defense": 10,
@@ -548,7 +548,7 @@
     "4": {
       "id": 4,
       "name": "Tank (Advanced)",
-      "health": 100,
+      "health": 10,
       "coins": 600,
       "movement_points": 2.25,
       "defense": 14,
@@ -566,7 +566,7 @@
     "40": {
       "id": 40,
       "name": "Miner",
-      "health": 100,
+      "health": 10,
       "coins": 175,
       "movement_points": 2,
       "defense": 4,
@@ -584,7 +584,7 @@
     "41": {
       "id": 41,
       "name": "Paratrooper",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "movement_points": 3,
       "defense": 6,
@@ -603,7 +603,7 @@
     "44": {
       "id": 44,
       "name": "Anti-aircraft (Advanced)",
-      "health": 100,
+      "health": 10,
       "coins": 500,
       "movement_points": 3,
       "defense": 6,
@@ -623,7 +623,7 @@
     "5": {
       "id": 5,
       "name": "Striker",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "movement_points": 4,
       "defense": 8,
@@ -643,7 +643,7 @@
     "6": {
       "id": 6,
       "name": "Anti-aircraft (Basic)",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "movement_points": 3,
       "defense": 4,
@@ -663,7 +663,7 @@
     "7": {
       "id": 7,
       "name": "Hovercraft",
-      "health": 100,
+      "health": 10,
       "coins": 300,
       "movement_points": 4,
       "defense": 8,
@@ -681,7 +681,7 @@
     "8": {
       "id": 8,
       "name": "Artillery (Basic)",
-      "health": 100,
+      "health": 10,
       "coins": 200,
       "movement_points": 3,
       "defense": 3,
@@ -700,7 +700,7 @@
     "9": {
       "id": 9,
       "name": "Artillery (Advanced)",
-      "health": 100,
+      "health": 10,
       "coins": 600,
       "movement_points": 2.25,
       "defense": 4,

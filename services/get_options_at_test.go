@@ -263,11 +263,11 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					R:    -2,
 					ExpectedResult: &GetOptionsAtExpectation{
 						// Our unit should have movement options + end turn
-						// These numbers may need adjustment based on actual WASM output
-						MoveOptionCount:   6, // Expect some adjacent movement tiles
-						AttackOptionCount: 0, // Enemy units too far away
+						// Soldier with 3 movement points can reach 23 tiles
+						MoveOptionCount:   23, // All reachable tiles within 3 movement
+						AttackOptionCount: 0,  // Enemy units too far away
 						EndTurnCount:      1,
-						TotalOptionCount:  7, // 6 moves + 1 end turn
+						TotalOptionCount:  24, // 23 moves + 1 end turn
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},

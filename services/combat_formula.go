@@ -251,3 +251,87 @@ func (re *RulesEngine) isOppositeSide(defender, pos1, pos2 AxialCoord) bool {
 	// Check if vectors point in opposite directions
 	return vec1Q == -vec2Q && vec1R == -vec2R
 }
+
+// SplashDamageTarget represents a unit that may receive splash damage
+type SplashDamageTarget struct {
+	Unit   *v1.Unit
+	Damage int32
+}
+
+// CalculateSplashDamage calculates splash damage for adjacent units
+// Returns a list of units and the damage they receive
+// Splash damage uses the same formula but without wound bonus (B = 0)
+// Only deals damage if the calculated damage > 4
+// Air units are immune to splash damage
+func (re *RulesEngine) CalculateSplashDamage(
+	attacker *v1.Unit,
+	attackerTile *v1.Tile,
+	defenderCoord AxialCoord,
+	adjacentUnits []*v1.Unit,
+	world *World,
+	rng *rand.Rand,
+) ([]*SplashDamageTarget, error) {
+	// Get attacker definition
+	attackerDef, err := re.GetUnitData(attacker.UnitType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get attacker data: %w", err)
+	}
+
+	// Check if attacker has splash damage
+	if attackerDef.SplashDamage <= 0 {
+		return nil, nil // No splash damage
+	}
+
+	var targets []*SplashDamageTarget
+
+	for _, target := range adjacentUnits {
+		// Get target unit definition
+		targetDef, err := re.GetUnitData(target.UnitType)
+		if err != nil {
+			continue // Skip if we can't get unit data
+		}
+
+		// Air units are immune to splash damage
+		if targetDef.UnitTerrain == "Air" {
+			continue
+		}
+
+		// Get target tile
+		targetCoord := UnitGetCoord(target)
+		targetTile := world.TileAt(targetCoord)
+		if targetTile == nil {
+			continue
+		}
+
+		// Create combat context with NO wound bonus for splash
+		ctx := &CombatContext{
+			Attacker:       attacker,
+			AttackerTile:   attackerTile,
+			AttackerHealth: attacker.AvailableHealth,
+			Defender:       target,
+			DefenderTile:   targetTile,
+			DefenderHealth: target.AvailableHealth,
+			WoundBonus:     0, // No wound bonus for splash damage
+		}
+
+		// Run the formula splash_damage times
+		totalDamage := int32(0)
+		for i := int32(0); i < attackerDef.SplashDamage; i++ {
+			damage, err := re.SimulateCombatDamage(ctx, rng)
+			if err != nil {
+				continue
+			}
+			totalDamage += damage
+		}
+
+		// Only apply splash damage if > 4
+		if totalDamage > 4 {
+			targets = append(targets, &SplashDamageTarget{
+				Unit:   target,
+				Damage: totalDamage,
+			})
+		}
+	}
+
+	return targets, nil
+}

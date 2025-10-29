@@ -45,15 +45,22 @@
 
 ### Combat System Completion
 **Priority**: High
-**Status**: Core mechanics done, needs polish
+**Status**: Formula-based combat complete, UI polish needed
 
-**Tasks**:
-- [ ] Attack command fully tested in CLI
-- [ ] Attack UI interactions in browser
-- [ ] Unit destruction and removal from game
+**Completed**:
+- [x] Formula-based combat system with dice rolling simulation
+- [x] Wound bonus tracking and accumulation within turns
+- [x] Splash damage implementation with air unit immunity
+- [x] Attack history management (cleared on turn change)
+- [x] CLI attack command with detailed diagnostics
+- [x] Comprehensive test coverage for combat formulas
+- [x] Attack simulator tool at /rules/attacksim (Monte Carlo simulation with damage distributions)
+
+**Remaining Tasks**:
+- [ ] Attack UI interactions in browser (clickable attack targets)
+- [ ] Combat animations and visual effects
 - [ ] Victory conditions (last player with units wins)
 - [ ] Game over screen and restart flow
-- [x] Attack simulator tool at /rules/attacksim (Monte Carlo simulation with damage distributions)
 
 ---
 

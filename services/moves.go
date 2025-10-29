@@ -17,16 +17,33 @@ func copyUnit(unit *v1.Unit) *v1.Unit {
 	if unit == nil {
 		return nil
 	}
+
+	// Deep copy attack history
+	var attackHistory []*v1.AttackRecord
+	if unit.AttackHistory != nil {
+		attackHistory = make([]*v1.AttackRecord, len(unit.AttackHistory))
+		for i, record := range unit.AttackHistory {
+			attackHistory[i] = &v1.AttackRecord{
+				Q:          record.Q,
+				R:          record.R,
+				IsRanged:   record.IsRanged,
+				TurnNumber: record.TurnNumber,
+			}
+		}
+	}
+
 	return &v1.Unit{
-		Q:                unit.Q,
-		R:                unit.R,
-		Player:           unit.Player,
-		UnitType:         unit.UnitType,
-		Shortcut:         unit.Shortcut,
-		AvailableHealth:  unit.AvailableHealth,
-		DistanceLeft:     unit.DistanceLeft,
-		LastActedTurn:    unit.LastActedTurn,
-		LastToppedupTurn: unit.LastToppedupTurn,
+		Q:                       unit.Q,
+		R:                       unit.R,
+		Player:                  unit.Player,
+		UnitType:                unit.UnitType,
+		Shortcut:                unit.Shortcut,
+		AvailableHealth:         unit.AvailableHealth,
+		DistanceLeft:            unit.DistanceLeft,
+		LastActedTurn:           unit.LastActedTurn,
+		LastToppedupTurn:        unit.LastToppedupTurn,
+		AttacksReceivedThisTurn: unit.AttacksReceivedThisTurn,
+		AttackHistory:           attackHistory,
 	}
 }
 
@@ -282,28 +299,60 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	attackerOriginalHealth := attacker.AvailableHealth
 	defenderOriginalHealth := defender.AvailableHealth
 
-	// Calculate damage using rules engine
-	attackerDamage := 0
-	defenderDamage := 0
+	// Get coordinates for wound bonus calculation
+	attackerCoord := CoordFromInt32(action.AttackerQ, action.AttackerR)
+	defenderCoord := CoordFromInt32(action.DefenderQ, action.DefenderR)
 
-	var canAttack bool
-	defenderDamage, canAttack, err = g.rulesEngine.CalculateCombatDamage(attacker.UnitType, defender.UnitType, g.rng)
+	// Calculate wound bonus from defender's attack history
+	woundBonus := g.rulesEngine.CalculateWoundBonus(defender, attackerCoord)
+
+	// Create combat context for attacker -> defender
+	attackerCtx := &CombatContext{
+		Attacker:       attacker,
+		AttackerTile:   g.World.TileAt(attackerCoord),
+		AttackerHealth: attacker.AvailableHealth,
+		Defender:       defender,
+		DefenderTile:   g.World.TileAt(defenderCoord),
+		DefenderHealth: defender.AvailableHealth,
+		WoundBonus:     woundBonus,
+	}
+
+	// Calculate damage using formula-based system
+	defenderDamage, err := g.rulesEngine.SimulateCombatDamage(attackerCtx, g.rng)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate combat damage: %w", err)
 	}
-	if !canAttack {
-		return nil, fmt.Errorf("unit type %d cannot attack unit type %d", attacker.UnitType, defender.UnitType)
-	}
 
 	// Check if defender can counter-attack
+	attackerDamage := int32(0)
 	if canCounter, err := g.rulesEngine.CanUnitAttackTarget(defender, attacker); err == nil && canCounter {
-		var canCounterAttack bool
-		attackerDamage, canCounterAttack, err = g.rulesEngine.CalculateCombatDamage(defender.UnitType, attacker.UnitType, g.rng)
-		if err != nil || !canCounterAttack {
-			// If counter-attack calculation fails or is not possible, no counter damage
+		// Create combat context for counter-attack (no wound bonus)
+		counterCtx := &CombatContext{
+			Attacker:       defender,
+			AttackerTile:   g.World.TileAt(defenderCoord),
+			AttackerHealth: defender.AvailableHealth,
+			Defender:       attacker,
+			DefenderTile:   g.World.TileAt(attackerCoord),
+			DefenderHealth: attacker.AvailableHealth,
+			WoundBonus:     0, // No wound bonus for counter-attacks
+		}
+
+		attackerDamage, err = g.rulesEngine.SimulateCombatDamage(counterCtx, g.rng)
+		if err != nil {
+			// If counter-attack calculation fails, no counter damage
 			attackerDamage = 0
 		}
 	}
+
+	// Record attack in defender's history for future wound bonus calculations
+	distance := CubeDistance(attackerCoord, defenderCoord)
+	defender.AttackHistory = append(defender.AttackHistory, &v1.AttackRecord{
+		Q:          action.AttackerQ,
+		R:          action.AttackerR,
+		IsRanged:   distance >= 2,
+		TurnNumber: g.TurnCounter,
+	})
+	defender.AttacksReceivedThisTurn++
 
 	// Apply damage
 	defender.AvailableHealth -= int32(defenderDamage)
@@ -390,6 +439,78 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 		}
 		result.Changes = append(result.Changes, change)
 		g.World.RemoveUnit(attacker)
+	}
+
+	// Apply splash damage to adjacent units (if attacker has splash damage capability)
+	// Only if attacker is still alive (not killed by counter-attack)
+	if !attackerKilled {
+		// Get all 6 adjacent hexes around the defender
+		var adjacentCoords [6]AxialCoord
+		defenderCoord.Neighbors(&adjacentCoords)
+
+		var adjacentUnits []*v1.Unit
+		for _, coord := range adjacentCoords {
+			if unit := g.World.UnitAt(coord); unit != nil {
+				// Include all units (friendly and enemy), air units will be filtered by CalculateSplashDamage
+				adjacentUnits = append(adjacentUnits, unit)
+			}
+		}
+
+		if len(adjacentUnits) > 0 {
+			splashTargets, err := g.rulesEngine.CalculateSplashDamage(
+				attacker,
+				g.World.TileAt(attackerCoord),
+				defenderCoord,
+				adjacentUnits,
+				g.World,
+				g.rng,
+			)
+			if err == nil && len(splashTargets) > 0 {
+				// Apply splash damage to each target
+				for _, target := range splashTargets {
+					// Store original health before splash damage
+					targetOriginalHealth := target.Unit.AvailableHealth
+
+					// Apply splash damage
+					target.Unit.AvailableHealth -= target.Damage
+					if target.Unit.AvailableHealth < 0 {
+						target.Unit.AvailableHealth = 0
+					}
+
+					// Check if unit was killed by splash
+					targetKilled := target.Unit.AvailableHealth <= 0
+
+					// Add damage change
+					targetPreviousUnit := copyUnit(target.Unit)
+					targetPreviousUnit.AvailableHealth = targetOriginalHealth
+
+					targetUpdatedUnit := copyUnit(target.Unit)
+
+					change := &v1.WorldChange{
+						ChangeType: &v1.WorldChange_UnitDamaged{
+							UnitDamaged: &v1.UnitDamagedChange{
+								PreviousUnit: targetPreviousUnit,
+								UpdatedUnit:  targetUpdatedUnit,
+							},
+						},
+					}
+					result.Changes = append(result.Changes, change)
+
+					// Add kill change if unit was killed by splash
+					if targetKilled {
+						killChange := &v1.WorldChange{
+							ChangeType: &v1.WorldChange_UnitKilled{
+								UnitKilled: &v1.UnitKilledChange{
+									PreviousUnit: targetPreviousUnit,
+								},
+							},
+						}
+						result.Changes = append(result.Changes, killChange)
+						g.World.RemoveUnit(target.Unit)
+					}
+				}
+			}
+		}
 	}
 
 	// Update timestamp
