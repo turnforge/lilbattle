@@ -221,10 +221,14 @@ export class Unit implements UnitInterface {
   /** Details around wound bonus tracking for this turn */
   attacksReceivedThisTurn: number = 0;
   attackHistory: AttackRecord[] = [];
-  /** Track actions performed this turn for progression (e.g., ["move", "attack"])
- Cleared on turn change via TopUpUnitIfNeeded()
- Used to determine which actions are still allowed based on UnitDefinition.action_order */
-  actionsThisTurn: string[] = [];
+  /** Action progression tracking - index into UnitDefinition.action_order
+ Indicates which step in the action sequence the unit is currently on
+ Reset to 0 at turn start via TopUpUnitIfNeeded() */
+  progressionStep: number = 0;
+  /** When current step has pipe-separated alternatives (e.g., "attack|capture"),
+ this tracks which alternative the user chose, preventing switching mid-step
+ Cleared when advancing to next step */
+  chosenAlternative: string = "";
 
   /**
    * Create and deserialize an instance from raw data

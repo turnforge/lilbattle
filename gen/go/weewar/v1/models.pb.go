@@ -9,12 +9,13 @@
 package weewarv1
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -628,12 +629,16 @@ type Unit struct {
 	// Details around wound bonus tracking for this turn
 	AttacksReceivedThisTurn int32           `protobuf:"varint,10,opt,name=attacks_received_this_turn,json=attacksReceivedThisTurn,proto3" json:"attacks_received_this_turn,omitempty"` // Total number of attacks received this turn
 	AttackHistory           []*AttackRecord `protobuf:"bytes,11,rep,name=attack_history,json=attackHistory,proto3" json:"attack_history,omitempty"`                                    // Detailed attack history for wound bonus calculation
-	// Track actions performed this turn for progression (e.g., ["move", "attack"])
-	// Cleared on turn change via TopUpUnitIfNeeded()
-	// Used to determine which actions are still allowed based on UnitDefinition.action_order
-	ActionsThisTurn []string `protobuf:"bytes,12,rep,name=actions_this_turn,json=actionsThisTurn,proto3" json:"actions_this_turn,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Action progression tracking - index into UnitDefinition.action_order
+	// Indicates which step in the action sequence the unit is currently on
+	// Reset to 0 at turn start via TopUpUnitIfNeeded()
+	ProgressionStep int32 `protobuf:"varint,12,opt,name=progression_step,json=progressionStep,proto3" json:"progression_step,omitempty"`
+	// When current step has pipe-separated alternatives (e.g., "attack|capture"),
+	// this tracks which alternative the user chose, preventing switching mid-step
+	// Cleared when advancing to next step
+	ChosenAlternative string `protobuf:"bytes,13,opt,name=chosen_alternative,json=chosenAlternative,proto3" json:"chosen_alternative,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *Unit) Reset() {
@@ -743,11 +748,18 @@ func (x *Unit) GetAttackHistory() []*AttackRecord {
 	return nil
 }
 
-func (x *Unit) GetActionsThisTurn() []string {
+func (x *Unit) GetProgressionStep() int32 {
 	if x != nil {
-		return x.ActionsThisTurn
+		return x.ProgressionStep
 	}
-	return nil
+	return 0
+}
+
+func (x *Unit) GetChosenAlternative() string {
+	if x != nil {
+		return x.ChosenAlternative
+	}
+	return ""
 }
 
 type AttackRecord struct {
@@ -2965,7 +2977,7 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x06player\x18\x04 \x01(\x05R\x06player\x12\x1a\n" +
 	"\bshortcut\x18\x05 \x01(\tR\bshortcut\x12&\n" +
 	"\x0flast_acted_turn\x18\x06 \x01(\x05R\rlastActedTurn\x12,\n" +
-	"\x12last_toppedup_turn\x18\a \x01(\x05R\x10lastToppedupTurn\"\xc2\x03\n" +
+	"\x12last_toppedup_turn\x18\a \x01(\x05R\x10lastToppedupTurn\"\xf0\x03\n" +
 	"\x04Unit\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x16\n" +
@@ -2978,8 +2990,9 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x12last_toppedup_turn\x18\t \x01(\x05R\x10lastToppedupTurn\x12;\n" +
 	"\x1aattacks_received_this_turn\x18\n" +
 	" \x01(\x05R\x17attacksReceivedThisTurn\x12>\n" +
-	"\x0eattack_history\x18\v \x03(\v2\x17.weewar.v1.AttackRecordR\rattackHistory\x12*\n" +
-	"\x11actions_this_turn\x18\f \x03(\tR\x0factionsThisTurn\"h\n" +
+	"\x0eattack_history\x18\v \x03(\v2\x17.weewar.v1.AttackRecordR\rattackHistory\x12)\n" +
+	"\x10progression_step\x18\f \x01(\x05R\x0fprogressionStep\x12-\n" +
+	"\x12chosen_alternative\x18\r \x01(\tR\x11chosenAlternative\"h\n" +
 	"\fAttackRecord\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +

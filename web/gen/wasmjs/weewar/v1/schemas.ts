@@ -310,10 +310,14 @@ export const UnitSchema: MessageSchema = {
       repeated: true,
     },
     {
-      name: "actionsThisTurn",
-      type: FieldType.REPEATED,
+      name: "progressionStep",
+      type: FieldType.NUMBER,
       id: 12,
-      repeated: true,
+    },
+    {
+      name: "chosenAlternative",
+      type: FieldType.STRING,
+      id: 13,
     },
   ],
 };

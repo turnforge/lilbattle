@@ -155,10 +155,15 @@ message Unit {
   int32 attacks_received_this_turn = 10;    // Total number of attacks received this turn
   repeated AttackRecord attack_history = 11; // Detailed attack history for wound bonus calculation
 
-  // Track actions performed this turn for progression (e.g., ["move", "attack"])
-  // Cleared on turn change via TopUpUnitIfNeeded()
-  // Used to determine which actions are still allowed based on UnitDefinition.action_order
-  repeated string actions_this_turn = 12;
+  // Action progression tracking - index into UnitDefinition.action_order
+  // Indicates which step in the action sequence the unit is currently on
+  // Reset to 0 at turn start via TopUpUnitIfNeeded()
+  int32 progression_step = 12;
+
+  // When current step has pipe-separated alternatives (e.g., "attack|capture"),
+  // this tracks which alternative the user chose, preventing switching mid-step
+  // Cleared when advancing to next step
+  string chosen_alternative = 13;
 }
 
 message AttackRecord {
