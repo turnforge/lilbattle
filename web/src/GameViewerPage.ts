@@ -156,9 +156,14 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         
         // TODO _ this will be done by initialize WASM
         this.wasmBundle.registerBrowserService('GameViewerPage', this)
-        
+
         // Initialize the presenter by setting it game data now that all UI components are ready
         await this.initializePresenter()
+
+        // Expose gameScene to console for testing animations
+        (window as any).gameScene = this.gameScene;
+        console.log("🎮 gameScene exposed to window for animation testing");
+        console.log("Try: gameScene.moveUnit(unit, path) or gameScene.showAttackEffect({q:0,r:0}, {q:1,r:0}, 10)");
     }
     
     
