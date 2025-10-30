@@ -3,15 +3,155 @@
 
 {{ define "BodySection" }}
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome to weewar</h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your app items below</p>
+    <!-- Hero Section -->
+    <div class="mb-12">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-3">Welcome to WeeWar</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400">Turn-based strategy gaming reimagined</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm font-medium uppercase tracking-wide">Active Games</p>
+                        <p class="text-4xl font-bold mt-2">{{ .TotalGames }}</p>
+                    </div>
+                    <div class="bg-blue-400 dark:bg-blue-800 bg-opacity-30 rounded-full p-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <a href="/games" class="inline-block mt-4 text-sm font-semibold hover:underline">View all games →</a>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm font-medium uppercase tracking-wide">Map Library</p>
+                        <p class="text-4xl font-bold mt-2">{{ .TotalWorlds }}</p>
+                    </div>
+                    <div class="bg-green-400 dark:bg-green-800 bg-opacity-30 rounded-full p-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <a href="/worlds" class="inline-block mt-4 text-sm font-semibold hover:underline">Browse worlds →</a>
+            </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/games/new" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Start New Game
+            </a>
+            <a href="/worlds/new" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+                Create World
+            </a>
+        </div>
     </div>
 
-    <h2><a href="/games">Games</a></h2>
+    <!-- Recent Activity Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Games -->
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Games</h2>
+                <a href="/games" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">View all →</a>
+            </div>
 
-    <hr/>
-    <h2><a href="/worlds">Worlds</a></h2>
+            {{ if .RecentGames }}
+            <div class="space-y-4">
+                {{ range .RecentGames }}
+                <a href="/games/{{ .Id }}/view" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                    <div class="flex">
+                        <div class="flex-shrink-0 w-32 h-24">
+                            <img src="{{ .ScreenshotUrl }}"
+                                 alt="{{ .Name }} preview"
+                                 class="w-full h-full object-cover"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 96%22%3E%3Crect fill=%22%23e5e7eb%22 width=%22100%25%22 height=%22100%25%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2214%22 fill=%22%239ca3af%22%3ENo Preview%3C/text%3E%3C/svg%3E';" />
+                        </div>
+                        <div class="flex-1 p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ .Name }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ .UpdatedAt.AsTime | Ago }}</p>
+                        </div>
+                    </div>
+                </a>
+                {{ end }}
+            </div>
+            {{ else }}
+            <div class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No games yet</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Start your first game to begin playing</p>
+                <div class="mt-6">
+                    <a href="/games/new" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Game
+                    </a>
+                </div>
+            </div>
+            {{ end }}
+        </div>
+
+        <!-- Recent Worlds -->
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Worlds</h2>
+                <a href="/worlds" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">View all →</a>
+            </div>
+
+            {{ if .RecentWorlds }}
+            <div class="space-y-4">
+                {{ range .RecentWorlds }}
+                <a href="/worlds/{{ .Id }}/view" class="block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                    <div class="flex">
+                        <div class="flex-shrink-0 w-32 h-24">
+                            <img src="{{ .ScreenshotUrl }}"
+                                 alt="{{ .Name }} preview"
+                                 class="w-full h-full object-cover"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 96%22%3E%3Crect fill=%22%23e5e7eb%22 width=%22100%25%22 height=%22100%25%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2214%22 fill=%22%239ca3af%22%3ENo Preview%3C/text%3E%3C/svg%3E';" />
+                        </div>
+                        <div class="flex-1 p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">{{ .Name }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ .UpdatedAt.AsTime | Ago }}</p>
+                        </div>
+                    </div>
+                </a>
+                {{ end }}
+            </div>
+            {{ else }}
+            <div class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No worlds yet</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create your first world to get started</p>
+                <div class="mt-6">
+                    <a href="/worlds/new" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New World
+                    </a>
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
 </main>
 {{ end }}
 

@@ -26,6 +26,24 @@
 
 ## UI Polish & User Experience
 
+### Dashboard Homepage
+**Priority**: Medium
+**Status**: ✅ COMPLETE
+
+**Completed**:
+- [x] Hero section with welcome message and tagline
+- [x] Stats cards showing total games and worlds with gradient backgrounds
+- [x] Quick action buttons for "Start New Game" and "Create World"
+- [x] Two-column layout with recent games and worlds (up to 6 each)
+- [x] Screenshot thumbnails in activity cards
+- [x] Empty states with helpful CTAs when no content exists
+- [x] Full responsive design and dark mode support
+
+**Design**:
+- Visual dashboard replacing plain text links on homepage
+- Leverages screenshot system for visual preview cards
+- Immediate activity overview on landing
+
 ### Screenshot and Preview System
 **Priority**: Medium
 **Status**: ✅ COMPLETE
@@ -37,12 +55,14 @@
 - [x] Screenshot thumbnails in GameList and WorldList pages
 - [x] screenshot_url field in Game and World protos for flexible URL management
 - [x] Default URL population with CDN-ready override capability
+- [x] Fixed infinite canvas height growth by removing automatic ResizeObserver
 
 **Design**:
 - Screenshots stored in `~/dev-app-data/weewar/storage/{games|worlds}/{id}/screenshots/`
 - Automatic tight bounds calculation to avoid empty space
 - Generic screenshot handler for reusability across resource types
 - Proto field allows easy migration to CDN or external hosting
+- Canvas sizing now controlled by CSS/parent page to avoid circular dependencies
 
 ### Visual Updates and Animations
 **Priority**: Medium

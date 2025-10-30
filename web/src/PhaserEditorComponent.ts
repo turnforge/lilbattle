@@ -190,27 +190,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         }
     }
     
-    /*
-    protected destroyComponent(): void {
-        this.log('Destroying PhaserEditorComponent');
-        
-        // Destroy Phaser editor
-        if (this.editorScene) {
-            this.editorScene.deactivate();
-            this.editorScene = null as any;
-        }
-        
-        // Remove Phaser container
-        const phaserContainer = document.getElementById('phaser-container');
-        if (phaserContainer) {
-            phaserContainer.remove();
-        }
-        
-        this.isInitialized = false;
-        this.log('PhaserEditorComponent destroyed');
-    }
-   */
-    
     /**
      * Bind toolbar event handlers
      */

@@ -1,7 +1,10 @@
 package server
 
 import (
+	"context"
 	"net/http"
+
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
 type BasePage struct {
@@ -15,18 +18,45 @@ type HomePage struct {
 	BasePage
 	Header Header
 
-	// Add any other components here to reflect what you want to show in your home page
-	// Note that you would also update your HomePage templates to reflect these
-	GameListView GameListView
+	// Dashboard data
+	RecentGames  []*v1.Game
+	RecentWorlds []*v1.World
+	TotalGames   int32
+	TotalWorlds  int32
 }
 
 func (p *HomePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
 	p.Title = "Home"
 	p.Header.Load(r, w, vc)
-	err, finished = p.GameListView.Load(r, w, vc)
-	if err != nil || finished {
-		return
+
+	// Fetch recent games (limit to 6)
+	gamesClient, err := vc.ClientMgr.GetGamesSvcClient()
+	if err == nil {
+		gamesResp, err := gamesClient.ListGames(context.Background(), &v1.ListGamesRequest{
+			Pagination: &v1.Pagination{
+				PageSize: 6,
+			},
+		})
+		if err == nil && gamesResp != nil {
+			p.RecentGames = gamesResp.Items
+			p.TotalGames = gamesResp.Pagination.TotalResults
+		}
 	}
+
+	// Fetch recent worlds (limit to 6)
+	worldsClient, err := vc.ClientMgr.GetWorldsSvcClient()
+	if err == nil {
+		worldsResp, err := worldsClient.ListWorlds(context.Background(), &v1.ListWorldsRequest{
+			Pagination: &v1.Pagination{
+				PageSize: 6,
+			},
+		})
+		if err == nil && worldsResp != nil {
+			p.RecentWorlds = worldsResp.Items
+			p.TotalWorlds = worldsResp.Pagination.TotalResults
+		}
+	}
+
 	return
 }
 
