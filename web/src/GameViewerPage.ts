@@ -882,7 +882,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     if (request.unit && request.path) {
       await this.gameScene.moveUnit(request.unit, request.path);
       // Update world after animation completes
-      // this.world.setUnitDirect(request.unit);
+      this.world.setUnitDirect(request.unit);
     }
     return {}
   }
