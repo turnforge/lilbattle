@@ -55,12 +55,35 @@
 - [x] CLI attack command with detailed diagnostics
 - [x] Comprehensive test coverage for combat formulas
 - [x] Attack simulator tool at /rules/attacksim (Monte Carlo simulation with damage distributions)
+- [x] Action progression system with index-based state machine
 
 **Remaining Tasks**:
 - [ ] Attack UI interactions in browser (clickable attack targets)
 - [ ] Combat animations and visual effects
 - [ ] Victory conditions (last player with units wins)
 - [ ] Game over screen and restart flow
+
+### Action Progression System
+**Priority**: High
+**Status**: ✅ COMPLETE
+
+**Completed**:
+- [x] Refactored from history-based to index-based state machine
+- [x] Unit progression tracking via progression_step (index into action_order)
+- [x] Pipe-separated alternatives support (e.g., "attack|capture")
+- [x] Natural movement limiting via distance_left
+- [x] Chosen alternative tracking for mutually exclusive actions
+- [x] Integration with ProcessMoveUnit, ProcessAttackUnit, GetOptionsAt
+- [x] Turn reset via TopUpUnitIfNeeded
+- [x] Comprehensive test coverage
+
+**Design**:
+- Units track progression_step (0-based index into UnitDefinition.action_order)
+- Default action_order: ["move", "attack|capture"]
+- Movement advances step when distance_left reaches 0
+- Pipe-separated alternatives are mutually exclusive (choosing one locks out others)
+- action_limits supported for repeated actions (e.g., {"attack": 2} for double attacks)
+- State resets to step 0 on turn change
 
 ---
 
