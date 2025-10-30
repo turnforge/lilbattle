@@ -2,7 +2,7 @@
 
 **Purpose:**
 
-This folder contains all the Go HTML template files (`*.html`) used for server-side rendering (SSR) and defining client-side template fragments. It utilizes the `html/template` syntax extended by the `templar` engine and heavily uses Tailwind CSS classes for styling.
+This folder contains all the Go HTML template files (`*.html`) used for server-side rendering (SSR) and defining client-side template fragments. The template system uses Go's `html/template` package with custom extensions via the `templar` engine, which provides advanced composition features. All templates heavily use Tailwind CSS utility classes for styling.
 
 **Key Files:**
 
@@ -32,3 +32,197 @@ This folder contains all the Go HTML template files (`*.html`) used for server-s
 *   **SSR Rendering:** Provides the templates processed by the Go backend (`web/frontend`) to generate the initial HTML sent to the browser.
 *   **Client-Side Templates:** Acts as a registry for HTML fragments used by TypeScript components to dynamically update the UI without full page reloads.
 *   **Styling:** Relies heavily on Tailwind CSS utility classes defined within the HTML.
+
+---
+
+## Template System Architecture
+
+### Templar Engine
+
+The template system uses a custom `templar` engine (imported from `github.com/panyam/goutils`) which extends Go's standard `html/template` with additional features:
+
+**Key Features:**
+- **Template Composition:** `{{# include "path/to/template.html" #}}` syntax for including other templates
+- **Block Definitions:** `{{ block "name" . }}...{{ end }}` for defining overridable sections
+- **Nested Includes:** Templates can include other templates recursively
+- **Path Resolution:** Automatic template discovery from configured root directories
+
+**Template Processing Flow:**
+1. Backend loads templates from `web/templates/` directory
+2. Templar parses templates and resolves all includes
+3. Go processes `{{ block }}`, `{{ range }}`, `{{ if }}` directives
+4. Final HTML sent to browser with embedded data
+
+### Server-Side Rendering (SSR)
+
+Templates are rendered on the backend in `web/frontend/server.go`:
+
+```go
+// Example: Rendering a page with data
+tmpl := templar.Get("WorldEditorPage.html")
+err := tmpl.Execute(w, data)
+```
+
+**Data Binding:**
+- Templates receive data via the `.` (dot) context
+- Access fields: `{{ .WorldId }}`, `{{ .GameId }}`, etc.
+- Range over collections: `{{ range .Worlds }}...{{ end }}`
+- Conditional rendering: `{{ if .IsLoggedIn }}...{{ end }}`
+
+**Common SSR Patterns:**
+1. **Page Templates:** Top-level templates that extend BasePage.html
+2. **Component Templates:** Reusable fragments included by multiple pages
+3. **Generated Templates:** `gen/` folder contains build-time generated templates with bundled JS
+
+### Client-Side Template Loading
+
+The `TemplateLoader` singleton (in `web/src/lib/TemplateLoader.ts`) manages dynamic template loading:
+
+**How It Works:**
+1. Client-side TypeScript requests a template by ID
+2. TemplateLoader fetches HTML from `TemplateRegistry.html` via selector
+3. Template fragment is cloned and inserted into DOM
+4. Event handlers and data binding applied by TypeScript components
+
+**Template Registry Format:**
+```html
+<!-- In TemplateRegistry.html -->
+<div data-template-id="my-template">
+  <div class="...">
+    <!-- Template content -->
+  </div>
+</div>
+```
+
+**Usage in TypeScript:**
+```typescript
+const html = TemplateLoader.getInstance().loadTemplate("my-template");
+container.innerHTML = html;
+```
+
+### Generated Templates (`gen/` folder)
+
+Build process generates templates that bundle TypeScript/JavaScript:
+
+**Generation Process:**
+1. `web/src/` TypeScript compiled by esbuild
+2. Output JavaScript written to `web/gen/`
+3. Corresponding `.html` templates in `web/templates/gen/` reference the JS
+4. Page templates include generated templates: `{{# include "gen/GameViewerPage.html" #}}`
+
+**Key Generated Pages:**
+- `GameViewerPage.html` - Main game UI with Phaser canvas
+- `WorldEditorPage.html` - Interactive world editor
+- `StartGamePage.html` - Game initialization and setup
+
+**Benefits:**
+- Code splitting per page
+- Bundle optimization
+- Separate TypeScript compilation per page module
+- Clean separation between SSR data and client JS
+
+### WASM Integration
+
+Templates interact with WASM modules for game logic:
+
+**Pattern:**
+1. Page template loads WASM module via script tag
+2. TypeScript initializes WASM and creates client instances
+3. Event handlers call WASM functions via typed interfaces
+4. WASM responses update DOM through TypeScript components
+
+**Example Flow (Game Viewer):**
+```
+User clicks tile →
+TypeScript handler →
+WASM GetOptionsAt() →
+TypeScript updates UI with options →
+User selects move →
+TypeScript ProcessMove() →
+WASM validates/executes →
+TypeScript refreshes scene
+```
+
+### Dark Mode & Theming
+
+Implemented via inline script in `BasePage.html`:
+
+**Mechanism:**
+- Checks `localStorage.theme` or system preference
+- Adds/removes `dark` class on `<html>` element
+- Tailwind CSS classes respond: `bg-white dark:bg-gray-900`
+- Theme toggle button updates localStorage and class
+
+**Theme Classes:**
+- Light: Default Tailwind colors
+- Dark: `dark:` prefix variants (bg-gray-900, text-white, etc.)
+
+### Modal & Toast Systems
+
+Managed by TypeScript singletons with template-defined structure:
+
+**Modals (`ModalContainer.html`):**
+- Fixed overlay with centered content area
+- TypeScript `ModalManager` controls visibility
+- Dynamic content loaded from TemplateRegistry
+- Backdrop click to dismiss
+
+**Toasts (`ToastContainer.html`):**
+- Fixed position notifications (top-right)
+- TypeScript `ToastManager` shows/hides messages
+- Auto-dismiss after timeout
+- Success/error/info styling variants
+
+### Component Update Patterns
+
+**Full Page Reload:**
+```go
+// Backend redirects after action
+http.Redirect(w, r, "/games/"+gameId, http.StatusSeeOther)
+```
+
+**Partial Update (AJAX):**
+```typescript
+// Client fetches HTML fragment
+const response = await fetch("/api/games/"+gameId+"/options");
+const html = await response.text();
+container.innerHTML = html;
+```
+
+**WASM-Driven Update:**
+```typescript
+// Direct DOM manipulation from WASM response
+const state = wasmClient.GetGameState();
+updateScene(state); // TypeScript updates Phaser or DOM
+```
+
+### Best Practices
+
+1. **Separation of Concerns:**
+   - Templates define structure (HTML)
+   - Tailwind defines styling (CSS classes)
+   - TypeScript defines behavior (JS)
+   - WASM defines game logic
+
+2. **Template Naming:**
+   - Pages: `*Page.html` (e.g., GameViewerPage.html)
+   - Components: Descriptive names (e.g., WorldList.html)
+   - Modals: `*Modal.html` or registered in TemplateRegistry
+   - Generated: `gen/*.html`
+
+3. **Data Flow:**
+   - SSR: Backend → Template → HTML
+   - Client: User Action → TypeScript → WASM → DOM Update
+   - Avoid mixing SSR data with client state
+
+4. **Performance:**
+   - Use TemplateLoader for fragments (avoid full rerenders)
+   - Cache WASM responses when appropriate
+   - Lazy-load heavy components (Phaser scenes)
+   - Debounce rapid updates (e.g., canvas painting)
+
+5. **Accessibility:**
+   - Use semantic HTML elements
+   - Include ARIA labels where needed
+   - Ensure keyboard navigation works
+   - Test with screen readers
