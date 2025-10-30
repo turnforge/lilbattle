@@ -32,7 +32,7 @@ export const AnimationConfig = {
 
   /** Duration of appear/fade-in effect (ms) */
   APPEAR_DURATION: 200,
-} as const;
+};
 
 /**
  * Animation visual configuration.

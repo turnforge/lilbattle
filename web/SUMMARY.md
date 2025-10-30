@@ -233,9 +233,23 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Event Integration**: Both panels receive unit selection events independently for synchronization
 - **UI Flexibility**: Users can now show/hide damage distribution independently from unit stats
 
+### Recent Achievements (Session 2025-10-30)
+
+#### Animation Framework Implementation (Complete)
+- **Presenter-Driven Architecture**: Animations orchestrated by presenter, scene remains a dumb renderer
+- **Promise-Based API**: All animations return Promises for easy sequencing and chaining
+- **Smart Batching**: Splash damage explosions play simultaneously, sequential chains for causality
+- **Configurable Timing**: Single config file controls all animation speeds with instant mode support
+- **Effect Classes**: Modular, self-contained effect implementations (ProjectileEffect, ExplosionEffect, HealBubblesEffect, CaptureEffect)
+- **Scene API Enhancements**: Enhanced PhaserWorldScene with moveUnit(), showAttackEffect(), showHealEffect(), showCaptureEffect()
+- **Unit Lifecycle Animations**: setUnit with flash/appear options, removeUnit with fade-out animation
+- **Particle System**: Runtime-generated particle texture with Phaser particle emitters for effects
+- **Path Animation**: Units smoothly slide along hex paths instead of teleporting
+- **Attack Sequences**: Complete attack animations with attacker flash, projectile arc, and impact explosions
+
 ## Status
-**Current Version**: 8.7 (Damage Distribution Panel Refactoring)  
-**Status**: Production-ready with modular panel architecture and independent damage visualization  
-**Build Status**: Clean compilation with all TypeScript errors resolved  
-**Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds  
-**Architecture**: Flexible AssetProvider system with independent dockable panels
+**Current Version**: 8.8 (Animation Framework)
+**Status**: Production-ready with animation system ready for presenter integration
+**Build Status**: Clean compilation with all TypeScript errors resolved
+**Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds
+**Architecture**: Flexible AssetProvider system with presenter-driven animation framework

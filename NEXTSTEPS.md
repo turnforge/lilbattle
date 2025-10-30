@@ -66,16 +66,27 @@
 
 ### Visual Updates and Animations
 **Priority**: Medium
-**Status**: Not Started
+**Status**: Animation Framework Complete - Presenter Integration Needed
 
-**Tasks**:
-- [ ] Implement incremental SetUnitAt/SetTileAt updates instead of full scene reload
-- [ ] Add smooth move animations (Phaser tweens along path)
-- [ ] Add attack animations and visual effects
+**Completed**:
+- [x] Animation framework with presenter-driven architecture
+- [x] Promise-based animation API for sequencing and chaining
+- [x] Smart batching for simultaneous effects (splash damage)
+- [x] Configurable timing with instant mode support
+- [x] Effect classes: ProjectileEffect, ExplosionEffect, HealBubblesEffect, CaptureEffect
+- [x] Scene API: moveUnit(), showAttackEffect(), showHealEffect(), showCaptureEffect()
+- [x] Unit lifecycle animations: setUnit (flash/appear), removeUnit (fade-out)
+- [x] Particle system with runtime-generated textures
+- [x] Path animation for smooth unit movement along hex paths
+- [x] Attack sequences: attacker flash, projectile arc, impact explosions
+
+**Remaining Tasks**:
+- [ ] Integrate animations with presenter's processServerChanges
 - [ ] Add loading states during move processing
 - [ ] Prevent concurrent move submissions
 - [ ] Add sound effects (moves, attacks, selections)
-- [ ] Add unit health/movement HTML overlays on hex tiles (UnitLabelManager)
+- [ ] Add retreat animations
+- [ ] Add capture animations with building color changes
 
 ---
 

@@ -9,6 +9,11 @@ import { EventBus } from '../../lib/EventBus';
 import { WorldEventType, WorldEventTypes } from '../events';
 import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../World';
 import { AssetProvider } from '../../assets/providers/AssetProvider';
+import { AnimationConfig } from './animations/AnimationConfig';
+import { ProjectileEffect } from './animations/effects/ProjectileEffect';
+import { ExplosionEffect } from './animations/effects/ExplosionEffect';
+import { HealBubblesEffect } from './animations/effects/HealBubblesEffect';
+import { CaptureEffect } from './animations/effects/CaptureEffect';
 
 const UNIT_TILE_RATIO = 0.9
 
@@ -468,7 +473,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     create() {
         // Initialize graphics for grid
         this.gridGraphics = this.add.graphics();
-        
+
+        // Create particle texture for effects
+        this.createParticleTexture();
+
         // Set up camera controls
         this.setupCameraControls();
         
@@ -831,61 +839,307 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     }
     
     // Unit management methods
-    public setUnit(unit: Unit) {
-        const q = unit.q;
-        const r = unit.r;
-        const unitType = unit.unitType;
-        const color = unit.player;
-        const key = `${q},${r}`;
-        const position = hexToPixel(q, r);
-        
-        // Remove existing unit and labels if they exist
-        if (this.unitSprites.has(key)) {
-            this.unitSprites.get(key)?.destroy();
-        }
-        this.removeUnitLabels(key);
-        
-        // Get texture key from asset provider
-        const textureKey = this.assetProvider.getUnitTexture(unitType, color);
-        
-        if (this.textures.exists(textureKey)) {
-            const unitSprite = this.add.sprite(position.x, position.y, textureKey);
-            unitSprite.setOrigin(0.5, 0.5);
-            unitSprite.setDepth(10); // Units render above tiles
-            // Scale sprite to match hex tile size - use provider's display size
-            const displaySize = this.assetProvider.getDisplaySize();
-            unitSprite.setDisplaySize(displaySize.width * UNIT_TILE_RATIO, displaySize.height * UNIT_TILE_RATIO);
-            this.unitSprites.set(key, unitSprite);
-        } else {
-            // Try fallback without player color
-            const fallbackKey = this.assetProvider.getUnitTexture(unitType, 0);
-            if (this.textures.exists(fallbackKey)) {
-                const unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
+    public setUnit(unit: Unit, options?: { flash?: boolean, appear?: boolean }): Promise<void> {
+        return new Promise((resolve) => {
+            const q = unit.q;
+            const r = unit.r;
+            const unitType = unit.unitType;
+            const color = unit.player;
+            const key = `${q},${r}`;
+            const position = hexToPixel(q, r);
+
+            // Remove existing unit and labels if they exist
+            if (this.unitSprites.has(key)) {
+                this.unitSprites.get(key)?.destroy();
+            }
+            this.removeUnitLabels(key);
+
+            // Get texture key from asset provider
+            const textureKey = this.assetProvider.getUnitTexture(unitType, color);
+
+            let unitSprite: Phaser.GameObjects.Sprite | undefined;
+
+            if (this.textures.exists(textureKey)) {
+                unitSprite = this.add.sprite(position.x, position.y, textureKey);
                 unitSprite.setOrigin(0.5, 0.5);
-                unitSprite.setDepth(10);
+                unitSprite.setDepth(10); // Units render above tiles
+                // Scale sprite to match hex tile size - use provider's display size
                 const displaySize = this.assetProvider.getDisplaySize();
                 unitSprite.setDisplaySize(displaySize.width * UNIT_TILE_RATIO, displaySize.height * UNIT_TILE_RATIO);
                 this.unitSprites.set(key, unitSprite);
             } else {
-                console.error(`[PhaserWorldScene] Unit texture not found: ${textureKey} or ${fallbackKey}`);
+                // Try fallback without player color
+                const fallbackKey = this.assetProvider.getUnitTexture(unitType, 0);
+                if (this.textures.exists(fallbackKey)) {
+                    unitSprite = this.add.sprite(position.x, position.y, fallbackKey);
+                    unitSprite.setOrigin(0.5, 0.5);
+                    unitSprite.setDepth(10);
+                    const displaySize = this.assetProvider.getDisplaySize();
+                    unitSprite.setDisplaySize(displaySize.width * UNIT_TILE_RATIO, displaySize.height * UNIT_TILE_RATIO);
+                    this.unitSprites.set(key, unitSprite);
+                } else {
+                    console.error(`[PhaserWorldScene] Unit texture not found: ${textureKey} or ${fallbackKey}`);
+                }
             }
-        }
-        
-        // Create unit labels
-        this.createUnitLabels(unit, position);
+
+            // Create unit labels
+            this.createUnitLabels(unit, position);
+
+            // Apply animations if requested
+            if (unitSprite) {
+                if (options?.appear && AnimationConfig.APPEAR_DURATION > 0) {
+                    // Fade in animation
+                    unitSprite.setAlpha(0);
+                    this.tweens.add({
+                        targets: unitSprite,
+                        alpha: 1,
+                        duration: AnimationConfig.APPEAR_DURATION,
+                        ease: 'Cubic.easeOut',
+                        onComplete: () => resolve()
+                    });
+                } else if (options?.flash && AnimationConfig.FLASH_DURATION > 0) {
+                    // Flash animation (tint and back)
+                    this.tweens.add({
+                        targets: unitSprite,
+                        tint: 0xff0000,
+                        duration: AnimationConfig.FLASH_DURATION / 2,
+                        yoyo: true,
+                        ease: 'Cubic.easeInOut',
+                        onComplete: () => {
+                            unitSprite!.clearTint();
+                            resolve();
+                        }
+                    });
+                } else {
+                    resolve();
+                }
+            } else {
+                resolve();
+            }
+        });
     }
     
-    public removeUnit(q: number, r: number) {
-        const key = `${q},${r}`;
-        
-        if (this.unitSprites.has(key)) {
-            this.unitSprites.get(key)?.destroy();
-            this.unitSprites.delete(key);
-        }
-        
-        this.removeUnitLabels(key);
+    public removeUnit(q: number, r: number, options?: { animate?: boolean }): Promise<void> {
+        return new Promise((resolve) => {
+            const key = `${q},${r}`;
+            const sprite = this.unitSprites.get(key);
+
+            if (!sprite) {
+                this.removeUnitLabels(key);
+                resolve();
+                return;
+            }
+
+            if (options?.animate && AnimationConfig.FADE_OUT_DURATION > 0) {
+                // Fade out animation
+                this.tweens.add({
+                    targets: sprite,
+                    alpha: 0,
+                    duration: AnimationConfig.FADE_OUT_DURATION,
+                    ease: 'Cubic.easeIn',
+                    onComplete: () => {
+                        sprite.destroy();
+                        this.unitSprites.delete(key);
+                        this.removeUnitLabels(key);
+                        resolve();
+                    }
+                });
+            } else {
+                // Instant removal
+                sprite.destroy();
+                this.unitSprites.delete(key);
+                this.removeUnitLabels(key);
+                resolve();
+            }
+        });
     }
-    
+
+    /**
+     * Move a unit along a path with animation.
+     * @param unit The unit to move
+     * @param path Array of hex coordinates representing the movement path
+     */
+    public moveUnit(unit: Unit, path: { q: number, r: number }[]): Promise<void> {
+        return new Promise((resolve) => {
+            if (path.length < 2) {
+                // No movement
+                resolve();
+                return;
+            }
+
+            const startKey = `${path[0].q},${path[0].r}`;
+            const sprite = this.unitSprites.get(startKey);
+
+            if (!sprite) {
+                console.warn(`[PhaserWorldScene] No sprite found for unit at ${path[0].q},${path[0].r}`);
+                resolve();
+                return;
+            }
+
+            // Calculate pixel positions for the path
+            const pixelPath = path.map(coord => hexToPixel(coord.q, coord.r));
+            const totalDuration = (path.length - 1) * AnimationConfig.MOVE_DURATION_PER_HEX;
+
+            if (totalDuration === 0) {
+                // Instant mode - just update position
+                const endPos = pixelPath[pixelPath.length - 1];
+                sprite.setPosition(endPos.x, endPos.y);
+
+                // Update sprite map key
+                this.unitSprites.delete(startKey);
+                const endKey = `${path[path.length - 1].q},${path[path.length - 1].r}`;
+                this.unitSprites.set(endKey, sprite);
+
+                // Update labels
+                this.removeUnitLabels(startKey);
+                this.createUnitLabels(unit, endPos);
+
+                resolve();
+                return;
+            }
+
+            // Chain tweens for smooth movement along path
+            let currentIndex = 1;
+
+            const animateNextSegment = () => {
+                if (currentIndex >= pixelPath.length) {
+                    // Animation complete - update sprite map and labels
+                    this.unitSprites.delete(startKey);
+                    const endKey = `${path[path.length - 1].q},${path[path.length - 1].r}`;
+                    this.unitSprites.set(endKey, sprite);
+
+                    this.removeUnitLabels(startKey);
+                    const endPos = pixelPath[pixelPath.length - 1];
+                    this.createUnitLabels(unit, endPos);
+
+                    resolve();
+                    return;
+                }
+
+                this.tweens.add({
+                    targets: sprite,
+                    x: pixelPath[currentIndex].x,
+                    y: pixelPath[currentIndex].y,
+                    duration: AnimationConfig.MOVE_DURATION_PER_HEX,
+                    ease: 'Cubic.easeInOut',
+                    onComplete: () => {
+                        currentIndex++;
+                        animateNextSegment();
+                    }
+                });
+            };
+
+            animateNextSegment();
+        });
+    }
+
+    /**
+     * Show attack effect with projectile and explosion.
+     * Handles splash damage by creating multiple simultaneous explosions.
+     * @param from Attacker hex coordinates
+     * @param to Defender hex coordinates
+     * @param damage Damage amount (scales explosion intensity)
+     * @param splashTargets Optional array of additional splash damage targets
+     */
+    public showAttackEffect(
+        from: { q: number, r: number },
+        to: { q: number, r: number },
+        damage: number,
+        splashTargets?: { q: number, r: number, damage: number }[]
+    ): Promise<void> {
+        return new Promise(async (resolve) => {
+            const fromPos = hexToPixel(from.q, from.r);
+            const toPos = hexToPixel(to.q, to.r);
+
+            // 1. Flash attacker
+            const attackerSprite = this.unitSprites.get(`${from.q},${from.r}`);
+            if (attackerSprite && AnimationConfig.ATTACK_FLASH_DURATION > 0) {
+                await new Promise<void>((flashResolve) => {
+                    this.tweens.add({
+                        targets: attackerSprite,
+                        tint: 0xff6600,
+                        duration: AnimationConfig.ATTACK_FLASH_DURATION / 2,
+                        yoyo: true,
+                        ease: 'Cubic.easeInOut',
+                        onComplete: () => {
+                            attackerSprite.clearTint();
+                            flashResolve();
+                        }
+                    });
+                });
+            }
+
+            // 2. Fire projectile
+            const projectile = new ProjectileEffect(this, fromPos.x, fromPos.y, toPos.x, toPos.y);
+            await projectile.play();
+
+            // 3. Create explosions (main target + splash targets simultaneously)
+            const explosionTargets = [
+                { x: toPos.x, y: toPos.y, intensity: damage }
+            ];
+
+            if (splashTargets) {
+                for (const target of splashTargets) {
+                    const targetPos = hexToPixel(target.q, target.r);
+                    explosionTargets.push({ x: targetPos.x, y: targetPos.y, intensity: target.damage });
+                }
+            }
+
+            // Play all explosions simultaneously
+            await ExplosionEffect.playMultiple(this, explosionTargets);
+
+            resolve();
+        });
+    }
+
+    /**
+     * Show healing effect with rising bubbles.
+     * @param q Hex Q coordinate
+     * @param r Hex R coordinate
+     * @param amount Heal amount (currently not used, but available for scaling)
+     */
+    public showHealEffect(q: number, r: number, amount: number = 1): Promise<void> {
+        const pos = hexToPixel(q, r);
+        const healEffect = new HealBubblesEffect(this, pos.x, pos.y, amount);
+        return healEffect.play();
+    }
+
+    /**
+     * Show capture/occupation effect.
+     * @param q Hex Q coordinate
+     * @param r Hex R coordinate
+     */
+    public showCaptureEffect(q: number, r: number): Promise<void> {
+        const pos = hexToPixel(q, r);
+        const captureEffect = new CaptureEffect(this, pos.x, pos.y);
+        return captureEffect.play();
+    }
+
+    /**
+     * Show standalone explosion effect.
+     * Utility method for creating explosions without attack context.
+     * @param q Hex Q coordinate
+     * @param r Hex R coordinate
+     * @param intensity Explosion intensity (scales particle count)
+     */
+    public showExplosion(q: number, r: number, intensity: number = 1): Promise<void> {
+        const pos = hexToPixel(q, r);
+        const explosion = new ExplosionEffect(this, pos.x, pos.y, intensity);
+        return explosion.play();
+    }
+
+    /**
+     * Create a simple circular particle texture for particle effects.
+     * This texture is used by explosion and heal effects.
+     */
+    private createParticleTexture(): void {
+        const graphics = this.add.graphics();
+        graphics.fillStyle(0xffffff);
+        graphics.fillCircle(8, 8, 8);
+        graphics.generateTexture('particle', 16, 16);
+        graphics.destroy();
+    }
+
     /**
      * Create health and distance labels for a unit
      */
