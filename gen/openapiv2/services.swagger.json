@@ -1148,6 +1148,10 @@
                     "worldData": {
                       "$ref": "#/definitions/v1WorldData",
                       "title": "The actual world contents/data"
+                    },
+                    "screenshotUrl": {
+                      "type": "string",
+                      "title": "URL to screenshot/preview image (defaults to /worlds/{id}/screenshot)\nCan be overridden to point to CDN or external hosting"
                     }
                   },
                   "title": "*\nWorld being updated"
@@ -1550,6 +1554,10 @@
         "config": {
           "$ref": "#/definitions/v1GameConfiguration",
           "title": "Game configuration"
+        },
+        "screenshotUrl": {
+          "type": "string",
+          "title": "URL to screenshot/preview image (defaults to /games/{id}/screenshot)\nCan be overridden to point to CDN or external hosting"
         }
       },
       "title": "Describes a game and its metadata"
@@ -2667,6 +2675,10 @@
         "worldData": {
           "$ref": "#/definitions/v1WorldData",
           "title": "The actual world contents/data"
+        },
+        "screenshotUrl": {
+          "type": "string",
+          "title": "URL to screenshot/preview image (defaults to /worlds/{id}/screenshot)\nCan be overridden to point to CDN or external hosting"
         }
       }
     },

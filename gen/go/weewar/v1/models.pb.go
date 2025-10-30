@@ -348,7 +348,10 @@ type World struct {
 	// Difficulty - example attribute
 	Difficulty string `protobuf:"bytes,9,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// The actual world contents/data
-	WorldData     *WorldData `protobuf:"bytes,10,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
+	WorldData *WorldData `protobuf:"bytes,10,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
+	// URL to screenshot/preview image (defaults to /worlds/{id}/screenshot)
+	// Can be overridden to point to CDN or external hosting
+	ScreenshotUrl string `protobuf:"bytes,11,opt,name=screenshot_url,json=screenshotUrl,proto3" json:"screenshot_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -451,6 +454,13 @@ func (x *World) GetWorldData() *WorldData {
 		return x.WorldData
 	}
 	return nil
+}
+
+func (x *World) GetScreenshotUrl() string {
+	if x != nil {
+		return x.ScreenshotUrl
+	}
+	return ""
 }
 
 type WorldData struct {
@@ -1525,7 +1535,10 @@ type Game struct {
 	// Difficulty - example attribute
 	Difficulty string `protobuf:"bytes,10,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// Game configuration
-	Config        *GameConfiguration `protobuf:"bytes,11,opt,name=config,proto3" json:"config,omitempty"`
+	Config *GameConfiguration `protobuf:"bytes,11,opt,name=config,proto3" json:"config,omitempty"`
+	// URL to screenshot/preview image (defaults to /games/{id}/screenshot)
+	// Can be overridden to point to CDN or external hosting
+	ScreenshotUrl string `protobuf:"bytes,12,opt,name=screenshot_url,json=screenshotUrl,proto3" json:"screenshot_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1635,6 +1648,13 @@ func (x *Game) GetConfig() *GameConfiguration {
 		return x.Config
 	}
 	return nil
+}
+
+func (x *Game) GetScreenshotUrl() string {
+	if x != nil {
+		return x.ScreenshotUrl
+	}
+	return ""
 }
 
 type GameConfiguration struct {
@@ -2948,7 +2968,7 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\rnext_page_key\x18\x02 \x01(\tR\vnextPageKey\x12(\n" +
 	"\x10next_page_offset\x18\x03 \x01(\x05R\x0enextPageOffset\x12\x19\n" +
 	"\bhas_more\x18\x04 \x01(\bR\ahasMore\x12#\n" +
-	"\rtotal_results\x18\x05 \x01(\x05R\ftotalResults\"\xe8\x02\n" +
+	"\rtotal_results\x18\x05 \x01(\x05R\ftotalResults\"\x8f\x03\n" +
 	"\x05World\x129\n" +
 	"\n" +
 	"created_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
@@ -2966,7 +2986,8 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"difficulty\x123\n" +
 	"\n" +
 	"world_data\x18\n" +
-	" \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\"Y\n" +
+	" \x01(\v2\x14.weewar.v1.WorldDataR\tworldData\x12%\n" +
+	"\x0escreenshot_url\x18\v \x01(\tR\rscreenshotUrl\"Y\n" +
 	"\tWorldData\x12%\n" +
 	"\x05tiles\x18\x01 \x03(\v2\x0f.weewar.v1.TileR\x05tiles\x12%\n" +
 	"\x05units\x18\x02 \x03(\v2\x0f.weewar.v1.UnitR\x05units\"\xc9\x01\n" +
@@ -3092,7 +3113,7 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\x1ad\n" +
 	"\x17UnitUnitPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x123\n" +
-	"\x05value\x18\x02 \x01(\v2\x1d.weewar.v1.UnitUnitPropertiesR\x05value:\x028\x01\"\x83\x03\n" +
+	"\x05value\x18\x02 \x01(\v2\x1d.weewar.v1.UnitUnitPropertiesR\x05value:\x028\x01\"\xaa\x03\n" +
 	"\x04Game\x129\n" +
 	"\n" +
 	"created_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
@@ -3110,7 +3131,8 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"difficulty\x18\n" +
 	" \x01(\tR\n" +
 	"difficulty\x124\n" +
-	"\x06config\x18\v \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\"\xa4\x01\n" +
+	"\x06config\x18\v \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\x12%\n" +
+	"\x0escreenshot_url\x18\f \x01(\tR\rscreenshotUrl\"\xa4\x01\n" +
 	"\x11GameConfiguration\x12/\n" +
 	"\aplayers\x18\x01 \x03(\v2\x15.weewar.v1.GamePlayerR\aplayers\x12)\n" +
 	"\x05teams\x18\x02 \x03(\v2\x13.weewar.v1.GameTeamR\x05teams\x123\n" +

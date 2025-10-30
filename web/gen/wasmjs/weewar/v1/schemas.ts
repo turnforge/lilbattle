@@ -173,6 +173,11 @@ export const WorldSchema: MessageSchema = {
       id: 10,
       messageType: "weewar.v1.WorldData",
     },
+    {
+      name: "screenshotUrl",
+      type: FieldType.STRING,
+      id: 11,
+    },
   ],
 };
 
@@ -742,6 +747,11 @@ export const GameSchema: MessageSchema = {
       type: FieldType.MESSAGE,
       id: 11,
       messageType: "weewar.v1.GameConfiguration",
+    },
+    {
+      name: "screenshotUrl",
+      type: FieldType.STRING,
+      id: 12,
     },
   ],
 };
