@@ -190,6 +190,9 @@ message TerrainDefinition {
 
   // How this terrain impacts 
   map<int32, TerrainUnitProperties> unit_properties = 7;
+
+  // List of units that can be built on this terrain
+  repeated int32 buildable_units = 8;
 }
 
 // Rules engine unit definition  
