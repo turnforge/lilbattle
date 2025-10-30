@@ -967,6 +967,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 return;
             }
 
+            // Always start at the unit's coord if path[0] != unit's coord
+            if (path[0].q != unit.q || path[0].r != unit.r) {
+                path.splice(0, 0, {q: unit.q, r: unit.r})
+            }
             const startKey = `${path[0].q},${path[0].r}`;
             const sprite = this.unitSprites.get(startKey);
 

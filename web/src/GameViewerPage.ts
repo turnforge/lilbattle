@@ -158,7 +158,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         this.wasmBundle.registerBrowserService('GameViewerPage', this)
 
         // Initialize the presenter by setting it game data now that all UI components are ready
-        await this.initializePresenter()
+        await this.initializePresenter();
 
         // Expose gameScene to console for testing animations
         (window as any).gameScene = this.gameScene;
@@ -882,7 +882,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     if (request.unit && request.path) {
       await this.gameScene.moveUnit(request.unit, request.path);
       // Update world after animation completes
-      this.world.setUnitDirect(request.unit);
+      // this.world.setUnitDirect(request.unit);
     }
     return {}
   }
