@@ -123,16 +123,56 @@ func FormatOptions(pc *PresenterContext, position string) string {
 			buildOpt := opt.Build
 			unitName := fmt.Sprintf("type %d", buildOpt.UnitType) // fallback
 
-			// Try to get the actual unit name from RulesEngine
+			// Try to get the actual unit details from RulesEngine
 			if pc.Presenter != nil && pc.Presenter.RulesEngine != nil {
 				rulesEngine := &services.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
 				if unitDef, err := rulesEngine.GetUnitData(buildOpt.UnitType); err == nil {
 					unitName = unitDef.Name
+
+					// Build detailed info line
+					var details []string
+
+					// Classification (e.g., "Heavy Land")
+					if unitDef.UnitClass != "" && unitDef.UnitTerrain != "" {
+						details = append(details, fmt.Sprintf("%s %s", unitDef.UnitClass, unitDef.UnitTerrain))
+					}
+
+					// Movement points
+					if unitDef.MovementPoints > 0 {
+						details = append(details, fmt.Sprintf("⚡%.0f", unitDef.MovementPoints))
+					}
+
+					// Attack range
+					if unitDef.AttackRange > 0 {
+						details = append(details, fmt.Sprintf("🎯%d", unitDef.AttackRange))
+					}
+
+					// Defense
+					if unitDef.Defense > 0 {
+						details = append(details, fmt.Sprintf("🛡️%d", unitDef.Defense))
+					}
+
+					sb.WriteString(fmt.Sprintf("%d. build %s (cost: %d, type: %d)\n",
+						i+1, unitName, buildOpt.Cost, buildOpt.UnitType))
+
+					// Add details on next line
+					if len(details) > 0 {
+						sb.WriteString(fmt.Sprintf("   %s\n", strings.Join(details, " • ")))
+					}
+
+					// Add properties if available
+					if len(unitDef.Properties) > 0 {
+						for _, prop := range unitDef.Properties {
+							sb.WriteString(fmt.Sprintf("   • %s\n", prop))
+						}
+					}
+					continue // Skip the default format line
 				}
 			}
 
-			sb.WriteString(fmt.Sprintf("%d. build %s (cost: %d)\n",
-				i+1, unitName, buildOpt.Cost))
+			// Fallback if we couldn't get unit data
+			sb.WriteString(fmt.Sprintf("%d. build %s (cost: %d, type: %d)\n",
+				i+1, unitName, buildOpt.Cost, buildOpt.UnitType))
 
 		case *v1.GameOption_EndTurn:
 			sb.WriteString(fmt.Sprintf("%d. end turn\n", i+1))
