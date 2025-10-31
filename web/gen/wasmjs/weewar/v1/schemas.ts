@@ -1301,6 +1301,13 @@ export const WorldChangeSchema: MessageSchema = {
       messageType: "weewar.v1.PlayerChangedChange",
       oneofGroup: "change_type",
     },
+    {
+      name: "unitBuilt",
+      type: FieldType.MESSAGE,
+      id: 5,
+      messageType: "weewar.v1.UnitBuiltChange",
+      oneofGroup: "change_type",
+    },
   ],
   oneofGroups: ["change_type"],
 };
@@ -1398,6 +1405,42 @@ export const PlayerChangedChangeSchema: MessageSchema = {
       id: 5,
       messageType: "weewar.v1.Unit",
       repeated: true,
+    },
+  ],
+};
+
+
+/**
+ * Schema for UnitBuiltChange message
+ */
+export const UnitBuiltChangeSchema: MessageSchema = {
+  name: "UnitBuiltChange",
+  fields: [
+    {
+      name: "unit",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.Unit",
+    },
+    {
+      name: "tileQ",
+      type: FieldType.NUMBER,
+      id: 2,
+    },
+    {
+      name: "tileR",
+      type: FieldType.NUMBER,
+      id: 3,
+    },
+    {
+      name: "coinsCost",
+      type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
+      name: "playerCoins",
+      type: FieldType.NUMBER,
+      id: 5,
     },
   ],
 };
@@ -3945,6 +3988,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.UnitDamagedChange": UnitDamagedChangeSchema,
   "weewar.v1.UnitKilledChange": UnitKilledChangeSchema,
   "weewar.v1.PlayerChangedChange": PlayerChangedChangeSchema,
+  "weewar.v1.UnitBuiltChange": UnitBuiltChangeSchema,
   "weewar.v1.AllPaths": AllPathsSchema,
   "weewar.v1.PathEdge": PathEdgeSchema,
   "weewar.v1.Path": PathSchema,

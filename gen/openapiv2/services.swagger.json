@@ -2627,6 +2627,35 @@
         }
       }
     },
+    "v1UnitBuiltChange": {
+      "type": "object",
+      "properties": {
+        "unit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "The newly created unit"
+        },
+        "tileQ": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Tile coordinates where unit was built"
+        },
+        "tileR": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "coinsCost": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Cost in coins"
+        },
+        "playerCoins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Player's remaining coins after build"
+        }
+      },
+      "title": "*\nA new unit was built at a tile"
+    },
     "v1UnitDamagedChange": {
       "type": "object",
       "properties": {
@@ -2810,6 +2839,9 @@
         },
         "playerChanged": {
           "$ref": "#/definitions/v1PlayerChangedChange"
+        },
+        "unitBuilt": {
+          "$ref": "#/definitions/v1UnitBuiltChange"
         }
       },
       "title": "*\nRepresents a change to the game world"

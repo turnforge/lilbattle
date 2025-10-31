@@ -547,6 +547,7 @@ export interface WorldChange {
   unitDamaged?: UnitDamagedChange;
   unitKilled?: UnitKilledChange;
   playerChanged?: PlayerChangedChange;
+  unitBuilt?: UnitBuiltChange;
 }
 
 
@@ -595,6 +596,23 @@ export interface PlayerChangedChange {
   newTurn: number;
   /** Units that had their movement/health reset for the new turn */
   resetUnits?: Unit[];
+}
+
+
+/**
+ * *
+ A new unit was built at a tile
+ */
+export interface UnitBuiltChange {
+  /** The newly created unit */
+  unit?: Unit;
+  /** Tile coordinates where unit was built */
+  tileQ: number;
+  tileR: number;
+  /** Cost in coins */
+  coinsCost: number;
+  /** Player's remaining coins after build */
+  playerCoins: number;
 }
 
 
