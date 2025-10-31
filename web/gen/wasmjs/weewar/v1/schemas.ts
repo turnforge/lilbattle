@@ -2248,6 +2248,36 @@ export const SetContentResponseSchema: MessageSchema = {
 
 
 /**
+ * Schema for ShowBuildOptionsRequest message
+ */
+export const ShowBuildOptionsRequestSchema: MessageSchema = {
+  name: "ShowBuildOptionsRequest",
+  fields: [
+    {
+      name: "innerHtml",
+      type: FieldType.STRING,
+      id: 1,
+    },
+    {
+      name: "hide",
+      type: FieldType.BOOLEAN,
+      id: 2,
+    },
+  ],
+};
+
+
+/**
+ * Schema for ShowBuildOptionsResponse message
+ */
+export const ShowBuildOptionsResponseSchema: MessageSchema = {
+  name: "ShowBuildOptionsResponse",
+  fields: [
+  ],
+};
+
+
+/**
  * Schema for LogMessageRequest message
  */
 export const LogMessageRequestSchema: MessageSchema = {
@@ -3902,6 +3932,8 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.EmptyResponse": EmptyResponseSchema,
   "weewar.v1.SetContentRequest": SetContentRequestSchema,
   "weewar.v1.SetContentResponse": SetContentResponseSchema,
+  "weewar.v1.ShowBuildOptionsRequest": ShowBuildOptionsRequestSchema,
+  "weewar.v1.ShowBuildOptionsResponse": ShowBuildOptionsResponseSchema,
   "weewar.v1.LogMessageRequest": LogMessageRequestSchema,
   "weewar.v1.LogMessageResponse": LogMessageResponseSchema,
   "weewar.v1.SetGameStateRequest": SetGameStateRequestSchema,

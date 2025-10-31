@@ -1010,6 +1010,18 @@ export interface SetContentResponse {
 }
 
 
+
+export interface ShowBuildOptionsRequest {
+  innerHtml: string;
+  hide: boolean;
+}
+
+
+
+export interface ShowBuildOptionsResponse {
+}
+
+
 /**
  * Request to fetch data from a URL
  */

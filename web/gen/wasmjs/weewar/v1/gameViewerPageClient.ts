@@ -5,42 +5,44 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    SetTileAtResponse,
-    RemoveTileAtResponse,
-    SetUnitAtAnimationRequest,
-    UpdateGameStatusResponse,
-    RemoveUnitAtResponse,
-    ShowHighlightsRequest,
-    SetContentResponse,
-    UpdateGameStatusRequest,
-    ShowHighlightsResponse,
-    MoveUnitAnimationResponse,
-    ShowCaptureEffectResponse,
-    SetGameStateRequest,
-    SetTileAtRequest,
-    ClearHighlightsResponse,
-    ShowAttackEffectRequest,
-    LogMessageRequest,
+    RemoveUnitAtRequest,
     ShowPathRequest,
+    MoveUnitAnimationResponse,
     ShowHealEffectResponse,
+    SetTileAtResponse,
+    SetUnitAtResponse,
+    ShowHighlightsResponse,
+    ClearPathsRequest,
+    ShowHealEffectRequest,
+    ShowCaptureEffectResponse,
+    SetUnitAtAnimationRequest,
+    SetContentRequest,
+    ShowBuildOptionsResponse,
+    SetUnitAtRequest,
+    ShowAttackEffectRequest,
+    RemoveUnitAtResponse,
+    SetGameStateResponse,
+    UpdateGameStatusRequest,
+    SetTileAtRequest,
+    MoveUnitAnimationRequest,
+    ShowAttackEffectResponse,
+    LogMessageRequest,
+    SetContentResponse,
+    ShowPathResponse,
     ShowCaptureEffectRequest,
     RemoveUnitAtAnimationResponse,
-    SetContentRequest,
-    RemoveUnitAtRequest,
-    ClearPathsResponse,
-    ShowHealEffectRequest,
-    SetUnitAtAnimationResponse,
     LogMessageResponse,
-    SetGameStateResponse,
+    ShowBuildOptionsRequest,
     ClearHighlightsRequest,
-    ShowPathResponse,
-    MoveUnitAnimationRequest,
     RemoveUnitAtAnimationRequest,
-    SetUnitAtRequest,
-    SetUnitAtResponse,
+    ShowHighlightsRequest,
+    ClearHighlightsResponse,
+    ClearPathsResponse,
+    SetUnitAtAnimationResponse,
+    SetGameStateRequest,
+    UpdateGameStatusResponse,
     RemoveTileAtRequest,
-    ClearPathsRequest,
-    ShowAttackEffectResponse,
+    RemoveTileAtResponse,
 } from './interfaces';
 /**
  * GameViewerPage service client interface
@@ -48,6 +50,7 @@ import {
  */
 export interface GameViewerPageMethods {
 	setTurnOptionsContent(request: SetContentRequest): Promise<SetContentResponse>;
+	showBuildOptions(request: ShowBuildOptionsRequest): Promise<ShowBuildOptionsResponse>;
 	setUnitStatsContent(request: SetContentRequest): Promise<SetContentResponse>;
 	setDamageDistributionContent(request: SetContentRequest): Promise<SetContentResponse>;
 	setTerrainStatsContent(request: SetContentRequest): Promise<SetContentResponse>;
@@ -76,6 +79,9 @@ export interface GameViewerPageMethods {
 export class GameViewerPageServiceClient extends ServiceClient implements GameViewerPageMethods {
     async setTurnOptionsContent(request: SetContentRequest): Promise<SetContentResponse> {
         return this.callMethod('gameViewerPage.setTurnOptionsContent', request);
+    }
+    async showBuildOptions(request: ShowBuildOptionsRequest): Promise<ShowBuildOptionsResponse> {
+        return this.callMethod('gameViewerPage.showBuildOptions', request);
     }
     async setUnitStatsContent(request: SetContentRequest): Promise<SetContentResponse> {
         return this.callMethod('gameViewerPage.setUnitStatsContent', request);

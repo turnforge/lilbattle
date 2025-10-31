@@ -38,6 +38,14 @@ func (c *GameViewerPageClient) SetTurnOptionsContent(ctx context.Context, req *w
 	)
 }
 
+// ShowBuildOptions calls the browser-provided ShowBuildOptions method
+func (c *GameViewerPageClient) ShowBuildOptions(ctx context.Context, req *weewarv1.ShowBuildOptionsRequest, opts ...grpc.CallOption) (*weewarv1.ShowBuildOptionsResponse, error) {
+	// This is a synchronous browser method
+	return wasm.CallBrowserService[*weewarv1.ShowBuildOptionsRequest, *weewarv1.ShowBuildOptionsResponse](
+		c.channel, ctx, "GameViewerPage", "showBuildOptions", req,
+	)
+}
+
 // SetUnitStatsContent calls the browser-provided SetUnitStatsContent method
 func (c *GameViewerPageClient) SetUnitStatsContent(ctx context.Context, req *weewarv1.SetContentRequest, opts ...grpc.CallOption) (*weewarv1.SetContentResponse, error) {
 	// This is a synchronous browser method

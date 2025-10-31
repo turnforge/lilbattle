@@ -2342,6 +2342,9 @@
     "v1ShowAttackEffectResponse": {
       "type": "object"
     },
+    "v1ShowBuildOptionsResponse": {
+      "type": "object"
+    },
     "v1ShowCaptureEffectResponse": {
       "type": "object"
     },

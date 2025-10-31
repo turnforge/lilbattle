@@ -177,6 +177,94 @@ func (*SetContentResponse) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{3}
 }
 
+type ShowBuildOptionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	InnerHtml     string                 `protobuf:"bytes,1,opt,name=inner_html,json=innerHtml,proto3" json:"inner_html,omitempty"`
+	Hide          bool                   `protobuf:"varint,2,opt,name=hide,proto3" json:"hide,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ShowBuildOptionsRequest) Reset() {
+	*x = ShowBuildOptionsRequest{}
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ShowBuildOptionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ShowBuildOptionsRequest) ProtoMessage() {}
+
+func (x *ShowBuildOptionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ShowBuildOptionsRequest.ProtoReflect.Descriptor instead.
+func (*ShowBuildOptionsRequest) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ShowBuildOptionsRequest) GetInnerHtml() string {
+	if x != nil {
+		return x.InnerHtml
+	}
+	return ""
+}
+
+func (x *ShowBuildOptionsRequest) GetHide() bool {
+	if x != nil {
+		return x.Hide
+	}
+	return false
+}
+
+type ShowBuildOptionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ShowBuildOptionsResponse) Reset() {
+	*x = ShowBuildOptionsResponse{}
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ShowBuildOptionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ShowBuildOptionsResponse) ProtoMessage() {}
+
+func (x *ShowBuildOptionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ShowBuildOptionsResponse.ProtoReflect.Descriptor instead.
+func (*ShowBuildOptionsResponse) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{5}
+}
+
 // Request to fetch data from a URL
 type LogMessageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -187,7 +275,7 @@ type LogMessageRequest struct {
 
 func (x *LogMessageRequest) Reset() {
 	*x = LogMessageRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[4]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -199,7 +287,7 @@ func (x *LogMessageRequest) String() string {
 func (*LogMessageRequest) ProtoMessage() {}
 
 func (x *LogMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[4]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -212,7 +300,7 @@ func (x *LogMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogMessageRequest.ProtoReflect.Descriptor instead.
 func (*LogMessageRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{4}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LogMessageRequest) GetMessage() string {
@@ -231,7 +319,7 @@ type LogMessageResponse struct {
 
 func (x *LogMessageResponse) Reset() {
 	*x = LogMessageResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[5]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -243,7 +331,7 @@ func (x *LogMessageResponse) String() string {
 func (*LogMessageResponse) ProtoMessage() {}
 
 func (x *LogMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[5]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -256,7 +344,7 @@ func (x *LogMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogMessageResponse.ProtoReflect.Descriptor instead.
 func (*LogMessageResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{5}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{7}
 }
 
 // Request to fetch data from a URL
@@ -270,7 +358,7 @@ type SetGameStateRequest struct {
 
 func (x *SetGameStateRequest) Reset() {
 	*x = SetGameStateRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[6]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +370,7 @@ func (x *SetGameStateRequest) String() string {
 func (*SetGameStateRequest) ProtoMessage() {}
 
 func (x *SetGameStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[6]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +383,7 @@ func (x *SetGameStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetGameStateRequest.ProtoReflect.Descriptor instead.
 func (*SetGameStateRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{6}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SetGameStateRequest) GetGame() *Game {
@@ -321,7 +409,7 @@ type SetGameStateResponse struct {
 
 func (x *SetGameStateResponse) Reset() {
 	*x = SetGameStateResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[7]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -333,7 +421,7 @@ func (x *SetGameStateResponse) String() string {
 func (*SetGameStateResponse) ProtoMessage() {}
 
 func (x *SetGameStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[7]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +434,7 @@ func (x *SetGameStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetGameStateResponse.ProtoReflect.Descriptor instead.
 func (*SetGameStateResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{7}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{9}
 }
 
 // Request to update game UI status (current player, turn counter)
@@ -360,7 +448,7 @@ type UpdateGameStatusRequest struct {
 
 func (x *UpdateGameStatusRequest) Reset() {
 	*x = UpdateGameStatusRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[8]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -372,7 +460,7 @@ func (x *UpdateGameStatusRequest) String() string {
 func (*UpdateGameStatusRequest) ProtoMessage() {}
 
 func (x *UpdateGameStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[8]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -385,7 +473,7 @@ func (x *UpdateGameStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGameStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateGameStatusRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{8}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateGameStatusRequest) GetCurrentPlayer() int32 {
@@ -410,7 +498,7 @@ type UpdateGameStatusResponse struct {
 
 func (x *UpdateGameStatusResponse) Reset() {
 	*x = UpdateGameStatusResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[9]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -422,7 +510,7 @@ func (x *UpdateGameStatusResponse) String() string {
 func (*UpdateGameStatusResponse) ProtoMessage() {}
 
 func (x *UpdateGameStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[9]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -435,7 +523,7 @@ func (x *UpdateGameStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGameStatusResponse.ProtoReflect.Descriptor instead.
 func (*UpdateGameStatusResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{9}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{11}
 }
 
 // Request to set a tile at a specific coordinate
@@ -450,7 +538,7 @@ type SetTileAtRequest struct {
 
 func (x *SetTileAtRequest) Reset() {
 	*x = SetTileAtRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[10]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -462,7 +550,7 @@ func (x *SetTileAtRequest) String() string {
 func (*SetTileAtRequest) ProtoMessage() {}
 
 func (x *SetTileAtRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[10]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -475,7 +563,7 @@ func (x *SetTileAtRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTileAtRequest.ProtoReflect.Descriptor instead.
 func (*SetTileAtRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{10}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SetTileAtRequest) GetQ() int32 {
@@ -507,7 +595,7 @@ type SetTileAtResponse struct {
 
 func (x *SetTileAtResponse) Reset() {
 	*x = SetTileAtResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[11]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -519,7 +607,7 @@ func (x *SetTileAtResponse) String() string {
 func (*SetTileAtResponse) ProtoMessage() {}
 
 func (x *SetTileAtResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[11]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +620,7 @@ func (x *SetTileAtResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTileAtResponse.ProtoReflect.Descriptor instead.
 func (*SetTileAtResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{11}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{13}
 }
 
 // Request to set a unit at a specific coordinate
@@ -547,7 +635,7 @@ type SetUnitAtRequest struct {
 
 func (x *SetUnitAtRequest) Reset() {
 	*x = SetUnitAtRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[12]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +647,7 @@ func (x *SetUnitAtRequest) String() string {
 func (*SetUnitAtRequest) ProtoMessage() {}
 
 func (x *SetUnitAtRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[12]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +660,7 @@ func (x *SetUnitAtRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUnitAtRequest.ProtoReflect.Descriptor instead.
 func (*SetUnitAtRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{12}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SetUnitAtRequest) GetQ() int32 {
@@ -604,7 +692,7 @@ type SetUnitAtResponse struct {
 
 func (x *SetUnitAtResponse) Reset() {
 	*x = SetUnitAtResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[13]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -616,7 +704,7 @@ func (x *SetUnitAtResponse) String() string {
 func (*SetUnitAtResponse) ProtoMessage() {}
 
 func (x *SetUnitAtResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[13]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -629,7 +717,7 @@ func (x *SetUnitAtResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUnitAtResponse.ProtoReflect.Descriptor instead.
 func (*SetUnitAtResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{13}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{15}
 }
 
 // Request to remove a tile at a specific coordinate
@@ -643,7 +731,7 @@ type RemoveTileAtRequest struct {
 
 func (x *RemoveTileAtRequest) Reset() {
 	*x = RemoveTileAtRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[14]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -655,7 +743,7 @@ func (x *RemoveTileAtRequest) String() string {
 func (*RemoveTileAtRequest) ProtoMessage() {}
 
 func (x *RemoveTileAtRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[14]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -668,7 +756,7 @@ func (x *RemoveTileAtRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTileAtRequest.ProtoReflect.Descriptor instead.
 func (*RemoveTileAtRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{14}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RemoveTileAtRequest) GetQ() int32 {
@@ -693,7 +781,7 @@ type RemoveTileAtResponse struct {
 
 func (x *RemoveTileAtResponse) Reset() {
 	*x = RemoveTileAtResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[15]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -705,7 +793,7 @@ func (x *RemoveTileAtResponse) String() string {
 func (*RemoveTileAtResponse) ProtoMessage() {}
 
 func (x *RemoveTileAtResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[15]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -718,7 +806,7 @@ func (x *RemoveTileAtResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTileAtResponse.ProtoReflect.Descriptor instead.
 func (*RemoveTileAtResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{15}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{17}
 }
 
 // Request to remove a unit at a specific coordinate
@@ -732,7 +820,7 @@ type RemoveUnitAtRequest struct {
 
 func (x *RemoveUnitAtRequest) Reset() {
 	*x = RemoveUnitAtRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[16]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -744,7 +832,7 @@ func (x *RemoveUnitAtRequest) String() string {
 func (*RemoveUnitAtRequest) ProtoMessage() {}
 
 func (x *RemoveUnitAtRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[16]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -757,7 +845,7 @@ func (x *RemoveUnitAtRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveUnitAtRequest.ProtoReflect.Descriptor instead.
 func (*RemoveUnitAtRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{16}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *RemoveUnitAtRequest) GetQ() int32 {
@@ -782,7 +870,7 @@ type RemoveUnitAtResponse struct {
 
 func (x *RemoveUnitAtResponse) Reset() {
 	*x = RemoveUnitAtResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[17]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -794,7 +882,7 @@ func (x *RemoveUnitAtResponse) String() string {
 func (*RemoveUnitAtResponse) ProtoMessage() {}
 
 func (x *RemoveUnitAtResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[17]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -807,7 +895,7 @@ func (x *RemoveUnitAtResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveUnitAtResponse.ProtoReflect.Descriptor instead.
 func (*RemoveUnitAtResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{17}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{19}
 }
 
 // Request to show highlights on the game board
@@ -820,7 +908,7 @@ type ShowHighlightsRequest struct {
 
 func (x *ShowHighlightsRequest) Reset() {
 	*x = ShowHighlightsRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[18]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -832,7 +920,7 @@ func (x *ShowHighlightsRequest) String() string {
 func (*ShowHighlightsRequest) ProtoMessage() {}
 
 func (x *ShowHighlightsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[18]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -845,7 +933,7 @@ func (x *ShowHighlightsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowHighlightsRequest.ProtoReflect.Descriptor instead.
 func (*ShowHighlightsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{18}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ShowHighlightsRequest) GetHighlights() []*HighlightSpec {
@@ -863,7 +951,7 @@ type ShowHighlightsResponse struct {
 
 func (x *ShowHighlightsResponse) Reset() {
 	*x = ShowHighlightsResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[19]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -875,7 +963,7 @@ func (x *ShowHighlightsResponse) String() string {
 func (*ShowHighlightsResponse) ProtoMessage() {}
 
 func (x *ShowHighlightsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[19]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -888,7 +976,7 @@ func (x *ShowHighlightsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowHighlightsResponse.ProtoReflect.Descriptor instead.
 func (*ShowHighlightsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{19}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{21}
 }
 
 // Specification for a single highlight
@@ -903,7 +991,7 @@ type HighlightSpec struct {
 
 func (x *HighlightSpec) Reset() {
 	*x = HighlightSpec{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[20]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -915,7 +1003,7 @@ func (x *HighlightSpec) String() string {
 func (*HighlightSpec) ProtoMessage() {}
 
 func (x *HighlightSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[20]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -928,7 +1016,7 @@ func (x *HighlightSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HighlightSpec.ProtoReflect.Descriptor instead.
 func (*HighlightSpec) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{20}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *HighlightSpec) GetQ() int32 {
@@ -962,7 +1050,7 @@ type ClearHighlightsRequest struct {
 
 func (x *ClearHighlightsRequest) Reset() {
 	*x = ClearHighlightsRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[21]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -974,7 +1062,7 @@ func (x *ClearHighlightsRequest) String() string {
 func (*ClearHighlightsRequest) ProtoMessage() {}
 
 func (x *ClearHighlightsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[21]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -987,7 +1075,7 @@ func (x *ClearHighlightsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearHighlightsRequest.ProtoReflect.Descriptor instead.
 func (*ClearHighlightsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{21}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ClearHighlightsRequest) GetTypes() []string {
@@ -1005,7 +1093,7 @@ type ClearHighlightsResponse struct {
 
 func (x *ClearHighlightsResponse) Reset() {
 	*x = ClearHighlightsResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[22]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1017,7 +1105,7 @@ func (x *ClearHighlightsResponse) String() string {
 func (*ClearHighlightsResponse) ProtoMessage() {}
 
 func (x *ClearHighlightsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[22]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1030,7 +1118,7 @@ func (x *ClearHighlightsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearHighlightsResponse.ProtoReflect.Descriptor instead.
 func (*ClearHighlightsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{22}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{24}
 }
 
 // Request to show a path on the game board
@@ -1045,7 +1133,7 @@ type ShowPathRequest struct {
 
 func (x *ShowPathRequest) Reset() {
 	*x = ShowPathRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[23]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1057,7 +1145,7 @@ func (x *ShowPathRequest) String() string {
 func (*ShowPathRequest) ProtoMessage() {}
 
 func (x *ShowPathRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[23]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1070,7 +1158,7 @@ func (x *ShowPathRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowPathRequest.ProtoReflect.Descriptor instead.
 func (*ShowPathRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{23}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ShowPathRequest) GetCoords() []int32 {
@@ -1102,7 +1190,7 @@ type ShowPathResponse struct {
 
 func (x *ShowPathResponse) Reset() {
 	*x = ShowPathResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[24]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1114,7 +1202,7 @@ func (x *ShowPathResponse) String() string {
 func (*ShowPathResponse) ProtoMessage() {}
 
 func (x *ShowPathResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[24]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1127,7 +1215,7 @@ func (x *ShowPathResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowPathResponse.ProtoReflect.Descriptor instead.
 func (*ShowPathResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{24}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{26}
 }
 
 // Request to clear paths
@@ -1139,7 +1227,7 @@ type ClearPathsRequest struct {
 
 func (x *ClearPathsRequest) Reset() {
 	*x = ClearPathsRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[25]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1239,7 @@ func (x *ClearPathsRequest) String() string {
 func (*ClearPathsRequest) ProtoMessage() {}
 
 func (x *ClearPathsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[25]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1252,7 @@ func (x *ClearPathsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearPathsRequest.ProtoReflect.Descriptor instead.
 func (*ClearPathsRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{25}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{27}
 }
 
 type ClearPathsResponse struct {
@@ -1175,7 +1263,7 @@ type ClearPathsResponse struct {
 
 func (x *ClearPathsResponse) Reset() {
 	*x = ClearPathsResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[26]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1187,7 +1275,7 @@ func (x *ClearPathsResponse) String() string {
 func (*ClearPathsResponse) ProtoMessage() {}
 
 func (x *ClearPathsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[26]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1200,7 +1288,7 @@ func (x *ClearPathsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearPathsResponse.ProtoReflect.Descriptor instead.
 func (*ClearPathsResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{26}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{28}
 }
 
 // Request to animate unit movement along a path
@@ -1214,7 +1302,7 @@ type MoveUnitAnimationRequest struct {
 
 func (x *MoveUnitAnimationRequest) Reset() {
 	*x = MoveUnitAnimationRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[27]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1226,7 +1314,7 @@ func (x *MoveUnitAnimationRequest) String() string {
 func (*MoveUnitAnimationRequest) ProtoMessage() {}
 
 func (x *MoveUnitAnimationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[27]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1239,7 +1327,7 @@ func (x *MoveUnitAnimationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveUnitAnimationRequest.ProtoReflect.Descriptor instead.
 func (*MoveUnitAnimationRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{27}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *MoveUnitAnimationRequest) GetUnit() *Unit {
@@ -1264,7 +1352,7 @@ type MoveUnitAnimationResponse struct {
 
 func (x *MoveUnitAnimationResponse) Reset() {
 	*x = MoveUnitAnimationResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[28]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1276,7 +1364,7 @@ func (x *MoveUnitAnimationResponse) String() string {
 func (*MoveUnitAnimationResponse) ProtoMessage() {}
 
 func (x *MoveUnitAnimationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[28]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1289,7 +1377,7 @@ func (x *MoveUnitAnimationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveUnitAnimationResponse.ProtoReflect.Descriptor instead.
 func (*MoveUnitAnimationResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{28}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{30}
 }
 
 // Hex coordinate for paths
@@ -1303,7 +1391,7 @@ type HexCoord struct {
 
 func (x *HexCoord) Reset() {
 	*x = HexCoord{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[29]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1315,7 +1403,7 @@ func (x *HexCoord) String() string {
 func (*HexCoord) ProtoMessage() {}
 
 func (x *HexCoord) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[29]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1328,7 +1416,7 @@ func (x *HexCoord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HexCoord.ProtoReflect.Descriptor instead.
 func (*HexCoord) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{29}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *HexCoord) GetQ() int32 {
@@ -1360,7 +1448,7 @@ type ShowAttackEffectRequest struct {
 
 func (x *ShowAttackEffectRequest) Reset() {
 	*x = ShowAttackEffectRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[30]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1372,7 +1460,7 @@ func (x *ShowAttackEffectRequest) String() string {
 func (*ShowAttackEffectRequest) ProtoMessage() {}
 
 func (x *ShowAttackEffectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[30]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1385,7 +1473,7 @@ func (x *ShowAttackEffectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowAttackEffectRequest.ProtoReflect.Descriptor instead.
 func (*ShowAttackEffectRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{30}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ShowAttackEffectRequest) GetFromQ() int32 {
@@ -1441,7 +1529,7 @@ type SplashTarget struct {
 
 func (x *SplashTarget) Reset() {
 	*x = SplashTarget{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[31]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1453,7 +1541,7 @@ func (x *SplashTarget) String() string {
 func (*SplashTarget) ProtoMessage() {}
 
 func (x *SplashTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[31]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +1554,7 @@ func (x *SplashTarget) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SplashTarget.ProtoReflect.Descriptor instead.
 func (*SplashTarget) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{31}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SplashTarget) GetQ() int32 {
@@ -1498,7 +1586,7 @@ type ShowAttackEffectResponse struct {
 
 func (x *ShowAttackEffectResponse) Reset() {
 	*x = ShowAttackEffectResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[32]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1510,7 +1598,7 @@ func (x *ShowAttackEffectResponse) String() string {
 func (*ShowAttackEffectResponse) ProtoMessage() {}
 
 func (x *ShowAttackEffectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[32]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1523,7 +1611,7 @@ func (x *ShowAttackEffectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowAttackEffectResponse.ProtoReflect.Descriptor instead.
 func (*ShowAttackEffectResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{32}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{34}
 }
 
 // Request to show heal effect animation
@@ -1538,7 +1626,7 @@ type ShowHealEffectRequest struct {
 
 func (x *ShowHealEffectRequest) Reset() {
 	*x = ShowHealEffectRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[33]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1550,7 +1638,7 @@ func (x *ShowHealEffectRequest) String() string {
 func (*ShowHealEffectRequest) ProtoMessage() {}
 
 func (x *ShowHealEffectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[33]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1563,7 +1651,7 @@ func (x *ShowHealEffectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowHealEffectRequest.ProtoReflect.Descriptor instead.
 func (*ShowHealEffectRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{33}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ShowHealEffectRequest) GetQ() int32 {
@@ -1595,7 +1683,7 @@ type ShowHealEffectResponse struct {
 
 func (x *ShowHealEffectResponse) Reset() {
 	*x = ShowHealEffectResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[34]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1607,7 +1695,7 @@ func (x *ShowHealEffectResponse) String() string {
 func (*ShowHealEffectResponse) ProtoMessage() {}
 
 func (x *ShowHealEffectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[34]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1620,7 +1708,7 @@ func (x *ShowHealEffectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowHealEffectResponse.ProtoReflect.Descriptor instead.
 func (*ShowHealEffectResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{34}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{36}
 }
 
 // Request to show capture effect animation
@@ -1634,7 +1722,7 @@ type ShowCaptureEffectRequest struct {
 
 func (x *ShowCaptureEffectRequest) Reset() {
 	*x = ShowCaptureEffectRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[35]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1646,7 +1734,7 @@ func (x *ShowCaptureEffectRequest) String() string {
 func (*ShowCaptureEffectRequest) ProtoMessage() {}
 
 func (x *ShowCaptureEffectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[35]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1659,7 +1747,7 @@ func (x *ShowCaptureEffectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowCaptureEffectRequest.ProtoReflect.Descriptor instead.
 func (*ShowCaptureEffectRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{35}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ShowCaptureEffectRequest) GetQ() int32 {
@@ -1684,7 +1772,7 @@ type ShowCaptureEffectResponse struct {
 
 func (x *ShowCaptureEffectResponse) Reset() {
 	*x = ShowCaptureEffectResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[36]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1696,7 +1784,7 @@ func (x *ShowCaptureEffectResponse) String() string {
 func (*ShowCaptureEffectResponse) ProtoMessage() {}
 
 func (x *ShowCaptureEffectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[36]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1709,7 +1797,7 @@ func (x *ShowCaptureEffectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ShowCaptureEffectResponse.ProtoReflect.Descriptor instead.
 func (*ShowCaptureEffectResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{36}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{38}
 }
 
 // Request to set unit with optional animation
@@ -1726,7 +1814,7 @@ type SetUnitAtAnimationRequest struct {
 
 func (x *SetUnitAtAnimationRequest) Reset() {
 	*x = SetUnitAtAnimationRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[37]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1738,7 +1826,7 @@ func (x *SetUnitAtAnimationRequest) String() string {
 func (*SetUnitAtAnimationRequest) ProtoMessage() {}
 
 func (x *SetUnitAtAnimationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[37]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1751,7 +1839,7 @@ func (x *SetUnitAtAnimationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUnitAtAnimationRequest.ProtoReflect.Descriptor instead.
 func (*SetUnitAtAnimationRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{37}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *SetUnitAtAnimationRequest) GetQ() int32 {
@@ -1797,7 +1885,7 @@ type SetUnitAtAnimationResponse struct {
 
 func (x *SetUnitAtAnimationResponse) Reset() {
 	*x = SetUnitAtAnimationResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[38]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1809,7 +1897,7 @@ func (x *SetUnitAtAnimationResponse) String() string {
 func (*SetUnitAtAnimationResponse) ProtoMessage() {}
 
 func (x *SetUnitAtAnimationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[38]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1822,7 +1910,7 @@ func (x *SetUnitAtAnimationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUnitAtAnimationResponse.ProtoReflect.Descriptor instead.
 func (*SetUnitAtAnimationResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{38}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{40}
 }
 
 // Request to remove unit with optional animation
@@ -1837,7 +1925,7 @@ type RemoveUnitAtAnimationRequest struct {
 
 func (x *RemoveUnitAtAnimationRequest) Reset() {
 	*x = RemoveUnitAtAnimationRequest{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[39]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1849,7 +1937,7 @@ func (x *RemoveUnitAtAnimationRequest) String() string {
 func (*RemoveUnitAtAnimationRequest) ProtoMessage() {}
 
 func (x *RemoveUnitAtAnimationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[39]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1862,7 +1950,7 @@ func (x *RemoveUnitAtAnimationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveUnitAtAnimationRequest.ProtoReflect.Descriptor instead.
 func (*RemoveUnitAtAnimationRequest) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{39}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *RemoveUnitAtAnimationRequest) GetQ() int32 {
@@ -1894,7 +1982,7 @@ type RemoveUnitAtAnimationResponse struct {
 
 func (x *RemoveUnitAtAnimationResponse) Reset() {
 	*x = RemoveUnitAtAnimationResponse{}
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[40]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1906,7 +1994,7 @@ func (x *RemoveUnitAtAnimationResponse) String() string {
 func (*RemoveUnitAtAnimationResponse) ProtoMessage() {}
 
 func (x *RemoveUnitAtAnimationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[40]
+	mi := &file_weewar_v1_gameviewerpage_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1919,7 +2007,7 @@ func (x *RemoveUnitAtAnimationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveUnitAtAnimationResponse.ProtoReflect.Descriptor instead.
 func (*RemoveUnitAtAnimationResponse) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{40}
+	return file_weewar_v1_gameviewerpage_proto_rawDescGZIP(), []int{42}
 }
 
 var File_weewar_v1_gameviewerpage_proto protoreflect.FileDescriptor
@@ -1932,7 +2020,12 @@ const file_weewar_v1_gameviewerpage_proto_rawDesc = "" +
 	"\x11SetContentRequest\x12\x1d\n" +
 	"\n" +
 	"inner_html\x18\x01 \x01(\tR\tinnerHtml\"\x14\n" +
-	"\x12SetContentResponse\"-\n" +
+	"\x12SetContentResponse\"L\n" +
+	"\x17ShowBuildOptionsRequest\x12\x1d\n" +
+	"\n" +
+	"inner_html\x18\x01 \x01(\tR\tinnerHtml\x12\x12\n" +
+	"\x04hide\x18\x02 \x01(\bR\x04hide\"\x1a\n" +
+	"\x18ShowBuildOptionsResponse\"-\n" +
 	"\x11LogMessageRequest\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\"\x14\n" +
 	"\x12LogMessageResponse\"f\n" +
@@ -2020,9 +2113,10 @@ const file_weewar_v1_gameviewerpage_proto_rawDesc = "" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x18\n" +
 	"\aanimate\x18\x03 \x01(\bR\aanimate\"\x1f\n" +
-	"\x1dRemoveUnitAtAnimationResponse2\xa3\x0e\n" +
+	"\x1dRemoveUnitAtAnimationResponse2\x80\x0f\n" +
 	"\x0eGameViewerPage\x12T\n" +
-	"\x15SetTurnOptionsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12R\n" +
+	"\x15SetTurnOptionsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12[\n" +
+	"\x10ShowBuildOptions\x12\".weewar.v1.ShowBuildOptionsRequest\x1a#.weewar.v1.ShowBuildOptionsResponse\x12R\n" +
 	"\x13SetUnitStatsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12[\n" +
 	"\x1cSetDamageDistributionContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12U\n" +
 	"\x16SetTerrainStatsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12O\n" +
@@ -2060,108 +2154,112 @@ func file_weewar_v1_gameviewerpage_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_gameviewerpage_proto_rawDescData
 }
 
-var file_weewar_v1_gameviewerpage_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
+var file_weewar_v1_gameviewerpage_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
 var file_weewar_v1_gameviewerpage_proto_goTypes = []any{
 	(*EmptyRequest)(nil),                  // 0: weewar.v1.EmptyRequest
 	(*EmptyResponse)(nil),                 // 1: weewar.v1.EmptyResponse
 	(*SetContentRequest)(nil),             // 2: weewar.v1.SetContentRequest
 	(*SetContentResponse)(nil),            // 3: weewar.v1.SetContentResponse
-	(*LogMessageRequest)(nil),             // 4: weewar.v1.LogMessageRequest
-	(*LogMessageResponse)(nil),            // 5: weewar.v1.LogMessageResponse
-	(*SetGameStateRequest)(nil),           // 6: weewar.v1.SetGameStateRequest
-	(*SetGameStateResponse)(nil),          // 7: weewar.v1.SetGameStateResponse
-	(*UpdateGameStatusRequest)(nil),       // 8: weewar.v1.UpdateGameStatusRequest
-	(*UpdateGameStatusResponse)(nil),      // 9: weewar.v1.UpdateGameStatusResponse
-	(*SetTileAtRequest)(nil),              // 10: weewar.v1.SetTileAtRequest
-	(*SetTileAtResponse)(nil),             // 11: weewar.v1.SetTileAtResponse
-	(*SetUnitAtRequest)(nil),              // 12: weewar.v1.SetUnitAtRequest
-	(*SetUnitAtResponse)(nil),             // 13: weewar.v1.SetUnitAtResponse
-	(*RemoveTileAtRequest)(nil),           // 14: weewar.v1.RemoveTileAtRequest
-	(*RemoveTileAtResponse)(nil),          // 15: weewar.v1.RemoveTileAtResponse
-	(*RemoveUnitAtRequest)(nil),           // 16: weewar.v1.RemoveUnitAtRequest
-	(*RemoveUnitAtResponse)(nil),          // 17: weewar.v1.RemoveUnitAtResponse
-	(*ShowHighlightsRequest)(nil),         // 18: weewar.v1.ShowHighlightsRequest
-	(*ShowHighlightsResponse)(nil),        // 19: weewar.v1.ShowHighlightsResponse
-	(*HighlightSpec)(nil),                 // 20: weewar.v1.HighlightSpec
-	(*ClearHighlightsRequest)(nil),        // 21: weewar.v1.ClearHighlightsRequest
-	(*ClearHighlightsResponse)(nil),       // 22: weewar.v1.ClearHighlightsResponse
-	(*ShowPathRequest)(nil),               // 23: weewar.v1.ShowPathRequest
-	(*ShowPathResponse)(nil),              // 24: weewar.v1.ShowPathResponse
-	(*ClearPathsRequest)(nil),             // 25: weewar.v1.ClearPathsRequest
-	(*ClearPathsResponse)(nil),            // 26: weewar.v1.ClearPathsResponse
-	(*MoveUnitAnimationRequest)(nil),      // 27: weewar.v1.MoveUnitAnimationRequest
-	(*MoveUnitAnimationResponse)(nil),     // 28: weewar.v1.MoveUnitAnimationResponse
-	(*HexCoord)(nil),                      // 29: weewar.v1.HexCoord
-	(*ShowAttackEffectRequest)(nil),       // 30: weewar.v1.ShowAttackEffectRequest
-	(*SplashTarget)(nil),                  // 31: weewar.v1.SplashTarget
-	(*ShowAttackEffectResponse)(nil),      // 32: weewar.v1.ShowAttackEffectResponse
-	(*ShowHealEffectRequest)(nil),         // 33: weewar.v1.ShowHealEffectRequest
-	(*ShowHealEffectResponse)(nil),        // 34: weewar.v1.ShowHealEffectResponse
-	(*ShowCaptureEffectRequest)(nil),      // 35: weewar.v1.ShowCaptureEffectRequest
-	(*ShowCaptureEffectResponse)(nil),     // 36: weewar.v1.ShowCaptureEffectResponse
-	(*SetUnitAtAnimationRequest)(nil),     // 37: weewar.v1.SetUnitAtAnimationRequest
-	(*SetUnitAtAnimationResponse)(nil),    // 38: weewar.v1.SetUnitAtAnimationResponse
-	(*RemoveUnitAtAnimationRequest)(nil),  // 39: weewar.v1.RemoveUnitAtAnimationRequest
-	(*RemoveUnitAtAnimationResponse)(nil), // 40: weewar.v1.RemoveUnitAtAnimationResponse
-	(*Game)(nil),                          // 41: weewar.v1.Game
-	(*GameState)(nil),                     // 42: weewar.v1.GameState
-	(*Tile)(nil),                          // 43: weewar.v1.Tile
-	(*Unit)(nil),                          // 44: weewar.v1.Unit
+	(*ShowBuildOptionsRequest)(nil),       // 4: weewar.v1.ShowBuildOptionsRequest
+	(*ShowBuildOptionsResponse)(nil),      // 5: weewar.v1.ShowBuildOptionsResponse
+	(*LogMessageRequest)(nil),             // 6: weewar.v1.LogMessageRequest
+	(*LogMessageResponse)(nil),            // 7: weewar.v1.LogMessageResponse
+	(*SetGameStateRequest)(nil),           // 8: weewar.v1.SetGameStateRequest
+	(*SetGameStateResponse)(nil),          // 9: weewar.v1.SetGameStateResponse
+	(*UpdateGameStatusRequest)(nil),       // 10: weewar.v1.UpdateGameStatusRequest
+	(*UpdateGameStatusResponse)(nil),      // 11: weewar.v1.UpdateGameStatusResponse
+	(*SetTileAtRequest)(nil),              // 12: weewar.v1.SetTileAtRequest
+	(*SetTileAtResponse)(nil),             // 13: weewar.v1.SetTileAtResponse
+	(*SetUnitAtRequest)(nil),              // 14: weewar.v1.SetUnitAtRequest
+	(*SetUnitAtResponse)(nil),             // 15: weewar.v1.SetUnitAtResponse
+	(*RemoveTileAtRequest)(nil),           // 16: weewar.v1.RemoveTileAtRequest
+	(*RemoveTileAtResponse)(nil),          // 17: weewar.v1.RemoveTileAtResponse
+	(*RemoveUnitAtRequest)(nil),           // 18: weewar.v1.RemoveUnitAtRequest
+	(*RemoveUnitAtResponse)(nil),          // 19: weewar.v1.RemoveUnitAtResponse
+	(*ShowHighlightsRequest)(nil),         // 20: weewar.v1.ShowHighlightsRequest
+	(*ShowHighlightsResponse)(nil),        // 21: weewar.v1.ShowHighlightsResponse
+	(*HighlightSpec)(nil),                 // 22: weewar.v1.HighlightSpec
+	(*ClearHighlightsRequest)(nil),        // 23: weewar.v1.ClearHighlightsRequest
+	(*ClearHighlightsResponse)(nil),       // 24: weewar.v1.ClearHighlightsResponse
+	(*ShowPathRequest)(nil),               // 25: weewar.v1.ShowPathRequest
+	(*ShowPathResponse)(nil),              // 26: weewar.v1.ShowPathResponse
+	(*ClearPathsRequest)(nil),             // 27: weewar.v1.ClearPathsRequest
+	(*ClearPathsResponse)(nil),            // 28: weewar.v1.ClearPathsResponse
+	(*MoveUnitAnimationRequest)(nil),      // 29: weewar.v1.MoveUnitAnimationRequest
+	(*MoveUnitAnimationResponse)(nil),     // 30: weewar.v1.MoveUnitAnimationResponse
+	(*HexCoord)(nil),                      // 31: weewar.v1.HexCoord
+	(*ShowAttackEffectRequest)(nil),       // 32: weewar.v1.ShowAttackEffectRequest
+	(*SplashTarget)(nil),                  // 33: weewar.v1.SplashTarget
+	(*ShowAttackEffectResponse)(nil),      // 34: weewar.v1.ShowAttackEffectResponse
+	(*ShowHealEffectRequest)(nil),         // 35: weewar.v1.ShowHealEffectRequest
+	(*ShowHealEffectResponse)(nil),        // 36: weewar.v1.ShowHealEffectResponse
+	(*ShowCaptureEffectRequest)(nil),      // 37: weewar.v1.ShowCaptureEffectRequest
+	(*ShowCaptureEffectResponse)(nil),     // 38: weewar.v1.ShowCaptureEffectResponse
+	(*SetUnitAtAnimationRequest)(nil),     // 39: weewar.v1.SetUnitAtAnimationRequest
+	(*SetUnitAtAnimationResponse)(nil),    // 40: weewar.v1.SetUnitAtAnimationResponse
+	(*RemoveUnitAtAnimationRequest)(nil),  // 41: weewar.v1.RemoveUnitAtAnimationRequest
+	(*RemoveUnitAtAnimationResponse)(nil), // 42: weewar.v1.RemoveUnitAtAnimationResponse
+	(*Game)(nil),                          // 43: weewar.v1.Game
+	(*GameState)(nil),                     // 44: weewar.v1.GameState
+	(*Tile)(nil),                          // 45: weewar.v1.Tile
+	(*Unit)(nil),                          // 46: weewar.v1.Unit
 }
 var file_weewar_v1_gameviewerpage_proto_depIdxs = []int32{
-	41, // 0: weewar.v1.SetGameStateRequest.game:type_name -> weewar.v1.Game
-	42, // 1: weewar.v1.SetGameStateRequest.state:type_name -> weewar.v1.GameState
-	43, // 2: weewar.v1.SetTileAtRequest.tile:type_name -> weewar.v1.Tile
-	44, // 3: weewar.v1.SetUnitAtRequest.unit:type_name -> weewar.v1.Unit
-	20, // 4: weewar.v1.ShowHighlightsRequest.highlights:type_name -> weewar.v1.HighlightSpec
-	44, // 5: weewar.v1.MoveUnitAnimationRequest.unit:type_name -> weewar.v1.Unit
-	29, // 6: weewar.v1.MoveUnitAnimationRequest.path:type_name -> weewar.v1.HexCoord
-	31, // 7: weewar.v1.ShowAttackEffectRequest.splash_targets:type_name -> weewar.v1.SplashTarget
-	44, // 8: weewar.v1.SetUnitAtAnimationRequest.unit:type_name -> weewar.v1.Unit
+	43, // 0: weewar.v1.SetGameStateRequest.game:type_name -> weewar.v1.Game
+	44, // 1: weewar.v1.SetGameStateRequest.state:type_name -> weewar.v1.GameState
+	45, // 2: weewar.v1.SetTileAtRequest.tile:type_name -> weewar.v1.Tile
+	46, // 3: weewar.v1.SetUnitAtRequest.unit:type_name -> weewar.v1.Unit
+	22, // 4: weewar.v1.ShowHighlightsRequest.highlights:type_name -> weewar.v1.HighlightSpec
+	46, // 5: weewar.v1.MoveUnitAnimationRequest.unit:type_name -> weewar.v1.Unit
+	31, // 6: weewar.v1.MoveUnitAnimationRequest.path:type_name -> weewar.v1.HexCoord
+	33, // 7: weewar.v1.ShowAttackEffectRequest.splash_targets:type_name -> weewar.v1.SplashTarget
+	46, // 8: weewar.v1.SetUnitAtAnimationRequest.unit:type_name -> weewar.v1.Unit
 	2,  // 9: weewar.v1.GameViewerPage.SetTurnOptionsContent:input_type -> weewar.v1.SetContentRequest
-	2,  // 10: weewar.v1.GameViewerPage.SetUnitStatsContent:input_type -> weewar.v1.SetContentRequest
-	2,  // 11: weewar.v1.GameViewerPage.SetDamageDistributionContent:input_type -> weewar.v1.SetContentRequest
-	2,  // 12: weewar.v1.GameViewerPage.SetTerrainStatsContent:input_type -> weewar.v1.SetContentRequest
-	6,  // 13: weewar.v1.GameViewerPage.SetGameState:input_type -> weewar.v1.SetGameStateRequest
-	8,  // 14: weewar.v1.GameViewerPage.UpdateGameStatus:input_type -> weewar.v1.UpdateGameStatusRequest
-	10, // 15: weewar.v1.GameViewerPage.SetTileAt:input_type -> weewar.v1.SetTileAtRequest
-	12, // 16: weewar.v1.GameViewerPage.SetUnitAt:input_type -> weewar.v1.SetUnitAtRequest
-	14, // 17: weewar.v1.GameViewerPage.RemoveTileAt:input_type -> weewar.v1.RemoveTileAtRequest
-	16, // 18: weewar.v1.GameViewerPage.RemoveUnitAt:input_type -> weewar.v1.RemoveUnitAtRequest
-	18, // 19: weewar.v1.GameViewerPage.ShowHighlights:input_type -> weewar.v1.ShowHighlightsRequest
-	21, // 20: weewar.v1.GameViewerPage.ClearHighlights:input_type -> weewar.v1.ClearHighlightsRequest
-	23, // 21: weewar.v1.GameViewerPage.ShowPath:input_type -> weewar.v1.ShowPathRequest
-	25, // 22: weewar.v1.GameViewerPage.ClearPaths:input_type -> weewar.v1.ClearPathsRequest
-	27, // 23: weewar.v1.GameViewerPage.MoveUnitAnimation:input_type -> weewar.v1.MoveUnitAnimationRequest
-	30, // 24: weewar.v1.GameViewerPage.ShowAttackEffect:input_type -> weewar.v1.ShowAttackEffectRequest
-	33, // 25: weewar.v1.GameViewerPage.ShowHealEffect:input_type -> weewar.v1.ShowHealEffectRequest
-	35, // 26: weewar.v1.GameViewerPage.ShowCaptureEffect:input_type -> weewar.v1.ShowCaptureEffectRequest
-	37, // 27: weewar.v1.GameViewerPage.SetUnitAtAnimation:input_type -> weewar.v1.SetUnitAtAnimationRequest
-	39, // 28: weewar.v1.GameViewerPage.RemoveUnitAtAnimation:input_type -> weewar.v1.RemoveUnitAtAnimationRequest
-	4,  // 29: weewar.v1.GameViewerPage.LogMessage:input_type -> weewar.v1.LogMessageRequest
-	3,  // 30: weewar.v1.GameViewerPage.SetTurnOptionsContent:output_type -> weewar.v1.SetContentResponse
-	3,  // 31: weewar.v1.GameViewerPage.SetUnitStatsContent:output_type -> weewar.v1.SetContentResponse
-	3,  // 32: weewar.v1.GameViewerPage.SetDamageDistributionContent:output_type -> weewar.v1.SetContentResponse
-	3,  // 33: weewar.v1.GameViewerPage.SetTerrainStatsContent:output_type -> weewar.v1.SetContentResponse
-	7,  // 34: weewar.v1.GameViewerPage.SetGameState:output_type -> weewar.v1.SetGameStateResponse
-	9,  // 35: weewar.v1.GameViewerPage.UpdateGameStatus:output_type -> weewar.v1.UpdateGameStatusResponse
-	11, // 36: weewar.v1.GameViewerPage.SetTileAt:output_type -> weewar.v1.SetTileAtResponse
-	13, // 37: weewar.v1.GameViewerPage.SetUnitAt:output_type -> weewar.v1.SetUnitAtResponse
-	15, // 38: weewar.v1.GameViewerPage.RemoveTileAt:output_type -> weewar.v1.RemoveTileAtResponse
-	17, // 39: weewar.v1.GameViewerPage.RemoveUnitAt:output_type -> weewar.v1.RemoveUnitAtResponse
-	19, // 40: weewar.v1.GameViewerPage.ShowHighlights:output_type -> weewar.v1.ShowHighlightsResponse
-	22, // 41: weewar.v1.GameViewerPage.ClearHighlights:output_type -> weewar.v1.ClearHighlightsResponse
-	24, // 42: weewar.v1.GameViewerPage.ShowPath:output_type -> weewar.v1.ShowPathResponse
-	26, // 43: weewar.v1.GameViewerPage.ClearPaths:output_type -> weewar.v1.ClearPathsResponse
-	28, // 44: weewar.v1.GameViewerPage.MoveUnitAnimation:output_type -> weewar.v1.MoveUnitAnimationResponse
-	32, // 45: weewar.v1.GameViewerPage.ShowAttackEffect:output_type -> weewar.v1.ShowAttackEffectResponse
-	34, // 46: weewar.v1.GameViewerPage.ShowHealEffect:output_type -> weewar.v1.ShowHealEffectResponse
-	36, // 47: weewar.v1.GameViewerPage.ShowCaptureEffect:output_type -> weewar.v1.ShowCaptureEffectResponse
-	38, // 48: weewar.v1.GameViewerPage.SetUnitAtAnimation:output_type -> weewar.v1.SetUnitAtAnimationResponse
-	40, // 49: weewar.v1.GameViewerPage.RemoveUnitAtAnimation:output_type -> weewar.v1.RemoveUnitAtAnimationResponse
-	5,  // 50: weewar.v1.GameViewerPage.LogMessage:output_type -> weewar.v1.LogMessageResponse
-	30, // [30:51] is the sub-list for method output_type
-	9,  // [9:30] is the sub-list for method input_type
+	4,  // 10: weewar.v1.GameViewerPage.ShowBuildOptions:input_type -> weewar.v1.ShowBuildOptionsRequest
+	2,  // 11: weewar.v1.GameViewerPage.SetUnitStatsContent:input_type -> weewar.v1.SetContentRequest
+	2,  // 12: weewar.v1.GameViewerPage.SetDamageDistributionContent:input_type -> weewar.v1.SetContentRequest
+	2,  // 13: weewar.v1.GameViewerPage.SetTerrainStatsContent:input_type -> weewar.v1.SetContentRequest
+	8,  // 14: weewar.v1.GameViewerPage.SetGameState:input_type -> weewar.v1.SetGameStateRequest
+	10, // 15: weewar.v1.GameViewerPage.UpdateGameStatus:input_type -> weewar.v1.UpdateGameStatusRequest
+	12, // 16: weewar.v1.GameViewerPage.SetTileAt:input_type -> weewar.v1.SetTileAtRequest
+	14, // 17: weewar.v1.GameViewerPage.SetUnitAt:input_type -> weewar.v1.SetUnitAtRequest
+	16, // 18: weewar.v1.GameViewerPage.RemoveTileAt:input_type -> weewar.v1.RemoveTileAtRequest
+	18, // 19: weewar.v1.GameViewerPage.RemoveUnitAt:input_type -> weewar.v1.RemoveUnitAtRequest
+	20, // 20: weewar.v1.GameViewerPage.ShowHighlights:input_type -> weewar.v1.ShowHighlightsRequest
+	23, // 21: weewar.v1.GameViewerPage.ClearHighlights:input_type -> weewar.v1.ClearHighlightsRequest
+	25, // 22: weewar.v1.GameViewerPage.ShowPath:input_type -> weewar.v1.ShowPathRequest
+	27, // 23: weewar.v1.GameViewerPage.ClearPaths:input_type -> weewar.v1.ClearPathsRequest
+	29, // 24: weewar.v1.GameViewerPage.MoveUnitAnimation:input_type -> weewar.v1.MoveUnitAnimationRequest
+	32, // 25: weewar.v1.GameViewerPage.ShowAttackEffect:input_type -> weewar.v1.ShowAttackEffectRequest
+	35, // 26: weewar.v1.GameViewerPage.ShowHealEffect:input_type -> weewar.v1.ShowHealEffectRequest
+	37, // 27: weewar.v1.GameViewerPage.ShowCaptureEffect:input_type -> weewar.v1.ShowCaptureEffectRequest
+	39, // 28: weewar.v1.GameViewerPage.SetUnitAtAnimation:input_type -> weewar.v1.SetUnitAtAnimationRequest
+	41, // 29: weewar.v1.GameViewerPage.RemoveUnitAtAnimation:input_type -> weewar.v1.RemoveUnitAtAnimationRequest
+	6,  // 30: weewar.v1.GameViewerPage.LogMessage:input_type -> weewar.v1.LogMessageRequest
+	3,  // 31: weewar.v1.GameViewerPage.SetTurnOptionsContent:output_type -> weewar.v1.SetContentResponse
+	5,  // 32: weewar.v1.GameViewerPage.ShowBuildOptions:output_type -> weewar.v1.ShowBuildOptionsResponse
+	3,  // 33: weewar.v1.GameViewerPage.SetUnitStatsContent:output_type -> weewar.v1.SetContentResponse
+	3,  // 34: weewar.v1.GameViewerPage.SetDamageDistributionContent:output_type -> weewar.v1.SetContentResponse
+	3,  // 35: weewar.v1.GameViewerPage.SetTerrainStatsContent:output_type -> weewar.v1.SetContentResponse
+	9,  // 36: weewar.v1.GameViewerPage.SetGameState:output_type -> weewar.v1.SetGameStateResponse
+	11, // 37: weewar.v1.GameViewerPage.UpdateGameStatus:output_type -> weewar.v1.UpdateGameStatusResponse
+	13, // 38: weewar.v1.GameViewerPage.SetTileAt:output_type -> weewar.v1.SetTileAtResponse
+	15, // 39: weewar.v1.GameViewerPage.SetUnitAt:output_type -> weewar.v1.SetUnitAtResponse
+	17, // 40: weewar.v1.GameViewerPage.RemoveTileAt:output_type -> weewar.v1.RemoveTileAtResponse
+	19, // 41: weewar.v1.GameViewerPage.RemoveUnitAt:output_type -> weewar.v1.RemoveUnitAtResponse
+	21, // 42: weewar.v1.GameViewerPage.ShowHighlights:output_type -> weewar.v1.ShowHighlightsResponse
+	24, // 43: weewar.v1.GameViewerPage.ClearHighlights:output_type -> weewar.v1.ClearHighlightsResponse
+	26, // 44: weewar.v1.GameViewerPage.ShowPath:output_type -> weewar.v1.ShowPathResponse
+	28, // 45: weewar.v1.GameViewerPage.ClearPaths:output_type -> weewar.v1.ClearPathsResponse
+	30, // 46: weewar.v1.GameViewerPage.MoveUnitAnimation:output_type -> weewar.v1.MoveUnitAnimationResponse
+	34, // 47: weewar.v1.GameViewerPage.ShowAttackEffect:output_type -> weewar.v1.ShowAttackEffectResponse
+	36, // 48: weewar.v1.GameViewerPage.ShowHealEffect:output_type -> weewar.v1.ShowHealEffectResponse
+	38, // 49: weewar.v1.GameViewerPage.ShowCaptureEffect:output_type -> weewar.v1.ShowCaptureEffectResponse
+	40, // 50: weewar.v1.GameViewerPage.SetUnitAtAnimation:output_type -> weewar.v1.SetUnitAtAnimationResponse
+	42, // 51: weewar.v1.GameViewerPage.RemoveUnitAtAnimation:output_type -> weewar.v1.RemoveUnitAtAnimationResponse
+	7,  // 52: weewar.v1.GameViewerPage.LogMessage:output_type -> weewar.v1.LogMessageResponse
+	31, // [31:53] is the sub-list for method output_type
+	9,  // [9:31] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -2179,7 +2277,7 @@ func file_weewar_v1_gameviewerpage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_gameviewerpage_proto_rawDesc), len(file_weewar_v1_gameviewerpage_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   41,
+			NumMessages:   43,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -37,6 +37,9 @@ const (
 	// GameViewerPageSetTurnOptionsContentProcedure is the fully-qualified name of the GameViewerPage's
 	// SetTurnOptionsContent RPC.
 	GameViewerPageSetTurnOptionsContentProcedure = "/weewar.v1.GameViewerPage/SetTurnOptionsContent"
+	// GameViewerPageShowBuildOptionsProcedure is the fully-qualified name of the GameViewerPage's
+	// ShowBuildOptions RPC.
+	GameViewerPageShowBuildOptionsProcedure = "/weewar.v1.GameViewerPage/ShowBuildOptions"
 	// GameViewerPageSetUnitStatsContentProcedure is the fully-qualified name of the GameViewerPage's
 	// SetUnitStatsContent RPC.
 	GameViewerPageSetUnitStatsContentProcedure = "/weewar.v1.GameViewerPage/SetUnitStatsContent"
@@ -102,6 +105,7 @@ const (
 type GameViewerPageClient interface {
 	// Content update methods
 	SetTurnOptionsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
+	ShowBuildOptions(context.Context, *connect.Request[v1.ShowBuildOptionsRequest]) (*connect.Response[v1.ShowBuildOptionsResponse], error)
 	SetUnitStatsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
 	SetDamageDistributionContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
 	SetTerrainStatsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
@@ -144,6 +148,12 @@ func NewGameViewerPageClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+GameViewerPageSetTurnOptionsContentProcedure,
 			connect.WithSchema(gameViewerPageMethods.ByName("SetTurnOptionsContent")),
+			connect.WithClientOptions(opts...),
+		),
+		showBuildOptions: connect.NewClient[v1.ShowBuildOptionsRequest, v1.ShowBuildOptionsResponse](
+			httpClient,
+			baseURL+GameViewerPageShowBuildOptionsProcedure,
+			connect.WithSchema(gameViewerPageMethods.ByName("ShowBuildOptions")),
 			connect.WithClientOptions(opts...),
 		),
 		setUnitStatsContent: connect.NewClient[v1.SetContentRequest, v1.SetContentResponse](
@@ -272,6 +282,7 @@ func NewGameViewerPageClient(httpClient connect.HTTPClient, baseURL string, opts
 // gameViewerPageClient implements GameViewerPageClient.
 type gameViewerPageClient struct {
 	setTurnOptionsContent        *connect.Client[v1.SetContentRequest, v1.SetContentResponse]
+	showBuildOptions             *connect.Client[v1.ShowBuildOptionsRequest, v1.ShowBuildOptionsResponse]
 	setUnitStatsContent          *connect.Client[v1.SetContentRequest, v1.SetContentResponse]
 	setDamageDistributionContent *connect.Client[v1.SetContentRequest, v1.SetContentResponse]
 	setTerrainStatsContent       *connect.Client[v1.SetContentRequest, v1.SetContentResponse]
@@ -297,6 +308,11 @@ type gameViewerPageClient struct {
 // SetTurnOptionsContent calls weewar.v1.GameViewerPage.SetTurnOptionsContent.
 func (c *gameViewerPageClient) SetTurnOptionsContent(ctx context.Context, req *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error) {
 	return c.setTurnOptionsContent.CallUnary(ctx, req)
+}
+
+// ShowBuildOptions calls weewar.v1.GameViewerPage.ShowBuildOptions.
+func (c *gameViewerPageClient) ShowBuildOptions(ctx context.Context, req *connect.Request[v1.ShowBuildOptionsRequest]) (*connect.Response[v1.ShowBuildOptionsResponse], error) {
+	return c.showBuildOptions.CallUnary(ctx, req)
 }
 
 // SetUnitStatsContent calls weewar.v1.GameViewerPage.SetUnitStatsContent.
@@ -403,6 +419,7 @@ func (c *gameViewerPageClient) LogMessage(ctx context.Context, req *connect.Requ
 type GameViewerPageHandler interface {
 	// Content update methods
 	SetTurnOptionsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
+	ShowBuildOptions(context.Context, *connect.Request[v1.ShowBuildOptionsRequest]) (*connect.Response[v1.ShowBuildOptionsResponse], error)
 	SetUnitStatsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
 	SetDamageDistributionContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
 	SetTerrainStatsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error)
@@ -441,6 +458,12 @@ func NewGameViewerPageHandler(svc GameViewerPageHandler, opts ...connect.Handler
 		GameViewerPageSetTurnOptionsContentProcedure,
 		svc.SetTurnOptionsContent,
 		connect.WithSchema(gameViewerPageMethods.ByName("SetTurnOptionsContent")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gameViewerPageShowBuildOptionsHandler := connect.NewUnaryHandler(
+		GameViewerPageShowBuildOptionsProcedure,
+		svc.ShowBuildOptions,
+		connect.WithSchema(gameViewerPageMethods.ByName("ShowBuildOptions")),
 		connect.WithHandlerOptions(opts...),
 	)
 	gameViewerPageSetUnitStatsContentHandler := connect.NewUnaryHandler(
@@ -567,6 +590,8 @@ func NewGameViewerPageHandler(svc GameViewerPageHandler, opts ...connect.Handler
 		switch r.URL.Path {
 		case GameViewerPageSetTurnOptionsContentProcedure:
 			gameViewerPageSetTurnOptionsContentHandler.ServeHTTP(w, r)
+		case GameViewerPageShowBuildOptionsProcedure:
+			gameViewerPageShowBuildOptionsHandler.ServeHTTP(w, r)
 		case GameViewerPageSetUnitStatsContentProcedure:
 			gameViewerPageSetUnitStatsContentHandler.ServeHTTP(w, r)
 		case GameViewerPageSetDamageDistributionContentProcedure:
@@ -618,6 +643,10 @@ type UnimplementedGameViewerPageHandler struct{}
 
 func (UnimplementedGameViewerPageHandler) SetTurnOptionsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewerPage.SetTurnOptionsContent is not implemented"))
+}
+
+func (UnimplementedGameViewerPageHandler) ShowBuildOptions(context.Context, *connect.Request[v1.ShowBuildOptionsRequest]) (*connect.Response[v1.ShowBuildOptionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewerPage.ShowBuildOptions is not implemented"))
 }
 
 func (UnimplementedGameViewerPageHandler) SetUnitStatsContent(context.Context, *connect.Request[v1.SetContentRequest]) (*connect.Response[v1.SetContentResponse], error) {

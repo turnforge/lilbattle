@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	GameViewerPage_SetTurnOptionsContent_FullMethodName        = "/weewar.v1.GameViewerPage/SetTurnOptionsContent"
+	GameViewerPage_ShowBuildOptions_FullMethodName             = "/weewar.v1.GameViewerPage/ShowBuildOptions"
 	GameViewerPage_SetUnitStatsContent_FullMethodName          = "/weewar.v1.GameViewerPage/SetUnitStatsContent"
 	GameViewerPage_SetDamageDistributionContent_FullMethodName = "/weewar.v1.GameViewerPage/SetDamageDistributionContent"
 	GameViewerPage_SetTerrainStatsContent_FullMethodName       = "/weewar.v1.GameViewerPage/SetTerrainStatsContent"
@@ -49,6 +50,7 @@ const (
 type GameViewerPageClient interface {
 	// Content update methods
 	SetTurnOptionsContent(ctx context.Context, in *SetContentRequest, opts ...grpc.CallOption) (*SetContentResponse, error)
+	ShowBuildOptions(ctx context.Context, in *ShowBuildOptionsRequest, opts ...grpc.CallOption) (*ShowBuildOptionsResponse, error)
 	SetUnitStatsContent(ctx context.Context, in *SetContentRequest, opts ...grpc.CallOption) (*SetContentResponse, error)
 	SetDamageDistributionContent(ctx context.Context, in *SetContentRequest, opts ...grpc.CallOption) (*SetContentResponse, error)
 	SetTerrainStatsContent(ctx context.Context, in *SetContentRequest, opts ...grpc.CallOption) (*SetContentResponse, error)
@@ -88,6 +90,16 @@ func (c *gameViewerPageClient) SetTurnOptionsContent(ctx context.Context, in *Se
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetContentResponse)
 	err := c.cc.Invoke(ctx, GameViewerPage_SetTurnOptionsContent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameViewerPageClient) ShowBuildOptions(ctx context.Context, in *ShowBuildOptionsRequest, opts ...grpc.CallOption) (*ShowBuildOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ShowBuildOptionsResponse)
+	err := c.cc.Invoke(ctx, GameViewerPage_ShowBuildOptions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -300,6 +312,7 @@ func (c *gameViewerPageClient) LogMessage(ctx context.Context, in *LogMessageReq
 type GameViewerPageServer interface {
 	// Content update methods
 	SetTurnOptionsContent(context.Context, *SetContentRequest) (*SetContentResponse, error)
+	ShowBuildOptions(context.Context, *ShowBuildOptionsRequest) (*ShowBuildOptionsResponse, error)
 	SetUnitStatsContent(context.Context, *SetContentRequest) (*SetContentResponse, error)
 	SetDamageDistributionContent(context.Context, *SetContentRequest) (*SetContentResponse, error)
 	SetTerrainStatsContent(context.Context, *SetContentRequest) (*SetContentResponse, error)
@@ -336,6 +349,9 @@ type UnimplementedGameViewerPageServer struct{}
 
 func (UnimplementedGameViewerPageServer) SetTurnOptionsContent(context.Context, *SetContentRequest) (*SetContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetTurnOptionsContent not implemented")
+}
+func (UnimplementedGameViewerPageServer) ShowBuildOptions(context.Context, *ShowBuildOptionsRequest) (*ShowBuildOptionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowBuildOptions not implemented")
 }
 func (UnimplementedGameViewerPageServer) SetUnitStatsContent(context.Context, *SetContentRequest) (*SetContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUnitStatsContent not implemented")
@@ -431,6 +447,24 @@ func _GameViewerPage_SetTurnOptionsContent_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GameViewerPageServer).SetTurnOptionsContent(ctx, req.(*SetContentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GameViewerPage_ShowBuildOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShowBuildOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameViewerPageServer).ShowBuildOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameViewerPage_ShowBuildOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameViewerPageServer).ShowBuildOptions(ctx, req.(*ShowBuildOptionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -805,6 +839,10 @@ var GameViewerPage_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetTurnOptionsContent",
 			Handler:    _GameViewerPage_SetTurnOptionsContent_Handler,
+		},
+		{
+			MethodName: "ShowBuildOptions",
+			Handler:    _GameViewerPage_ShowBuildOptions_Handler,
 		},
 		{
 			MethodName: "SetUnitStatsContent",

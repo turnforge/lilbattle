@@ -19,6 +19,11 @@ class GameViewerPageStub(object):
                 request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentResponse.FromString,
                 _registered_method=True)
+        self.ShowBuildOptions = channel.unary_unary(
+                '/weewar.v1.GameViewerPage/ShowBuildOptions',
+                request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsResponse.FromString,
+                _registered_method=True)
         self.SetUnitStatsContent = channel.unary_unary(
                 '/weewar.v1.GameViewerPage/SetUnitStatsContent',
                 request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
@@ -127,6 +132,12 @@ class GameViewerPageServicer(object):
     def SetTurnOptionsContent(self, request, context):
         """Content update methods
         """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ShowBuildOptions(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -264,6 +275,11 @@ def add_GameViewerPageServicer_to_server(servicer, server):
                     request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentResponse.SerializeToString,
             ),
+            'ShowBuildOptions': grpc.unary_unary_rpc_method_handler(
+                    servicer.ShowBuildOptions,
+                    request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsResponse.SerializeToString,
+            ),
             'SetUnitStatsContent': grpc.unary_unary_rpc_method_handler(
                     servicer.SetUnitStatsContent,
                     request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetContentRequest.FromString,
@@ -392,6 +408,33 @@ class GameViewerPage(object):
             '/weewar.v1.GameViewerPage/SetTurnOptionsContent',
             weewar_dot_v1_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
             weewar_dot_v1_dot_gameviewerpage__pb2.SetContentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ShowBuildOptions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.GameViewerPage/ShowBuildOptions',
+            weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsRequest.SerializeToString,
+            weewar_dot_v1_dot_gameviewerpage__pb2.ShowBuildOptionsResponse.FromString,
             options,
             channel_credentials,
             insecure,

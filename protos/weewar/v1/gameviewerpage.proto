@@ -14,6 +14,8 @@ service GameViewerPage {
     // Content update methods
     rpc SetTurnOptionsContent(SetContentRequest) returns (SetContentResponse);
 
+    rpc ShowBuildOptions(ShowBuildOptionsRequest) returns (ShowBuildOptionsResponse);
+
     rpc SetUnitStatsContent(SetContentRequest) returns (SetContentResponse);
 
     rpc SetDamageDistributionContent(SetContentRequest) returns (SetContentResponse);
@@ -70,6 +72,15 @@ message SetContentRequest {
 
 // Response from fetch
 message SetContentResponse {
+}
+
+
+message ShowBuildOptionsRequest {
+    string inner_html = 1;
+    bool hide = 2;
+}
+
+message ShowBuildOptionsResponse {
 }
 
 // Request to fetch data from a URL
