@@ -351,6 +351,10 @@ func (b *BaseGamesServiceImpl) applyWorldChange(change *v1.WorldChange, rtGame *
 		return b.applyUnitKilled(changeType.UnitKilled, rtGame)
 	case *v1.WorldChange_PlayerChanged:
 		return b.applyPlayerChanged(changeType.PlayerChanged, rtGame, state)
+	case *v1.WorldChange_UnitBuilt:
+		return b.applyUnitBuilt(changeType.UnitBuilt, rtGame)
+	case *v1.WorldChange_CoinsChanged:
+		return b.applyCoinsChanged(changeType.CoinsChanged, rtGame)
 	default:
 		return fmt.Errorf("unknown world change type")
 	}
@@ -428,6 +432,37 @@ func (b *BaseGamesServiceImpl) applyPlayerChanged(change *v1.PlayerChangedChange
 	state.TurnCounter = change.NewTurn
 
 	return nil
+}
+
+// applyUnitBuilt adds a newly built unit to the runtime game
+func (b *BaseGamesServiceImpl) applyUnitBuilt(change *v1.UnitBuiltChange, rtGame *Game) error {
+	if change.Unit == nil {
+		return fmt.Errorf("missing unit data in UnitBuiltChange")
+	}
+
+	// Add the new unit to the runtime game
+	rtGame.World.AddUnit(change.Unit)
+
+	// Update tile's last acted turn
+	coord := AxialCoord{Q: int(change.TileQ), R: int(change.TileR)}
+	tile := rtGame.World.TileAt(coord)
+	if tile != nil {
+		tile.LastActedTurn = rtGame.TurnCounter
+	}
+
+	return nil
+}
+
+// applyCoinsChanged updates a player's coin balance in the runtime game
+func (b *BaseGamesServiceImpl) applyCoinsChanged(change *v1.CoinsChangedChange, rtGame *Game) error {
+	// Update player's coins in game config
+	for i, player := range rtGame.Config.Players {
+		if player.PlayerId == change.PlayerId {
+			rtGame.Config.Players[i].Coins = change.NewCoins
+			return nil
+		}
+	}
+	return fmt.Errorf("player %d not found", change.PlayerId)
 }
 
 // convertRuntimeWorldToProto converts runtime world state to protobuf WorldData

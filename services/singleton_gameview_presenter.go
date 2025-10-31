@@ -143,7 +143,9 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 	switch req.Layer {
 	case "movement-highlight":
 		// User clicked on a movement highlight - execute the move
-		s.executeMovementAction(ctx, q, r)
+		if err := s.executeMovementAction(ctx, q, r); err != nil {
+			return nil, err
+		}
 	case "base-map":
 		wd := rg.World
 		if err != nil {
@@ -397,19 +399,17 @@ func extractPathCoords(path *v1.Path) []int32 {
 }
 
 // executeMovementAction executes a movement when user clicks on a movement highlight
-func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Context, targetQ, targetR int32) {
+func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Context, targetQ, targetR int32) error {
 	// Get current options from TurnOptionsPanel
 	currentOptions := s.TurnOptionsPanel.CurrentOptions()
 	if currentOptions == nil || len(currentOptions.Options) == 0 {
-		fmt.Println("[Presenter] No options available for movement")
-		return
+		return fmt.Errorf("no options available for movement")
 	}
 
 	// Get current game state
 	gameState := s.GamesService.SingletonGameState
 	if gameState == nil {
-		fmt.Println("[Presenter] Game state is nil")
-		return
+		return fmt.Errorf("game state is nil")
 	}
 
 	// Find the move option that matches the clicked coordinates
@@ -443,8 +443,7 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 	}
 
 	if gameMove == nil {
-		fmt.Println("[Presenter] Move/Attack option does not contain action object")
-		return
+		return fmt.Errorf("no valid move or attack option found for target position (%d,%d)", targetQ, targetR)
 	}
 
 	// Call ProcessMoves to execute the move
@@ -453,8 +452,7 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 	})
 
 	if err != nil {
-		fmt.Printf("[Presenter] Move execution failed: %v\n", err)
-		return
+		return fmt.Errorf("move execution failed: %w", err)
 	}
 
 	fmt.Println("[Presenter] Move executed successfully")
@@ -465,6 +463,8 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 
 	// Apply incremental updates from the move results
 	s.applyIncrementalChanges(ctx, resp.MoveResults)
+
+	return nil
 }
 
 // executeEndTurnAction executes the end turn action
@@ -602,6 +602,15 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 					}
 				}
 				// Update game UI status with new current player and turn counter
+				gameState := s.GamesService.SingletonGameState
+				s.GameState.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
+					CurrentPlayer: gameState.CurrentPlayer,
+					TurnCounter:   gameState.TurnCounter,
+				})
+
+			case *v1.WorldChange_CoinsChanged:
+				// Refresh game state panel to show updated coin balances
+				// The GameState panel automatically displays player coins from the game state
 				gameState := s.GamesService.SingletonGameState
 				s.GameState.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
 					CurrentPlayer: gameState.CurrentPlayer,

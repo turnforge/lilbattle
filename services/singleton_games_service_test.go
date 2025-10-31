@@ -79,12 +79,12 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 	// Verify option types
 	for i, opt := range resp.Options {
 		if moveOpt := opt.GetMove(); moveOpt != nil {
-			t.Logf("  Option %d: Move to (%d,%d)", i, moveOpt.Action.ToQ, moveOpt.Action.ToR)
+			t.Logf("  Option %d: Move to (%d,%d)", i, moveOpt.ToQ, moveOpt.ToR)
 			if moveOpt.ReconstructedPath != nil {
 				t.Logf("    Path has %d edges", len(moveOpt.ReconstructedPath.Edges))
 			}
 		} else if attackOpt := opt.GetAttack(); attackOpt != nil {
-			t.Logf("  Option %d: Attack at (%d,%d)", i, attackOpt.Action.DefenderQ, attackOpt.Action.DefenderR)
+			t.Logf("  Option %d: Attack at (%d,%d)", i, attackOpt.DefenderQ, attackOpt.DefenderR)
 		} else if captureOpt := opt.GetCapture(); captureOpt != nil {
 			t.Logf("  Option %d: Capture at (%d,%d)", i, captureOpt.Q, captureOpt.R)
 		}

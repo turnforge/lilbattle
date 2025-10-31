@@ -340,8 +340,23 @@ message GameConfiguration {
   // Team configuration
   repeated GameTeam teams = 2;
 
+  // Various kinds of per turn income configs
+  IncomeConfig income_configs = 3;
+
   // Game settings
-  GameSettings settings = 3;
+  GameSettings settings = 4;
+}
+
+message IncomeConfig {
+  int32 landbase_income = 1;
+
+  int32 navalbase_income = 2;
+
+  int32 airportbase_income = 3;
+
+  int32 missilesilo_income = 4;
+
+  int32 mines_income = 5;
 }
 
 message GamePlayer {
@@ -561,6 +576,7 @@ message WorldChange {
     UnitKilledChange unit_killed = 3;
     PlayerChangedChange player_changed = 4;
     UnitBuiltChange unit_built = 5;
+    CoinsChangedChange coins_changed = 6;
   }
 }
 
@@ -617,6 +633,20 @@ message UnitBuiltChange {
   int32 coins_cost = 4;
   // Player's remaining coins after build
   int32 player_coins = 5;
+}
+
+/**
+ * A player's coin balance changed
+ */
+message CoinsChangedChange {
+  // Which player's coins changed
+  int32 player_id = 1;
+  // Previous coin balance
+  int32 previous_coins = 2;
+  // New coin balance
+  int32 new_coins = 3;
+  // Reason for change: "build", "income", "repair", etc.
+  string reason = 4;
 }
 
 // Compact representation of all reachable paths from a source

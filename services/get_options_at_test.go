@@ -149,14 +149,14 @@ func runGetOptionsAtTest(t *testing.T, svc *SingletonGamesServiceImpl, testCase 
 			case *v1.GameOption_Move:
 				moveCount++
 				moveCoords = append(moveCoords, AxialCoord{
-					Q: int(optionType.Move.Action.ToQ),
-					R: int(optionType.Move.Action.ToR),
+					Q: int(optionType.Move.ToQ),
+					R: int(optionType.Move.ToR),
 				})
 			case *v1.GameOption_Attack:
 				attackCount++
 				attackCoords = append(attackCoords, AxialCoord{
-					Q: int(optionType.Attack.Action.DefenderQ),
-					R: int(optionType.Attack.Action.DefenderR),
+					Q: int(optionType.Attack.DefenderQ),
+					R: int(optionType.Attack.DefenderR),
 				})
 			case *v1.GameOption_EndTurn:
 				endTurnCount++

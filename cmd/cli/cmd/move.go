@@ -26,8 +26,9 @@ Examples:
   ww move A1 TL,TL,TR      Move unit A1: top-left, then top-left, then top-right
   ww move 3,4 TL           Move unit at 3,4 to top-left
   ww move A1 R --dryrun    Preview move without saving`,
-	Args: cobra.ExactArgs(2),
-	RunE: runMove,
+	Args:         cobra.ExactArgs(2),
+	SilenceUsage: true,
+	RunE:         runMove,
 }
 
 func init() {
@@ -116,7 +117,6 @@ func runMove(cmd *cobra.Command, args []string) error {
 
 	// Format output
 	formatter := NewOutputFormatter()
-	defer formatter.PrintText("Done with this")
 
 	if formatter.JSON {
 		data := map[string]any{

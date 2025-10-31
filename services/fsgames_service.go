@@ -214,6 +214,9 @@ func (s *FSGamesServiceImpl) UpdateGame(ctx context.Context, req *v1.UpdateGameR
 		if req.NewGame.Difficulty != "" {
 			game.Difficulty = req.NewGame.Difficulty
 		}
+		if req.NewGame.Config != nil {
+			game.Config = req.NewGame.Config
+		}
 		game.UpdatedAt = tspb.New(time.Now())
 
 		if err := s.storage.SaveArtifact(req.GameId, "metadata", game); err != nil {

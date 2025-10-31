@@ -784,10 +784,51 @@ export const GameConfigurationSchema: MessageSchema = {
       repeated: true,
     },
     {
-      name: "settings",
+      name: "incomeConfigs",
       type: FieldType.MESSAGE,
       id: 3,
+      messageType: "weewar.v1.IncomeConfig",
+    },
+    {
+      name: "settings",
+      type: FieldType.MESSAGE,
+      id: 4,
       messageType: "weewar.v1.GameSettings",
+    },
+  ],
+};
+
+
+/**
+ * Schema for IncomeConfig message
+ */
+export const IncomeConfigSchema: MessageSchema = {
+  name: "IncomeConfig",
+  fields: [
+    {
+      name: "landbaseIncome",
+      type: FieldType.NUMBER,
+      id: 1,
+    },
+    {
+      name: "navalbaseIncome",
+      type: FieldType.NUMBER,
+      id: 2,
+    },
+    {
+      name: "airportbaseIncome",
+      type: FieldType.NUMBER,
+      id: 3,
+    },
+    {
+      name: "missilesiloIncome",
+      type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
+      name: "minesIncome",
+      type: FieldType.NUMBER,
+      id: 5,
     },
   ],
 };
@@ -1308,6 +1349,13 @@ export const WorldChangeSchema: MessageSchema = {
       messageType: "weewar.v1.UnitBuiltChange",
       oneofGroup: "change_type",
     },
+    {
+      name: "coinsChanged",
+      type: FieldType.MESSAGE,
+      id: 6,
+      messageType: "weewar.v1.CoinsChangedChange",
+      oneofGroup: "change_type",
+    },
   ],
   oneofGroups: ["change_type"],
 };
@@ -1441,6 +1489,36 @@ export const UnitBuiltChangeSchema: MessageSchema = {
       name: "playerCoins",
       type: FieldType.NUMBER,
       id: 5,
+    },
+  ],
+};
+
+
+/**
+ * Schema for CoinsChangedChange message
+ */
+export const CoinsChangedChangeSchema: MessageSchema = {
+  name: "CoinsChangedChange",
+  fields: [
+    {
+      name: "playerId",
+      type: FieldType.NUMBER,
+      id: 1,
+    },
+    {
+      name: "previousCoins",
+      type: FieldType.NUMBER,
+      id: 2,
+    },
+    {
+      name: "newCoins",
+      type: FieldType.NUMBER,
+      id: 3,
+    },
+    {
+      name: "reason",
+      type: FieldType.STRING,
+      id: 4,
     },
   ],
 };
@@ -3970,6 +4048,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.RulesEngine": RulesEngineSchema,
   "weewar.v1.Game": GameSchema,
   "weewar.v1.GameConfiguration": GameConfigurationSchema,
+  "weewar.v1.IncomeConfig": IncomeConfigSchema,
   "weewar.v1.GamePlayer": GamePlayerSchema,
   "weewar.v1.GameTeam": GameTeamSchema,
   "weewar.v1.GameSettings": GameSettingsSchema,
@@ -3989,6 +4068,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.UnitKilledChange": UnitKilledChangeSchema,
   "weewar.v1.PlayerChangedChange": PlayerChangedChangeSchema,
   "weewar.v1.UnitBuiltChange": UnitBuiltChangeSchema,
+  "weewar.v1.CoinsChangedChange": CoinsChangedChangeSchema,
   "weewar.v1.AllPaths": AllPathsSchema,
   "weewar.v1.PathEdge": PathEdgeSchema,
   "weewar.v1.Path": PathSchema,

@@ -199,7 +199,7 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 	g.GameState.UpdatedAt = tspb.New(time.Now())
 
 	// Record the build in world changes
-	change := &v1.WorldChange{
+	buildChange := &v1.WorldChange{
 		ChangeType: &v1.WorldChange_UnitBuilt{
 			UnitBuilt: &v1.UnitBuiltChange{
 				Unit:         copyUnit(newUnit),
@@ -210,8 +210,21 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 			},
 		},
 	}
+	result.Changes = append(result.Changes, buildChange)
 
-	result.Changes = append(result.Changes, change)
+	// Record the coin deduction
+	coinsChange := &v1.WorldChange{
+		ChangeType: &v1.WorldChange_CoinsChanged{
+			CoinsChanged: &v1.CoinsChangedChange{
+				PlayerId:      g.CurrentPlayer,
+				PreviousCoins: playerCoins,
+				NewCoins:      playerCoins - unitData.Coins,
+				Reason:        "build",
+			},
+		},
+	}
+	result.Changes = append(result.Changes, coinsChange)
+
 	return result, nil
 }
 
@@ -230,6 +243,56 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 	// TODO - use a pushed world at ProcessMoves level instead of g.World each time
 	previousPlayer := g.CurrentPlayer
 	previousTurn := g.TurnCounter
+
+	// Calculate income for ending player based on number of bases owned
+	const incomePerBase = int32(10)
+	baseCount := int32(0)
+	for _, tile := range g.World.TilesByCoord() {
+		if tile.Player == previousPlayer {
+			// Check if this is a base (building that generates income)
+			terrainData, err := g.rulesEngine.GetTerrainData(tile.TileType)
+			if err == nil && len(terrainData.BuildableUnitIds) > 0 {
+				// Buildings that can produce units are bases
+				baseCount++
+			}
+		}
+	}
+
+	// Get player's current coins
+	var playerCoins int32
+	for _, player := range g.Config.Players {
+		if player.PlayerId == previousPlayer {
+			playerCoins = player.Coins
+			break
+		}
+	}
+
+	// Calculate and add income
+	income := baseCount * incomePerBase
+	newCoins := playerCoins + income
+
+	// Update player's coins
+	for i, player := range g.Config.Players {
+		if player.PlayerId == previousPlayer {
+			g.Config.Players[i].Coins = newCoins
+			break
+		}
+	}
+
+	// Record the income change
+	if income > 0 {
+		coinsChange := &v1.WorldChange{
+			ChangeType: &v1.WorldChange_CoinsChanged{
+				CoinsChanged: &v1.CoinsChangedChange{
+					PlayerId:      previousPlayer,
+					PreviousCoins: playerCoins,
+					NewCoins:      newCoins,
+					Reason:        "income",
+				},
+			},
+		}
+		results.Changes = append(results.Changes, coinsChange)
+	}
 
 	// Capture the reset units AFTER reset (with refreshed movement points)
 	var resetUnits []*v1.Unit

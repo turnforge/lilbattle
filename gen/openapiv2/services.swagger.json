@@ -1434,6 +1434,31 @@
     "v1ClearPathsResponse": {
       "type": "object"
     },
+    "v1CoinsChangedChange": {
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Which player's coins changed"
+        },
+        "previousCoins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Previous coin balance"
+        },
+        "newCoins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "New coin balance"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for change: \"build\", \"income\", \"repair\", etc."
+        }
+      },
+      "title": "*\nA player's coin balance changed"
+    },
     "v1CreateGameRequest": {
       "type": "object",
       "properties": {
@@ -1626,6 +1651,10 @@
             "$ref": "#/definitions/v1GameTeam"
           },
           "title": "Team configuration"
+        },
+        "incomeConfigs": {
+          "$ref": "#/definitions/v1IncomeConfig",
+          "title": "Various kinds of per turn income configs"
         },
         "settings": {
           "$ref": "#/definitions/v1GameSettings",
@@ -2058,6 +2087,31 @@
         }
       },
       "title": "Specification for a single highlight"
+    },
+    "v1IncomeConfig": {
+      "type": "object",
+      "properties": {
+        "landbaseIncome": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "navalbaseIncome": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "airportbaseIncome": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "missilesiloIncome": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "minesIncome": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "v1InitializeGameResponse": {
       "type": "object",
@@ -2842,6 +2896,9 @@
         },
         "unitBuilt": {
           "$ref": "#/definitions/v1UnitBuiltChange"
+        },
+        "coinsChanged": {
+          "$ref": "#/definitions/v1CoinsChangedChange"
         }
       },
       "title": "*\nRepresents a change to the game world"

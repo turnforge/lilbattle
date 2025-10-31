@@ -339,8 +339,20 @@ export interface GameConfiguration {
   players?: GamePlayer[];
   /** Team configuration */
   teams?: GameTeam[];
+  /** Various kinds of per turn income configs */
+  incomeConfigs?: IncomeConfig;
   /** Game settings */
   settings?: GameSettings;
+}
+
+
+
+export interface IncomeConfig {
+  landbaseIncome: number;
+  navalbaseIncome: number;
+  airportbaseIncome: number;
+  missilesiloIncome: number;
+  minesIncome: number;
 }
 
 
@@ -548,6 +560,7 @@ export interface WorldChange {
   unitKilled?: UnitKilledChange;
   playerChanged?: PlayerChangedChange;
   unitBuilt?: UnitBuiltChange;
+  coinsChanged?: CoinsChangedChange;
 }
 
 
@@ -613,6 +626,22 @@ export interface UnitBuiltChange {
   coinsCost: number;
   /** Player's remaining coins after build */
   playerCoins: number;
+}
+
+
+/**
+ * *
+ A player's coin balance changed
+ */
+export interface CoinsChangedChange {
+  /** Which player's coins changed */
+  playerId: number;
+  /** Previous coin balance */
+  previousCoins: number;
+  /** New coin balance */
+  newCoins: number;
+  /** Reason for change: "build", "income", "repair", etc. */
+  reason: string;
 }
 
 
