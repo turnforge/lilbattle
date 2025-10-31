@@ -174,8 +174,11 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 			fmt.Printf("[SceneClicked] Options count: %d, Build options count: %d, hasOnlyBuildOptions: %v\n",
 				len(optionsResp.Options), len(buildOptions), hasOnlyBuildOptions)
 
+			// Always populate TurnOptionsPanel so CLI can access options
+			s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
+
 			if hasOnlyBuildOptions {
-				// Show build modal instead of turn options panel
+				// Show build modal for web UI
 				playerCoins := getPlayerCoins(game, gameState.CurrentPlayer)
 				fmt.Printf("[SceneClicked] Showing build modal with %d options, playerCoins=%d\n",
 					len(buildOptions), playerCoins)
@@ -188,9 +191,6 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 				s.selectedQ = &q
 				s.selectedR = &r
 			} else {
-				// Show turn options panel as usual
-				s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
-
 				// Send visualization commands to show highlights
 				highlights := buildHighlightSpecs(optionsResp, q, r)
 				if len(highlights) > 0 {
