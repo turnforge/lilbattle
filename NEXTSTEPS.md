@@ -161,7 +161,7 @@
 
 ### Advanced Game Mechanics
 **Priority**: Medium
-**Status**: Economy System Complete
+**Status**: Economy System Complete with Configurable Income
 
 **Completed**:
 - [x] Unit production from buildings (build system)
@@ -172,15 +172,18 @@
 - [x] ProcessBuildUnit with comprehensive validations
 - [x] UnitBuiltChange tracking in world history
 - [x] Economy system with coin deduction on build
-- [x] Income generation on end turn (bases * income_per_base)
+- [x] Income generation on end turn based on terrain type
 - [x] CoinsChangedChange WorldChange event tracking
 - [x] FSGamesService fix to persist GameConfig changes
 - [x] Move command error propagation (no false success messages)
+- [x] Terrain-based income system (income_per_turn field in TerrainDefinition)
+- [x] DefaultIncomeMap with varied rates (Land Base: 100, Naval: 150, Airport: 200, Silo: 300, Mines: 500)
+- [x] StartGamePage server-rendered configuration with GameConfiguration proto
+- [x] Income configuration UI (currently using defaults from terrain definitions)
+- [x] Starting coins configuration per player (default: 300)
+- [x] Comprehensive unit tests for income system (5 tests covering all scenarios)
 
 **Remaining Tasks**:
-- [ ] Move income rates from hardcoded constant to GameConfiguration.IncomeConfig
-- [ ] Add income configuration UI in StartGamePage
-- [ ] Add starting coins configuration per player in StartGamePage
 - [ ] Building capture mechanics
 - [ ] Fog of war implementation
 - [ ] Turn time limits and timers

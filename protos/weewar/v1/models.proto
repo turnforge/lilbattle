@@ -193,6 +193,8 @@ message TerrainDefinition {
 
   // List of units that can be built on this terrain
   repeated int32 buildable_unit_ids = 8;
+
+  int32 income_per_turn = 9;
 }
 
 // Rules engine unit definition  

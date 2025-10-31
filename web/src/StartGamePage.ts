@@ -5,6 +5,7 @@ import { World } from './World';
 import { LCMComponent } from '../lib/LCMComponent';
 import { LifecycleController } from '../lib/LifecycleController';
 import { WorldEventTypes } from './events';
+import type { GameConfiguration, GamePlayer, IncomeConfig } from '../gen/wasmjs/weewar/v1/interfaces';
 
 /**
  * Start Game Page - Orchestrator for game configuration functionality
@@ -26,9 +27,20 @@ class StartGamePage extends BasePage implements LCMComponent {
     private playerCount: number;
     private gameConfig: GameConfiguration = {
         players: [],
-        allowedUnits: [], // Will be populated with unit IDs
-        turnTimeLimit: 0,
-        teamMode: 'ffa'
+        teams: [],
+        incomeConfigs: {
+            landbaseIncome: 100,
+            navalbaseIncome: 100,
+            airportbaseIncome: 100,
+            missilesiloIncome: 100,
+            minesIncome: 100
+        },
+        settings: {
+            allowedUnits: [],
+            turnTimeLimit: 0,
+            teamMode: 'ffa',
+            maxTurns: 0
+        }
     };
     
     // Component instances
@@ -99,6 +111,15 @@ class StartGamePage extends BasePage implements LCMComponent {
         if (turnLimitSelect) {
             turnLimitSelect.addEventListener('change', this.handleTurnLimitChange.bind(this));
         }
+
+        // Bind income input fields
+        const incomeFields = ['landbase-income', 'navalbase-income', 'airportbase-income', 'missilesilo-income', 'mines-income'];
+        incomeFields.forEach(field => {
+            const input = document.querySelector(`[data-config="${field}"]`);
+            if (input) {
+                input.addEventListener('change', this.handleIncomeChange.bind(this));
+            }
+        });
     }
 
     /** Load document data and set initial UI states */
@@ -134,123 +155,66 @@ class StartGamePage extends BasePage implements LCMComponent {
     }
     
     /**
-     * Initialize game configuration based on detected player count
+     * Initialize game configuration from server-rendered HTML
      */
     private initializeGameConfiguration(): void {
-        const playerColors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
-        
+        // Load player configuration from server-rendered elements
         this.gameConfig.players = [];
-        for (let i = 0; i < this.playerCount; i++) {
-            this.gameConfig.players.push({
-                id: i + 1,
-                color: playerColors[i % playerColors.length],
-                type: i === 0 ? 'human' : 'ai', // Player 1 is human, others are AI
-                team: i + 1 // Each player starts on their own team
-            });
-        }
-        
-        // Initialize all units as allowed by default (get from server-rendered checkboxes)
+        const playerElements = document.querySelectorAll('[data-config-section="players"] [data-player]');
+        playerElements.forEach(el => {
+            const playerId = parseInt((el as HTMLElement).dataset.player || '0');
+            const typeSelect = el.querySelector('[data-config="type"]') as HTMLSelectElement;
+            const teamSelect = el.querySelector('[data-config="team"]') as HTMLSelectElement;
+            const coinsInput = el.querySelector('[data-config="coins"]') as HTMLInputElement;
+
+            if (typeSelect && teamSelect && coinsInput) {
+                this.gameConfig.players?.push({
+                    playerId: playerId,
+                    playerType: typeSelect.value,
+                    color: '', // Color is handled by server rendering
+                    teamId: parseInt(teamSelect.value),
+                    name: `Player ${playerId}`,
+                    isActive: true,
+                    startingCoins: parseInt(coinsInput.value),
+                    coins: parseInt(coinsInput.value)
+                });
+            }
+        });
+
+        // Load allowed units from server-rendered checkboxes
         const unitCheckboxes = document.querySelectorAll('#unit-restriction-grid input[type="checkbox"]');
-        this.gameConfig.allowedUnits = Array.from(unitCheckboxes).map(cb => (cb as HTMLInputElement).dataset.unit || '');
-        
-        // Update the player configuration UI
-        this.updatePlayerConfigurationUI();
+        this.gameConfig.settings!.allowedUnits = Array.from(unitCheckboxes)
+            .filter(cb => (cb as HTMLInputElement).checked)
+            .map(cb => parseInt((cb as HTMLInputElement).dataset.unit || '0'));
+
+        // Bind event listeners to server-rendered elements
+        this.bindPlayerConfigurationEvents();
     }
-    
+
     /**
-     * Update the player configuration UI elements
+     * Bind event listeners to server-rendered player configuration elements
      */
-    private updatePlayerConfigurationUI(): void {
+    private bindPlayerConfigurationEvents(): void {
         const playersSection = document.querySelector('[data-config-section="players"]');
         if (!playersSection) return;
-        
-        // Find the players container
-        const playersContainer = playersSection.querySelector('.space-y-3');
-        if (!playersContainer) return;
-        
-        // Clear existing player elements
-        playersContainer.innerHTML = '';
-        
-        // Create player configuration elements
-        for (let i = 0; i < this.playerCount; i++) {
-            const player = this.gameConfig.players[i];
-            const playerElement = this.createPlayerConfigElement(player, i);
-            playersContainer.appendChild(playerElement);
-        }
+
+        // Bind events to all player config selects and inputs
+        const typeSelects = playersSection.querySelectorAll('select[data-config="type"]');
+        typeSelects.forEach(select => {
+            select.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'type'));
+        });
+
+        const teamSelects = playersSection.querySelectorAll('select[data-config="team"]');
+        teamSelects.forEach(select => {
+            select.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'team'));
+        });
+
+        const coinsInputs = playersSection.querySelectorAll('input[data-config="coins"]');
+        coinsInputs.forEach(input => {
+            input.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'coins'));
+        });
     }
-    
-    /**
-     * Create a player configuration element
-     */
-    private createPlayerConfigElement(player: Player, index: number): HTMLElement {
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg';
-        
-        const colorClass = this.getPlayerColorClass(player.color);
-        
-        div.innerHTML = `
-            <div class="flex items-center space-x-2">
-                <div class="w-4 h-4 ${colorClass} rounded-full border border-gray-300"></div>
-                <span class="text-sm font-medium text-gray-900 dark:text-white">Player ${player.id}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-                <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
-                        data-player="${player.id}" 
-                        data-config="type"
-                        ${index === 0 ? 'disabled' : ''}>
-                    <option value="human" ${player.type === 'human' ? 'selected' : ''}>Human</option>
-                    <option value="ai" ${player.type === 'ai' ? 'selected' : ''}>AI</option>
-                    <option value="open" disabled>Open Invite</option>
-                </select>
-                <select class="text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
-                        data-player="${player.id}" 
-                        data-config="team">
-                    <option value="0">None</option>
-                    ${this.generateTeamOptions(player.team)}
-                </select>
-            </div>
-        `;
-        
-        // Bind event listeners
-        const typeSelect = div.querySelector('[data-config="type"]') as HTMLSelectElement;
-        const teamSelect = div.querySelector('[data-config="team"]') as HTMLSelectElement;
-        
-        if (typeSelect) {
-            typeSelect.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'type'));
-        }
-        if (teamSelect) {
-            teamSelect.addEventListener('change', (e) => this.handlePlayerConfigChange(e, 'team'));
-        }
-        
-        return div;
-    }
-    
-    /**
-     * Generate team options HTML based on player count
-     */
-    private generateTeamOptions(selectedTeam: number): string {
-        let options = '';
-        for (let i = 1; i <= this.playerCount; i++) {
-            options += `<option value="${i}" ${selectedTeam === i ? 'selected' : ''}>Team ${i}</option>`;
-        }
-        return options;
-    }
-    
-    /**
-     * Get CSS class for player color
-     */
-    private getPlayerColorClass(color: string): string {
-        const colorWorld: { [key: string]: string } = {
-            'red': 'bg-red-500',
-            'blue': 'bg-blue-500',
-            'green': 'bg-green-500',
-            'yellow': 'bg-yellow-500',
-            'purple': 'bg-purple-500',
-            'orange': 'bg-orange-500'
-        };
-        return colorWorld[color] || 'bg-gray-500';
-    }
-    
+
     /**
      * Bind events to server-rendered unit restriction buttons
      */
@@ -276,33 +240,40 @@ class StartGamePage extends BasePage implements LCMComponent {
         });
     }
     
-    private handlePlayerConfigChange(event: Event, configType: 'type' | 'team'): void {
-        const select = event.target as HTMLSelectElement;
-        const playerId = parseInt(select.dataset.player || '0');
-        const value = configType === 'team' ? parseInt(select.value) : select.value;
-        
-        const player = this.gameConfig.players.find(p => p.id === playerId);
+    private handlePlayerConfigChange(event: Event, configType: 'type' | 'team' | 'coins'): void {
+        const target = event.target as HTMLSelectElement | HTMLInputElement;
+        const playerId = parseInt(target.dataset.player || '0');
+
+        const player = this.gameConfig.players?.find(p => p.playerId === playerId);
         if (player) {
             if (configType === 'type') {
-                player.type = value as PlayerType;
+                player.playerType = (target as HTMLSelectElement).value;
             } else if (configType === 'team') {
-                player.team = value as number;
+                player.teamId = parseInt((target as HTMLSelectElement).value);
+            } else if (configType === 'coins') {
+                const coins = parseInt((target as HTMLInputElement).value) || 300;
+                player.startingCoins = coins;
+                player.coins = coins;
             }
         }
-        
+
         this.validateGameConfiguration();
     }
 
     private handleUnitRestrictionChange(event: Event): void {
         const checkbox = event.target as HTMLInputElement;
-        const unitId = checkbox.dataset.unit || '';
-        
+        const unitId = parseInt(checkbox.dataset.unit || '0');
+
+        if (!this.gameConfig.settings) {
+            this.gameConfig.settings = { allowedUnits: [], turnTimeLimit: 0, teamMode: 'ffa', maxTurns: 0 };
+        }
+
         if (checkbox.checked) {
-            if (!this.gameConfig.allowedUnits.includes(unitId)) {
-                this.gameConfig.allowedUnits.push(unitId);
+            if (!this.gameConfig.settings.allowedUnits.includes(unitId)) {
+                this.gameConfig.settings.allowedUnits.push(unitId);
             }
         } else {
-            this.gameConfig.allowedUnits = this.gameConfig.allowedUnits.filter(unit => unit !== unitId);
+            this.gameConfig.settings.allowedUnits = this.gameConfig.settings.allowedUnits.filter(unit => unit !== unitId);
         }
         
         this.validateGameConfiguration();
@@ -310,10 +281,47 @@ class StartGamePage extends BasePage implements LCMComponent {
 
     private handleTurnLimitChange(event: Event): void {
         const select = event.target as HTMLSelectElement;
-        this.gameConfig.turnTimeLimit = parseInt(select.value);
+        if (this.gameConfig.settings) {
+            this.gameConfig.settings.turnTimeLimit = parseInt(select.value);
+        }
         this.validateGameConfiguration();
     }
 
+    private handleIncomeChange(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const configType = input.dataset.config;
+        const value = parseInt(input.value) || 0;
+
+        if (!this.gameConfig.incomeConfigs) {
+            this.gameConfig.incomeConfigs = {
+                landbaseIncome: 100,
+                navalbaseIncome: 100,
+                airportbaseIncome: 100,
+                missilesiloIncome: 100,
+                minesIncome: 100
+            };
+        }
+
+        switch (configType) {
+            case 'landbase-income':
+                this.gameConfig.incomeConfigs.landbaseIncome = value;
+                break;
+            case 'navalbase-income':
+                this.gameConfig.incomeConfigs.navalbaseIncome = value;
+                break;
+            case 'airportbase-income':
+                this.gameConfig.incomeConfigs.airportbaseIncome = value;
+                break;
+            case 'missilesilo-income':
+                this.gameConfig.incomeConfigs.missilesiloIncome = value;
+                break;
+            case 'mines-income':
+                this.gameConfig.incomeConfigs.minesIncome = value;
+                break;
+        }
+
+        this.validateGameConfiguration();
+    }
 
     private validateGameConfiguration(): boolean {
         const startButton = document.querySelector('[data-action="start-game"]') as HTMLButtonElement;
@@ -321,13 +329,13 @@ class StartGamePage extends BasePage implements LCMComponent {
         let errors: string[] = [];
 
         // Check if at least one unit type is allowed
-        if (this.gameConfig.allowedUnits.length === 0) {
+        if (!this.gameConfig.settings?.allowedUnits || this.gameConfig.settings.allowedUnits.length === 0) {
             isValid = false;
             errors.push('At least one unit type must be allowed');
         }
 
         // Check if we have at least 2 active players
-        const activePlayers = this.gameConfig.players.filter(p => p.type !== 'none');
+        const activePlayers = this.gameConfig.players?.filter(p => p.playerType !== 'none') || [];
         if (activePlayers.length < 2) {
             isValid = false;
             errors.push('At least 2 players are required');
@@ -370,8 +378,8 @@ class StartGamePage extends BasePage implements LCMComponent {
     // Call CreateGame API via gRPC gateway
     private async callCreateGameAPI(): Promise<{ gameId: string }> {
         // Prepare the request payload matching the updated proto structure
-        const activePlayers = this.gameConfig.players.filter(p => p.type !== 'none');
-        
+        const activePlayers = this.gameConfig.players?.filter(p => p.playerType !== 'none') || [];
+
         // Get game name from input field
         const gameNameInput = document.getElementById('game-name-title') as HTMLInputElement;
         const gameName = gameNameInput?.value?.trim() || 'New Game';
@@ -385,15 +393,20 @@ class StartGamePage extends BasePage implements LCMComponent {
                 tags: [],
                 config: {
                     players: activePlayers.map(p => ({
-                        player_id: p.id,
-                        player_type: p.type,
+                        player_id: p.playerId,
+                        player_type: p.playerType,
                         color: p.color,
-                        team_id: p.team
+                        team_id: p.teamId,
+                        name: p.name,
+                        is_active: p.isActive,
+                        starting_coins: p.startingCoins,
+                        coins: p.coins
                     })),
+                    income_configs: this.gameConfig.incomeConfigs,
                     settings: {
-                        allowed_units: this.gameConfig.allowedUnits.map(id => parseInt(id)),
-                        turn_time_limit: this.gameConfig.turnTimeLimit,
-                        team_mode: this.gameConfig.teamMode,
+                        allowed_units: this.gameConfig.settings?.allowedUnits || [],
+                        turn_time_limit: this.gameConfig.settings?.turnTimeLimit || 0,
+                        team_mode: this.gameConfig.settings?.teamMode || 'ffa',
                         max_turns: 0 // Unlimited for now
                     }
                 }
@@ -436,19 +449,27 @@ class StartGamePage extends BasePage implements LCMComponent {
     }
 }
 
-// Type definitions for game configuration
-interface GameConfiguration {
-    players: Player[];
+// Type definitions for local game configuration state (will be mapped to proto types)
+interface GameConfigurationLocal {
+    players: PlayerLocal[];
     allowedUnits: string[];
     turnTimeLimit: number; // seconds, 0 = no limit
     teamMode: 'ffa' | 'teams';
+    incomeConfig: {
+        landbaseIncome: number;
+        navalbaseIncome: number;
+        airportbaseIncome: number;
+        missilesiloIncome: number;
+        minesIncome: number;
+    };
 }
 
-interface Player {
+interface PlayerLocal {
     id: number;
     color: string;
     type: PlayerType;
     team: number;
+    startingCoins: number;
 }
 
 type PlayerType = 'human' | 'ai' | 'open' | 'none';

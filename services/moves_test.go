@@ -194,3 +194,272 @@ func convertRuntimeWorldToProto(world *World) *v1.WorldData {
 
 	return worldData
 }
+
+// TestProcessEndTurnIncome tests that income is calculated correctly based on owned terrain types
+func TestProcessEndTurnIncome(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	// Create a world with different income-generating tiles
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add tiles for player 1
+	// Land Base (ID 1): income 100
+	baseTile := NewTile(AxialCoord{Q: 0, R: 0}, 1)
+	baseTile.Player = 1
+	world.AddTile(baseTile)
+
+	// Naval Base (ID 2): income 150
+	harborTile := NewTile(AxialCoord{Q: 1, R: 0}, 2)
+	harborTile.Player = 1
+	world.AddTile(harborTile)
+
+	// Airport (ID 3): income 200
+	airportTile := NewTile(AxialCoord{Q: 2, R: 0}, 3)
+	airportTile.Player = 1
+	world.AddTile(airportTile)
+
+	// Missile Silo (ID 16): income 300
+	siloTile := NewTile(AxialCoord{Q: 3, R: 0}, 16)
+	siloTile.Player = 1
+	world.AddTile(siloTile)
+
+	// Non-income tile for player 1 (Grass)
+	grassTile := NewTile(AxialCoord{Q: 4, R: 0}, 4)
+	grassTile.Player = 1
+	world.AddTile(grassTile)
+
+	// Land Base for player 2
+	player2Base := NewTile(AxialCoord{Q: 5, R: 0}, 1)
+	player2Base.Player = 2
+	world.AddTile(player2Base)
+
+	// Create game configuration with initial coins
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 500, StartingCoins: 500},
+			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+		},
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	// Process end turn for player 1
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Verify income was calculated correctly
+	// Expected income for player 1: 100 (base) + 150 (harbor) + 200 (airport) + 300 (silo) = 750
+	expectedIncome := int32(750)
+	expectedCoins := int32(500) + expectedIncome // 500 starting + 750 income = 1250
+
+	// Check player coins were updated
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != expectedCoins {
+		t.Errorf("Player 1 coins after end turn: got %d, want %d (initial 500 + income %d)",
+			player1.Coins, expectedCoins, expectedIncome)
+	}
+
+	// Verify CoinsChangedChange was recorded
+	hasCoinsChange := false
+	for _, change := range result.Changes {
+		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
+			hasCoinsChange = true
+			if coinsChange.PlayerId != 1 {
+				t.Errorf("CoinsChangedChange player: got %d, want 1", coinsChange.PlayerId)
+			}
+			if coinsChange.PreviousCoins != 500 {
+				t.Errorf("Previous coins: got %d, want 500", coinsChange.PreviousCoins)
+			}
+			if coinsChange.NewCoins != expectedCoins {
+				t.Errorf("New coins: got %d, want %d", coinsChange.NewCoins, expectedCoins)
+			}
+		}
+	}
+
+	if !hasCoinsChange {
+		t.Error("Expected CoinsChangedChange in result, but not found")
+	}
+
+	// Verify current player changed to player 2
+	if rtGame.CurrentPlayer != 2 {
+		t.Errorf("Current player after end turn: got %d, want 2", rtGame.CurrentPlayer)
+	}
+}
+
+// TestProcessEndTurnNoIncome tests end turn with no income-generating tiles
+func TestProcessEndTurnNoIncome(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	// Create a world with only non-income tiles
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add only grass tiles for player 1 (no income)
+	grassTile1 := NewTile(AxialCoord{Q: 0, R: 0}, 4)
+	grassTile1.Player = 1
+	world.AddTile(grassTile1)
+
+	grassTile2 := NewTile(AxialCoord{Q: 1, R: 0}, 4)
+	grassTile2.Player = 1
+	world.AddTile(grassTile2)
+
+	// Create game configuration
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 200, StartingCoins: 200},
+			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+		},
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	// Process end turn for player 1
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Verify no income was added (coins stay the same)
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != 200 {
+		t.Errorf("Player 1 coins after end turn: got %d, want 200 (no income generated)", player1.Coins)
+	}
+
+	// Verify no CoinsChangedChange was recorded (since income was 0)
+	for _, change := range result.Changes {
+		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
+			t.Errorf("Expected no CoinsChangedChange when income is 0, but got change with %d income",
+				coinsChange.NewCoins-coinsChange.PreviousCoins)
+		}
+	}
+}
+
+// TestProcessEndTurnMultipleSameType tests income from multiple bases of the same type
+func TestProcessEndTurnMultipleSameType(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	// Create a world with multiple land bases
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add 5 land bases for player 1 (each generates 100 income)
+	for i := 0; i < 5; i++ {
+		baseTile := NewTile(AxialCoord{Q: i, R: 0}, 1)
+		baseTile.Player = 1
+		world.AddTile(baseTile)
+	}
+
+	// Create game configuration
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 1000, StartingCoins: 1000},
+			{PlayerId: 2, Coins: 500, StartingCoins: 500},
+		},
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	// Process end turn
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Verify income: 5 bases * 100 = 500
+	expectedIncome := int32(500)
+	expectedCoins := int32(1000) + expectedIncome
+
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != expectedCoins {
+		t.Errorf("Player 1 coins after end turn: got %d, want %d (1000 + 500 income)",
+			player1.Coins, expectedCoins)
+	}
+
+	// Verify CoinsChangedChange
+	hasCoinsChange := false
+	for _, change := range result.Changes {
+		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
+			hasCoinsChange = true
+			actualIncome := coinsChange.NewCoins - coinsChange.PreviousCoins
+			if actualIncome != expectedIncome {
+				t.Errorf("Income: got %d, want %d", actualIncome, expectedIncome)
+			}
+		}
+	}
+
+	if !hasCoinsChange {
+		t.Error("Expected CoinsChangedChange in result")
+	}
+}

@@ -286,6 +286,7 @@ export class TerrainDefinition implements TerrainDefinitionInterface {
   unitProperties: Record<number, TerrainUnitProperties> = {};
   /** List of units that can be built on this terrain */
   buildableUnitIds: number[] = [];
+  incomePerTurn: number = 0;
 
   /**
    * Create and deserialize an instance from raw data

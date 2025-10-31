@@ -198,6 +198,7 @@ export interface TerrainDefinition {
   unitProperties: Record<number, TerrainUnitProperties>;
   /** List of units that can be built on this terrain */
   buildableUnitIds: number[];
+  incomePerTurn: number;
 }
 
 

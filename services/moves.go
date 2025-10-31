@@ -244,16 +244,15 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 	previousPlayer := g.CurrentPlayer
 	previousTurn := g.TurnCounter
 
-	// Calculate income for ending player based on number of bases owned
-	const incomePerBase = int32(10)
-	baseCount := int32(0)
+	// Calculate income for ending player based on bases owned and their types
+	totalIncome := int32(0)
 	for _, tile := range g.World.TilesByCoord() {
 		if tile.Player == previousPlayer {
 			// Check if this is a base (building that generates income)
 			terrainData, err := g.rulesEngine.GetTerrainData(tile.TileType)
-			if err == nil && len(terrainData.BuildableUnitIds) > 0 {
-				// Buildings that can produce units are bases
-				baseCount++
+			if err == nil && terrainData.IncomePerTurn > 0 {
+				// Add income from this terrain
+				totalIncome += terrainData.IncomePerTurn
 			}
 		}
 	}
@@ -268,7 +267,7 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 	}
 
 	// Calculate and add income
-	income := baseCount * incomePerBase
+	income := totalIncome
 	newCoins := playerCoins + income
 
 	// Update player's coins

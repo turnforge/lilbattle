@@ -914,6 +914,7 @@ type TerrainDefinition struct {
 	UnitProperties map[int32]*TerrainUnitProperties `protobuf:"bytes,7,rep,name=unit_properties,json=unitProperties,proto3" json:"unit_properties,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// List of units that can be built on this terrain
 	BuildableUnitIds []int32 `protobuf:"varint,8,rep,packed,name=buildable_unit_ids,json=buildableUnitIds,proto3" json:"buildable_unit_ids,omitempty"`
+	IncomePerTurn    int32   `protobuf:"varint,9,opt,name=income_per_turn,json=incomePerTurn,proto3" json:"income_per_turn,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -988,6 +989,13 @@ func (x *TerrainDefinition) GetBuildableUnitIds() []int32 {
 		return x.BuildableUnitIds
 	}
 	return nil
+}
+
+func (x *TerrainDefinition) GetIncomePerTurn() int32 {
+	if x != nil {
+		return x.IncomePerTurn
+	}
+	return 0
 }
 
 // Rules engine unit definition
@@ -3809,14 +3817,15 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +
 	"\tis_ranged\x18\x03 \x01(\bR\bisRanged\x12\x1f\n" +
 	"\vturn_number\x18\x04 \x01(\x05R\n" +
-	"turnNumber\"\xdb\x02\n" +
+	"turnNumber\"\x83\x03\n" +
 	"\x11TerrainDefinition\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x05 \x01(\x05R\x04type\x12 \n" +
 	"\vdescription\x18\x06 \x01(\tR\vdescription\x12Y\n" +
 	"\x0funit_properties\x18\a \x03(\v20.weewar.v1.TerrainDefinition.UnitPropertiesEntryR\x0eunitProperties\x12,\n" +
-	"\x12buildable_unit_ids\x18\b \x03(\x05R\x10buildableUnitIds\x1ac\n" +
+	"\x12buildable_unit_ids\x18\b \x03(\x05R\x10buildableUnitIds\x12&\n" +
+	"\x0fincome_per_turn\x18\t \x01(\x05R\rincomePerTurn\x1ac\n" +
 	"\x13UnitPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x126\n" +
 	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\"\xd9\a\n" +

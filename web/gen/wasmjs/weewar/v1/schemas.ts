@@ -395,6 +395,11 @@ export const TerrainDefinitionSchema: MessageSchema = {
       id: 8,
       repeated: true,
     },
+    {
+      name: "incomePerTurn",
+      type: FieldType.NUMBER,
+      id: 9,
+    },
   ],
 };
 

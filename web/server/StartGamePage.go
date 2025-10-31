@@ -14,10 +14,11 @@ var AllowedUnitIDs = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 
 
 type StartGamePage struct {
 	BasePage
-	Header    Header
-	World     *protos.World
-	WorldId   string
-	UnitTypes []UnitType
+	Header            Header
+	World             *protos.World
+	WorldId           string
+	UnitTypes         []UnitType
+	GameConfiguration *protos.GameConfiguration
 }
 
 func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
@@ -52,7 +53,10 @@ func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 		}
 	}
 
-	// Load unit types for unit restrictions UI
+	// Initialize default game configuration
+	p.initializeGameConfiguration()
+
+	// Load unit types for unit restrictions UI (after config is initialized)
 	p.loadUnitTypes()
 
 	return nil, false
@@ -78,6 +82,54 @@ func (p *StartGamePage) loadUnitTypes() {
 				IconDataURL:    iconDataURL,
 			})
 		}
+	}
+}
+
+// initializeGameConfiguration sets up default game configuration values
+func (p *StartGamePage) initializeGameConfiguration() {
+	playerColors := []string{"red", "blue", "green", "yellow", "purple", "orange"}
+
+	// Initialize players with defaults
+	players := []*protos.GamePlayer{}
+	for i := 0; i < 2; i++ {
+		playerType := "ai"
+		if i == 0 {
+			playerType = "human"
+		}
+		players = append(players, &protos.GamePlayer{
+			PlayerId:      int32(i + 1),
+			PlayerType:    playerType,
+			Color:         playerColors[i%len(playerColors)],
+			TeamId:        int32(i + 1),
+			Name:          fmt.Sprintf("Player %d", i+1),
+			IsActive:      true,
+			StartingCoins: 300,
+			Coins:         300,
+		})
+	}
+
+	// Initialize default income configuration
+	incomeConfig := &protos.IncomeConfig{
+		LandbaseIncome:     100,
+		NavalbaseIncome:    100,
+		AirportbaseIncome:  100,
+		MissilesiloIncome:  100,
+		MinesIncome:        100,
+	}
+
+	// Initialize default settings
+	settings := &protos.GameSettings{
+		AllowedUnits:  AllowedUnitIDs,
+		TurnTimeLimit: 0,
+		TeamMode:      "ffa",
+		MaxTurns:      0,
+	}
+
+	p.GameConfiguration = &protos.GameConfiguration{
+		Players:       players,
+		Teams:         []*protos.GameTeam{},
+		IncomeConfigs: incomeConfig,
+		Settings:      settings,
 	}
 }
 

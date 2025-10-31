@@ -10,6 +10,16 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// Default Income available from various tile types if this is not already in our rules data json
+// All other tiles do not generate income
+var DefaultIncomeMap = map[int32]int32{
+	1:  100, // Land Base
+	2:  150, // Naval base
+	3:  200, // Airport base
+	16: 300, // Missile silo
+	20: 500, // Mines
+}
+
 // LoadRulesEngineFromFile loads a RulesEngine from separate rules and damage JSON files
 // damageFilename can be empty string if damage distributions are not needed
 func LoadRulesEngineFromFile(rulesFilename string, damageFilename string) (*RulesEngine, error) {
@@ -148,6 +158,9 @@ func LoadRulesEngineFromJSON(rulesJSON []byte, damageJSON []byte) (*RulesEngine,
 		}
 	}
 
+	// Set default income values for terrains
+	setDefaultIncomeValues(rulesEngine)
+
 	// Populate reference maps from centralized properties for fast lookup
 	rulesEngine.PopulateReferenceMaps()
 
@@ -238,4 +251,14 @@ func calculateExpectedDamage(damage *v1.DamageDistribution) {
 	}
 
 	damage.ExpectedDamage = expectedDamage
+}
+
+// setDefaultIncomeValues sets default income_per_turn values for terrain types using DefaultIncomeMap
+func setDefaultIncomeValues(re *RulesEngine) {
+	for tileID, terrain := range re.Terrains {
+		// Check if this tile ID has a default income value
+		if income, ok := DefaultIncomeMap[tileID]; ok {
+			terrain.IncomePerTurn = income
+		}
+	}
 }

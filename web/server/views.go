@@ -111,6 +111,14 @@ func NewRootViewsHandler(middleware *oa.Middleware, clients *svc.ClientMgr) *Roo
 			}
 			return template.JS(jsonBytes)
 		},
+		"contains": func(slice []int32, item int32) bool {
+			for _, v := range slice {
+				if v == item {
+					return true
+				}
+			}
+			return false
+		},
 	})
 	out.Context = &ViewContext{
 		AuthMiddleware: middleware,
