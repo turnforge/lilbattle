@@ -1,0 +1,21 @@
+{
+  "ui": {
+    "Variables": { "pos": "left", "width": 60 },
+    "Watches": { "pos": "left", "width": 60 },
+    "Stack": { "pos": "left", "width": 60 },
+    "Breakpoints": { "pos": "left", "width": 60 },
+    "Output": { "pos": "bottom", "height": 10 },
+    "Console": { "pos": "bottom", "height": 10 }
+  },
+  "configurations": {
+    "Debug 'ww tiles'": {
+      "adapter": "vscode-go",
+      "configuration": {
+        "request": "launch",
+        "program": "main.go",
+        "mode": "debug",
+        "args": ["--dryrun", "--game-id", "c5380903", "tiles"]
+      }
+    }
+  }
+}

@@ -192,12 +192,76 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 			coord := services.CoordFromInt32(unit.Q, unit.R)
 			unitID := unit.Shortcut
 			if unitID == "" {
-				playerLetter := string(rune('A' + playerID))
+				// Player 1 -> 'A', Player 2 -> 'B', etc.
+				playerLetter := string(rune('A' + playerID - 1))
 				unitID = fmt.Sprintf("%s?", playerLetter)
 			}
 			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s (HP: %d, Moves: %f)\n",
 				unitID, unit.UnitType, coord.String(),
 				unit.AvailableHealth, unit.DistanceLeft))
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+// FormatTiles formats all units as text
+func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
+	if state.WorldData == nil || len(state.WorldData.Tiles) == 0 {
+		return "No tiles found\n"
+	}
+
+	rtGame, err := pc.Presenter.GamesService.GetRuntimeGame(
+		pc.Presenter.GamesService.SingletonGame,
+		pc.Presenter.GamesService.SingletonGameState)
+	if err != nil {
+		panic(err)
+	}
+
+	// Group tiles by player
+	tilesByPlayer := make(map[int32][]*v1.Tile)
+	numPlayers := int32(0)
+
+	for _, tile := range state.WorldData.Tiles {
+		if tile != nil && tile.Player > 0 {
+			if err := rtGame.TopUpTileIfNeeded(tile); err != nil {
+				panic(err)
+			}
+			tilesByPlayer[tile.Player] = append(tilesByPlayer[tile.Player], tile)
+			if tile.Player > numPlayers {
+				numPlayers = tile.Player
+			}
+		}
+	}
+
+	var sb strings.Builder
+	// Iterate starting from current player and wrap around
+	for i := int32(0); i < numPlayers; i++ {
+		playerID := (i + state.CurrentPlayer) % numPlayers
+		if playerID == 0 {
+			playerID = numPlayers
+		}
+		tiles := tilesByPlayer[playerID]
+		if len(tiles) == 0 {
+			continue
+		}
+		turnIndicator := ""
+		if playerID == state.CurrentPlayer {
+			turnIndicator = " *"
+		}
+		sb.WriteString(fmt.Sprintf("Player %d tiles%s:\n", playerID, turnIndicator))
+
+		for _, tile := range tiles {
+			coord := services.CoordFromInt32(tile.Q, tile.R)
+			tileID := tile.Shortcut
+			if tileID == "" {
+				// Player 1 -> 'A', Player 2 -> 'B', etc.
+				playerLetter := string(rune('A' + playerID - 1))
+				tileID = fmt.Sprintf("%s?", playerLetter)
+			}
+			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s\n",
+				tileID, tile.TileType, coord.String()))
 		}
 		sb.WriteString("\n")
 	}

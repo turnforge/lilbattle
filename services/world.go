@@ -44,6 +44,9 @@ type World struct {
 	unitsByShortcut      map[string]*v1.Unit `json:"-"` // Quick lookup by shortcut
 	unitCountersByPlayer map[int32]int32     `json:"-"` // Next unit number for each player
 
+	tilesByShortcut      map[string]*v1.Tile `json:"-"` // Quick lookup by shortcut
+	tileCountersByPlayer map[int32]int32     `json:"-"` // Next tile number for each player
+
 	// In case we are pushed environment this will tell us
 	// if a unit was "deleted" in this layer so not to recurse
 	//up when looking up a missing unit
@@ -82,19 +85,34 @@ func NewWorld(name string, protoWorld *v1.WorldData) *World {
 		unitsByCoord:         map[AxialCoord]*v1.Unit{},
 		unitsByShortcut:      map[string]*v1.Unit{},
 		unitCountersByPlayer: map[int32]int32{},
+		tilesByShortcut:      map[string]*v1.Tile{},
+		tileCountersByPlayer: map[int32]int32{},
 		tileDeleted:          map[AxialCoord]bool{},
 		unitDeleted:          map[AxialCoord]bool{},
 	}
 
-	// Convert protobuf tiles to runtime tiles
+	// Convert protobuf tiles and units to runtime structures
 	if protoWorld != nil {
+		// First pass: track existing tile shortcuts and find max counters
 		for _, protoTile := range protoWorld.Tiles {
-			coord := AxialCoord{Q: int(protoTile.Q), R: int(protoTile.R)}
-			w.SetTileType(coord, int(protoTile.TileType))
+			if protoTile.Player > 0 && protoTile.Shortcut != "" {
+				// Parse existing shortcut to update counter
+				if len(protoTile.Shortcut) >= 2 {
+					playerLetter := protoTile.Shortcut[0]
+					if playerLetter >= 'A' && playerLetter <= 'Z' {
+						if num, err := strconv.Atoi(protoTile.Shortcut[1:]); err == nil {
+							// Player 1 -> 'A', Player 2 -> 'B', etc.
+							playerID := int32(playerLetter - 'A' + 1)
+							if current, ok := w.tileCountersByPlayer[playerID]; !ok || int32(num) >= current {
+								w.tileCountersByPlayer[playerID] = int32(num + 1)
+							}
+						}
+					}
+				}
+			}
 		}
 
-		// Convert protobuf units to runtime units
-		// First pass: track existing shortcuts and find max counters
+		// First pass: track existing unit shortcuts and find max counters
 		for _, protoUnit := range protoWorld.Units {
 			if protoUnit.Shortcut != "" {
 				// Parse existing shortcut to update counter
@@ -102,7 +120,8 @@ func NewWorld(name string, protoWorld *v1.WorldData) *World {
 					playerLetter := protoUnit.Shortcut[0]
 					if playerLetter >= 'A' && playerLetter <= 'Z' {
 						if num, err := strconv.Atoi(protoUnit.Shortcut[1:]); err == nil {
-							playerID := int32(playerLetter - 'A')
+							// Player 1 -> 'A', Player 2 -> 'B', etc.
+							playerID := int32(playerLetter - 'A' + 1)
 							if current, ok := w.unitCountersByPlayer[playerID]; !ok || int32(num) >= current {
 								w.unitCountersByPlayer[playerID] = int32(num + 1)
 							}
@@ -112,22 +131,16 @@ func NewWorld(name string, protoWorld *v1.WorldData) *World {
 			}
 		}
 
-		// Second pass: add units (AddUnit will generate shortcuts for those without)
+		// Second pass: add tiles (use original proto objects to preserve references)
+		for _, protoTile := range protoWorld.Tiles {
+			// Use the original proto object directly so shortcuts are preserved
+			w.AddTile(protoTile)
+		}
+
+		// Second pass: add units (use original proto objects to preserve references)
 		for _, protoUnit := range protoWorld.Units {
-			coord := AxialCoord{Q: int(protoUnit.Q), R: int(protoUnit.R)}
-			// fmt.Printf("NewWorld: Converting unit at (%d, %d), saved DistanceLeft=%d, AvailableHealth=%d\n", coord.Q, coord.R, protoUnit.DistanceLeft, protoUnit.AvailableHealth)
-			unit := &v1.Unit{
-				UnitType:         protoUnit.UnitType,
-				Q:                int32(coord.Q),
-				R:                int32(coord.R),
-				Player:           protoUnit.Player,
-				Shortcut:         protoUnit.Shortcut, // Preserve existing shortcut
-				AvailableHealth:  protoUnit.AvailableHealth,
-				DistanceLeft:     protoUnit.DistanceLeft, // Preserve saved movement points
-				LastActedTurn:    protoUnit.LastActedTurn,
-				LastToppedupTurn: protoUnit.LastToppedupTurn,
-			}
-			w.AddUnit(unit)
+			// Use the original proto object directly so shortcuts are preserved
+			w.AddUnit(protoUnit)
 		}
 	}
 
@@ -140,6 +153,9 @@ func (w *World) Push() *World {
 	// Inherit unit counters from parent
 	for playerID, counter := range w.unitCountersByPlayer {
 		out.unitCountersByPlayer[playerID] = counter
+	}
+	for playerID, counter := range w.tileCountersByPlayer {
+		out.tileCountersByPlayer[playerID] = counter
 	}
 	return out
 }
@@ -217,8 +233,8 @@ func (w *World) NumUnits() int32 {
 
 // GenerateUnitShortcut creates a new shortcut for a unit of the given player
 func (w *World) GenerateUnitShortcut(playerID int32) string {
-	if playerID < 0 || playerID > 25 {
-		return "" // Only support A-Z for now
+	if playerID <= 0 || playerID > 26 {
+		return "" // Only support players 1-26 (A-Z), player 0 is neutral (no shortcut)
 	}
 
 	// Get next counter for this player
@@ -226,7 +242,8 @@ func (w *World) GenerateUnitShortcut(playerID int32) string {
 	w.unitCountersByPlayer[playerID] = counter + 1
 
 	// Generate shortcut: A1, B12, etc.
-	playerLetter := string(rune('A' + playerID))
+	// Player 1 -> 'A', Player 2 -> 'B', etc.
+	playerLetter := string(rune('A' + playerID - 1))
 	return fmt.Sprintf("%s%d", playerLetter, counter+1)
 }
 
@@ -240,6 +257,37 @@ func (w *World) GetUnitByShortcut(shortcut string) *v1.Unit {
 	// Check parent layer if exists
 	if w.parent != nil {
 		return w.parent.GetUnitByShortcut(shortcut)
+	}
+
+	return nil
+}
+
+// GenerateTileShortcut creates a new shortcut for a tile of the given player
+func (w *World) GenerateTileShortcut(playerID int32) string {
+	if playerID <= 0 || playerID > 26 {
+		return "" // Only support players 1-26 (A-Z), player 0 is neutral (no shortcut)
+	}
+
+	// Get next counter for this player
+	counter := w.tileCountersByPlayer[playerID]
+	w.tileCountersByPlayer[playerID] = counter + 1
+
+	// Generate shortcut: A1, B12, etc.
+	// Player 1 -> 'A', Player 2 -> 'B', etc.
+	playerLetter := string(rune('A' + playerID - 1))
+	return fmt.Sprintf("%s%d", playerLetter, counter+1)
+}
+
+// GetTileByShortcut returns a tile by its shortcut (e.g., "A1", "B12")
+func (w *World) GetTileByShortcut(shortcut string) *v1.Tile {
+	// Check current layer first
+	if tile, ok := w.tilesByShortcut[shortcut]; ok {
+		return tile
+	}
+
+	// Check parent layer if exists
+	if w.parent != nil {
+		return w.parent.GetTileByShortcut(shortcut)
 	}
 
 	return nil
@@ -336,12 +384,30 @@ func (w *World) AddTile(tile *v1.Tile) {
 	}
 	w.tileDeleted[coord] = false
 	w.tilesByCoord[coord] = tile
+
+	// Generate shortcut if not already set and tile is player-owned
+	if tile.Player > 0 && tile.Shortcut == "" {
+		tile.Shortcut = w.GenerateTileShortcut(tile.Player)
+	}
+
+	// Add to shortcut map (only for player-owned tiles with shortcuts)
+	if tile.Player > 0 && tile.Shortcut != "" {
+		w.tilesByShortcut[tile.Shortcut] = tile
+	}
 }
 
 // DeleteTile removes the tile at the specified cube coordinate
 func (w *World) DeleteTile(coord AxialCoord) {
-	w.tileDeleted[coord] = true
-	delete(w.tilesByCoord, coord)
+	tile := w.TileAt(coord)
+	if tile != nil {
+		w.tileDeleted[coord] = true
+		delete(w.tilesByCoord, coord)
+
+		// Remove from shortcut map
+		if tile.Shortcut != "" {
+			delete(w.tilesByShortcut, tile.Shortcut)
+		}
+	}
 }
 
 // AddUnit adds a new unit to the world at the specified position

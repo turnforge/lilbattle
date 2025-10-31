@@ -96,6 +96,36 @@ func (g *Game) ArePlayersOnSameTeam(playerID1, playerID2 int) bool {
 // Helper Functions
 // =============================================================================
 
+// TopUpTileIfNeeded performs lazy top-up of tile stats if the tile hasn't been refreshed this turn
+// This checks if tile.LastToppedupTurn < game.TurnCounter and if so:
+// - Restores movement points to max
+// - Sets available health to max (for new tiles) or applies healing
+// - Clears attack history and attacks received counter (wound bonus resets each turn)
+// - Updates tile.LastToppedupTurn to game.TurnCounter
+func (g *Game) TopUpTileIfNeeded(tile *v1.Tile) error {
+	// Check if tile needs top-up (hasn't been refreshed this turn)
+	if tile.LastToppedupTurn >= g.TurnCounter {
+		return nil // Already topped up this turn
+	}
+
+	// Get tile definition from rules engine
+	if g.rulesEngine == nil {
+		return fmt.Errorf("rules engine not set")
+	}
+
+	/* - TODO - use when needed
+	tileData, err := g.rulesEngine.GetTerrainData(tile.TileType)
+	if err != nil {
+		return fmt.Errorf("failed to get tile data for type %d: %w", tile.TileType, err)
+	}
+	*/
+
+	// Mark tile as topped-up for this turn
+	tile.LastToppedupTurn = g.TurnCounter
+
+	return nil
+}
+
 // TopUpUnitIfNeeded performs lazy top-up of unit stats if the unit hasn't been refreshed this turn
 // This checks if unit.LastToppedupTurn < game.TurnCounter and if so:
 // - Restores movement points to max
