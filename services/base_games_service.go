@@ -223,86 +223,79 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 		// Get allowed actions based on progression state
 		allowedActions := rtGame.rulesEngine.GetAllowedActionsForUnit(unit, unitDef)
 
-		// If no actions allowed (progression complete), only end turn available
-		if len(allowedActions) == 0 {
-			options = append(options, &v1.GameOption{
-				OptionType: &v1.GameOption_EndTurn{
-					EndTurn: &v1.EndTurnAction{},
-				},
-			})
-		} else {
-			// Check if "move" is allowed at current progression step
-			moveAllowed := containsAction(allowedActions, "move")
+		// Check if "move" is allowed at current progression step
+		moveAllowed := containsAction(allowedActions, "move")
 
-			// Get movement options if unit has movement left and move is allowed
-			if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 && moveAllowed {
-				pathsResult, err := dmp.GetMovementOptions(rtGame, req.Q, req.R)
-				if err == nil {
-					allPaths = pathsResult
+		// Get movement options if unit has movement left and move is allowed
+		if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 && moveAllowed {
+			pathsResult, err := dmp.GetMovementOptions(rtGame, req.Q, req.R)
+			if err == nil {
+				allPaths = pathsResult
 
-					// Create move options from AllPaths
-					for key, edge := range allPaths.Edges {
-						path, err := ReconstructPath(allPaths, edge.ToQ, edge.ToR)
-						if err != nil {
-							panic(err)
-						}
+				// Create move options from AllPaths
+				for key, edge := range allPaths.Edges {
+					path, err := ReconstructPath(allPaths, edge.ToQ, edge.ToR)
+					if err != nil {
+						panic(err)
+					}
 
-						// Create ready-to-use MoveUnitAction
-						moveAction := &v1.MoveUnitAction{
-							FromQ:             req.Q,
-							FromR:             req.R,
-							ToQ:               edge.ToQ,
-							ToR:               edge.ToR,
-							MovementCost:      edge.TotalCost,
-							ReconstructedPath: path,
+					// Create ready-to-use MoveUnitAction
+					moveAction := &v1.MoveUnitAction{
+						FromQ:             req.Q,
+						FromR:             req.R,
+						ToQ:               edge.ToQ,
+						ToR:               edge.ToR,
+						MovementCost:      edge.TotalCost,
+						ReconstructedPath: path,
+					}
+
+					options = append(options, &v1.GameOption{
+						OptionType: &v1.GameOption_Move{Move: moveAction},
+					})
+					_ = key // Using key just to avoid unused variable warning
+				}
+			}
+		}
+
+		// Check if "attack" is allowed at current progression step
+		attackAllowed := containsAction(allowedActions, "attack")
+
+		// Get attack options if unit can attack and attack is allowed
+		if unit.AvailableHealth > 0 && attackAllowed {
+			attackCoords, err := dmp.GetAttackOptions(rtGame, req.Q, req.R)
+			if err == nil {
+				for _, coord := range attackCoords {
+					// Get target unit info for rich attack option data
+					targetUnit := rtGame.World.UnitAt(coord)
+					if targetUnit != nil {
+						// Calculate estimated damage (simplified for now)
+						damageEstimate := int32(50) // TODO: Use proper damage calculation from rules engine
+
+						// Create ready-to-use AttackUnitAction
+						attackAction := &v1.AttackUnitAction{
+							AttackerQ:        req.Q,
+							AttackerR:        req.R,
+							DefenderQ:        int32(coord.Q),
+							DefenderR:        int32(coord.R),
+							TargetUnitType:   targetUnit.UnitType,
+							TargetUnitHealth: targetUnit.AvailableHealth,
+							CanAttack:        true,
+							DamageEstimate:   damageEstimate,
 						}
 
 						options = append(options, &v1.GameOption{
-							OptionType: &v1.GameOption_Move{Move: moveAction},
+							OptionType: &v1.GameOption_Attack{Attack: attackAction},
 						})
-						_ = key // Using key just to avoid unused variable warning
 					}
 				}
 			}
-
-			// Check if "attack" is allowed at current progression step
-			attackAllowed := containsAction(allowedActions, "attack")
-
-			// Get attack options if unit can attack and attack is allowed
-			if unit.AvailableHealth > 0 && attackAllowed {
-				attackCoords, err := dmp.GetAttackOptions(rtGame, req.Q, req.R)
-				if err == nil {
-					for _, coord := range attackCoords {
-						// Get target unit info for rich attack option data
-						targetUnit := rtGame.World.UnitAt(coord)
-						if targetUnit != nil {
-							// Calculate estimated damage (simplified for now)
-							damageEstimate := int32(50) // TODO: Use proper damage calculation from rules engine
-
-							// Create ready-to-use AttackUnitAction
-							attackAction := &v1.AttackUnitAction{
-								AttackerQ:        req.Q,
-								AttackerR:        req.R,
-								DefenderQ:        int32(coord.Q),
-								DefenderR:        int32(coord.R),
-								TargetUnitType:   targetUnit.UnitType,
-								TargetUnitHealth: targetUnit.AvailableHealth,
-								CanAttack:        true,
-								DamageEstimate:   damageEstimate,
-							}
-
-							options = append(options, &v1.GameOption{
-								OptionType: &v1.GameOption_Attack{Attack: attackAction},
-							})
-						}
-					}
-				}
-			}
-
-			// TODO: Add capture building options if "capture" is allowed
-			// TODO: Add build unit options if "build" is allowed
 		}
+
+		// TODO: Add capture building options if "capture" is allowed
+		// TODO: Add build unit options if "build" is allowed
 	}
+
+	// Note: End turn is always available as a global action, so we don't include it in tile-specific options
 
 	// Sort it for convinience too
 	sort.Slice(options, func(i, j int) bool {

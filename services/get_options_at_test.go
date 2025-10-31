@@ -224,11 +224,11 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					Q:    0, // Adjust based on actual unit positions in small-world
 					R:    0,
 					ExpectedResult: &GetOptionsAtExpectation{
-						// Empty tile - should only have end turn option
+						// Empty tile - no options (end turn is globally available)
 						MoveOptionCount:   0,
 						AttackOptionCount: 0,
-						EndTurnCount:      1,
-						TotalOptionCount:  1,
+						EndTurnCount:      0,
+						TotalOptionCount:  0,
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
@@ -240,8 +240,8 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					ExpectedResult: &GetOptionsAtExpectation{
 						MoveOptionCount:   0,
 						AttackOptionCount: 0,
-						EndTurnCount:      1,
-						TotalOptionCount:  1,
+						EndTurnCount:      0,
+						TotalOptionCount:  0,
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
@@ -262,12 +262,12 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					Q:    -1, // Player 1 unit from the logs above
 					R:    -2,
 					ExpectedResult: &GetOptionsAtExpectation{
-						// Our unit should have movement options + end turn
+						// Our unit should have movement options (end turn is global)
 						// Soldier with 3 movement points can reach 23 tiles
 						MoveOptionCount:   23, // All reachable tiles within 3 movement
 						AttackOptionCount: 0,  // Enemy units too far away
-						EndTurnCount:      1,
-						TotalOptionCount:  24, // 23 moves + 1 end turn
+						EndTurnCount:      0,
+						TotalOptionCount:  23, // Just the 23 moves
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
@@ -277,11 +277,11 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					Q:    2, // Player 2 unit from the logs above
 					R:    3,
 					ExpectedResult: &GetOptionsAtExpectation{
-						// Enemy unit - only end turn available
+						// Enemy unit - no options (end turn is global)
 						MoveOptionCount:   0,
 						AttackOptionCount: 0,
-						EndTurnCount:      1,
-						TotalOptionCount:  1,
+						EndTurnCount:      0,
+						TotalOptionCount:  0,
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
@@ -293,8 +293,8 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 					ExpectedResult: &GetOptionsAtExpectation{
 						MoveOptionCount:   0,
 						AttackOptionCount: 0,
-						EndTurnCount:      1,
-						TotalOptionCount:  1,
+						EndTurnCount:      0,
+						TotalOptionCount:  0,
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
