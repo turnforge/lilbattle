@@ -1115,6 +1115,8 @@ export interface SetUnitAtRequest {
   q: number;
   r: number;
   unit?: Unit;
+  flash: boolean;
+  appear: boolean;
 }
 
 
@@ -1129,6 +1131,7 @@ export interface SetUnitAtResponse {
 export interface RemoveTileAtRequest {
   q: number;
   r: number;
+  animate: boolean;
 }
 
 
@@ -1143,6 +1146,7 @@ export interface RemoveTileAtResponse {
 export interface RemoveUnitAtRequest {
   q: number;
   r: number;
+  animate: boolean;
 }
 
 
@@ -1221,14 +1225,14 @@ export interface ClearPathsResponse {
 /**
  * Request to animate unit movement along a path
  */
-export interface MoveUnitAnimationRequest {
+export interface MoveUnitRequest {
   unit?: Unit;
   path?: HexCoord[];
 }
 
 
 
-export interface MoveUnitAnimationResponse {
+export interface MoveUnitResponse {
 }
 
 
@@ -1293,38 +1297,6 @@ export interface ShowCaptureEffectRequest {
 
 
 export interface ShowCaptureEffectResponse {
-}
-
-
-/**
- * Request to set unit with optional animation
- */
-export interface SetUnitAtAnimationRequest {
-  q: number;
-  r: number;
-  unit?: Unit;
-  flash: boolean;
-  appear: boolean;
-}
-
-
-
-export interface SetUnitAtAnimationResponse {
-}
-
-
-/**
- * Request to remove unit with optional animation
- */
-export interface RemoveUnitAtAnimationRequest {
-  q: number;
-  r: number;
-  animate: boolean;
-}
-
-
-
-export interface RemoveUnitAtAnimationResponse {
 }
 
 

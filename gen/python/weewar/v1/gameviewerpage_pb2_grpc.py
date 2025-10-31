@@ -89,10 +89,10 @@ class GameViewerPageStub(object):
                 request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ClearPathsRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ClearPathsResponse.FromString,
                 _registered_method=True)
-        self.MoveUnitAnimation = channel.unary_unary(
-                '/weewar.v1.GameViewerPage/MoveUnitAnimation',
-                request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationRequest.SerializeToString,
-                response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationResponse.FromString,
+        self.MoveUnit = channel.unary_unary(
+                '/weewar.v1.GameViewerPage/MoveUnit',
+                request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitResponse.FromString,
                 _registered_method=True)
         self.ShowAttackEffect = channel.unary_unary(
                 '/weewar.v1.GameViewerPage/ShowAttackEffect',
@@ -108,16 +108,6 @@ class GameViewerPageStub(object):
                 '/weewar.v1.GameViewerPage/ShowCaptureEffect',
                 request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.FromString,
-                _registered_method=True)
-        self.SetUnitAtAnimation = channel.unary_unary(
-                '/weewar.v1.GameViewerPage/SetUnitAtAnimation',
-                request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationRequest.SerializeToString,
-                response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationResponse.FromString,
-                _registered_method=True)
-        self.RemoveUnitAtAnimation = channel.unary_unary(
-                '/weewar.v1.GameViewerPage/RemoveUnitAtAnimation',
-                request_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationRequest.SerializeToString,
-                response_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationResponse.FromString,
                 _registered_method=True)
         self.LogMessage = channel.unary_unary(
                 '/weewar.v1.GameViewerPage/LogMessage',
@@ -223,7 +213,7 @@ class GameViewerPageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def MoveUnitAnimation(self, request, context):
+    def MoveUnit(self, request, context):
         """Animation methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -243,18 +233,6 @@ class GameViewerPageServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def ShowCaptureEffect(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def SetUnitAtAnimation(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def RemoveUnitAtAnimation(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -345,10 +323,10 @@ def add_GameViewerPageServicer_to_server(servicer, server):
                     request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ClearPathsRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ClearPathsResponse.SerializeToString,
             ),
-            'MoveUnitAnimation': grpc.unary_unary_rpc_method_handler(
-                    servicer.MoveUnitAnimation,
-                    request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationRequest.FromString,
-                    response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationResponse.SerializeToString,
+            'MoveUnit': grpc.unary_unary_rpc_method_handler(
+                    servicer.MoveUnit,
+                    request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitResponse.SerializeToString,
             ),
             'ShowAttackEffect': grpc.unary_unary_rpc_method_handler(
                     servicer.ShowAttackEffect,
@@ -364,16 +342,6 @@ def add_GameViewerPageServicer_to_server(servicer, server):
                     servicer.ShowCaptureEffect,
                     request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.SerializeToString,
-            ),
-            'SetUnitAtAnimation': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetUnitAtAnimation,
-                    request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationRequest.FromString,
-                    response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationResponse.SerializeToString,
-            ),
-            'RemoveUnitAtAnimation': grpc.unary_unary_rpc_method_handler(
-                    servicer.RemoveUnitAtAnimation,
-                    request_deserializer=weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationRequest.FromString,
-                    response_serializer=weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationResponse.SerializeToString,
             ),
             'LogMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.LogMessage,
@@ -797,7 +765,7 @@ class GameViewerPage(object):
             _registered_method=True)
 
     @staticmethod
-    def MoveUnitAnimation(request,
+    def MoveUnit(request,
             target,
             options=(),
             channel_credentials=None,
@@ -810,9 +778,9 @@ class GameViewerPage(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/weewar.v1.GameViewerPage/MoveUnitAnimation',
-            weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationRequest.SerializeToString,
-            weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitAnimationResponse.FromString,
+            '/weewar.v1.GameViewerPage/MoveUnit',
+            weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitRequest.SerializeToString,
+            weewar_dot_v1_dot_gameviewerpage__pb2.MoveUnitResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -894,60 +862,6 @@ class GameViewerPage(object):
             '/weewar.v1.GameViewerPage/ShowCaptureEffect',
             weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.SerializeToString,
             weewar_dot_v1_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def SetUnitAtAnimation(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/weewar.v1.GameViewerPage/SetUnitAtAnimation',
-            weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationRequest.SerializeToString,
-            weewar_dot_v1_dot_gameviewerpage__pb2.SetUnitAtAnimationResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def RemoveUnitAtAnimation(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/weewar.v1.GameViewerPage/RemoveUnitAtAnimation',
-            weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationRequest.SerializeToString,
-            weewar_dot_v1_dot_gameviewerpage__pb2.RemoveUnitAtAnimationResponse.FromString,
             options,
             channel_credentials,
             insecure,

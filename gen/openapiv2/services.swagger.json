@@ -2234,7 +2234,7 @@
       },
       "title": "*\nMove unit from one position to another"
     },
-    "v1MoveUnitAnimationResponse": {
+    "v1MoveUnitResponse": {
       "type": "object"
     },
     "v1Pagination": {
@@ -2418,9 +2418,6 @@
     "v1RemoveTileAtResponse": {
       "type": "object"
     },
-    "v1RemoveUnitAtAnimationResponse": {
-      "type": "object"
-    },
     "v1RemoveUnitAtResponse": {
       "type": "object"
     },
@@ -2442,9 +2439,6 @@
       "title": "Response from fetch"
     },
     "v1SetTileAtResponse": {
-      "type": "object"
-    },
-    "v1SetUnitAtAnimationResponse": {
       "type": "object"
     },
     "v1SetUnitAtResponse": {

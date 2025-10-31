@@ -5,44 +5,40 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    ShowBuildOptionsResponse,
-    SetGameStateResponse,
-    SetTileAtRequest,
-    ShowCaptureEffectResponse,
-    RemoveUnitAtAnimationResponse,
-    SetContentResponse,
-    ShowBuildOptionsRequest,
-    ClearHighlightsRequest,
-    ShowPathRequest,
-    ShowPathResponse,
-    MoveUnitAnimationResponse,
-    RemoveTileAtRequest,
-    UpdateGameStatusResponse,
-    ClearPathsRequest,
-    ShowCaptureEffectRequest,
-    SetUnitAtResponse,
-    RemoveTileAtResponse,
-    ShowAttackEffectRequest,
-    SetUnitAtAnimationRequest,
-    SetContentRequest,
-    ShowHighlightsRequest,
-    ShowHighlightsResponse,
-    RemoveUnitAtAnimationRequest,
-    LogMessageRequest,
-    RemoveUnitAtRequest,
-    ClearHighlightsResponse,
-    ShowAttackEffectResponse,
-    SetGameStateRequest,
-    SetTileAtResponse,
-    SetUnitAtRequest,
-    MoveUnitAnimationRequest,
-    ShowHealEffectRequest,
-    ShowHealEffectResponse,
-    SetUnitAtAnimationResponse,
     LogMessageResponse,
+    ShowBuildOptionsRequest,
+    ShowBuildOptionsResponse,
+    SetGameStateRequest,
+    ClearHighlightsResponse,
+    SetContentResponse,
+    SetUnitAtResponse,
+    ShowHighlightsRequest,
+    SetGameStateResponse,
+    UpdateGameStatusResponse,
+    RemoveUnitAtRequest,
+    LogMessageRequest,
+    ShowHighlightsResponse,
+    MoveUnitRequest,
+    ShowAttackEffectRequest,
+    ShowHealEffectResponse,
+    SetUnitAtRequest,
+    RemoveTileAtRequest,
+    ShowAttackEffectResponse,
     UpdateGameStatusRequest,
+    ClearHighlightsRequest,
+    RemoveTileAtResponse,
+    SetTileAtRequest,
     RemoveUnitAtResponse,
+    ShowPathResponse,
     ClearPathsResponse,
+    MoveUnitResponse,
+    ShowCaptureEffectRequest,
+    SetContentRequest,
+    SetTileAtResponse,
+    ShowPathRequest,
+    ClearPathsRequest,
+    ShowHealEffectRequest,
+    ShowCaptureEffectResponse,
 } from './interfaces';
 /**
  * GameViewerPage service client interface
@@ -64,12 +60,10 @@ export interface GameViewerPageMethods {
 	clearHighlights(request: ClearHighlightsRequest): Promise<ClearHighlightsResponse>;
 	showPath(request: ShowPathRequest): Promise<ShowPathResponse>;
 	clearPaths(request: ClearPathsRequest): Promise<ClearPathsResponse>;
-	moveUnitAnimation(request: MoveUnitAnimationRequest): Promise<MoveUnitAnimationResponse>;
+	moveUnit(request: MoveUnitRequest): Promise<MoveUnitResponse>;
 	showAttackEffect(request: ShowAttackEffectRequest): Promise<ShowAttackEffectResponse>;
 	showHealEffect(request: ShowHealEffectRequest): Promise<ShowHealEffectResponse>;
 	showCaptureEffect(request: ShowCaptureEffectRequest): Promise<ShowCaptureEffectResponse>;
-	setUnitAtAnimation(request: SetUnitAtAnimationRequest): Promise<SetUnitAtAnimationResponse>;
-	removeUnitAtAnimation(request: RemoveUnitAtAnimationRequest): Promise<RemoveUnitAtAnimationResponse>;
 	logMessage(request: LogMessageRequest): Promise<LogMessageResponse>;
 }
 /**
@@ -122,8 +116,8 @@ export class GameViewerPageServiceClient extends ServiceClient implements GameVi
     async clearPaths(request: ClearPathsRequest): Promise<ClearPathsResponse> {
         return this.callMethod('gameViewerPage.clearPaths', request);
     }
-    async moveUnitAnimation(request: MoveUnitAnimationRequest): Promise<MoveUnitAnimationResponse> {
-        return this.callMethod('gameViewerPage.moveUnitAnimation', request);
+    async moveUnit(request: MoveUnitRequest): Promise<MoveUnitResponse> {
+        return this.callMethod('gameViewerPage.moveUnit', request);
     }
     async showAttackEffect(request: ShowAttackEffectRequest): Promise<ShowAttackEffectResponse> {
         return this.callMethod('gameViewerPage.showAttackEffect', request);
@@ -133,12 +127,6 @@ export class GameViewerPageServiceClient extends ServiceClient implements GameVi
     }
     async showCaptureEffect(request: ShowCaptureEffectRequest): Promise<ShowCaptureEffectResponse> {
         return this.callMethod('gameViewerPage.showCaptureEffect', request);
-    }
-    async setUnitAtAnimation(request: SetUnitAtAnimationRequest): Promise<SetUnitAtAnimationResponse> {
-        return this.callMethod('gameViewerPage.setUnitAtAnimation', request);
-    }
-    async removeUnitAtAnimation(request: RemoveUnitAtAnimationRequest): Promise<RemoveUnitAtAnimationResponse> {
-        return this.callMethod('gameViewerPage.removeUnitAtAnimation', request);
     }
     async logMessage(request: LogMessageRequest): Promise<LogMessageResponse> {
         return this.callMethod('gameViewerPage.logMessage', request);

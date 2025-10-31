@@ -150,11 +150,11 @@ func (c *GameViewerPageClient) ClearPaths(ctx context.Context, req *weewarv1.Cle
 	)
 }
 
-// MoveUnitAnimation calls the browser-provided MoveUnitAnimation method
-func (c *GameViewerPageClient) MoveUnitAnimation(ctx context.Context, req *weewarv1.MoveUnitAnimationRequest, opts ...grpc.CallOption) (*weewarv1.MoveUnitAnimationResponse, error) {
+// MoveUnit calls the browser-provided MoveUnit method
+func (c *GameViewerPageClient) MoveUnit(ctx context.Context, req *weewarv1.MoveUnitRequest, opts ...grpc.CallOption) (*weewarv1.MoveUnitResponse, error) {
 	// This is a synchronous browser method
-	return wasm.CallBrowserService[*weewarv1.MoveUnitAnimationRequest, *weewarv1.MoveUnitAnimationResponse](
-		c.channel, ctx, "GameViewerPage", "moveUnitAnimation", req,
+	return wasm.CallBrowserService[*weewarv1.MoveUnitRequest, *weewarv1.MoveUnitResponse](
+		c.channel, ctx, "GameViewerPage", "moveUnit", req,
 	)
 }
 
@@ -179,22 +179,6 @@ func (c *GameViewerPageClient) ShowCaptureEffect(ctx context.Context, req *weewa
 	// This is a synchronous browser method
 	return wasm.CallBrowserService[*weewarv1.ShowCaptureEffectRequest, *weewarv1.ShowCaptureEffectResponse](
 		c.channel, ctx, "GameViewerPage", "showCaptureEffect", req,
-	)
-}
-
-// SetUnitAtAnimation calls the browser-provided SetUnitAtAnimation method
-func (c *GameViewerPageClient) SetUnitAtAnimation(ctx context.Context, req *weewarv1.SetUnitAtAnimationRequest, opts ...grpc.CallOption) (*weewarv1.SetUnitAtAnimationResponse, error) {
-	// This is a synchronous browser method
-	return wasm.CallBrowserService[*weewarv1.SetUnitAtAnimationRequest, *weewarv1.SetUnitAtAnimationResponse](
-		c.channel, ctx, "GameViewerPage", "setUnitAtAnimation", req,
-	)
-}
-
-// RemoveUnitAtAnimation calls the browser-provided RemoveUnitAtAnimation method
-func (c *GameViewerPageClient) RemoveUnitAtAnimation(ctx context.Context, req *weewarv1.RemoveUnitAtAnimationRequest, opts ...grpc.CallOption) (*weewarv1.RemoveUnitAtAnimationResponse, error) {
-	// This is a synchronous browser method
-	return wasm.CallBrowserService[*weewarv1.RemoveUnitAtAnimationRequest, *weewarv1.RemoveUnitAtAnimationResponse](
-		c.channel, ctx, "GameViewerPage", "removeUnitAtAnimation", req,
 	)
 }
 

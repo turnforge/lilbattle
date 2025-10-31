@@ -2528,6 +2528,16 @@ export const SetUnitAtRequestSchema: MessageSchema = {
       id: 3,
       messageType: "weewar.v1.Unit",
     },
+    {
+      name: "flash",
+      type: FieldType.BOOLEAN,
+      id: 4,
+    },
+    {
+      name: "appear",
+      type: FieldType.BOOLEAN,
+      id: 5,
+    },
   ],
 };
 
@@ -2558,6 +2568,11 @@ export const RemoveTileAtRequestSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 2,
     },
+    {
+      name: "animate",
+      type: FieldType.BOOLEAN,
+      id: 3,
+    },
   ],
 };
 
@@ -2587,6 +2602,11 @@ export const RemoveUnitAtRequestSchema: MessageSchema = {
       name: "r",
       type: FieldType.NUMBER,
       id: 2,
+    },
+    {
+      name: "animate",
+      type: FieldType.BOOLEAN,
+      id: 3,
     },
   ],
 };
@@ -2766,10 +2786,10 @@ export const ClearPathsResponseSchema: MessageSchema = {
 
 
 /**
- * Schema for MoveUnitAnimationRequest message
+ * Schema for MoveUnitRequest message
  */
-export const MoveUnitAnimationRequestSchema: MessageSchema = {
-  name: "MoveUnitAnimationRequest",
+export const MoveUnitRequestSchema: MessageSchema = {
+  name: "MoveUnitRequest",
   fields: [
     {
       name: "unit",
@@ -2789,10 +2809,10 @@ export const MoveUnitAnimationRequestSchema: MessageSchema = {
 
 
 /**
- * Schema for MoveUnitAnimationResponse message
+ * Schema for MoveUnitResponse message
  */
-export const MoveUnitAnimationResponseSchema: MessageSchema = {
-  name: "MoveUnitAnimationResponse",
+export const MoveUnitResponseSchema: MessageSchema = {
+  name: "MoveUnitResponse",
   fields: [
   ],
 };
@@ -2955,87 +2975,6 @@ export const ShowCaptureEffectRequestSchema: MessageSchema = {
  */
 export const ShowCaptureEffectResponseSchema: MessageSchema = {
   name: "ShowCaptureEffectResponse",
-  fields: [
-  ],
-};
-
-
-/**
- * Schema for SetUnitAtAnimationRequest message
- */
-export const SetUnitAtAnimationRequestSchema: MessageSchema = {
-  name: "SetUnitAtAnimationRequest",
-  fields: [
-    {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 1,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 2,
-    },
-    {
-      name: "unit",
-      type: FieldType.MESSAGE,
-      id: 3,
-      messageType: "weewar.v1.Unit",
-    },
-    {
-      name: "flash",
-      type: FieldType.BOOLEAN,
-      id: 4,
-    },
-    {
-      name: "appear",
-      type: FieldType.BOOLEAN,
-      id: 5,
-    },
-  ],
-};
-
-
-/**
- * Schema for SetUnitAtAnimationResponse message
- */
-export const SetUnitAtAnimationResponseSchema: MessageSchema = {
-  name: "SetUnitAtAnimationResponse",
-  fields: [
-  ],
-};
-
-
-/**
- * Schema for RemoveUnitAtAnimationRequest message
- */
-export const RemoveUnitAtAnimationRequestSchema: MessageSchema = {
-  name: "RemoveUnitAtAnimationRequest",
-  fields: [
-    {
-      name: "q",
-      type: FieldType.NUMBER,
-      id: 1,
-    },
-    {
-      name: "r",
-      type: FieldType.NUMBER,
-      id: 2,
-    },
-    {
-      name: "animate",
-      type: FieldType.BOOLEAN,
-      id: 3,
-    },
-  ],
-};
-
-
-/**
- * Schema for RemoveUnitAtAnimationResponse message
- */
-export const RemoveUnitAtAnimationResponseSchema: MessageSchema = {
-  name: "RemoveUnitAtAnimationResponse",
   fields: [
   ],
 };
@@ -4132,8 +4071,8 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.ShowPathResponse": ShowPathResponseSchema,
   "weewar.v1.ClearPathsRequest": ClearPathsRequestSchema,
   "weewar.v1.ClearPathsResponse": ClearPathsResponseSchema,
-  "weewar.v1.MoveUnitAnimationRequest": MoveUnitAnimationRequestSchema,
-  "weewar.v1.MoveUnitAnimationResponse": MoveUnitAnimationResponseSchema,
+  "weewar.v1.MoveUnitRequest": MoveUnitRequestSchema,
+  "weewar.v1.MoveUnitResponse": MoveUnitResponseSchema,
   "weewar.v1.HexCoord": HexCoordSchema,
   "weewar.v1.ShowAttackEffectRequest": ShowAttackEffectRequestSchema,
   "weewar.v1.SplashTarget": SplashTargetSchema,
@@ -4142,10 +4081,6 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.ShowHealEffectResponse": ShowHealEffectResponseSchema,
   "weewar.v1.ShowCaptureEffectRequest": ShowCaptureEffectRequestSchema,
   "weewar.v1.ShowCaptureEffectResponse": ShowCaptureEffectResponseSchema,
-  "weewar.v1.SetUnitAtAnimationRequest": SetUnitAtAnimationRequestSchema,
-  "weewar.v1.SetUnitAtAnimationResponse": SetUnitAtAnimationResponseSchema,
-  "weewar.v1.RemoveUnitAtAnimationRequest": RemoveUnitAtAnimationRequestSchema,
-  "weewar.v1.RemoveUnitAtAnimationResponse": RemoveUnitAtAnimationResponseSchema,
   "weewar.v1.TurnOptionClickedRequest": TurnOptionClickedRequestSchema,
   "weewar.v1.TurnOptionClickedResponse": TurnOptionClickedResponseSchema,
   "weewar.v1.SceneClickedRequest": SceneClickedRequestSchema,

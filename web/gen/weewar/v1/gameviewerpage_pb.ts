@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file weewar/v1/gameviewerpage.proto.
  */
 export const file_weewar_v1_gameviewerpage: GenFile = /*@__PURE__*/
-  fileDesc("Ch53ZWV3YXIvdjEvZ2FtZXZpZXdlcnBhZ2UucHJvdG8SCXdlZXdhci52MSIOCgxFbXB0eVJlcXVlc3QiDwoNRW1wdHlSZXNwb25zZSInChFTZXRDb250ZW50UmVxdWVzdBISCgppbm5lcl9odG1sGAEgASgJIhQKElNldENvbnRlbnRSZXNwb25zZSJRChdTaG93QnVpbGRPcHRpb25zUmVxdWVzdBISCgppbm5lcl9odG1sGAEgASgJEgwKBGhpZGUYAiABKAgSCQoBcRgDIAEoBRIJCgFyGAQgASgFIhoKGFNob3dCdWlsZE9wdGlvbnNSZXNwb25zZSIkChFMb2dNZXNzYWdlUmVxdWVzdBIPCgdtZXNzYWdlGAEgASgJIhQKEkxvZ01lc3NhZ2VSZXNwb25zZSJZChNTZXRHYW1lU3RhdGVSZXF1ZXN0Eh0KBGdhbWUYASABKAsyDy53ZWV3YXIudjEuR2FtZRIjCgVzdGF0ZRgCIAEoCzIULndlZXdhci52MS5HYW1lU3RhdGUiFgoUU2V0R2FtZVN0YXRlUmVzcG9uc2UiRwoXVXBkYXRlR2FtZVN0YXR1c1JlcXVlc3QSFgoOY3VycmVudF9wbGF5ZXIYASABKAUSFAoMdHVybl9jb3VudGVyGAIgASgFIhoKGFVwZGF0ZUdhbWVTdGF0dXNSZXNwb25zZSJHChBTZXRUaWxlQXRSZXF1ZXN0EgkKAXEYASABKAUSCQoBchgCIAEoBRIdCgR0aWxlGAMgASgLMg8ud2Vld2FyLnYxLlRpbGUiEwoRU2V0VGlsZUF0UmVzcG9uc2UiRwoQU2V0VW5pdEF0UmVxdWVzdBIJCgFxGAEgASgFEgkKAXIYAiABKAUSHQoEdW5pdBgDIAEoCzIPLndlZXdhci52MS5Vbml0IhMKEVNldFVuaXRBdFJlc3BvbnNlIisKE1JlbW92ZVRpbGVBdFJlcXVlc3QSCQoBcRgBIAEoBRIJCgFyGAIgASgFIhYKFFJlbW92ZVRpbGVBdFJlc3BvbnNlIisKE1JlbW92ZVVuaXRBdFJlcXVlc3QSCQoBcRgBIAEoBRIJCgFyGAIgASgFIhYKFFJlbW92ZVVuaXRBdFJlc3BvbnNlIkUKFVNob3dIaWdobGlnaHRzUmVxdWVzdBIsCgpoaWdobGlnaHRzGAEgAygLMhgud2Vld2FyLnYxLkhpZ2hsaWdodFNwZWMiGAoWU2hvd0hpZ2hsaWdodHNSZXNwb25zZSL5AQoNSGlnaGxpZ2h0U3BlYxIJCgFxGAEgASgFEgkKAXIYAiABKAUSDAoEdHlwZRgDIAEoCRIpCgRtb3ZlGAQgASgLMhkud2Vld2FyLnYxLk1vdmVVbml0QWN0aW9uSAASLQoGYXR0YWNrGAUgASgLMhsud2Vld2FyLnYxLkF0dGFja1VuaXRBY3Rpb25IABIrCgVidWlsZBgGIAEoCzIaLndlZXdhci52MS5CdWlsZFVuaXRBY3Rpb25IABIzCgdjYXB0dXJlGAcgASgLMiAud2Vld2FyLnYxLkNhcHR1cmVCdWlsZGluZ0FjdGlvbkgAQggKBmFjdGlvbiInChZDbGVhckhpZ2hsaWdodHNSZXF1ZXN0Eg0KBXR5cGVzGAEgAygJIhkKF0NsZWFySGlnaGxpZ2h0c1Jlc3BvbnNlIkMKD1Nob3dQYXRoUmVxdWVzdBIOCgZjb29yZHMYASADKAUSDQoFY29sb3IYAiABKA0SEQoJdGhpY2tuZXNzGAMgASgFIhIKEFNob3dQYXRoUmVzcG9uc2UiEwoRQ2xlYXJQYXRoc1JlcXVlc3QiFAoSQ2xlYXJQYXRoc1Jlc3BvbnNlIlwKGE1vdmVVbml0QW5pbWF0aW9uUmVxdWVzdBIdCgR1bml0GAEgASgLMg8ud2Vld2FyLnYxLlVuaXQSIQoEcGF0aBgCIAMoCzITLndlZXdhci52MS5IZXhDb29yZCIbChlNb3ZlVW5pdEFuaW1hdGlvblJlc3BvbnNlIiAKCEhleENvb3JkEgkKAXEYASABKAUSCQoBchgCIAEoBSKWAQoXU2hvd0F0dGFja0VmZmVjdFJlcXVlc3QSDgoGZnJvbV9xGAEgASgFEg4KBmZyb21fchgCIAEoBRIMCgR0b19xGAMgASgFEgwKBHRvX3IYBCABKAUSDgoGZGFtYWdlGAUgASgFEi8KDnNwbGFzaF90YXJnZXRzGAYgAygLMhcud2Vld2FyLnYxLlNwbGFzaFRhcmdldCI0CgxTcGxhc2hUYXJnZXQSCQoBcRgBIAEoBRIJCgFyGAIgASgFEg4KBmRhbWFnZRgDIAEoBSIaChhTaG93QXR0YWNrRWZmZWN0UmVzcG9uc2UiPQoVU2hvd0hlYWxFZmZlY3RSZXF1ZXN0EgkKAXEYASABKAUSCQoBchgCIAEoBRIOCgZhbW91bnQYAyABKAUiGAoWU2hvd0hlYWxFZmZlY3RSZXNwb25zZSIwChhTaG93Q2FwdHVyZUVmZmVjdFJlcXVlc3QSCQoBcRgBIAEoBRIJCgFyGAIgASgFIhsKGVNob3dDYXB0dXJlRWZmZWN0UmVzcG9uc2UibwoZU2V0VW5pdEF0QW5pbWF0aW9uUmVxdWVzdBIJCgFxGAEgASgFEgkKAXIYAiABKAUSHQoEdW5pdBgDIAEoCzIPLndlZXdhci52MS5Vbml0Eg0KBWZsYXNoGAQgASgIEg4KBmFwcGVhchgFIAEoCCIcChpTZXRVbml0QXRBbmltYXRpb25SZXNwb25zZSJFChxSZW1vdmVVbml0QXRBbmltYXRpb25SZXF1ZXN0EgkKAXEYASABKAUSCQoBchgCIAEoBRIPCgdhbmltYXRlGAMgASgIIh8KHVJlbW92ZVVuaXRBdEFuaW1hdGlvblJlc3BvbnNlMoAPCg5HYW1lVmlld2VyUGFnZRJUChVTZXRUdXJuT3B0aW9uc0NvbnRlbnQSHC53ZWV3YXIudjEuU2V0Q29udGVudFJlcXVlc3QaHS53ZWV3YXIudjEuU2V0Q29udGVudFJlc3BvbnNlElsKEFNob3dCdWlsZE9wdGlvbnMSIi53ZWV3YXIudjEuU2hvd0J1aWxkT3B0aW9uc1JlcXVlc3QaIy53ZWV3YXIudjEuU2hvd0J1aWxkT3B0aW9uc1Jlc3BvbnNlElIKE1NldFVuaXRTdGF0c0NvbnRlbnQSHC53ZWV3YXIudjEuU2V0Q29udGVudFJlcXVlc3QaHS53ZWV3YXIudjEuU2V0Q29udGVudFJlc3BvbnNlElsKHFNldERhbWFnZURpc3RyaWJ1dGlvbkNvbnRlbnQSHC53ZWV3YXIudjEuU2V0Q29udGVudFJlcXVlc3QaHS53ZWV3YXIudjEuU2V0Q29udGVudFJlc3BvbnNlElUKFlNldFRlcnJhaW5TdGF0c0NvbnRlbnQSHC53ZWV3YXIudjEuU2V0Q29udGVudFJlcXVlc3QaHS53ZWV3YXIudjEuU2V0Q29udGVudFJlc3BvbnNlEk8KDFNldEdhbWVTdGF0ZRIeLndlZXdhci52MS5TZXRHYW1lU3RhdGVSZXF1ZXN0Gh8ud2Vld2FyLnYxLlNldEdhbWVTdGF0ZVJlc3BvbnNlElsKEFVwZGF0ZUdhbWVTdGF0dXMSIi53ZWV3YXIudjEuVXBkYXRlR2FtZVN0YXR1c1JlcXVlc3QaIy53ZWV3YXIudjEuVXBkYXRlR2FtZVN0YXR1c1Jlc3BvbnNlEkYKCVNldFRpbGVBdBIbLndlZXdhci52MS5TZXRUaWxlQXRSZXF1ZXN0Ghwud2Vld2FyLnYxLlNldFRpbGVBdFJlc3BvbnNlEkYKCVNldFVuaXRBdBIbLndlZXdhci52MS5TZXRVbml0QXRSZXF1ZXN0Ghwud2Vld2FyLnYxLlNldFVuaXRBdFJlc3BvbnNlEk8KDFJlbW92ZVRpbGVBdBIeLndlZXdhci52MS5SZW1vdmVUaWxlQXRSZXF1ZXN0Gh8ud2Vld2FyLnYxLlJlbW92ZVRpbGVBdFJlc3BvbnNlEk8KDFJlbW92ZVVuaXRBdBIeLndlZXdhci52MS5SZW1vdmVVbml0QXRSZXF1ZXN0Gh8ud2Vld2FyLnYxLlJlbW92ZVVuaXRBdFJlc3BvbnNlElUKDlNob3dIaWdobGlnaHRzEiAud2Vld2FyLnYxLlNob3dIaWdobGlnaHRzUmVxdWVzdBohLndlZXdhci52MS5TaG93SGlnaGxpZ2h0c1Jlc3BvbnNlElgKD0NsZWFySGlnaGxpZ2h0cxIhLndlZXdhci52MS5DbGVhckhpZ2hsaWdodHNSZXF1ZXN0GiIud2Vld2FyLnYxLkNsZWFySGlnaGxpZ2h0c1Jlc3BvbnNlEkMKCFNob3dQYXRoEhoud2Vld2FyLnYxLlNob3dQYXRoUmVxdWVzdBobLndlZXdhci52MS5TaG93UGF0aFJlc3BvbnNlEkkKCkNsZWFyUGF0aHMSHC53ZWV3YXIudjEuQ2xlYXJQYXRoc1JlcXVlc3QaHS53ZWV3YXIudjEuQ2xlYXJQYXRoc1Jlc3BvbnNlEl4KEU1vdmVVbml0QW5pbWF0aW9uEiMud2Vld2FyLnYxLk1vdmVVbml0QW5pbWF0aW9uUmVxdWVzdBokLndlZXdhci52MS5Nb3ZlVW5pdEFuaW1hdGlvblJlc3BvbnNlElsKEFNob3dBdHRhY2tFZmZlY3QSIi53ZWV3YXIudjEuU2hvd0F0dGFja0VmZmVjdFJlcXVlc3QaIy53ZWV3YXIudjEuU2hvd0F0dGFja0VmZmVjdFJlc3BvbnNlElUKDlNob3dIZWFsRWZmZWN0EiAud2Vld2FyLnYxLlNob3dIZWFsRWZmZWN0UmVxdWVzdBohLndlZXdhci52MS5TaG93SGVhbEVmZmVjdFJlc3BvbnNlEl4KEVNob3dDYXB0dXJlRWZmZWN0EiMud2Vld2FyLnYxLlNob3dDYXB0dXJlRWZmZWN0UmVxdWVzdBokLndlZXdhci52MS5TaG93Q2FwdHVyZUVmZmVjdFJlc3BvbnNlEmEKElNldFVuaXRBdEFuaW1hdGlvbhIkLndlZXdhci52MS5TZXRVbml0QXRBbmltYXRpb25SZXF1ZXN0GiUud2Vld2FyLnYxLlNldFVuaXRBdEFuaW1hdGlvblJlc3BvbnNlEmoKFVJlbW92ZVVuaXRBdEFuaW1hdGlvbhInLndlZXdhci52MS5SZW1vdmVVbml0QXRBbmltYXRpb25SZXF1ZXN0Gigud2Vld2FyLnYxLlJlbW92ZVVuaXRBdEFuaW1hdGlvblJlc3BvbnNlEkkKCkxvZ01lc3NhZ2USHC53ZWV3YXIudjEuTG9nTWVzc2FnZVJlcXVlc3QaHS53ZWV3YXIudjEuTG9nTWVzc2FnZVJlc3BvbnNlGgTAtRgBQq4BCg1jb20ud2Vld2FyLnYxQhNHYW1ldmlld2VycGFnZVByb3RvUAFaQ2dpdGh1Yi5jb20vcGFueWFtL3R1cm5lbmdpbmUvZ2FtZXMvd2Vld2FyL2dlbi9nby93ZWV3YXIvdjE7d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_wasmjs_v1_annotations, file_weewar_v1_models]);
+  fileDesc("Ch53ZWV3YXIvdjEvZ2FtZXZpZXdlcnBhZ2UucHJvdG8SCXdlZXdhci52MSIOCgxFbXB0eVJlcXVlc3QiDwoNRW1wdHlSZXNwb25zZSInChFTZXRDb250ZW50UmVxdWVzdBISCgppbm5lcl9odG1sGAEgASgJIhQKElNldENvbnRlbnRSZXNwb25zZSJRChdTaG93QnVpbGRPcHRpb25zUmVxdWVzdBISCgppbm5lcl9odG1sGAEgASgJEgwKBGhpZGUYAiABKAgSCQoBcRgDIAEoBRIJCgFyGAQgASgFIhoKGFNob3dCdWlsZE9wdGlvbnNSZXNwb25zZSIkChFMb2dNZXNzYWdlUmVxdWVzdBIPCgdtZXNzYWdlGAEgASgJIhQKEkxvZ01lc3NhZ2VSZXNwb25zZSJZChNTZXRHYW1lU3RhdGVSZXF1ZXN0Eh0KBGdhbWUYASABKAsyDy53ZWV3YXIudjEuR2FtZRIjCgVzdGF0ZRgCIAEoCzIULndlZXdhci52MS5HYW1lU3RhdGUiFgoUU2V0R2FtZVN0YXRlUmVzcG9uc2UiRwoXVXBkYXRlR2FtZVN0YXR1c1JlcXVlc3QSFgoOY3VycmVudF9wbGF5ZXIYASABKAUSFAoMdHVybl9jb3VudGVyGAIgASgFIhoKGFVwZGF0ZUdhbWVTdGF0dXNSZXNwb25zZSJHChBTZXRUaWxlQXRSZXF1ZXN0EgkKAXEYASABKAUSCQoBchgCIAEoBRIdCgR0aWxlGAMgASgLMg8ud2Vld2FyLnYxLlRpbGUiEwoRU2V0VGlsZUF0UmVzcG9uc2UiZgoQU2V0VW5pdEF0UmVxdWVzdBIJCgFxGAEgASgFEgkKAXIYAiABKAUSHQoEdW5pdBgDIAEoCzIPLndlZXdhci52MS5Vbml0Eg0KBWZsYXNoGAQgASgIEg4KBmFwcGVhchgFIAEoCCITChFTZXRVbml0QXRSZXNwb25zZSI8ChNSZW1vdmVUaWxlQXRSZXF1ZXN0EgkKAXEYASABKAUSCQoBchgCIAEoBRIPCgdhbmltYXRlGAMgASgIIhYKFFJlbW92ZVRpbGVBdFJlc3BvbnNlIjwKE1JlbW92ZVVuaXRBdFJlcXVlc3QSCQoBcRgBIAEoBRIJCgFyGAIgASgFEg8KB2FuaW1hdGUYAyABKAgiFgoUUmVtb3ZlVW5pdEF0UmVzcG9uc2UiRQoVU2hvd0hpZ2hsaWdodHNSZXF1ZXN0EiwKCmhpZ2hsaWdodHMYASADKAsyGC53ZWV3YXIudjEuSGlnaGxpZ2h0U3BlYyIYChZTaG93SGlnaGxpZ2h0c1Jlc3BvbnNlIvkBCg1IaWdobGlnaHRTcGVjEgkKAXEYASABKAUSCQoBchgCIAEoBRIMCgR0eXBlGAMgASgJEikKBG1vdmUYBCABKAsyGS53ZWV3YXIudjEuTW92ZVVuaXRBY3Rpb25IABItCgZhdHRhY2sYBSABKAsyGy53ZWV3YXIudjEuQXR0YWNrVW5pdEFjdGlvbkgAEisKBWJ1aWxkGAYgASgLMhoud2Vld2FyLnYxLkJ1aWxkVW5pdEFjdGlvbkgAEjMKB2NhcHR1cmUYByABKAsyIC53ZWV3YXIudjEuQ2FwdHVyZUJ1aWxkaW5nQWN0aW9uSABCCAoGYWN0aW9uIicKFkNsZWFySGlnaGxpZ2h0c1JlcXVlc3QSDQoFdHlwZXMYASADKAkiGQoXQ2xlYXJIaWdobGlnaHRzUmVzcG9uc2UiQwoPU2hvd1BhdGhSZXF1ZXN0Eg4KBmNvb3JkcxgBIAMoBRINCgVjb2xvchgCIAEoDRIRCgl0aGlja25lc3MYAyABKAUiEgoQU2hvd1BhdGhSZXNwb25zZSITChFDbGVhclBhdGhzUmVxdWVzdCIUChJDbGVhclBhdGhzUmVzcG9uc2UiUwoPTW92ZVVuaXRSZXF1ZXN0Eh0KBHVuaXQYASABKAsyDy53ZWV3YXIudjEuVW5pdBIhCgRwYXRoGAIgAygLMhMud2Vld2FyLnYxLkhleENvb3JkIhIKEE1vdmVVbml0UmVzcG9uc2UiIAoISGV4Q29vcmQSCQoBcRgBIAEoBRIJCgFyGAIgASgFIpYBChdTaG93QXR0YWNrRWZmZWN0UmVxdWVzdBIOCgZmcm9tX3EYASABKAUSDgoGZnJvbV9yGAIgASgFEgwKBHRvX3EYAyABKAUSDAoEdG9fchgEIAEoBRIOCgZkYW1hZ2UYBSABKAUSLwoOc3BsYXNoX3RhcmdldHMYBiADKAsyFy53ZWV3YXIudjEuU3BsYXNoVGFyZ2V0IjQKDFNwbGFzaFRhcmdldBIJCgFxGAEgASgFEgkKAXIYAiABKAUSDgoGZGFtYWdlGAMgASgFIhoKGFNob3dBdHRhY2tFZmZlY3RSZXNwb25zZSI9ChVTaG93SGVhbEVmZmVjdFJlcXVlc3QSCQoBcRgBIAEoBRIJCgFyGAIgASgFEg4KBmFtb3VudBgDIAEoBSIYChZTaG93SGVhbEVmZmVjdFJlc3BvbnNlIjAKGFNob3dDYXB0dXJlRWZmZWN0UmVxdWVzdBIJCgFxGAEgASgFEgkKAXIYAiABKAUiGwoZU2hvd0NhcHR1cmVFZmZlY3RSZXNwb25zZTKWDQoOR2FtZVZpZXdlclBhZ2USVAoVU2V0VHVybk9wdGlvbnNDb250ZW50Ehwud2Vld2FyLnYxLlNldENvbnRlbnRSZXF1ZXN0Gh0ud2Vld2FyLnYxLlNldENvbnRlbnRSZXNwb25zZRJbChBTaG93QnVpbGRPcHRpb25zEiIud2Vld2FyLnYxLlNob3dCdWlsZE9wdGlvbnNSZXF1ZXN0GiMud2Vld2FyLnYxLlNob3dCdWlsZE9wdGlvbnNSZXNwb25zZRJSChNTZXRVbml0U3RhdHNDb250ZW50Ehwud2Vld2FyLnYxLlNldENvbnRlbnRSZXF1ZXN0Gh0ud2Vld2FyLnYxLlNldENvbnRlbnRSZXNwb25zZRJbChxTZXREYW1hZ2VEaXN0cmlidXRpb25Db250ZW50Ehwud2Vld2FyLnYxLlNldENvbnRlbnRSZXF1ZXN0Gh0ud2Vld2FyLnYxLlNldENvbnRlbnRSZXNwb25zZRJVChZTZXRUZXJyYWluU3RhdHNDb250ZW50Ehwud2Vld2FyLnYxLlNldENvbnRlbnRSZXF1ZXN0Gh0ud2Vld2FyLnYxLlNldENvbnRlbnRSZXNwb25zZRJPCgxTZXRHYW1lU3RhdGUSHi53ZWV3YXIudjEuU2V0R2FtZVN0YXRlUmVxdWVzdBofLndlZXdhci52MS5TZXRHYW1lU3RhdGVSZXNwb25zZRJbChBVcGRhdGVHYW1lU3RhdHVzEiIud2Vld2FyLnYxLlVwZGF0ZUdhbWVTdGF0dXNSZXF1ZXN0GiMud2Vld2FyLnYxLlVwZGF0ZUdhbWVTdGF0dXNSZXNwb25zZRJGCglTZXRUaWxlQXQSGy53ZWV3YXIudjEuU2V0VGlsZUF0UmVxdWVzdBocLndlZXdhci52MS5TZXRUaWxlQXRSZXNwb25zZRJGCglTZXRVbml0QXQSGy53ZWV3YXIudjEuU2V0VW5pdEF0UmVxdWVzdBocLndlZXdhci52MS5TZXRVbml0QXRSZXNwb25zZRJPCgxSZW1vdmVUaWxlQXQSHi53ZWV3YXIudjEuUmVtb3ZlVGlsZUF0UmVxdWVzdBofLndlZXdhci52MS5SZW1vdmVUaWxlQXRSZXNwb25zZRJPCgxSZW1vdmVVbml0QXQSHi53ZWV3YXIudjEuUmVtb3ZlVW5pdEF0UmVxdWVzdBofLndlZXdhci52MS5SZW1vdmVVbml0QXRSZXNwb25zZRJVCg5TaG93SGlnaGxpZ2h0cxIgLndlZXdhci52MS5TaG93SGlnaGxpZ2h0c1JlcXVlc3QaIS53ZWV3YXIudjEuU2hvd0hpZ2hsaWdodHNSZXNwb25zZRJYCg9DbGVhckhpZ2hsaWdodHMSIS53ZWV3YXIudjEuQ2xlYXJIaWdobGlnaHRzUmVxdWVzdBoiLndlZXdhci52MS5DbGVhckhpZ2hsaWdodHNSZXNwb25zZRJDCghTaG93UGF0aBIaLndlZXdhci52MS5TaG93UGF0aFJlcXVlc3QaGy53ZWV3YXIudjEuU2hvd1BhdGhSZXNwb25zZRJJCgpDbGVhclBhdGhzEhwud2Vld2FyLnYxLkNsZWFyUGF0aHNSZXF1ZXN0Gh0ud2Vld2FyLnYxLkNsZWFyUGF0aHNSZXNwb25zZRJDCghNb3ZlVW5pdBIaLndlZXdhci52MS5Nb3ZlVW5pdFJlcXVlc3QaGy53ZWV3YXIudjEuTW92ZVVuaXRSZXNwb25zZRJbChBTaG93QXR0YWNrRWZmZWN0EiIud2Vld2FyLnYxLlNob3dBdHRhY2tFZmZlY3RSZXF1ZXN0GiMud2Vld2FyLnYxLlNob3dBdHRhY2tFZmZlY3RSZXNwb25zZRJVCg5TaG93SGVhbEVmZmVjdBIgLndlZXdhci52MS5TaG93SGVhbEVmZmVjdFJlcXVlc3QaIS53ZWV3YXIudjEuU2hvd0hlYWxFZmZlY3RSZXNwb25zZRJeChFTaG93Q2FwdHVyZUVmZmVjdBIjLndlZXdhci52MS5TaG93Q2FwdHVyZUVmZmVjdFJlcXVlc3QaJC53ZWV3YXIudjEuU2hvd0NhcHR1cmVFZmZlY3RSZXNwb25zZRJJCgpMb2dNZXNzYWdlEhwud2Vld2FyLnYxLkxvZ01lc3NhZ2VSZXF1ZXN0Gh0ud2Vld2FyLnYxLkxvZ01lc3NhZ2VSZXNwb25zZRoEwLUYAUKuAQoNY29tLndlZXdhci52MUITR2FtZXZpZXdlcnBhZ2VQcm90b1ABWkNnaXRodWIuY29tL3BhbnlhbS90dXJuZW5naW5lL2dhbWVzL3dlZXdhci9nZW4vZ28vd2Vld2FyL3YxO3dlZXdhcnYxogIDV1hYqgIJV2Vld2FyLlYxygIJV2Vld2FyXFYx4gIVV2Vld2FyXFYxXEdQQk1ldGFkYXRh6gIKV2Vld2FyOjpWMWIGcHJvdG8z", [file_wasmjs_v1_annotations, file_weewar_v1_models]);
 
 /**
  * @generated from message weewar.v1.EmptyRequest
@@ -296,6 +296,20 @@ export type SetUnitAtRequest = Message<"weewar.v1.SetUnitAtRequest"> & {
    * @generated from field: weewar.v1.Unit unit = 3;
    */
   unit?: Unit;
+
+  /**
+   * Flash animation (for damage)
+   *
+   * @generated from field: bool flash = 4;
+   */
+  flash: boolean;
+
+  /**
+   * Appear/fade-in animation (for spawn)
+   *
+   * @generated from field: bool appear = 5;
+   */
+  appear: boolean;
 };
 
 /**
@@ -333,6 +347,13 @@ export type RemoveTileAtRequest = Message<"weewar.v1.RemoveTileAtRequest"> & {
    * @generated from field: int32 r = 2;
    */
   r: number;
+
+  /**
+   * Fade-out animation (for death)
+   *
+   * @generated from field: bool animate = 3;
+   */
+  animate: boolean;
 };
 
 /**
@@ -370,6 +391,13 @@ export type RemoveUnitAtRequest = Message<"weewar.v1.RemoveUnitAtRequest"> & {
    * @generated from field: int32 r = 2;
    */
   r: number;
+
+  /**
+   * Fade-out animation (for death)
+   *
+   * @generated from field: bool animate = 3;
+   */
+  animate: boolean;
 };
 
 /**
@@ -599,9 +627,9 @@ export const ClearPathsResponseSchema: GenMessage<ClearPathsResponse> = /*@__PUR
 /**
  * Request to animate unit movement along a path
  *
- * @generated from message weewar.v1.MoveUnitAnimationRequest
+ * @generated from message weewar.v1.MoveUnitRequest
  */
-export type MoveUnitAnimationRequest = Message<"weewar.v1.MoveUnitAnimationRequest"> & {
+export type MoveUnitRequest = Message<"weewar.v1.MoveUnitRequest"> & {
   /**
    * Unit to animate
    *
@@ -618,23 +646,23 @@ export type MoveUnitAnimationRequest = Message<"weewar.v1.MoveUnitAnimationReque
 };
 
 /**
- * Describes the message weewar.v1.MoveUnitAnimationRequest.
- * Use `create(MoveUnitAnimationRequestSchema)` to create a new message.
+ * Describes the message weewar.v1.MoveUnitRequest.
+ * Use `create(MoveUnitRequestSchema)` to create a new message.
  */
-export const MoveUnitAnimationRequestSchema: GenMessage<MoveUnitAnimationRequest> = /*@__PURE__*/
+export const MoveUnitRequestSchema: GenMessage<MoveUnitRequest> = /*@__PURE__*/
   messageDesc(file_weewar_v1_gameviewerpage, 29);
 
 /**
- * @generated from message weewar.v1.MoveUnitAnimationResponse
+ * @generated from message weewar.v1.MoveUnitResponse
  */
-export type MoveUnitAnimationResponse = Message<"weewar.v1.MoveUnitAnimationResponse"> & {
+export type MoveUnitResponse = Message<"weewar.v1.MoveUnitResponse"> & {
 };
 
 /**
- * Describes the message weewar.v1.MoveUnitAnimationResponse.
- * Use `create(MoveUnitAnimationResponseSchema)` to create a new message.
+ * Describes the message weewar.v1.MoveUnitResponse.
+ * Use `create(MoveUnitResponseSchema)` to create a new message.
  */
-export const MoveUnitAnimationResponseSchema: GenMessage<MoveUnitAnimationResponse> = /*@__PURE__*/
+export const MoveUnitResponseSchema: GenMessage<MoveUnitResponse> = /*@__PURE__*/
   messageDesc(file_weewar_v1_gameviewerpage, 30);
 
 /**
@@ -839,106 +867,6 @@ export const ShowCaptureEffectResponseSchema: GenMessage<ShowCaptureEffectRespon
   messageDesc(file_weewar_v1_gameviewerpage, 38);
 
 /**
- * Request to set unit with optional animation
- *
- * @generated from message weewar.v1.SetUnitAtAnimationRequest
- */
-export type SetUnitAtAnimationRequest = Message<"weewar.v1.SetUnitAtAnimationRequest"> & {
-  /**
-   * @generated from field: int32 q = 1;
-   */
-  q: number;
-
-  /**
-   * @generated from field: int32 r = 2;
-   */
-  r: number;
-
-  /**
-   * @generated from field: weewar.v1.Unit unit = 3;
-   */
-  unit?: Unit;
-
-  /**
-   * Flash animation (for damage)
-   *
-   * @generated from field: bool flash = 4;
-   */
-  flash: boolean;
-
-  /**
-   * Appear/fade-in animation (for spawn)
-   *
-   * @generated from field: bool appear = 5;
-   */
-  appear: boolean;
-};
-
-/**
- * Describes the message weewar.v1.SetUnitAtAnimationRequest.
- * Use `create(SetUnitAtAnimationRequestSchema)` to create a new message.
- */
-export const SetUnitAtAnimationRequestSchema: GenMessage<SetUnitAtAnimationRequest> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gameviewerpage, 39);
-
-/**
- * @generated from message weewar.v1.SetUnitAtAnimationResponse
- */
-export type SetUnitAtAnimationResponse = Message<"weewar.v1.SetUnitAtAnimationResponse"> & {
-};
-
-/**
- * Describes the message weewar.v1.SetUnitAtAnimationResponse.
- * Use `create(SetUnitAtAnimationResponseSchema)` to create a new message.
- */
-export const SetUnitAtAnimationResponseSchema: GenMessage<SetUnitAtAnimationResponse> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gameviewerpage, 40);
-
-/**
- * Request to remove unit with optional animation
- *
- * @generated from message weewar.v1.RemoveUnitAtAnimationRequest
- */
-export type RemoveUnitAtAnimationRequest = Message<"weewar.v1.RemoveUnitAtAnimationRequest"> & {
-  /**
-   * @generated from field: int32 q = 1;
-   */
-  q: number;
-
-  /**
-   * @generated from field: int32 r = 2;
-   */
-  r: number;
-
-  /**
-   * Fade-out animation (for death)
-   *
-   * @generated from field: bool animate = 3;
-   */
-  animate: boolean;
-};
-
-/**
- * Describes the message weewar.v1.RemoveUnitAtAnimationRequest.
- * Use `create(RemoveUnitAtAnimationRequestSchema)` to create a new message.
- */
-export const RemoveUnitAtAnimationRequestSchema: GenMessage<RemoveUnitAtAnimationRequest> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gameviewerpage, 41);
-
-/**
- * @generated from message weewar.v1.RemoveUnitAtAnimationResponse
- */
-export type RemoveUnitAtAnimationResponse = Message<"weewar.v1.RemoveUnitAtAnimationResponse"> & {
-};
-
-/**
- * Describes the message weewar.v1.RemoveUnitAtAnimationResponse.
- * Use `create(RemoveUnitAtAnimationResponseSchema)` to create a new message.
- */
-export const RemoveUnitAtAnimationResponseSchema: GenMessage<RemoveUnitAtAnimationResponse> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gameviewerpage, 42);
-
-/**
  * @generated from service weewar.v1.GameViewerPage
  */
 export const GameViewerPage: GenService<{
@@ -1073,12 +1001,12 @@ export const GameViewerPage: GenService<{
   /**
    * Animation methods
    *
-   * @generated from rpc weewar.v1.GameViewerPage.MoveUnitAnimation
+   * @generated from rpc weewar.v1.GameViewerPage.MoveUnit
    */
-  moveUnitAnimation: {
+  moveUnit: {
     methodKind: "unary";
-    input: typeof MoveUnitAnimationRequestSchema;
-    output: typeof MoveUnitAnimationResponseSchema;
+    input: typeof MoveUnitRequestSchema;
+    output: typeof MoveUnitResponseSchema;
   },
   /**
    * @generated from rpc weewar.v1.GameViewerPage.ShowAttackEffect
@@ -1103,22 +1031,6 @@ export const GameViewerPage: GenService<{
     methodKind: "unary";
     input: typeof ShowCaptureEffectRequestSchema;
     output: typeof ShowCaptureEffectResponseSchema;
-  },
-  /**
-   * @generated from rpc weewar.v1.GameViewerPage.SetUnitAtAnimation
-   */
-  setUnitAtAnimation: {
-    methodKind: "unary";
-    input: typeof SetUnitAtAnimationRequestSchema;
-    output: typeof SetUnitAtAnimationResponseSchema;
-  },
-  /**
-   * @generated from rpc weewar.v1.GameViewerPage.RemoveUnitAtAnimation
-   */
-  removeUnitAtAnimation: {
-    methodKind: "unary";
-    input: typeof RemoveUnitAtAnimationRequestSchema;
-    output: typeof RemoveUnitAtAnimationResponseSchema;
   },
   /**
    * Utility methods

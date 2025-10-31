@@ -46,17 +46,13 @@ service GameViewerPage {
     rpc ClearPaths(ClearPathsRequest) returns (ClearPathsResponse);
 
     // Animation methods
-    rpc MoveUnitAnimation(MoveUnitAnimationRequest) returns (MoveUnitAnimationResponse);
+    rpc MoveUnit(MoveUnitRequest) returns (MoveUnitResponse);
 
     rpc ShowAttackEffect(ShowAttackEffectRequest) returns (ShowAttackEffectResponse);
 
     rpc ShowHealEffect(ShowHealEffectRequest) returns (ShowHealEffectResponse);
 
     rpc ShowCaptureEffect(ShowCaptureEffectRequest) returns (ShowCaptureEffectResponse);
-
-    rpc SetUnitAtAnimation(SetUnitAtAnimationRequest) returns (SetUnitAtAnimationResponse);
-
-    rpc RemoveUnitAtAnimation(RemoveUnitAtAnimationRequest) returns (RemoveUnitAtAnimationResponse);
 
     // Utility methods
     rpc LogMessage(LogMessageRequest) returns (LogMessageResponse);
@@ -128,6 +124,8 @@ message SetUnitAtRequest {
     int32 q = 1;
     int32 r = 2;
     Unit unit = 3;
+    bool flash = 4; // Flash animation (for damage)
+    bool appear = 5; // Appear/fade-in animation (for spawn)
 }
 
 message SetUnitAtResponse {
@@ -137,6 +135,7 @@ message SetUnitAtResponse {
 message RemoveTileAtRequest {
     int32 q = 1;
     int32 r = 2;
+    bool animate = 3; // Fade-out animation (for death)
 }
 
 message RemoveTileAtResponse {
@@ -146,6 +145,7 @@ message RemoveTileAtResponse {
 message RemoveUnitAtRequest {
     int32 q = 1;
     int32 r = 2;
+    bool animate = 3; // Fade-out animation (for death)
 }
 
 message RemoveUnitAtResponse {
@@ -207,12 +207,12 @@ message ClearPathsResponse {
 // ============================================================================
 
 // Request to animate unit movement along a path
-message MoveUnitAnimationRequest {
+message MoveUnitRequest {
     Unit unit = 1; // Unit to animate
     repeated HexCoord path = 2; // Path coordinates to animate along
 }
 
-message MoveUnitAnimationResponse {
+message MoveUnitResponse {
 }
 
 // Hex coordinate for paths
@@ -257,26 +257,4 @@ message ShowCaptureEffectRequest {
 }
 
 message ShowCaptureEffectResponse {
-}
-
-// Request to set unit with optional animation
-message SetUnitAtAnimationRequest {
-    int32 q = 1;
-    int32 r = 2;
-    Unit unit = 3;
-    bool flash = 4; // Flash animation (for damage)
-    bool appear = 5; // Appear/fade-in animation (for spawn)
-}
-
-message SetUnitAtAnimationResponse {
-}
-
-// Request to remove unit with optional animation
-message RemoveUnitAtAnimationRequest {
-    int32 q = 1;
-    int32 r = 2;
-    bool animate = 3; // Fade-out animation (for death)
-}
-
-message RemoveUnitAtAnimationResponse {
 }
