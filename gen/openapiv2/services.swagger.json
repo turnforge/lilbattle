@@ -1738,6 +1738,11 @@
         "isActive": {
           "type": "boolean",
           "title": "Whether play is still in the game - can this just be inferred?"
+        },
+        "coins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Player's current money/coins balance for building units"
         }
       }
     },

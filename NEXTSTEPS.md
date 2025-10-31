@@ -26,6 +26,21 @@
 
 ## UI Polish & User Experience
 
+### CLI Tool Enhancements
+**Priority**: Medium
+**Status**: ✅ COMPLETE
+
+**Completed**:
+- [x] Tile prefix parsing (t:A1, t:0,-3) for disambiguating tiles from units
+- [x] Enhanced status command showing player coins, unit counts, tile counts
+- [x] Position parser supports all coordinate formats with tile prefix
+- [x] JSON output for all CLI commands with rich player information
+
+**Design**:
+- `t:` prefix forces tile lookup instead of unit (e.g., `ww options t:A1`)
+- Status command now provides comprehensive game overview
+- ParseTarget struct tracks ForceTile flag and provides GetTile() method
+
 ### Dashboard Homepage
 **Priority**: Medium
 **Status**: ✅ COMPLETE

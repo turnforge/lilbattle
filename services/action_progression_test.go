@@ -6,8 +6,8 @@ import (
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
-// TestGetAllowedActions tests the core progression logic
-func TestGetAllowedActions(t *testing.T) {
+// TestGetAllowedActionsForUnit tests the core progression logic
+func TestGetAllowedActionsForUnit(t *testing.T) {
 	rulesEngine := DefaultRulesEngine()
 
 	tests := []struct {
@@ -88,7 +88,7 @@ func TestGetAllowedActions(t *testing.T) {
 				ActionOrder: tt.actionOrder,
 			}
 
-			allowed := rulesEngine.GetAllowedActions(unit, unitDef)
+			allowed := rulesEngine.GetAllowedActionsForUnit(unit, unitDef)
 
 			if len(allowed) != len(tt.expected) {
 				t.Errorf("Expected %d actions, got %d: %v", len(tt.expected), len(allowed), allowed)
@@ -199,8 +199,8 @@ func TestTopUpResetsProgression(t *testing.T) {
 				AvailableHealth:   100,
 				DistanceLeft:      0,
 				LastToppedupTurn:  1,
-				ProgressionStep:   2,             // At completion
-				ChosenAlternative: "attack",      // Had chosen attack
+				ProgressionStep:   2,        // At completion
+				ChosenAlternative: "attack", // Had chosen attack
 			},
 		},
 	}

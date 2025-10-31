@@ -572,6 +572,8 @@ export class GamePlayer implements GamePlayerInterface {
   name: string = "";
   /** Whether play is still in the game - can this just be inferred? */
   isActive: boolean = false;
+  /** Player's current money/coins balance for building units */
+  coins: number = 0;
 
   /**
    * Create and deserialize an instance from raw data

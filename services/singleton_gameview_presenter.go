@@ -150,34 +150,31 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 		s.UnitStatsPanel.SetCurrentUnit(ctx, unit)
 		s.DamageDistributionPanel.SetCurrentUnit(ctx, unit)
 
-		// Only proceed with options and highlights if there's a unit
+		// Top up unit if present
 		if unit != nil {
 			rg.TopUpUnitIfNeeded(unit)
-			// Get options at this position and update TurnOptionsPanel
-			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-				Q: q,
-				R: r,
-			})
-			if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
-				s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
+		}
 
-				// Send visualization commands to show highlights
-				highlights := buildHighlightSpecs(optionsResp, q, r)
-				if len(highlights) > 0 {
-					s.GameScene.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
-						Highlights: highlights,
-					})
-					s.hasHighlights = true
-					s.selectedQ = &q
-					s.selectedR = &r
-				}
-			} else {
-				// Unit exists but no options available
-				s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
-				s.clearHighlightsAndSelection(ctx)
+		// Get options at this position (handles both unit and tile actions)
+		optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+			Q: q,
+			R: r,
+		})
+		if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
+			s.TurnOptionsPanel.SetCurrentUnit(ctx, unit, optionsResp)
+
+			// Send visualization commands to show highlights
+			highlights := buildHighlightSpecs(optionsResp, q, r)
+			if len(highlights) > 0 {
+				s.GameScene.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
+					Highlights: highlights,
+				})
+				s.hasHighlights = true
+				s.selectedQ = &q
+				s.selectedR = &r
 			}
 		} else {
-			// No unit at clicked position - clear options and highlights
+			// No options available - clear options and highlights
 			s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 			s.clearHighlightsAndSelection(ctx)
 		}

@@ -358,6 +358,8 @@ export interface GamePlayer {
   name: string;
   /** Whether play is still in the game - can this just be inferred? */
   isActive: boolean;
+  /** Player's current money/coins balance for building units */
+  coins: number;
 }
 
 

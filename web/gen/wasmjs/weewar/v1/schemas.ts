@@ -751,13 +751,13 @@ export const GameSchema: MessageSchema = {
     {
       name: "config",
       type: FieldType.MESSAGE,
-      id: 11,
+      id: 12,
       messageType: "weewar.v1.GameConfiguration",
     },
     {
       name: "screenshotUrl",
       type: FieldType.STRING,
-      id: 12,
+      id: 13,
     },
   ],
 };
@@ -828,6 +828,11 @@ export const GamePlayerSchema: MessageSchema = {
       name: "isActive",
       type: FieldType.BOOLEAN,
       id: 6,
+    },
+    {
+      name: "coins",
+      type: FieldType.NUMBER,
+      id: 7,
     },
   ],
 };

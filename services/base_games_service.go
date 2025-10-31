@@ -151,23 +151,66 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 		}
 	}
 
-	if unit == nil {
-		// Empty tile - check for building/capture options, then end turn
-		// TODO: Add building construction options if this is a city/factory tile
-		// For now, just add end turn
-		options = append(options, &v1.GameOption{
-			OptionType: &v1.GameOption_EndTurn{
-				EndTurn: &v1.EndTurnOption{},
-			},
-		})
-	} else if unit.Player != rtGame.CurrentPlayer {
-		// Enemy unit - only end turn available (can't interact with enemy units directly)
-		options = append(options, &v1.GameOption{
-			OptionType: &v1.GameOption_EndTurn{
-				EndTurn: &v1.EndTurnOption{},
-			},
-		})
-	} else {
+	// Check if there's a tile at this position and get its actions
+	tile := rtGame.World.TileAt(AxialCoord{Q: int(req.Q), R: int(req.R)})
+	fmt.Printf("DEBUG: TileAt(%d,%d) returned: %v\n", req.Q, req.R, tile)
+	if tile != nil {
+		// Lazy top-up: Ensure tile is refreshed for the current turn
+		if err := rtGame.TopUpTileIfNeeded(tile); err != nil {
+			return &v1.GetOptionsAtResponse{
+				Options:         []*v1.GameOption{},
+				CurrentPlayer:   gameresp.State.CurrentPlayer,
+				GameInitialized: false,
+			}, fmt.Errorf("failed to top-up tile: %w", err)
+		}
+
+		// Only check tile actions if tile belongs to current player
+		if tile.Player == rtGame.CurrentPlayer {
+			// Get terrain definition for tile-specific actions
+			terrainDef, err := rtGame.rulesEngine.GetTerrainData(tile.TileType)
+			if err == nil {
+				// Get current player's coins (default to 100 for now, will be from game config later)
+				// TODO: Get actual player coins from rtGame.Game.Config.Players[currentPlayer].Coins
+				playerCoins := int32(100)
+
+				// Get allowed actions for this tile
+				tileActions := rtGame.rulesEngine.GetAllowedActionsForTile(tile, terrainDef, playerCoins)
+				fmt.Printf("DEBUG: Tile at (%d,%d) player=%d, currentPlayer=%d, terrainType=%d, playerCoins=%d, actions=%v\n",
+					tile.Q, tile.R, tile.Player, rtGame.CurrentPlayer, tile.TileType, playerCoins, tileActions)
+
+				// Generate options based on allowed tile actions
+				for _, action := range tileActions {
+					switch action {
+					case "build":
+						// Generate build unit options from terrainDef.BuildableUnitIds
+						for _, unitTypeID := range terrainDef.BuildableUnitIds {
+							// Get unit definition to retrieve cost
+							unitDef, err := rtGame.rulesEngine.GetUnitData(unitTypeID)
+							if err != nil {
+								continue // Skip if we can't get unit definition
+							}
+
+							// Only show units the player can afford
+							if unitDef.Coins <= playerCoins {
+								options = append(options, &v1.GameOption{
+									OptionType: &v1.GameOption_Build{
+										Build: &v1.BuildUnitOption{
+											Q:        req.Q,
+											R:        req.R,
+											UnitType: unitTypeID,
+											Cost:     unitDef.Coins,
+										},
+									},
+								})
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if unit != nil {
 		// Our unit - get available options based on action progression
 		var dmp MoveProcessor
 
@@ -181,7 +224,7 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 		}
 
 		// Get allowed actions based on progression state
-		allowedActions := rtGame.rulesEngine.GetAllowedActions(unit, unitDef)
+		allowedActions := rtGame.rulesEngine.GetAllowedActionsForUnit(unit, unitDef)
 
 		// If no actions allowed (progression complete), only end turn available
 		if len(allowedActions) == 0 {
@@ -268,15 +311,26 @@ func (s *BaseGamesServiceImpl) GetOptionsAt(ctx context.Context, req *v1.GetOpti
 
 			// TODO: Add capture building options if "capture" is allowed
 			// TODO: Add build unit options if "build" is allowed
+		}
 
-			// Always add end turn option
+		// Only add the endturn option if it is curerent player
+		if unit.Player == rtGame.CurrentPlayer {
+			// Enemy unit - only end turn available (can't interact with enemy units directly)
 			options = append(options, &v1.GameOption{
 				OptionType: &v1.GameOption_EndTurn{
 					EndTurn: &v1.EndTurnOption{},
 				},
 			})
 		}
+	} else {
+		// No unit present - always show end turn option for empty tiles
+		options = append(options, &v1.GameOption{
+			OptionType: &v1.GameOption_EndTurn{
+				EndTurn: &v1.EndTurnOption{},
+			},
+		})
 	}
+
 	// Sort it for convinience too
 	sort.Slice(options, func(i, j int) bool {
 		return GameOptionLess(options[i], options[j])

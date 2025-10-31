@@ -109,9 +109,9 @@ func (re *RulesEngine) GetTerrainData(terrainID int32) (*v1.TerrainDefinition, e
 // Action Progression System
 // =============================================================================
 
-// GetAllowedActions returns which actions are currently valid for a unit
+// GetAllowedActionsForUnit returns which actions are currently valid for a unit
 // based on its progression_step index into the UnitDefinition.action_order
-func (re *RulesEngine) GetAllowedActions(unit *v1.Unit, unitDef *v1.UnitDefinition) []string {
+func (re *RulesEngine) GetAllowedActionsForUnit(unit *v1.Unit, unitDef *v1.UnitDefinition) []string {
 	// Get action_order, default to ["move", "attack|capture"]
 	actionOrder := unitDef.ActionOrder
 	if len(actionOrder) == 0 {
@@ -140,6 +140,38 @@ func (re *RulesEngine) GetAllowedActions(unit *v1.Unit, unitDef *v1.UnitDefiniti
 			allowed = append(allowed, action)
 		}
 	}
+
+	return allowed
+}
+
+// GetAllowedActionsForTile returns which actions are currently valid for a tile
+// for a given player with specified coin balance.
+// NOTE: Caller should only call this for tiles belonging to the player being checked.
+// This function does not validate current turn or player ownership - that's the caller's responsibility.
+func (re *RulesEngine) GetAllowedActionsForTile(tile *v1.Tile, terrainDef *v1.TerrainDefinition, playerCoins int32) []string {
+	var allowed []string
+
+	// Check if this terrain type can build units and player can afford at least one
+	if terrainDef != nil && len(terrainDef.BuildableUnitIds) > 0 {
+		// Check if player can afford at least one buildable unit
+		canAffordAny := false
+		for _, unitTypeID := range terrainDef.BuildableUnitIds {
+			unitDef, err := re.GetUnitData(unitTypeID)
+			if err == nil && unitDef.Coins <= playerCoins {
+				canAffordAny = true
+				break
+			}
+		}
+
+		if canAffordAny {
+			allowed = append(allowed, "build")
+		}
+	}
+
+	// TODO: Add other tile-specific actions:
+	// - "repair" - if tile can repair units on it
+	// - "heal" - if tile provides healing
+	// - "income" - if tile generates income
 
 	return allowed
 }

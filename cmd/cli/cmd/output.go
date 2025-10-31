@@ -119,6 +119,11 @@ func FormatOptions(pc *PresenterContext, position string) string {
 			sb.WriteString(fmt.Sprintf("%d. attack %s (damage est: %d)\n",
 				i+1, targetCoord.String(), attackOpt.DamageEstimate))
 
+		case *v1.GameOption_Build:
+			buildOpt := opt.Build
+			sb.WriteString(fmt.Sprintf("%d. build unit type %d (cost: %d)\n",
+				i+1, buildOpt.UnitType, buildOpt.Cost))
+
 		case *v1.GameOption_EndTurn:
 			sb.WriteString(fmt.Sprintf("%d. end turn\n", i+1))
 		}
@@ -128,15 +133,63 @@ func FormatOptions(pc *PresenterContext, position string) string {
 }
 
 // FormatGameStatus formats game status as text
-func FormatGameStatus(state *v1.GameState) string {
+func FormatGameStatus(game *v1.Game, state *v1.GameState) string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Turn: %d\n", state.TurnCounter))
+	sb.WriteString(fmt.Sprintf("Game: %s\n", game.Name))
+	if game.Description != "" {
+		sb.WriteString(fmt.Sprintf("Description: %s\n", game.Description))
+	}
+	sb.WriteString(fmt.Sprintf("\nTurn: %d\n", state.TurnCounter))
 	sb.WriteString(fmt.Sprintf("Current Player: %d\n", state.CurrentPlayer))
 	sb.WriteString(fmt.Sprintf("Game Status: %s\n", state.Status))
 
 	if state.WinningPlayer != 0 {
 		sb.WriteString(fmt.Sprintf("\nGame Over! Winner: Player %d\n", state.WinningPlayer))
+	}
+
+	// Count units per player
+	unitCounts := make(map[int32]int)
+	if state.WorldData != nil {
+		for _, unit := range state.WorldData.Units {
+			if unit != nil {
+				unitCounts[unit.Player]++
+			}
+		}
+	}
+
+	// Count tiles per player
+	tileCounts := make(map[int32]int)
+	if state.WorldData != nil {
+		for _, tile := range state.WorldData.Tiles {
+			if tile != nil && tile.Player > 0 {
+				tileCounts[tile.Player]++
+			}
+		}
+	}
+
+	// Show player info
+	if game.Config != nil && len(game.Config.Players) > 0 {
+		sb.WriteString("\nPlayers:\n")
+		for _, player := range game.Config.Players {
+			indicator := ""
+			if player.PlayerId == state.CurrentPlayer {
+				indicator = " *"
+			}
+			sb.WriteString(fmt.Sprintf("  Player %d%s:\n", player.PlayerId, indicator))
+			sb.WriteString(fmt.Sprintf("    Type: %s\n", player.PlayerType))
+			if player.Name != "" {
+				sb.WriteString(fmt.Sprintf("    Name: %s\n", player.Name))
+			}
+			sb.WriteString(fmt.Sprintf("    Coins: %d\n", player.Coins))
+			sb.WriteString(fmt.Sprintf("    Units: %d\n", unitCounts[player.PlayerId]))
+			if tileCounts[player.PlayerId] > 0 {
+				sb.WriteString(fmt.Sprintf("    Tiles: %d\n", tileCounts[player.PlayerId]))
+			}
+			if player.TeamId > 0 {
+				sb.WriteString(fmt.Sprintf("    Team: %d\n", player.TeamId))
+			}
+		}
 	}
 
 	return sb.String()

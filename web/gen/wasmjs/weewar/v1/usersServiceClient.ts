@@ -7,16 +7,16 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 import {
     ListUsersResponse,
     GetUserRequest,
-    DeleteUserRequest,
     DeleteUserResponse,
     UpdateUserRequest,
+    ListUsersRequest,
+    GetUserResponse,
+    DeleteUserRequest,
     UpdateUserResponse,
     CreateUserRequest,
     CreateUserResponse,
     GetUsersRequest,
     GetUsersResponse,
-    ListUsersRequest,
-    GetUserResponse,
 } from './interfaces';
 /**
  * UsersService service client interface

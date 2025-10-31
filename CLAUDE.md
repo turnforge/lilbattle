@@ -128,7 +128,7 @@ folder):
 ```bash
 export WEEWAR_GAME_ID=c5380903  # Or use --game-id flag
 
-ww status                    # Show game state
+ww status                    # Show game state (players, coins, units, tiles)
 ww units                     # List all units
 ww options B1                # Show available moves for unit B1
 ww move B1 0,-3             # Move unit by coordinates
@@ -142,7 +142,23 @@ ww --dryrun move B1 R      # Preview move without saving
 ww --json status            # Output as JSON
 ```
 
-**Direction shortcuts:** L (left), R (right), TL (top-left), TR (top-right), BL (bottom-left), BR (bottom-right)
+**Status command shows:**
+- Game name and description
+- Current turn and player
+- For each player: type (human/ai), coins, unit count, tile count, team
+- Current player marked with *
+
+**Position format support:**
+- Unit shortcuts: `A1`, `B2` (references a unit)
+- Q,R coordinates: `0,-3`, `5,2` (axial hex coordinates)
+- Row,Col coordinates: `r4,5` (offset coordinates)
+- Direction shortcuts: `L`, `R`, `TL`, `TR`, `BL`, `BR` (relative to a base position)
+- Tile prefix: `t:A1`, `t:0,-3`, `t:r4,5` (forces tile lookup instead of unit)
+
+**When to use "t:" prefix:**
+Use the "t:" prefix when a tile and unit share the same shortcut or coordinate, and you explicitly want to reference the tile instead of the unit. For example:
+- `ww options t:A1` - Show options for tile A1 (ignores any unit at that position)
+- `ww move B1 t:0,-3` - Move unit B1 to tile at 0,-3 (useful if there's ambiguity)
 
 ### Key Service Files and Architecture
 
@@ -166,7 +182,7 @@ ww --json status            # Output as JSON
 - **cmd/endturn.go**: End turn command
 
 **Utilities** (`services/`):
-- **position_parser.go**: ParsePosition(), ParseUnitShortcut(), ParseDirection()
+- **position_parser.go**: ParsePositionOrUnit(), ParsePositionOrUnitWithContext(), ParseDirection(), parseTileID()
 - **path_display.go**: FormatPath(), DisplayPath() for CLI output
 - **options_formatter.go**: FormatOptions() for CLI display
 - **utils.go**: NewWorld(), various conversion helpers

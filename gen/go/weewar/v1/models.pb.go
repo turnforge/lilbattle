@@ -1544,10 +1544,10 @@ type Game struct {
 	// Difficulty - example attribute
 	Difficulty string `protobuf:"bytes,10,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// Game configuration
-	Config *GameConfiguration `protobuf:"bytes,11,opt,name=config,proto3" json:"config,omitempty"`
+	Config *GameConfiguration `protobuf:"bytes,12,opt,name=config,proto3" json:"config,omitempty"`
 	// URL to screenshot/preview image (defaults to /games/{id}/screenshot)
 	// Can be overridden to point to CDN or external hosting
-	ScreenshotUrl string `protobuf:"bytes,12,opt,name=screenshot_url,json=screenshotUrl,proto3" json:"screenshot_url,omitempty"`
+	ScreenshotUrl string `protobuf:"bytes,13,opt,name=screenshot_url,json=screenshotUrl,proto3" json:"screenshot_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1742,7 +1742,9 @@ type GamePlayer struct {
 	// Nickname for the player in this game
 	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
 	// Whether play is still in the game - can this just be inferred?
-	IsActive      bool `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	IsActive bool `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	// Player's current money/coins balance for building units
+	Coins         int32 `protobuf:"varint,7,opt,name=coins,proto3" json:"coins,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1817,6 +1819,13 @@ func (x *GamePlayer) GetIsActive() bool {
 		return x.IsActive
 	}
 	return false
+}
+
+func (x *GamePlayer) GetCoins() int32 {
+	if x != nil {
+		return x.Coins
+	}
+	return 0
 }
 
 type GameTeam struct {
@@ -3141,12 +3150,12 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"difficulty\x18\n" +
 	" \x01(\tR\n" +
 	"difficulty\x124\n" +
-	"\x06config\x18\v \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\x12%\n" +
-	"\x0escreenshot_url\x18\f \x01(\tR\rscreenshotUrl\"\xa4\x01\n" +
+	"\x06config\x18\f \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\x12%\n" +
+	"\x0escreenshot_url\x18\r \x01(\tR\rscreenshotUrl\"\xa4\x01\n" +
 	"\x11GameConfiguration\x12/\n" +
 	"\aplayers\x18\x01 \x03(\v2\x15.weewar.v1.GamePlayerR\aplayers\x12)\n" +
 	"\x05teams\x18\x02 \x03(\v2\x13.weewar.v1.GameTeamR\x05teams\x123\n" +
-	"\bsettings\x18\x03 \x01(\v2\x17.weewar.v1.GameSettingsR\bsettings\"\xaa\x01\n" +
+	"\bsettings\x18\x03 \x01(\v2\x17.weewar.v1.GameSettingsR\bsettings\"\xc0\x01\n" +
 	"\n" +
 	"GamePlayer\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\x05R\bplayerId\x12\x1f\n" +
@@ -3155,7 +3164,8 @@ const file_weewar_v1_models_proto_rawDesc = "" +
 	"\x05color\x18\x03 \x01(\tR\x05color\x12\x17\n" +
 	"\ateam_id\x18\x04 \x01(\x05R\x06teamId\x12\x12\n" +
 	"\x04name\x18\x05 \x01(\tR\x04name\x12\x1b\n" +
-	"\tis_active\x18\x06 \x01(\bR\bisActive\"j\n" +
+	"\tis_active\x18\x06 \x01(\bR\bisActive\x12\x14\n" +
+	"\x05coins\x18\a \x01(\x05R\x05coins\"j\n" +
 	"\bGameTeam\x12\x17\n" +
 	"\ateam_id\x18\x01 \x01(\x05R\x06teamId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +

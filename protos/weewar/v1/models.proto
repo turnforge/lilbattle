@@ -326,11 +326,11 @@ message Game {
   string difficulty = 10;
 
   // Game configuration
-  GameConfiguration config = 11;
+  GameConfiguration config = 12;
 
   // URL to screenshot/preview image (defaults to /games/{id}/screenshot)
   // Can be overridden to point to CDN or external hosting
-  string screenshot_url = 12;
+  string screenshot_url = 13;
 }
 
 message GameConfiguration {
@@ -362,6 +362,9 @@ message GamePlayer {
 
   // Whether play is still in the game - can this just be inferred?
   bool is_active = 6;
+
+  // Player's current money/coins balance for building units
+  int32 coins = 7;
 }
 
 message GameTeam {

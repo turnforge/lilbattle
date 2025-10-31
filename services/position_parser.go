@@ -10,10 +10,13 @@ import (
 
 // ParseTarget represents either a unit ID or a coordinate position
 type ParseTarget struct {
-	IsUnit     bool       // true if this represents a unit, false if coordinate
-	Unit       *v1.Unit   // the unit if IsUnit is true
-	Coordinate AxialCoord // the coordinate if IsUnit is false
-	Raw        string     // original input string
+	IsShortcut   bool       // true if this represents a unit, false if coordinate
+	ForceTile    bool       // true if "t:" prefix was used to force tile lookup
+	Unit         *v1.Unit   // the unit if IsShortcut is true
+	Tile         *v1.Tile   // the tile at this position
+	Coordinate   AxialCoord // the coordinate if IsShortcut is false
+	Raw          string     // original input string
+	RawNoPrefix  string     // input string without the "t:" prefix
 }
 
 // ParsePositionOrUnit parses a string that can be either:
@@ -28,10 +31,22 @@ func ParsePositionOrUnit(game *Game, input string) (target *ParseTarget, err err
 // Supports all formats from ParsePositionOrUnit, plus:
 // - Direction: L, R, TL, TR, BL, BR (when baseCoord is provided)
 // - Multiple directions: TL,TL,TR (when baseCoord is provided, applies sequentially)
+// - Tile prefix: t:A1, t:3,4, t:r4,5 (forces tile lookup instead of unit)
 func ParsePositionOrUnitWithContext(game *Game, input string, baseCoord *AxialCoord) (target *ParseTarget, err error) {
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return nil, fmt.Errorf("empty input")
+	}
+
+	// Check for "t:" prefix to force tile lookup
+	forceTile := false
+	originalInput := input
+	if strings.HasPrefix(strings.ToLower(input), "t:") {
+		forceTile = true
+		input = strings.TrimSpace(input[2:]) // Remove "t:" prefix
+		if input == "" {
+			return nil, fmt.Errorf("empty input after 't:' prefix")
+		}
 	}
 
 	// Check if it's a direction sequence (only if baseCoord is provided)
@@ -56,11 +71,19 @@ func ParsePositionOrUnitWithContext(game *Game, input string, baseCoord *AxialCo
 			for _, dir := range directions {
 				currentCoord = currentCoord.Neighbor(dir)
 			}
+			tile := game.World.TileAt(currentCoord)
+			unit := game.World.UnitAt(currentCoord)
+			if forceTile {
+				unit = nil // Don't return unit when tile is explicitly requested
+			}
 			return &ParseTarget{
-				IsUnit:     false,
-				Unit:       game.World.UnitAt(currentCoord),
-				Coordinate: currentCoord,
-				Raw:        input,
+				IsShortcut:  false,
+				ForceTile:   forceTile,
+				Unit:        unit,
+				Tile:        tile,
+				Coordinate:  currentCoord,
+				Raw:         originalInput,
+				RawNoPrefix: input,
 			}, nil
 		}
 		// If not all directions, fall through to coordinate parsing
@@ -73,18 +96,29 @@ func ParsePositionOrUnitWithContext(game *Game, input string, baseCoord *AxialCo
 		// Check if it's a coordinate (contains comma)
 		target, err = parseQRCoordinate(input)
 	} else {
-		// Try to parse as unit ID
-		target, err = parseUnitID(game, input)
+		// Try to parse as unit ID or tile shortcut
+		if forceTile {
+			target, err = parseTileID(game, input)
+		} else {
+			target, err = parseUnitID(game, input)
+		}
 	}
 
 	if target == nil {
 		return
 	}
 
-	// Get the unit if you can
-	if !target.IsUnit {
+	// Set the forceTile flag and original input
+	target.ForceTile = forceTile
+	target.Raw = originalInput
+	target.RawNoPrefix = input
+
+	// Get the tile and unit at this coordinate
+	target.Tile = game.World.TileAt(target.Coordinate)
+	if !target.IsShortcut && !forceTile {
 		target.Unit = game.World.UnitAt(target.Coordinate)
 	}
+
 	return
 }
 
@@ -102,10 +136,29 @@ func parseUnitID(game *Game, input string) (*ParseTarget, error) {
 	}
 
 	return &ParseTarget{
-		IsUnit:     true,
+		IsShortcut: true,
 		Unit:       unit,
 		Coordinate: CoordFromInt32(unit.Q, unit.R), // Also provide the coordinate for convenience
-		Raw:        input,
+	}, nil
+}
+
+// parseTileID parses tile shortcut format: A1, B12, C2, etc.
+func parseTileID(game *Game, input string) (*ParseTarget, error) {
+	input = strings.ToUpper(strings.TrimSpace(input))
+	if len(input) < 2 {
+		return nil, fmt.Errorf("tile ID too short")
+	}
+
+	// Use the shortcut lookup directly
+	tile := game.World.GetTileByShortcut(input)
+	if tile == nil {
+		return nil, fmt.Errorf("tile %s does not exist", input)
+	}
+
+	return &ParseTarget{
+		IsShortcut: true, // tile shortcuts use the same format as unit shortcuts
+		Tile:       tile,
+		Coordinate: CoordFromInt32(tile.Q, tile.R), // Also provide the coordinate for convenience
 	}, nil
 }
 
@@ -129,10 +182,8 @@ func parseQRCoordinate(input string) (*ParseTarget, error) {
 	coord := AxialCoord{Q: q, R: r}
 
 	return &ParseTarget{
-		IsUnit:     false,
-		Unit:       nil,
+		IsShortcut: false,
 		Coordinate: coord,
-		Raw:        input,
 	}, nil
 }
 
@@ -157,19 +208,24 @@ func parseRowColCoordinate(input string) (*ParseTarget, error) {
 	coord := RowColToHex(row, col)
 
 	return &ParseTarget{
-		IsUnit:     false,
-		Unit:       nil,
+		IsShortcut: false,
 		Coordinate: coord,
-		Raw:        fmt.Sprintf("r%s", input),
 	}, nil
 }
 
 // String returns a human-readable representation of the target
 func (t *ParseTarget) String() string {
-	if t.IsUnit {
-		return fmt.Sprintf("Unit %s at %s", t.Raw, t.Coordinate.String())
+	prefix := ""
+	if t.ForceTile {
+		prefix = "Tile "
 	}
-	return fmt.Sprintf("Position %s", t.Coordinate.String())
+	if t.IsShortcut {
+		if t.ForceTile {
+			return fmt.Sprintf("%s%s at %s", prefix, t.RawNoPrefix, t.Coordinate.String())
+		}
+		return fmt.Sprintf("Unit %s at %s", t.RawNoPrefix, t.Coordinate.String())
+	}
+	return fmt.Sprintf("%sPosition %s", prefix, t.Coordinate.String())
 }
 
 // GetCoordinate returns the coordinate for this target (works for both units and positions)
@@ -180,4 +236,9 @@ func (t *ParseTarget) GetCoordinate() AxialCoord {
 // GetUnit returns the unit if this target represents a unit, nil otherwise
 func (t *ParseTarget) GetUnit() *v1.Unit {
 	return t.Unit
+}
+
+// GetTile returns the tile at this target's position
+func (t *ParseTarget) GetTile() *v1.Tile {
+	return t.Tile
 }
