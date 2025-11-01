@@ -120,8 +120,8 @@ func (b *BaseGameScene) ShowHighlights(_ context.Context, h *v1.ShowHighlightsRe
 }
 
 // Animation methods - no-ops for CLI
-func (b *BaseGameScene) MoveUnit(_ context.Context, _ *v1.MoveUnitAnimationRequest) (*v1.MoveUnitAnimationResponse, error) {
-	return &v1.MoveUnitAnimationResponse{}, nil
+func (b *BaseGameScene) MoveUnit(_ context.Context, _ *v1.MoveUnitRequest) (*v1.MoveUnitResponse, error) {
+	return &v1.MoveUnitResponse{}, nil
 }
 
 func (b *BaseGameScene) ShowAttackEffect(_ context.Context, _ *v1.ShowAttackEffectRequest) (*v1.ShowAttackEffectResponse, error) {
@@ -136,12 +136,12 @@ func (b *BaseGameScene) ShowCaptureEffect(_ context.Context, _ *v1.ShowCaptureEf
 	return &v1.ShowCaptureEffectResponse{}, nil
 }
 
-func (b *BaseGameScene) SetUnitAt(_ context.Context, _ *v1.SetUnitAtAnimationRequest) (*v1.SetUnitAtAnimationResponse, error) {
-	return &v1.SetUnitAtAnimationResponse{}, nil
+func (b *BaseGameScene) SetUnitAt(_ context.Context, _ *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
+	return &v1.SetUnitAtResponse{}, nil
 }
 
-func (b *BaseGameScene) RemoveUnitAt(_ context.Context, _ *v1.RemoveUnitAtAnimationRequest) (*v1.RemoveUnitAtAnimationResponse, error) {
-	return &v1.RemoveUnitAtAnimationResponse{}, nil
+func (b *BaseGameScene) RemoveUnitAt(_ context.Context, _ *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
+	return &v1.RemoveUnitAtResponse{}, nil
 }
 
 type BaseTurnOptionsPanel struct {
@@ -346,6 +346,25 @@ func (b *BrowserGameScene) ShowPath(ctx context.Context, p *v1.ShowPathRequest) 
 func (b *BrowserGameScene) ShowHighlights(ctx context.Context, h *v1.ShowHighlightsRequest) {
 	b.BaseGameScene.ShowHighlights(ctx, h)
 	go b.GameViewerPage.ShowHighlights(ctx, h)
+}
+
+// Animation methods - forward to browser
+func (b *BrowserGameScene) MoveUnit(ctx context.Context, req *v1.MoveUnitRequest) (*v1.MoveUnitResponse, error) {
+	b.BaseGameScene.MoveUnit(ctx, req)
+	go b.GameViewerPage.MoveUnit(ctx, req)
+	return &v1.MoveUnitResponse{}, nil
+}
+
+func (b *BrowserGameScene) SetUnitAt(ctx context.Context, req *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
+	b.BaseGameScene.SetUnitAt(ctx, req)
+	go b.GameViewerPage.SetUnitAt(ctx, req)
+	return &v1.SetUnitAtResponse{}, nil
+}
+
+func (b *BrowserGameScene) RemoveUnitAt(ctx context.Context, req *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
+	b.BaseGameScene.RemoveUnitAt(ctx, req)
+	go b.GameViewerPage.RemoveUnitAt(ctx, req)
+	return &v1.RemoveUnitAtResponse{}, nil
 }
 
 // BrowserGameState is a non-UI implementation of GameState interface
