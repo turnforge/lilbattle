@@ -81,7 +81,7 @@
 
 ### Visual Updates and Animations
 **Priority**: Medium
-**Status**: Animation Framework Complete - Presenter Integration Needed
+**Status**: ✅ COMPLETE
 
 **Completed**:
 - [x] Animation framework with presenter-driven architecture
@@ -94,9 +94,13 @@
 - [x] Particle system with runtime-generated textures
 - [x] Path animation for smooth unit movement along hex paths
 - [x] Attack sequences: attacker flash, projectile arc, impact explosions
+- [x] Presenter integration with applyIncrementalChanges for WorldChange events
+- [x] BrowserGameScene overrides forwarding animations to browser Phaser scene
+- [x] Unit appear animation: scale bounce (0.5 → 1.5 → 1) instead of fade-in
+- [x] Exhausted units/tiles gray highlight system (depth 13, above all other elements)
+- [x] Selective highlight clearing to preserve exhausted state during interactions
 
 **Remaining Tasks**:
-- [ ] Integrate animations with presenter's processServerChanges
 - [ ] Add loading states during move processing
 - [ ] Prevent concurrent move submissions
 - [ ] Add sound effects (moves, attacks, selections)

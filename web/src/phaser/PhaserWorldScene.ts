@@ -14,6 +14,7 @@ import { ProjectileEffect } from './animations/effects/ProjectileEffect';
 import { ExplosionEffect } from './animations/effects/ExplosionEffect';
 import { HealBubblesEffect } from './animations/effects/HealBubblesEffect';
 import { CaptureEffect } from './animations/effects/CaptureEffect';
+import { ExhaustedUnitsHighlightLayer } from './layers/HexHighlightLayer';
 
 const UNIT_TILE_RATIO = 0.9
 
@@ -61,7 +62,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Layer system for managing overlays and interactions
     protected layerManager: LayerManager | null = null;
     protected baseMapLayer: BaseMapLayer | null = null;
-    
+    protected exhaustedUnitsLayer: ExhaustedUnitsHighlightLayer | null = null;
+
     // Game interaction callback (unified, only used by GameViewerPage)
     public sceneClickedCallback: (context: ClickContext, layer: string, extra?: any) => void;
     
@@ -583,12 +585,16 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             (q: number, r: number) => this.world?.getTileAt(q, r) || null,
             (q: number, r: number) => this.world?.getUnitAt(q, r) || null
         );
-        
+
         // Create base map layer for default interactions
         this.baseMapLayer = new BaseMapLayer(this);
-        
+
         // Add base map layer to manager
         this.layerManager.addLayer(this.baseMapLayer);
+
+        // Create exhausted units highlight layer
+        this.exhaustedUnitsLayer = new ExhaustedUnitsHighlightLayer(this, this.tileWidth);
+        this.layerManager.addLayer(this.exhaustedUnitsLayer);
     }
     
     private setupInputHandling() {
@@ -888,14 +894,22 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             // Apply animations if requested
             if (unitSprite) {
                 if (options?.appear && AnimationConfig.APPEAR_DURATION > 0) {
-                    // Fade in animation
-                    unitSprite.setAlpha(0);
+                    // Scale bounce animation: 0.5 → 2 → 1
+                    unitSprite.setScale(0.5);
                     this.tweens.add({
                         targets: unitSprite,
-                        alpha: 1,
-                        duration: AnimationConfig.APPEAR_DURATION,
-                        ease: 'Cubic.easeOut',
-                        onComplete: () => resolve()
+                        scale: 1.5,
+                        duration: AnimationConfig.APPEAR_DURATION / 2,
+                        ease: 'Quad.easeOut',
+                        onComplete: () => {
+                            this.tweens.add({
+                                targets: unitSprite,
+                                scale: 1,
+                                duration: AnimationConfig.APPEAR_DURATION / 2,
+                                ease: 'Quad.easeIn',
+                                onComplete: () => resolve()
+                            });
+                        }
                     });
                 } else if (options?.flash && AnimationConfig.FLASH_DURATION > 0) {
                     // Flash animation (tint and back)
@@ -967,10 +981,6 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 return;
             }
 
-            // Always start at the unit's coord if path[0] != unit's coord
-            if (path[0].q != unit.q || path[0].r != unit.r) {
-                path.splice(0, 0, {q: unit.q, r: unit.r})
-            }
             const startKey = `${path[0].q},${path[0].r}`;
             const sprite = this.unitSprites.get(startKey);
 
@@ -1624,6 +1634,13 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
      */
     public getLayerManager(): LayerManager | null {
         return this.layerManager;
+    }
+
+    /**
+     * Get the exhausted units highlight layer for marking units/tiles with no moves
+     */
+    public getExhaustedUnitsLayer(): ExhaustedUnitsHighlightLayer | null {
+        return this.exhaustedUnitsLayer;
     }
 
     /**

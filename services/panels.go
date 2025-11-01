@@ -107,8 +107,11 @@ func (b *BaseGameScene) ClearPaths(context.Context) {
 	b.CurrentPathsRequest = nil
 }
 
-func (b *BaseGameScene) ClearHighlights(context.Context) {
-	b.CurrentHighlightsRequest = nil
+func (b *BaseGameScene) ClearHighlights(_ context.Context, req *v1.ClearHighlightsRequest) {
+	// Only clear CurrentHighlightsRequest if clearing all or clearing specific interactive types
+	if req == nil || len(req.Types) == 0 {
+		b.CurrentHighlightsRequest = nil
+	}
 }
 
 func (b *BaseGameScene) ShowPath(_ context.Context, p *v1.ShowPathRequest) {
@@ -333,9 +336,12 @@ func (b *BrowserGameScene) ClearPaths(ctx context.Context) {
 	go b.GameViewerPage.ClearPaths(ctx, &v1.ClearPathsRequest{})
 }
 
-func (b *BrowserGameScene) ClearHighlights(ctx context.Context) {
-	b.BaseGameScene.ClearHighlights(ctx)
-	go b.GameViewerPage.ClearHighlights(ctx, &v1.ClearHighlightsRequest{})
+func (b *BrowserGameScene) ClearHighlights(ctx context.Context, req *v1.ClearHighlightsRequest) {
+	b.BaseGameScene.ClearHighlights(ctx, req)
+	if req == nil {
+		req = &v1.ClearHighlightsRequest{} // Clear all if no request provided
+	}
+	go b.GameViewerPage.ClearHighlights(ctx, req)
 }
 
 func (b *BrowserGameScene) ShowPath(ctx context.Context, p *v1.ShowPathRequest) {

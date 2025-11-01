@@ -54,16 +54,16 @@ type BuildOptionsModal interface {
 type GameScene interface {
 	BasePanel
 	ClearPaths(context.Context)
-	ClearHighlights(context.Context)
+	ClearHighlights(context.Context, *v1.ClearHighlightsRequest)
 	ShowPath(context.Context, *v1.ShowPathRequest)
 	ShowHighlights(context.Context, *v1.ShowHighlightsRequest)
 	// Animation methods
-	MoveUnit(context.Context, *v1.MoveUnitAnimationRequest) (*v1.MoveUnitAnimationResponse, error)
+	MoveUnit(context.Context, *v1.MoveUnitRequest) (*v1.MoveUnitResponse, error)
 	ShowAttackEffect(context.Context, *v1.ShowAttackEffectRequest) (*v1.ShowAttackEffectResponse, error)
 	ShowHealEffect(context.Context, *v1.ShowHealEffectRequest) (*v1.ShowHealEffectResponse, error)
 	ShowCaptureEffect(context.Context, *v1.ShowCaptureEffectRequest) (*v1.ShowCaptureEffectResponse, error)
-	SetUnitAt(context.Context, *v1.SetUnitAtAnimationRequest) (*v1.SetUnitAtAnimationResponse, error)
-	RemoveUnitAt(context.Context, *v1.RemoveUnitAtAnimationRequest) (*v1.RemoveUnitAtAnimationResponse, error)
+	SetUnitAt(context.Context, *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error)
+	RemoveUnitAt(context.Context, *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error)
 }
 
 type SingletonGameViewPresenterImpl struct {
@@ -215,11 +215,14 @@ func (s *SingletonGameViewPresenterImpl) SceneClicked(ctx context.Context, req *
 	return
 }
 
-// clearHighlightsAndSelection clears highlights if any are currently shown
+// clearHighlightsAndSelection clears interactive highlights (selection, movement, attack) but preserves exhausted highlights
 func (s *SingletonGameViewPresenterImpl) clearHighlightsAndSelection(ctx context.Context) {
 	s.GameScene.ClearPaths(ctx)
 	if s.hasHighlights {
-		s.GameScene.ClearHighlights(ctx)
+		// Clear only interactive highlights, not exhausted
+		s.GameScene.ClearHighlights(ctx, &v1.ClearHighlightsRequest{
+			Types: []string{"selection", "movement", "attack", "build"},
+		})
 		s.hasHighlights = false
 		s.selectedQ = nil
 		s.selectedR = nil
@@ -322,7 +325,7 @@ func (s *SingletonGameViewPresenterImpl) TurnOptionClicked(ctx context.Context, 
 			option := optionsResp.Options[req.OptionIndex]
 			if moveOpt := option.GetMove(); moveOpt != nil && moveOpt.ReconstructedPath != nil {
 				// Extract path coordinates from the reconstructed path
-				coords := extractPathCoords(moveOpt.ReconstructedPath)
+				coords := ExtractPathCoords(moveOpt.ReconstructedPath)
 				if len(coords) >= 4 {
 					// Show green path for movement
 					s.GameScene.ShowPath(ctx, &v1.ShowPathRequest{
@@ -377,27 +380,6 @@ func (s *SingletonGameViewPresenterImpl) EndTurnButtonClicked(ctx context.Contex
 	return
 }
 
-// extractPathCoords converts a Path to a flat coordinate array
-func extractPathCoords(path *v1.Path) []int32 {
-	if path == nil || len(path.Edges) == 0 {
-		return nil
-	}
-
-	coords := make([]int32, 0, len(path.Edges)*2+2)
-
-	// Add starting position from first edge
-	if len(path.Edges) > 0 {
-		coords = append(coords, path.Edges[0].FromQ, path.Edges[0].FromR)
-	}
-
-	// Add all destination positions
-	for _, edge := range path.Edges {
-		coords = append(coords, edge.ToQ, edge.ToR)
-	}
-
-	return coords
-}
-
 // executeMovementAction executes a movement when user clicks on a movement highlight
 func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Context, targetQ, targetR int32) error {
 	// Get current options from TurnOptionsPanel
@@ -447,19 +429,12 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 	}
 
 	// Call ProcessMoves to execute the move
-	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
-		Moves: []*v1.GameMove{gameMove},
-	})
-
+	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{Moves: []*v1.GameMove{gameMove}})
 	if err != nil {
 		return fmt.Errorf("move execution failed: %w", err)
 	}
 
 	fmt.Println("[Presenter] Move executed successfully")
-
-	// Clear selection and highlights after successful move
-	s.clearHighlightsAndSelection(ctx)
-	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 
 	// Apply incremental updates from the move results
 	s.applyIncrementalChanges(ctx, resp.MoveResults)
@@ -471,10 +446,7 @@ func (s *SingletonGameViewPresenterImpl) executeMovementAction(ctx context.Conte
 // executeBuildAction processes a build unit action
 func (s *SingletonGameViewPresenterImpl) executeBuildAction(ctx context.Context, gameMove *v1.GameMove) {
 	// Call ProcessMoves to execute the build
-	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
-		Moves: []*v1.GameMove{gameMove},
-	})
-
+	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{Moves: []*v1.GameMove{gameMove}})
 	if err != nil {
 		fmt.Printf("[Presenter] Build action failed: %v\n", err)
 		return
@@ -484,12 +456,6 @@ func (s *SingletonGameViewPresenterImpl) executeBuildAction(ctx context.Context,
 
 	// Hide the build modal
 	s.BuildOptionsModal.Hide(ctx)
-
-	// Clear selection and highlights
-	s.clearHighlightsAndSelection(ctx)
-
-	// Clear turn options panel
-	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 
 	// Apply incremental updates from the move results
 	s.applyIncrementalChanges(ctx, resp.MoveResults)
@@ -524,16 +490,15 @@ func (s *SingletonGameViewPresenterImpl) executeEndTurnAction(ctx context.Contex
 
 	fmt.Printf("[Presenter] Turn ended, new current player: %d\n", s.GamesService.SingletonGameState.CurrentPlayer)
 
-	// Clear selection and highlights
-	s.clearHighlightsAndSelection(ctx)
-	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
-
 	// Apply incremental updates from the move results
 	s.applyIncrementalChanges(ctx, resp.MoveResults)
 }
 
 // applyIncrementalChanges processes WorldChange objects and calls incremental browser update methods
 func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Context, moveResults []*v1.GameMoveResult) {
+	// Clear selection and highlights
+	s.clearHighlightsAndSelection(ctx)
+	s.TurnOptionsPanel.SetCurrentUnit(ctx, nil, nil)
 	for _, result := range moveResults {
 		for _, change := range result.Changes {
 			switch changeType := change.ChangeType.(type) {
@@ -547,7 +512,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 						{Q: updatedUnit.Q, R: updatedUnit.R},
 					}
 					// Animate unit movement
-					s.GameScene.MoveUnit(ctx, &v1.MoveUnitAnimationRequest{
+					s.GameScene.MoveUnit(ctx, &v1.MoveUnitRequest{
 						Unit: updatedUnit,
 						Path: path,
 					})
@@ -558,7 +523,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				if updatedUnit != nil {
 					// Update unit with flash effect for now
 					// TODO: Enhance with attack animation when we have move context
-					s.GameScene.SetUnitAt(ctx, &v1.SetUnitAtAnimationRequest{
+					s.GameScene.SetUnitAt(ctx, &v1.SetUnitAtRequest{
 						Q:     updatedUnit.Q,
 						R:     updatedUnit.R,
 						Unit:  updatedUnit,
@@ -570,7 +535,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				previousUnit := changeType.UnitKilled.PreviousUnit
 				if previousUnit != nil {
 					// Remove unit with death animation
-					s.GameScene.RemoveUnitAt(ctx, &v1.RemoveUnitAtAnimationRequest{
+					s.GameScene.RemoveUnitAt(ctx, &v1.RemoveUnitAtRequest{
 						Q:       previousUnit.Q,
 						R:       previousUnit.R,
 						Animate: true,
@@ -582,7 +547,7 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				builtUnit := changeType.UnitBuilt.Unit
 				if builtUnit != nil {
 					// Add unit with appear animation
-					s.GameScene.SetUnitAt(ctx, &v1.SetUnitAtAnimationRequest{
+					s.GameScene.SetUnitAt(ctx, &v1.SetUnitAtRequest{
 						Q:      builtUnit.Q,
 						R:      builtUnit.R,
 						Unit:   builtUnit,
@@ -591,6 +556,11 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				}
 
 			case *v1.WorldChange_PlayerChanged:
+				// Clear exhausted highlights for new turn (all units reset)
+				s.GameScene.ClearHighlights(ctx, &v1.ClearHighlightsRequest{
+					Types: []string{"exhausted"},
+				})
+
 				// Reset all units for new turn (lazy top-up pattern)
 				if changeType.PlayerChanged.ResetUnits != nil {
 					for _, resetUnit := range changeType.PlayerChanged.ResetUnits {
@@ -621,5 +591,40 @@ func (s *SingletonGameViewPresenterImpl) applyIncrementalChanges(ctx context.Con
 				fmt.Printf("[Presenter] Unknown world change type: %T\n", changeType)
 			}
 		}
+	}
+
+	// After applying all changes, refresh exhausted highlights
+	s.refreshExhaustedHighlights(ctx)
+}
+
+// refreshExhaustedHighlights updates the exhausted highlights for all units with no movement points
+func (s *SingletonGameViewPresenterImpl) refreshExhaustedHighlights(ctx context.Context) {
+	gameState := s.GamesService.SingletonGameState
+	if gameState == nil || gameState.WorldData == nil {
+		return
+	}
+
+	// Build list of exhausted units/tiles
+	var exhaustedHighlights []*v1.HighlightSpec
+
+	// Check all units for the current player
+	for _, unit := range gameState.WorldData.Units {
+		if unit.Player == gameState.CurrentPlayer {
+			// Mark as exhausted if no movement points left
+			if unit.DistanceLeft <= 0 {
+				exhaustedHighlights = append(exhaustedHighlights, &v1.HighlightSpec{
+					Q:    unit.Q,
+					R:    unit.R,
+					Type: "exhausted",
+				})
+			}
+		}
+	}
+
+	// Send exhausted highlights to browser
+	if len(exhaustedHighlights) > 0 {
+		s.GameScene.ShowHighlights(ctx, &v1.ShowHighlightsRequest{
+			Highlights: exhaustedHighlights,
+		})
 	}
 }

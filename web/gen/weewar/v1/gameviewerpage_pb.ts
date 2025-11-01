@@ -469,7 +469,7 @@ export type HighlightSpec = Message<"weewar.v1.HighlightSpec"> & {
   r: number;
 
   /**
-   * "selection", "movement", "attack"
+   * "selection", "movement", "attack", "build", "exhausted"
    *
    * @generated from field: string type = 3;
    */

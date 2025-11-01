@@ -429,3 +429,56 @@ export class AttackHighlightLayer extends HexHighlightLayer {
         this.clearHighlights();
     }
 }
+
+// =============================================================================
+// Exhausted Units Highlight Layer
+// =============================================================================
+
+/**
+ * Shows gray highlights for units with no movement points left
+ */
+export class ExhaustedUnitsHighlightLayer extends HexHighlightLayer {
+    constructor(scene: Phaser.Scene, tileWidth: number) {
+        super(scene, {
+            name: 'exhausted-units-highlight',
+            coordinateSpace: 'hex',
+            interactive: false, // Exhausted highlights don't consume clicks
+            depth: 13, // Above units (depth 10) and selection (depth 12) for visibility
+            tileWidth
+        });
+    }
+
+    public hitTest(context: ClickContext): LayerHitResult | null {
+        // Exhausted highlights are visual only, never intercept clicks
+        return LayerHitResult.TRANSPARENT;
+    }
+
+    /**
+     * Mark a unit as exhausted (no movement points)
+     */
+    public markExhausted(q: number, r: number): void {
+        // Add gray highlight (semi-transparent gray)
+        this.addHighlight(q, r, 0x404040, 0.4);
+    }
+
+    /**
+     * Remove exhausted status from a unit
+     */
+    public unmarkExhausted(q: number, r: number): void {
+        this.removeHighlight(q, r);
+    }
+
+    /**
+     * Clear all exhausted highlights (e.g., at turn end)
+     */
+    public clearAllExhausted(): void {
+        this.clearHighlights();
+    }
+
+    /**
+     * Check if a unit is marked as exhausted
+     */
+    public isMarkedExhausted(q: number, r: number): boolean {
+        return this.hasHighlight(q, r);
+    }
+}

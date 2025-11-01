@@ -228,6 +228,7 @@ export class PhaserGameScene extends PhaserWorldScene {
         const selections = highlights.filter(h => h.type === 'selection');
         const movements: MoveUnitAction[] = highlights.filter(h => h.type === 'movement').map(h => h.move!);
         const attacks = highlights.filter(h => h.type === 'attack').map(h => h.attack!);
+        const exhausted = highlights.filter(h => h.type === 'exhausted');
 
         // Apply selection highlights (typically just one)
         if (this._selectionHighlightLayer && selections.length > 0) {
@@ -245,6 +246,14 @@ export class PhaserGameScene extends PhaserWorldScene {
         // Apply attack highlights
         if (this._attackHighlightLayer && attacks.length > 0) {
             this._attackHighlightLayer.showAttackOptions(attacks);
+        }
+
+        // Apply exhausted highlights
+        const exhaustedLayer = this.getExhaustedUnitsLayer();
+        if (exhaustedLayer && exhausted.length > 0) {
+            exhausted.forEach(h => {
+                exhaustedLayer.markExhausted(h.q, h.r);
+            });
         }
     }
 
@@ -265,6 +274,11 @@ export class PhaserGameScene extends PhaserWorldScene {
 
         if ((clearAll || types.includes('attack')) && this._attackHighlightLayer) {
             this._attackHighlightLayer.clearAttackOptions();
+        }
+
+        const exhaustedLayer = this.getExhaustedUnitsLayer();
+        if ((clearAll || types.includes('exhausted')) && exhaustedLayer) {
+            exhaustedLayer.clearAllExhausted();
         }
     }
 

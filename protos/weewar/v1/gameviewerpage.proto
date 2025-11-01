@@ -167,7 +167,7 @@ message ShowHighlightsResponse {
 message HighlightSpec {
     int32 q = 1;
     int32 r = 2;
-    string type = 3; // "selection", "movement", "attack"
+    string type = 3; // "selection", "movement", "attack", "build", "exhausted"
     oneof action {
       MoveUnitAction move = 4;
       AttackUnitAction attack = 5;

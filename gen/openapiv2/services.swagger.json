@@ -2071,7 +2071,7 @@
         },
         "type": {
           "type": "string",
-          "title": "\"selection\", \"movement\", \"attack\""
+          "title": "\"selection\", \"movement\", \"attack\", \"build\", \"exhausted\""
         },
         "move": {
           "$ref": "#/definitions/v1MoveUnitAction"

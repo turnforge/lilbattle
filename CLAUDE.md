@@ -278,3 +278,25 @@ previousUnit := &v1.Unit{Q: unit.Q, R: unit.R, ...} // May forget Shortcut!
 - `LastActedTurn`: Last turn when unit performed an action
 - `DistanceLeft`: Current remaining movement points
 
+### Exhausted Units/Tiles Highlight System
+
+**Visual Indicator**: Gray overlay (0x404040, alpha 0.4) on units/tiles with no movement points left
+
+**Architecture**:
+- **Layer**: `ExhaustedUnitsHighlightLayer` in `web/src/phaser/layers/HexHighlightLayer.ts`
+- **Depth**: 13 (topmost - above units, selection, and other highlights for visibility)
+- **Highlight Type**: "exhausted" (added to `HighlightSpec` proto)
+- **Interface**: Non-interactive (LayerHitResult.TRANSPARENT)
+
+**Presenter Control** (services/singleton_gameview_presenter.go):
+- `refreshExhaustedHighlights()`: Scans current player's units, marks those with `DistanceLeft <= 0`
+- Called after `applyIncrementalChanges()` to update state after moves
+- Cleared on turn end in `PlayerChanged` WorldChange case
+- `clearHighlightsAndSelection()`: Preserves exhausted highlights while clearing interactive ones
+
+**Key Design**:
+- Uses existing `ShowHighlights` RPC infrastructure with type="exhausted"
+- Selective clearing via `ClearHighlightsRequest.Types` parameter
+- Persists across user interactions (selection, movement, attack)
+- Automatically refreshes after any unit action or state change
+

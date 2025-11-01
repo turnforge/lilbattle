@@ -1032,7 +1032,7 @@ type HighlightSpec struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Q     int32                  `protobuf:"varint,1,opt,name=q,proto3" json:"q,omitempty"`
 	R     int32                  `protobuf:"varint,2,opt,name=r,proto3" json:"r,omitempty"`
-	Type  string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"` // "selection", "movement", "attack"
+	Type  string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"` // "selection", "movement", "attack", "build", "exhausted"
 	// Types that are valid to be assigned to Action:
 	//
 	//	*HighlightSpec_Move
