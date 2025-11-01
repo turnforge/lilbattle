@@ -6,6 +6,24 @@ import (
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
 )
 
+// extractPathCoords converts a Path to a flat coordinate array
+func ExtractPathCoords(path *v1.Path) (coords []int32) {
+	if path != nil && len(path.Edges) != 0 {
+		coords = make([]int32, 0, len(path.Edges)*2+2)
+
+		// Add starting position from first edge
+		if len(path.Edges) > 0 {
+			coords = append(coords, path.Edges[0].FromQ, path.Edges[0].FromR)
+		}
+
+		// Add all destination positions
+		for _, edge := range path.Edges {
+			coords = append(coords, edge.ToQ, edge.ToR)
+		}
+	}
+	return
+}
+
 // ReconstructPath reconstructs a complete path from source to destination using AllPaths
 // Returns the path as a sequence of edges from source to destination
 func ReconstructPath(allPaths *v1.AllPaths, destQ, destR int32) (*v1.Path, error) {
