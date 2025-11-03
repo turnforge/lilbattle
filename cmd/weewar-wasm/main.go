@@ -22,7 +22,6 @@ import (
 )
 
 type SingletonInitializerService struct {
-	v1.UnimplementedSingletonInitializerServiceServer
 	GamesService      *singleton.SingletonGamesService
 	GameViewPresenter *services.GameViewPresenter
 }
