@@ -3,11 +3,11 @@
 
 {{ define "ExtraHeaderButtons" }}
 <!-- Back to World Button -->
-<a href="/worlds/{{ .WorldId }}/view" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+<a href="/worlds/{{ .WorldId }}/view" class="header-action-btn inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
     <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
-    Back to World
+    <span class="header-btn-text">Back to World</span>
 </a>
 {{ end }}
 
@@ -79,12 +79,22 @@
             </div>
 
             <!-- Game Configuration Panel: Fixed width (484px) -->
-            <div class="w-full lg:w-[484px] lg:flex-shrink-0 p-6 lg:pl-3 order-1 lg:order-2">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" data-component="game-config-panel">
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="w-full lg:w-[484px] lg:flex-shrink-0 p-6 lg:pl-3 order-1 lg:order-2 lg:min-h-0">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full" data-component="game-config-panel">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Game Configuration</h2>
+                        <!-- Start Game Button in Header -->
+                        <button data-action="start-game" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="hidden sm:inline">Start Game</span>
+                            <svg class="h-4 w-4 sm:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" />
+                            </svg>
+                        </button>
                     </div>
-                    <div class="p-4 space-y-6">
+                    <div class="p-4 space-y-6 overflow-y-auto flex-1">
                         
                         <!-- Player Configuration -->
                         <div data-config-section="players">
@@ -223,15 +233,6 @@
                             </div>
                         </div>
 
-                        <!-- Start Game Button -->
-                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <button data-action="start-game" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Start Game
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
