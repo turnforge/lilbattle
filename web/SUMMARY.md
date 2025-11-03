@@ -247,6 +247,18 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Path Animation**: Units smoothly slide along hex paths instead of teleporting
 - **Attack Sequences**: Complete attack animations with attacker flash, projectile arc, and impact explosions
 
+### Recent Achievements (Session 2025-11-03)
+
+#### Responsive Layout System with Bottom Sheets (Complete)
+- **Mobile-First Design**: Full-screen canvas with overlay panels on mobile devices
+- **Bottom Sheet Pattern**: Consistent slide-up overlay UI with backdrop, handle bar, and smooth transitions
+- **FAB (Floating Action Button)**: Icon-based triggers for accessing secondary panels on mobile
+- **Responsive Header Buttons**: Desktop buttons collapse into three-dot dropdown menu on mobile
+- **Media Query Control**: Explicit CSS media queries (768px, 1024px breakpoints) with display controls
+- **Applied to Multiple Pages**: WorldViewerPage (stats panel) and StartGamePage (config panel)
+- **Consistent Implementation**: Reusable patterns for openSheet/closeSheet handlers with ESC key support
+- **Layout Preservation**: Desktop two-column layouts unchanged, mobile gets optimized single-column with overlays
+
 ## Status
 **Current Version**: 8.8 (Animation Framework)
 **Status**: Production-ready with animation system ready for presenter integration

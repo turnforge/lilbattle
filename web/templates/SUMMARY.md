@@ -198,6 +198,98 @@ const state = wasmClient.GetGameState();
 updateScene(state); // TypeScript updates Phaser or DOM
 ```
 
+### Responsive Layout Patterns
+
+#### Bottom Sheet Pattern (Mobile Overlays)
+
+**Purpose:** Provides mobile-optimized UI by showing secondary panels as slide-up overlays instead of fixed sidebars.
+
+**Implementation Pattern:**
+
+1. **Desktop Layout:** Two-column with fixed sidebar
+```html
+<div class="flex h-screen">
+  <!-- Main content (full-width on mobile) -->
+  <div class="w-full lg:w-[calc(100%-300px)]">
+    <div id="preview-container"></div>
+  </div>
+
+  <!-- Sidebar (hidden on mobile) -->
+  <div class="hidden lg:block lg:w-[300px]">
+    <!-- Panel content -->
+  </div>
+</div>
+```
+
+2. **Mobile FAB Button:**
+```html
+<button id="stats-fab" class="fixed bottom-6 right-6 z-40 lg:hidden ...">
+  <svg><!-- Icon --></svg>
+  <span>Stats</span>
+</button>
+```
+
+3. **Bottom Sheet Overlay:**
+```html
+<div id="stats-overlay" class="fixed inset-0 z-50 hidden lg:hidden">
+  <!-- Semi-transparent backdrop -->
+  <div id="stats-backdrop" class="absolute inset-0 bg-black/50"></div>
+
+  <!-- Slide-up panel -->
+  <div id="stats-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl transform translate-y-full transition-transform duration-300 max-h-[85vh] flex flex-col">
+    <!-- Handle bar -->
+    <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-2"></div>
+
+    <!-- Header with close button -->
+    <div class="flex items-center justify-between p-4 border-b">
+      <h2>Panel Title</h2>
+      <button id="stats-close">×</button>
+    </div>
+
+    <!-- Scrollable content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <!-- Panel content here -->
+    </div>
+  </div>
+</div>
+```
+
+4. **Media Query Controls:**
+```html
+<style>
+  /* Ensure FAB only shows on mobile */
+  @media (max-width: 1023px) {
+    #stats-fab { display: flex !important; }
+  }
+  @media (min-width: 1024px) {
+    #stats-fab, #stats-overlay { display: none !important; }
+  }
+</style>
+```
+
+**TypeScript Integration:** See `web/src/SUMMARY.md` for handler implementation.
+
+**Pages Using Pattern:**
+- `WorldViewerPage.html` - Stats panel with FAB button
+- `StartGamePage.html` - Config panel with FAB button
+
+#### Responsive Header Buttons
+
+**Purpose:** Desktop buttons collapse into dropdown menu on mobile.
+
+**Implementation in Header.html:**
+- Desktop: Buttons shown inline via `md:flex` visibility
+- Mobile: Three-dot menu button triggers dropdown
+- TypeScript: `initializeHeaderActionsDropdown()` in BasePage.ts clones buttons into dropdown
+
+**Usage Pattern:**
+```html
+{{ block "ExtraHeaderButtons" . }}
+  <button class="header-action-btn px-4 py-2 ...">Edit</button>
+  <button class="header-action-btn px-4 py-2 ...">Create Game</button>
+{{ end }}
+```
+
 ### Best Practices
 
 1. **Separation of Concerns:**
@@ -228,3 +320,9 @@ updateScene(state); // TypeScript updates Phaser or DOM
    - Include ARIA labels where needed
    - Ensure keyboard navigation works
    - Test with screen readers
+
+6. **Responsive Design:**
+   - Use Tailwind breakpoints (md: 768px, lg: 1024px)
+   - Add explicit media queries with `!important` for critical show/hide behavior
+   - Test both mobile (< 768px) and desktop (> 1024px) layouts
+   - Ensure FAB buttons are properly positioned and accessible on mobile

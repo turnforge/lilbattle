@@ -74,3 +74,49 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 *   **Panel Integration Optimization**: Improved coordination between EditorToolsPanel, TileStatsPanel, and PhaserEditor
 *   **Reference Management**: Cleaner component initialization and lifecycle patterns
 *   **State Management Consolidation**: Reduced complexity in page-level state handling
+
+### Recent Session Work (2025-11-03)
+
+#### Responsive Bottom Sheet Implementation ✅
+*   **Bottom Sheet Handler Pattern**: Reusable `initializeBottomSheet()` method pattern for mobile overlays
+*   **Event Handling**: openSheet/closeSheet functions with backdrop, close button, and ESC key support
+*   **Multiple Elements Support**: Using `querySelectorAll` for binding to duplicate buttons across desktop/mobile layouts
+*   **Applied to Pages**: WorldViewerPage (`initializeBottomSheet` for stats), StartGamePage (`initializeConfigBottomSheet` for config)
+*   **Consistent Architecture**: Same implementation pattern across pages for maintainability
+
+**Bottom Sheet Pattern Implementation:**
+```typescript
+private initializeBottomSheet(): void {
+    const fab = document.getElementById('fab-id');
+    const overlay = document.getElementById('overlay-id');
+    const panel = document.getElementById('panel-id');
+    const backdrop = document.getElementById('backdrop-id');
+    const closeButton = document.getElementById('close-id');
+
+    if (!fab || !overlay || !panel || !backdrop || !closeButton) return;
+
+    const openSheet = () => {
+        overlay.classList.remove('hidden');
+        overlay.offsetHeight; // Force reflow
+        panel.classList.remove('translate-y-full');
+    };
+
+    const closeSheet = () => {
+        panel.classList.add('translate-y-full');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+    };
+
+    fab.addEventListener('click', openSheet);
+    closeButton.addEventListener('click', closeSheet);
+    backdrop.addEventListener('click', closeSheet);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+            closeSheet();
+        }
+    });
+}
+```
+
+**Key Fixes:**
+- StartGamePage: Fixed mobile "Start Game" button by using `querySelectorAll` to bind all buttons (desktop + mobile)
+- Validation: Updated `validateGameConfiguration()` to disable/enable all button instances across layouts

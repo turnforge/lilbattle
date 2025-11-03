@@ -103,11 +103,11 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Internal method to bind page-specific events (called from activate() phase)
      */
     private bindPageSpecificEvents(): void {
-        // Bind start game button
-        const startGameButton = document.querySelector('[data-action="start-game"]');
-        if (startGameButton) {
-            startGameButton.addEventListener('click', this.startGame.bind(this));
-        }
+        // Bind all start game buttons (desktop and mobile)
+        const startGameButtons = document.querySelectorAll('[data-action="start-game"]');
+        startGameButtons.forEach(button => {
+            button.addEventListener('click', this.startGame.bind(this));
+        });
 
         // Bind turn limit selector
         const turnLimitSelect = document.querySelector('[data-config="turn-limit"]');
@@ -121,6 +121,53 @@ class StartGamePage extends BasePage implements LCMComponent {
             const input = document.querySelector(`[data-config="${field}"]`);
             if (input) {
                 input.addEventListener('change', this.handleIncomeChange.bind(this));
+            }
+        });
+
+        // Initialize bottom sheet for mobile
+        this.initializeConfigBottomSheet();
+    }
+
+    /**
+     * Initialize bottom sheet for mobile config panel
+     */
+    private initializeConfigBottomSheet(): void {
+        const fab = document.getElementById('config-fab');
+        const overlay = document.getElementById('config-overlay');
+        const panel = document.getElementById('config-panel');
+        const backdrop = document.getElementById('config-backdrop');
+        const closeButton = document.getElementById('config-close');
+
+        if (!fab || !overlay || !panel || !backdrop || !closeButton) {
+            return; // Elements don't exist (probably on desktop)
+        }
+
+        // Open bottom sheet
+        const openSheet = () => {
+            overlay.classList.remove('hidden');
+            // Force reflow to enable transition
+            overlay.offsetHeight;
+            panel.classList.remove('translate-y-full');
+        };
+
+        // Close bottom sheet
+        const closeSheet = () => {
+            panel.classList.add('translate-y-full');
+            // Wait for animation to complete before hiding
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        };
+
+        // Event listeners
+        fab.addEventListener('click', openSheet);
+        closeButton.addEventListener('click', closeSheet);
+        backdrop.addEventListener('click', closeSheet);
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+                closeSheet();
             }
         });
     }
@@ -327,7 +374,7 @@ class StartGamePage extends BasePage implements LCMComponent {
     }
 
     private validateGameConfiguration(): boolean {
-        const startButton = document.querySelector('[data-action="start-game"]') as HTMLButtonElement;
+        const startButtons = document.querySelectorAll('[data-action="start-game"]') as NodeListOf<HTMLButtonElement>;
         let isValid = true;
         let errors: string[] = [];
 
@@ -344,10 +391,11 @@ class StartGamePage extends BasePage implements LCMComponent {
             errors.push('At least 2 players are required');
         }
 
-        if (startButton) {
-            startButton.disabled = !isValid;
-            startButton.title = errors.length > 0 ? errors.join('; ') : '';
-        }
+        // Update all start game buttons (desktop and mobile)
+        startButtons.forEach(button => {
+            button.disabled = !isValid;
+            button.title = errors.length > 0 ? errors.join('; ') : '';
+        });
 
         return isValid;
     }
