@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -166,7 +166,7 @@ func LoadRulesEngineFromJSON(rulesJSON []byte, damageJSON []byte) (*RulesEngine,
 	}
 
 	// Set default income values for terrains
-	setDefaultIncomeValues(rulesEngine)
+	SetDefaultIncomeValues(rulesEngine)
 
 	// Populate reference maps from centralized properties for fast lookup
 	rulesEngine.PopulateReferenceMaps()
@@ -253,8 +253,8 @@ func calculateExpectedDamage(damage *v1.DamageDistribution) {
 	damage.ExpectedDamage = expectedDamage
 }
 
-// setDefaultIncomeValues sets default income_per_turn values for terrain types using DefaultIncomeMap
-func setDefaultIncomeValues(re *RulesEngine) {
+// SetDefaultIncomeValues sets default income_per_turn values for terrain types using DefaultIncomeMap
+func SetDefaultIncomeValues(re *RulesEngine) {
 	for tileID, terrain := range re.Terrains {
 		// Check if this tile ID has a default income value
 		if income, ok := DefaultIncomeMap[tileID]; ok {

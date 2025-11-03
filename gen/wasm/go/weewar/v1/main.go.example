@@ -15,43 +15,7 @@ import (
 
 func main() {
 	// Initialize service implementations with your business logic
-	exports := &weewar.WeewarServicesExports{
-		// TODO: Replace with your actual GamesService implementation
-		// GamesService: &yourGamesServiceImplementation{
-		//     // Initialize with database, config, etc.
-		//     db: database,
-		//     auth: authService,
-		//     config: appConfig,
-		// },
-		// TODO: Replace with your actual SingletonInitializerService implementation
-		// SingletonInitializerService: &yourSingletonInitializerServiceImplementation{
-		//     // Initialize with database, config, etc.
-		//     db: database,
-		//     auth: authService,
-		//     config: appConfig,
-		// },
-		// TODO: Replace with your actual GameViewPresenter implementation
-		// GameViewPresenter: &yourGameViewPresenterImplementation{
-		//     // Initialize with database, config, etc.
-		//     db: database,
-		//     auth: authService,
-		//     config: appConfig,
-		// },
-		// TODO: Replace with your actual UsersService implementation
-		// UsersService: &yourUsersServiceImplementation{
-		//     // Initialize with database, config, etc.
-		//     db: database,
-		//     auth: authService,
-		//     config: appConfig,
-		// },
-		// TODO: Replace with your actual WorldsService implementation
-		// WorldsService: &yourWorldsServiceImplementation{
-		//     // Initialize with database, config, etc.
-		//     db: database,
-		//     auth: authService,
-		//     config: appConfig,
-		// },
-	}
+	exports := &weewar.WeewarServicesExports{}
 
 	// Register the JavaScript API
 	exports.RegisterAPI()

@@ -1,6 +1,6 @@
 package services
 
-import v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+import v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 
 // =============================================================================
 // Observer Pattern for World State Changes

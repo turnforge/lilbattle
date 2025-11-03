@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -113,7 +113,7 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 	}
 
 	// Check if tile can build (must be a building that can produce units)
-	terrainData, err := g.rulesEngine.GetTerrainData(tile.TileType)
+	terrainData, err := g.RulesEngine.GetTerrainData(tile.TileType)
 	if err != nil || terrainData == nil {
 		return nil, fmt.Errorf("terrain data not found for tile type %d", tile.TileType)
 	}
@@ -146,7 +146,7 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 	}
 
 	// Get unit definition for cost validation
-	unitData, err := g.rulesEngine.GetUnitData(action.UnitType)
+	unitData, err := g.RulesEngine.GetUnitData(action.UnitType)
 	if err != nil || unitData == nil {
 		return nil, fmt.Errorf("unit data not found for unit type %d", action.UnitType)
 	}
@@ -202,11 +202,11 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 	buildChange := &v1.WorldChange{
 		ChangeType: &v1.WorldChange_UnitBuilt{
 			UnitBuilt: &v1.UnitBuiltChange{
-				Unit:         copyUnit(newUnit),
-				TileQ:        tile.Q,
-				TileR:        tile.R,
-				CoinsCost:    unitData.Coins,
-				PlayerCoins:  playerCoins - unitData.Coins,
+				Unit:        copyUnit(newUnit),
+				TileQ:       tile.Q,
+				TileR:       tile.R,
+				CoinsCost:   unitData.Coins,
+				PlayerCoins: playerCoins - unitData.Coins,
 			},
 		},
 	}
@@ -249,7 +249,7 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 	for _, tile := range g.World.TilesByCoord() {
 		if tile.Player == previousPlayer {
 			// Check if this is a base (building that generates income)
-			terrainData, err := g.rulesEngine.GetTerrainData(tile.TileType)
+			terrainData, err := g.RulesEngine.GetTerrainData(tile.TileType)
 			if err == nil && terrainData.IncomePerTurn > 0 {
 				// Add income from this terrain
 				totalIncome += terrainData.IncomePerTurn
@@ -361,7 +361,7 @@ func (g *Game) IsValidMove(from, to AxialCoord) bool {
 
 	// Create simple two-tile path and validate using RulesEngine
 	path := []AxialCoord{from, to}
-	valid, err := g.rulesEngine.IsValidPath(unit, path, g.World)
+	valid, err := g.RulesEngine.IsValidPath(unit, path, g.World)
 	if err != nil {
 		return false
 	}
@@ -403,7 +403,7 @@ func (m *MoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, action *v1.M
 	}
 
 	// Get movement cost using RulesEngine
-	cost, err := g.rulesEngine.GetMovementCost(g.World, unit, to)
+	cost, err := g.RulesEngine.GetMovementCost(g.World, unit, to)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate movement cost: %w", err)
 	}
@@ -500,7 +500,7 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	defenderCoord := CoordFromInt32(action.DefenderQ, action.DefenderR)
 
 	// Calculate wound bonus from defender's attack history
-	woundBonus := g.rulesEngine.CalculateWoundBonus(defender, attackerCoord)
+	woundBonus := g.RulesEngine.CalculateWoundBonus(defender, attackerCoord)
 
 	// Create combat context for attacker -> defender
 	attackerCtx := &CombatContext{
@@ -514,14 +514,14 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	}
 
 	// Calculate damage using formula-based system
-	defenderDamage, err := g.rulesEngine.SimulateCombatDamage(attackerCtx, g.rng)
+	defenderDamage, err := g.RulesEngine.SimulateCombatDamage(attackerCtx, g.rng)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate combat damage: %w", err)
 	}
 
 	// Check if defender can counter-attack
 	attackerDamage := int32(0)
-	if canCounter, err := g.rulesEngine.CanUnitAttackTarget(defender, attacker); err == nil && canCounter {
+	if canCounter, err := g.RulesEngine.CanUnitAttackTarget(defender, attacker); err == nil && canCounter {
 		// Create combat context for counter-attack (no wound bonus)
 		counterCtx := &CombatContext{
 			Attacker:       defender,
@@ -533,7 +533,7 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 			WoundBonus:     0, // No wound bonus for counter-attacks
 		}
 
-		attackerDamage, err = g.rulesEngine.SimulateCombatDamage(counterCtx, g.rng)
+		attackerDamage, err = g.RulesEngine.SimulateCombatDamage(counterCtx, g.rng)
 		if err != nil {
 			// If counter-attack calculation fails, no counter damage
 			attackerDamage = 0
@@ -541,7 +541,7 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	}
 
 	// Update progression: record chosen alternative and check if step is complete
-	unitDef, err := g.rulesEngine.GetUnitData(attacker.UnitType)
+	unitDef, err := g.RulesEngine.GetUnitData(attacker.UnitType)
 	if err == nil && unitDef != nil {
 		// Get action_order for this unit
 		actionOrder := unitDef.ActionOrder
@@ -677,7 +677,7 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 		}
 
 		if len(adjacentUnits) > 0 {
-			splashTargets, err := g.rulesEngine.CalculateSplashDamage(
+			splashTargets, err := g.RulesEngine.CalculateSplashDamage(
 				attacker,
 				g.World.TileAt(attackerCoord),
 				defenderCoord,
@@ -758,7 +758,7 @@ func (g *Game) CanMoveUnit(unit *v1.Unit, to AxialCoord) bool {
 	}
 
 	// Use Dijkstra to compute all reachable tiles based on terrain and movement points
-	allPaths, err := g.rulesEngine.GetMovementOptions(g.World, unit, int(unit.DistanceLeft))
+	allPaths, err := g.RulesEngine.GetMovementOptions(g.World, unit, int(unit.DistanceLeft))
 	if err != nil {
 		return false
 	}
@@ -786,7 +786,7 @@ func (g *Game) CanAttackUnit(attacker, defender *v1.Unit) bool {
 	}
 
 	// Use rules engine for attack validation
-	canAttack, err := g.rulesEngine.CanUnitAttackTarget(attacker, defender)
+	canAttack, err := g.RulesEngine.CanUnitAttackTarget(attacker, defender)
 	if err != nil {
 		return false
 	}
@@ -823,7 +823,7 @@ func (m *MoveProcessor) GetMovementOptions(game *Game, q, r int32) (*v1.AllPaths
 	if unit.DistanceLeft <= 0 {
 		return nil, fmt.Errorf("unit has no movement points remaining")
 	}
-	return game.rulesEngine.GetMovementOptions(game.World, unit, int(unit.DistanceLeft))
+	return game.RulesEngine.GetMovementOptions(game.World, unit, int(unit.DistanceLeft))
 }
 
 // GetAttackOptions returns attack options for unit at given coordinates with full validation
@@ -838,7 +838,7 @@ func (m *MoveProcessor) GetAttackOptions(game *Game, q, r int32) ([]AxialCoord, 
 	if unit.AvailableHealth <= 0 {
 		return nil, fmt.Errorf("unit has no health remaining")
 	}
-	return game.rulesEngine.GetAttackOptions(game.World, unit)
+	return game.RulesEngine.GetAttackOptions(game.World, unit)
 }
 
 // CanSelectUnit validates if unit at given coordinates can be selected by current player
@@ -867,5 +867,5 @@ func (g *Game) GetUnitAttackOptionsFrom(q, r int) ([]AxialCoord, error) {
 	return g.GetUnitAttackOptions(g.World.UnitAt(AxialCoord{q, r}))
 }
 func (g *Game) GetUnitAttackOptions(unit *v1.Unit) ([]AxialCoord, error) {
-	return g.rulesEngine.GetAttackOptions(g.World, unit)
+	return g.RulesEngine.GetAttackOptions(g.World, unit)
 }

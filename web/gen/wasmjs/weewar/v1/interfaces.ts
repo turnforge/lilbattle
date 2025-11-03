@@ -689,21 +689,6 @@ export interface Path {
 
 
 /**
- * GameInfo represents a game in the catalog
- */
-export interface GameInfo {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  tags: string[];
-  icon: string;
-  lastUpdated: string;
-}
-
-
-/**
  * Request messages
  */
 export interface ListGamesRequest {

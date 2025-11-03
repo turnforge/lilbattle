@@ -5,18 +5,18 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 // ParseTarget represents either a unit ID or a coordinate position
 type ParseTarget struct {
-	IsShortcut   bool       // true if this represents a unit, false if coordinate
-	ForceTile    bool       // true if "t:" prefix was used to force tile lookup
-	Unit         *v1.Unit   // the unit if IsShortcut is true
-	Tile         *v1.Tile   // the tile at this position
-	Coordinate   AxialCoord // the coordinate if IsShortcut is false
-	Raw          string     // original input string
-	RawNoPrefix  string     // input string without the "t:" prefix
+	IsShortcut  bool       // true if this represents a unit, false if coordinate
+	ForceTile   bool       // true if "t:" prefix was used to force tile lookup
+	Unit        *v1.Unit   // the unit if IsShortcut is true
+	Tile        *v1.Tile   // the tile at this position
+	Coordinate  AxialCoord // the coordinate if IsShortcut is false
+	Raw         string     // original input string
+	RawNoPrefix string     // input string without the "t:" prefix
 }
 
 // ParsePositionOrUnit parses a string that can be either:

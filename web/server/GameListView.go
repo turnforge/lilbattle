@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 type GameListView struct {
-	Games  []*protos.Game
+	Games     []*protos.Game
 	Paginator Paginator
 }
 

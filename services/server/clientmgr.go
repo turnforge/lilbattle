@@ -12,7 +12,7 @@ import (
 	"errors"
 	"log"
 
-	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1s "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services/fsbe"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -25,8 +25,8 @@ var ErrNoSuchEntity = errors.New("entity not found")
 
 type ClientMgr struct {
 	svcAddr         string
-	gamesSvcClient  protos.GamesServiceClient
-	worldsSvcClient protos.WorldsServiceClient
+	gamesSvcClient  v1s.GamesServiceClient
+	worldsSvcClient v1s.WorldsServiceClient
 	authSvc         *fsbe.AuthService
 	// We may need an auth svc at some point
 }
@@ -59,7 +59,7 @@ func (c *ClientMgr) GetAuthService() *fsbe.AuthService {
 }
 
 // We will have one client per service here
-func (c *ClientMgr) GetWorldsSvcClient() (out protos.WorldsServiceClient, err error) {
+func (c *ClientMgr) GetWorldsSvcClient() (out v1s.WorldsServiceClient, err error) {
 	if c.worldsSvcClient == nil {
 		worldsSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
@@ -67,13 +67,13 @@ func (c *ClientMgr) GetWorldsSvcClient() (out protos.WorldsServiceClient, err er
 			return nil, err
 		}
 
-		c.worldsSvcClient = protos.NewWorldsServiceClient(worldsSvcConn)
+		c.worldsSvcClient = v1s.NewWorldsServiceClient(worldsSvcConn)
 	}
 	return c.worldsSvcClient, nil
 }
 
 // We will have one client per service here
-func (c *ClientMgr) GetGamesSvcClient() (out protos.GamesServiceClient, err error) {
+func (c *ClientMgr) GetGamesSvcClient() (out v1s.GamesServiceClient, err error) {
 	if c.gamesSvcClient == nil {
 		gamesSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
@@ -81,7 +81,7 @@ func (c *ClientMgr) GetGamesSvcClient() (out protos.GamesServiceClient, err erro
 			return nil, err
 		}
 
-		c.gamesSvcClient = protos.NewGamesServiceClient(gamesSvcConn)
+		c.gamesSvcClient = v1s.NewGamesServiceClient(gamesSvcConn)
 	}
 	return c.gamesSvcClient, nil
 }

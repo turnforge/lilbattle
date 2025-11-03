@@ -13,7 +13,8 @@ import (
 
 	turnengine "github.com/panyam/turnengine/engine/gen/go/turnengine/v1"
 	"github.com/panyam/turnengine/engine/storage"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1services "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services"
 	"google.golang.org/protobuf/proto"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -24,7 +25,7 @@ var GAMES_STORAGE_DIR = ""
 // FSGamesService implements the GamesService gRPC interface
 type FSGamesService struct {
 	services.BaseGamesService
-	WorldsService v1.WorldsServiceServer
+	WorldsService v1services.WorldsServiceServer
 	storage       *storage.FileStorage // Storage area for all files
 
 	// Simple caches - maps with game ID as key

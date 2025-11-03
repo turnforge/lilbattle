@@ -1,0 +1,92 @@
+
+syntax = "proto3";
+
+package weewar.v1;
+
+import "google/protobuf/field_mask.proto";
+import "weewar/v1/models/models.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models";
+
+// Called when the end turn button was clicked
+message InitializeSingletonRequest {
+  string game_id = 1;
+  string game_data = 2;
+  string game_state = 3;
+  string move_history = 4;
+}
+
+// Response of a turn option click
+message InitializeSingletonResponse {
+  InitializeGameResponse response = 1;
+}
+
+// Called when a turn option is clicked in TurnOptionsPanel
+message TurnOptionClickedRequest {
+  string game_id = 1;
+  int32 option_index = 2;  // Index of the option in the options array
+  string option_type = 3;   // Type of option: "move", "attack", "endTurn", etc.
+  int32 q = 4;              // Target Q coordinate
+  int32 r = 5;              // Target R coordinate
+}
+
+// Response of a turn option click
+message TurnOptionClickedResponse {
+  string game_id = 1;
+}
+
+// Called when the scene was clicked
+message SceneClickedRequest {
+  string game_id = 1;
+  int32 q = 2;
+  int32 r = 3;
+  string layer = 4;
+}
+
+// Response of a turn option click
+message SceneClickedResponse {
+  string game_id = 1;
+}
+
+// Called when the end turn button was clicked
+message EndTurnButtonClickedRequest {
+  string game_id = 1;
+}
+
+// Response of a turn option click
+message EndTurnButtonClickedResponse {
+  string game_id = 1;
+}
+
+// Called when a build option is clicked in BuildOptionsModal
+message BuildOptionClickedRequest {
+  string game_id = 1;
+  int32 q = 2;              // Q coordinate of the tile where unit is being built
+  int32 r = 3;              // R coordinate of the tile where unit is being built
+  int32 unit_type = 4;     // Type of unit being built (e.g., "soldier_basic")
+}
+
+// Response of a build option click
+message BuildOptionClickedResponse {
+}
+
+// Called when the end turn button was clicked
+message InitializeGameRequest {
+  string game_id = 1;
+}
+
+// Response of a turn option click
+message InitializeGameResponse {
+  bool success = 1;
+  string error = 2;
+  // Initial UI state information
+  int32 current_player = 3;
+  int32 turn_counter = 4;
+  string game_name = 5;
+
+  // Game game = 6;
+  // GameState state = 7;
+  // GameMoveHistory history = 8;
+}

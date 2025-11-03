@@ -1633,57 +1633,6 @@ export const PathSchema: MessageSchema = {
 
 
 /**
- * Schema for GameInfo message
- */
-export const GameInfoSchema: MessageSchema = {
-  name: "GameInfo",
-  fields: [
-    {
-      name: "id",
-      type: FieldType.STRING,
-      id: 1,
-    },
-    {
-      name: "name",
-      type: FieldType.STRING,
-      id: 2,
-    },
-    {
-      name: "description",
-      type: FieldType.STRING,
-      id: 3,
-    },
-    {
-      name: "category",
-      type: FieldType.STRING,
-      id: 4,
-    },
-    {
-      name: "difficulty",
-      type: FieldType.STRING,
-      id: 5,
-    },
-    {
-      name: "tags",
-      type: FieldType.REPEATED,
-      id: 6,
-      repeated: true,
-    },
-    {
-      name: "icon",
-      type: FieldType.STRING,
-      id: 7,
-    },
-    {
-      name: "lastUpdated",
-      type: FieldType.STRING,
-      id: 8,
-    },
-  ],
-};
-
-
-/**
  * Schema for ListGamesRequest message
  */
 export const ListGamesRequestSchema: MessageSchema = {
@@ -4052,7 +4001,6 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.AllPaths": AllPathsSchema,
   "weewar.v1.PathEdge": PathEdgeSchema,
   "weewar.v1.Path": PathSchema,
-  "weewar.v1.GameInfo": GameInfoSchema,
   "weewar.v1.ListGamesRequest": ListGamesRequestSchema,
   "weewar.v1.ListGamesResponse": ListGamesResponseSchema,
   "weewar.v1.GetGameRequest": GetGameRequestSchema,

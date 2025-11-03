@@ -8,8 +8,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	gfn "github.com/panyam/goutils/fn"
 	oa "github.com/panyam/oneauth"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
-	v1connect "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/weewarv1connect"
+	v1s "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
+	v1connect "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services/weewarv1connect"
 	"github.com/panyam/turnengine/games/weewar/services/fsbe"
 	"github.com/panyam/turnengine/games/weewar/services/server"
 	"google.golang.org/grpc"
@@ -132,12 +132,12 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 	ctx := context.Background()
 
 	// Register existing services
-	err := v1.RegisterGamesServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+	err := v1s.RegisterGamesServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
 	if err != nil {
 		log.Fatal("Unable to register appitems service: ", err)
 		return nil, err
 	}
-	err = v1.RegisterWorldsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+	err = v1s.RegisterWorldsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
 	if err != nil {
 		log.Fatal("Unable to register appitems service: ", err)
 		return nil, err

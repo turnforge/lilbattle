@@ -17,7 +17,7 @@ import (
 
 	"github.com/panyam/turnengine/engine/coordination"
 	turnengine "github.com/panyam/turnengine/engine/gen/go/turnengine/v1"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1s "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services/fsbe"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -52,8 +52,8 @@ func (s *Server) Start(ctx context.Context, srvErr chan error, srvChan chan bool
 	coordService := coordination.NewService(coordStorage, coordConfig, gamesService)
 
 	// Register services
-	v1.RegisterGamesServiceServer(server, gamesService)
-	v1.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
+	v1s.RegisterGamesServiceServer(server, gamesService)
+	v1s.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
 	turnengine.RegisterCoordinatorServiceServer(server, coordService)
 
 	l, err := net.Listen("tcp", s.Address)

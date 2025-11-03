@@ -3,12 +3,11 @@ package services
 import (
 	"context"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 // UsersServiceImpl implements the UsersService gRPC interface
 type UsersServiceImpl struct {
-	v1.UnimplementedUsersServiceServer
 }
 
 // NewUsersService creates a new UsersService implementation

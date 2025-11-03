@@ -13,8 +13,8 @@ import (
 	"syscall/js"
 
 	// Generated WASM exports
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
-	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services/singleton"
 
 	// Service implementations
@@ -47,9 +47,9 @@ func main() {
 
 	// Wire service implementations to generated WASM exports
 	exports := &weewar_v1_services.Weewar_v1ServicesExports{
-		GamesService:                wasmGamesService,
-		GameViewPresenter:           wasmGameViewPresenter,
-		UsersService:                services.NewUsersService(),
+		GamesService:      wasmGamesService,
+		GameViewPresenter: wasmGameViewPresenter,
+		// UsersService:                services.NewUsersService(),
 		WorldsService:               wasmWorldsService,
 		GameViewerPage:              weewar_v1_services.NewGameViewerPageClient(),
 		SingletonInitializerService: wasmInitializer,

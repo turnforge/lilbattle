@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	weewar "github.com/panyam/turnengine/games/weewar/services"
 )
 

@@ -1,7 +1,7 @@
 package themes
 
 import (
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 // Theme interface provides metadata about units and terrains in a theme

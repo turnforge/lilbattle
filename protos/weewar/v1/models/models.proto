@@ -1,0 +1,700 @@
+// protos/apptemplate/v1/models.proto
+
+syntax = "proto3";
+
+package weewar.v1;
+
+import "google/protobuf/timestamp.proto";
+//import "turnengine/v1/coordinator.proto";
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+
+message User {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the user
+  string id = 3;
+
+  // Name if items have names
+  string name = 4;
+
+  // Description if user has a description
+  string description = 5;
+
+  // Some tags
+  repeated string tags = 6;
+
+  // A possible image url
+  string image_url = 7;
+
+  // Difficulty - example attribute
+  string difficulty = 8;
+}
+
+message Pagination {
+  /**
+   * Instead of an offset an abstract  "page" key is provided that offers
+   * an opaque "pointer" into some offset in a result set.
+   */
+  string page_key = 1;
+
+  /**
+   * If a pagekey is not supported we can also support a direct integer offset
+   * for cases where it makes sense.
+   */
+  int32 page_offset = 2;
+
+  /**
+   * Number of results to return.
+   */
+  int32 page_size = 3;
+}
+
+message PaginationResponse {
+  /**
+   * The key/pointer string that subsequent List requests should pass to
+   * continue the pagination.
+   */
+  string next_page_key = 2;
+
+  /**
+   * Also support an integer offset if possible
+   */
+  int32 next_page_offset = 3;
+
+  /**
+   * Whether theere are more results.
+   */
+  bool has_more = 4;
+
+  /**
+   * Total number of results.
+   */
+  int32 total_results = 5;
+}
+
+///////// World related models
+
+message World {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the world
+  string id = 3;
+
+  // User that created the world
+  string creator_id = 4;
+
+  // Name if items have names
+  string name = 5;
+
+  // Description if world has a description
+  string description = 6;
+
+  // Some tags
+  repeated string tags = 7;
+
+  // A possible image url
+  string image_url = 8;
+
+  // Difficulty - example attribute
+  string difficulty = 9;
+
+  // The actual world contents/data
+  WorldData world_data = 10;
+
+  // URL to screenshot/preview image (defaults to /worlds/{id}/screenshot)
+  // Can be overridden to point to CDN or external hosting
+  string screenshot_url = 11;
+}
+
+message WorldData {
+  // JSON-fied tile data about what units and terrains are at each location
+  repeated Tile tiles = 1;
+
+  // All units on the world and who they belong to
+  repeated Unit units = 2;
+}
+
+message Tile {
+  // Q and R in Cubed coordinates
+  int32 q = 1;
+  int32 r = 2;
+  int32 tile_type = 3; // Tile type
+
+  // Whether the tile itself belongs to a player
+  int32 player = 4;
+  string shortcut = 5;  // A short cut like A1 or S2 etc for quick access
+
+  // Keep track of turns when the move was last made and when a "top up" was last done on/for this tile.
+  // This helps us not having to "top up" or "reset" the stats at the end
+  // of each turn.  Instead as the game turn is incremented we can do a 
+  // lazy reset for any unit or tile where unit_or_tile.last_toppedup_turn < game.curent_turn
+  // So we just have to increment the game_turn and the unit is automaticaly flagged as
+  // needing a top up of its health/balance/movement etc
+  int32 last_acted_turn = 6;      // Which turn this unit was created/last acted on (ie movemade)
+  int32 last_toppedup_turn = 7;   // When the last top up happened
+}
+
+message Unit {
+  // Q and R in Cubed coordinates
+  int32 q = 1;
+  int32 r = 2;
+  int32 player = 3;
+  int32 unit_type = 4;
+  string shortcut = 5;  // A short cut like A1 or S2 etc for quick access
+  
+  // Runtime state fields
+  int32 available_health = 6; // Current health points
+  double distance_left = 7;    // Movement points remaining this turn
+
+  // Keep track of turns when the move was last made and when a "top up" was last done on/for this tile.
+  // This helps us not having to "top up" or "reset" the stats at the end
+  // of each turn.  Instead as the game turn is incremented we can do a 
+  // lazy reset for any unit or tile where unit_or_tile.last_toppedup_turn < game.curent_turn
+  // So we just have to increment the game_turn and the unit is automaticaly flagged as
+  // needing a top up of its health/balance/movement etc
+  int32 last_acted_turn = 8;      // Which turn this unit was created/last acted on (ie movemade)
+  int32 last_toppedup_turn = 9;   // When the last top up happened
+
+  // Details around wound bonus tracking for this turn
+  int32 attacks_received_this_turn = 10;    // Total number of attacks received this turn
+  repeated AttackRecord attack_history = 11; // Detailed attack history for wound bonus calculation
+
+  // Action progression tracking - index into UnitDefinition.action_order
+  // Indicates which step in the action sequence the unit is currently on
+  // Reset to 0 at turn start via TopUpUnitIfNeeded()
+  int32 progression_step = 12;
+
+  // When current step has pipe-separated alternatives (e.g., "attack|capture"),
+  // this tracks which alternative the user chose, preventing switching mid-step
+  // Cleared when advancing to next step
+  string chosen_alternative = 13;
+}
+
+message AttackRecord {
+  int32 q = 1;    // Attacker's Q coordinate
+  int32 r = 2;    // Attacker's R coordinate
+  bool is_ranged = 3; // Whether attacker is ranged 2+ tiles away
+  int32 turn_number = 4; // Which turn this attack occured
+}
+
+///////// Rules Engine Definitions
+
+// Rules engine terrain definition
+message TerrainDefinition {
+  int32 id = 1;                  // Terrain type ID
+  string name = 2;               // Display name (e.g., "Grass", "Mountain")  
+  // double base_move_cost = 3;     // Base movement cost
+  // double defense_bonus = 4;      // Defense bonus multiplier (0.0 to 1.0)
+  int32 type = 5;               // Terrain category type
+  string description = 6;        // Human-readable description
+
+  // How this terrain impacts 
+  map<int32, TerrainUnitProperties> unit_properties = 7;
+
+  // List of units that can be built on this terrain
+  repeated int32 buildable_unit_ids = 8;
+
+  int32 income_per_turn = 9;
+}
+
+// Rules engine unit definition  
+message UnitDefinition {
+  int32 id = 1;                  // Unit type ID
+  string name = 2;               // Display name (e.g., "Infantry", "Tank")
+  string description = 3;        //
+  int32 health = 4;              // Maximum health points
+  int32 coins = 5;               // how much it costs to build
+  double movement_points = 6;    // Maximum movement per turn
+  double retreat_points = 7;    // Movement points available after attacking
+  int32 defense = 8;             // Base defense value
+  int32 attack_range = 9;        // Max Attack range in tiles
+  int32 min_attack_range = 10;    // Minimum attack range in tile radius if specified (otherwise - will be 1
+  int32 splash_damage = 11;      // Splash damage amount
+  map<int32, TerrainUnitProperties> terrain_properties = 12;
+  repeated string properties = 13; // Special properties/abilities
+
+  // Unit classification for attack calculations
+  string unit_class = 14;        // "Light", "Heavy", or "Stealth"
+  string unit_terrain = 15;      // "Air", "Land", or "Water"
+
+  // Attack table: base attack values against different unit classes
+  // Key format: "Light:Air", "Heavy:Land", "Stealth:Water", etc.
+  // Value 0 or missing key means "n/a" (cannot attack)
+  map<string, int32> attack_vs_class = 16;
+
+  // Ordered list of allowed actions this turn
+  // Examples:
+  //   ["move", "attack"] - can move then attack
+  //   ["move", "attack|capture"] - can move then either attack or capture
+  //   ["attack"] - can only attack (no movement)
+  // Default if empty: ["move", "attack|capture"]
+  repeated string action_order = 17;
+
+  // How many times each action type can be performed per turn
+  // Key: action name, Value: max count
+  // Example: {"attack": 2} means can attack twice
+  // Default if not specified: 1 per action type
+  map<string, int32> action_limits = 18;
+}
+
+// Properties that are specific to unit on a particular terrain
+message TerrainUnitProperties {
+  int32 terrain_id = 1;  // Renamed from tile_id for clarity
+  int32 unit_id = 2;
+  double movement_cost = 3;          // Movement cost for this unit on this terrain
+  int32 healing_bonus = 4;           // How much healing per turn this tile would offer this unit
+  bool can_build = 5;                // Whether this particular terrain can build this given unit
+  bool can_capture = 6;              // Whether this particular unit can capture this terrain/building type
+  int32 attack_bonus = 7;            // How much more attack this terrain gives to this unit
+  int32 defense_bonus = 8;           // How much more defense this terrain gives to this unit
+  int32 attack_range = 9;             // Max Attack range in tiles
+  int32 min_attack_range = 10;        // Minimum attack range in tile radius if specified (otherwise - will be 1
+}
+
+// Properties for unit-vs-unit combat interactions
+message UnitUnitProperties {
+  int32 attacker_id = 1;
+  int32 defender_id = 2;
+  optional int32 attack_override = 3;    // Optional attack override for this Attacker/Defender combo
+  optional int32 defense_override = 4;   // Optional defense override for this Attacker/Defender combo
+
+  DamageDistribution damage = 5;
+}
+
+// Damage distribution for combat calculations
+message DamageDistribution {
+  double min_damage = 1;
+  double max_damage = 2;
+  double expected_damage = 3;
+  repeated DamageRange ranges = 4;
+}
+
+message DamageRange {
+  double min_value = 1;
+  double max_value = 2;
+  double probability = 3;
+}
+
+// Main rules engine definition - centralized source of truth
+message RulesEngine {
+  // Core entity definitions
+  map<int32, UnitDefinition> units = 1;
+  map<int32, TerrainDefinition> terrains = 2;
+  
+  // Centralized property definitions (source of truth)
+  // Key format: "terrain_id:unit_id" (e.g., "1:3" for terrain 1, unit 3)
+  map<string, TerrainUnitProperties> terrain_unit_properties = 3;
+  
+  // Key format: "attacker_id:defender_id" (e.g., "1:2" for unit 1 attacking unit 2)
+  map<string, UnitUnitProperties> unit_unit_properties = 4;
+}
+
+///////// Game related models
+//
+enum GameStatus {
+	GAME_STATUS_UNSPECIFIED = 0;
+	GAME_STATUS_PLAYING = 1;
+	GAME_STATUS_PAUSED = 2;
+	GAME_STATUS_ENDED = 3;
+}
+
+// Describes a game and its metadata
+message Game {
+  google.protobuf.Timestamp created_at = 1;
+  google.protobuf.Timestamp updated_at = 2;
+
+  // Unique ID for the game
+  string id = 3;
+
+  // User who started/created the game
+  string creator_id = 4;
+
+  // The world this game was created from
+  string world_id = 5;
+
+  // Name if items have names
+  string name = 6;
+
+  // Description if game has a description
+  string description = 7;
+
+  // Some tags
+  repeated string tags = 8;
+
+  // A possible image url
+  string image_url = 9;
+
+  // Difficulty - example attribute
+  string difficulty = 10;
+
+  // Game configuration
+  GameConfiguration config = 12;
+
+  // URL to screenshot/preview image (defaults to /games/{id}/screenshot)
+  // Can be overridden to point to CDN or external hosting
+  string screenshot_url = 13;
+}
+
+message GameConfiguration {
+  // Player configuration
+  repeated GamePlayer players = 1;
+
+  // Team configuration
+  repeated GameTeam teams = 2;
+
+  // Various kinds of per turn income configs
+  IncomeConfig income_configs = 3;
+
+  // Game settings
+  GameSettings settings = 4;
+}
+
+message IncomeConfig {
+  int32 landbase_income = 1;
+
+  int32 navalbase_income = 2;
+
+  int32 airportbase_income = 3;
+
+  int32 missilesilo_income = 4;
+
+  int32 mines_income = 5;
+}
+
+message GamePlayer {
+  // Player ID (1-based)
+  int32 player_id = 1;
+
+  // Player type
+  string player_type = 2; // "human", "ai", "open"
+
+  // Player color
+  string color = 3;
+
+  // Team ID (0 = no team, 1+ = team number)
+  int32 team_id = 4;
+
+  // Nickname for the player in this game
+  string name = 5;
+
+  // Whether play is still in the game - can this just be inferred?
+  bool is_active = 6;
+
+  // How many coins the player started off with
+  int32 starting_coins = 7;
+
+  // Player's current money/coins balance for building units
+  int32 coins = 8;
+}
+
+message GameTeam {
+  // ID of the team within the game (unique to the game)
+  int32 team_id = 1;
+
+  // Name of the team - in a game
+  string name = 2;
+
+  // Just a color for this team
+  string color = 3;
+
+  // Whether team has active players - can also be inferred
+  bool is_active = 4;
+}
+
+message GameSettings {
+  // List of allowed unit type IDs
+  repeated int32 allowed_units = 1;
+
+  // Turn time limit in seconds (0 = no limit)
+  int32 turn_time_limit = 2;
+
+  // Team mode
+  string team_mode = 3; // "ffa" or "teams"
+
+  // Maximum number of turns (0 = unlimited)
+  int32 max_turns = 4;
+}
+
+// Holds the game's Active/Current state (eg world state)
+message GameState {
+  google.protobuf.Timestamp updated_at = 2;
+
+  // ID of the game whos state is being tracked
+  string game_id = 3;
+
+  int32 turn_counter = 4;
+
+  int32 current_player = 5;
+
+  // Current world state
+  WorldData world_data = 6;
+
+  // Proposal tracking for multiplayer coordination (from TurnEngine)
+  // turnengine.v1.ProposalTrackingInfo proposal_info = 7;
+
+  // Current state hash for validation
+  string state_hash = 8;
+
+  // Version number for optimistic locking
+  int64 version = 9;
+
+  GameStatus status = 10;
+
+  // Only set after a win has been possible
+  bool finished = 11;
+  int32 winning_player = 12;
+  int32 winning_team = 13;
+}
+
+// Holds the game's move history (can be used as a replay log)
+message GameMoveHistory {
+  // Move history for the game
+  string game_id = 1;
+
+  // Each entry in our history is a "group" of moves
+  repeated GameMoveGroup groups = 2;
+}
+
+// A move group - we can allow X moves in one "tick"
+message GameMoveGroup {
+  // When the moves happened (or were submitted)
+  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp ended_at = 3;
+
+  /**
+   * List of moves to add - 
+   */
+  repeated GameMove moves = 4;
+
+  /*
+   * Each game move result stores the result of the individual Move in the request.
+   * ie move_results[i] = ResultOfProcessing(ProcessMoveRequest.moves[i])
+   */
+  repeated GameMoveResult move_results = 5;
+}
+
+/**
+ * Represents a single move which can be one of many actions in the game
+ */
+message GameMove {
+	int32 player = 1; // The player making the move
+  google.protobuf.Timestamp timestamp = 2;
+
+  // A monotonically increasing and unique (within the game) sequence number for the move
+  // This is generated by the server
+  int64 sequence_num = 3;
+
+  oneof move_type {
+    MoveUnitAction move_unit = 4;
+    AttackUnitAction attack_unit = 5;
+    EndTurnAction end_turn = 6;
+    BuildUnitAction build_unit = 7;
+  }
+}
+
+/**
+ * Represents the result of executing a move
+ */
+message GameMoveResult {
+  // Whether the result is permenant and can be undone.
+  // Just moving a unit for example is not permanent, but attacking a unit
+  // would be (ie a player cannot undo it).
+  bool is_permanent = 1;
+
+  // A monotonically increasing and unique (within the game) sequence number for the move
+  int64 sequence_num = 2;
+
+  // A set of changes to the world as a result of making this move
+  repeated WorldChange changes = 3;
+}
+
+/**
+ * Move unit from one position to another
+ */
+message MoveUnitAction {
+  int32 from_q = 1;
+  int32 from_r = 2;
+  int32 to_q = 3;
+  int32 to_r = 4;
+
+  // Optional fields that can be used for showing move options as well as debugging
+  double movement_cost = 5;
+
+  // Debug fields
+  Path reconstructed_path = 6;
+}
+
+/**
+ * Attack with one unit against another
+ */
+message AttackUnitAction {
+  int32 attacker_q = 1;
+  int32 attacker_r = 2;
+  int32 defender_q = 3;
+  int32 defender_r = 4;
+
+
+  // Optional fields for presenting during "options" and debugging
+  int32 target_unit_type = 5;
+  int32 target_unit_health = 6;
+  bool can_attack = 7;
+  int32 damage_estimate = 8; // Estimated damage this attack would deal
+}
+
+/**
+ * An action to build a unit (at a city tile)
+ */
+message BuildUnitAction {
+  int32 q = 1;
+  int32 r = 2;
+  int32 unit_type = 3;
+  int32 cost = 4;
+}
+
+/**
+ * A move where a unit can capture a building
+ */
+message CaptureBuildingAction {
+  int32 q = 1;
+  int32 r = 2;
+  int32 tile_type = 3;
+}
+
+/**
+ * End current player's turn
+ */
+message EndTurnAction {
+  // No additional fields needed
+}
+
+/**
+ * Represents a change to the game world
+ */
+message WorldChange {
+  // When did this change happen
+  oneof change_type {
+    UnitMovedChange unit_moved = 1;
+    UnitDamagedChange unit_damaged = 2;
+    UnitKilledChange unit_killed = 3;
+    PlayerChangedChange player_changed = 4;
+    UnitBuiltChange unit_built = 5;
+    CoinsChangedChange coins_changed = 6;
+  }
+}
+
+/**
+ * A unit moved from one position to another
+ */
+message UnitMovedChange {
+  // Complete unit state before the move
+  Unit previous_unit = 6;
+  // Complete unit state after the move (includes updated position, distanceLeft, etc.)
+  Unit updated_unit = 7;
+}
+
+/**
+ * A unit took damage
+ */
+message UnitDamagedChange {
+  // Complete unit state before taking damage
+  Unit previous_unit = 6;
+  // Complete unit state after taking damage
+  Unit updated_unit = 7;
+}
+
+/**
+ * A unit was killed
+ */
+message UnitKilledChange {
+  // Complete unit state before being killed
+  Unit previous_unit = 6;
+}
+
+/**
+ * Active player changed
+ */
+message PlayerChangedChange {
+  int32 previous_player = 1;
+  int32 new_player = 2;
+  int32 previous_turn = 3;
+  int32 new_turn = 4;
+  // Units that had their movement/health reset for the new turn
+  repeated Unit reset_units = 5;
+}
+
+/**
+ * A new unit was built at a tile
+ */
+message UnitBuiltChange {
+  // The newly created unit
+  Unit unit = 1;
+  // Tile coordinates where unit was built
+  int32 tile_q = 2;
+  int32 tile_r = 3;
+  // Cost in coins
+  int32 coins_cost = 4;
+  // Player's remaining coins after build
+  int32 player_coins = 5;
+}
+
+/**
+ * A player's coin balance changed
+ */
+message CoinsChangedChange {
+  // Which player's coins changed
+  int32 player_id = 1;
+  // Previous coin balance
+  int32 previous_coins = 2;
+  // New coin balance
+  int32 new_coins = 3;
+  // Reason for change: "build", "income", "repair", etc.
+  string reason = 4;
+}
+
+// Compact representation of all reachable paths from a source
+message AllPaths {
+  // Starting coordinate for all paths
+  int32 source_q = 1;
+  int32 source_r = 2;
+  
+  // Map of edges: key is "toQ,toR" for quick parent lookup
+  // Each edge represents the optimal way to reach 'to' from its parent
+  map<string, PathEdge> edges = 3;
+}
+
+// A single edge in a path with movement details
+message PathEdge {
+  int32 from_q = 1;            // Parent coordinate Q
+  int32 from_r = 2;            // Parent coordinate R
+  int32 to_q = 3;              // Destination coordinate Q
+  int32 to_r = 4;              // Destination coordinate R
+  double movement_cost = 5;     // Cost to move from 'from' to 'to' (edge cost)
+  double total_cost = 6;        // Total cumulative cost from source to 'to'
+  string terrain_type = 7;     // e.g., "mountain", "plains", "forest"
+  string explanation = 8;      // e.g., "Mountain costs Soldier 4 movement points"
+}
+
+// Full path from source to destination (constructed on-demand from AllPaths)
+message Path {
+  // Edges in order from source to destination
+  repeated PathEdge edges = 1;
+
+  // len(directions) = len(edges) - 1
+  // and directions[i] = direction from edge[i - 1] -> edge[i]
+  repeated PathDirection directions = 2;
+
+  // Sum of all edge costs
+  double total_cost = 3;
+}
+
+enum PathDirection {
+  PATH_DIRECTION_UNSPECIFIED = 0;
+	PATH_DIRECTION_LEFT = 1;
+	PATH_DIRECTION_TOP_LEFT = 2;
+	PATH_DIRECTION_TOP_RIGHT = 3;
+	PATH_DIRECTION_RIGHT = 4;
+	PATH_DIRECTION_BOTTOM_RIGHT = 5;
+	PATH_DIRECTION_BOTTOM_LEFT = 6;
+}

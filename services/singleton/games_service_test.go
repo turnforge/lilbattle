@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	"github.com/panyam/turnengine/games/weewar/services"
 )
 
@@ -16,7 +16,7 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 	homeDir, _ := os.UserHomeDir()
 	worldsDir := filepath.Join(homeDir, "dev-app-data", "weewar", "storage", "worlds")
 
-	world, gameState, err := services.LoadTestWorldFromStorage(worldsDir, "32112070")
+	world, gameState, err := LoadTestWorldFromStorage(worldsDir, "32112070")
 	if err != nil {
 		t.Skipf("Skipping test - world data not available: %v", err)
 	}

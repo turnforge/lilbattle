@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -183,14 +183,14 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		// Only check tile actions if tile belongs to current player
 		if tile.Player == rtGame.CurrentPlayer {
 			// Get terrain definition for tile-specific actions
-			terrainDef, err := rtGame.rulesEngine.GetTerrainData(tile.TileType)
+			terrainDef, err := rtGame.RulesEngine.GetTerrainData(tile.TileType)
 			if err == nil {
 				// Get current player's coins (default to 100 for now, will be from game config later)
 				// TODO: Get actual player coins from rtGame.Game.Config.Players[currentPlayer].Coins
 				playerCoins := int32(100)
 
 				// Get allowed actions for this tile
-				tileActions := rtGame.rulesEngine.GetAllowedActionsForTile(tile, terrainDef, playerCoins)
+				tileActions := rtGame.RulesEngine.GetAllowedActionsForTile(tile, terrainDef, playerCoins)
 
 				// Generate options based on allowed tile actions
 				for _, action := range tileActions {
@@ -199,7 +199,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 						// Generate build unit options from terrainDef.BuildableUnitIds
 						for _, unitTypeID := range terrainDef.BuildableUnitIds {
 							// Get unit definition to retrieve cost
-							unitDef, err := rtGame.rulesEngine.GetUnitData(unitTypeID)
+							unitDef, err := rtGame.RulesEngine.GetUnitData(unitTypeID)
 							if err != nil {
 								continue // Skip if we can't get unit definition
 							}
@@ -229,7 +229,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		var dmp MoveProcessor
 
 		// Get unit definition for progression rules
-		unitDef, err := rtGame.rulesEngine.GetUnitData(unit.UnitType)
+		unitDef, err := rtGame.RulesEngine.GetUnitData(unit.UnitType)
 		if err != nil {
 			// If we can't get unit def, default to all actions
 			unitDef = &v1.UnitDefinition{
@@ -238,7 +238,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		}
 
 		// Get allowed actions based on progression state
-		allowedActions := rtGame.rulesEngine.GetAllowedActionsForUnit(unit, unitDef)
+		allowedActions := rtGame.RulesEngine.GetAllowedActionsForUnit(unit, unitDef)
 
 		// Check if "move" is allowed at current progression step
 		moveAllowed := containsAction(allowedActions, "move")

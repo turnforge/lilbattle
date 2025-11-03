@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 type GameCreatorPage struct {

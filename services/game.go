@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,7 +30,7 @@ type Game struct {
 	rng *rand.Rand `json:"-"` // RNG for deterministic gameplay
 
 	// Rules engine for data-driven game mechanics
-	rulesEngine *RulesEngine `json:"-"` // Rules engine for movement costs, combat, unit data
+	RulesEngine *RulesEngine `json:"-"` // Rules engine for movement costs, combat, unit data
 }
 
 // NewGame creates a new game instance with the specified parameters
@@ -47,7 +47,7 @@ func NewGame(game *v1.Game, state *v1.GameState, world *World, rulesEngine *Rule
 		World:       world,
 		Seed:        seed,
 		rng:         rand.New(rand.NewSource(seed)),
-		rulesEngine: rulesEngine,
+		RulesEngine: rulesEngine,
 	}
 	return out
 }
@@ -109,12 +109,12 @@ func (g *Game) TopUpTileIfNeeded(tile *v1.Tile) error {
 	}
 
 	// Get tile definition from rules engine
-	if g.rulesEngine == nil {
+	if g.RulesEngine == nil {
 		return fmt.Errorf("rules engine not set")
 	}
 
 	/* - TODO - use when needed
-	tileData, err := g.rulesEngine.GetTerrainData(tile.TileType)
+	tileData, err := g.RulesEngine.GetTerrainData(tile.TileType)
 	if err != nil {
 		return fmt.Errorf("failed to get tile data for type %d: %w", tile.TileType, err)
 	}
@@ -139,11 +139,11 @@ func (g *Game) TopUpUnitIfNeeded(unit *v1.Unit) error {
 	}
 
 	// Get unit definition from rules engine
-	if g.rulesEngine == nil {
+	if g.RulesEngine == nil {
 		return fmt.Errorf("rules engine not set")
 	}
 
-	unitData, err := g.rulesEngine.GetUnitData(unit.UnitType)
+	unitData, err := g.RulesEngine.GetUnitData(unit.UnitType)
 	if err != nil {
 		return fmt.Errorf("failed to get unit data for type %d: %w", unit.UnitType, err)
 	}
@@ -231,12 +231,12 @@ func (g *Game) GetUnitID(unit *v1.Unit) string {
 
 // GetRulesEngine returns the current RulesEngine instance
 func (g *Game) GetRulesEngine() *RulesEngine {
-	return g.rulesEngine
+	return g.RulesEngine
 }
 
 // SetRulesEngine sets the RulesEngine instance for data-driven game mechanics
 func (g *Game) SetRulesEngine(rulesEngine *RulesEngine) {
-	g.rulesEngine = rulesEngine
+	g.RulesEngine = rulesEngine
 }
 
 // LoadGame restores a game from saved JSON data
@@ -248,7 +248,7 @@ func LoadGame(saveData []byte) (*Game, error) {
 
 	// Restore transient state
 	game.rng = rand.New(rand.NewSource(game.Seed))
-	game.rulesEngine = nil // Will be set by caller
+	game.RulesEngine = nil // Will be set by caller
 
 	// Note: Neighbor connections are no longer stored, calculated on-demand
 

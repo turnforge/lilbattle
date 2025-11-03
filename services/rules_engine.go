@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/panyam/turnengine/games/weewar/assets"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 )
 
 // =============================================================================
@@ -125,7 +125,7 @@ func (re *RulesEngine) GetAllowedActionsForUnit(unit *v1.Unit, unitDef *v1.UnitD
 
 	// Get current step's actions
 	stepActions := actionOrder[unit.ProgressionStep]
-	alternatives := parseActionAlternatives(stepActions)
+	alternatives := ParseActionAlternatives(stepActions)
 
 	// If user already chose an alternative from pipe-separated options,
 	// only that alternative is allowed (prevents switching mid-step)
@@ -204,9 +204,9 @@ func (re *RulesEngine) canPerformAction(unit *v1.Unit, unitDef *v1.UnitDefinitio
 	}
 }
 
-// parseActionAlternatives parses pipe-separated action alternatives
+// ParseActionAlternatives parses pipe-separated action alternatives
 // e.g., "attack|capture" -> ["attack", "capture"]
-func parseActionAlternatives(stepActions string) []string {
+func ParseActionAlternatives(stepActions string) []string {
 	// Simple split on pipe character
 	alternatives := []string{}
 	current := ""
@@ -348,7 +348,7 @@ func (re *RulesEngine) IsValidPath(unit *v1.Unit, path []AxialCoord, world *Worl
 		}
 
 		// 3. Check terrain traversability
-		stepCost, err := re.getUnitTerrainCost(unit.UnitType, toTile.TileType)
+		stepCost, err := re.GetUnitTerrainCost(unit.UnitType, toTile.TileType)
 		if err != nil {
 			return false, fmt.Errorf("path step %d: unit type %d cannot traverse terrain %d: %w",
 				i, unit.UnitType, toTile.TileType, err)
@@ -460,7 +460,7 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 			}
 
 			// Get movement cost to this terrain
-			moveCost, err := re.getUnitTerrainCost(unitType, tile.TileType)
+			moveCost, err := re.GetUnitTerrainCost(unitType, tile.TileType)
 			if err != nil {
 				continue // Cannot move on this terrain
 			}
@@ -508,9 +508,9 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 	return allPaths
 }
 
-// getUnitTerrainCost returns movement cost for unit type on terrain type (internal helper)
+// GetUnitTerrainCost returns movement cost for unit type on terrain type (internal helper)
 // Uses the new centralized TerrainUnitProperties system
-func (re *RulesEngine) getUnitTerrainCost(unitID, terrainID int32) (float64, error) {
+func (re *RulesEngine) GetUnitTerrainCost(unitID, terrainID int32) (float64, error) {
 	// Create key for centralized properties lookup
 	key := fmt.Sprintf("%d:%d", terrainID, unitID)
 

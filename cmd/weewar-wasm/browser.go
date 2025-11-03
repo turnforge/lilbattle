@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
-	wasmv1 "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	wasmv1 "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services"
 )
 
