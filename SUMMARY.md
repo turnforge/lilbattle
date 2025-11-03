@@ -33,6 +33,42 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ## Recent Major Achievements
 
+### Responsive Layout System (Current Session)
+
+**Achievement**: Implemented mobile-first responsive design for WorldViewerPage with reusable header button system.
+
+**Key Features**:
+- **Bottom Sheet Stats Panel**: Mobile stats overlay with FAB button trigger
+- **Responsive Header Buttons**: Automatic dropdown menu on mobile for action buttons
+- **Breakpoint Strategy**: Mobile (< 768px) vs Desktop (≥ 1024px) layouts
+- **Touch-Friendly**: Large tap targets, swipe affordances, smooth animations
+- **Reusable System**: BasePage.ts handles all responsive header logic automatically
+
+**Implementation**:
+- web/templates/Header.html: Responsive button container with mobile dropdown
+- web/lib/BasePage.ts: initializeHeaderActionsDropdown() for automatic setup
+- web/templates/WorldViewerPage.html: Bottom sheet overlay with FAB
+- web/src/WorldViewerPage.ts: Bottom sheet interaction handlers
+
+**Mobile Features**:
+- **FAB Button**: Fixed bottom-right with "Stats" label and chart icon
+- **Bottom Sheet**: Slides from bottom, 80% viewport height, scrollable
+- **Backdrop**: Semi-transparent overlay with tap-to-close
+- **Handle Bar**: Visual swipe indicator at top of sheet
+- **Header Dropdown**: Three-dot menu with action buttons
+
+**Desktop Features**:
+- **Two-Column Layout**: Preview (flexible) + Stats sidebar (250px fixed)
+- **Direct Buttons**: Header buttons shown inline without dropdown
+- **No Overlays**: FAB and bottom sheet hidden on desktop
+
+**Benefits**:
+- Mobile-optimized full-screen preview
+- Reduced header clutter on small screens
+- Consistent UX patterns across pages
+- Zero configuration for new pages using ExtraHeaderButtons
+- Smooth animations and transitions
+
 ### Splash Screen System (Current Session)
 
 **Achievement**: Implemented instant-loading splash screen system with progress tracking for all major pages.

@@ -76,6 +76,9 @@ export abstract class BasePage extends BaseComponent {
 
         // Initialize theme button state
         this.updateThemeButtonState();
+
+        // Initialize responsive header actions dropdown
+        this.initializeHeaderActionsDropdown();
     }
 
     /**
@@ -136,6 +139,66 @@ export abstract class BasePage extends BaseComponent {
      */
     protected isDarkMode(): boolean {
         return document.documentElement.classList.contains('dark');
+    }
+
+    /**
+     * Initialize responsive header actions dropdown for mobile
+     */
+    protected initializeHeaderActionsDropdown(): void {
+        const menuBtn = document.getElementById('header-actions-menu-btn');
+        const dropdown = document.getElementById('header-actions-dropdown');
+        const dropdownContent = document.getElementById('header-actions-dropdown-content');
+        const sourceContainer = document.getElementById('header-buttons-source');
+
+        if (!menuBtn || !dropdown || !dropdownContent || !sourceContainer) {
+            return; // Elements don't exist on this page
+        }
+
+        // Clone buttons from source into dropdown with dropdown styling
+        const buttons = sourceContainer.querySelectorAll('.header-action-btn');
+        buttons.forEach((button) => {
+            const clone = button.cloneNode(true) as HTMLElement;
+
+            // Convert to dropdown item styling
+            clone.classList.remove('px-4', 'py-2', 'rounded-md', 'shadow-sm', 'border', 'border-transparent', 'border-gray-300', 'dark:border-gray-600');
+            clone.classList.add('w-full', 'text-left', 'px-4', 'py-2', 'text-sm', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'flex', 'items-center');
+
+            // Remove bg colors and use hover instead
+            clone.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700', 'bg-white', 'dark:bg-gray-700', 'hover:bg-gray-50', 'dark:hover:bg-gray-600');
+            clone.classList.add('text-gray-700', 'dark:text-gray-200');
+
+            dropdownContent.appendChild(clone);
+        });
+
+        // Toggle dropdown
+        const toggleDropdown = () => {
+            dropdown.classList.toggle('hidden');
+        };
+
+        // Close dropdown
+        const closeDropdown = () => {
+            dropdown.classList.add('hidden');
+        };
+
+        // Event listeners
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!dropdown.classList.contains('hidden') && !dropdown.contains(e.target as Node)) {
+                closeDropdown();
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !dropdown.classList.contains('hidden')) {
+                closeDropdown();
+            }
+        });
     }
 
     /**

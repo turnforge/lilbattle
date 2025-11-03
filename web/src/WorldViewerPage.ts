@@ -135,6 +135,53 @@ class WorldViewerPage extends BasePage implements LCMComponent {
         if (copyButton) {
             copyButton.addEventListener('click', this.copyWorld.bind(this));
         }
+
+        // Bind bottom sheet controls (mobile only)
+        this.initializeBottomSheet();
+    }
+
+    /**
+     * Initialize bottom sheet for mobile stats panel
+     */
+    private initializeBottomSheet(): void {
+        const fab = document.getElementById('stats-fab');
+        const overlay = document.getElementById('stats-overlay');
+        const panel = document.getElementById('stats-panel');
+        const backdrop = document.getElementById('stats-backdrop');
+        const closeButton = document.getElementById('stats-close');
+
+        if (!fab || !overlay || !panel || !backdrop || !closeButton) {
+            return; // Elements don't exist (probably on desktop)
+        }
+
+        // Open bottom sheet
+        const openSheet = () => {
+            overlay.classList.remove('hidden');
+            // Force reflow to enable transition
+            overlay.offsetHeight;
+            panel.classList.remove('translate-y-full');
+        };
+
+        // Close bottom sheet
+        const closeSheet = () => {
+            panel.classList.add('translate-y-full');
+            // Wait for animation to complete before hiding
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        };
+
+        // Event listeners
+        fab.addEventListener('click', openSheet);
+        closeButton.addEventListener('click', closeSheet);
+        backdrop.addEventListener('click', closeSheet);
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+                closeSheet();
+            }
+        });
     }
 
 

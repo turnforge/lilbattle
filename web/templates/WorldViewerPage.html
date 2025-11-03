@@ -3,19 +3,27 @@
 
 {{ define "ExtraHeaderButtons" }}
 <!-- Edit Button -->
-<a href="/worlds/{{ .WorldId }}/edit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+<a href="/worlds/{{ .WorldId }}/edit" class="header-action-btn inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
     <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
     </svg>
-    Edit World
+    <span class="header-btn-text">Edit World</span>
+</a>
+
+<!-- Create Game Button -->
+<a href="/worlds/{{ .WorldId }}/start" class="header-action-btn inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">
+    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span class="header-btn-text">Create Game</span>
 </a>
 
 <!-- Copy Button -->
-<button data-action="copy-world" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+<button data-action="copy-world" class="header-action-btn inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
     <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
     </svg>
-    Copy World
+    <span class="header-btn-text">Copy World</span>
 </button>
 {{ end }}
 
@@ -49,7 +57,7 @@
         <!-- World Content -->
         <div class="flex-1 flex max-w-9xl mx-auto w-full">
             <!-- World Preview Section - WorldViewer Component Root -->
-            <div class="flex-1 p-6 pr-3" style="width: calc(100% - 250px);">
+            <div class="flex-1 p-6 lg:pr-3 w-full lg:w-[calc(100%-250px)]">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full" data-component="world-viewer">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">World Preview</h2>
@@ -61,8 +69,8 @@
                 </div>
             </div>
 
-            <!-- World Stats Sidebar - WorldStatsPanel Component Root -->
-            <div class="p-6 pl-3" style="width: 250px; flex-shrink: 0;">
+            <!-- World Stats Sidebar - Desktop Only -->
+            <div class="hidden lg:block p-6 pl-3" style="width: 250px; flex-shrink: 0;">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" data-component="world-stats-panel">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">World Statistics</h2>
@@ -133,23 +141,133 @@
                             </div>
                         </div>
 
-                        <!-- Actions -->
-                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <a href="/worlds/{{ .WorldId }}/edit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Edit World
-                            </a>
-                            <a href="/worlds/{{ .WorldId }}/start" class="mt-2 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Create Game
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Floating Action Button - Mobile Only -->
+        <button id="stats-fab"
+                class="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                style="display: none;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span class="font-medium">Stats</span>
+        </button>
+
+        <style>
+            /* Show FAB and overlay only on mobile/tablet (< 1024px) */
+            @media (max-width: 1023px) {
+                #stats-fab {
+                    display: flex !important;
+                }
+                #stats-overlay:not(.hidden) {
+                    display: block !important;
+                }
+            }
+            /* Force hide on desktop (>= 1024px) */
+            @media (min-width: 1024px) {
+                #stats-fab,
+                #stats-overlay {
+                    display: none !important;
+                }
+            }
+        </style>
+
+        <!-- Bottom Sheet Overlay - Mobile Only -->
+        <div id="stats-overlay" class="fixed inset-0 z-50 hidden" style="display: none;">
+            <!-- Backdrop -->
+            <div id="stats-backdrop" class="absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+
+            <!-- Bottom Sheet Panel -->
+            <div id="stats-panel" class="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out max-h-[80vh] overflow-hidden flex flex-col">
+                <!-- Handle Bar -->
+                <div class="flex justify-center pt-3 pb-2">
+                    <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                </div>
+
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">World Statistics</h2>
+                    <button id="stats-close" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+                    <!-- Basic Stats -->
+                    <div data-stat-section="basic">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Basic Info</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">Dimensions:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-stat="dimensions">8 × 8</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">Total Tiles:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-stat="total-tiles">64</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-gray-600 dark:text-gray-400">Total Units:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-stat="total-units">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terrain Distribution -->
+                    <div data-stat-section="terrain">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Terrain Distribution</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">🌱 Grass:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-terrain="1">32 (50%)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">🏜️ Desert:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-terrain="2">12 (19%)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">🌊 Water:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-terrain="3">8 (13%)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400">⛰️ Mountain:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-terrain="16">8 (13%)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-gray-600 dark:text-gray-400">🗿 Rock:</span>
+                                <span class="font-medium text-gray-900 dark:text-white" data-terrain="20">4 (6%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Stats (Coming Soon) -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Game Statistics</h3>
+                        <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span>Games Played:</span>
+                                <span>Coming Soon</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                                <span>Avg Game Duration:</span>
+                                <span>Coming Soon</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span>Win Rate:</span>
+                                <span>Coming Soon</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <!-- Hidden World Data for Frontend -->
         <pre id="world-data-json" style="display: none;">{{ if .World }}{{ .World | ToJson }}{{ else }}null{{ end }}</pre>
         <pre id="world-tiles-data-json" style="display: none;">{{ if .World.WorldData }}{{ .World.WorldData | ToJson }}{{ else }}null{{ end }}</pre>
