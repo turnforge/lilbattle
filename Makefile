@@ -3,7 +3,7 @@ GO_ROOT=$(go env GOROOT)
 WASM_EXEC_PATH=$(find `go env GOROOT` -name "wasm_exec.js" 2>/dev/null | head -1)
 
 buildweb:
-	cd web ; npm run build
+	cd web ; make build
 
 binlocal: 
 	go build -ldflags "$(LDFLAGS)" -o ./bin/weewar ./main.go
