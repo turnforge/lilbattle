@@ -101,18 +101,6 @@ service GamesService {
   }
 }
 
-// GameInfo represents a game in the catalog
-message GameInfo {
-  string id = 1;
-  string name = 2;
-  string description = 3;
-  string category = 4;
-  string difficulty = 5;
-  repeated string tags = 6;
-  string icon = 7;
-  string last_updated = 8;
-}
-
 // Request messages
 message ListGamesRequest {
   // Pagination info
