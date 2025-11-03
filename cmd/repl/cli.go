@@ -10,21 +10,22 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	"github.com/panyam/turnengine/games/weewar/services"
 	weewar "github.com/panyam/turnengine/games/weewar/services"
+	"github.com/panyam/turnengine/games/weewar/services/fsbe"
 )
 
 // CLI is a headless command processor for WeeWar games
 type CLI struct {
 	gameID   string
-	service  *services.FSGamesServiceImpl
+	service  *fsbe.FSGamesService
 	readline *readline.Instance // For reading user input with history
 }
 
 // NewCLI creates a new CLI instance
 func NewCLI(gameID string) (*CLI, error) {
-	service := services.NewFSGamesService()
+	service := fsbe.NewFSGamesService("")
 
 	// Verify game exists by trying to load it
 	ctx := context.Background()
@@ -182,7 +183,7 @@ func (cli *CLI) showOptions(position string, detailed bool) string {
 		switch opt := option.OptionType.(type) {
 		case *v1.GameOption_Move:
 			moveOpt := opt.Move
-			targetCoord := weewar.CoordFromInt32(moveOpt.Q, moveOpt.R)
+			targetCoord := weewar.CoordFromInt32(moveOpt.ToQ, moveOpt.ToR)
 
 			// Build the menu item with path if available
 			menuItem := fmt.Sprintf("%d. move to %s (cost: %d)",
@@ -206,23 +207,21 @@ func (cli *CLI) showOptions(position string, detailed bool) string {
 
 			// Create the move action using the provided action
 			move := &v1.GameMove{
-				MoveType: &v1.GameMove_MoveUnit{
-					MoveUnit: moveOpt.Action,
-				},
+				MoveType: &v1.GameMove_MoveUnit{MoveUnit: moveOpt},
 			}
 			actions = append(actions, move)
 			menuIndex++
 
 		case *v1.GameOption_Attack:
 			attackOpt := opt.Attack
-			targetCoord := weewar.CoordFromInt32(attackOpt.Q, attackOpt.R)
+			targetCoord := weewar.CoordFromInt32(attackOpt.DefenderQ, attackOpt.DefenderR)
 			menuItems = append(menuItems, fmt.Sprintf("%d. attack %s (type %d, damage est: %d)",
 				menuIndex, targetCoord.String(), attackOpt.TargetUnitType, attackOpt.DamageEstimate))
 
 			// Create the attack action using the provided action
 			move := &v1.GameMove{
 				MoveType: &v1.GameMove_AttackUnit{
-					AttackUnit: attackOpt.Action,
+					AttackUnit: attackOpt,
 				},
 			}
 			actions = append(actions, move)

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/antchfx/htmlquery"
-	weewarv1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1"
+	weewarv1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	"golang.org/x/net/html"
 )
 
@@ -700,16 +700,18 @@ func extractAttackTable(doc *html.Node, unitDef *weewarv1.UnitDefinition) {
 
 // extractActionOrder extracts the action_order from the Progression section
 // The HTML structure is:
-//   <p><strong>Progression</strong>...
-//     <span class="badge bg-success fw-normal">
-//       <span class="tip">move 3</span>
-//     </span>
-//     <span class="badge bg-success fw-normal">
-//       <span class="tip">attack 1</span>
-//       OR
-//       <span class="tip">capture</span>
-//     </span>
-//   </p>
+//
+//	<p><strong>Progression</strong>...
+//	  <span class="badge bg-success fw-normal">
+//	    <span class="tip">move 3</span>
+//	  </span>
+//	  <span class="badge bg-success fw-normal">
+//	    <span class="tip">attack 1</span>
+//	    OR
+//	    <span class="tip">capture</span>
+//	  </span>
+//	</p>
+//
 // We extract action names and join alternatives with "|" (e.g., "attack|capture")
 // Numeric values like "move 3" or "attack 1-2" are ignored (extracted elsewhere)
 func extractActionOrder(doc *html.Node, unitDef *weewarv1.UnitDefinition) {

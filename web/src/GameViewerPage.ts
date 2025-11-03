@@ -598,7 +598,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
         this.gamesClient = new GamesServiceClient(this.wasmBundle);
         this.gameViewPresenterClient = new GameViewPresenterClient(this.wasmBundle);
         this.singletonInitializerClient = new SingletonInitializerClient(this.wasmBundle);
-        await this.wasmBundle.loadWasm('/static/wasm/weewar-cli.wasm');
+        await this.wasmBundle.loadWasm((document.getElementById("wasmBundlePathField") as HTMLInputElement).value)
         await this.wasmBundle.waitUntilReady()
     }
 

@@ -239,7 +239,8 @@
 
 {{ define "PostBodySection" }}
 <!-- WASM and Game Scripts -->
-<script src="/static/wasm/wasm_exec.js"></script>
+<script src="{{.WasmExecJsPath}}"></script>
+<input id = "wasmBundlePathField" type=hidden value="{{.WasmBundlePath}}" />
 <!-- Include generated JS for GameViewerPage -->
 {{# include "gen/GameViewerPage.html" #}}
 {{ end }}

@@ -15,17 +15,16 @@ import (
 
 	wasm "github.com/panyam/protoc-gen-go-wasmjs/pkg/wasm"
 	v1models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	v1services "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // Weewar_v1ServicesExports provides WASM exports for dependency injection
 type Weewar_v1ServicesExports struct {
-	GamesService                v1services.GamesServiceServer
-	SingletonInitializerService v1services.SingletonInitializerServiceServer
-	GameViewPresenter           v1services.GameViewPresenterServer
-	UsersService                v1services.UsersServiceServer
-	WorldsService               v1services.WorldsServiceServer
+	GamesService                GamesServiceServer
+	SingletonInitializerService SingletonInitializerServiceServer
+	GameViewPresenter           GameViewPresenterServer
+	UsersService                UsersServiceServer
+	WorldsService               WorldsServiceServer
 
 	// Browser-provided services (clients)
 	GameViewerPage *GameViewerPageClient

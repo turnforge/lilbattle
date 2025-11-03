@@ -1,6 +1,9 @@
 
-GO_ROOT=$(go env GOROOT)
-WASM_EXEC_PATH=$(find `go env GOROOT` -name "wasm_exec.js" 2>/dev/null | head -1)
+# Use shell function for runtime evaluation
+GO_ROOT=$(shell go env GOROOT)
+TINYGO_ROOT=$(shell tinygo env TINYGOROOT 2>/dev/null || echo "")
+# Try both common locations for wasm_exec.js (newer Go versions use lib/wasm, older use misc/wasm)
+WASM_EXEC_PATH=$(shell find $(GO_ROOT)/lib/wasm $(GO_ROOT)/misc/wasm -name "wasm_exec.js" 2>/dev/null | head -1)
 
 buildweb:
 	cd web ; make build
@@ -12,10 +15,9 @@ serve:
 	go run main.go
 
 vars:
-	go env GOROOT
-	find `go env GOROOT` -name "wasm_exec.js" 2>/dev/null | head -1
-	echo GO_ROOT=${GO_ROOT}
-	echo WASM_EXEC_PATH=${WASM_EXEC_PATH}
+	@echo "GO_ROOT=$(GO_ROOT)"
+	@echo "TINYGO_ROOT=$(TINYGO_ROOT)"
+	@echo "WASM_EXEC_PATH=$(WASM_EXEC_PATH)"
 
 test:
 	@echo "Running tests..."
@@ -34,18 +36,35 @@ wasm: # test
 	mkdir -p web/static/wasm
 	echo "Building weewar-cli WASM..."
 	# GOOS=js GOARCH=wasm go build -o web/static/wasm/weewar-cli.wasm cmd/weewar-wasm/*.go
+	echo "Building standard WASM Binary..."
 	GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o web/static/wasm/weewar-cli.wasm ./cmd/weewar-wasm
-	echo "Compressing WASM with gzip..."
+	echo "Compressing standard WASM Binary..."
 	gzip -9 -k -f web/static/wasm/weewar-cli.wasm
-	echo "Copying wasm_exec.js..."
+	echo "Building TinyGO WASM Binary..."
+	tinygo build -target wasm -o web/static/wasm/weewar-cli-tinygo.wasm ./cmd/weewar-wasm
+	echo "Compressing standard WASM Binary..."
+	gzip -9 -k -f web/static/wasm/weewar-cli-tinygo.wasm
+	echo "Building TinyGO NoDebug WASM Binary..."
+	tinygo build -target wasm -no-debug -o web/static/wasm/weewar-cli-tinygo-nodebug.wasm ./cmd/weewar-wasm
+	echo "Compressing TinyGo NoDebug WASM Binary..."
+	gzip -9 -k -f web/static/wasm/weewar-cli-tinygo-nodebug.wasm
 
 wasmexecjs:
-	GO_ROOT = $(go env GOROOT)
-	WASM_EXEC_PATH = $(find "$GO_ROOT" -name "wasm_exec.js" 2>/dev/null | head -1)
-	cp "${WASM_EXEC_PATH}" web/static/wasm/
-	# echo "Warning: wasm_exec.js not found in Go installation"
-	echo "File sizes:"
-	du -h web/static/wasm/*.wasm web/static/wasm/*.js
+	@echo "Copying wasm_exec.js files..."
+	@if [ -n "$(TINYGO_ROOT)" ]; then \
+		echo "Copying TinyGo wasm_exec.js from $(TINYGO_ROOT)"; \
+		cp "$(TINYGO_ROOT)/targets/wasm_exec.js" web/static/wasm/wasm_exec_tiny.js; \
+	else \
+		echo "Warning: TinyGo not found, skipping wasm_exec_tiny.js"; \
+	fi
+	@if [ -n "$(WASM_EXEC_PATH)" ]; then \
+		echo "Copying standard Go wasm_exec.js from $(WASM_EXEC_PATH)"; \
+		cp "$(WASM_EXEC_PATH)" web/static/wasm/wasm_exec.js; \
+	else \
+		echo "Warning: wasm_exec.js not found in Go installation at $(GO_ROOT)"; \
+	fi
+	@echo "File sizes:"
+	@du -h web/static/wasm/*.wasm web/static/wasm/*.js 2>/dev/null || true
 
 install-tools:
 	@echo "Installing required Go tools..."

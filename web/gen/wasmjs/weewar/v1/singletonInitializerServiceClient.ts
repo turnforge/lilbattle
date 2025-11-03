@@ -5,8 +5,8 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    InitializeSingletonResponse,
     InitializeSingletonRequest,
+    InitializeSingletonResponse,
 } from './interfaces';
 /**
  * SingletonInitializerService service client interface

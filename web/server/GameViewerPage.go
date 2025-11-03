@@ -27,9 +27,19 @@ type GameViewerPage struct {
 	PlayerCount      int
 	MaxTurns         int
 	UnitRestrictions map[string]string // unitId -> restriction level
+
+	WasmExecJsPath string
+	WasmBundlePath string
 }
 
 func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+	p.WasmExecJsPath = "/static/wasm/wasm_exec.js"
+	p.WasmBundlePath = "/static/wasm/weewar-cli.wasm"
+	if true { // true for TinyGo
+		p.WasmExecJsPath = "/static/wasm/wasm_exec_tiny.js"
+		p.WasmBundlePath = "/static/wasm/weewar-cli-tinygo.wasm"
+	}
+
 	p.GameId = r.PathValue("gameId") // gameId is actually worldId for now
 	if p.GameId == "" {
 		http.Error(w, "Game ID is required", http.StatusBadRequest)
