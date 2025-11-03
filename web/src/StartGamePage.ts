@@ -54,17 +54,23 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Phase 1: Initialize DOM and discover child components
      */
     performLocalInit(): Promise<LCMComponent[]> | LCMComponent[] {
-        this.loadInitialState(); // Load initial state here since constructor calls this
+        this.loadInitialState();
 
-        this.loadWorldData()
-        
-        // Subscribe to events BEFORE creating components - None here
-        
-        // Create child components
-        this.createComponents();
-        
-        // Return child components for lifecycle management
-        return [this.worldScene];
+        // Only load world data and create components if a world is selected
+        if (this.currentWorldId) {
+            this.loadWorldData();
+
+            // Subscribe to events BEFORE creating components - None here
+
+            // Create child components
+            this.createComponents();
+
+            // Return child components for lifecycle management
+            return [this.worldScene];
+        }
+
+        // No world selected - return empty array (no child components)
+        return [];
     }
 
     /**
@@ -73,10 +79,14 @@ class StartGamePage extends BasePage implements LCMComponent {
     async activate(): Promise<void> {
         // Bind events now that all components are ready
         this.bindPageSpecificEvents();
-        this.worldScene.loadWorld(this.world);
-        this.showToast('Success', 'World loaded successfully', 'success');
 
-        // Dismiss splash screen once world is loaded
+        // Only load world if one was selected
+        if (this.currentWorldId && this.worldScene) {
+            this.worldScene.loadWorld(this.world);
+            this.showToast('Success', 'World loaded successfully', 'success');
+        }
+
+        // Dismiss splash screen
         super.dismissSplashScreen();
     }
 
@@ -180,8 +190,8 @@ class StartGamePage extends BasePage implements LCMComponent {
         if (worldId) {
             this.currentWorldId = worldId;
         } else {
-            console.error("World ID input element not found or has no value. Cannot load world.");
-            this.showToast("Error", "Could not load world: World ID missing.", "error");
+            // No world selected - this is a valid state, user needs to select a world
+            this.currentWorldId = null;
         }
     }
 
