@@ -13,6 +13,7 @@ import (
 	"syscall/js"
 
 	// Generated WASM exports
+
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
 	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1/services"
 	"github.com/panyam/turnengine/games/weewar/services/singleton"
@@ -95,6 +96,7 @@ func main() {
 	wasmGameViewPresenter.BuildOptionsModal.SetRulesEngine(wasmGameViewPresenter.RulesEngine)
 
 	// Register the JavaScript API using generated exports
+	// wasm.SetGlobalMarshaller(wasm.NewVTProtoMarshallerWithFallback())
 	exports.RegisterAPI()
 
 	weewarObj := js.Global().Get("weewar")

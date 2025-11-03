@@ -7,6 +7,9 @@
 package weewar
 
 import (
+
+	// "github.com/panyam/protoc-gen-go-wasmjs/pkg/wasm"
+
 	wasm "github.com/panyam/protoc-gen-go-wasmjs/pkg/wasm"
 )
 
