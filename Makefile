@@ -79,6 +79,9 @@ install-tools:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 	go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+	go get google.golang.org/genproto/googleapis/api/annotations@latest
+	go get github.com/planetscale/vtprotobuf/protohelpers@latest
+	go get github.com/planetscale/vtprotobuf@latest
 	npm install --force -g  @bufbuild/buf @bufbuild/protobuf @bufbuild/protoc-gen-es @bufbuild/protoc-gen-connect-es
 	@echo "✓ Go tools installed"
 
