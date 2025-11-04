@@ -9,8 +9,12 @@ import (
 )
 
 type WorldListView struct {
-	Worlds    []*protos.World
-	Paginator Paginator
+	Worlds     []*protos.World
+	Paginator  Paginator
+	ViewMode   string // "table" or "grid"
+	ActionMode string // "manage" or "select"
+	Query      string // search query
+	Sort       string // sort order
 }
 
 func (g *WorldListView) Copy() View { return &WorldListView{} }
@@ -21,6 +25,28 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	// if we are an independent view then read its params from the query params
 	// otherwise those will be passed in
 	_, _ = p.Paginator.Load(r, w, vc)
+
+	// Load view mode (table or grid), default to grid for select mode, table for manage mode
+	p.ViewMode = r.URL.Query().Get("view")
+	if p.ViewMode == "" {
+		if p.ActionMode == "select" {
+			p.ViewMode = "grid" // Default to grid for world selection
+		} else {
+			p.ViewMode = "table" // Default to table for manage mode
+		}
+	}
+
+	// Load search query and sort
+	p.Query = r.URL.Query().Get("q")
+	p.Sort = r.URL.Query().Get("sort")
+	if p.Sort == "" {
+		p.Sort = "modified_desc" // Default sort
+	}
+
+	// Default action mode to "manage" if not set
+	if p.ActionMode == "" {
+		p.ActionMode = "manage"
+	}
 
 	client, err := vc.ClientMgr.GetWorldsSvcClient()
 	if err != nil {

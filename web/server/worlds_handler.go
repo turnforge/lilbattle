@@ -12,6 +12,7 @@ import (
 func (r *RootViewsHandler) setupWorldsMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", r.ViewRenderer(Copier(&WorldListingPage{}), ""))
+	mux.HandleFunc("/select", r.ViewRenderer(Copier(&SelectWorldPage{}), ""))
 	mux.HandleFunc("/new", r.createNewWorldHandler)
 	mux.HandleFunc("/{worldId}/view", r.ViewRenderer(Copier(&WorldViewerPage{}), ""))
 	mux.HandleFunc("/{worldId}/edit", r.ViewRenderer(Copier(&WorldEditorPage{}), ""))

@@ -1,0 +1,22 @@
+<!-- templates/SelectWorldPage.html -->
+{{# include "BasePage.html" #}}
+{{# include "WorldList.html" #}}
+
+{{ define "BodySection" }}
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+        <p class="text-gray-600 dark:text-gray-400">Choose a world to start your game</p>
+    </div>
+
+    <!-- World List in Selection Mode -->
+    {{ template "WorldList" .WorldListView }}
+</main>
+{{ end }}
+
+{{ define "PostBodySection" }}
+{{# include "gen/WorldListingPage.html" #}}
+{{ end }}
+
+{{ define "SelectWorldPage" }}
+{{ template "BasePage" . }}
+{{ end }}

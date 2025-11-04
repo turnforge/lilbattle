@@ -1,0 +1,61 @@
+<!-- templates/WorldFilterPanel.html -->
+<!-- Reusable world search and filter panel -->
+{{ define "WorldFilterPanel" }}
+<div class="flex items-center space-x-4 w-full sm:w-auto">
+    <!-- Search Input -->
+    <div class="relative flex-grow sm:flex-grow-0">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        <input type="search"
+               id="{{ or .SearchInputId "search-worlds-input" }}"
+               name="q"
+               placeholder="Search worlds..."
+               value="{{ .Query }}"
+               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+               {{ if .HtmxEnabled }}
+               hx-get="{{ or .SearchUrl "/worlds/search" }}"
+               hx-trigger="keyup changed delay:500ms, search"
+               hx-target="{{ or .TargetSelector "#worlds-container" }}"
+               hx-swap="innerHTML"
+               hx-indicator="{{ or .IndicatorSelector "#list-loading-indicator" }}"
+               hx-select="{{ or .SelectSelector "#worlds-container" }}"
+               {{ end }} />
+    </div>
+
+    <!-- Sort Select -->
+    <div>
+        <label for="{{ or .SortSelectId "sort-worlds-select" }}" class="sr-only">Sort by</label>
+        <select id="{{ or .SortSelectId "sort-worlds-select" }}"
+                name="sort"
+                class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                {{ if .HtmxEnabled }}
+                hx-get="{{ or .SearchUrl "/worlds/search" }}"
+                hx-trigger="change"
+                hx-target="{{ or .TargetSelector "#worlds-container" }}"
+                hx-swap="innerHTML"
+                hx-indicator="{{ or .IndicatorSelector "#list-loading-indicator" }}"
+                hx-select="{{ or .SelectSelector "#worlds-container" }}"
+                hx-include="[name='q']"
+                {{ end }}>
+            <option value="modified_desc" {{ if eq .Sort "modified_desc" }}selected{{ end }}>Last Modified (Newest)</option>
+            <option value="modified_asc" {{ if eq .Sort "modified_asc" }}selected{{ end }}>Last Modified (Oldest)</option>
+            <option value="title_asc" {{ if eq .Sort "title_asc" }}selected{{ end }}>Title (A-Z)</option>
+            <option value="title_desc" {{ if eq .Sort "title_desc" }}selected{{ end }}>Title (Z-A)</option>
+        </select>
+    </div>
+
+    <!-- Optional: Create New Button (can be disabled for selection mode) -->
+    {{ if not .HideCreateButton }}
+    <a href="/worlds/new"
+       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 whitespace-nowrap">
+        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        Create New
+    </a>
+    {{ end }}
+</div>
+{{ end }}

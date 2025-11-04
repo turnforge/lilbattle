@@ -25,6 +25,12 @@ func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	// Get worldId from query parameter (optional)
 	p.WorldId = r.URL.Query().Get("worldId")
 
+	// If no worldId provided, redirect to world selection page
+	if p.WorldId == "" {
+		http.Redirect(w, r, "/worlds/select", http.StatusSeeOther)
+		return nil, true
+	}
+
 	p.Title = "New Game"
 	p.Header.Load(r, w, vc)
 
