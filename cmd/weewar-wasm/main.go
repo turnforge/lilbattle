@@ -95,6 +95,9 @@ func main() {
 	wasmGameViewPresenter.BuildOptionsModal.SetTheme(wasmGameViewPresenter.Theme)
 	wasmGameViewPresenter.BuildOptionsModal.SetRulesEngine(wasmGameViewPresenter.RulesEngine)
 
+	// Wire GameViewerPage client for mobile-specific RPC calls
+	wasmGameViewPresenter.GameViewerPage = exports.GameViewerPage
+
 	// Register the JavaScript API using generated exports
 	// wasm.SetGlobalMarshaller(wasm.NewVTProtoMarshallerWithFallback())
 	exports.RegisterAPI()

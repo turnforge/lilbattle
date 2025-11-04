@@ -228,6 +228,20 @@ export class GameViewerPageMobile extends GameViewerPageBase {
     }
 
     /**
+     * Override to set theme on compact summary card
+     */
+    setupDependencies(): void {
+        super.setupDependencies();
+
+        // Set theme on compact summary card
+        const assetProvider = this.gameScene?.getAssetProvider();
+        if (assetProvider && this.compactSummaryCard) {
+            const theme = assetProvider.getTheme();
+            this.compactSummaryCard.setTheme(theme);
+        }
+    }
+
+    /**
      * Show/focus a specific panel (opens its drawer)
      */
     protected showPanel(panelId: PanelId): void {
