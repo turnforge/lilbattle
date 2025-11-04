@@ -351,15 +351,24 @@
 - [x] Page variant pattern ready for mobile implementation
 
 **Remaining Tasks**:
-- [ ] GameViewerPageMobile with bottom sheet/drawer system
-- [ ] Context-aware panel switching (unit selected, base selected, nothing selected)
+- [x] GameViewerPageMobile with bottom drawer system (2025-11-04)
+- [x] Context-aware button ordering (unit/tile/nothing selected) (2025-11-04)
+- [x] MobileBottomDrawer reusable component (2025-11-04)
+- [x] CompactSummaryCard for terrain+unit info (2025-11-04)
+- [ ] Fix mobile layout CSS (bottom bar visibility issue)
+- [ ] Server-side setCompactSummaryCard implementation
 - [ ] Touch controls for unit selection and movement
 - [ ] Touch gesture support (pinch to zoom, pan)
 - [ ] Mobile performance optimization
 - [ ] Touch-friendly hex selection and highlighting
 
-**Architecture Notes**:
-The Page Variant Architecture pattern (GameViewerPageBase + layout-specific children) provides a clean foundation for mobile implementation. All game logic lives in the base class, allowing GameViewerPageMobile to focus solely on mobile-optimized layout and interactions.
+**Architecture Implementation (2025-11-04)**:
+- GameViewerPageMobile.ts: Mobile page variant with context-aware bottom bar
+- MobileBottomDrawer.ts: Reusable drawer component (60-70% height, auto-close)
+- CompactSummaryCard.ts: Top banner showing terrain+unit selection info
+- GameViewerPageMobile.html: Mobile template with 5 drawers and bottom action bar
+- Button Ordering: Dynamic reordering based on selection context (unit/tile/nothing)
+- setCompactSummaryCard: New RPC method for mobile-specific UI updates
 
 ---
 

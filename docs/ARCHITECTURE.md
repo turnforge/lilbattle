@@ -54,10 +54,22 @@ class GameViewerPageGrid extends GameViewerPageBase {
 }
 
 class GameViewerPageMobile extends GameViewerPageBase {
-    // Mobile layout with bottom sheets and FABs
-    // Context-aware panel switching based on selection state
+    // Mobile layout with bottom drawers and context-aware button bar
+    // Compact summary card at top, game scene in center, action bar at bottom
+    // Dynamic button ordering based on selection context
 }
 ```
+
+**Mobile Variant Details (2025-11-04)**:
+- **MobileBottomDrawer**: Reusable component for 60-70% height drawers with auto-close
+- **CompactSummaryCard**: Top banner showing terrain+unit info rendered by presenter
+- **Context-Aware Button Bar**: Icons + labels that reorder based on selection state
+  - Unit selected: [🪖 Unit] [🎯 Actions] [⚔️ Damage] [🗺️ Terrain] [📜 Log]
+  - Tile selected: [🗺️ Terrain] [🎯 Actions] [🪖 Unit] [⚔️ Damage] [📜 Log]
+  - Nothing: [📜 Log] [🎯 Actions] [🗺️ Terrain] [🪖 Unit] [⚔️ Damage]
+- **setCompactSummaryCard RPC**: Browser method for mobile UI updates
+- **Drawer Management**: Only one drawer open at a time, tap outside to close
+- **Layout**: Fixed header (56px) → Compact card (60px) → Game scene (flex: 1) → Bottom bar (64px)
 
 **Architecture Benefits**:
 - **Maintainability**: Single source of truth for game logic, changes propagate to all variants

@@ -551,6 +551,15 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         return {};
     }
 
+    /**
+     * Set compact summary card content (mobile-specific, no-op for desktop/grid)
+     */
+    async setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse> {
+        // Default implementation: no-op for desktop and grid layouts
+        // Mobile layout overrides this to show compact card
+        return {};
+    }
+
     async showHighlights(request: ShowHighlightsRequest) {
         console.log("showHighlights called:", request);
         if (request.highlights) {

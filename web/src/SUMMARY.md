@@ -79,18 +79,27 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 
 #### Page Variant Architecture Pattern ✅
 *   **GameViewerPageBase Abstract Class**: Core game logic extracted to base class (WASM, presenter, panels, events, RPC methods)
-*   **Layout-Specific Child Classes**: GameViewerPageDockView (flexible dockable layout) and GameViewerPageGrid (static CSS grid)
+*   **Layout-Specific Child Classes**: GameViewerPageDockView (flexible dockable), GameViewerPageGrid (static CSS grid), GameViewerPageMobile (touch-optimized)
 *   **Abstract Method Pattern**: Child classes implement layout-specific concerns (initializeLayout, createPanels, getGameSceneContainer)
 *   **Zero Logic Duplication**: All game logic lives in base class, children only handle structural differences
-*   **Flexible Timing Control**: Child classes control when game scene is created (early for Grid, late for DockView)
+*   **Flexible Timing Control**: Child classes control when game scene is created (early for Grid/Mobile, late for DockView)
 *   **Server-Side Template Rendering**: Each variant has its own HTML template with appropriate layout structure
-*   **Planned Mobile Variant**: Foundation ready for GameViewerPageMobile with bottom sheet and context-aware panels
+
+**Mobile Variant Implementation ✅:**
+- **GameViewerPageMobile.ts**: Mobile page with context-aware bottom action bar
+- **MobileBottomDrawer.ts**: Reusable drawer component (60-70% height, auto-close on backdrop tap)
+- **CompactSummaryCard.ts**: Top banner showing terrain+unit selection info
+- **Context-Aware Button Ordering**: Dynamic reordering based on selection state (unit/tile/nothing)
+- **setCompactSummaryCard RPC**: New browser method for mobile-specific UI updates (no-op for desktop/grid)
+- **Bottom Drawers**: 5 drawers (unit stats, terrain stats, damage, actions, log), one open at a time
+- **Layout Structure**: Header → Compact Card → Game Scene (flex: 1) → Bottom Bar (64px)
 
 **Architecture Benefits:**
 - Clean separation of game logic from layout concerns
 - Easy to add new layout variants without code duplication
 - Can serve different variants based on user agent/screen size
 - Each variant optimized for its use case (performance, flexibility, touch)
+- Reusable components in web/lib for cross-page usage
 
 ### Recent Session Work (2025-11-03)
 
