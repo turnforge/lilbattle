@@ -91,6 +91,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         // Initialize asset provider (default to PNG if not provided)
         this.assetProvider = assetProvider || this.createDefaultAssetProvider();
     }
+
+    getContainerElement(): HTMLElement {
+      return this.containerElement
+    }
     
     /**
      * Create the default asset provider based on configuration
@@ -303,14 +307,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
     // Cleanup phase
     deactivate(): void {
-        if (this.debugMode) {
-            console.log('[PhaserWorldScene] Deactivating');
-        }
-        
-        // Unsubscribe from world events
-        this.unsubscribeFromWorldEvents();
-        
-        this.destroyPhaser();
+        this.destroy();
     }
     
     // Public destroy method for LCMComponent compatibility
@@ -412,6 +409,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
      * Destroy Phaser game instance and clean up
      */
     private destroyPhaser(): void {
+        // Unsubscribe from world events
+        this.unsubscribeFromWorldEvents();
+
         // Clean up layer system
         if (this.layerManager) {
             this.layerManager.destroy();

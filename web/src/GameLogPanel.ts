@@ -12,12 +12,10 @@ import { EventBus } from '../lib/EventBus';
  * - Template-based UI with proper event handling
  */
 export class GameLogPanel implements LCMComponent {
-    private element: HTMLElement;
     private eventBus: EventBus;
     private gameLog: string[] = [];
 
-    constructor(element: HTMLElement, eventBus: EventBus) {
-        this.element = element;
+    constructor(readonly element: HTMLElement, eventBus: EventBus) {
         this.eventBus = eventBus;
     }
 

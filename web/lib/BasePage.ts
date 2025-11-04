@@ -5,6 +5,7 @@ import { EventBus } from './EventBus';
 import { BaseComponent } from './Component';
 import { LCMComponent } from './LCMComponent';
 import { SplashScreen } from '../lib/SplashScreen';
+import { LifecycleController } from './LifecycleController';
 
 /**
  * Base class for all pages that provides common UI components and functionality
@@ -252,4 +253,22 @@ export abstract class BasePage extends BaseComponent {
     protected dismissSplashScreen() {
         SplashScreen.dismiss();
     }
+
+    static loadAfterPageLoaded<T>(pageName: string, PageClass: any, PageClassName: string) {
+        // Initialize page when DOM is ready using LifecycleController
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Create page instance (just basic setup)
+            const page = new PageClass(PageClassName);
+            
+            // Make GameViewerPage available for e2e testing via command interface
+            (window as any)[pageName] = page;
+            
+            // Create lifecycle controller with debug logging
+            const lifecycleController = new LifecycleController(page.eventBus, LifecycleController.DefaultConfig);
+            
+            // Start breadth-first initialization
+            await lifecycleController.initializeFromRoot(page);
+        });
+    }
 }
+

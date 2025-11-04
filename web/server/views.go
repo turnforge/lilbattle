@@ -159,7 +159,7 @@ func (b *RootViewsHandler) RenderView(view View, template string, r *http.Reques
 				log.Println("Template Load Error: ", templateFile, err)
 				fmt.Fprint(w, "Error rendering: ", err.Error())
 			} else {
-				log.Printf("DEBUG: Successfully loaded template, rendering...")
+				log.Printf("DEBUG: Successfully loaded template, rendering... %s", template)
 				err = b.Context.Templates.RenderHtmlTemplate(w, tmpl[0], template, view, nil)
 				if err != nil {
 					log.Printf("DEBUG: Template render error: %v", err)

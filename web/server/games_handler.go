@@ -13,7 +13,7 @@ func (r *RootViewsHandler) setupGamesMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", r.ViewRenderer(Copier(&GameListingPage{}), ""))
 	mux.HandleFunc("/new", r.ViewRenderer(Copier(&StartGamePage{}), ""))
-	mux.HandleFunc("/{gameId}/view", r.ViewRenderer(Copier(&GameViewerPage{}), ""))
+	mux.HandleFunc("/{gameId}/view", r.gameViewerHandler) // Use custom handler for layout detection
 	mux.HandleFunc("/{gameId}/copy", func(w http.ResponseWriter, r *http.Request) {
 		notationId := r.PathValue("notationId")
 		http.Redirect(w, r, fmt.Sprintf("/appitems/new?copyFrom=%s", notationId), http.StatusFound)
@@ -21,6 +21,54 @@ func (r *RootViewsHandler) setupGamesMux() *http.ServeMux {
 	mux.HandleFunc("/{gameId}/screenshot", r.handleResourceScreenshot("game"))
 	mux.HandleFunc("/{gameId}", r.handleGameActions)
 	return mux
+}
+
+// gameViewerHandler detects layout preference and serves appropriate template
+func (r *RootViewsHandler) gameViewerHandler(w http.ResponseWriter, req *http.Request) {
+	// Detect layout preference
+	layout := detectLayoutPreference(req)
+
+	// Map layout to template name
+	templateName := "GameViewerPage"
+	if false {
+		switch layout {
+		case "dockviewfull":
+			templateName = "GameViewerPageDockViewFull"
+		case "dockview":
+			templateName = "GameViewerPageDockView"
+		case "mobile":
+			templateName = "GameViewerPageMobile" // Future
+		default:
+			templateName = "GameViewerPage" // Base fixed grid
+		}
+	}
+
+	log.Printf("GameViewer: Using layout=%s, template=%s", layout, templateName)
+
+	// Render with selected template
+	r.RenderView(Copier(&GameViewerPage{})(), templateName, req, w)
+}
+
+// detectLayoutPreference determines which layout to use based on request
+func detectLayoutPreference(r *http.Request) string {
+	// 1. Check query param (for testing/debugging)
+	if layout := r.URL.Query().Get("layout"); layout != "" {
+		return layout
+	}
+
+	// 2. Check cookie/session preference (future)
+	if cookie, err := r.Cookie("layout_preference"); err == nil {
+		return cookie.Value
+	}
+
+	// 3. User-Agent detection (future - mobile detection)
+	// ua := r.Header.Get("User-Agent")
+	// if isMobileDevice(ua) {
+	//     return "base" // or "mobile" when ready
+	// }
+
+	// 4. Default to DockView for backward compatibility
+	return "dockview"
 }
 
 // handleGameActions handles different HTTP methods for game operations
