@@ -242,9 +242,9 @@
 <script src="{{.WasmExecJsPath}}"></script>
 <input id = "wasmBundlePathField" type=hidden value="{{.WasmBundlePath}}" />
 <!-- Include generated JS for GameViewerPage -->
-{{# include "gen/GameViewerPage.html" #}}
+{{# include "gen/GameViewerPageDockView.html" #}}
 {{ end }}
 
-{{ define "GameViewerPage" }}
+{{ define "GameViewerPageDockView" }}
 {{ template "BasePage" . }}
 {{ end }}

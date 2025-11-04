@@ -1002,6 +1002,15 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
       }
     }
   }
+
+    /**
+     * Set compact summary card content (mobile-specific, no-op for desktop/grid)
+     */
+    async setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse> {
+        // Default implementation: no-op for desktop and grid layouts
+        // Mobile layout overrides this to show compact card
+        return {};
+    }
 }
 
 // Initialize page when DOM is ready using LifecycleController

@@ -29,17 +29,15 @@ func (r *RootViewsHandler) gameViewerHandler(w http.ResponseWriter, req *http.Re
 	layout := detectLayoutPreference(req)
 
 	// Map layout to template name
-	templateName := "GameViewerPage"
-	if false {
+	templateName := "GameViewerPageDockView"
+	if true {
 		switch layout {
-		case "dockviewfull":
-			templateName = "GameViewerPageDockViewFull"
 		case "dockview":
 			templateName = "GameViewerPageDockView"
 		case "mobile":
 			templateName = "GameViewerPageMobile" // Future
-		default:
-			templateName = "GameViewerPage" // Base fixed grid
+		case "grid":
+			templateName = "GameViewerPageGrid"
 		}
 	}
 
