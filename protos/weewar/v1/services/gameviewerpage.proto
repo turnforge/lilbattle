@@ -57,6 +57,9 @@ service GameViewerPage {
 
     rpc ShowCaptureEffect(ShowCaptureEffectRequest) returns (ShowCaptureEffectResponse);
 
+    // Panel visibility and ordering
+    rpc SetAllowedPanels(SetAllowedPanelsRequest) returns (SetAllowedPanelsResponse);
+
     // Utility methods
     rpc LogMessage(LogMessageRequest) returns (LogMessageResponse);
 }

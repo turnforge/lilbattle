@@ -41,6 +41,7 @@ const (
 	GameViewerPage_ShowAttackEffect_FullMethodName             = "/weewar.v1.GameViewerPage/ShowAttackEffect"
 	GameViewerPage_ShowHealEffect_FullMethodName               = "/weewar.v1.GameViewerPage/ShowHealEffect"
 	GameViewerPage_ShowCaptureEffect_FullMethodName            = "/weewar.v1.GameViewerPage/ShowCaptureEffect"
+	GameViewerPage_SetAllowedPanels_FullMethodName             = "/weewar.v1.GameViewerPage/SetAllowedPanels"
 	GameViewerPage_LogMessage_FullMethodName                   = "/weewar.v1.GameViewerPage/LogMessage"
 )
 
@@ -73,6 +74,8 @@ type GameViewerPageClient interface {
 	ShowAttackEffect(ctx context.Context, in *models.ShowAttackEffectRequest, opts ...grpc.CallOption) (*models.ShowAttackEffectResponse, error)
 	ShowHealEffect(ctx context.Context, in *models.ShowHealEffectRequest, opts ...grpc.CallOption) (*models.ShowHealEffectResponse, error)
 	ShowCaptureEffect(ctx context.Context, in *models.ShowCaptureEffectRequest, opts ...grpc.CallOption) (*models.ShowCaptureEffectResponse, error)
+	// Panel visibility and ordering
+	SetAllowedPanels(ctx context.Context, in *models.SetAllowedPanelsRequest, opts ...grpc.CallOption) (*models.SetAllowedPanelsResponse, error)
 	// Utility methods
 	LogMessage(ctx context.Context, in *models.LogMessageRequest, opts ...grpc.CallOption) (*models.LogMessageResponse, error)
 }
@@ -285,6 +288,16 @@ func (c *gameViewerPageClient) ShowCaptureEffect(ctx context.Context, in *models
 	return out, nil
 }
 
+func (c *gameViewerPageClient) SetAllowedPanels(ctx context.Context, in *models.SetAllowedPanelsRequest, opts ...grpc.CallOption) (*models.SetAllowedPanelsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(models.SetAllowedPanelsResponse)
+	err := c.cc.Invoke(ctx, GameViewerPage_SetAllowedPanels_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gameViewerPageClient) LogMessage(ctx context.Context, in *models.LogMessageRequest, opts ...grpc.CallOption) (*models.LogMessageResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(models.LogMessageResponse)
@@ -324,6 +337,8 @@ type GameViewerPageServer interface {
 	ShowAttackEffect(context.Context, *models.ShowAttackEffectRequest) (*models.ShowAttackEffectResponse, error)
 	ShowHealEffect(context.Context, *models.ShowHealEffectRequest) (*models.ShowHealEffectResponse, error)
 	ShowCaptureEffect(context.Context, *models.ShowCaptureEffectRequest) (*models.ShowCaptureEffectResponse, error)
+	// Panel visibility and ordering
+	SetAllowedPanels(context.Context, *models.SetAllowedPanelsRequest) (*models.SetAllowedPanelsResponse, error)
 	// Utility methods
 	LogMessage(context.Context, *models.LogMessageRequest) (*models.LogMessageResponse, error)
 }
@@ -394,6 +409,9 @@ func (UnimplementedGameViewerPageServer) ShowHealEffect(context.Context, *models
 }
 func (UnimplementedGameViewerPageServer) ShowCaptureEffect(context.Context, *models.ShowCaptureEffectRequest) (*models.ShowCaptureEffectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowCaptureEffect not implemented")
+}
+func (UnimplementedGameViewerPageServer) SetAllowedPanels(context.Context, *models.SetAllowedPanelsRequest) (*models.SetAllowedPanelsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAllowedPanels not implemented")
 }
 func (UnimplementedGameViewerPageServer) LogMessage(context.Context, *models.LogMessageRequest) (*models.LogMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LogMessage not implemented")
@@ -778,6 +796,24 @@ func _GameViewerPage_ShowCaptureEffect_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameViewerPage_SetAllowedPanels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(models.SetAllowedPanelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameViewerPageServer).SetAllowedPanels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameViewerPage_SetAllowedPanels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameViewerPageServer).SetAllowedPanels(ctx, req.(*models.SetAllowedPanelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GameViewerPage_LogMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(models.LogMessageRequest)
 	if err := dec(in); err != nil {
@@ -882,6 +918,10 @@ var GameViewerPage_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ShowCaptureEffect",
 			Handler:    _GameViewerPage_ShowCaptureEffect_Handler,
+		},
+		{
+			MethodName: "SetAllowedPanels",
+			Handler:    _GameViewerPage_SetAllowedPanels_Handler,
 		},
 		{
 			MethodName: "LogMessage",

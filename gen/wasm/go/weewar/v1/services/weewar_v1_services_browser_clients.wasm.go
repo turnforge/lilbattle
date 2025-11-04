@@ -189,6 +189,14 @@ func (c *GameViewerPageClient) ShowCaptureEffect(ctx context.Context, req *v1mod
 	)
 }
 
+// SetAllowedPanels calls the browser-provided SetAllowedPanels method
+func (c *GameViewerPageClient) SetAllowedPanels(ctx context.Context, req *v1models.SetAllowedPanelsRequest) (*v1models.SetAllowedPanelsResponse, error) {
+	// This is a synchronous browser method
+	return wasm.CallBrowserService[*v1models.SetAllowedPanelsRequest, *v1models.SetAllowedPanelsResponse](
+		c.channel, ctx, "GameViewerPage", "setAllowedPanels", req,
+	)
+}
+
 // LogMessage calls the browser-provided LogMessage method
 func (c *GameViewerPageClient) LogMessage(ctx context.Context, req *v1models.LogMessageRequest) (*v1models.LogMessageResponse, error) {
 	// This is a synchronous browser method

@@ -8,7 +8,7 @@ import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { PhaserGameScene } from './phaser/PhaserGameScene';
-import { SetContentRequest, SetContentResponse } from '../gen/wasmjs/weewar/v1/interfaces';
+import { SetContentRequest, SetContentResponse, SetAllowedPanelsRequest, SetAllowedPanelsResponse } from '../gen/wasmjs/weewar/v1/interfaces';
 
 /**
  * Context-aware button ordering configuration
@@ -74,6 +74,7 @@ export class GameViewerPageMobile extends GameViewerPageBase {
     private bottomBarElement: HTMLElement | null = null;
     private buttonOrdering: ButtonOrderingConfig = DEFAULT_BUTTON_ORDERING;
     private currentContext: 'unitSelected' | 'tileSelected' | 'nothingSelected' = 'nothingSelected';
+    private allowedPanels: PanelId[] = ['game-log']; // Start with just game log, presenter will set the full list
 
     /**
      * Initialize mobile layout with drawers and bottom bar
@@ -294,8 +295,10 @@ export class GameViewerPageMobile extends GameViewerPageBase {
     private renderBottomBar(): void {
         if (!this.bottomBarElement) return;
 
-        // Get button order for current context
-        const orderedPanelIds = this.buttonOrdering[this.currentContext];
+        // Get button order for current context, filtered by allowed panels
+        const orderedPanelIds = this.buttonOrdering[this.currentContext].filter(
+            panelId => this.allowedPanels.includes(panelId)
+        );
 
         // Build HTML for buttons
         const buttonsHtml = orderedPanelIds.map(panelId => {
@@ -365,6 +368,22 @@ export class GameViewerPageMobile extends GameViewerPageBase {
         if (this.compactSummaryCard) {
             this.compactSummaryCard.innerHTML = request.innerHtml;
         }
+
+        return {};
+    }
+
+    /**
+     * Override setAllowedPanels to update bottom bar buttons
+     */
+    async setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse> {
+        console.log("setAllowedPanels called on mobile:", request.panelIds);
+
+        // Update allowed panels list
+        this.allowedPanels = request.panelIds as PanelId[];
+
+        // Re-render bottom bar with new panel set
+        this.renderBottomBar();
+        this.updateButtonHighlights();
 
         return {};
     }

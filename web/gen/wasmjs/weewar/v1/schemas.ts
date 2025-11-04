@@ -2930,6 +2930,32 @@ export const ShowCaptureEffectResponseSchema: MessageSchema = {
 
 
 /**
+ * Schema for SetAllowedPanelsRequest message
+ */
+export const SetAllowedPanelsRequestSchema: MessageSchema = {
+  name: "SetAllowedPanelsRequest",
+  fields: [
+    {
+      name: "panelIds",
+      type: FieldType.REPEATED,
+      id: 1,
+      repeated: true,
+    },
+  ],
+};
+
+
+/**
+ * Schema for SetAllowedPanelsResponse message
+ */
+export const SetAllowedPanelsResponseSchema: MessageSchema = {
+  name: "SetAllowedPanelsResponse",
+  fields: [
+  ],
+};
+
+
+/**
  * Schema for InitializeSingletonRequest message
  */
 export const InitializeSingletonRequestSchema: MessageSchema = {
@@ -4065,6 +4091,8 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.ShowHealEffectResponse": ShowHealEffectResponseSchema,
   "weewar.v1.ShowCaptureEffectRequest": ShowCaptureEffectRequestSchema,
   "weewar.v1.ShowCaptureEffectResponse": ShowCaptureEffectResponseSchema,
+  "weewar.v1.SetAllowedPanelsRequest": SetAllowedPanelsRequestSchema,
+  "weewar.v1.SetAllowedPanelsResponse": SetAllowedPanelsResponseSchema,
   "weewar.v1.InitializeSingletonRequest": InitializeSingletonRequestSchema,
   "weewar.v1.InitializeSingletonResponse": InitializeSingletonResponseSchema,
   "weewar.v1.TurnOptionClickedRequest": TurnOptionClickedRequestSchema,

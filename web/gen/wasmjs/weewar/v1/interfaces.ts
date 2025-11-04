@@ -1286,6 +1286,19 @@ export interface ShowCaptureEffectResponse {
 
 
 /**
+ * Request to set allowed panels and their order
+ */
+export interface SetAllowedPanelsRequest {
+  panelIds: string[];
+}
+
+
+
+export interface SetAllowedPanelsResponse {
+}
+
+
+/**
  * Called when the end turn button was clicked
  */
 export interface InitializeSingletonRequest {

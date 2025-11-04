@@ -208,3 +208,11 @@ message ShowCaptureEffectRequest {
 
 message ShowCaptureEffectResponse {
 }
+
+// Request to set allowed panels and their order
+message SetAllowedPanelsRequest {
+    repeated string panel_ids = 1; // Panel IDs in order of importance
+}
+
+message SetAllowedPanelsResponse {
+}

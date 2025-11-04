@@ -24,6 +24,7 @@ import {
     ShowCaptureEffectRequest, ShowCaptureEffectResponse,
     SetUnitAtRequest, SetUnitAtResponse,
     RemoveUnitAtRequest, RemoveUnitAtResponse,
+    SetAllowedPanelsRequest, SetAllowedPanelsResponse,
 } from '../gen/wasmjs/weewar/v1/interfaces';
 import * as models from '../gen/wasmjs/weewar/v1/models';
 import { create } from '@bufbuild/protobuf';
@@ -557,6 +558,16 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     async setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse> {
         // Default implementation: no-op for desktop and grid layouts
         // Mobile layout overrides this to show compact card
+        return {};
+    }
+
+    /**
+     * Set allowed panels and their order (mobile-specific, no-op for desktop/grid)
+     */
+    async setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse> {
+        console.log("setAllowedPanels called on the browser:", request.panelIds);
+        // Default implementation: no-op for desktop and grid layouts
+        // Mobile layout overrides this to update bottom bar buttons
         return {};
     }
 

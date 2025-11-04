@@ -93,6 +93,9 @@ const (
 	// GameViewerPageShowCaptureEffectProcedure is the fully-qualified name of the GameViewerPage's
 	// ShowCaptureEffect RPC.
 	GameViewerPageShowCaptureEffectProcedure = "/weewar.v1.GameViewerPage/ShowCaptureEffect"
+	// GameViewerPageSetAllowedPanelsProcedure is the fully-qualified name of the GameViewerPage's
+	// SetAllowedPanels RPC.
+	GameViewerPageSetAllowedPanelsProcedure = "/weewar.v1.GameViewerPage/SetAllowedPanels"
 	// GameViewerPageLogMessageProcedure is the fully-qualified name of the GameViewerPage's LogMessage
 	// RPC.
 	GameViewerPageLogMessageProcedure = "/weewar.v1.GameViewerPage/LogMessage"
@@ -125,6 +128,8 @@ type GameViewerPageClient interface {
 	ShowAttackEffect(context.Context, *connect.Request[models.ShowAttackEffectRequest]) (*connect.Response[models.ShowAttackEffectResponse], error)
 	ShowHealEffect(context.Context, *connect.Request[models.ShowHealEffectRequest]) (*connect.Response[models.ShowHealEffectResponse], error)
 	ShowCaptureEffect(context.Context, *connect.Request[models.ShowCaptureEffectRequest]) (*connect.Response[models.ShowCaptureEffectResponse], error)
+	// Panel visibility and ordering
+	SetAllowedPanels(context.Context, *connect.Request[models.SetAllowedPanelsRequest]) (*connect.Response[models.SetAllowedPanelsResponse], error)
 	// Utility methods
 	LogMessage(context.Context, *connect.Request[models.LogMessageRequest]) (*connect.Response[models.LogMessageResponse], error)
 }
@@ -260,6 +265,12 @@ func NewGameViewerPageClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(gameViewerPageMethods.ByName("ShowCaptureEffect")),
 			connect.WithClientOptions(opts...),
 		),
+		setAllowedPanels: connect.NewClient[models.SetAllowedPanelsRequest, models.SetAllowedPanelsResponse](
+			httpClient,
+			baseURL+GameViewerPageSetAllowedPanelsProcedure,
+			connect.WithSchema(gameViewerPageMethods.ByName("SetAllowedPanels")),
+			connect.WithClientOptions(opts...),
+		),
 		logMessage: connect.NewClient[models.LogMessageRequest, models.LogMessageResponse](
 			httpClient,
 			baseURL+GameViewerPageLogMessageProcedure,
@@ -291,6 +302,7 @@ type gameViewerPageClient struct {
 	showAttackEffect             *connect.Client[models.ShowAttackEffectRequest, models.ShowAttackEffectResponse]
 	showHealEffect               *connect.Client[models.ShowHealEffectRequest, models.ShowHealEffectResponse]
 	showCaptureEffect            *connect.Client[models.ShowCaptureEffectRequest, models.ShowCaptureEffectResponse]
+	setAllowedPanels             *connect.Client[models.SetAllowedPanelsRequest, models.SetAllowedPanelsResponse]
 	logMessage                   *connect.Client[models.LogMessageRequest, models.LogMessageResponse]
 }
 
@@ -394,6 +406,11 @@ func (c *gameViewerPageClient) ShowCaptureEffect(ctx context.Context, req *conne
 	return c.showCaptureEffect.CallUnary(ctx, req)
 }
 
+// SetAllowedPanels calls weewar.v1.GameViewerPage.SetAllowedPanels.
+func (c *gameViewerPageClient) SetAllowedPanels(ctx context.Context, req *connect.Request[models.SetAllowedPanelsRequest]) (*connect.Response[models.SetAllowedPanelsResponse], error) {
+	return c.setAllowedPanels.CallUnary(ctx, req)
+}
+
 // LogMessage calls weewar.v1.GameViewerPage.LogMessage.
 func (c *gameViewerPageClient) LogMessage(ctx context.Context, req *connect.Request[models.LogMessageRequest]) (*connect.Response[models.LogMessageResponse], error) {
 	return c.logMessage.CallUnary(ctx, req)
@@ -426,6 +443,8 @@ type GameViewerPageHandler interface {
 	ShowAttackEffect(context.Context, *connect.Request[models.ShowAttackEffectRequest]) (*connect.Response[models.ShowAttackEffectResponse], error)
 	ShowHealEffect(context.Context, *connect.Request[models.ShowHealEffectRequest]) (*connect.Response[models.ShowHealEffectResponse], error)
 	ShowCaptureEffect(context.Context, *connect.Request[models.ShowCaptureEffectRequest]) (*connect.Response[models.ShowCaptureEffectResponse], error)
+	// Panel visibility and ordering
+	SetAllowedPanels(context.Context, *connect.Request[models.SetAllowedPanelsRequest]) (*connect.Response[models.SetAllowedPanelsResponse], error)
 	// Utility methods
 	LogMessage(context.Context, *connect.Request[models.LogMessageRequest]) (*connect.Response[models.LogMessageResponse], error)
 }
@@ -557,6 +576,12 @@ func NewGameViewerPageHandler(svc GameViewerPageHandler, opts ...connect.Handler
 		connect.WithSchema(gameViewerPageMethods.ByName("ShowCaptureEffect")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gameViewerPageSetAllowedPanelsHandler := connect.NewUnaryHandler(
+		GameViewerPageSetAllowedPanelsProcedure,
+		svc.SetAllowedPanels,
+		connect.WithSchema(gameViewerPageMethods.ByName("SetAllowedPanels")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gameViewerPageLogMessageHandler := connect.NewUnaryHandler(
 		GameViewerPageLogMessageProcedure,
 		svc.LogMessage,
@@ -605,6 +630,8 @@ func NewGameViewerPageHandler(svc GameViewerPageHandler, opts ...connect.Handler
 			gameViewerPageShowHealEffectHandler.ServeHTTP(w, r)
 		case GameViewerPageShowCaptureEffectProcedure:
 			gameViewerPageShowCaptureEffectHandler.ServeHTTP(w, r)
+		case GameViewerPageSetAllowedPanelsProcedure:
+			gameViewerPageSetAllowedPanelsHandler.ServeHTTP(w, r)
 		case GameViewerPageLogMessageProcedure:
 			gameViewerPageLogMessageHandler.ServeHTTP(w, r)
 		default:
@@ -694,6 +721,10 @@ func (UnimplementedGameViewerPageHandler) ShowHealEffect(context.Context, *conne
 
 func (UnimplementedGameViewerPageHandler) ShowCaptureEffect(context.Context, *connect.Request[models.ShowCaptureEffectRequest]) (*connect.Response[models.ShowCaptureEffectResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewerPage.ShowCaptureEffect is not implemented"))
+}
+
+func (UnimplementedGameViewerPageHandler) SetAllowedPanels(context.Context, *connect.Request[models.SetAllowedPanelsRequest]) (*connect.Response[models.SetAllowedPanelsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewerPage.SetAllowedPanels is not implemented"))
 }
 
 func (UnimplementedGameViewerPageHandler) LogMessage(context.Context, *connect.Request[models.LogMessageRequest]) (*connect.Response[models.LogMessageResponse], error) {

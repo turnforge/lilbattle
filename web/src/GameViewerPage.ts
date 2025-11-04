@@ -9,6 +9,7 @@ import { PhaserGameScene } from './phaser/PhaserGameScene';
 import { Unit, Tile, World } from './World';
 import {
     GameState as ProtoGameState,
+    SetAllowedPanelsRequest, SetAllowedPanelsResponse,
     SetGameStateRequest, SetGameStateResponse,
     SetContentRequest, SetContentResponse,
 	  LogMessageRequest, LogMessageResponse,
@@ -1009,6 +1010,13 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     async setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse> {
         // Default implementation: no-op for desktop and grid layouts
         // Mobile layout overrides this to show compact card
+        return {};
+    }
+
+    async setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse> {
+        console.log("setAllowedPanels called on the browser:", request.panelIds);
+        // Default implementation: no-op for desktop and grid layouts
+        // Mobile layout overrides this to update bottom bar buttons
         return {};
     }
 }

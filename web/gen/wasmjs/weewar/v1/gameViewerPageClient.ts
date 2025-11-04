@@ -5,40 +5,42 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    SetUnitAtResponse,
-    UpdateGameStatusRequest,
-    SetTileAtResponse,
-    RemoveTileAtResponse,
-    ClearHighlightsResponse,
+    SetUnitAtRequest,
+    ShowHighlightsRequest,
+    ShowHighlightsResponse,
     ShowPathRequest,
+    ShowPathResponse,
+    MoveUnitResponse,
+    ShowCaptureEffectRequest,
+    ShowCaptureEffectResponse,
+    ShowBuildOptionsResponse,
+    UpdateGameStatusResponse,
+    SetTileAtRequest,
+    SetUnitAtResponse,
+    ClearHighlightsResponse,
+    ClearPathsRequest,
+    ShowHealEffectResponse,
+    SetAllowedPanelsRequest,
+    SetAllowedPanelsResponse,
+    SetContentResponse,
+    ShowBuildOptionsRequest,
+    SetTileAtResponse,
+    ClearHighlightsRequest,
+    ClearPathsResponse,
+    RemoveTileAtRequest,
+    RemoveUnitAtResponse,
+    MoveUnitRequest,
     ShowHealEffectRequest,
     LogMessageRequest,
-    ShowBuildOptionsResponse,
-    SetGameStateResponse,
-    ClearHighlightsRequest,
-    SetTileAtRequest,
-    RemoveUnitAtResponse,
-    ShowPathResponse,
-    ClearPathsRequest,
-    MoveUnitRequest,
-    ShowCaptureEffectResponse,
     LogMessageResponse,
     SetGameStateRequest,
-    ShowHighlightsRequest,
-    MoveUnitResponse,
     SetContentRequest,
-    ShowHighlightsResponse,
-    ClearPathsResponse,
-    ShowBuildOptionsRequest,
-    UpdateGameStatusResponse,
-    RemoveUnitAtRequest,
+    SetGameStateResponse,
+    RemoveTileAtResponse,
     ShowAttackEffectResponse,
-    ShowCaptureEffectRequest,
-    SetContentResponse,
-    SetUnitAtRequest,
-    RemoveTileAtRequest,
+    UpdateGameStatusRequest,
+    RemoveUnitAtRequest,
     ShowAttackEffectRequest,
-    ShowHealEffectResponse,
 } from './interfaces';
 /**
  * GameViewerPage service client interface
@@ -65,6 +67,7 @@ export interface GameViewerPageMethods {
 	showAttackEffect(request: ShowAttackEffectRequest): Promise<ShowAttackEffectResponse>;
 	showHealEffect(request: ShowHealEffectRequest): Promise<ShowHealEffectResponse>;
 	showCaptureEffect(request: ShowCaptureEffectRequest): Promise<ShowCaptureEffectResponse>;
+	setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse>;
 	logMessage(request: LogMessageRequest): Promise<LogMessageResponse>;
 }
 /**
@@ -131,6 +134,9 @@ export class GameViewerPageClient extends ServiceClient implements GameViewerPag
     }
     async showCaptureEffect(request: ShowCaptureEffectRequest): Promise<ShowCaptureEffectResponse> {
         return this.callMethod('gameViewerPage.showCaptureEffect', request);
+    }
+    async setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse> {
+        return this.callMethod('gameViewerPage.setAllowedPanels', request);
     }
     async logMessage(request: LogMessageRequest): Promise<LogMessageResponse> {
         return this.callMethod('gameViewerPage.logMessage', request);

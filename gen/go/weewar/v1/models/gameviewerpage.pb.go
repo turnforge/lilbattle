@@ -1926,6 +1926,87 @@ func (*ShowCaptureEffectResponse) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_gameviewerpage_proto_rawDescGZIP(), []int{38}
 }
 
+// Request to set allowed panels and their order
+type SetAllowedPanelsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PanelIds      []string               `protobuf:"bytes,1,rep,name=panel_ids,json=panelIds,proto3" json:"panel_ids,omitempty"` // Panel IDs in order of importance
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetAllowedPanelsRequest) Reset() {
+	*x = SetAllowedPanelsRequest{}
+	mi := &file_weewar_v1_models_gameviewerpage_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetAllowedPanelsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetAllowedPanelsRequest) ProtoMessage() {}
+
+func (x *SetAllowedPanelsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_models_gameviewerpage_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetAllowedPanelsRequest.ProtoReflect.Descriptor instead.
+func (*SetAllowedPanelsRequest) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_models_gameviewerpage_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *SetAllowedPanelsRequest) GetPanelIds() []string {
+	if x != nil {
+		return x.PanelIds
+	}
+	return nil
+}
+
+type SetAllowedPanelsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetAllowedPanelsResponse) Reset() {
+	*x = SetAllowedPanelsResponse{}
+	mi := &file_weewar_v1_models_gameviewerpage_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetAllowedPanelsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetAllowedPanelsResponse) ProtoMessage() {}
+
+func (x *SetAllowedPanelsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_models_gameviewerpage_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetAllowedPanelsResponse.ProtoReflect.Descriptor instead.
+func (*SetAllowedPanelsResponse) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_models_gameviewerpage_proto_rawDescGZIP(), []int{40}
+}
+
 var File_weewar_v1_models_gameviewerpage_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_models_gameviewerpage_proto_rawDesc = "" +
@@ -2028,7 +2109,10 @@ const file_weewar_v1_models_gameviewerpage_proto_rawDesc = "" +
 	"\x18ShowCaptureEffectRequest\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\"\x1b\n" +
-	"\x19ShowCaptureEffectResponseB\xb5\x01\n" +
+	"\x19ShowCaptureEffectResponse\"6\n" +
+	"\x17SetAllowedPanelsRequest\x12\x1b\n" +
+	"\tpanel_ids\x18\x01 \x03(\tR\bpanelIds\"\x1a\n" +
+	"\x18SetAllowedPanelsResponseB\xb5\x01\n" +
 	"\rcom.weewar.v1B\x13GameviewerpageProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
@@ -2044,7 +2128,7 @@ func file_weewar_v1_models_gameviewerpage_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_models_gameviewerpage_proto_rawDescData
 }
 
-var file_weewar_v1_models_gameviewerpage_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_weewar_v1_models_gameviewerpage_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_weewar_v1_models_gameviewerpage_proto_goTypes = []any{
 	(*EmptyRequest)(nil),              // 0: weewar.v1.EmptyRequest
 	(*EmptyResponse)(nil),             // 1: weewar.v1.EmptyResponse
@@ -2085,26 +2169,28 @@ var file_weewar_v1_models_gameviewerpage_proto_goTypes = []any{
 	(*ShowHealEffectResponse)(nil),    // 36: weewar.v1.ShowHealEffectResponse
 	(*ShowCaptureEffectRequest)(nil),  // 37: weewar.v1.ShowCaptureEffectRequest
 	(*ShowCaptureEffectResponse)(nil), // 38: weewar.v1.ShowCaptureEffectResponse
-	(*Game)(nil),                      // 39: weewar.v1.Game
-	(*GameState)(nil),                 // 40: weewar.v1.GameState
-	(*Tile)(nil),                      // 41: weewar.v1.Tile
-	(*Unit)(nil),                      // 42: weewar.v1.Unit
-	(*MoveUnitAction)(nil),            // 43: weewar.v1.MoveUnitAction
-	(*AttackUnitAction)(nil),          // 44: weewar.v1.AttackUnitAction
-	(*BuildUnitAction)(nil),           // 45: weewar.v1.BuildUnitAction
-	(*CaptureBuildingAction)(nil),     // 46: weewar.v1.CaptureBuildingAction
+	(*SetAllowedPanelsRequest)(nil),   // 39: weewar.v1.SetAllowedPanelsRequest
+	(*SetAllowedPanelsResponse)(nil),  // 40: weewar.v1.SetAllowedPanelsResponse
+	(*Game)(nil),                      // 41: weewar.v1.Game
+	(*GameState)(nil),                 // 42: weewar.v1.GameState
+	(*Tile)(nil),                      // 43: weewar.v1.Tile
+	(*Unit)(nil),                      // 44: weewar.v1.Unit
+	(*MoveUnitAction)(nil),            // 45: weewar.v1.MoveUnitAction
+	(*AttackUnitAction)(nil),          // 46: weewar.v1.AttackUnitAction
+	(*BuildUnitAction)(nil),           // 47: weewar.v1.BuildUnitAction
+	(*CaptureBuildingAction)(nil),     // 48: weewar.v1.CaptureBuildingAction
 }
 var file_weewar_v1_models_gameviewerpage_proto_depIdxs = []int32{
-	39, // 0: weewar.v1.SetGameStateRequest.game:type_name -> weewar.v1.Game
-	40, // 1: weewar.v1.SetGameStateRequest.state:type_name -> weewar.v1.GameState
-	41, // 2: weewar.v1.SetTileAtRequest.tile:type_name -> weewar.v1.Tile
-	42, // 3: weewar.v1.SetUnitAtRequest.unit:type_name -> weewar.v1.Unit
+	41, // 0: weewar.v1.SetGameStateRequest.game:type_name -> weewar.v1.Game
+	42, // 1: weewar.v1.SetGameStateRequest.state:type_name -> weewar.v1.GameState
+	43, // 2: weewar.v1.SetTileAtRequest.tile:type_name -> weewar.v1.Tile
+	44, // 3: weewar.v1.SetUnitAtRequest.unit:type_name -> weewar.v1.Unit
 	22, // 4: weewar.v1.ShowHighlightsRequest.highlights:type_name -> weewar.v1.HighlightSpec
-	43, // 5: weewar.v1.HighlightSpec.move:type_name -> weewar.v1.MoveUnitAction
-	44, // 6: weewar.v1.HighlightSpec.attack:type_name -> weewar.v1.AttackUnitAction
-	45, // 7: weewar.v1.HighlightSpec.build:type_name -> weewar.v1.BuildUnitAction
-	46, // 8: weewar.v1.HighlightSpec.capture:type_name -> weewar.v1.CaptureBuildingAction
-	42, // 9: weewar.v1.MoveUnitRequest.unit:type_name -> weewar.v1.Unit
+	45, // 5: weewar.v1.HighlightSpec.move:type_name -> weewar.v1.MoveUnitAction
+	46, // 6: weewar.v1.HighlightSpec.attack:type_name -> weewar.v1.AttackUnitAction
+	47, // 7: weewar.v1.HighlightSpec.build:type_name -> weewar.v1.BuildUnitAction
+	48, // 8: weewar.v1.HighlightSpec.capture:type_name -> weewar.v1.CaptureBuildingAction
+	44, // 9: weewar.v1.MoveUnitRequest.unit:type_name -> weewar.v1.Unit
 	31, // 10: weewar.v1.MoveUnitRequest.path:type_name -> weewar.v1.HexCoord
 	33, // 11: weewar.v1.ShowAttackEffectRequest.splash_targets:type_name -> weewar.v1.SplashTarget
 	12, // [12:12] is the sub-list for method output_type
@@ -2132,7 +2218,7 @@ func file_weewar_v1_models_gameviewerpage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_models_gameviewerpage_proto_rawDesc), len(file_weewar_v1_models_gameviewerpage_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   39,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

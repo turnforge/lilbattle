@@ -114,6 +114,11 @@ class GameViewerPageStub(object):
                 request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.FromString,
                 _registered_method=True)
+        self.SetAllowedPanels = channel.unary_unary(
+                '/weewar.v1.GameViewerPage/SetAllowedPanels',
+                request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsResponse.FromString,
+                _registered_method=True)
         self.LogMessage = channel.unary_unary(
                 '/weewar.v1.GameViewerPage/LogMessage',
                 request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.LogMessageRequest.SerializeToString,
@@ -249,6 +254,13 @@ class GameViewerPageServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetAllowedPanels(self, request, context):
+        """Panel visibility and ordering
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def LogMessage(self, request, context):
         """Utility methods
         """
@@ -358,6 +370,11 @@ def add_GameViewerPageServicer_to_server(servicer, server):
                     servicer.ShowCaptureEffect,
                     request_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.SerializeToString,
+            ),
+            'SetAllowedPanels': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetAllowedPanels,
+                    request_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsResponse.SerializeToString,
             ),
             'LogMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.LogMessage,
@@ -905,6 +922,33 @@ class GameViewerPage(object):
             '/weewar.v1.GameViewerPage/ShowCaptureEffect',
             weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectRequest.SerializeToString,
             weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.ShowCaptureEffectResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetAllowedPanels(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.GameViewerPage/SetAllowedPanels',
+            weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsRequest.SerializeToString,
+            weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetAllowedPanelsResponse.FromString,
             options,
             channel_credentials,
             insecure,

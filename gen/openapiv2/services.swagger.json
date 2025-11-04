@@ -2442,6 +2442,9 @@
       },
       "title": "Response of a turn option click"
     },
+    "v1SetAllowedPanelsResponse": {
+      "type": "object"
+    },
     "v1SetContentResponse": {
       "type": "object",
       "title": "Response from fetch"
