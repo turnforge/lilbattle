@@ -1,6 +1,7 @@
-{{ if or .Tile .Unit }}
-{{ $theme := .Theme }}
-<div class="flex items-center justify-start gap-4 h-full">
+<!-- CompactSummaryCard Template -->
+<div class="compact-summary-card h-full bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-start gap-4">
+  {{ if or .Tile .Unit }}
+  {{ $theme := .Theme }}
   {{ if .Tile }}
   {{ $terrainName := $theme.GetTerrainName .Tile.TileType }}
   {{ if $terrainName }}
@@ -52,5 +53,10 @@
   </div>
   {{ end }}
   {{ end }}
+  {{ else }}
+  <!-- Empty state when no tile or unit selected -->
+  <div class="text-sm text-gray-500 dark:text-gray-400">
+    Select a tile or unit
+  </div>
+  {{ end }}
 </div>
-{{ end }}
