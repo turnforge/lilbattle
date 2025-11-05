@@ -12,7 +12,7 @@ binlocal:
 	go build -ldflags "$(LDFLAGS)" -o ./bin/weewar ./main.go
 
 serve:
-	go run main.go
+	WEEWAR_ENV=dev go run main.go
 
 vars:
 	@echo "GO_ROOT=$(GO_ROOT)"

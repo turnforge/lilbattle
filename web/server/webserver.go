@@ -24,7 +24,11 @@ func (s *WebAppServer) Start(ctx context.Context, srvErr chan error, stopChan ch
 }
 
 func (s *WebAppServer) StartWithHandler(ctx context.Context, handler http.Handler, srvErr chan error, stopChan chan bool) error {
-	log.Println("Starting http web server on: ", s.Address)
+	if s.AllowLocalDev {
+		PrintStartupMessage(s.Address)
+	} else {
+		log.Println("Starting http web server on: ", s.Address)
+	}
 	// handler := otelhttp.NewHandler(mux, "gateway", otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string { return fmt.Sprintf("%s %s %s", operation, r.Method, r.URL.Path) }))
 	handler = withLogger(handler)
 	if s.AllowLocalDev {

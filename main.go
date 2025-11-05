@@ -81,7 +81,13 @@ func (b *Backend) SetupApp() *utils.App {
 	log.Println("Grpc, Address: ", grpcAddress)
 	log.Println("gateway, Address: ", gatewayAddress)
 	app.AddServer(&server.Server{Address: b.GrpcAddress})
-	app.AddServer(&web.WebAppServer{GrpcAddress: b.GrpcAddress, Address: b.GatewayAddress})
+
+	isDevMode := os.Getenv("WEEWAR_ENV") == "dev"
+	app.AddServer(&web.WebAppServer{
+		GrpcAddress:   b.GrpcAddress,
+		Address:       b.GatewayAddress,
+		AllowLocalDev: isDevMode,
+	})
 	b.App = app
 	return app
 }

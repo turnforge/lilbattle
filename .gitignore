@@ -5,3 +5,5 @@ logs
 dist
 node_modules
 storage
+.env
+.env.dev
