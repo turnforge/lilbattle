@@ -218,32 +218,15 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      * Set up the Phaser container element
      */
     private setupPhaserContainer(): void {
-        // First try to find the existing editor-canvas-container from the template
-        let phaserContainer = this.findElement('#editor-canvas-container');
+        // PhaserSceneView template creates the container with id="phaser-container"
+        // All sizing constraints are handled by the template
+        const phaserContainer = this.findElement('#phaser-container');
 
-        if (phaserContainer) {
-            // Rename the existing container to phaser-container for PhaserEditorScene
-            phaserContainer.id = 'phaser-container';
-            // Set container to be 100% of parent with no min-size to avoid circular growth
-            phaserContainer.style.width = '100%';
-            phaserContainer.style.height = '100%';
-            phaserContainer.style.position = 'relative';
-            phaserContainer.style.overflow = 'hidden';
-            this.log('Using existing editor-canvas-container as phaser-container');
-        } else {
-            // Fallback: create new container if template container not found
-            phaserContainer = document.createElement('div');
-            phaserContainer.id = 'phaser-container';
-            // Set container to be 100% of parent with no min-size to avoid circular growth
-            phaserContainer.style.width = '100%';
-            phaserContainer.style.height = '100%';
-            phaserContainer.style.position = 'relative';
-            phaserContainer.style.overflow = 'hidden';
-            this.rootElement.appendChild(phaserContainer);
-            this.log('Created new phaser-container');
+        if (!phaserContainer) {
+            throw new Error('Phaser container #phaser-container not found - ensure PhaserSceneView template is included');
         }
 
-        this.log('Phaser container setup complete');
+        this.log('Phaser container found, sizing handled by PhaserSceneView template');
     }
 
     /**

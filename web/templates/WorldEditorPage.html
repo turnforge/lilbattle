@@ -1,5 +1,6 @@
 <!-- templates/WorldEditorPage.html -->
 {{# include "BasePage.html" #}}
+{{# include "panels/PhaserPanel.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
 <!-- Save Button -->
@@ -132,7 +133,7 @@
                 {{# include "panels/ToolsPanel.html" #}}
             </div>
             <div id="canvas-panel-template" style="height: 100%;">
-                {{# include "panels/PhaserPanel.html" #}}
+              {{ template "PhaserPanel" . }}
             </div>
             <div id="console-panel-template">
                 {{# include "panels/ConsolePanel.html" #}}

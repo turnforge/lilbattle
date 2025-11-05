@@ -584,11 +584,31 @@ await this.scene.performLocalInit();
 await this.scene.activate();
 ```
 
+**Template Convention (2025-01-05):**
+All templates use `{{ define }}` blocks instead of root-level HTML to avoid leaking globals:
+
+```html
+{{# include "components/PhaserSceneView.html" #}}
+{{# include "panels/MyToolbar.html" #}}
+
+{{/* Override blocks for regions */}}
+{{ define "PhaserSceneView_North" }}
+  <div id="phaser-scene-view-north" class="flex-shrink-0" style="flex-shrink: 0">
+    {{ template "MyToolbar" }}
+  </div>
+{{ end }}
+
+{{/* Wrap in named template for reuse */}}
+{{ define "MyPanel" }}
+  {{ template "PhaserSceneView" (dict "SceneId" "my-scene" "FlexMode" "fill") }}
+{{ end }}
+```
+
 **Pages Migrated:**
-- WorldViewerPage (simple scene-only layout)
+- WorldViewerPage ✅ (scene only, FlexMode="fill")
+- WorldEditorPage ✅ (toolbar + scene, FlexMode="fixed")
 
 **Pages To Migrate:**
-- WorldEditorPage (toolbar + scene)
 - GameViewerPageDockView (optional controls + scene)
 - GameViewerPageMobile (header + scene + action bar)
 - StartGamePage (preview scene)

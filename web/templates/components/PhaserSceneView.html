@@ -55,10 +55,6 @@ Example usage:
 {{ $sceneId := or .SceneId "phaser-scene-container" }}
 {{ $wrapperClass := or .WrapperClass "" }}
 {{ $centerClass := or .CenterClass "" }}
-{{ $hasNorth := .NorthContent }}
-{{ $hasSouth := .SouthContent }}
-{{ $hasEast := .EastContent }}
-{{ $hasWest := .WestContent }}
 
 {{/* FlexMode determines how the wrapper behaves in a flex parent:
      "fill" (default) - takes remaining space (flex-1 + min-height: 0)
@@ -77,28 +73,12 @@ Example usage:
   {{ end }}
 >
   <!-- North Region (Toolbar/Header) -->
-  {{ if $hasNorth }}
-  <div
-    id="phaser-scene-view-north"
-    class="flex-shrink-0"
-    style="flex-shrink: 0"
-  >
-    {{ .NorthContent }}
-  </div>
-  {{ end }}
+  {{ block "PhaserSceneView_North" . }}{{ end }}
 
   <!-- Middle Row: West, Center (Scene), East -->
   <div class="flex-1 flex flex-row" style="min-height: 0; overflow: hidden">
     <!-- West Region (Left Sidebar) -->
-    {{ if $hasWest }}
-    <div
-      id="phaser-scene-view-west"
-      class="flex-shrink-0"
-      style="flex-shrink: 0; overflow-y: auto"
-    >
-      {{ .WestContent }}
-    </div>
-    {{ end }}
+    {{ block "PhaserSceneView_West" . }}{{ end }}
 
     <!-- Center Region (Phaser Scene) - takes remaining space -->
     <!-- CRITICAL: flex-1 takes remaining space, min-width/height: 0 prevents content from pushing parent -->
@@ -118,26 +98,10 @@ Example usage:
     </div>
 
     <!-- East Region (Right Sidebar) -->
-    {{ if $hasEast }}
-    <div
-      id="phaser-scene-view-east"
-      class="flex-shrink-0"
-      style="flex-shrink: 0; overflow-y: auto"
-    >
-      {{ .EastContent }}
-    </div>
-    {{ end }}
+    {{ block "PhaserSceneView_East" . }}{{ end }}
   </div>
 
   <!-- South Region (Footer/Bottom Bar) -->
-  {{ if $hasSouth }}
-  <div
-    id="phaser-scene-view-south"
-    class="flex-shrink-0"
-    style="flex-shrink: 0"
-  >
-    {{ .SouthContent }}
-  </div>
-  {{ end }}
+  {{ block "PhaserSceneView_South" . }}{{ end }}
 </div>
 {{ end }}

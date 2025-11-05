@@ -65,12 +65,13 @@
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">World Preview</h2>
                     </div>
                     <!-- Phaser Scene using PhaserSceneView - takes remaining space -->
-                    {{/* Use PhaserSceneView with no regions - FlexMode="fill" handles flex-1 + min-height:0 */}}
+                    {{/* Use PhaserSceneView with no regions (scene only) - FlexMode="fill" handles flex-1 + min-height:0 */}}
                     {{ template "PhaserSceneView" ( dict
                       "SceneId" "world-viewer-scene"
                       "CenterClass" "bg-gray-900"
                       "FlexMode" "fill" )
                     }}
+                    {{/* Note: No PhaserSceneView_North/South/East/West blocks defined = scene only layout */}}
                 </div>
             </div>
 

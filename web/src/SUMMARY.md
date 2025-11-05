@@ -65,11 +65,19 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 - Eliminates wrapper div boilerplate in pages
 
 **Migrated Pages:**
-- WorldViewerPage ✅
+- WorldViewerPage ✅ (scene only)
+- WorldEditorPage ✅ (toolbar + scene, FlexMode="fixed")
+
+**TypeScript Integration:**
+- PhaserEditorComponent simplified - container ID no longer renamed
+- All scene types (PhaserWorldScene, PhaserEditorScene, PhaserGameScene) work unchanged
+- Container ID from template SceneId parameter used directly
 
 **Documentation:**
-- `/web/templates/components/PhaserSceneView_README.md` - Component usage guide
+- `/web/templates/components/PhaserSceneView_README.md` - Component usage guide with block inheritance pattern
+- `/web/templates/components/PhaserSceneView_INTEGRATION.md` - Migration guide with template conventions
 - `/web/PHASER_SIZING_FIX_SUMMARY.md` - Complete technical summary
+- `/web/WORLDEDITORPAGE_MIGRATION.md` - WorldEditorPage migration record
 
 ## Recent Session Work (2025-01-24)
 

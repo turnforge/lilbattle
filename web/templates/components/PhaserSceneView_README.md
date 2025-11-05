@@ -44,50 +44,86 @@ Parent resizes → Canvas resizes → Canvas pushes parent → Parent grows → 
 
 ## Usage
 
-### Basic Usage (Scene Only)
+### Pattern: Block Inheritance (Recommended)
 
-Perfect for simple viewers with no controls:
+Use Go template block inheritance to extend PhaserSceneView regions. This is the cleanest approach:
 
+**Step 1: Include base component and content templates**
 ```html
-{{ template "components/PhaserSceneView.html" dict
-  "SceneId" "my-scene"
-  "CenterClass" "bg-gray-900"
-}}
+{{# include "components/PhaserSceneView.html" #}}
+{{# include "panels/MyToolbar.html" #}}
 ```
 
-### With North Toolbar
+**Step 2: Override blocks for regions you want to customize**
+```html
+{{ define "PhaserSceneView_North" }}
+<div id="phaser-scene-view-north" class="flex-shrink-0" style="flex-shrink: 0">
+  {{ template "MyToolbar" }}
+</div>
+{{ end }}
+```
 
-Common pattern for editors with top controls:
+**Step 3: Call PhaserSceneView with parameters**
+```html
+{{ define "MyPanel" }}
+  {{ template "PhaserSceneView" (dict
+    "SceneId" "my-scene"
+    "CenterClass" "bg-gray-900"
+    "FlexMode" "fill" )
+  }}
+{{ end }}
+```
+
+### Example: WorldEditorPage Pattern
+
+This is the complete pattern used in WorldEditorPage:
 
 ```html
-{{ define "MyToolbar" }}
-  <div class="p-2 bg-white dark:bg-gray-800">
-    <button>Tool 1</button>
-    <button>Tool 2</button>
-  </div>
+<!-- panels/PhaserPanel.html -->
+{{# include "components/PhaserSceneView.html" #}}
+{{# include "panels/WorldEditorToolbar.html" #}}
+
+{{/* Override North region with toolbar */}}
+{{ define "PhaserSceneView_North" }}
+<div id="phaser-scene-view-north" class="flex-shrink-0" style="flex-shrink: 0">
+  {{ template "WorldEditorToolbar" }}
+</div>
 {{ end }}
 
-{{ template "components/PhaserSceneView.html" dict
-  "NorthContent" (template "MyToolbar" .)
-  "SceneId" "my-scene"
-  "CenterClass" "bg-gray-100 dark:bg-gray-900 p-2"
-}}
+{{/* Wrap in named template for reuse */}}
+{{ define "PhaserPanel" }}
+  {{ template "PhaserSceneView" (dict
+    "SceneId" "phaser-container"
+    "CenterClass" "bg-gray-100 dark:bg-gray-900 p-2"
+    "FlexMode" "fixed" )
+  }}
+{{ end }}
 ```
 
-### Full BorderLayout
+Then from WorldEditorPage:
+```html
+{{# include "panels/PhaserPanel.html" #}}
 
-All regions can be used simultaneously:
+<div id="canvas-panel-template" style="height: 100%;">
+  {{ template "PhaserPanel" . }}
+</div>
+```
+
+### Scene Only (No Regions)
+
+For simple viewers, just call PhaserSceneView without defining any blocks:
 
 ```html
-{{ template "components/PhaserSceneView.html" dict
-  "NorthContent" (template "TopToolbar" .)
-  "SouthContent" (template "BottomBar" .)
-  "WestContent" (template "LeftSidebar" .)
-  "EastContent" (template "RightSidebar" .)
-  "SceneId" "my-scene"
+{{# include "components/PhaserSceneView.html" #}}
+
+{{ template "PhaserSceneView" (dict
+  "SceneId" "world-viewer-scene"
   "CenterClass" "bg-gray-900"
+  "FlexMode" "fill" )
 }}
 ```
+
+No block overrides = scene only layout.
 
 ## Parameters
 

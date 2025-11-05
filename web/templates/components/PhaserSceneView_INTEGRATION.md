@@ -25,6 +25,65 @@ All scene classes work with `PhaserSceneView.html` since they all extend `Phaser
 
 ## Migration Pattern
 
+### Template Convention: Definitions Over Globals
+
+**Convention**: Use `{{ define }}` blocks instead of root-level HTML to avoid leaking globals when including templates.
+
+**Structure:**
+```html
+<!-- Good: Everything in define blocks -->
+{{ define "MyComponent" }}
+  <div>Component content</div>
+{{ end }}
+
+<!-- Bad: Root-level HTML leaks when included -->
+<div>This is at root level</div>
+```
+
+**Pattern for PhaserSceneView Integration:**
+
+1. **Content templates** (e.g., `WorldEditorToolbar.html`):
+   ```html
+   {{ define "WorldEditorToolbar" }}
+     <div class="...">Toolbar content</div>
+   {{ end }}
+   ```
+
+2. **Panel templates** (e.g., `PhaserPanel.html`):
+   ```html
+   {{# include "components/PhaserSceneView.html" #}}
+   {{# include "panels/WorldEditorToolbar.html" #}}
+
+   {{ define "PhaserSceneView_North" }}
+   <div id="phaser-scene-view-north" class="flex-shrink-0" style="flex-shrink: 0">
+     {{ template "WorldEditorToolbar" }}
+   </div>
+   {{ end }}
+
+   {{ define "PhaserPanel" }}
+     {{ template "PhaserSceneView" (dict
+       "SceneId" "phaser-container"
+       "CenterClass" "bg-gray-100 dark:bg-gray-900 p-2"
+       "FlexMode" "fixed" )
+     }}
+   {{ end }}
+   ```
+
+3. **Page templates** (e.g., `WorldEditorPage.html`):
+   ```html
+   {{# include "panels/PhaserPanel.html" #}}
+
+   <div id="canvas-panel-template">
+     {{ template "PhaserPanel" . }}
+   </div>
+   ```
+
+**Benefits:**
+- ✅ No global HTML leakage
+- ✅ Clear separation: definitions vs. usage
+- ✅ Reusable named templates
+- ✅ Predictable include behavior
+
 ### TypeScript Integration (Common for All Scene Types)
 
 All scene classes share the same initialization pattern:
