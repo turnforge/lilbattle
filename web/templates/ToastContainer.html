@@ -1,7 +1,19 @@
 <!-- templates/ToastContainer.html -->
 
 {{ define "ToastContainer" }}
-<div class="fixed bottom-4 left-4 z-50 flex flex-col space-y-2 max-w-xs sm:max-w-sm w-full">
+<style>
+    /* Toast positioning: higher on mobile to avoid bottom bars */
+    #toast-container {
+        bottom: 1rem; /* 16px - desktop default */
+    }
+    @media (max-width: 768px) {
+        #toast-container {
+            bottom: 5rem !important; /* 80px - mobile: clear 64px bottom bar */
+        }
+    }
+</style>
+<!-- Toast container -->
+<div id="toast-container" class="fixed left-4 z-50 flex flex-col space-y-2 max-w-xs sm:max-w-sm w-full">
     <!-- Toast notifications will be dynamically added here via JavaScript -->
     <!-- Sample toast for reference (will be hidden initially) -->
     <div id="toast-template" class="hidden transform transition-all duration-300 ease-out scale-95 opacity-0">
