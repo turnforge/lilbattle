@@ -1012,7 +1012,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                 return;
             }
 
-            // Chain tweens for smooth movement along path
+            // Chain tweens for smooth movement along path with pauses at each tile
             let currentIndex = 1;
 
             const animateNextSegment = () => {
@@ -1030,6 +1030,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                     return;
                 }
 
+                // Animate movement to next tile
                 this.tweens.add({
                     targets: sprite,
                     x: pixelPath[currentIndex].x,
@@ -1037,8 +1038,17 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
                     duration: AnimationConfig.MOVE_DURATION_PER_HEX,
                     ease: 'Cubic.easeInOut',
                     onComplete: () => {
-                        currentIndex++;
-                        animateNextSegment();
+                        // Add pause at this tile before moving to next segment
+                        if (AnimationConfig.MOVE_PAUSE_PER_HEX > 0) {
+                            this.time.delayedCall(AnimationConfig.MOVE_PAUSE_PER_HEX, () => {
+                                currentIndex++;
+                                animateNextSegment();
+                            });
+                        } else {
+                            // No pause - continue immediately
+                            currentIndex++;
+                            animateNextSegment();
+                        }
                     }
                 });
             };

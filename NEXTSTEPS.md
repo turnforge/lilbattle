@@ -121,6 +121,9 @@
 - [x] Unit appear animation: scale bounce (0.5 → 1.5 → 1) instead of fade-in
 - [x] Exhausted units/tiles gray highlight system (depth 13, above all other elements)
 - [x] Selective highlight clearing to preserve exhausted state during interactions
+- [x] Path-following movement animation with pauses at each tile (2025-01-05)
+- [x] Full pathfinding route extraction from MoveUnitAction.reconstructed_path (2025-01-05)
+- [x] Segment-by-segment animation with configurable pause timing (2025-01-05)
 
 **Remaining Tasks**:
 - [ ] Add loading states during move processing

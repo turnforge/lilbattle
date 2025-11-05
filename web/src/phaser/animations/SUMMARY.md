@@ -38,6 +38,7 @@ showExplosion(q, r, intensity): Promise<void>
 Central configuration for all animation timings:
 
 - `MOVE_DURATION_PER_HEX`: Time to move one hex (200ms)
+- `MOVE_PAUSE_PER_HEX`: Pause at each tile during movement (100ms)
 - `ATTACK_FLASH_DURATION`: Attacker flash duration (150ms)
 - `PROJECTILE_DURATION`: Projectile flight time (300ms)
 - `EXPLOSION_DURATION`: Explosion effect duration (300ms)
@@ -139,12 +140,24 @@ await capture.play();
 - `create()`: Creates particle texture for effects
 
 **New methods**:
-- `moveUnit()`: Animates unit along hex path
+- `moveUnit()`: Animates unit along hex path with pauses at each tile
 - `showAttackEffect()`: Full attack sequence (flash → projectile → explosion)
 - `showHealEffect()`: Healing bubble animation
 - `showCaptureEffect()`: Capture pulse animation
 - `showExplosion()`: Standalone explosion utility
 - `createParticleTexture()`: Generates white circle texture for particles
+
+### Movement Animation Details
+
+The `moveUnit()` method implements pathfinding-aware movement:
+
+1. **Full path support**: Accepts array of hex coordinates representing the complete pathfinding route
+2. **Segment-by-segment animation**: Moves through each waypoint sequentially
+3. **Pause at tiles**: Brief pause at each tile for board game feel (configurable via `MOVE_PAUSE_PER_HEX`)
+4. **Smooth transitions**: Uses cubic easing between tiles
+5. **Fallback**: If path has only 2 points, animates direct movement
+
+**Path extraction**: Presenter extracts the full path from `MoveUnitAction.reconstructed_path` which contains all waypoints calculated by the pathfinding algorithm.
 
 ### Presenter Integration (TODO)
 
