@@ -1,6 +1,5 @@
 <!-- templates/GameViewerPage.html -->
 {{# include "BasePage.html" #}}
-{{# include "BasePage.html" #}}
 {{# include "panels/GameLogPanel.html" #}}
 {{# include "TerrainStatsPanel.html" #}}
 {{# include "UnitStatsPanel.html" #}}
@@ -185,7 +184,7 @@
 
         <!-- Hidden Panel Templates for Dockview -->
         <div style="display: none;">
-            <div id="main-game-panel-template"> {{ template "GameViewerPageScenePanel" }} </div>
+            <div id="main-game-panel-template" style="height: 100%;"> {{ template "GameViewerPageScenePanel" }} </div>
             {{ template "TerrainStatsPanel" }}
             {{ template "UnitStatsPanel" }}
             {{ template "TurnOptionsPanel" }}
