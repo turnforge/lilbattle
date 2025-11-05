@@ -1,5 +1,6 @@
 <!-- templates/StartGamePage.html -->
 {{# include "BasePage.html" #}}
+{{# include "components/PhaserSceneView.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
 <!-- Back to World Button -->
@@ -56,10 +57,14 @@
                         </h2>
                     </div>
                     {{ if and .World .World.Name }}
-                    <!-- Phaser World Viewer Container: Fixed height on mobile, responsive on desktop -->
-                    <div id="phaser-viewer-container" class="w-full flex-1 min-h-0 overflow-hidden">
-                        <!-- Phaser canvas will be inserted here and sized to 100% width/height -->
-                    </div>
+                    <!-- Phaser Scene using PhaserSceneView - takes remaining space -->
+                    {{/* Use PhaserSceneView with no regions (scene only) - FlexMode="fill" handles flex-1 + min-height:0 */}}
+                    {{ template "PhaserSceneView" ( dict
+                      "SceneId" "start-game-scene"
+                      "CenterClass" "bg-gray-900"
+                      "FlexMode" "fill" )
+                    }}
+                    {{/* Note: No PhaserSceneView_North/South/East/West blocks defined = scene only layout */}}
                     {{ else }}
                     <!-- No World Selected - This should not happen as backend redirects to /worlds/select -->
                     <div class="flex items-center justify-center flex-1">

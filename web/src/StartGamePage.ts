@@ -104,8 +104,8 @@ class StartGamePage extends BasePage implements LCMComponent {
      * Create PhaserWorldScene component instance
      */
     private createComponents(): void {
-        // Create PhaserWorldScene component for preview
-        const phaserContainer = this.ensureElement('#phaser-viewer-container', 'phaser-viewer-container');
+        // Create PhaserWorldScene component for preview - uses PhaserSceneView template with SceneId: "start-game-scene"
+        const phaserContainer = this.ensureElement('#start-game-scene', 'start-game-scene');
         this.worldScene = new PhaserWorldScene(phaserContainer, this.eventBus, true);
     }
 
