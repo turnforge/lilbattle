@@ -53,6 +53,7 @@ export const EditorEventTypes = {
     
     // Reference image events (PhaserEditorComponent → ReferenceImagePanel)
     REFERENCE_SCALE_CHANGED: 'reference-scale-changed',
+    REFERENCE_POSITION_CHANGED: 'reference-position-changed',
     REFERENCE_STATE_CHANGED: 'reference-state-changed',
     REFERENCE_ALPHA_CHANGED: 'reference-alpha-changed',
     REFERENCE_MODE_CHANGED: 'reference-mode-changed',

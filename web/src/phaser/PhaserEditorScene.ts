@@ -251,6 +251,7 @@ export class PhaserEditorScene extends PhaserWorldScene {
     private onTileClickCallback: ((q: number, r: number) => void) | null = null;
     private onWorldChangeCallback: (() => void) | null = null;
     private onReferenceScaleChangeCallback: ((x: number, y: number) => void) | null = null;
+    private onReferencePositionChangeCallback: ((x: number, y: number) => void) | null = null;
 
     /**
      * Set terrain type for painting (compatibility with PhaserEditorComponent)
@@ -299,6 +300,27 @@ export class PhaserEditorScene extends PhaserWorldScene {
      */
     public onReferenceScaleChange(callback: (x: number, y: number) => void): void {
         this.onReferenceScaleChangeCallback = callback;
+
+        // Subscribe to scene events and forward to callback
+        this.events.on('referenceScaleChanged', (data: { x: number; y: number }) => {
+            if (this.onReferenceScaleChangeCallback) {
+                this.onReferenceScaleChangeCallback(data.x, data.y);
+            }
+        });
+    }
+
+    /**
+     * Set callback for reference position change events
+     */
+    public onReferencePositionChange(callback: (x: number, y: number) => void): void {
+        this.onReferencePositionChangeCallback = callback;
+
+        // Subscribe to scene events and forward to callback
+        this.events.on('referencePositionChanged', (data: { x: number; y: number }) => {
+            if (this.onReferencePositionChangeCallback) {
+                this.onReferencePositionChangeCallback(data.x, data.y);
+            }
+        });
     }
 
     /**

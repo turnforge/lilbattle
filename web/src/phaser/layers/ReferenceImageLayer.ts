@@ -78,6 +78,10 @@ export class ReferenceImageLayer extends BaseLayer {
         const newY = this.dragStartImageY + (context.worldY - this.dragStartY);
 
         this.setReferencePosition(newX, newY);
+
+        // Emit position change event for UI sync
+        this.scene.events.emit('referencePositionChanged', { x: newX, y: newY });
+
         return true;
     }
 
@@ -109,6 +113,10 @@ export class ReferenceImageLayer extends BaseLayer {
         // Apply new scale and position
         this.setReferenceScale(newScaleX, newScaleY);
         this.setReferencePosition(newPosX, newPosY);
+
+        // Emit events for UI sync
+        this.scene.events.emit('referenceScaleChanged', { x: newScaleX, y: newScaleY });
+        this.scene.events.emit('referencePositionChanged', { x: newPosX, y: newPosY });
 
         return true; // We handled the scroll
     }

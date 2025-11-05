@@ -319,7 +319,12 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
         this.editorScene.onReferenceScaleChange((x: number, y: number) => {
             this.emit(EditorEventTypes.REFERENCE_SCALE_CHANGED, { scaleX: x, scaleY: y }, this, this);
         });
-        
+
+        // Handle reference position changes
+        this.editorScene.onReferencePositionChange((x: number, y: number) => {
+            this.emit(EditorEventTypes.REFERENCE_POSITION_CHANGED, { x, y }, this, this);
+        });
+
         this.log('Phaser event handlers setup complete');
     }
     

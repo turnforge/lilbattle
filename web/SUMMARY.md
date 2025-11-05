@@ -282,9 +282,28 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - **Conditional Loading**: Only loads world data and Phaser components when worldId present
 - **Safe Activation**: Component initialization checks prevent crashes
 
+### Recent Achievements (Session 2025-01-05)
+
+#### Reference Image Layer System for World Editor (Complete)
+- **Layer System Integration**: Integrated ReferenceImageLayer into PhaserEditorScene for proper overlay/background handling
+- **Independent Drag Handling**: Overlay mode allows dragging reference image without moving tiles or camera
+- **Independent Scroll Handling**: Overlay mode allows scaling reference image with mouse wheel without zooming camera
+- **Event-Driven UI Sync**: Position and scale changes emit events to keep UI controls in sync during drag/scroll
+- **Circular Reference Prevention**: Value comparison guards prevent infinite update loops between layer and UI
+- **LayerManager Extensions**: Added processClick(), processDrag(), processScroll() for unified event routing
+- **Background vs Overlay Modes**: Background (depth -1) moves with world, Overlay (depth 1000) interactive and independent
+- **World Coordinate Persistence**: Reference image stays in world coordinates when switching modes (no position jumping)
+
+**Architecture**:
+- ReferenceImageLayer implements full Layer interface with hitTest(), handleClick(), handleDrag(), handleScroll()
+- PhaserWorldScene routes pointer events through LayerManager before camera operations
+- Layers can block camera pan/zoom by returning true from event handlers
+- Scene events bridge layer changes to EventBus for UI synchronization
+- Guard conditions in ReferenceImagePanel prevent circular updates from programmatic input.value changes
+
 ## Status
-**Current Version**: 8.8 (Animation Framework)
-**Status**: Production-ready with animation system ready for presenter integration
+**Current Version**: 8.9 (Reference Image Layer System)
+**Status**: Production-ready with complete world editor reference image overlay system
 **Build Status**: Clean compilation with all TypeScript errors resolved
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds
-**Architecture**: Flexible AssetProvider system with presenter-driven animation framework
+**Architecture**: Flexible AssetProvider system with presenter-driven animation framework and layer-based interaction system

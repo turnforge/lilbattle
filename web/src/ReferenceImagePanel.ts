@@ -1,7 +1,7 @@
 import { LCMComponent } from '../lib/LCMComponent';
 import { BaseComponent } from '../lib/Component';
 import { EventBus } from '../lib/EventBus';
-import { EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload, ReferenceScaleChangedPayload, ReferenceStateChangedPayload, ReferenceImageLoadedPayload } from './events';
+import { EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload, ReferenceScaleChangedPayload, ReferencePositionChangedPayload, ReferenceStateChangedPayload, ReferenceImageLoadedPayload } from './events';
 
 /**
  * ReferenceImagePanel - Demonstrates new lifecycle architecture
@@ -117,10 +117,13 @@ export class ReferenceImagePanel extends BaseComponent {
     private subscribeToReferenceEvents(): void {
         // Subscribe to scale changes from direct Phaser interaction
         this.addSubscription(EditorEventTypes.REFERENCE_SCALE_CHANGED, this);
-        
+
+        // Subscribe to position changes from direct Phaser interaction
+        this.addSubscription(EditorEventTypes.REFERENCE_POSITION_CHANGED, this);
+
         // Subscribe to state changes from direct Phaser interaction
         this.addSubscription(EditorEventTypes.REFERENCE_STATE_CHANGED, this);
-        
+
         this.log('Subscribed to reference image EventBus events');
     }
 
@@ -132,11 +135,15 @@ export class ReferenceImagePanel extends BaseComponent {
             case EditorEventTypes.REFERENCE_SCALE_CHANGED:
                 this.handleReferenceScaleChanged(data);
                 break;
-            
+
+            case EditorEventTypes.REFERENCE_POSITION_CHANGED:
+                this.handleReferencePositionChanged(data);
+                break;
+
             case EditorEventTypes.REFERENCE_STATE_CHANGED:
                 this.handleReferenceStateChanged(data);
                 break;
-            
+
             default:
                 // Call parent implementation for unhandled events
                 super.handleBusEvent(eventType, data, target, emitter);
@@ -148,15 +155,45 @@ export class ReferenceImagePanel extends BaseComponent {
      */
     private handleReferenceScaleChanged(data: ReferenceScaleChangedPayload): void {
         this.log(`Received reference scale changed: ${data.scaleX}, ${data.scaleY}`);
-        
+
+        // Only update if values actually changed (prevent circular updates)
+        const changed = this.referenceState.scale.x !== data.scaleX ||
+                       this.referenceState.scale.y !== data.scaleY;
+
+        if (!changed) {
+            return;
+        }
+
         // Update local state cache
         this.referenceState.scale.x = data.scaleX;
         this.referenceState.scale.y = data.scaleY;
-        
+
         // Update UI display
         this.updateReferenceScaleDisplay();
     }
-    
+
+    /**
+     * Handle reference position changed event from PhaserEditorComponent
+     */
+    private handleReferencePositionChanged(data: ReferencePositionChangedPayload): void {
+        this.log(`Received reference position changed: ${data.x}, ${data.y}`);
+
+        // Only update if values actually changed (prevent circular updates)
+        const changed = this.referenceState.position.x !== data.x ||
+                       this.referenceState.position.y !== data.y;
+
+        if (!changed) {
+            return;
+        }
+
+        // Update local state cache
+        this.referenceState.position.x = data.x;
+        this.referenceState.position.y = data.y;
+
+        // Update UI display
+        this.updateReferencePositionDisplay();
+    }
+
     /**
      * Handle reference state changed event from PhaserEditorComponent
      */

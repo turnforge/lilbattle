@@ -81,6 +81,26 @@
 - Smart defaults: Grid for selection, table for management
 - Seamless user flow: /games/new → /worlds/select → click Play → game config
 
+### World Editor Reference Image System
+**Priority**: Medium
+**Status**: ✅ COMPLETE
+
+**Completed**:
+- [x] ReferenceImageLayer integration into PhaserEditorScene
+- [x] Layer-based input routing for independent drag/scroll handling
+- [x] Overlay mode for aligning reference image over tiles without moving map
+- [x] Background mode for reference image moving with world coordinates
+- [x] Event emission for UI synchronization during interactive transformations
+- [x] Circular reference prevention with value comparison guards
+- [x] LayerManager extensions (processClick, processDrag, processScroll)
+
+**Design**:
+- Overlay mode (depth 1000): Interactive layer blocks camera events, allows independent drag/scale
+- Background mode (depth -1): Non-interactive layer follows world coordinates
+- Reference image stays in world coordinates when switching modes (no position jumping)
+- Scene events bridge layer state changes to EventBus for ReferenceImagePanel updates
+- Layer system provides clean separation of input handling vs rendering
+
 ### Screenshot and Preview System
 **Priority**: Medium
 **Status**: ✅ COMPLETE
