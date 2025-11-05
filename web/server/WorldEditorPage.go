@@ -221,7 +221,14 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewC
 
 	// Read query parameters first (before SetupDefaults)
 	queryParams := r.URL.Query()
+
+	// Theme fallback priority: URL param > cookie > default
 	v.Theme = queryParams.Get("theme")
+	if v.Theme == "" {
+		if cookie, err := r.Cookie("assetTheme"); err == nil {
+			v.Theme = cookie.Value
+		}
+	}
 	if v.Theme == "" {
 		v.Theme = "fantasy" // Default theme
 	}

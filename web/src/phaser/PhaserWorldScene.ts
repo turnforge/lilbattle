@@ -102,13 +102,19 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private createDefaultAssetProvider(): AssetProvider {
         // Check URL parameters for asset configuration
         const urlParams = new URLSearchParams(window.location.search);
-        const themeName = urlParams.get('theme') || 'fantasy';
+
+        // Theme fallback priority: URL param > localStorage > default
+        let themeName = urlParams.get('theme');
+        if (!themeName) {
+            themeName = localStorage.getItem('assetTheme') || 'fantasy';
+        }
+
         const svgSize = urlParams.get('svgSize');
-        
+
         if (this.debugMode) {
             console.log(`[PhaserWorldScene] Using theme: ${themeName}`);
         }
-        
+
         const rasterSize = svgSize ? parseInt(svgSize) : 160;
         return new AssetProvider(themeName, rasterSize, this.debugMode);
     }
