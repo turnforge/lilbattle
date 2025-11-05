@@ -1,9 +1,15 @@
 <!-- templates/GameViewerPageGrid.html -->
 {{# include "BasePage.html" #}}
+{{# include "panels/GameLogPanel.html" #}}
+{{# include "TerrainStatsPanel.html" #}}
+{{# include "UnitStatsPanel.html" #}}
+{{# include "DamageDistributionPanel.html" #}}
+{{# include "TurnOptionsPanel.html" #}}
+{{# include "GameViewerHeaderButtons.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
 <div class="flex items-center space-x-2">
-    {{# include "GameViewerHeaderButtons.html" #}}
+  {{ template "GameViewerHeaderButtons" }}
 </div>
 {{ end }}
 
@@ -65,7 +71,7 @@
     }
 
     /* Phaser container fills the game scene area */
-    #phaser-viewer-container {
+    #game-viewer-scene {
         @apply w-full h-full;
     }
 
@@ -131,7 +137,7 @@
         <div id="grid-container" class="flex-1 min-h-0">
             <!-- Game Log Panel (Left) -->
             <div id="grid-game-log-container">
-                {{# include "panels/GameLogPanel.html" #}}
+                {{ template "GameLogPanel" }}
             </div>
 
             <!-- Game Scene (Center) -->
@@ -145,25 +151,14 @@
                 </div>
 
                 <!-- Phaser Game Container -->
-                <div id="phaser-viewer-container"></div>
+                <div id="game-viewer-scene"></div>
             </div>
 
             <!-- Right Column Panels -->
-            <div id="grid-terrain-stats-container">
-                {{# include "TerrainStatsPanel.html" #}}
-            </div>
-
-            <div id="grid-unit-stats-container">
-                {{# include "UnitStatsPanel.html" #}}
-            </div>
-
-            <div id="grid-damage-distribution-container">
-                {{# include "DamageDistributionPanel.html" #}}
-            </div>
-
-            <div id="grid-turn-options-container">
-                {{# include "TurnOptionsPanel.html" #}}
-            </div>
+            <div id="grid-terrain-stats-container"> {{ template "TerrainStatsPanel" }} </div>
+            <div id="grid-unit-stats-container"> {{ template "UnitStatsPanel" }} </div>
+            <div id="grid-damage-distribution-container"> {{ template "DamageDistributionPanel" }} </div>
+            <div id="grid-turn-options-container"> {{ template "TurnOptionsPanel" }} </div>
         </div>
 
         <!-- Build Options Modal -->

@@ -119,12 +119,13 @@ export class GameViewerPageDockView extends GameViewerPageBase {
 
     /**
      * Get game scene container - in DockView, this is created dynamically
+     * Uses PhaserSceneView with SceneId: "game-viewer-scene"
      */
     protected getGameSceneContainer(): HTMLElement {
         // Find the container within the DockView panel instance
-        const container = document.querySelector('#main-game-panel-instance #phaser-viewer-container') as HTMLElement;
+        const container = document.querySelector('#main-game-panel-instance #game-viewer-scene') as HTMLElement;
         if (!container) {
-            throw new Error('GameViewerPageDockView: phaser-viewer-container not found in DockView panel');
+            throw new Error('GameViewerPageDockView: game-viewer-scene not found in DockView panel');
         }
         return container;
     }
@@ -295,8 +296,8 @@ export class GameViewerPageDockView extends GameViewerPageBase {
         return {
             element,
             init: () => {
-                // Find the Phaser container within the cloned template
-                const phaserContainer = element.querySelector('#phaser-viewer-container') as HTMLElement;
+                // Find the Phaser container within the cloned template (PhaserSceneView with SceneId: "game-viewer-scene")
+                const phaserContainer = element.querySelector('#game-viewer-scene') as HTMLElement;
                 if (phaserContainer) {
                     // Create PhaserGameScene with the container
                     this.gameScene = new PhaserGameScene(phaserContainer, this.eventBus, true);
@@ -308,7 +309,7 @@ export class GameViewerPageDockView extends GameViewerPageBase {
             },
             onDidResize: () => {
                 if (this.gameScene) {
-                    const phaserContainer = element.querySelector('#phaser-viewer-container') as HTMLElement;
+                    const phaserContainer = element.querySelector('#game-viewer-scene') as HTMLElement;
                     if (phaserContainer) {
                         const width = phaserContainer.clientWidth;
                         const height = phaserContainer.clientHeight;

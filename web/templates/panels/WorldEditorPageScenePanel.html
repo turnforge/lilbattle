@@ -1,7 +1,7 @@
 <!-- World Editor Phaser Panel using PhaserSceneView -->
 
 {{# include "components/PhaserSceneView.html" #}}
-{{# include "panels/WorldEditorToolbar.html" #}}
+{{# include "panels/WorldEditorPageToolbar.html" #}}
 
 {{/* Define North region (toolbar) by extending PhaserSceneView_North block */}}
 {{ define "PhaserSceneView_North" }}
@@ -10,12 +10,12 @@
   class="flex-shrink-0"
   style="flex-shrink: 0"
 >
-    {{ template "WorldEditorToolbar" }}
+    {{ template "WorldEditorPageToolbar" }}
 </div>
 {{ end }}
 
 {{/* Use PhaserSceneView - toolbar is defined above via block extension */}}
-{{ define "PhaserPanel" }}
+{{ define "WorldEditorPageScenePanel" }}
 
 {{ template "PhaserSceneView" (dict
 

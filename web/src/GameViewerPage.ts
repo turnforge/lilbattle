@@ -438,7 +438,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
             element,
             init: () => {
                 // Find the Phaser container within the cloned template
-                const phaserContainer = element.querySelector('#phaser-viewer-container') as HTMLElement;
+                const phaserContainer = element.querySelector('#game-viewer-scene') as HTMLElement;
                 if (phaserContainer) {
                     // Create PhaserGameScene with the container
                     this.gameScene = new PhaserGameScene(phaserContainer, this.eventBus, true);
@@ -452,7 +452,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
                 // Handle panel resize events - resize the Phaser scene
                 if (this.gameScene) {
                     // Get the current container size
-                    const phaserContainer = element.querySelector('#phaser-viewer-container') as HTMLElement;
+                    const phaserContainer = element.querySelector('#game-viewer-scene') as HTMLElement;
                     if (phaserContainer) {
                         const width = phaserContainer.clientWidth;
                         const height = phaserContainer.clientHeight;
@@ -758,7 +758,7 @@ export class GameViewerPage extends BasePage implements LCMComponent, GameViewer
     private resizeGameCanvas(): void {
         if (this.gameScene) {
             // Find the Phaser container in the main game panel
-            const phaserContainer = document.querySelector('#main-game-panel-instance #phaser-viewer-container') as HTMLElement;
+            const phaserContainer = document.querySelector('#main-game-panel-instance #game-viewer-scene') as HTMLElement;
             if (phaserContainer) {
                 // Force a resize to ensure the canvas fits the container
                 const width = phaserContainer.clientWidth;

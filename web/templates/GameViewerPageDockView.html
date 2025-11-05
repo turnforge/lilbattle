@@ -1,9 +1,17 @@
 <!-- templates/GameViewerPage.html -->
 {{# include "BasePage.html" #}}
+{{# include "BasePage.html" #}}
+{{# include "panels/GameLogPanel.html" #}}
+{{# include "TerrainStatsPanel.html" #}}
+{{# include "UnitStatsPanel.html" #}}
+{{# include "DamageDistributionPanel.html" #}}
+{{# include "TurnOptionsPanel.html" #}}
+{{# include "GameViewerHeaderButtons.html" #}}
+{{# include "panels/GameViewerPageScenePanel.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
 <div class="flex items-center space-x-2">
-    {{# include "GameViewerHeaderButtons.html" #}}
+    {{ template "GameViewerHeaderButtons" }}
 </div>
 {{ end }}
 
@@ -177,19 +185,12 @@
 
         <!-- Hidden Panel Templates for Dockview -->
         <div style="display: none;">
-            <div id="main-game-panel-template">
-                {{# include "panels/MainGamePanel.html" #}}
-            </div>
-            {{# include "TerrainStatsPanel.html" #}}
-            {{# include "UnitStatsPanel.html" #}}
-            {{# include "TurnOptionsPanel.html" #}}
-            {{# include "DamageDistributionPanel.html" #}}
-            <div id="game-actions-panel-template">
-                {{# include "panels/GameActionsPanel.html" #}}
-            </div>
-            <div id="game-log-panel-template">
-                {{# include "panels/GameLogPanel.html" #}}
-            </div>
+            <div id="main-game-panel-template"> {{ template "GameViewerPageScenePanel" }} </div>
+            {{ template "TerrainStatsPanel" }}
+            {{ template "UnitStatsPanel" }}
+            {{ template "TurnOptionsPanel" }}
+            {{ template "DamageDistributionPanel" }}
+            <div id="game-log-panel-template">{{ template "GameLogPanel" }}</div>
         </div>
         
         <!-- Hidden World Data for Frontend -->
