@@ -19,12 +19,12 @@ import { EditorEventTypes, ReferenceLoadFromFilePayload, ReferenceSetModePayload
 export class ReferenceImagePanel extends BaseComponent {
     // Dependencies (injected in phase 2)
     private toastCallback?: (title: string, message: string, type: 'success' | 'error' | 'info') => void;
-    
+
     // Internal state
     private isUIBound = false;
     private isActivated = false;
     private pendingOperations: Array<() => void> = [];
-    
+
     // Reference image state cache (updated via EventBus)
     private referenceState = {
         scale: { x: 1.0, y: 1.0 },
@@ -33,7 +33,16 @@ export class ReferenceImagePanel extends BaseComponent {
         mode: 0,
         isLoaded: false
     };
-    
+
+    // localStorage keys
+    private static readonly STORAGE_KEY_POSITION = 'referenceImagePosition';
+    private static readonly STORAGE_KEY_SCALE = 'referenceImageScale';
+
+    // Debounced save
+    private savePositionDebounceTimer: number | null = null;
+    private saveScaleDebounceTimer: number | null = null;
+    private static readonly SAVE_DEBOUNCE_MS = 300; // 300ms debounce
+
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('reference-image-panel', rootElement, eventBus, debugMode);
     }
@@ -95,18 +104,21 @@ export class ReferenceImagePanel extends BaseComponent {
             this.log('Already activated, skipping');
             return;
         }
-        
+
         this.log('Activating ReferenceImagePanel');
-        
+
+        // Load saved position and scale from localStorage
+        this.loadSavedPositionAndScale();
+
         // Subscribe to EventBus events from PhaserEditorComponent
         this.subscribeToReferenceEvents();
-        
+
         // Process any operations that were queued during UI binding
         this.processPendingOperations();
-        
+
         // Update UI state - no longer dependent on PhaserEditorComponent availability
         this.updateUIState();
-        
+
         this.isActivated = true;
         this.log('ReferenceImagePanel activated successfully');
     }
@@ -170,6 +182,9 @@ export class ReferenceImagePanel extends BaseComponent {
 
         // Update UI display
         this.updateReferenceScaleDisplay();
+
+        // Save to localStorage with debouncing
+        this.saveScaleToLocalStorage();
     }
 
     /**
@@ -192,6 +207,9 @@ export class ReferenceImagePanel extends BaseComponent {
 
         // Update UI display
         this.updateReferencePositionDisplay();
+
+        // Save to localStorage with debouncing
+        this.savePositionToLocalStorage();
     }
 
     /**
@@ -590,17 +608,20 @@ export class ReferenceImagePanel extends BaseComponent {
         
         // Set default mode to background if currently hidden - BEFORE emitting event
         this.setDefaultMode();
-        
+
+        // Apply saved position and scale values from localStorage
+        this.applySavedPositionAndScale();
+
         // Notify EventBus that image was loaded (notification, not request)
-        // This happens AFTER setDefaultMode so Phaser gets the image with correct mode
+        // This happens AFTER setDefaultMode and applySavedPositionAndScale so Phaser gets the image with correct values
         this.eventBus.emit<ReferenceImageLoadedPayload>(
-            EditorEventTypes.REFERENCE_IMAGE_LOADED, 
+            EditorEventTypes.REFERENCE_IMAGE_LOADED,
             {
                 source: source,
                 width: img.width,
                 height: img.height,
                 url: imageUrl
-            }, 
+            },
             this,
             this
         );
@@ -892,20 +913,129 @@ export class ReferenceImagePanel extends BaseComponent {
     private updateReferencePositionDisplay(): void {
         const positionXInput = this.rootElement.querySelector('#reference-position-x-value') as HTMLInputElement;
         const positionYInput = this.rootElement.querySelector('#reference-position-y-value') as HTMLInputElement;
-        
+
         // Defensive programming: ensure position values exist
         const positionX = this.referenceState?.position?.x ?? 0;
         const positionY = this.referenceState?.position?.y ?? 0;
-        
+
         if (positionXInput) {
             positionXInput.value = positionX.toString();
         }
-        
+
         if (positionYInput) {
             positionYInput.value = positionY.toString();
         }
     }
-    
+
+    /**
+     * Load saved position and scale from localStorage and populate input fields
+     */
+    private loadSavedPositionAndScale(): void {
+        try {
+            // Load position
+            const savedPosition = localStorage.getItem(ReferenceImagePanel.STORAGE_KEY_POSITION);
+            if (savedPosition) {
+                const position = JSON.parse(savedPosition);
+                this.referenceState.position.x = position.x ?? 0;
+                this.referenceState.position.y = position.y ?? 0;
+                this.updateReferencePositionDisplay();
+                this.log(`Loaded saved position: ${position.x}, ${position.y}`);
+            }
+
+            // Load scale
+            const savedScale = localStorage.getItem(ReferenceImagePanel.STORAGE_KEY_SCALE);
+            if (savedScale) {
+                const scale = JSON.parse(savedScale);
+                this.referenceState.scale.x = scale.x ?? 1.0;
+                this.referenceState.scale.y = scale.y ?? 1.0;
+                this.updateReferenceScaleDisplay();
+                this.log(`Loaded saved scale: ${scale.x}, ${scale.y}`);
+            }
+        } catch (error) {
+            this.log(`Failed to load saved position/scale: ${error}`);
+        }
+    }
+
+    /**
+     * Apply saved position and scale to the reference image layer
+     * Called when a new reference image is loaded
+     */
+    private applySavedPositionAndScale(): void {
+        // Apply position
+        this.eventBus.emit<ReferenceSetPositionPayload>(
+            EditorEventTypes.REFERENCE_SET_POSITION,
+            {
+                x: this.referenceState.position.x,
+                y: this.referenceState.position.y
+            },
+            this,
+            this
+        );
+
+        // Apply scale
+        this.eventBus.emit<ReferenceSetScalePayload>(
+            EditorEventTypes.REFERENCE_SET_SCALE,
+            {
+                scaleX: this.referenceState.scale.x,
+                scaleY: this.referenceState.scale.y
+            },
+            this,
+            this
+        );
+
+        this.log(`Applied saved position (${this.referenceState.position.x}, ${this.referenceState.position.y}) and scale (${this.referenceState.scale.x}, ${this.referenceState.scale.y})`);
+    }
+
+    /**
+     * Save position to localStorage with debouncing
+     */
+    private savePositionToLocalStorage(): void {
+        // Clear existing timer
+        if (this.savePositionDebounceTimer !== null) {
+            window.clearTimeout(this.savePositionDebounceTimer);
+        }
+
+        // Set new timer
+        this.savePositionDebounceTimer = window.setTimeout(() => {
+            try {
+                const position = {
+                    x: this.referenceState.position.x,
+                    y: this.referenceState.position.y
+                };
+                localStorage.setItem(ReferenceImagePanel.STORAGE_KEY_POSITION, JSON.stringify(position));
+                this.log(`Saved position to localStorage: ${position.x}, ${position.y}`);
+            } catch (error) {
+                this.log(`Failed to save position: ${error}`);
+            }
+            this.savePositionDebounceTimer = null;
+        }, ReferenceImagePanel.SAVE_DEBOUNCE_MS);
+    }
+
+    /**
+     * Save scale to localStorage with debouncing
+     */
+    private saveScaleToLocalStorage(): void {
+        // Clear existing timer
+        if (this.saveScaleDebounceTimer !== null) {
+            window.clearTimeout(this.saveScaleDebounceTimer);
+        }
+
+        // Set new timer
+        this.saveScaleDebounceTimer = window.setTimeout(() => {
+            try {
+                const scale = {
+                    x: this.referenceState.scale.x,
+                    y: this.referenceState.scale.y
+                };
+                localStorage.setItem(ReferenceImagePanel.STORAGE_KEY_SCALE, JSON.stringify(scale));
+                this.log(`Saved scale to localStorage: ${scale.x}, ${scale.y}`);
+            } catch (error) {
+                this.log(`Failed to save scale: ${error}`);
+            }
+            this.saveScaleDebounceTimer = null;
+        }, ReferenceImagePanel.SAVE_DEBOUNCE_MS);
+    }
+
     private clearReferenceImage(): void {
         // Emit event to PhaserEditorComponent via EventBus
         this.eventBus.emit(EditorEventTypes.REFERENCE_CLEAR, {}, this, this);
