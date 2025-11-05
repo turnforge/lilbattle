@@ -9,6 +9,9 @@ export const AnimationConfig = {
   /** Duration per hex tile when moving units (ms) */
   MOVE_DURATION_PER_HEX: 200,
 
+  /** Pause duration at each tile during movement (ms) */
+  MOVE_PAUSE_PER_HEX: 100,
+
   /** Duration of attacker flash when initiating attack (ms) */
   ATTACK_FLASH_DURATION: 150,
 
