@@ -1,0 +1,143 @@
+{{#/*
+
+<!--
+PhaserSceneView - Reusable BorderLayout template for Phaser scenes
+
+This template provides a flexible BorderLayout container with 5 regions:
+
+- North (top toolbar/header)
+- South (bottom toolbar/footer)
+- East (right sidebar)
+- West (left sidebar)
+- Center (Phaser scene - takes remaining space)
+
+The center always contains the Phaser scene and is sized to fill remaining space. 
+All regions are optional and hidden when empty. Sizing Flow (one-way): 
+
+1. North/South content → height changes
+2. East/West content → width changes
+3. Remaining space → Center (scene container)
+4. Center size → Phaser canvas size
+5. Canvas NEVER influences parent size (constrained by min-height: 0)
+
+Parameters:
+.NorthContent - HTML content for north region (optional)
+.SouthContent - HTML content for south region (optional)
+.EastContent - HTML content for east region (optional)
+.WestContent - HTML content for west region (optional)
+.SceneId - ID for the scene container - default: "phaser-scene-container"
+.WrapperClass - Additional CSS classes for the wrapper (optional)
+.CenterClass - Additional CSS classes for the center region (optional)
+.FlexMode - How wrapper behaves in flex parent: "fill" (default, flex-1 + min-height:0), "fixed" (100% size), "auto" (natural size)
+
+Standard IDs (for TypeScript access):
+- phaser-scene-view-wrapper: Main container
+- phaser-scene-view-north: North region
+- phaser-scene-view-south: South region
+- phaser-scene-view-east: East region
+- phaser-scene-view-west: West region
+- phaser-scene-view-center: Center region (contains scene)
+- [SceneId]: The actual scene container - default: "phaser-scene-container"
+
+Example usage:
+
+{{ define "NorthContent" }} <div class="toolbar">My Toolbar</div> {{ end }}
+
+{{ template "components/PhaserSceneView.html" ( .dict "NorthContent" (template "NorthContent") "SceneId" "my-scene" ) }}
+-->
+*/#}}
+
+<!-- PhaserSceneView: BorderLayout container with flex column -->
+{{ define "PhaserSceneView" }}
+
+<!-- Some Defaults -->
+
+{{ $sceneId := or .SceneId "phaser-scene-container" }}
+{{ $wrapperClass := or .WrapperClass "" }}
+{{ $centerClass := or .CenterClass "" }}
+{{ $hasNorth := .NorthContent }}
+{{ $hasSouth := .SouthContent }}
+{{ $hasEast := .EastContent }}
+{{ $hasWest := .WestContent }}
+
+{{/* FlexMode determines how the wrapper behaves in a flex parent:
+     "fill" (default) - takes remaining space (flex-1 + min-height: 0)
+     "fixed" - fixed size (width: 100%; height: 100%)
+     "auto" - natural size based on content
+*/}}
+{{ $flexMode := or .FlexMode "fill" }}
+
+<div
+  id="phaser-scene-view-wrapper"
+  class="flex flex-col {{ $wrapperClass }}"
+  {{ if eq $flexMode "fill" }}
+    style="flex: 1 1 0%; min-height: 0; min-width: 0;"
+  {{ else if eq $flexMode "fixed" }}
+    style="width: 100%; height: 100%;"
+  {{ end }}
+>
+  <!-- North Region (Toolbar/Header) -->
+  {{ if $hasNorth }}
+  <div
+    id="phaser-scene-view-north"
+    class="flex-shrink-0"
+    style="flex-shrink: 0"
+  >
+    {{ .NorthContent }}
+  </div>
+  {{ end }}
+
+  <!-- Middle Row: West, Center (Scene), East -->
+  <div class="flex-1 flex flex-row" style="min-height: 0; overflow: hidden">
+    <!-- West Region (Left Sidebar) -->
+    {{ if $hasWest }}
+    <div
+      id="phaser-scene-view-west"
+      class="flex-shrink-0"
+      style="flex-shrink: 0; overflow-y: auto"
+    >
+      {{ .WestContent }}
+    </div>
+    {{ end }}
+
+    <!-- Center Region (Phaser Scene) - takes remaining space -->
+    <!-- CRITICAL: flex-1 takes remaining space, min-width/height: 0 prevents content from pushing parent -->
+    <div
+      id="phaser-scene-view-center"
+      class="flex-1 {{ $centerClass }}"
+      style="min-width: 0; min-height: 0; overflow: hidden; position: relative"
+    >
+      <!-- Phaser Scene Container - constrained to parent size -->
+      <div
+        id="{{ $sceneId }}"
+        class="w-full h-full"
+        style="position: relative; overflow: hidden"
+      >
+        <!-- Phaser canvas will be inserted here by TypeScript -->
+      </div>
+    </div>
+
+    <!-- East Region (Right Sidebar) -->
+    {{ if $hasEast }}
+    <div
+      id="phaser-scene-view-east"
+      class="flex-shrink-0"
+      style="flex-shrink: 0; overflow-y: auto"
+    >
+      {{ .EastContent }}
+    </div>
+    {{ end }}
+  </div>
+
+  <!-- South Region (Footer/Bottom Bar) -->
+  {{ if $hasSouth }}
+  <div
+    id="phaser-scene-view-south"
+    class="flex-shrink-0"
+    style="flex-shrink: 0"
+  >
+    {{ .SouthContent }}
+  </div>
+  {{ end }}
+</div>
+{{ end }}

@@ -35,6 +35,42 @@ This folder contains the core client-side TypeScript logic for the webapp, manag
 *   **Toast/Modal Systems**: User feedback and interaction patterns
 *   **Theme Management**: Coordinated theming across component boundaries
 
+## Recent Session Work (2025-01-05)
+
+### Phaser Scene Sizing Fix ✅
+**Problem Solved**: Circular sizing issue where Phaser canvas would cause recursive growth with parent containers
+
+**Root Causes:**
+- Flexbox `min-height: auto` default prevented containers from shrinking below content size
+- Canvas `object-fit: contain` maintained aspect ratio, causing height changes when width changed
+- Missing `min-height: 0` constraints on flex children broke one-way sizing flow
+
+**Solutions Implemented:**
+- **PhaserWorldScene.ts**: Removed `object-fit: contain` from canvas styling (line 376)
+- **PhaserSceneView Template**: Created reusable BorderLayout component with built-in sizing constraints
+- **FlexMode Parameter**: Automatic application of `flex: 1 1 0%; min-height: 0; min-width: 0;` to wrapper
+- **Go Template Safety**: Fixed ZgotmplZ issue by using inline conditionals instead of style variables
+
+**Key Pattern - min-height: 0**:
+```typescript
+// Critical for preventing circular sizing in flexbox:
+// Container with min-height: 0 can shrink below content size
+// This breaks: Canvas grows → Container grows → Parent grows → Loop
+```
+
+**Benefits:**
+- One-way sizing flow: parent → canvas (never canvas → parent)
+- Width changes don't affect height (no aspect ratio constraint)
+- Works with all scene types (PhaserWorldScene, PhaserEditorScene, PhaserGameScene)
+- Eliminates wrapper div boilerplate in pages
+
+**Migrated Pages:**
+- WorldViewerPage ✅
+
+**Documentation:**
+- `/web/templates/components/PhaserSceneView_README.md` - Component usage guide
+- `/web/PHASER_SIZING_FIX_SUMMARY.md` - Complete technical summary
+
 ## Recent Session Work (2025-01-24)
 
 ### Layer System Architecture Complete ✅

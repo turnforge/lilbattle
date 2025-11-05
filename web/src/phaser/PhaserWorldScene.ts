@@ -343,7 +343,9 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             scale: {
                 mode: Phaser.Scale.RESIZE,
                 width: width,
-                height: height
+                height: height,
+                // Prevent canvas from growing parent
+                autoCenter: Phaser.Scale.NO_CENTER
             },
             physics: {
                 default: 'arcade',
@@ -363,6 +365,19 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
         this.phaserGame = new Phaser.Game(config);
         this.isInitialized = true;
+
+        // Ensure canvas doesn't cause parent to grow
+        // Phaser inserts the canvas into the parent container
+        if (this.phaserGame.canvas) {
+            const canvas = this.phaserGame.canvas;
+            canvas.style.display = 'block';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            // Note: Do NOT use object-fit:contain as it maintains aspect ratio
+            // and causes height to change when width changes. We want the canvas
+            // to fill the container completely - Phaser's Scale.RESIZE mode
+            // handles the internal rendering correctly.
+        }
 
         // Set up assets ready promise
         this.assetsReadyPromise = new Promise<void>((resolve) => {

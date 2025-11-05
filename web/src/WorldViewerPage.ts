@@ -106,8 +106,8 @@ class WorldViewerPage extends BasePage implements LCMComponent {
      * Create PhaserWorldScene and WorldStatsPanel component instances
      */
     private createComponents(): void {
-        // Create PhaserWorldScene component - use the actual phaser container, not the outer wrapper
-        const phaserContainer = this.ensureElement('#phaser-viewer-container', 'phaser-viewer-container');
+        // Create PhaserWorldScene component - uses PhaserSceneView template with SceneId: "world-viewer-scene"
+        const phaserContainer = this.ensureElement('#world-viewer-scene', 'world-viewer-scene');
         this.worldScene = new PhaserWorldScene(phaserContainer, this.eventBus, true);
         
         // Create WorldStatsPanel component - pass the content div, not the container with header

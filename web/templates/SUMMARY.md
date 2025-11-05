@@ -520,3 +520,75 @@ go b.GameViewerPage.SetCompactSummaryCard(ctx, &v1.SetContentRequest{
 - Font-semibold labels for visibility
 - HP badge with background for emphasis
 - Horizontal layout with divider between terrain/unit
+
+### PhaserSceneView Component (Session 2025-01-05)
+
+#### components/PhaserSceneView.html
+Reusable BorderLayout template for Phaser scenes solving circular sizing problems.
+
+**Purpose:**
+Provides a consistent, maintainable pattern for integrating Phaser scenes into pages with proper sizing constraints to prevent canvas from influencing parent container size.
+
+**Architecture - BorderLayout with 5 Regions:**
+- **North**: Optional toolbar/header (fixed size)
+- **South**: Optional footer/status bar (fixed size)
+- **East**: Optional right sidebar (fixed width)
+- **West**: Optional left sidebar (fixed width)
+- **Center**: Phaser scene container (takes remaining space, never grows parent)
+
+**Key Parameters:**
+- `SceneId`: ID for scene container (default: "phaser-scene-container")
+- `FlexMode`: Controls wrapper behavior - "fill" (flex-1 + min-height:0), "fixed" (100% size), "auto" (natural)
+- `NorthContent`, `SouthContent`, `EastContent`, `WestContent`: Optional HTML content for regions
+- `CenterClass`: Additional CSS classes for center region
+- `WrapperClass`: Additional CSS classes for wrapper
+
+**Critical Sizing Constraints:**
+- Uses `min-height: 0` and `min-width: 0` on flex children to prevent circular sizing
+- FlexMode="fill" applies `flex: 1 1 0%; min-height: 0; min-width: 0;` to wrapper automatically
+- Eliminates need for manual wrapper divs in pages
+- Ensures one-way sizing flow: parent → canvas (never canvas → parent)
+
+**Standard IDs:**
+- `phaser-scene-view-wrapper`: Main container
+- `phaser-scene-view-north/south/east/west`: Region containers
+- `phaser-scene-view-center`: Center region containing scene
+- `[SceneId]`: Actual scene container (customizable)
+
+**Usage Pattern:**
+```html
+{{/* Simple scene only */}}
+{{ template "PhaserSceneView" ( dict
+  "SceneId" "my-scene"
+  "FlexMode" "fill"
+) }}
+
+{{/* With toolbar */}}
+{{ define "MyToolbar" }}
+  <div class="p-2">Toolbar content</div>
+{{ end }}
+
+{{ template "PhaserSceneView" ( dict
+  "NorthContent" (template "MyToolbar" .)
+  "SceneId" "my-scene"
+  "FlexMode" "fill"
+) }}
+```
+
+**TypeScript Integration:**
+Works with all Phaser scene types (PhaserWorldScene, PhaserEditorScene, PhaserGameScene):
+```typescript
+const container = document.getElementById('my-scene');
+this.scene = new PhaserWorldScene(container, this.eventBus);
+await this.scene.performLocalInit();
+await this.scene.activate();
+```
+
+**Pages Migrated:**
+- WorldViewerPage (simple scene-only layout)
+
+**Pages To Migrate:**
+- WorldEditorPage (toolbar + scene)
+- GameViewerPageDockView (optional controls + scene)
+- GameViewerPageMobile (header + scene + action bar)
+- StartGamePage (preview scene)

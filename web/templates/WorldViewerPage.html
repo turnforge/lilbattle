@@ -1,5 +1,6 @@
 <!-- templates/WorldViewerPage.html -->
 {{# include "BasePage.html" #}}
+{{# include "components/PhaserSceneView.html" #}}
 
 {{ define "ExtraHeaderButtons" }}
 <!-- Edit Button -->
@@ -55,17 +56,21 @@
         </div>
 
         <!-- World Content -->
-        <div class="flex-1 flex max-w-9xl mx-auto w-full">
+        <div class="flex-1 flex max-w-9xl mx-auto w-full" style="min-height: 0;">
             <!-- World Preview Section - WorldViewer Component Root -->
             <div class="flex-1 p-6 lg:pr-3 w-full lg:w-[calc(100%-250px)]">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full" data-component="world-viewer">
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full flex flex-col" data-component="world-viewer">
+                    <!-- Header -->
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                         <h2 class="text-lg font-medium text-gray-900 dark:text-white">World Preview</h2>
                     </div>
-                    <!-- Phaser World Viewer Container -->
-                    <div id="phaser-viewer-container" class="w-full h-full"  style="max-height:800px">
-                        <!-- Phaser canvas will be inserted here -->
-                    </div>
+                    <!-- Phaser Scene using PhaserSceneView - takes remaining space -->
+                    {{/* Use PhaserSceneView with no regions - FlexMode="fill" handles flex-1 + min-height:0 */}}
+                    {{ template "PhaserSceneView" ( dict
+                      "SceneId" "world-viewer-scene"
+                      "CenterClass" "bg-gray-900"
+                      "FlexMode" "fill" )
+                    }}
                 </div>
             </div>
 
