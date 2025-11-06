@@ -324,34 +324,52 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 
 #### Multi-Click Shape Tool System (Complete)
 - **Extensible Shape Tool Architecture**: Created ShapeTool interface for multi-click shape drawing workflow
-  - RectangleTool implementation: First click sets corner, mouse move shows preview, second click completes
+  - RectangleTool: First click sets corner, mouse move shows preview, second click completes
+  - CircleTool: First click sets center, second click sets radius (2 clicks total)
+  - OvalTool: First click sets center, second click sets radiusX, third click sets radiusY (3 clicks total, axis-aligned)
+  - LineTool: Multi-click path tool - N clicks to add vertices, Enter to finish, Escape to cancel
   - Replaced fatiguing drag-based system with ergonomic multi-click approach
   - Camera panning disabled during shape mode to prevent accidental interruptions
-  - Escape key cancels current shape drawing
+  - Escape key cancels current shape but stays in shape mode
+- **World Helper Methods**: Added reusable shape generation methods
+  - World.circleFrom(): Generate circle tiles using hex distance formula
+  - World.ovalFrom(): Generate axis-aligned ellipse tiles in row/col space
+  - World.lineFrom(): Generate line/path tiles using Bresenham algorithm
+  - hexDistance() utility in hexUtils.ts for hex coordinate distance calculation
 - **Fill/Outline Toggle**: Added UI checkbox for switching between filled and outline shapes
-  - Toggle appears automatically when rectangle mode is activated
+  - Toggle appears for Rectangle, Circle, and Oval modes
+  - Hidden for Line mode (lines always stroke only)
   - Updates shape preview in real-time when toggled
   - Integrated into WorldEditorPageToolbar template
 - **Event Handler Refactoring**: Replaced drag-based rectangle logic with click-based system
   - pointerdown: Collects shape anchor points
   - pointermove: Shows live preview without requiring button hold
-  - keyboard: Escape to cancel, Enter for shapes requiring confirmation (polygon, path)
-- **UI Text Updates**: Changed dropdown text from "Rectangle (click & drag)" to "Rectangle (2 clicks)"
+  - keyboard: Escape to cancel current shape, Enter for shapes requiring confirmation (line/path)
+- **Unified Shape API**: Single setShapeMode(shapeType) method instead of separate methods per shape
+  - Type-safe string literals: 'rectangle' | 'circle' | 'oval' | 'line' | null
+  - Cleaner UI handler with shape mode mapping
+- **UI Organization**: Created "Shapes" optgroup in brush selector dropdown
+  - Rectangle (2 clicks)
+  - Circle (2 clicks)
+  - Oval (3 clicks)
+  - Line/Path (N clicks, Enter to finish)
 
 **Architecture**:
-- ShapeTool interface defines contract for all shape tools (rectangle, circle, polygon, path)
+- ShapeTool interface defines contract for all shape tools
 - Tools maintain their own state (anchor points, fill mode) and provide preview/result tiles
-- PhaserEditorScene delegates to currentShapeTool for all shape operations
+- PhaserEditorScene delegates to currentShapeTool for all shape operations with unified setShapeMode()
 - ShapeHighlightLayer renders preview independently of tool type
-- Future shapes (circle, polygon) can be added by implementing ShapeTool interface
+- World methods use hexUtils (hexDistance, hexToRowCol, rowColToHex) for consistency
+- Oval is axis-aligned in row/col space (simpler math, easier to reason about)
+- Line uses Bresenham-style interpolation in row/col space
 
-**Known Issues**:
-- First click in shape mode sets tile on underlying layer (should only start shape)
-- Escape exits rectangle mode entirely instead of just canceling current shape
+**Bug Fixes**:
+- Fixed: First click in shape mode no longer sets tile on underlying layer (handleTap override)
+- Fixed: Escape cancels current shape but stays in shape mode (cancelCurrentShape vs exitShapeMode)
 
 ## Status
-**Current Version**: 8.11 (Multi-Click Shape Tool System)
-**Status**: Development - shape tool refactoring complete, pending bug fixes
+**Current Version**: 8.12 (Complete Shape Tool Suite)
+**Status**: Production-ready - Circle, Oval, Line, and Rectangle tools fully implemented
 **Build Status**: Clean compilation with all TypeScript errors resolved
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds
 **Architecture**: Flexible AssetProvider system with presenter-driven animation framework and layer-based interaction system

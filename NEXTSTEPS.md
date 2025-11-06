@@ -40,11 +40,19 @@
 - [x] Multi-click shape tool system replacing drag-to-paint (2025-11-06)
 - [x] ShapeTool interface for extensible shape tools (2025-11-06)
 - [x] RectangleTool implementation with 2-click workflow (2025-11-06)
+- [x] CircleTool implementation with 2-click workflow (center + radius) (2025-11-06)
+- [x] OvalTool implementation with 3-click workflow (center + radiusX + radiusY) (2025-11-06)
+- [x] LineTool implementation with N-click workflow (path, Enter to finish) (2025-11-06)
+- [x] World.rectFrom(), circleFrom(), ovalFrom(), lineFrom() helper methods (2025-11-06)
+- [x] hexDistance() utility in hexUtils.ts (2025-11-06)
+- [x] Unified setShapeMode(shapeType) API instead of separate methods (2025-11-06)
 - [x] Fill/Outline toggle UI in toolbar (2025-11-06)
-- [x] Keyboard support (Escape to cancel shape) (2025-11-06)
+- [x] Keyboard support (Escape to cancel shape, Enter for line completion) (2025-11-06)
 - [x] Camera panning disabled during shape mode (2025-11-06)
+- [x] Bug fix: First click no longer paints tile in shape mode (2025-11-06)
+- [x] Bug fix: Escape cancels shape but stays in shape mode (2025-11-06)
 - [x] ShapeHighlightLayer for extensible shape tool preview system
-- [x] World.rectFrom() method using row/col coordinate space
+- [x] "Shapes" optgroup in UI dropdown (Rectangle, Circle, Oval, Line) (2025-11-06)
 - [x] Blue outline preview showing perimeter during shape drawing
 - [x] Reference image persistence with IndexedDB storage
 - [x] ReferenceImagePanel manages all loading operations (storage/file/clipboard)
@@ -53,16 +61,12 @@
 - [x] Clean separation of concerns: Panel=loading/storage, Layer=display/interaction
 
 **Remaining Tasks**:
-- [ ] Fix: First click in shape mode sets tile on underlying layer (should only start shape)
-- [ ] Fix: Escape exits rectangle mode entirely (should just cancel current shape and stay in rectangle mode)
-- [ ] Add visual feedback: cursor change, anchor point markers, status text
+- [ ] Add visual feedback: cursor change, anchor point markers, status text for shape tools
 - [ ] Implement flood fill algorithm with radial limit
 - [ ] Context-aware Clear button (brush clear vs flood clear)
 - [ ] Remove dead code: GameViewerPage.ts (replaced by PageBase + variants)
 - [ ] Keyboard shortcuts for Fill tool
 - [ ] Fill tool visual feedback and preview
-- [ ] Circle shape tool using World.circleFrom()
-- [ ] Ellipse shape tool using World.ellipseFrom()
 
 **Design**:
 - Brush/Fill unified selector uses optgroups for clear separation
