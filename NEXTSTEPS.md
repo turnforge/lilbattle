@@ -30,7 +30,7 @@
 **Priority**: Medium
 **Status**: 🔄 IN PROGRESS
 
-**Completed (2025-01-05)**:
+**Completed (2025-01-05 / 2025-01-06)**:
 - [x] Fixed neutral player bug - city tiles now correctly save as player=0
 - [x] Asset theme URL query parameter support (?theme=classic)
 - [x] Brush size functionality fixed - added missing event listener
@@ -41,6 +41,9 @@
 - [x] ShapeHighlightLayer for extensible shape tool preview system
 - [x] World.rectFrom() method using row/col coordinate space
 - [x] Blue outline preview showing perimeter during rectangle drag
+- [x] Reference image persistence with IndexedDB storage
+- [x] ReferenceImageLayer self-managed lifecycle and storage
+- [x] Automatic restore of reference images on page refresh
 
 **Remaining Tasks**:
 - [ ] Implement flood fill algorithm with radial limit

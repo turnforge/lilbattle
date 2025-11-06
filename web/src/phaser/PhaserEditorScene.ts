@@ -57,6 +57,26 @@ export class PhaserEditorScene extends PhaserWorldScene {
     }
 
     /**
+     * Override loadWorld to initialize reference image layer with worldId
+     */
+    public async loadWorld(world: World): Promise<void> {
+        // Call parent to load world data
+        await super.loadWorld(world);
+
+        // Initialize reference image layer with worldId from the loaded world
+        if (this.referenceImageLayer && world) {
+            const worldId = world.getWorldId();
+            if (worldId) {
+                // Set worldId on the layer
+                (this.referenceImageLayer as any).worldId = worldId;
+
+                // Initialize DB and load from storage
+                await this.referenceImageLayer.init();
+            }
+        }
+    }
+
+    /**
      * Override setupLayerSystem to add ReferenceImageLayer and RectanglePreviewLayer for editor
      */
     protected setupLayerSystem(): void {

@@ -33,6 +33,42 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 
 ## Recent Major Achievements
 
+### Reference Image Persistence (Current Session)
+
+**Achievement**: Implemented IndexedDB-backed persistence for reference images in WorldEditorPage, eliminating need to reload images after page refresh.
+
+**Key Features**:
+- **IndexedDB Storage**: Stores reference image blobs per-world with automatic save/restore
+- **Lifecycle-Managed**: ReferenceImageLayer handles its own storage initialization and cleanup
+- **Blob Storage**: Stores images as-is without conversion overhead or base64 bloat
+- **Graceful Degradation**: Works without IndexedDB, silently falls back to session-only storage
+- **Auto-Restore**: Images automatically reload when returning to world editor
+
+**Implementation**:
+- web/src/lib/ReferenceImageDB.ts: IndexedDB wrapper (saveImage, getImage, deleteImage)
+- web/src/phaser/layers/ReferenceImageLayer.ts: Self-managed lifecycle with init() and storage integration
+- web/src/phaser/PhaserEditorScene.ts: Initializes layer with worldId during loadWorld()
+- web/src/PhaserEditorComponent.ts: Clear button triggers layer's storage cleanup
+
+**Architecture**:
+- Layer responsible for its own lifecycle (no parent intervention)
+- Storage keyed by worldId for per-world isolation
+- Automatic save when loading from file/clipboard
+- Automatic clear when clearing reference image
+- No logic bleeding across component boundaries
+
+**Storage Flow**:
+1. User loads image from file/clipboard → Saved to IndexedDB
+2. Page refresh → Layer.init() auto-restores from IndexedDB
+3. User clears image → Deleted from IndexedDB
+
+**Benefits**:
+- Persistent reference images across page refreshes
+- No manual reload needed
+- Clean separation of concerns with self-managed components
+- Efficient blob storage (no encoding overhead)
+- Per-world isolation prevents cross-contamination
+
 ### World Editor Shape Tools (Current Session)
 
 **Achievement**: Implemented extensible shape tool system for WorldEditorPage with rectangle tool as first implementation.

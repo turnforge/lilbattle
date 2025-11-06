@@ -2261,6 +2261,7 @@ class WorldEditorPage extends BasePage {
         // Load world data if available
         if (this.world && this.phaserEditorComponent) {
             // Give Phaser time to fully initialize webgl context and scene
+            // Note: loadWorld now handles reference image restoration automatically
             await this.phaserEditorComponent.editorScene.loadWorld(this.world);
             this.hasPendingWorldDataLoad = false;
             this.refreshTileStats();

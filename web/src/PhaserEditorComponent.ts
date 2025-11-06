@@ -456,13 +456,15 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     /**
      * Handle reference image clear event from ReferenceImagePanel
      */
-    private handleReferenceClear(): void {
+    private async handleReferenceClear(): Promise<void> {
         if (!this.editorScene || !this.isInitialized) {
             this.log('Phaser not ready, cannot clear reference image');
             return;
         }
-        
-        this.editorScene.clearReferenceImage();
+
+        // Clear reference image (layer handles storage cleanup internally)
+        await this.editorScene.clearReferenceImage();
+
         this.log('Reference image cleared');
     }
     
