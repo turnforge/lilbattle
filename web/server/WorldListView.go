@@ -26,14 +26,10 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	// otherwise those will be passed in
 	_, _ = p.Paginator.Load(r, w, vc)
 
-	// Load view mode (table or grid), default to grid for select mode, table for manage mode
+	// Load view mode (table or grid), default to grid for both select and manage modes
 	p.ViewMode = r.URL.Query().Get("view")
 	if p.ViewMode == "" {
-		if p.ActionMode == "select" {
-			p.ViewMode = "grid" // Default to grid for world selection
-		} else {
-			p.ViewMode = "table" // Default to table for manage mode
-		}
+		p.ViewMode = "grid" // Default to grid view
 	}
 
 	// Load search query and sort
