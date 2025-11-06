@@ -819,29 +819,39 @@ export const IncomeConfigSchema: MessageSchema = {
   name: "IncomeConfig",
   fields: [
     {
-      name: "landbaseIncome",
+      name: "startingCoins",
       type: FieldType.NUMBER,
       id: 1,
     },
     {
-      name: "navalbaseIncome",
+      name: "gameIncome",
       type: FieldType.NUMBER,
       id: 2,
     },
     {
-      name: "airportbaseIncome",
+      name: "landbaseIncome",
       type: FieldType.NUMBER,
       id: 3,
     },
     {
-      name: "missilesiloIncome",
+      name: "navalbaseIncome",
       type: FieldType.NUMBER,
       id: 4,
     },
     {
-      name: "minesIncome",
+      name: "airportbaseIncome",
       type: FieldType.NUMBER,
       id: 5,
+    },
+    {
+      name: "missilesiloIncome",
+      type: FieldType.NUMBER,
+      id: 6,
+    },
+    {
+      name: "minesIncome",
+      type: FieldType.NUMBER,
+      id: 7,
     },
   ],
 };

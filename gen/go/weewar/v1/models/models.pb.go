@@ -1817,14 +1817,23 @@ func (x *GameConfiguration) GetSettings() *GameSettings {
 }
 
 type IncomeConfig struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	LandbaseIncome    int32                  `protobuf:"varint,1,opt,name=landbase_income,json=landbaseIncome,proto3" json:"landbase_income,omitempty"`
-	NavalbaseIncome   int32                  `protobuf:"varint,2,opt,name=navalbase_income,json=navalbaseIncome,proto3" json:"navalbase_income,omitempty"`
-	AirportbaseIncome int32                  `protobuf:"varint,3,opt,name=airportbase_income,json=airportbaseIncome,proto3" json:"airportbase_income,omitempty"`
-	MissilesiloIncome int32                  `protobuf:"varint,4,opt,name=missilesilo_income,json=missilesiloIncome,proto3" json:"missilesilo_income,omitempty"`
-	MinesIncome       int32                  `protobuf:"varint,5,opt,name=mines_income,json=minesIncome,proto3" json:"mines_income,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// How much starting coins to give each player
+	StartingCoins int32 `protobuf:"varint,1,opt,name=starting_coins,json=startingCoins,proto3" json:"starting_coins,omitempty"`
+	// Income each player just for being in the game
+	GameIncome int32 `protobuf:"varint,2,opt,name=game_income,json=gameIncome,proto3" json:"game_income,omitempty"`
+	// Income from each landbase per turn
+	LandbaseIncome int32 `protobuf:"varint,3,opt,name=landbase_income,json=landbaseIncome,proto3" json:"landbase_income,omitempty"`
+	// Income from each navalbase per turn
+	NavalbaseIncome int32 `protobuf:"varint,4,opt,name=navalbase_income,json=navalbaseIncome,proto3" json:"navalbase_income,omitempty"`
+	// Income from each airport base per turn
+	AirportbaseIncome int32 `protobuf:"varint,5,opt,name=airportbase_income,json=airportbaseIncome,proto3" json:"airportbase_income,omitempty"`
+	// Income from each missile silo per turn
+	MissilesiloIncome int32 `protobuf:"varint,6,opt,name=missilesilo_income,json=missilesiloIncome,proto3" json:"missilesilo_income,omitempty"`
+	// Income from each mine per turn
+	MinesIncome   int32 `protobuf:"varint,7,opt,name=mines_income,json=minesIncome,proto3" json:"mines_income,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *IncomeConfig) Reset() {
@@ -1855,6 +1864,20 @@ func (x *IncomeConfig) ProtoReflect() protoreflect.Message {
 // Deprecated: Use IncomeConfig.ProtoReflect.Descriptor instead.
 func (*IncomeConfig) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *IncomeConfig) GetStartingCoins() int32 {
+	if x != nil {
+		return x.StartingCoins
+	}
+	return 0
+}
+
+func (x *IncomeConfig) GetGameIncome() int32 {
+	if x != nil {
+		return x.GameIncome
+	}
+	return 0
 }
 
 func (x *IncomeConfig) GetLandbaseIncome() int32 {
@@ -3947,13 +3970,16 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"\aplayers\x18\x01 \x03(\v2\x15.weewar.v1.GamePlayerR\aplayers\x12)\n" +
 	"\x05teams\x18\x02 \x03(\v2\x13.weewar.v1.GameTeamR\x05teams\x12>\n" +
 	"\x0eincome_configs\x18\x03 \x01(\v2\x17.weewar.v1.IncomeConfigR\rincomeConfigs\x123\n" +
-	"\bsettings\x18\x04 \x01(\v2\x17.weewar.v1.GameSettingsR\bsettings\"\xe3\x01\n" +
-	"\fIncomeConfig\x12'\n" +
-	"\x0flandbase_income\x18\x01 \x01(\x05R\x0elandbaseIncome\x12)\n" +
-	"\x10navalbase_income\x18\x02 \x01(\x05R\x0fnavalbaseIncome\x12-\n" +
-	"\x12airportbase_income\x18\x03 \x01(\x05R\x11airportbaseIncome\x12-\n" +
-	"\x12missilesilo_income\x18\x04 \x01(\x05R\x11missilesiloIncome\x12!\n" +
-	"\fmines_income\x18\x05 \x01(\x05R\vminesIncome\"\xe7\x01\n" +
+	"\bsettings\x18\x04 \x01(\v2\x17.weewar.v1.GameSettingsR\bsettings\"\xab\x02\n" +
+	"\fIncomeConfig\x12%\n" +
+	"\x0estarting_coins\x18\x01 \x01(\x05R\rstartingCoins\x12\x1f\n" +
+	"\vgame_income\x18\x02 \x01(\x05R\n" +
+	"gameIncome\x12'\n" +
+	"\x0flandbase_income\x18\x03 \x01(\x05R\x0elandbaseIncome\x12)\n" +
+	"\x10navalbase_income\x18\x04 \x01(\x05R\x0fnavalbaseIncome\x12-\n" +
+	"\x12airportbase_income\x18\x05 \x01(\x05R\x11airportbaseIncome\x12-\n" +
+	"\x12missilesilo_income\x18\x06 \x01(\x05R\x11missilesiloIncome\x12!\n" +
+	"\fmines_income\x18\a \x01(\x05R\vminesIncome\"\xe7\x01\n" +
 	"\n" +
 	"GamePlayer\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\x05R\bplayerId\x12\x1f\n" +

@@ -351,10 +351,19 @@ export interface GameConfiguration {
 
 
 export interface IncomeConfig {
+  /** How much starting coins to give each player */
+  startingCoins: number;
+  /** Income each player just for being in the game */
+  gameIncome: number;
+  /** Income from each landbase per turn */
   landbaseIncome: number;
+  /** Income from each navalbase per turn */
   navalbaseIncome: number;
+  /** Income from each airport base per turn */
   airportbaseIncome: number;
+  /** Income from each missile silo per turn */
   missilesiloIncome: number;
+  /** Income from each mine per turn */
   minesIncome: number;
 }
 

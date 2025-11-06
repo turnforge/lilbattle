@@ -355,15 +355,26 @@ message GameConfiguration {
 }
 
 message IncomeConfig {
-  int32 landbase_income = 1;
+  // How much starting coins to give each player
+  int32 starting_coins = 1;
 
-  int32 navalbase_income = 2;
+  // Income each player just for being in the game
+  int32 game_income = 2;
 
-  int32 airportbase_income = 3;
+  // Income from each landbase per turn
+  int32 landbase_income = 3;
 
-  int32 missilesilo_income = 4;
+  // Income from each navalbase per turn
+  int32 navalbase_income = 4;
 
-  int32 mines_income = 5;
+  // Income from each airport base per turn
+  int32 airportbase_income = 5;
+
+  // Income from each missile silo per turn
+  int32 missilesilo_income = 6;
+
+  // Income from each mine per turn
+  int32 mines_income = 7;
 }
 
 message GamePlayer {

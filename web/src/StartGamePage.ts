@@ -29,6 +29,8 @@ class StartGamePage extends BasePage implements LCMComponent {
         players: [],
         teams: [],
         incomeConfigs: {
+            startingCoins: 100,
+            gameIncome: 100,
             landbaseIncome: 100,
             navalbaseIncome: 100,
             airportbaseIncome: 100,
@@ -354,6 +356,8 @@ class StartGamePage extends BasePage implements LCMComponent {
 
         if (!this.gameConfig.incomeConfigs) {
             this.gameConfig.incomeConfigs = {
+                startingCoins: 100,
+                gameIncome: 100,
                 landbaseIncome: 100,
                 navalbaseIncome: 100,
                 airportbaseIncome: 100,

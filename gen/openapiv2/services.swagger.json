@@ -2104,25 +2104,40 @@
     "v1IncomeConfig": {
       "type": "object",
       "properties": {
+        "startingCoins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "How much starting coins to give each player"
+        },
+        "gameIncome": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Income each player just for being in the game"
+        },
         "landbaseIncome": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "Income from each landbase per turn"
         },
         "navalbaseIncome": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "Income from each navalbase per turn"
         },
         "airportbaseIncome": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "Income from each airport base per turn"
         },
         "missilesiloIncome": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "Income from each missile silo per turn"
         },
         "minesIncome": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "title": "Income from each mine per turn"
         }
       }
     },

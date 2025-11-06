@@ -78,6 +78,7 @@ export interface WorldMetadata {
     name: string;
     width: number;
     height: number;
+    defaultGameConfig?: any; // GameConfiguration proto object
 }
 
 /**
@@ -302,7 +303,16 @@ export class World {
     public setHeight(height: number): void {
         this.metadata.height = height;
     }
-    
+
+    public getDefaultGameConfig(): any {
+        return this.metadata.defaultGameConfig;
+    }
+
+    public setDefaultGameConfig(config: any): void {
+        this.metadata.defaultGameConfig = config;
+        this.hasUnsavedChanges = true;
+    }
+
     public getMetadata(): WorldMetadata {
         return { ...this.metadata };
     }
@@ -523,7 +533,8 @@ export class World {
             description: '',
             tags: [],
             difficulty: 'medium',
-            creatorId: 'editor-user'
+            creatorId: 'editor-user',
+            defaultGameConfig: this.metadata.defaultGameConfig || undefined
         });
 
         // Build WorldData (tiles and units)
@@ -614,11 +625,12 @@ export class World {
             name: worldMetadata.name || 'Untitled World',
             Name: worldMetadata.name || 'Untitled World', // Both for compatibility
             id: worldMetadata.id,
-            
+            defaultGameConfig: worldMetadata.defaultGameConfig || worldMetadata.default_game_config,
+
             // Calculate dimensions from tiles if present
             width: 40,  // Default
             height: 40, // Default
-            
+
             // World tiles and units
             tiles: worldTilesData.tiles || [],
             units: worldTilesData.units || []
@@ -654,6 +666,7 @@ export class World {
         if (data.Name) this.metadata.name = data.Name; // Backend format
         if (data.width) this.metadata.width = data.width;
         if (data.height) this.metadata.height = data.height;
+        if (data.defaultGameConfig) this.metadata.defaultGameConfig = data.defaultGameConfig;
 
         return this.loadTilesAndUnits(data.tiles, data.units)
     }

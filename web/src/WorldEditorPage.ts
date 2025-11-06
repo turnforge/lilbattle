@@ -151,7 +151,7 @@ class WorldEditorPage extends BasePage {
             this.hasPendingWorldDataLoad = true;
         } catch (error) {
             console.error('Failed to load world:', error);
-            this.logToConsole(`Failed to load world: ${error}`);
+            console.log(`Failed to load world: ${error}`);
             this.updateEditorStatus('Load Error');
         }
     }
@@ -209,6 +209,8 @@ class WorldEditorPage extends BasePage {
     private handleWorldLoaded(data: WorldLoadedEventData): void {
         this.updateEditorStatus('Loaded');
         this.updateSaveButtonState();
+        // Load game configuration from world into the form
+        this.loadGameConfig();
     }
     
     private handleWorldSaved(data: any): void {
@@ -332,8 +334,8 @@ class WorldEditorPage extends BasePage {
                     case 'tilestats':
                         return this.createTileStatsComponent();
                     // case 'console': return this.createConsoleComponent();
-                    case 'advancedTools':
-                        return this.createAdvancedToolsComponent();
+                    case 'gameConfig':
+                        return this.createGameConfigComponent();
                     case 'referenceImage':
                         return this.createReferenceImageComponent();
                     default:
@@ -582,11 +584,11 @@ class WorldEditorPage extends BasePage {
             showGridCheckbox.addEventListener('change', (e) => {
                 const checked = (e.target as HTMLInputElement).checked;
                 this.setShowGrid(checked);
-                this.logToConsole(`Grid checkbox changed to: ${checked}`);
+                console.log(`Grid checkbox changed to: ${checked}`);
             });
-            this.logToConsole('Grid checkbox event handler bound');
+            console.log('Grid checkbox event handler bound');
         } else {
-            this.logToConsole('Grid checkbox not found in Phaser panel');
+            console.log('Grid checkbox not found in Phaser panel');
         }
         
         const showCoordinatesCheckbox = container.querySelector('#show-coordinates') as HTMLInputElement;
@@ -594,11 +596,11 @@ class WorldEditorPage extends BasePage {
             showCoordinatesCheckbox.addEventListener('change', (e) => {
                 const checked = (e.target as HTMLInputElement).checked;
                 this.setShowCoordinates(checked);
-                this.logToConsole(`Coordinates checkbox changed to: ${checked}`);
+                console.log(`Coordinates checkbox changed to: ${checked}`);
             });
-            this.logToConsole('Coordinates checkbox event handler bound');
+            console.log('Coordinates checkbox event handler bound');
         } else {
-            this.logToConsole('Coordinates checkbox not found in Phaser panel');
+            console.log('Coordinates checkbox not found in Phaser panel');
         }
         
         const showHealthCheckbox = container.querySelector('#show-health') as HTMLInputElement;
@@ -606,11 +608,11 @@ class WorldEditorPage extends BasePage {
             showHealthCheckbox.addEventListener('change', (e) => {
                 const checked = (e.target as HTMLInputElement).checked;
                 this.setShowHealth(checked);
-                this.logToConsole(`Health checkbox changed to: ${checked}`);
+                console.log(`Health checkbox changed to: ${checked}`);
             });
-            this.logToConsole('Health checkbox event handler bound');
+            console.log('Health checkbox event handler bound');
         } else {
-            this.logToConsole('Health checkbox not found in Phaser panel');
+            console.log('Health checkbox not found in Phaser panel');
         }
 
         // Brush/Fill tool selector
@@ -623,17 +625,17 @@ class WorldEditorPage extends BasePage {
                     // Fill mode - extract radius
                     const radius = parseInt(value.substring(5));
                     this.setFillRadius(radius);
-                    this.logToConsole(`Fill mode activated with radius: ${radius}`);
+                    console.log(`Fill mode activated with radius: ${radius}`);
                 } else {
                     // Brush mode - extract size
                     const size = parseInt(value);
                     this.setBrushSize(size);
-                    this.logToConsole(`Brush size changed to: ${size}`);
+                    console.log(`Brush size changed to: ${size}`);
                 }
             });
-            this.logToConsole('Brush/Fill tool selector event handler bound');
+            console.log('Brush/Fill tool selector event handler bound');
         } else {
-            this.logToConsole('Brush/Fill tool selector not found');
+            console.log('Brush/Fill tool selector not found');
         }
     }
 
@@ -770,8 +772,102 @@ class WorldEditorPage extends BasePage {
     public setFillRadius(radius: number): void {
         // TODO: Implement flood fill functionality
         // Store fill radius in pageState for future use
-        this.logToConsole(`Fill radius set to: ${radius} (flood fill not yet implemented)`);
+        console.log(`Fill radius set to: ${radius} (flood fill not yet implemented)`);
         this.showToast('Fill Mode', `Fill tool activated with ${radius} tile radius`, 'info');
+    }
+
+    /**
+     * Setup event handlers for game config panel inputs
+     */
+    private setupGameConfigHandlers(): void {
+        // Save button handler
+        const saveButton = document.getElementById('save-game-config');
+        if (saveButton) {
+            saveButton.addEventListener('click', () => this.saveGameConfig());
+        }
+
+        // TODO: Add auto-save on input change if desired
+    }
+
+    /**
+     * Load game configuration into the form inputs
+     */
+    private loadGameConfig(): void {
+        const gameConfig = this.world?.getDefaultGameConfig();
+
+        if (!gameConfig) {
+            console.log('No game configuration found in world, using defaults');
+            return;
+        }
+
+        // Set number of players
+        const numPlayersInput = document.getElementById('config-num-players') as HTMLInputElement;
+        if (numPlayersInput && gameConfig.players) {
+            numPlayersInput.value = gameConfig.players.length.toString();
+        }
+
+        // Set income config values
+        if (gameConfig.income_configs) {
+            const incomeConfig = gameConfig.income_configs;
+
+            (document.getElementById('config-starting-coins') as HTMLInputElement)!.value = incomeConfig.starting_coins?.toString() || '300';
+            (document.getElementById('config-game-income') as HTMLInputElement)!.value = incomeConfig.game_income?.toString() || '0';
+            (document.getElementById('config-landbase-income') as HTMLInputElement)!.value = incomeConfig.landbase_income?.toString() || '100';
+            (document.getElementById('config-navalbase-income') as HTMLInputElement)!.value = incomeConfig.navalbase_income?.toString() || '150';
+            (document.getElementById('config-airportbase-income') as HTMLInputElement)!.value = incomeConfig.airportbase_income?.toString() || '200';
+            (document.getElementById('config-missilesilo-income') as HTMLInputElement)!.value = incomeConfig.missilesilo_income?.toString() || '300';
+            (document.getElementById('config-mines-income') as HTMLInputElement)!.value = incomeConfig.mines_income?.toString() || '500';
+        }
+
+        console.log('Game configuration loaded into form');
+    }
+
+    /**
+     * Save game configuration to the world
+     */
+    private async saveGameConfig(): Promise<void> {
+        // Collect values from inputs
+        const numPlayers = parseInt((document.getElementById('config-num-players') as HTMLInputElement)?.value || '2');
+        const startingCoins = parseInt((document.getElementById('config-starting-coins') as HTMLInputElement)?.value || '300');
+        const gameIncome = parseInt((document.getElementById('config-game-income') as HTMLInputElement)?.value || '0');
+        const landbaseIncome = parseInt((document.getElementById('config-landbase-income') as HTMLInputElement)?.value || '100');
+        const navalbaseIncome = parseInt((document.getElementById('config-navalbase-income') as HTMLInputElement)?.value || '150');
+        const airportbaseIncome = parseInt((document.getElementById('config-airportbase-income') as HTMLInputElement)?.value || '200');
+        const missilesiloIncome = parseInt((document.getElementById('config-missilesilo-income') as HTMLInputElement)?.value || '300');
+        const minesIncome = parseInt((document.getElementById('config-mines-income') as HTMLInputElement)?.value || '500');
+
+        // Create GameConfiguration object
+        const gameConfig = {
+            players: Array.from({ length: numPlayers }, (_, i) => ({
+                player_id: i + 1,
+                player_type: 'human',
+                color: `player${i + 1}`,
+                team_id: 0,
+                name: `Player ${i + 1}`,
+                is_active: true,
+                starting_coins: startingCoins,
+                coins: startingCoins
+            })),
+            teams: [],
+            income_configs: {
+                starting_coins: startingCoins,
+                game_income: gameIncome,
+                landbase_income: landbaseIncome,
+                navalbase_income: navalbaseIncome,
+                airportbase_income: airportbaseIncome,
+                missilesilo_income: missilesiloIncome,
+                mines_income: minesIncome
+            },
+            settings: {}
+        };
+
+        // Update world object with new config
+        if (this.world) {
+            this.world.setDefaultGameConfig(gameConfig);
+        }
+
+        this.showToast('Configuration Saved', 'Default game configuration updated', 'success');
+        console.log('Game configuration saved:', gameConfig);
     }
     
     public setShowGrid(showGrid: boolean): void {
@@ -787,7 +883,7 @@ class WorldEditorPage extends BasePage {
             this,
             this.pageState
         );
-        this.logToConsole(`Grid visibility set to: ${showGrid}`);
+        console.log(`Grid visibility set to: ${showGrid}`);
     }
     
     public setShowCoordinates(showCoordinates: boolean): void {
@@ -803,7 +899,7 @@ class WorldEditorPage extends BasePage {
             this,
             this.pageState
         );
-        this.logToConsole(`Coordinates visibility set to: ${showCoordinates}`);
+        console.log(`Coordinates visibility set to: ${showCoordinates}`);
     }
     
     public setShowHealth(showHealth: boolean): void {
@@ -819,7 +915,7 @@ class WorldEditorPage extends BasePage {
             this,
             this.pageState
         );
-        this.logToConsole(`Health visibility set to: ${showHealth}`);
+        console.log(`Health visibility set to: ${showHealth}`);
     }
 
     public downloadImage(): void {
@@ -842,9 +938,9 @@ class WorldEditorPage extends BasePage {
         
         if (this.world) {
             this.world.fillAllTerrain(1, 0); // Terrain type 1 = Grass
-            this.logToConsole('Filled world with grass via World Observer pattern');
+            console.log('Filled world with grass via World Observer pattern');
         } else {
-            this.logToConsole('World not available, cannot fill grass');
+            console.log('World not available, cannot fill grass');
         }
     }
 
@@ -884,7 +980,7 @@ class WorldEditorPage extends BasePage {
                 }
             }
         } else {
-            this.logToConsole('World or Phaser panel not available, cannot create mountain ridge');
+            console.log('World or Phaser panel not available, cannot create mountain ridge');
         }
     }
 
@@ -915,37 +1011,37 @@ class WorldEditorPage extends BasePage {
             
             if (stats.other > 0) {
             }
-            this.logToConsole(`Total tiles: ${tiles.length}`);
+            console.log(`Total tiles: ${tiles.length}`);
         } else {
         }
        */
     }
 
     public randomizeTerrain(): void {
-        this.logToConsole('Randomizing terrain...');
+        console.log('Randomizing terrain...');
         
         if (this.phaserEditorComponent && this.phaserEditorComponent.getIsInitialized()) {
             this.phaserEditorComponent.randomizeTerrain();
-            this.logToConsole('Terrain randomized using Phaser');
+            console.log('Terrain randomized using Phaser');
         } else {
-            this.logToConsole('Phaser panel not available, cannot randomize terrain');
+            console.log('Phaser panel not available, cannot randomize terrain');
         }
     }
 
     public clearWorld(): void {
-        this.logToConsole('Clearing entire world...');
+        console.log('Clearing entire world...');
         
         // Clear world data - this will trigger observer notifications to update Phaser
         if (this.world) {
             this.world.clearAll();
-            this.logToConsole('World data cleared - Phaser will update via observer pattern');
+            console.log('World data cleared - Phaser will update via observer pattern');
         } else {
-            this.logToConsole('World instance not available');
+            console.log('World instance not available');
         }
         
         // Show success message
         this.showToast('World Cleared', 'All tiles and units have been removed', 'info');
-        this.logToConsole('Clear world operation completed');
+        console.log('Clear world operation completed');
     }
 
     // Canvas management methods removed - now handled by Phaser panel
@@ -967,7 +1063,7 @@ class WorldEditorPage extends BasePage {
             }
         } catch (error) {
             console.error('Save failed:', error);
-            this.logToConsole(`Save failed: ${error}`);
+            console.log(`Save failed: ${error}`);
             this.updateEditorStatus('Save Error');
             this.showToast('Error', 'Failed to save world', 'error');
         }
@@ -1051,7 +1147,7 @@ class WorldEditorPage extends BasePage {
         }
 
         try {
-            this.logToConsole(`Updating world title to: ${newTitle}`);
+            console.log(`Updating world title to: ${newTitle}`);
             
             // Save the world (this will include the title update)
             await this.saveWorld();
@@ -1060,7 +1156,7 @@ class WorldEditorPage extends BasePage {
             
         } catch (error) {
             console.error('Failed to save world title:', error);
-            this.logToConsole(`Failed to save world title: ${error}`);
+            console.log(`Failed to save world title: ${error}`);
             this.showToast('Error', 'Failed to update world title', 'error');
             
             // Revert the title on error
@@ -1231,7 +1327,7 @@ class WorldEditorPage extends BasePage {
                 // Initialize PhaserEditorComponent using the template directly
                 // PhaserEditorComponent will find the #editor-canvas-container within this template
                 this.phaserEditorComponent = new PhaserEditorComponent("PhaserEditorComponent", template, this.eventBus, this.debugMode);
-                this.logToConsole('PhaserEditorComponent initialized using template directly');
+                console.log('PhaserEditorComponent initialized using template directly');
                 
                 // Bind grid and coordinates checkboxes
                 this.bindPhaserPanelEvents(template);
@@ -1303,20 +1399,21 @@ class WorldEditorPage extends BasePage {
         };
     }
 
-    private createAdvancedToolsComponent() {
-        const template = document.getElementById('advanced-tools-panel-template');
+    private createGameConfigComponent() {
+        const template = document.getElementById('game-config-panel-template');
         if (!template) {
-            console.error('Advanced tools panel template not found');
+            console.error('Game config panel template not found');
             return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
         }
-        
+
         // Use the template element directly - no cloning needed
         template.style.display = 'block';
-        
+
         return {
             element: template,
             init: () => {
-                // Advanced tools panel is already initialized through global event binding
+                // Setup event handlers for game config inputs
+                this.setupGameConfigHandlers();
             },
             dispose: () => {}
         };
@@ -1375,20 +1472,20 @@ class WorldEditorPage extends BasePage {
             position: { direction: 'left', referencePanel: 'phaser' }
         });
 
-        // Add advanced tools panel to the right of Phaser (260px width)
+        // Add game config panel to the right of Phaser (260px width)
         this.dockview.addPanel({
-            id: 'advancedTools',
-            component: 'advancedTools',
-            title: '🔧 Advanced & View',
+            id: 'gameConfig',
+            component: 'gameConfig',
+            title: '⚙️ Game Configuration',
             position: { direction: 'right', referencePanel: 'phaser' }
         });
 
-        // Add TileStats panel below the Advanced Tools panel
+        // Add TileStats panel below the Game Config panel
         this.dockview.addPanel({
             id: 'tilestats',
             component: 'tilestats',
             title: '📊 World Statistics',
-            position: { direction: 'below', referencePanel: 'advancedTools' }
+            position: { direction: 'below', referencePanel: 'gameConfig' }
         });
         
         // Add Reference Image panel below the TileStats panel
@@ -1424,10 +1521,10 @@ class WorldEditorPage extends BasePage {
                 toolsPanel.api.setSize({ width: 270 });
             }
 
-            // Set right panel (Advanced Tools) to 260px width
-            const advancedToolsPanel = this.dockview.getPanel('advancedTools');
-            if (advancedToolsPanel) {
-                advancedToolsPanel.api.setSize({ width: 260 });
+            // Set right panel (Game Config) to 260px width
+            const gameConfigPanel = this.dockview.getPanel('gameConfig');
+            if (gameConfigPanel) {
+                gameConfigPanel.api.setSize({ width: 260 });
             }
 
             const consolePanel = this.dockview.getPanel('console');
@@ -1441,7 +1538,7 @@ class WorldEditorPage extends BasePage {
                 referenceImagePanel.api.setSize({ height: 300 });
             }
 
-            this.logToConsole('Panel sizes set: Tools=270px, Advanced=260px, ReferenceImage=300px, World Editor=remaining');
+            console.log('Panel sizes set: Tools=270px, Advanced=260px, ReferenceImage=300px, World Editor=remaining');
     }
 
     private saveDockviewLayout(): void {
@@ -1509,13 +1606,13 @@ class WorldEditorPage extends BasePage {
      */
     private centerCameraOnWorld(): void {
         if (!this.phaserEditorComponent || !this.phaserEditorComponent.getIsInitialized() || !this.world) {
-            this.logToConsole('Cannot center camera - components not ready');
+            console.log('Cannot center camera - components not ready');
             return;
         }
         
         const allTiles = this.world.getAllTiles();
         if (allTiles.length === 0) {
-            this.logToConsole('No tiles to center camera on');
+            console.log('No tiles to center camera on');
             return;
         }
         
@@ -1536,7 +1633,7 @@ class WorldEditorPage extends BasePage {
         const centerQ = Math.floor((minQ + maxQ) / 2);
         const centerR = Math.floor((minR + maxR) / 2);
         
-        this.logToConsole(`Centering camera on Q=${centerQ}, R=${centerR} (bounds: Q=${minQ}-${maxQ}, R=${minR}-${maxR})`);
+        console.log(`Centering camera on Q=${centerQ}, R=${centerR} (bounds: Q=${minQ}-${maxQ}, R=${minR}-${maxR})`);
         
         // Center the camera using the PhaserEditorComponent's method
         this.phaserEditorComponent.centerCamera(centerQ, centerR);
@@ -1754,7 +1851,7 @@ class WorldEditorPage extends BasePage {
     private cancelSelection(): void {
         this.restoreUIState();
         this.hidePreviewIndicator();
-        this.logToConsole('Selection cancelled - state restored');
+        console.log('Selection cancelled - state restored');
     }
 
     // Tab switching handlers
@@ -1769,7 +1866,7 @@ class WorldEditorPage extends BasePage {
             // Switch to nature tab and turn on overlay
             this.editorToolsPanel.switchToTab('nature');
             this.setOverlayForTab('nature', true);
-            this.logToConsole('Switched to Nature terrain tab');
+            console.log('Switched to Nature terrain tab');
         }
     }
     
@@ -1784,7 +1881,7 @@ class WorldEditorPage extends BasePage {
             // Switch to city tab and turn on overlay
             this.editorToolsPanel.switchToTab('city');
             this.setOverlayForTab('city', true);
-            this.logToConsole('Switched to City terrain tab');
+            console.log('Switched to City terrain tab');
         }
     }
     
@@ -1799,7 +1896,7 @@ class WorldEditorPage extends BasePage {
             // Switch to unit tab and turn on overlay
             this.editorToolsPanel.switchToTab('unit');
             this.setOverlayForTab('unit', true);
-            this.logToConsole('Switched to Unit tab');
+            console.log('Switched to Unit tab');
         }
     }
     
@@ -1818,7 +1915,7 @@ class WorldEditorPage extends BasePage {
             }
         }
         
-        this.logToConsole(`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab overlay ${visible ? 'shown' : 'hidden'}`);
+        console.log(`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab overlay ${visible ? 'shown' : 'hidden'}`);
     }
     
     private toggleOverlayForTab(tab: 'nature' | 'city' | 'unit'): void {
@@ -1923,7 +2020,7 @@ class WorldEditorPage extends BasePage {
             this.executeNumberSelection();
         }, 1500);
         
-        this.logToConsole(`Number input: ${this.numberInputBuffer}`);
+        console.log(`Number input: ${this.numberInputBuffer}`);
     }
     
     private removeLastDigit(): void {
@@ -1941,7 +2038,7 @@ class WorldEditorPage extends BasePage {
                     this.executeNumberSelection();
                 }, 1500);
                 
-                this.logToConsole(`Number input: ${this.numberInputBuffer}`);
+                console.log(`Number input: ${this.numberInputBuffer}`);
             }
         }
     }
@@ -1957,7 +2054,7 @@ class WorldEditorPage extends BasePage {
         
         const activeTab = this.editorToolsPanel.getActiveTab();
         this.editorToolsPanel.selectByIndex(index);
-        this.logToConsole(`Selected item ${index} in ${activeTab} tab`);
+        console.log(`Selected item ${index} in ${activeTab} tab`);
         
         this.clearNumberInput();
     }
@@ -1992,7 +2089,7 @@ class WorldEditorPage extends BasePage {
         const activeTab = this.editorToolsPanel.getActiveTab();
         this.editorToolsPanel.selectByIndex(index);
         this.editorToolsPanel.hideNumberOverlays();
-        this.logToConsole(`Selected item ${index} in ${activeTab} tab`);
+        console.log(`Selected item ${index} in ${activeTab} tab`);
     }
     
     private previewByNumberInActiveTab(args?: string): void {
@@ -2003,14 +2100,14 @@ class WorldEditorPage extends BasePage {
         
         this.editorToolsPanel.showNumberOverlays();
         const activeTab = this.editorToolsPanel.getActiveTab();
-        this.logToConsole(`Preview: item ${index} in ${activeTab} tab`);
+        console.log(`Preview: item ${index} in ${activeTab} tab`);
     }
     
     private cancelNumberSelection(): void {
         if (this.editorToolsPanel) {
             this.editorToolsPanel.hideNumberOverlays();
         }
-        this.logToConsole('Cancelled number selection');
+        console.log('Cancelled number selection');
     }
     
     private selectPlayer(args?: string): void {
@@ -2103,7 +2200,7 @@ class WorldEditorPage extends BasePage {
             btn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
         });
         
-        this.logToConsole('Reset all tools to defaults');
+        console.log('Reset all tools to defaults');
         
         // Show toast notification
         this.showToast('Reset Complete', 'All tools reset to defaults', 'info');
@@ -2115,13 +2212,13 @@ class WorldEditorPage extends BasePage {
 
     // Public methods for Phaser panel (for backward compatibility with UI)
     public initializePhaser(): void {
-        this.logToConsole('Phaser initialization now handled by PhaserEditorComponent in dockview');
+        console.log('Phaser initialization now handled by PhaserEditorComponent in dockview');
     }
     
     // Old EventBus handlers removed - components now use pageState directly
     
     private async handlePhaserReady() {
-        this.logToConsole('EventBus: Phaser editor is ready');
+        console.log('EventBus: Phaser editor is ready');
 
         // Load world data if available
         if (this.world && this.phaserEditorComponent) {

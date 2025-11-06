@@ -820,17 +820,17 @@ export class ReferenceImagePanel extends BaseComponent {
     private updateReferenceScaleDisplay(): void {
         const scaleXInput = this.rootElement.querySelector('#reference-scale-x-value') as HTMLInputElement;
         const scaleYInput = this.rootElement.querySelector('#reference-scale-y-value') as HTMLInputElement;
-        
+
         // Defensive programming: ensure scale values exist
         const scaleX = this.referenceState?.scale?.x ?? 1.0;
         const scaleY = this.referenceState?.scale?.y ?? 1.0;
-        
+
         if (scaleXInput) {
-            scaleXInput.value = scaleX.toFixed(2);
+            scaleXInput.value = scaleX.toString();
         }
-        
+
         if (scaleYInput) {
-            scaleYInput.value = scaleY.toFixed(2);
+            scaleYInput.value = scaleY.toString();
         }
     }
     

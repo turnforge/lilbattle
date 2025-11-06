@@ -12,6 +12,7 @@ type WorldListingPage struct {
 }
 
 func (m *WorldListingPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+	m.DisableSplashScreen = true
 	m.Title = "Worlds"
 	m.Header.Load(r, w, vc)
 	err, finished = m.WorldListView.Load(r, w, vc)
