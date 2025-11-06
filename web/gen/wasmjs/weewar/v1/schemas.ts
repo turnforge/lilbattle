@@ -179,6 +179,12 @@ export const WorldSchema: MessageSchema = {
       id: 11,
       repeated: true,
     },
+    {
+      name: "defaultGameConfig",
+      type: FieldType.MESSAGE,
+      id: 12,
+      messageType: "weewar.v1.GameConfiguration",
+    },
   ],
 };
 

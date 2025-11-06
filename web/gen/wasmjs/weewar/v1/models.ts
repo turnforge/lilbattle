@@ -128,6 +128,8 @@ export class World implements WorldInterface {
   /** URL to screenshot/preview image (defaults to /worlds/{id}/screenshots/{screenshotName})
  Can be overridden to point to CDN or external hosting */
   previewUrls: string[] = [];
+  /** Default game configs */
+  defaultGameConfig?: GameConfiguration;
 
   /**
    * Create and deserialize an instance from raw data

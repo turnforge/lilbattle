@@ -32,7 +32,7 @@
         </div>
 
         <!-- Search and Filter Panel -->
-        {{ template "WorldFilterPanel" (dict "SearchInputId" "search-worlds-input" "SortSelectId" "sort-worlds-select" "HideCreateButton" (eq .ActionMode "select") "HtmxEnabled" true "Query" .Query "Sort" .Sort) }}
+        {{ template "WorldFilterPanel" (dict "SearchInputId" "search-worlds-input" "SortSelectId" "sort-worlds-select" "HideCreateButton" (eq .ActionMode "select") "HtmxEnabled" false "Query" .Query "Sort" .Sort) }}
     </div>
 
     <!-- Grid View -->

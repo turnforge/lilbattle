@@ -16,19 +16,27 @@
         </button>
       </div>
 
-      <!-- Brush Size -->
-      <div class="flex items-center space-x-2">
-        <label class="text-xs font-medium text-gray-700 dark:text-gray-300">Brush:</label>
+      <!-- Brush/Fill Tool -->
+      <div class="flex items-center">
         <select
           id="brush-size"
           class="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         >
-          <option value="0">Single (1)</option>
-          <option value="1">Small (3)</option>
-          <option value="3">Medium (5)</option>
-          <option value="5">Large (9)</option>
-          <option value="10">X-Large (15)</option>
-          <option value="15">XX-Large (25)</option>
+          <optgroup label="Brush">
+            <option value="0">Single (1)</option>
+            <option value="1">Small (3)</option>
+            <option value="3">Medium (5)</option>
+            <option value="5">Large (9)</option>
+            <option value="10">X-Large (15)</option>
+            <option value="15">XX-Large (25)</option>
+          </optgroup>
+          <optgroup label="Fill">
+            <option value="fill:5">5 tiles</option>
+            <option value="fill:10">10 tiles</option>
+            <option value="fill:20">20 tiles</option>
+            <option value="fill:50">50 tiles</option>
+            <option value="fill:100">100 tiles</option>
+          </optgroup>
         </select>
       </div>
 

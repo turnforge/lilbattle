@@ -26,6 +26,32 @@
 
 ## UI Polish & User Experience
 
+### World Editor Improvements
+**Priority**: Medium
+**Status**: 🔄 IN PROGRESS
+
+**Completed (2025-01-05)**:
+- [x] Fixed neutral player bug - city tiles now correctly save as player=0
+- [x] Asset theme URL query parameter support (?theme=classic)
+- [x] Brush size functionality fixed - added missing event listener
+- [x] Unified Brush/Fill tool dropdown with optgroup sections
+- [x] Dynamic brush size reading from dropdown (single source of truth)
+- [x] Fill tool foundation (5, 10, 20, 50, 100 tile radius options)
+
+**Remaining Tasks**:
+- [ ] Implement flood fill algorithm with radial limit
+- [ ] Context-aware Clear button (brush clear vs flood clear)
+- [ ] Remove dead code: GameViewerPage.ts (replaced by PageBase + variants)
+- [ ] Keyboard shortcuts for Fill tool
+- [ ] Fill tool visual feedback and preview
+
+**Design**:
+- Brush/Fill unified selector uses optgroups for clear separation
+- Fill values prefixed with "fill:" (e.g., "fill:10") for easy parsing
+- getBrushSizeValues() and getBrushSizeName() read from HTML for flexibility
+- Clear button works with both Brush (area clear) and Fill (flood clear) modes
+- AssetThemePreference priority: URL param > localStorage > cookie > default
+
 ### CLI Tool Enhancements
 **Priority**: Medium
 **Status**: ✅ COMPLETE

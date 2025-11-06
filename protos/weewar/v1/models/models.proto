@@ -106,6 +106,9 @@ message World {
   // URL to screenshot/preview image (defaults to /worlds/{id}/screenshots/{screenshotName})
   // Can be overridden to point to CDN or external hosting
   repeated string preview_urls = 11;
+
+  // Default game configs
+  GameConfiguration default_game_config = 12;
 }
 
 message WorldData {

@@ -22,6 +22,8 @@
                hx-swap="innerHTML"
                hx-indicator="{{ or .IndicatorSelector "#list-loading-indicator" }}"
                hx-select="{{ or .SelectSelector "#worlds-container" }}"
+               {{ else }}
+               onchange="handleSearchChange(this)"
                {{ end }} />
     </div>
 
@@ -39,6 +41,8 @@
                 hx-indicator="{{ or .IndicatorSelector "#list-loading-indicator" }}"
                 hx-select="{{ or .SelectSelector "#worlds-container" }}"
                 hx-include="[name='q']"
+                {{ else }}
+                onchange="handleSortChange(this)"
                 {{ end }}>
             <option value="modified_desc" {{ if eq .Sort "modified_desc" }}selected{{ end }}>Last Modified (Newest)</option>
             <option value="modified_asc" {{ if eq .Sort "modified_asc" }}selected{{ end }}>Last Modified (Oldest)</option>

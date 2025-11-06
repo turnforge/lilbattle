@@ -13,7 +13,6 @@ import { EditorToolsPanel } from './EditorToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
 import { LCMComponent } from '../lib/LCMComponent';
 import { LifecycleController } from '../lib/LifecycleController';
-import { BRUSH_SIZE_NAMES } from "./ColorsAndNames"
 
 /**
  * World Editor page with unified World architecture and centralized page state
@@ -613,6 +612,29 @@ class WorldEditorPage extends BasePage {
         } else {
             this.logToConsole('Health checkbox not found in Phaser panel');
         }
+
+        // Brush/Fill tool selector
+        const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        if (brushSizeSelect) {
+            brushSizeSelect.addEventListener('change', (e) => {
+                const value = (e.target as HTMLSelectElement).value;
+
+                if (value.startsWith('fill:')) {
+                    // Fill mode - extract radius
+                    const radius = parseInt(value.substring(5));
+                    this.setFillRadius(radius);
+                    this.logToConsole(`Fill mode activated with radius: ${radius}`);
+                } else {
+                    // Brush mode - extract size
+                    const size = parseInt(value);
+                    this.setBrushSize(size);
+                    this.logToConsole(`Brush size changed to: ${size}`);
+                }
+            });
+            this.logToConsole('Brush/Fill tool selector event handler bound');
+        } else {
+            this.logToConsole('Brush/Fill tool selector not found');
+        }
     }
 
     private initializeKeyboardShortcuts(): void {
@@ -741,8 +763,15 @@ class WorldEditorPage extends BasePage {
         if (this.pageState) {
             this.pageState.setBrushSize(size);
         }
-        
+
         this.updateBrushInfo();
+    }
+
+    public setFillRadius(radius: number): void {
+        // TODO: Implement flood fill functionality
+        // Store fill radius in pageState for future use
+        this.logToConsole(`Fill radius set to: ${radius} (flood fill not yet implemented)`);
+        this.showToast('Fill Mode', `Fill tool activated with ${radius} tile radius`, 'info');
     }
     
     public setShowGrid(showGrid: boolean): void {
@@ -1088,12 +1117,42 @@ class WorldEditorPage extends BasePage {
         }
     }
 
+    /**
+     * Get brush size values from the select dropdown
+     */
+    private getBrushSizeValues(): number[] {
+        const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        if (!brushSizeSelect) return [0];
+
+        const values: number[] = [];
+        for (let i = 0; i < brushSizeSelect.options.length; i++) {
+            values.push(parseInt(brushSizeSelect.options[i].value));
+        }
+        return values;
+    }
+
+    /**
+     * Get brush size display name from the select dropdown
+     */
+    private getBrushSizeName(brushSize: number): string {
+        const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
+        if (!brushSizeSelect) return 'Unknown';
+
+        for (let i = 0; i < brushSizeSelect.options.length; i++) {
+            if (parseInt(brushSizeSelect.options[i].value) === brushSize) {
+                return brushSizeSelect.options[i].text;
+            }
+        }
+        return 'Unknown';
+    }
+
     private updateBrushInfo(): void {
         const brushInfo = document.getElementById('brush-info');
         if (brushInfo) {
             const currentTerrain = this.pageState?.getToolState().selectedTerrain || 1;
             const currentBrushSize = this.pageState?.getToolState().brushSize || 0;
-            brushInfo.textContent = `Current: Terrain ${currentTerrain}, ${BRUSH_SIZE_NAMES[currentBrushSize]}`;
+            const brushSizeName = this.getBrushSizeName(currentBrushSize);
+            brushInfo.textContent = `Current: Terrain ${currentTerrain}, ${brushSizeName}`;
         }
     }
 
@@ -1673,21 +1732,22 @@ class WorldEditorPage extends BasePage {
     
     private previewBrushSize(args?: string): void {
         const index = parseInt(args || '1'); // 1-based index
-        
-        // World 1-based index to actual brush size values
-        const brushSizeValues = [0, 1, 3, 5, 10, 15]; // Corresponds to the select options
-        
+
+        // Get brush size values from the select dropdown
+        const brushSizeValues = this.getBrushSizeValues();
+
         if (index >= 1 && index <= brushSizeValues.length) {
             this.saveUIState();
             const actualSize = brushSizeValues[index - 1];
             this.setBrushSize(actualSize);
-            
+
             const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
             if (brushSizeSelect) {
                 brushSizeSelect.value = actualSize.toString();
             }
-            
-            this.showPreviewIndicator(`Preview: ${BRUSH_SIZE_NAMES[index - 1]} brush`);
+
+            const brushSizeName = this.getBrushSizeName(actualSize);
+            this.showPreviewIndicator(`Preview: ${brushSizeName} brush`);
         }
     }
     
@@ -1978,16 +2038,16 @@ class WorldEditorPage extends BasePage {
     
     private selectBrushSize(args?: string): void {
         const index = parseInt(args || '1'); // 1-based index
-        
+
         this.hidePreviewIndicator(); // Hide preview indicator when committing
-        
-        // World 1-based index to actual brush size values
-        const brushSizeValues = [0, 1, 3, 5, 10, 15]; // Corresponds to the select options
-        
+
+        // Get brush size values from the select dropdown
+        const brushSizeValues = this.getBrushSizeValues();
+
         if (index >= 1 && index <= brushSizeValues.length) {
             const actualSize = brushSizeValues[index - 1];
             this.setBrushSize(actualSize);
-            
+
             // Update brush size selector in UI and trigger onchange
             const brushSizeSelect = document.getElementById('brush-size') as HTMLSelectElement;
             if (brushSizeSelect) {
@@ -1995,9 +2055,9 @@ class WorldEditorPage extends BasePage {
                 // Trigger the onchange event
                 brushSizeSelect.dispatchEvent(new Event('change'));
             }
-            
-            // Show toast notification
-            this.showToast('Brush Size Selected', `${BRUSH_SIZE_NAMES[index - 1]} brush selected`, 'success');
+
+            const brushSizeName = this.getBrushSizeName(actualSize);
+            this.showToast('Brush Size Selected', `${brushSizeName} brush selected`, 'success');
         } else {
             this.showToast('Invalid Selection', `Brush size ${index} not available`, 'error');
         }

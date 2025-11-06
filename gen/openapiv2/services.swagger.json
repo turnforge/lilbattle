@@ -1215,6 +1215,10 @@
                         "type": "string"
                       },
                       "title": "URL to screenshot/preview image (defaults to /worlds/{id}/screenshots/{screenshotName})\nCan be overridden to point to CDN or external hosting"
+                    },
+                    "defaultGameConfig": {
+                      "$ref": "#/definitions/v1GameConfiguration",
+                      "title": "Default game configs"
                     }
                   },
                   "title": "*\nWorld being updated"
@@ -2894,6 +2898,10 @@
             "type": "string"
           },
           "title": "URL to screenshot/preview image (defaults to /worlds/{id}/screenshots/{screenshotName})\nCan be overridden to point to CDN or external hosting"
+        },
+        "defaultGameConfig": {
+          "$ref": "#/definitions/v1GameConfiguration",
+          "title": "Default game configs"
         }
       }
     },
