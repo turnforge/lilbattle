@@ -2,7 +2,7 @@ import { EventBus } from '../lib/EventBus';
 import { WorldEventTypes, WorldEventType } from './events';
 import { BaseComponent } from '../lib/Component';
 import { HexCoord } from './phaser/hexUtils';
-import { rowColToHex, hexToRowCol, axialNeighbors } from "./phaser/hexUtils";
+import { rowColToHex, hexToRowCol, axialNeighbors, hexDistance } from "./phaser/hexUtils";
 import { 
     World as ProtoWorld, 
     WorldData as ProtoWorldData, 
@@ -922,6 +922,132 @@ export class World {
                 // Convert back to hex coordinates
                 const hex = rowColToHex(row, col);
                 out.push([hex.q, hex.r]);
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Generate tiles for a circle in hex coordinates
+     * @param centerQ Center Q coordinate
+     * @param centerR Center R coordinate
+     * @param radius Radius in hex tiles
+     * @param filled If true, fill the circle; if false, only return outline
+     * @returns Array of [q, r] coordinate pairs
+     */
+    public circleFrom(centerQ: number, centerR: number, radius: number, filled: boolean = true): [number, number][] {
+        const out: [number, number][] = [];
+
+        // Scan bounding box
+        for (let q = centerQ - radius; q <= centerQ + radius; q++) {
+            for (let r = centerR - radius; r <= centerR + radius; r++) {
+                const dist = hexDistance(centerQ, centerR, q, r);
+
+                if (filled) {
+                    // Include all tiles within radius
+                    if (dist <= radius) {
+                        out.push([q, r]);
+                    }
+                } else {
+                    // Only include outline tiles (distance exactly equals radius)
+                    if (dist === radius) {
+                        out.push([q, r]);
+                    }
+                }
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Generate tiles for an axis-aligned oval/ellipse in hex coordinates
+     * @param centerQ Center Q coordinate
+     * @param centerR Center R coordinate
+     * @param radiusX Horizontal radius in row/col space
+     * @param radiusY Vertical radius in row/col space
+     * @param filled If true, fill the oval; if false, only return outline
+     * @returns Array of [q, r] coordinate pairs
+     */
+    public ovalFrom(centerQ: number, centerR: number, radiusX: number, radiusY: number, filled: boolean = true): [number, number][] {
+        const out: [number, number][] = [];
+
+        // Convert center to row/col
+        const centerRowCol = hexToRowCol(centerQ, centerR);
+
+        // Scan bounding box in row/col space
+        const minRow = Math.floor(centerRowCol.row - radiusY);
+        const maxRow = Math.ceil(centerRowCol.row + radiusY);
+        const minCol = Math.floor(centerRowCol.col - radiusX);
+        const maxCol = Math.ceil(centerRowCol.col + radiusX);
+
+        for (let row = minRow; row <= maxRow; row++) {
+            for (let col = minCol; col <= maxCol; col++) {
+                // Ellipse formula: (dx/radiusX)^2 + (dy/radiusY)^2 <= 1
+                const dx = col - centerRowCol.col;
+                const dy = row - centerRowCol.row;
+                const normalizedDist = (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY);
+
+                if (filled) {
+                    // Include all tiles within ellipse
+                    if (normalizedDist <= 1) {
+                        const hex = rowColToHex(row, col);
+                        out.push([hex.q, hex.r]);
+                    }
+                } else {
+                    // Outline: tiles on the edge (within a small threshold of boundary)
+                    // Use threshold to account for discretization
+                    if (normalizedDist >= 0.85 && normalizedDist <= 1.15) {
+                        const hex = rowColToHex(row, col);
+                        out.push([hex.q, hex.r]);
+                    }
+                }
+            }
+        }
+
+        return out;
+    }
+
+    /**
+     * Generate tiles for a line/path through multiple points using Bresenham algorithm
+     * @param points Array of {q, r} coordinates defining the path
+     * @returns Array of [q, r] coordinate pairs for all tiles along the line
+     */
+    public lineFrom(points: { q: number; r: number }[]): [number, number][] {
+        if (points.length < 2) {
+            return points.map(p => [p.q, p.r] as [number, number]);
+        }
+
+        const out: [number, number][] = [];
+        const visited = new Set<string>();
+
+        // Draw line segment between each consecutive pair of points
+        for (let i = 0; i < points.length - 1; i++) {
+            const start = points[i];
+            const end = points[i + 1];
+
+            // Bresenham line algorithm in hex coordinates
+            // Convert to row/col for linear interpolation
+            const startRowCol = hexToRowCol(start.q, start.r);
+            const endRowCol = hexToRowCol(end.q, end.r);
+
+            const dx = endRowCol.col - startRowCol.col;
+            const dy = endRowCol.row - startRowCol.row;
+            const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+            for (let step = 0; step <= steps; step++) {
+                const t = steps === 0 ? 0 : step / steps;
+                const col = Math.round(startRowCol.col + t * dx);
+                const row = Math.round(startRowCol.row + t * dy);
+
+                const hex = rowColToHex(row, col);
+                const key = `${hex.q},${hex.r}`;
+
+                if (!visited.has(key)) {
+                    visited.add(key);
+                    out.push([hex.q, hex.r]);
+                }
             }
         }
 

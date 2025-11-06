@@ -7,6 +7,9 @@ import { ReferenceImageLayer } from './layers/ReferenceImageLayer';
 import { ShapeHighlightLayer } from './layers/HexHighlightLayer';
 import { ShapeTool } from './tools/ShapeTool';
 import { RectangleTool } from './tools/RectangleTool';
+import { CircleTool } from './tools/CircleTool';
+import { OvalTool } from './tools/OvalTool';
+import { LineTool } from './tools/LineTool';
 
 /**
  * PhaserEditorScene extends PhaserWorldScene with editor-specific functionality.
@@ -538,22 +541,41 @@ export class PhaserEditorScene extends PhaserWorldScene {
     }
 
     /**
-     * Enable rectangle mode (creates and activates RectangleTool)
+     * Set shape mode - creates and activates the appropriate shape tool
+     * @param shapeType Type of shape: 'rectangle', 'circle', 'oval', 'line', or null to disable
      */
-    public setRectangleMode(enabled: boolean): void {
-        if (enabled) {
-            if (!this.world) return;
-
-            // Create rectangle tool and enter shape drawing mode
-            this.currentShapeTool = new RectangleTool(this.world, this.shapeFillMode);
-            this.isInShapeDrawingMode = true;
-        } else {
+    public setShapeMode(shapeType: 'rectangle' | 'circle' | 'oval' | 'line' | null): void {
+        if (shapeType === null) {
             this.exitShapeMode();
+            return;
         }
+
+        if (!this.world) return;
+
+        // Create the appropriate shape tool
+        switch (shapeType) {
+            case 'rectangle':
+                this.currentShapeTool = new RectangleTool(this.world, this.shapeFillMode);
+                break;
+            case 'circle':
+                this.currentShapeTool = new CircleTool(this.world, this.shapeFillMode);
+                break;
+            case 'oval':
+                this.currentShapeTool = new OvalTool(this.world, this.shapeFillMode);
+                break;
+            case 'line':
+                this.currentShapeTool = new LineTool(this.world);
+                break;
+            default:
+                console.warn(`Unknown shape type: ${shapeType}`);
+                return;
+        }
+
+        this.isInShapeDrawingMode = true;
     }
 
     /**
-     * Check if rectangle mode is enabled
+     * Check if rectangle mode is enabled (for backward compatibility)
      */
     public isInRectangleMode(): boolean {
         return this.isInShapeDrawingMode && this.currentShapeTool instanceof RectangleTool;

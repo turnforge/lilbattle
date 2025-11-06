@@ -624,23 +624,36 @@ class WorldEditorPage extends BasePage {
             brushSizeSelect.addEventListener('change', (e) => {
                 const value = (e.target as HTMLSelectElement).value;
 
-                if (value === 'rect') {
-                    // Rectangle mode
-                    this.setBrushSize("rect", 0);
+                // Shape modes map
+                const shapeMode: { [key: string]: 'rectangle' | 'circle' | 'oval' | 'line' | null } = {
+                    'rect': 'rectangle',
+                    'circle': 'circle',
+                    'oval': 'oval',
+                    'line': 'line'
+                };
+
+                if (shapeMode[value]) {
+                    // Shape mode (rectangle, circle, oval, line)
+                    const shape = shapeMode[value]!;
+                    this.setBrushSize(value, 0);
                     if (this.phaserEditorComponent && this.phaserEditorComponent.editorScene) {
-                        this.phaserEditorComponent.editorScene.setRectangleMode(true);
+                        this.phaserEditorComponent.editorScene.setShapeMode(shape);
                     }
-                    // Show fill/outline toggle
+                    // Show fill/outline toggle (except for line)
                     if (shapeFillToggle) {
-                        shapeFillToggle.classList.remove('hidden');
+                        if (shape === 'line') {
+                            shapeFillToggle.classList.add('hidden');
+                        } else {
+                            shapeFillToggle.classList.remove('hidden');
+                        }
                     }
-                    console.log(`Rectangle mode activated (multi-click)`);
+                    console.log(`${shape.charAt(0).toUpperCase() + shape.slice(1)} mode activated (multi-click)`);
                 } else if (value.startsWith('fill:')) {
                     // Fill mode - extract radius
                     const radius = parseInt(value.substring(5));
                     this.setBrushSize("fill", radius);
                     if (this.phaserEditorComponent && this.phaserEditorComponent.editorScene) {
-                        this.phaserEditorComponent.editorScene.setRectangleMode(false);
+                        this.phaserEditorComponent.editorScene.setShapeMode(null);
                     }
                     // Hide fill/outline toggle
                     if (shapeFillToggle) {
@@ -652,7 +665,7 @@ class WorldEditorPage extends BasePage {
                     const size = parseInt(value);
                     this.setBrushSize("brush", size);
                     if (this.phaserEditorComponent && this.phaserEditorComponent.editorScene) {
-                        this.phaserEditorComponent.editorScene.setRectangleMode(false);
+                        this.phaserEditorComponent.editorScene.setShapeMode(null);
                     }
                     // Hide fill/outline toggle
                     if (shapeFillToggle) {

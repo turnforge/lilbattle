@@ -94,3 +94,13 @@ export function axialNeighbors(q: number, r: number): [number, number][] {
 	}
   return out
 }
+
+/**
+ * Calculate hex distance using cube coordinates
+ * Distance is the maximum of the absolute differences in cube coordinates
+ */
+export function hexDistance(q1: number, r1: number, q2: number, r2: number): number {
+    const dq = q2 - q1;
+    const dr = r2 - r1;
+    return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+}
