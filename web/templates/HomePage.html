@@ -12,6 +12,7 @@
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {{ if not (Ctx).HideGames }}
             <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
@@ -26,7 +27,9 @@
                 </div>
                 <a href="/games" class="inline-block mt-4 text-sm font-semibold hover:underline">View all games →</a>
             </div>
+            {{ end }}
 
+            {{ if not (Ctx).HideWorlds }}
             <div class="bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-lg shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
@@ -41,28 +44,34 @@
                 </div>
                 <a href="/worlds" class="inline-block mt-4 text-sm font-semibold hover:underline">Browse worlds →</a>
             </div>
+            {{ end }}
         </div>
 
         <!-- Quick Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            {{ if not (Ctx).HideGames }}
             <a href="/games/new" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Start New Game
             </a>
+            {{ end }}
+            {{ if not (Ctx).HideWorlds }}
             <a href="/worlds/new" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
                 Create World
             </a>
+            {{ end }}
         </div>
     </div>
 
     <!-- Recent Activity Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Recent Games -->
+        {{ if not (Ctx).HideGames }}
         <div>
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Games</h2>
@@ -106,8 +115,10 @@
             </div>
             {{ end }}
         </div>
+        {{ end }}
 
         <!-- Recent Worlds -->
+        {{ if not (Ctx).HideWorlds }}
         <div>
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Worlds</h2>
@@ -151,6 +162,7 @@
             </div>
             {{ end }}
         </div>
+        {{ end }}
     </div>
 </main>
 {{ end }}

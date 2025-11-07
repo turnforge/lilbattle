@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"net/http"
 
 	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
@@ -15,6 +14,7 @@ type BasePage struct {
 	DisableSplashScreen bool
 	SplashTitle         string
 	SplashMessage       string
+	ActiveTab           string
 }
 
 type HomePage struct {
@@ -29,39 +29,17 @@ type HomePage struct {
 }
 
 func (p *HomePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
-	p.Title = "Home"
-	p.DisableSplashScreen = true
-	p.Header.Load(r, w, vc)
-
-	// Fetch recent games (limit to 6)
-	gamesClient, err := vc.ClientMgr.GetGamesSvcClient()
-	if err == nil {
-		gamesResp, err := gamesClient.ListGames(context.Background(), &v1.ListGamesRequest{
-			Pagination: &v1.Pagination{
-				PageSize: 6,
-			},
-		})
-		if err == nil && gamesResp != nil {
-			p.RecentGames = gamesResp.Items
-			p.TotalGames = gamesResp.Pagination.TotalResults
-		}
+	// Redirect to the first visible tab
+	if !vc.HideWorlds {
+		http.Redirect(w, r, "/worlds/", http.StatusFound)
+		return nil, true
+	} else if !vc.HideGames {
+		http.Redirect(w, r, "/games/", http.StatusFound)
+		return nil, true
+	} else {
+		http.Redirect(w, r, "/profile", http.StatusFound)
+		return nil, true
 	}
-
-	// Fetch recent worlds (limit to 6)
-	worldsClient, err := vc.ClientMgr.GetWorldsSvcClient()
-	if err == nil {
-		worldsResp, err := worldsClient.ListWorlds(context.Background(), &v1.ListWorldsRequest{
-			Pagination: &v1.Pagination{
-				PageSize: 6,
-			},
-		})
-		if err == nil && worldsResp != nil {
-			p.RecentWorlds = worldsResp.Items
-			p.TotalWorlds = worldsResp.Pagination.TotalResults
-		}
-	}
-
-	return
 }
 
 type PrivacyPolicy struct {

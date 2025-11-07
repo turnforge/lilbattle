@@ -96,9 +96,31 @@
 - Status command now provides comprehensive game overview
 - ParseTarget struct tracks ForceTile flag and provides GetTile() method
 
+### Feature Flags and Navigation System
+**Priority**: High
+**Status**: ✅ COMPLETE
+
+**Completed**:
+- [x] Backend-controlled feature flags (WEEWAR_HIDE_GAMES, WEEWAR_HIDE_WORLDS)
+- [x] ViewContext integration for template access to flags
+- [x] Unified navigation tab system in floating drawer
+- [x] Active tab highlighting using BasePage.ActiveTab
+- [x] Homepage smart redirect to first visible tab
+- [x] Consistent header pattern site-wide (matching GameViewerPage)
+- [x] Mobile responsive drawer with slide-down animation
+- [x] Environment variable configuration in .env files
+
+**Design**:
+- Feature flags control UI visibility while keeping APIs accessible
+- Navigation tabs in HeaderActionsDrawer (sibling of header, not child)
+- Desktop: centered, always visible, horizontal
+- Mobile: slide-down drawer with backdrop
+- Tabs conditionally show based on HideGames/HideWorlds flags
+- / redirects to /worlds/ or /games/ or /profile based on flags
+
 ### Dashboard Homepage
 **Priority**: Medium
-**Status**: ✅ COMPLETE
+**Status**: ✅ COMPLETE (with feature flag integration)
 
 **Completed**:
 - [x] Hero section with welcome message and tagline
@@ -108,11 +130,13 @@
 - [x] Screenshot thumbnails in activity cards
 - [x] Empty states with helpful CTAs when no content exists
 - [x] Full responsive design and dark mode support
+- [x] Conditional UI sections based on feature flags
 
 **Design**:
 - Visual dashboard replacing plain text links on homepage
 - Leverages screenshot system for visual preview cards
 - Immediate activity overview on landing
+- HomePage now redirects to tab pages instead of showing dashboard
 
 ### World Selection & Listing System
 **Priority**: Medium

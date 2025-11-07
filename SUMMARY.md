@@ -103,6 +103,42 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 - Foundation for multiple shape-based editing tools
 - Proper alignment with hex grid visual layout
 
+### Feature Flags and Navigation System (Current Session)
+
+**Achievement**: Implemented backend-controlled feature flags for selective UI visibility with unified navigation tab system.
+
+**Key Features**:
+- **Environment-Based Flags**: `WEEWAR_HIDE_GAMES` and `WEEWAR_HIDE_WORLDS` control UI visibility
+- **ViewContext Integration**: Flags loaded from env vars and accessible in all templates
+- **Floating Navigation Drawer**: Consistent header pattern site-wide matching GameViewerPage
+- **Conditional Navigation**: Tabs show/hide based on feature flags
+- **Active Tab Highlighting**: BasePage.ActiveTab field drives visual state
+- **Smart Redirect**: Homepage redirects to first visible tab (Worlds → Games → Profile)
+
+**Implementation**:
+- web/server/views.go: ViewContext with HideGames/HideWorlds boolean flags
+- web/templates/Header.html: Split into Header and HeaderActionsDrawer templates
+- web/templates/BasePage.html: Renders drawer as sibling of header (not child)
+- web/server/HomePage.go: BasePage.ActiveTab field for tab state
+- web/server/GameListingPage.go: Sets ActiveTab = "games"
+- web/server/WorldListingPage.go: Sets ActiveTab = "worlds"
+- web/server/HomePage.go: Redirects to first visible tab
+- .env: Feature flag configuration with defaults
+
+**Architecture**:
+- **Header Structure**: Minimal `<header>` tag (logo, burger menu, theme toggle) + floating drawer
+- **Floating Drawer (#header-actions-drawer)**: Contains navigation tabs + page-specific buttons
+- **Desktop**: Drawer centered, always visible, horizontal layout, transparent background
+- **Mobile**: Drawer slides down from top, backdrop overlay, vertical layout
+- **Consistency**: Same pattern as GameViewerPage header actions
+
+**Benefits**:
+- Clean feature gating for phased launches
+- API endpoints remain accessible while UI is hidden
+- Consistent navigation UX across all pages
+- Easy to toggle via environment variables
+- No code changes needed to hide/show features
+
 ### Responsive Layout System (Current Session)
 
 **Achievement**: Implemented mobile-first responsive design for WorldViewerPage with reusable header button system.

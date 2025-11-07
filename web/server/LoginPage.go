@@ -5,6 +5,7 @@ import (
 )
 
 type LoginPage struct {
+	BasePage
 	Header          Header
 	CallbackURL     string
 	CsrfToken       string
@@ -23,6 +24,7 @@ type RegisterPage struct {
 }
 
 func (p *LoginPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+	p.DisableSplashScreen = true
 	err, finished = p.Header.Load(r, w, vc)
 	p.CallbackURL = r.URL.Query().Get("callbackURL")
 	return

@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 
@@ -32,6 +33,8 @@ type ViewContext struct {
 	ClientMgr      *server.ClientMgr
 	Ctx            context.Context
 	Templates      *tmplr.TemplateGroup
+	HideGames      bool
+	HideWorlds     bool
 }
 
 type ViewMaker func() View
@@ -125,6 +128,8 @@ func NewRootViewsHandler(middleware *oa.Middleware, clients *server.ClientMgr) *
 		AuthMiddleware: middleware,
 		ClientMgr:      clients,
 		Templates:      templates,
+		HideGames:      os.Getenv("WEEWAR_HIDE_GAMES") == "true",
+		HideWorlds:     os.Getenv("WEEWAR_HIDE_WORLDS") == "true",
 	}
 
 	// setup routes
