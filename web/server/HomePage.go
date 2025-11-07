@@ -43,19 +43,23 @@ func (p *HomePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext)
 }
 
 type PrivacyPolicy struct {
+	BasePage
 	Header Header
 }
 
 func (p *PrivacyPolicy) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+	p.DisableSplashScreen = true
 	return p.Header.Load(r, w, vc)
 }
 
 type TermsOfService struct {
+	BasePage
 	Header Header
 }
 
-func (p *TermsOfService) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
-	return p.Header.Load(r, w, vc)
+func (t *TermsOfService) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+	t.DisableSplashScreen = true
+	return t.Header.Load(r, w, vc)
 }
 
 func (g *TermsOfService) Copy() View { return &TermsOfService{} }

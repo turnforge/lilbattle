@@ -92,13 +92,56 @@ func NewApp(ClientMgr *server.ClientMgr) (app *App, err error) {
 			localAuth.HandleResetPassword(w, r)
 		}
 	}))
+	oneauth.AddAuth("/resend-verification", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		email := r.FormValue("email")
+		if email == "" {
+			http.Redirect(w, r, "/profile?verification_error=Email is required", http.StatusFound)
+			return
+		}
+
+		// Get the identity to find the user ID
+		identity, _, err := authService.IdentityStore.GetIdentity("email", email, false)
+		if err != nil || identity == nil {
+			// For security, don't reveal if email exists - just say success
+			http.Redirect(w, r, "/profile?verification_sent=true", http.StatusFound)
+			return
+		}
+
+		// Create verification token
+		token, err := authService.TokenStore.CreateToken(
+			identity.UserID,
+			email,
+			oa.TokenTypeEmailVerification,
+			oa.TokenExpiryEmailVerification,
+		)
+		if err != nil {
+			log.Printf("Error creating verification token: %v", err)
+			http.Redirect(w, r, "/profile?verification_error=Failed to create verification token", http.StatusFound)
+			return
+		}
+
+		// Send verification email
+		verificationLink := baseURL + "/auth/verify-email?token=" + token.Token
+		if err := localAuth.EmailSender.SendVerificationEmail(email, verificationLink); err != nil {
+			log.Printf("Error sending verification email: %v", err)
+			http.Redirect(w, r, "/profile?verification_error=Failed to send verification email", http.StatusFound)
+			return
+		}
+
+		http.Redirect(w, r, "/profile?verification_sent=true", http.StatusFound)
+	}))
 
 	app = &App{
 		Session:     session,
 		Auth:        oneauth,
 		AuthService: authService,
 		Api:         NewApiHandler(&oneauth.Middleware, ClientMgr),
-		ViewsRoot:   NewRootViewsHandler(&oneauth.Middleware, ClientMgr),
+		ViewsRoot:   NewRootViewsHandler(&oneauth.Middleware, authService, ClientMgr),
 	}
 
 	return
