@@ -3,17 +3,20 @@ import { LCMComponent } from '../lib/LCMComponent';
 
 class ProfilePage extends BasePage {
     private resendVerificationForm: HTMLFormElement | null = null;
+    private resetPasswordForm: HTMLFormElement | null = null;
     private successMessage: HTMLElement | null = null;
     private errorMessage: HTMLElement | null = null;
 
     protected initializeSpecificComponents(): LCMComponent[] {
         // Find form elements
         this.resendVerificationForm = document.querySelector('form[action="/auth/resend-verification"]');
+        this.resetPasswordForm = document.getElementById('reset-password-form') as HTMLFormElement;
         this.successMessage = document.querySelector('.bg-green-50, .dark\\:bg-green-900\\/20');
         this.errorMessage = document.querySelector('.bg-red-50, .dark\\:bg-red-900\\/20');
 
         console.log('ProfilePage initialized:', {
             hasResendForm: !!this.resendVerificationForm,
+            hasResetPasswordForm: !!this.resetPasswordForm,
             hasSuccessMessage: !!this.successMessage,
             hasErrorMessage: !!this.errorMessage
         });
@@ -41,6 +44,65 @@ class ProfilePage extends BasePage {
                 }
             });
         }
+
+        // Handle reset password form submission
+        if (this.resetPasswordForm) {
+            this.resetPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const submitButton = this.resetPasswordForm?.querySelector('button[type="submit"]') as HTMLButtonElement;
+                const originalContent = submitButton?.innerHTML;
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = `
+                        <svg class="animate-spin h-4 w-4 mr-2 inline-block" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                    `;
+                }
+
+                try {
+                    const formData = new FormData(this.resetPasswordForm!);
+                    const response = await fetch('/auth/forgot-password', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        this.showToast('Password reset email sent! Check your inbox.', 'success');
+                    } else {
+                        const data = await response.json();
+                        this.showToast(data.error || 'Failed to send reset email', 'error');
+                    }
+                } catch (error) {
+                    this.showToast('Failed to send reset email', 'error');
+                } finally {
+                    if (submitButton && originalContent) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalContent;
+                    }
+                }
+            });
+        }
+    }
+
+    private showToast(message: string, type: 'success' | 'error'): void {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-y-0 ${
+            type === 'success'
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
     }
 
     private autoDismissMessages(): void {
