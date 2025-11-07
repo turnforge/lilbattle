@@ -221,10 +221,10 @@ func (n *RootViewsHandler) setupRoutes() {
 	n.mux.HandleFunc("/about", n.ViewRenderer(Copier(&GenericPage{}), "AboutPage"))
 	n.mux.HandleFunc("/contact", n.ViewRenderer(Copier(&GenericPage{}), "ContactUsPage"))
 	n.mux.HandleFunc("/login", n.ViewRenderer(Copier(&LoginPage{}), ""))
-	n.mux.HandleFunc("/profile", n.ViewRenderer(Copier(&ProfilePage{}), ""))
+	n.mux.HandleFunc("/profile/", n.ViewRenderer(Copier(&ProfilePage{}), ""))
 	// n.mux.HandleFunc("/logout", n.onLogout)
-	n.mux.HandleFunc("/privacy", n.ViewRenderer(Copier(&PrivacyPolicy{}), ""))
-	n.mux.HandleFunc("/terms", n.ViewRenderer(Copier(&TermsOfService{}), ""))
+	n.mux.HandleFunc("/privacy/", n.ViewRenderer(Copier(&PrivacyPolicy{}), ""))
+	n.mux.HandleFunc("/terms/", n.ViewRenderer(Copier(&TermsOfService{}), ""))
 	n.mux.HandleFunc("/", n.ViewRenderer(Copier(&HomePage{}), ""))
 	n.mux.Handle("/{invalidbits}/", http.NotFoundHandler()) // <-- Default 404
 
