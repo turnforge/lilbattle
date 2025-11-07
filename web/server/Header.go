@@ -2,6 +2,7 @@ package server
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -78,10 +79,16 @@ func (v *Header) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (
 	// Load username if logged in
 	if v.IsLoggedIn && vc.AuthService != nil {
 		user, userErr := vc.AuthService.GetUserById(v.LoggedInUserId)
-		if userErr == nil && user != nil {
+		if userErr != nil {
+			log.Printf("Header: Error loading user %s: %v", v.LoggedInUserId, userErr)
+		} else if user != nil {
 			profile := user.Profile()
+			log.Printf("Header: User profile for %s: %+v", v.LoggedInUserId, profile)
 			if username, ok := profile["username"].(string); ok {
 				v.Username = username
+				log.Printf("Header: Set username to: %s", v.Username)
+			} else {
+				log.Printf("Header: No username in profile or wrong type")
 			}
 		}
 	}

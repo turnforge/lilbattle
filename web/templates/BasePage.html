@@ -43,7 +43,7 @@
     {{ if not .CustomHeader }}
     <!-- Header Block -->
     <div class="print:hidden sticky left-0 top-0 z-20 border-b border-gray-200 dark:border-gray-700">
-        {{ template "Header" . }} <!-- Theme toggle is inside here -->
+        {{ template "Header" .Header }} <!-- Pass Header object -->
     </div>
     <!-- Header Actions Drawer (sibling of header, not child) -->
     {{ template "HeaderActionsDrawer" . }}
