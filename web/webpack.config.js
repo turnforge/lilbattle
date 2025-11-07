@@ -8,7 +8,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const SRC_FOLDERS = [
-  "./src",
+  "./pages",
   "./assets",
   "./static/assets",
   "./lib",
@@ -23,12 +23,12 @@ const components = [
   ["LoginPage", 0, "ts"],
   ["WorldListingPage", 0, "ts"],
   ["WorldViewerPage", 0, "ts"],
-  ["WorldEditorPage", 0, "ts"],
+  ["WorldEditorPage/index", 0, "ts"],
   ["GameListingPage", 0, "ts"],
   ["StartGamePage", 0, "ts"],
-  ["GameViewerPageDockView", 0, "ts"],
-  ["GameViewerPageGrid", 0, "ts"],
-  ["GameViewerPageMobile", 0, "ts"],
+  ["GameViewerPage/GameViewerPageDockView", 0, "ts"],
+  ["GameViewerPage/GameViewerPageGrid", 0, "ts"],
+  ["GameViewerPage/GameViewerPageMobile", 0, "ts"],
   ["AttackSimulatorPage", 0, "ts"],
 ];
 

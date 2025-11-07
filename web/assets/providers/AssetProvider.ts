@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { TILE_WIDTH, TILE_HEIGHT } from '../../src/phaser/hexUtils';
+import { TILE_WIDTH, TILE_HEIGHT } from '../../pages/common/hexUtils';
 import { ITheme, PLAYER_COLORS } from '../themes/BaseTheme';
 import DefaultTheme from '../themes/default';
 import ModernTheme from '../themes/modern';
