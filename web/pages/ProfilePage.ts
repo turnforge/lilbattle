@@ -3,20 +3,20 @@ import { LCMComponent } from '../lib/LCMComponent';
 
 class ProfilePage extends BasePage {
     private resendVerificationForm: HTMLFormElement | null = null;
-    private resetPasswordForm: HTMLFormElement | null = null;
+    private changePasswordForm: HTMLFormElement | null = null;
     private successMessage: HTMLElement | null = null;
     private errorMessage: HTMLElement | null = null;
 
     protected initializeSpecificComponents(): LCMComponent[] {
         // Find form elements
         this.resendVerificationForm = document.querySelector('form[action="/auth/resend-verification"]');
-        this.resetPasswordForm = document.getElementById('reset-password-form') as HTMLFormElement;
+        this.changePasswordForm = document.getElementById('change-password-form') as HTMLFormElement;
         this.successMessage = document.querySelector('.bg-green-50, .dark\\:bg-green-900\\/20');
         this.errorMessage = document.querySelector('.bg-red-50, .dark\\:bg-red-900\\/20');
 
         console.log('ProfilePage initialized:', {
             hasResendForm: !!this.resendVerificationForm,
-            hasResetPasswordForm: !!this.resetPasswordForm,
+            hasChangePasswordForm: !!this.changePasswordForm,
             hasSuccessMessage: !!this.successMessage,
             hasErrorMessage: !!this.errorMessage
         });
@@ -45,12 +45,22 @@ class ProfilePage extends BasePage {
             });
         }
 
-        // Handle reset password form submission
-        if (this.resetPasswordForm) {
-            this.resetPasswordForm.addEventListener('submit', async (e) => {
+        // Handle change password form submission
+        if (this.changePasswordForm) {
+            this.changePasswordForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const submitButton = this.resetPasswordForm?.querySelector('button[type="submit"]') as HTMLButtonElement;
+                const formData = new FormData(this.changePasswordForm!);
+                const newPassword = formData.get('new_password') as string;
+                const confirmPassword = formData.get('confirm_password') as string;
+
+                // Validate passwords match
+                if (newPassword !== confirmPassword) {
+                    this.showToast('New passwords do not match', 'error');
+                    return;
+                }
+
+                const submitButton = this.changePasswordForm?.querySelector('button[type="submit"]') as HTMLButtonElement;
                 const originalContent = submitButton?.innerHTML;
 
                 if (submitButton) {
@@ -60,25 +70,25 @@ class ProfilePage extends BasePage {
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Sending...
+                        Changing...
                     `;
                 }
 
                 try {
-                    const formData = new FormData(this.resetPasswordForm!);
-                    const response = await fetch('/auth/forgot-password', {
+                    const response = await fetch('/auth/change-password', {
                         method: 'POST',
                         body: formData
                     });
 
                     if (response.ok) {
-                        this.showToast('Password reset email sent! Check your inbox.', 'success');
+                        this.showToast('Password changed successfully!', 'success');
+                        this.changePasswordForm?.reset();
                     } else {
                         const data = await response.json();
-                        this.showToast(data.error || 'Failed to send reset email', 'error');
+                        this.showToast(data.error || 'Failed to change password', 'error');
                     }
                 } catch (error) {
-                    this.showToast('Failed to send reset email', 'error');
+                    this.showToast('Failed to change password', 'error');
                 } finally {
                     if (submitButton && originalContent) {
                         submitButton.disabled = false;

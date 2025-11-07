@@ -136,6 +136,82 @@ func NewApp(ClientMgr *server.ClientMgr) (app *App, err error) {
 		http.Redirect(w, r, "/profile?verification_sent=true", http.StatusFound)
 	}))
 
+	oneauth.AddAuth("/change-password", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(`{"error": "Method not allowed"}`))
+			return
+		}
+
+		// Get logged in user ID
+		userId := oneauth.Middleware.GetLoggedInUserId(r)
+		if userId == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "Not logged in"}`))
+			return
+		}
+
+		// Get user to find their email
+		user, err := authService.GetUserById(userId)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": "User not found"}`))
+			return
+		}
+
+		profile := user.Profile()
+		email, ok := profile["email"].(string)
+		if !ok || email == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "No email associated with account"}`))
+			return
+		}
+
+		// Parse form data
+		if err := r.ParseForm(); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "Invalid form data"}`))
+			return
+		}
+
+		currentPassword := r.FormValue("current_password")
+		newPassword := r.FormValue("new_password")
+
+		if currentPassword == "" || newPassword == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "Current password and new password are required"}`))
+			return
+		}
+
+		// Verify current password
+		_, err = authService.ValidateLocalCredentials(email, currentPassword, "email")
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "Current password is incorrect"}`))
+			return
+		}
+
+		// Update password
+		if err := authService.UpdatePassword(email, newPassword); err != nil {
+			log.Printf("Error updating password: %v", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": "Failed to update password"}`))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"success": true}`))
+	}))
+
 	app = &App{
 		Session:     session,
 		Auth:        oneauth,

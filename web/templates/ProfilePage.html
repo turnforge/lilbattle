@@ -162,6 +162,50 @@
                 </div>
                 {{end}}
 
+                <!-- Change Password Section -->
+                {{if .Email}}
+                <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        Change Password
+                    </h2>
+
+                    <form id="change-password-form" class="space-y-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Current Password
+                            </label>
+                            <input type="password" id="current-password" name="current_password" required
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                        </div>
+
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                New Password
+                            </label>
+                            <input type="password" id="new-password" name="new_password" required minlength="8"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters</p>
+                        </div>
+
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Confirm New Password
+                            </label>
+                            <input type="password" id="confirm-password" name="confirm_password" required minlength="8"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                        </div>
+
+                        <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            Change Password
+                        </button>
+                    </form>
+                </div>
+                {{end}}
+
                 <!-- Account Actions -->
                 <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
@@ -169,19 +213,6 @@
                     </h2>
 
                     <div class="flex flex-wrap gap-3">
-                        {{if .Email}}
-                        <form id="reset-password-form" class="inline-block">
-                            <input type="hidden" name="email" value="{{.Email}}">
-                            <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors">
-                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                </svg>
-                                Reset Password
-                            </button>
-                        </form>
-                        {{end}}
-
                         <a href="/auth/logout"
                            class="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-600 text-sm font-medium rounded-lg text-red-700 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800 transition-colors">
                             <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
