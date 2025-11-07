@@ -21,6 +21,7 @@ const OUTPUT_DIR = path.resolve(__dirname, "./static/js/gen/");
 const components = [
   ["HomePage", 0, "ts"],
   ["LoginPage", 0, "ts"],
+  ["ProfilePage", 0, "ts"],
   ["WorldListingPage", 0, "ts"],
   ["WorldViewerPage", 0, "ts"],
   ["WorldEditorPage/index", 0, "ts"],
