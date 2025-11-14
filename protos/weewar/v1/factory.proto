@@ -7,7 +7,7 @@ package weewar.v1;
 import "weewar/v1/models/models.proto";
 import "weewar/v1/models/indexer.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1";
 
 // Import wasmjs annotations
 import "wasmjs/v1/annotations.proto";

@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
-	weewar "github.com/panyam/turnengine/games/weewar/services"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
+	weewar "github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/fsbe"
 )
 
 // CLI is a headless command processor for WeeWar games

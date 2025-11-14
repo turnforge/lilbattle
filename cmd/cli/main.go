@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/panyam/turnengine/games/weewar/cmd/cli/cmd"
+	"github.com/turnforge/weewar/cmd/cli/cmd"
 )
 
 func main() {

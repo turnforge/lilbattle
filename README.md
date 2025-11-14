@@ -64,7 +64,7 @@ WeeWar follows a clean, modern architecture:
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd turnengine/games/weewar
+   cd weewar
    ```
 
 2. **Install dependencies**
@@ -128,7 +128,7 @@ ww endturn
 ## Project Structure
 
 ```
-turnengine/games/weewar/
+weewar/
 ├── cmd/
 │   └── cli/              # Command-line interface
 ├── services/             # Go backend services

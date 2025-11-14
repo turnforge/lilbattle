@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/fsbe"
 )
 
 func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *services.World {

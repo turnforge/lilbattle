@@ -2112,8 +2112,8 @@ const file_weewar_v1_models_gameviewerpage_proto_rawDesc = "" +
 	"\x19ShowCaptureEffectResponse\"6\n" +
 	"\x17SetAllowedPanelsRequest\x12\x1b\n" +
 	"\tpanel_ids\x18\x01 \x03(\tR\bpanelIds\"\x1a\n" +
-	"\x18SetAllowedPanelsResponseB\xb5\x01\n" +
-	"\rcom.weewar.v1B\x13GameviewerpageProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x18SetAllowedPanelsResponseB\xa7\x01\n" +
+	"\rcom.weewar.v1B\x13GameviewerpageProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

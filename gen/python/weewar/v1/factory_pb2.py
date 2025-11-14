@@ -27,12 +27,12 @@ from weewar.v1.models import indexer_pb2 as weewar_dot_v1_dot_models_dot_indexer
 from wasmjs.v1 import annotations_pb2 as wasmjs_dot_v1_dot_annotations__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17weewar/v1/factory.proto\x12\tweewar.v1\x1a\x1dweewar/v1/models/models.proto\x1a\x1eweewar/v1/models/indexer.proto\x1a\x1bwasmjs/v1/annotations.protoB\xab\x01\n\rcom.weewar.v1B\x0c\x46\x61\x63toryProtoP\x01ZCgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1\xc8\xb5\x18\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17weewar/v1/factory.proto\x12\tweewar.v1\x1a\x1dweewar/v1/models/models.proto\x1a\x1eweewar/v1/models/indexer.proto\x1a\x1bwasmjs/v1/annotations.protoB\x9d\x01\n\rcom.weewar.v1B\x0c\x46\x61\x63toryProtoP\x01Z5github.com/turnforge/weewar/gen/go/weewar/v1;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1\xc8\xb5\x18\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'weewar.v1.factory_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n\rcom.weewar.v1B\014FactoryProtoP\001ZCgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1;weewarv1\242\002\003WXX\252\002\tWeewar.V1\312\002\tWeewar\\V1\342\002\025Weewar\\V1\\GPBMetadata\352\002\nWeewar::V1\310\265\030\001'
+  _globals['DESCRIPTOR']._serialized_options = b'\n\rcom.weewar.v1B\014FactoryProtoP\001Z5github.com/turnforge/weewar/gen/go/weewar/v1;weewarv1\242\002\003WXX\252\002\tWeewar.V1\312\002\tWeewar\\V1\342\002\025Weewar\\V1\\GPBMetadata\352\002\nWeewar::V1\310\265\030\001'
 # @@protoc_insertion_point(module_scope)

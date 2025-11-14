@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // var RULES_DATA_FILE = DevDataPath("assets/weewar-rules.json")

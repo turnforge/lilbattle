@@ -501,8 +501,8 @@ const file_weewar_v1_models_themes_proto_rawDesc = "" +
 	"\x10TYPE_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tTYPE_PATH\x10\x01\x12\f\n" +
 	"\bTYPE_SVG\x10\x02\x12\x11\n" +
-	"\rTYPE_DATA_URL\x10\x03B\xad\x01\n" +
-	"\rcom.weewar.v1B\vThemesProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\rTYPE_DATA_URL\x10\x03B\x9f\x01\n" +
+	"\rcom.weewar.v1B\vThemesProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

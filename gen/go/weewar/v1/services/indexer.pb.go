@@ -10,7 +10,7 @@ import (
 	reflect "reflect"
 	unsafe "unsafe"
 
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -34,8 +34,8 @@ const file_weewar_v1_services_indexer_proto_rawDesc = "" +
 	"\x15UpdateIndexRecordsLRO\x12'.weewar.v1.UpdateIndexRecordsLRORequest\x1a(.weewar.v1.UpdateIndexRecordsLROResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*2\x19/v1/indexlro/{lro.lro_id}\x12\x7f\n" +
 	"\x0eGetIndexStates\x12 .weewar.v1.GetIndexStatesRequest\x1a!.weewar.v1.GetIndexStatesResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /v1/index:batchGet/{entity_type}\x12y\n" +
 	"\x0fListIndexStates\x12!.weewar.v1.ListIndexStatesRequest\x1a\".weewar.v1.ListIndexStatesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/index/{entity_type}\x12\x7f\n" +
-	"\x11DeleteIndexStates\x12#.weewar.v1.DeleteIndexStatesRequest\x1a$.weewar.v1.DeleteIndexStatesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19*\x17/v1/index/{entity_type}B\xb0\x01\n" +
-	"\rcom.weewar.v1B\fIndexerProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x11DeleteIndexStates\x12#.weewar.v1.DeleteIndexStatesRequest\x1a$.weewar.v1.DeleteIndexStatesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19*\x17/v1/index/{entity_type}B\xa2\x01\n" +
+	"\rcom.weewar.v1B\fIndexerProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_indexer_proto_goTypes = []any{

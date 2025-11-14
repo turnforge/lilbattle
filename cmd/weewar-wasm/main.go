@@ -14,12 +14,12 @@ import (
 
 	// Generated WASM exports
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	weewar_v1_services "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1/services"
-	"github.com/panyam/turnengine/games/weewar/services/singleton"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	weewar_v1_services "github.com/turnforge/weewar/gen/wasm/go/weewar/v1/services"
+	"github.com/turnforge/weewar/services/singleton"
 
 	// Service implementations
-	"github.com/panyam/turnengine/games/weewar/services"
+	"github.com/turnforge/weewar/services"
 )
 
 type SingletonInitializerService struct {

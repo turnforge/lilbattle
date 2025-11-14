@@ -9,8 +9,8 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	protos "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	weewar "github.com/panyam/turnengine/games/weewar/services"
+	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	weewar "github.com/turnforge/weewar/services"
 )
 
 type GameViewerPage struct {

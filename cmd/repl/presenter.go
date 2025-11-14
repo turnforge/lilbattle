@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/panyam/turnengine/games/weewar/services"
+	"github.com/turnforge/weewar/services"
 )
 
 func newPresenter() *services.SingletonGameViewPresenterImpl {

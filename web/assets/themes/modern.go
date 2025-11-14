@@ -3,8 +3,8 @@ package themes
 import (
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/web/assets"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/web/assets"
 )
 
 // ModernTheme implements the Theme interface for the Modern Military theme

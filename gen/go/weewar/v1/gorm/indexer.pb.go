@@ -11,8 +11,8 @@ import (
 	sync "sync"
 	unsafe "unsafe"
 
-	_ "github.com/panyam/turnengine/games/weewar/gen/go/dal/v1"
-	_ "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	_ "github.com/turnforge/weewar/gen/go/dal/v1"
+	_ "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
@@ -278,8 +278,8 @@ const file_weewar_v1_gorm_indexer_proto_rawDesc = "" +
 	"\fcallback_url\x18\x05 \x01(\tB\x17\x92\xa6\x1d\x13R\x11type:varchar(500)R\vcallbackUrl\x12*\n" +
 	"\arecords\x18\x06 \x01(\fB\x10\x92\xa6\x1d\fR\n" +
 	"type:jsonbR\arecords:3ʦ\x1d/\n" +
-	"\x19weewar.v1.IndexRecordsLRO\x12\x12index_records_lrosB\xac\x01\n" +
-	"\rcom.weewar.v1B\fIndexerProtoP\x01ZHgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x19weewar.v1.IndexRecordsLRO\x12\x12index_records_lrosB\x9e\x01\n" +
+	"\rcom.weewar.v1B\fIndexerProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

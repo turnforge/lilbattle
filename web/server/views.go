@@ -15,7 +15,7 @@ import (
 	gotl "github.com/panyam/goutils/template"
 	oa "github.com/panyam/oneauth"
 	tmplr "github.com/panyam/templar"
-	"github.com/panyam/turnengine/games/weewar/services/server"
+	"github.com/turnforge/weewar/services/server"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

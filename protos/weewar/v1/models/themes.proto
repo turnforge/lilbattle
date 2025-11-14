@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package weewar.v1;
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models";
+option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1/models";
 
 // ThemeInfo contains metadata about a theme
 message ThemeInfo {

@@ -5,7 +5,7 @@ package weewar.v1;
 import "google/api/annotations.proto";
 import "weewar/v1/models/indexer.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services";
+option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1/services";
 
 // Manages indexing of entities
 service IndexerService {

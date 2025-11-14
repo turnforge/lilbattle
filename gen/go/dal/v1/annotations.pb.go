@@ -1055,9 +1055,9 @@ const file_dal_v1_annotations_proto_rawDesc = "" +
 	"\x04gorm\x12\x1f.google.protobuf.MessageOptions\x18\xe9\xd4\x03 \x01(\v2\x13.dal.v1.GormOptionsR\x04gorm:h\n" +
 	"\x11datastore_options\x12\x1f.google.protobuf.MessageOptions\x18\xea\xd4\x03 \x01(\v2\x18.dal.v1.DatastoreOptionsR\x10datastoreOptions:Y\n" +
 	"\tfirestore\x12\x1f.google.protobuf.MessageOptions\x18\xeb\xd4\x03 \x01(\v2\x18.dal.v1.FirestoreOptionsR\tfirestore:S\n" +
-	"\amongodb\x12\x1f.google.protobuf.MessageOptions\x18\xec\xd4\x03 \x01(\v2\x16.dal.v1.MongoDBOptionsR\amongodbB\x96\x01\n" +
+	"\amongodb\x12\x1f.google.protobuf.MessageOptions\x18\xec\xd4\x03 \x01(\v2\x16.dal.v1.MongoDBOptionsR\amongodbB\x88\x01\n" +
 	"\n" +
-	"com.dal.v1B\x10AnnotationsProtoP\x01Z=github.com/panyam/turnengine/games/weewar/gen/go/dal/v1;dalv1\xa2\x02\x03DXX\xaa\x02\x06Dal.V1\xca\x02\x06Dal\\V1\xe2\x02\x12Dal\\V1\\GPBMetadata\xea\x02\aDal::V1b\x06proto3"
+	"com.dal.v1B\x10AnnotationsProtoP\x01Z/github.com/turnforge/weewar/gen/go/dal/v1;dalv1\xa2\x02\x03DXX\xaa\x02\x06Dal.V1\xca\x02\x06Dal\\V1\xe2\x02\x12Dal\\V1\\GPBMetadata\xea\x02\aDal::V1b\x06proto3"
 
 var (
 	file_dal_v1_annotations_proto_rawDescOnce sync.Once

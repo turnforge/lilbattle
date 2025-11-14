@@ -10,14 +10,14 @@ import (
 	oa "github.com/panyam/oneauth"
 	oa2 "github.com/panyam/oneauth/oauth2"
 	"github.com/panyam/templar"
-	"github.com/panyam/turnengine/games/weewar/services"
-	"github.com/panyam/turnengine/games/weewar/services/server"
+	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/server"
 )
 
 // You can all this anything - but App is just a convention for all "top level" routes and handlers
 type App struct {
 	Api         *ApiHandler
-	Auth        *oa.OneAuth         // One auth gives us alots of things out of the box
+	Auth        *oa.OneAuth // One auth gives us alots of things out of the box
 	AuthService *services.AuthService
 	Session     *scs.SessionManager // Session and auth go together
 	ClientMgr   *server.ClientMgr
@@ -68,7 +68,7 @@ func NewApp(ClientMgr *server.ClientMgr) (app *App, err error) {
 		EmailSender:              &oa.ConsoleEmailSender{},
 		TokenStore:               authService.TokenStore,
 		BaseURL:                  baseURL,
-		RequireEmailVerification: false, // Optional verification
+		RequireEmailVerification: false,   // Optional verification
 		UsernameField:            "email", // For login: accept email as username
 		HandleUser:               oneauth.SaveUserAndRedirect,
 		VerifyEmail:              authService.VerifyEmailByToken,

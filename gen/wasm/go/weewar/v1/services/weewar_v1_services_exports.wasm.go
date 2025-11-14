@@ -14,7 +14,7 @@ import (
 	"time"
 
 	wasm "github.com/panyam/protoc-gen-go-wasmjs/pkg/wasm"
-	v1models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // Weewar_v1ServicesExports provides WASM exports for dependency injection

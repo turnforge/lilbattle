@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -37,8 +37,8 @@ const file_weewar_v1_services_presenter_proto_rawDesc = "" +
 	"\fSceneClicked\x12\x1e.weewar.v1.SceneClickedRequest\x1a\x1f.weewar.v1.SceneClickedResponse\"A\x82\xd3\xe4\x93\x02;:\x01*\"6/v1/presenters/gameview/action:clicked:scene/{game_id}\x12\xa6\x01\n" +
 	"\x11TurnOptionClicked\x12#.weewar.v1.TurnOptionClickedRequest\x1a$.weewar.v1.TurnOptionClickedResponse\"F\x82\xd3\xe4\x93\x02@:\x01*\";/v1/presenters/gameview/action:clicked:turnOption/{game_id}\x12\xb2\x01\n" +
 	"\x14EndTurnButtonClicked\x12&.weewar.v1.EndTurnButtonClickedRequest\x1a'.weewar.v1.EndTurnButtonClickedResponse\"I\x82\xd3\xe4\x93\x02C:\x01*\">/v1/presenters/gameview/action:clicked:endTurnButton/{game_id}\x12\xaa\x01\n" +
-	"\x12BuildOptionClicked\x12$.weewar.v1.BuildOptionClickedRequest\x1a%.weewar.v1.BuildOptionClickedResponse\"G\x82\xd3\xe4\x93\x02A:\x01*\"</v1/presenters/gameview/action:clicked:buildOption/{game_id}B\xb2\x01\n" +
-	"\rcom.weewar.v1B\x0ePresenterProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x12BuildOptionClicked\x12$.weewar.v1.BuildOptionClickedRequest\x1a%.weewar.v1.BuildOptionClickedResponse\"G\x82\xd3\xe4\x93\x02A:\x01*\"</v1/presenters/gameview/action:clicked:buildOption/{game_id}B\xa4\x01\n" +
+	"\rcom.weewar.v1B\x0ePresenterProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_presenter_proto_goTypes = []any{

@@ -4149,8 +4149,8 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"\x18PATH_DIRECTION_TOP_RIGHT\x10\x03\x12\x18\n" +
 	"\x14PATH_DIRECTION_RIGHT\x10\x04\x12\x1f\n" +
 	"\x1bPATH_DIRECTION_BOTTOM_RIGHT\x10\x05\x12\x1e\n" +
-	"\x1aPATH_DIRECTION_BOTTOM_LEFT\x10\x06B\xad\x01\n" +
-	"\rcom.weewar.v1B\vModelsProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x1aPATH_DIRECTION_BOTTOM_LEFT\x10\x06B\x9f\x01\n" +
+	"\rcom.weewar.v1B\vModelsProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

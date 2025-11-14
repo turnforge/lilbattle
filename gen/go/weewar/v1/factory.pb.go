@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/panyam/protoc-gen-go-wasmjs/proto/gen/go/wasmjs/v1"
-	_ "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	_ "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
@@ -27,8 +27,8 @@ var File_weewar_v1_factory_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_factory_proto_rawDesc = "" +
 	"\n" +
-	"\x17weewar/v1/factory.proto\x12\tweewar.v1\x1a\x1dweewar/v1/models/models.proto\x1a\x1eweewar/v1/models/indexer.proto\x1a\x1bwasmjs/v1/annotations.protoB\xab\x01ȵ\x18\x01\n" +
-	"\rcom.weewar.v1B\fFactoryProtoP\x01ZCgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x17weewar/v1/factory.proto\x12\tweewar.v1\x1a\x1dweewar/v1/models/models.proto\x1a\x1eweewar/v1/models/indexer.proto\x1a\x1bwasmjs/v1/annotations.protoB\x9d\x01ȵ\x18\x01\n" +
+	"\rcom.weewar.v1B\fFactoryProtoP\x01Z5github.com/turnforge/weewar/gen/go/weewar/v1;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_factory_proto_goTypes = []any{}

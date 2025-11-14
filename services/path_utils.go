@@ -3,7 +3,7 @@ package services
 import (
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // extractPathCoords converts a Path to a flat coordinate array

@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
 )
 
 // moveCmd represents the move command

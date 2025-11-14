@@ -2,7 +2,7 @@
 package datastore
 
 import (
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 
 	"fmt"
 	"strconv"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/panyam/turnengine/games/weewar/web/assets/themes"
+	"github.com/turnforge/weewar/web/assets/themes"
 )
 
 // Example showing how to create and use themes
@@ -15,15 +15,15 @@ func ExampleCreateTheme() {
 	modernTheme, _ := themes.CreateTheme("modern")
 
 	// Use default theme (PNG-based)
-	fmt.Println(defaultTheme.GetUnitName(1))  // "Infantry"
+	fmt.Println(defaultTheme.GetUnitName(1))      // "Infantry"
 	fmt.Println(defaultTheme.GetThemeInfo().Name) // "Default (PNG)"
 
 	// Use fantasy theme (SVG-based, loaded from embedded mapping.json)
-	fmt.Println(fantasyTheme.GetUnitName(1))  // "Peasant"
+	fmt.Println(fantasyTheme.GetUnitName(1))      // "Peasant"
 	fmt.Println(fantasyTheme.GetThemeInfo().Name) // "Medieval Fantasy"
 
 	// Use modern theme (SVG-based, loaded from embedded mapping.json)
-	fmt.Println(modernTheme.GetUnitName(1))   // "Infantry"
+	fmt.Println(modernTheme.GetUnitName(1))      // "Infantry"
 	fmt.Println(modernTheme.GetThemeInfo().Name) // "Modern Military"
 
 	// Output:

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strconv"
 
-	weewar "github.com/panyam/turnengine/games/weewar/services"
+	weewar "github.com/turnforge/weewar/services"
 )
 
 type AttackSimulatorPage struct {

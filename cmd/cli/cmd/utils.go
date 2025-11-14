@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
 )
 
 func GetGame() (pc *PresenterContext, game *v1.Game, gameState *v1.GameState, gameHistory *v1.GameMoveHistory, rtGame *services.Game, err error) {

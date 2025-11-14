@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
 )
 
 // TestSplashDamageBasic tests that splash damage is calculated and applied correctly

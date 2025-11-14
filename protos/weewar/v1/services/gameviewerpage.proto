@@ -7,7 +7,7 @@ import "wasmjs/v1/annotations.proto";
 import "weewar/v1/models/models.proto";
 import "weewar/v1/models/gameviewerpage.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services";
+option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1/services";
 
 service GameViewerPage {
     option (wasmjs.v1.browser_provided) = true;

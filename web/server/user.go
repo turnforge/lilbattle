@@ -1,8 +1,8 @@
 package server
 
 import (
-	svc "github.com/panyam/turnengine/games/weewar/services"
 	oa "github.com/panyam/oneauth"
+	svc "github.com/turnforge/weewar/services"
 	"golang.org/x/oauth2"
 )
 

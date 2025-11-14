@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -39,9 +39,9 @@ const file_weewar_v1_services_users_proto_rawDesc = "" +
 	"\n" +
 	"DeleteUser\x12\x1c.weewar.v1.DeleteUserRequest\x1a\x1d.weewar.v1.DeleteUserResponse\"\x18\x82\xd3\xe4\x93\x02\x12*\x10/v1/users/{id=*}\x12k\n" +
 	"\n" +
-	"UpdateUser\x12\x1c.weewar.v1.UpdateUserRequest\x1a\x1d.weewar.v1.UpdateUserResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/users/{user.id=*}B\xae\x01\n" +
+	"UpdateUser\x12\x1c.weewar.v1.UpdateUserRequest\x1a\x1d.weewar.v1.UpdateUserResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/users/{user.id=*}B\xa0\x01\n" +
 	"\rcom.weewar.v1B\n" +
-	"UsersProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"UsersProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_users_proto_goTypes = []any{

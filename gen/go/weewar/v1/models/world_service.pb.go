@@ -835,8 +835,8 @@ const file_weewar_v1_models_world_service_proto_rawDesc = "" +
 	"\ffield_errors\x18\x03 \x03(\v2/.weewar.v1.CreateWorldResponse.FieldErrorsEntryR\vfieldErrors\x1a>\n" +
 	"\x10FieldErrorsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\xb3\x01\n" +
-	"\rcom.weewar.v1B\x11WorldServiceProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\xa5\x01\n" +
+	"\rcom.weewar.v1B\x11WorldServiceProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

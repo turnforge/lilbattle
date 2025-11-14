@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/felixge/httpsnoop"
-	"github.com/panyam/turnengine/games/weewar/services/server"
+	"github.com/turnforge/weewar/services/server"
 )
 
 type WebAppServer struct {

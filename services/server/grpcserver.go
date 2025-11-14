@@ -14,8 +14,8 @@ import (
 	"log/slog"
 	"net"
 
-	v1s "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
+	v1s "github.com/turnforge/weewar/gen/go/weewar/v1/services"
+	"github.com/turnforge/weewar/services/fsbe"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

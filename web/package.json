@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "author": "Sriram Panyam",
   "description": "weewar web frontend",
-  "homepage": "https://github.com/panyam/turnengine/games/weewar#readme",
+  "homepage": "https://github.com/turnforge/weewar#readme",
   "license": "ISC",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/panyam/turnengine/games/weewar.git"
+    "url": "git+https://github.com/turnforge/weewar.git"
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -32,7 +32,7 @@
     "temlate apps"
   ],
   "bugs": {
-    "url": "https://github.com/panyam/turnengine/games/weewar/issues"
+    "url": "https://github.com/turnforge/weewar/issues"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.6.2",

@@ -9,7 +9,7 @@ package weewar
 import (
 	"context"
 
-	v1models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // Service interfaces for WASM (without gRPC dependencies)

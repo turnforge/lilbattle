@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -39,8 +39,8 @@ const file_weewar_v1_services_worlds_proto_rawDesc = "" +
 	"/v1/worlds\x12\\\n" +
 	"\bGetWorld\x12\x1a.weewar.v1.GetWorldRequest\x1a\x1b.weewar.v1.GetWorldResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/worlds/{id}\x12g\n" +
 	"\vDeleteWorld\x12\x1d.weewar.v1.DeleteWorldRequest\x1a\x1e.weewar.v1.DeleteWorldResponse\"\x19\x82\xd3\xe4\x93\x02\x13*\x11/v1/worlds/{id=*}\x12p\n" +
-	"\vUpdateWorld\x12\x1d.weewar.v1.UpdateWorldRequest\x1a\x1e.weewar.v1.UpdateWorldResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*2\x17/v1/worlds/{world.id=*}B\xaf\x01\n" +
-	"\rcom.weewar.v1B\vWorldsProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\vUpdateWorld\x12\x1d.weewar.v1.UpdateWorldRequest\x1a\x1e.weewar.v1.UpdateWorldResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*2\x17/v1/worlds/{world.id=*}B\xa1\x01\n" +
+	"\rcom.weewar.v1B\vWorldsProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_worlds_proto_goTypes = []any{

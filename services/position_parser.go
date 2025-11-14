@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // ParseTarget represents either a unit ID or a coordinate position

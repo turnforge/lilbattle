@@ -740,8 +740,8 @@ const file_weewar_v1_models_presenter_proto_rawDesc = "" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12%\n" +
 	"\x0ecurrent_player\x18\x03 \x01(\x05R\rcurrentPlayer\x12!\n" +
 	"\fturn_counter\x18\x04 \x01(\x05R\vturnCounter\x12\x1b\n" +
-	"\tgame_name\x18\x05 \x01(\tR\bgameNameB\xb0\x01\n" +
-	"\rcom.weewar.v1B\x0ePresenterProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\tgame_name\x18\x05 \x01(\tR\bgameNameB\xa2\x01\n" +
+	"\rcom.weewar.v1B\x0ePresenterProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

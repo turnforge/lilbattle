@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services/fsbe"
 )
 
 // ConnectGamesServiceAdapter adapts the gRPC GamesService to Connect's interface

@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/panyam/protoc-gen-go-wasmjs/proto/gen/go/wasmjs/v1"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
@@ -52,8 +52,8 @@ const file_weewar_v1_services_gameviewerpage_proto_rawDesc = "" +
 	"\x11ShowCaptureEffect\x12#.weewar.v1.ShowCaptureEffectRequest\x1a$.weewar.v1.ShowCaptureEffectResponse\x12[\n" +
 	"\x10SetAllowedPanels\x12\".weewar.v1.SetAllowedPanelsRequest\x1a#.weewar.v1.SetAllowedPanelsResponse\x12I\n" +
 	"\n" +
-	"LogMessage\x12\x1c.weewar.v1.LogMessageRequest\x1a\x1d.weewar.v1.LogMessageResponse\x1a\x04\xc0\xb5\x18\x01B\xb7\x01\n" +
-	"\rcom.weewar.v1B\x13GameviewerpageProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"LogMessage\x12\x1c.weewar.v1.LogMessageRequest\x1a\x1d.weewar.v1.LogMessageResponse\x1a\x04\xc0\xb5\x18\x01B\xa9\x01\n" +
+	"\rcom.weewar.v1B\x13GameviewerpageProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_gameviewerpage_proto_goTypes = []any{

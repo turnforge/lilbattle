@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/panyam/turnengine/games/weewar/services/server"
-	"github.com/panyam/turnengine/games/weewar/utils"
-	web "github.com/panyam/turnengine/games/weewar/web/server"
+	"github.com/turnforge/weewar/services/server"
+	"github.com/turnforge/weewar/utils"
+	web "github.com/turnforge/weewar/web/server"
 )
 
 var (

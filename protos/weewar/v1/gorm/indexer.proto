@@ -5,7 +5,7 @@ package weewar.v1;
 import "dal/v1/annotations.proto";
 import "weewar/v1/models/indexer.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/gorm;weewargorm";
+option go_package = "github.com/turnforge/weewar/gen/gorm;weewargorm";
 
 // EntityIndexStateGORM is the GORM representation for EntityIndexState
 message EntityIndexStateGORM {

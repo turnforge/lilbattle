@@ -1,7 +1,7 @@
 package fsbe
 
 import (
-	"github.com/panyam/turnengine/games/weewar/services"
+	"github.com/turnforge/weewar/services"
 	"golang.org/x/oauth2"
 )
 

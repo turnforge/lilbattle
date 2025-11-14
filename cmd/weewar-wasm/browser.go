@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	wasmv1 "github.com/panyam/turnengine/games/weewar/gen/wasm/go/weewar/v1/services"
-	"github.com/panyam/turnengine/games/weewar/services"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	wasmv1 "github.com/turnforge/weewar/gen/wasm/go/weewar/v1/services"
+	"github.com/turnforge/weewar/services"
 )
 
 // Browser specific panel and other "client" implementations

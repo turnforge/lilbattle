@@ -11,8 +11,8 @@ import (
 	strings "strings"
 
 	connect "connectrpc.com/connect"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	services "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	services "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are

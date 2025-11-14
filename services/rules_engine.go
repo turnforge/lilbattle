@@ -3,8 +3,8 @@ package services
 import (
 	"fmt"
 
-	"github.com/panyam/turnengine/games/weewar/assets"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/assets"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // =============================================================================

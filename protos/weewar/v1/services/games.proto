@@ -8,7 +8,7 @@ import "google/protobuf/field_mask.proto";
 import "weewar/v1/models/models.proto";
 import "weewar/v1/models/games_service.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services";
+option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1/services";
 
 // GamesService manages the game examples catalog
 service GamesService {

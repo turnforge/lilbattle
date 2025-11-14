@@ -5,7 +5,7 @@ package weewar.v1;
 import "dal/v1/annotations.proto";
 import "weewar/v1/models/indexer.proto";
 
-option go_package = "github.com/panyam/turnengine/games/weewar/gen/datastore;weewardatastore";
+option go_package = "github.com/turnforge/weewar/gen/datastore;weewardatastore";
 
 // EntityIndexStateDatastore is the Datastore representation for EntityIndexState
 message EntityIndexStateDatastore {

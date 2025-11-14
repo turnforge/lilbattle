@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	tmpls "github.com/panyam/turnengine/games/weewar/web/templates"
+	tmpls "github.com/turnforge/weewar/web/templates"
 )
 
 func renderPanelTemplate(_ context.Context, templatefile string, data any) (content string) {

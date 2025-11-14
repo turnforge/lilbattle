@@ -1060,8 +1060,8 @@ const file_weewar_v1_models_indexer_proto_rawDesc = "" +
 	"\x19GetIndexRecordsLRORequest\x12\x15\n" +
 	"\x06lro_id\x18\x01 \x01(\tR\x05lroId\"J\n" +
 	"\x1aGetIndexRecordsLROResponse\x12,\n" +
-	"\x03lro\x18\x01 \x01(\v2\x1a.weewar.v1.IndexRecordsLROR\x03lroB\xae\x01\n" +
-	"\rcom.weewar.v1B\fIndexerProtoP\x01ZJgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"\x03lro\x18\x01 \x01(\v2\x1a.weewar.v1.IndexRecordsLROR\x03lroB\xa0\x01\n" +
+	"\rcom.weewar.v1B\fIndexerProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var (

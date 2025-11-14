@@ -1,9 +1,9 @@
 package tests
 
 import (
-	"github.com/panyam/turnengine/games/weewar/services"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
-	"github.com/panyam/turnengine/games/weewar/services/singleton"
+	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/fsbe"
+	"github.com/turnforge/weewar/services/singleton"
 )
 
 type AxialCoord = services.AxialCoord

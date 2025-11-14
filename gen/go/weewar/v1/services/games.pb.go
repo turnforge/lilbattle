@@ -11,7 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
-	models "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -44,9 +44,9 @@ const file_weewar_v1_services_games_proto_rawDesc = "" +
 	"\tListMoves\x12\x1b.weewar.v1.ListMovesRequest\x1a\x1c.weewar.v1.ListMovesResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/games/{game_id}/moves\x12u\n" +
 	"\fProcessMoves\x12\x1e.weewar.v1.ProcessMovesRequest\x1a\x1f.weewar.v1.ProcessMovesResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/{game_id}/moves\x12|\n" +
 	"\fGetOptionsAt\x12\x1e.weewar.v1.GetOptionsAtRequest\x1a\x1f.weewar.v1.GetOptionsAtResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/games/{game_id}/options/{q}/{r}\x12{\n" +
-	"\x0eSimulateAttack\x12 .weewar.v1.SimulateAttackRequest\x1a!.weewar.v1.SimulateAttackResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/simulate_attackB\xae\x01\n" +
+	"\x0eSimulateAttack\x12 .weewar.v1.SimulateAttackRequest\x1a!.weewar.v1.SimulateAttackResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/simulate_attackB\xa0\x01\n" +
 	"\rcom.weewar.v1B\n" +
-	"GamesProtoP\x01ZLgithub.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
+	"GamesProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
 var file_weewar_v1_services_games_proto_goTypes = []any{

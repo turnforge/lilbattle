@@ -13,9 +13,9 @@ import (
 
 	// turnengine "github.com/panyam/turnengine/engine/gen/go/turnengine/v1/models"
 	"github.com/panyam/turnengine/engine/storage"
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	v1services "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services"
-	"github.com/panyam/turnengine/games/weewar/services"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	v1services "github.com/turnforge/weewar/gen/go/weewar/v1/services"
+	"github.com/turnforge/weewar/services"
 	"google.golang.org/protobuf/proto"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -4,25 +4,25 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/models"
-	"github.com/panyam/turnengine/games/weewar/services"
-	"github.com/panyam/turnengine/games/weewar/services/fsbe"
-	"github.com/panyam/turnengine/games/weewar/services/singleton"
+	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/fsbe"
+	"github.com/turnforge/weewar/services/singleton"
 )
 
 // PresenterContext holds the presenter and associated panels for CLI operations
 type PresenterContext struct {
-	Presenter             *services.GameViewPresenter
-	GameState             *services.BaseGameState
-	TurnOptions           *services.BaseTurnOptionsPanel
-	BuildOptions          *services.BaseBuildOptionsModal
-	UnitStats             *services.BaseUnitPanel
-	TerrainStats          *services.BaseTilePanel
-	DamageDistribution    *services.BaseUnitPanel
-	CompactSummaryCard    *services.BaseCompactSummaryCardPanel
-	GameScene             *services.BaseGameScene
-	GameID                string
-	FSService             *fsbe.FSGamesService
+	Presenter          *services.GameViewPresenter
+	GameState          *services.BaseGameState
+	TurnOptions        *services.BaseTurnOptionsPanel
+	BuildOptions       *services.BaseBuildOptionsModal
+	UnitStats          *services.BaseUnitPanel
+	TerrainStats       *services.BaseTilePanel
+	DamageDistribution *services.BaseUnitPanel
+	CompactSummaryCard *services.BaseCompactSummaryCardPanel
+	GameScene          *services.BaseGameScene
+	GameID             string
+	FSService          *fsbe.FSGamesService
 }
 
 // createPresenter loads a game from disk into an in-memory presenter

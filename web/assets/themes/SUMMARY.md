@@ -76,7 +76,7 @@ assets/themes/
 ### In Your Presenter
 
 ```go
-import "github.com/panyam/turnengine/games/weewar/web/assets/themes"
+import "github.com/turnforge/weewar/web/assets/themes"
 
 type SingletonGameViewPresenterImpl struct {
     Theme themes.Theme
