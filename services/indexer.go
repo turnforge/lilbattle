@@ -8,11 +8,12 @@ import (
 )
 
 type IndexerService interface {
-	v1s.UnimplementedIndexerServiceServer
+	v1s.IndexerServiceServer
 }
 
 type BaseIndexerService struct {
 	Self IndexerService // The actual implementation
+	v1s.UnimplementedIndexerServiceServer
 }
 
 func (b *BaseIndexerService) GetIndexStates(contextcontext *v1.GetIndexStatesRequest) (resp *v1.GetIndexStatesResponse, err error) {
