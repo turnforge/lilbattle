@@ -4,8 +4,8 @@ import { hexToPixel } from '../common/hexUtils';
 import { World } from '../common/World';
 import { SelectionHighlightLayer, MovementHighlightLayer, AttackHighlightLayer } from '../common/HexHighlightLayer';
 import { EventBus } from '../../lib/EventBus';
-import { GameViewPresenterClient as  GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/gameViewPresenterClient';
-import { MoveUnitAction, AttackUnitAction, HighlightSpec } from '../../gen/wasmjs/weewar/v1/interfaces';
+import { GameViewPresenterClient as  GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/services/gameViewPresenterClient';
+import { MoveUnitAction, AttackUnitAction, HighlightSpec } from '../../gen/wasmjs/weewar/v1/models/interfaces';
 
 /**
  * PhaserGameScene extends PhaserWorldScene with game-specific interactive features.

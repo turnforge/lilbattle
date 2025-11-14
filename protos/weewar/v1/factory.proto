@@ -1,0 +1,17 @@
+
+syntax = "proto3";
+
+package weewar.v1;
+
+// Import messages we want in the factory
+import "weewar/v1/models/models.proto";
+import "weewar/v1/models/indexer.proto";
+
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1";
+
+// Import wasmjs annotations
+import "wasmjs/v1/annotations.proto";
+
+// Mark this file as a TypeScript factory definition
+option (wasmjs.v1.ts_factory) = true;
+

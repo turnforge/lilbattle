@@ -1,7 +1,7 @@
 // Generated TypeScript interfaces from proto file
 // DO NOT EDIT - This file is auto-generated
 
-import { FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
+import { Any, FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
 
 
 /**
@@ -1306,6 +1306,159 @@ export interface SetAllowedPanelsRequest {
 
 
 export interface SetAllowedPanelsResponse {
+}
+
+
+
+export interface EntityIndexState {
+  entityType: string;
+  entityId: string;
+  /** eg "screenshots", "keywords" etc
+ EntityType + EntityId + IndexType should be  unique */
+  indexType: string;
+  /** When the last indexing was queued */
+  lastQueuedAt?: Timestamp;
+  /** when the last indexing was completed */
+  lastIndexedAt?: Timestamp;
+  /** "queued/pending", "indexing", "completed", "failed" */
+  status: string;
+  /** If there was an error in the last indexing */
+  lastError: string;
+  /** Keep a hash of the contents for quick check to check updated
+ (not sure if needed) - This should be provided by the source */
+  lastContentHash: string;
+  retryCount: number;
+  /** Which LRO this entity has been updated via */
+  currentLroId: string;
+}
+
+
+
+export interface GetIndexStatesRequest {
+  entityType: string;
+  entityIds: string[];
+  /** Optional - can be used to get "all" indexer states or just once specified here */
+  indexTypes: string[];
+}
+
+
+
+export interface EntityIndexStateList {
+  states?: EntityIndexState[];
+}
+
+
+
+export interface GetIndexStatesResponse {
+  states: Record<string, EntityIndexStateList>;
+}
+
+
+
+export interface ListIndexStatesRequest {
+  entityType: string;
+  /** Get records indexed "before" this time */
+  indexedBefore?: Timestamp | undefined;
+  /** Get records indexed "after" this time */
+  indexedAfter?: Timestamp | undefined;
+  /** Filter by index types or get all */
+  indexTypes: string[];
+  /** "id" or "indexed_at" */
+  orderBy: string;
+  /** limit to max items */
+  count: number;
+}
+
+
+
+export interface ListIndexStatesResponse {
+  items?: EntityIndexState[];
+  /** How to identify the next "page" in this list */
+  nextPageKey: string;
+}
+
+
+
+export interface DeleteIndexStatesRequest {
+  entityType: string;
+  entityIds: string[];
+  /** Optional - can be used to get "all" indexer states or just once specified here */
+  indexTypes: string[];
+}
+
+
+
+export interface DeleteIndexStatesResponse {
+}
+
+
+/**
+ * Request messages
+ */
+export interface IndexRecord {
+  entityId: string;
+  updatedAt?: Timestamp;
+  entityData?: Any;
+  indexerTypes: string[];
+}
+
+
+/**
+ * Each IndexRecords gets its own "long running operation" 
+ so we can track how things are
+ */
+export interface IndexRecordsLRO {
+  lroId: string;
+  /** Single entity type in a index request */
+  entityType: string;
+  /** When this request was created */
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  /** Callback url for this request (if any)
+ All records indexed in this operation will be notified via this url */
+  callbackUrl: string;
+  /** Records to enqueue - note that indexing by its nature is asynchronous
+ so we wont wait for all the indexing to finish */
+  records?: IndexRecord[];
+}
+
+
+
+export interface CreateIndexRecordsLRORequest {
+  lro?: IndexRecordsLRO;
+}
+
+
+
+export interface CreateIndexRecordsLROResponse {
+  lro?: IndexRecordsLRO;
+}
+
+
+
+export interface UpdateIndexRecordsLRORequest {
+  lro?: IndexRecordsLRO;
+  /** *
+ Mask of fields being updated in this Game to make partial changes. */
+  updateMask?: FieldMask;
+}
+
+
+
+export interface UpdateIndexRecordsLROResponse {
+  lro?: IndexRecordsLRO;
+}
+
+
+
+export interface GetIndexRecordsLRORequest {
+  lroId: string;
+}
+
+
+
+export interface GetIndexRecordsLROResponse {
+  lro?: IndexRecordsLRO;
 }
 
 

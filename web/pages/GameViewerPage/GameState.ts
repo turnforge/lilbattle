@@ -1,6 +1,6 @@
 import { EventBus } from '../../lib/EventBus';
 import WeewarBundle from '../../gen/wasmjs';
-import { GamesServiceClient } from '../../gen/wasmjs/weewar/v1/gamesServiceClient';
+import { GamesServiceClient } from '../../gen/wasmjs/weewar/v1/services/gamesServiceClient';
 import { 
     ProcessMovesRequest, 
     ProcessMovesResponse, 
@@ -16,9 +16,10 @@ import {
     GameState as ProtoGameState, 
     Game as ProtoGame, 
     WorldData 
-} from '../../gen/wasmjs/weewar/v1/interfaces'
+} from '../../gen/wasmjs/weewar/v1/models/interfaces'
 
-import * as models from '../../gen/wasmjs/weewar/v1/models'
+import * as models from '../../gen/wasmjs/weewar/v1/models/models'
+import { Weewar_v1Deserializer as WD } from '../../gen/wasmjs/weewar/v1/factory';
 
 /**
  * GameState - Lightweight WASM interface and game metadata manager
@@ -162,36 +163,36 @@ export class GameState {
      * Helper function to create GameMove for unit movement
      */
     public static createMoveUnitAction(fromQ: number, fromR: number, toQ: number, toR: number, playerId: number): GameMove {
-        const moveAction = models.MoveUnitAction.from({
+        const moveAction = WD.from(models.MoveUnitAction, {
             fromQ: fromQ,
             fromR: fromR,
             toQ: toQ,
             toR: toR
         });
 
-        return models.GameMove.from({ player: playerId, moveUnit: moveAction, });
+        return WD.from(models.GameMove, { player: playerId, moveUnit: moveAction, });
     }
 
     /**
      * Helper function to create GameMove for unit attack
      */
     public static createAttackUnitAction(attackerQ: number, attackerR: number, defenderQ: number, defenderR: number, playerId: number): GameMove {
-        const attackAction = models.AttackUnitAction.from({
+        const attackAction = WD.from(models.AttackUnitAction, {
             attackerQ: attackerQ,
             attackerR: attackerR,
             defenderQ: defenderQ,
             defenderR: defenderR
         });
 
-        return models.GameMove.from({ player: playerId, attackUnit: attackAction });
+        return WD.from(models.GameMove, { player: playerId, attackUnit: attackAction });
     }
 
     /**
      * Helper function to create GameMove for end turn
      */
     public static createEndTurnAction(playerId: number): GameMove {
-        const endTurnAction = models.EndTurnAction.from({});
-        return models.GameMove.from({ player: playerId, endTurn: endTurnAction });
+        const endTurnAction = WD.from(models.EndTurnAction, {});
+        return WD.from(models.GameMove, { player: playerId, endTurn: endTurnAction });
     }
 
     /**
@@ -259,9 +260,9 @@ export class GameState {
      */
     public async getCurrentGameState(): Promise<ProtoGameState> {
         await this.wasmBundle.ensureReady();
-        const request = models.GetGameStateRequest.from({ gameId: this.gameId });
+        const request = WD.from(models.GetGameStateRequest, { gameId: this.gameId });
         const response = await this.gamesClient.getGameState(request);
-        return response.state || models.GameState.from({});
+        return response.state || WD.from(models.GameState, {});
     }
 
     /**
@@ -269,9 +270,9 @@ export class GameState {
      */
     public async getCurrentGame(): Promise<ProtoGame> {
         const client = await this.wasmBundle.ensureReady();
-        const request = models.GetGameRequest.from({ id: this.gameId });
+        const request = WD.from(models.GetGameRequest, { id: this.gameId });
         const response = await this.gamesClient.getGame(request);
-        return response.game || models.Game.from({});
+        return response.game || WD.from(models.Game, {});
     }
 
     /**
@@ -279,7 +280,7 @@ export class GameState {
      */
     public async getWorldData(): Promise<WorldData> {
         const gameState = await this.getCurrentGameState();
-        return gameState.worldData || models.WorldData.from({ tiles: [], units: [] });
+        return gameState.worldData || WD.from(models.WorldData, { tiles: [], units: [] });
     }
 
     /**
@@ -296,14 +297,14 @@ export class GameState {
      */
     public async getOptionsAt(q: number, r: number): Promise<GetOptionsAtResponse> {
         if (!this.gameId) {
-            return models.GetOptionsAtResponse.from({ 
+            return WD.from(models.GetOptionsAtResponse, { 
                 options: [], 
                 currentPlayer: 0, 
                 gameInitialized: false 
             });
         }
 
-        const request = models.GetOptionsAtRequest.from({
+        const request = WD.from(models.GetOptionsAtRequest, {
             gameId: this.gameId,
             q: q,
             r: r

@@ -1,8 +1,9 @@
-import { FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
+import { Any, FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
 
 
-import { User as UserInterface, Pagination as PaginationInterface, PaginationResponse as PaginationResponseInterface, World as WorldInterface, WorldData as WorldDataInterface, Tile as TileInterface, Unit as UnitInterface, AttackRecord as AttackRecordInterface, TerrainDefinition as TerrainDefinitionInterface, UnitDefinition as UnitDefinitionInterface, TerrainUnitProperties as TerrainUnitPropertiesInterface, UnitUnitProperties as UnitUnitPropertiesInterface, DamageDistribution as DamageDistributionInterface, DamageRange as DamageRangeInterface, RulesEngine as RulesEngineInterface, Game as GameInterface, GameConfiguration as GameConfigurationInterface, IncomeConfig as IncomeConfigInterface, GamePlayer as GamePlayerInterface, GameTeam as GameTeamInterface, GameSettings as GameSettingsInterface, GameState as GameStateInterface, GameMoveHistory as GameMoveHistoryInterface, GameMoveGroup as GameMoveGroupInterface, GameMove as GameMoveInterface, GameMoveResult as GameMoveResultInterface, MoveUnitAction as MoveUnitActionInterface, AttackUnitAction as AttackUnitActionInterface, BuildUnitAction as BuildUnitActionInterface, CaptureBuildingAction as CaptureBuildingActionInterface, EndTurnAction as EndTurnActionInterface, WorldChange as WorldChangeInterface, UnitMovedChange as UnitMovedChangeInterface, UnitDamagedChange as UnitDamagedChangeInterface, UnitKilledChange as UnitKilledChangeInterface, PlayerChangedChange as PlayerChangedChangeInterface, UnitBuiltChange as UnitBuiltChangeInterface, CoinsChangedChange as CoinsChangedChangeInterface, AllPaths as AllPathsInterface, PathEdge as PathEdgeInterface, Path as PathInterface, ListGamesRequest as ListGamesRequestInterface, ListGamesResponse as ListGamesResponseInterface, GetGameRequest as GetGameRequestInterface, GetGameResponse as GetGameResponseInterface, GetGameContentRequest as GetGameContentRequestInterface, GetGameContentResponse as GetGameContentResponseInterface, UpdateGameRequest as UpdateGameRequestInterface, UpdateGameResponse as UpdateGameResponseInterface, DeleteGameRequest as DeleteGameRequestInterface, DeleteGameResponse as DeleteGameResponseInterface, GetGamesRequest as GetGamesRequestInterface, GetGamesResponse as GetGamesResponseInterface, CreateGameRequest as CreateGameRequestInterface, CreateGameResponse as CreateGameResponseInterface, ProcessMovesRequest as ProcessMovesRequestInterface, ProcessMovesResponse as ProcessMovesResponseInterface, GetGameStateRequest as GetGameStateRequestInterface, GetGameStateResponse as GetGameStateResponseInterface, ListMovesRequest as ListMovesRequestInterface, ListMovesResponse as ListMovesResponseInterface, GetOptionsAtRequest as GetOptionsAtRequestInterface, GetOptionsAtResponse as GetOptionsAtResponseInterface, GameOption as GameOptionInterface, SimulateAttackRequest as SimulateAttackRequestInterface, SimulateAttackResponse as SimulateAttackResponseInterface, EmptyRequest as EmptyRequestInterface, EmptyResponse as EmptyResponseInterface, SetContentRequest as SetContentRequestInterface, SetContentResponse as SetContentResponseInterface, ShowBuildOptionsRequest as ShowBuildOptionsRequestInterface, ShowBuildOptionsResponse as ShowBuildOptionsResponseInterface, LogMessageRequest as LogMessageRequestInterface, LogMessageResponse as LogMessageResponseInterface, SetGameStateRequest as SetGameStateRequestInterface, SetGameStateResponse as SetGameStateResponseInterface, UpdateGameStatusRequest as UpdateGameStatusRequestInterface, UpdateGameStatusResponse as UpdateGameStatusResponseInterface, SetTileAtRequest as SetTileAtRequestInterface, SetTileAtResponse as SetTileAtResponseInterface, SetUnitAtRequest as SetUnitAtRequestInterface, SetUnitAtResponse as SetUnitAtResponseInterface, RemoveTileAtRequest as RemoveTileAtRequestInterface, RemoveTileAtResponse as RemoveTileAtResponseInterface, RemoveUnitAtRequest as RemoveUnitAtRequestInterface, RemoveUnitAtResponse as RemoveUnitAtResponseInterface, ShowHighlightsRequest as ShowHighlightsRequestInterface, ShowHighlightsResponse as ShowHighlightsResponseInterface, HighlightSpec as HighlightSpecInterface, ClearHighlightsRequest as ClearHighlightsRequestInterface, ClearHighlightsResponse as ClearHighlightsResponseInterface, ShowPathRequest as ShowPathRequestInterface, ShowPathResponse as ShowPathResponseInterface, ClearPathsRequest as ClearPathsRequestInterface, ClearPathsResponse as ClearPathsResponseInterface, MoveUnitRequest as MoveUnitRequestInterface, MoveUnitResponse as MoveUnitResponseInterface, HexCoord as HexCoordInterface, ShowAttackEffectRequest as ShowAttackEffectRequestInterface, SplashTarget as SplashTargetInterface, ShowAttackEffectResponse as ShowAttackEffectResponseInterface, ShowHealEffectRequest as ShowHealEffectRequestInterface, ShowHealEffectResponse as ShowHealEffectResponseInterface, ShowCaptureEffectRequest as ShowCaptureEffectRequestInterface, ShowCaptureEffectResponse as ShowCaptureEffectResponseInterface, SetAllowedPanelsRequest as SetAllowedPanelsRequestInterface, SetAllowedPanelsResponse as SetAllowedPanelsResponseInterface, InitializeSingletonRequest as InitializeSingletonRequestInterface, InitializeSingletonResponse as InitializeSingletonResponseInterface, TurnOptionClickedRequest as TurnOptionClickedRequestInterface, TurnOptionClickedResponse as TurnOptionClickedResponseInterface, SceneClickedRequest as SceneClickedRequestInterface, SceneClickedResponse as SceneClickedResponseInterface, EndTurnButtonClickedRequest as EndTurnButtonClickedRequestInterface, EndTurnButtonClickedResponse as EndTurnButtonClickedResponseInterface, BuildOptionClickedRequest as BuildOptionClickedRequestInterface, BuildOptionClickedResponse as BuildOptionClickedResponseInterface, InitializeGameRequest as InitializeGameRequestInterface, InitializeGameResponse as InitializeGameResponseInterface, ThemeInfo as ThemeInfoInterface, UnitMapping as UnitMappingInterface, TerrainMapping as TerrainMappingInterface, ThemeManifest as ThemeManifestInterface, PlayerColor as PlayerColorInterface, AssetResult as AssetResultInterface, UserInfo as UserInfoInterface, ListUsersRequest as ListUsersRequestInterface, ListUsersResponse as ListUsersResponseInterface, GetUserRequest as GetUserRequestInterface, GetUserResponse as GetUserResponseInterface, GetUserContentRequest as GetUserContentRequestInterface, GetUserContentResponse as GetUserContentResponseInterface, UpdateUserRequest as UpdateUserRequestInterface, UpdateUserResponse as UpdateUserResponseInterface, DeleteUserRequest as DeleteUserRequestInterface, DeleteUserResponse as DeleteUserResponseInterface, GetUsersRequest as GetUsersRequestInterface, GetUsersResponse as GetUsersResponseInterface, CreateUserRequest as CreateUserRequestInterface, CreateUserResponse as CreateUserResponseInterface, WorldInfo as WorldInfoInterface, ListWorldsRequest as ListWorldsRequestInterface, ListWorldsResponse as ListWorldsResponseInterface, GetWorldRequest as GetWorldRequestInterface, GetWorldResponse as GetWorldResponseInterface, UpdateWorldRequest as UpdateWorldRequestInterface, UpdateWorldResponse as UpdateWorldResponseInterface, DeleteWorldRequest as DeleteWorldRequestInterface, DeleteWorldResponse as DeleteWorldResponseInterface, GetWorldsRequest as GetWorldsRequestInterface, GetWorldsResponse as GetWorldsResponseInterface, CreateWorldRequest as CreateWorldRequestInterface, CreateWorldResponse as CreateWorldResponseInterface, GameStatus, PathDirection, Type } from "./interfaces";
-import { Weewar_v1Deserializer } from "./deserializer";
+import { User as UserInterface, Pagination as PaginationInterface, PaginationResponse as PaginationResponseInterface, World as WorldInterface, WorldData as WorldDataInterface, Tile as TileInterface, Unit as UnitInterface, AttackRecord as AttackRecordInterface, TerrainDefinition as TerrainDefinitionInterface, UnitDefinition as UnitDefinitionInterface, TerrainUnitProperties as TerrainUnitPropertiesInterface, UnitUnitProperties as UnitUnitPropertiesInterface, DamageDistribution as DamageDistributionInterface, DamageRange as DamageRangeInterface, RulesEngine as RulesEngineInterface, Game as GameInterface, GameConfiguration as GameConfigurationInterface, IncomeConfig as IncomeConfigInterface, GamePlayer as GamePlayerInterface, GameTeam as GameTeamInterface, GameSettings as GameSettingsInterface, GameState as GameStateInterface, GameMoveHistory as GameMoveHistoryInterface, GameMoveGroup as GameMoveGroupInterface, GameMove as GameMoveInterface, GameMoveResult as GameMoveResultInterface, MoveUnitAction as MoveUnitActionInterface, AttackUnitAction as AttackUnitActionInterface, BuildUnitAction as BuildUnitActionInterface, CaptureBuildingAction as CaptureBuildingActionInterface, EndTurnAction as EndTurnActionInterface, WorldChange as WorldChangeInterface, UnitMovedChange as UnitMovedChangeInterface, UnitDamagedChange as UnitDamagedChangeInterface, UnitKilledChange as UnitKilledChangeInterface, PlayerChangedChange as PlayerChangedChangeInterface, UnitBuiltChange as UnitBuiltChangeInterface, CoinsChangedChange as CoinsChangedChangeInterface, AllPaths as AllPathsInterface, PathEdge as PathEdgeInterface, Path as PathInterface, ListGamesRequest as ListGamesRequestInterface, ListGamesResponse as ListGamesResponseInterface, GetGameRequest as GetGameRequestInterface, GetGameResponse as GetGameResponseInterface, GetGameContentRequest as GetGameContentRequestInterface, GetGameContentResponse as GetGameContentResponseInterface, UpdateGameRequest as UpdateGameRequestInterface, UpdateGameResponse as UpdateGameResponseInterface, DeleteGameRequest as DeleteGameRequestInterface, DeleteGameResponse as DeleteGameResponseInterface, GetGamesRequest as GetGamesRequestInterface, GetGamesResponse as GetGamesResponseInterface, CreateGameRequest as CreateGameRequestInterface, CreateGameResponse as CreateGameResponseInterface, ProcessMovesRequest as ProcessMovesRequestInterface, ProcessMovesResponse as ProcessMovesResponseInterface, GetGameStateRequest as GetGameStateRequestInterface, GetGameStateResponse as GetGameStateResponseInterface, ListMovesRequest as ListMovesRequestInterface, ListMovesResponse as ListMovesResponseInterface, GetOptionsAtRequest as GetOptionsAtRequestInterface, GetOptionsAtResponse as GetOptionsAtResponseInterface, GameOption as GameOptionInterface, SimulateAttackRequest as SimulateAttackRequestInterface, SimulateAttackResponse as SimulateAttackResponseInterface, EmptyRequest as EmptyRequestInterface, EmptyResponse as EmptyResponseInterface, SetContentRequest as SetContentRequestInterface, SetContentResponse as SetContentResponseInterface, ShowBuildOptionsRequest as ShowBuildOptionsRequestInterface, ShowBuildOptionsResponse as ShowBuildOptionsResponseInterface, LogMessageRequest as LogMessageRequestInterface, LogMessageResponse as LogMessageResponseInterface, SetGameStateRequest as SetGameStateRequestInterface, SetGameStateResponse as SetGameStateResponseInterface, UpdateGameStatusRequest as UpdateGameStatusRequestInterface, UpdateGameStatusResponse as UpdateGameStatusResponseInterface, SetTileAtRequest as SetTileAtRequestInterface, SetTileAtResponse as SetTileAtResponseInterface, SetUnitAtRequest as SetUnitAtRequestInterface, SetUnitAtResponse as SetUnitAtResponseInterface, RemoveTileAtRequest as RemoveTileAtRequestInterface, RemoveTileAtResponse as RemoveTileAtResponseInterface, RemoveUnitAtRequest as RemoveUnitAtRequestInterface, RemoveUnitAtResponse as RemoveUnitAtResponseInterface, ShowHighlightsRequest as ShowHighlightsRequestInterface, ShowHighlightsResponse as ShowHighlightsResponseInterface, HighlightSpec as HighlightSpecInterface, ClearHighlightsRequest as ClearHighlightsRequestInterface, ClearHighlightsResponse as ClearHighlightsResponseInterface, ShowPathRequest as ShowPathRequestInterface, ShowPathResponse as ShowPathResponseInterface, ClearPathsRequest as ClearPathsRequestInterface, ClearPathsResponse as ClearPathsResponseInterface, MoveUnitRequest as MoveUnitRequestInterface, MoveUnitResponse as MoveUnitResponseInterface, HexCoord as HexCoordInterface, ShowAttackEffectRequest as ShowAttackEffectRequestInterface, SplashTarget as SplashTargetInterface, ShowAttackEffectResponse as ShowAttackEffectResponseInterface, ShowHealEffectRequest as ShowHealEffectRequestInterface, ShowHealEffectResponse as ShowHealEffectResponseInterface, ShowCaptureEffectRequest as ShowCaptureEffectRequestInterface, ShowCaptureEffectResponse as ShowCaptureEffectResponseInterface, SetAllowedPanelsRequest as SetAllowedPanelsRequestInterface, SetAllowedPanelsResponse as SetAllowedPanelsResponseInterface, EntityIndexState as EntityIndexStateInterface, GetIndexStatesRequest as GetIndexStatesRequestInterface, EntityIndexStateList as EntityIndexStateListInterface, GetIndexStatesResponse as GetIndexStatesResponseInterface, ListIndexStatesRequest as ListIndexStatesRequestInterface, ListIndexStatesResponse as ListIndexStatesResponseInterface, DeleteIndexStatesRequest as DeleteIndexStatesRequestInterface, DeleteIndexStatesResponse as DeleteIndexStatesResponseInterface, IndexRecord as IndexRecordInterface, IndexRecordsLRO as IndexRecordsLROInterface, CreateIndexRecordsLRORequest as CreateIndexRecordsLRORequestInterface, CreateIndexRecordsLROResponse as CreateIndexRecordsLROResponseInterface, UpdateIndexRecordsLRORequest as UpdateIndexRecordsLRORequestInterface, UpdateIndexRecordsLROResponse as UpdateIndexRecordsLROResponseInterface, GetIndexRecordsLRORequest as GetIndexRecordsLRORequestInterface, GetIndexRecordsLROResponse as GetIndexRecordsLROResponseInterface, InitializeSingletonRequest as InitializeSingletonRequestInterface, InitializeSingletonResponse as InitializeSingletonResponseInterface, TurnOptionClickedRequest as TurnOptionClickedRequestInterface, TurnOptionClickedResponse as TurnOptionClickedResponseInterface, SceneClickedRequest as SceneClickedRequestInterface, SceneClickedResponse as SceneClickedResponseInterface, EndTurnButtonClickedRequest as EndTurnButtonClickedRequestInterface, EndTurnButtonClickedResponse as EndTurnButtonClickedResponseInterface, BuildOptionClickedRequest as BuildOptionClickedRequestInterface, BuildOptionClickedResponse as BuildOptionClickedResponseInterface, InitializeGameRequest as InitializeGameRequestInterface, InitializeGameResponse as InitializeGameResponseInterface, ThemeInfo as ThemeInfoInterface, UnitMapping as UnitMappingInterface, TerrainMapping as TerrainMappingInterface, ThemeManifest as ThemeManifestInterface, PlayerColor as PlayerColorInterface, AssetResult as AssetResultInterface, UserInfo as UserInfoInterface, ListUsersRequest as ListUsersRequestInterface, ListUsersResponse as ListUsersResponseInterface, GetUserRequest as GetUserRequestInterface, GetUserResponse as GetUserResponseInterface, GetUserContentRequest as GetUserContentRequestInterface, GetUserContentResponse as GetUserContentResponseInterface, UpdateUserRequest as UpdateUserRequestInterface, UpdateUserResponse as UpdateUserResponseInterface, DeleteUserRequest as DeleteUserRequestInterface, DeleteUserResponse as DeleteUserResponseInterface, GetUsersRequest as GetUsersRequestInterface, GetUsersResponse as GetUsersResponseInterface, CreateUserRequest as CreateUserRequestInterface, CreateUserResponse as CreateUserResponseInterface, WorldInfo as WorldInfoInterface, ListWorldsRequest as ListWorldsRequestInterface, ListWorldsResponse as ListWorldsResponseInterface, GetWorldRequest as GetWorldRequestInterface, GetWorldResponse as GetWorldResponseInterface, UpdateWorldRequest as UpdateWorldRequestInterface, UpdateWorldResponse as UpdateWorldResponseInterface, DeleteWorldRequest as DeleteWorldRequestInterface, DeleteWorldResponse as DeleteWorldResponseInterface, GetWorldsRequest as GetWorldsRequestInterface, GetWorldsResponse as GetWorldsResponseInterface, CreateWorldRequest as CreateWorldRequestInterface, CreateWorldResponse as CreateWorldResponseInterface, GameStatus, PathDirection, Type } from "./interfaces";
+
+
 
 
 
@@ -11,6 +12,7 @@ export class User implements UserInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.User";
+  readonly __MESSAGE_TYPE = User.MESSAGE_TYPE;
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -27,14 +29,7 @@ export class User implements UserInterface {
   /** Difficulty - example attribute */
   difficulty: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized User instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<User>(User.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -44,6 +39,7 @@ export class Pagination implements PaginationInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.Pagination";
+  readonly __MESSAGE_TYPE = Pagination.MESSAGE_TYPE;
 
   /** *
  Instead of an offset an abstract  "page" key is provided that offers
@@ -57,14 +53,7 @@ export class Pagination implements PaginationInterface {
  Number of results to return. */
   pageSize: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized Pagination instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<Pagination>(Pagination.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -74,6 +63,7 @@ export class PaginationResponse implements PaginationResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.PaginationResponse";
+  readonly __MESSAGE_TYPE = PaginationResponse.MESSAGE_TYPE;
 
   /** *
  The key/pointer string that subsequent List requests should pass to
@@ -89,14 +79,7 @@ export class PaginationResponse implements PaginationResponseInterface {
  Total number of results. */
   totalResults: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized PaginationResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<PaginationResponse>(PaginationResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -106,6 +89,7 @@ export class World implements WorldInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.World";
+  readonly __MESSAGE_TYPE = World.MESSAGE_TYPE;
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -131,14 +115,7 @@ export class World implements WorldInterface {
   /** Default game configs */
   defaultGameConfig?: GameConfiguration;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized World instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<World>(World.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -148,20 +125,14 @@ export class WorldData implements WorldDataInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.WorldData";
+  readonly __MESSAGE_TYPE = WorldData.MESSAGE_TYPE;
 
   /** JSON-fied tile data about what units and terrains are at each location */
   tiles: Tile[] = [];
   /** All units on the world and who they belong to */
   units: Unit[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized WorldData instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<WorldData>(WorldData.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -171,6 +142,7 @@ export class Tile implements TileInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.Tile";
+  readonly __MESSAGE_TYPE = Tile.MESSAGE_TYPE;
 
   /** Q and R in Cubed coordinates */
   q: number = 0;
@@ -188,14 +160,7 @@ export class Tile implements TileInterface {
   lastActedTurn: number = 0;
   lastToppedupTurn: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized Tile instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<Tile>(Tile.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -205,6 +170,7 @@ export class Unit implements UnitInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.Unit";
+  readonly __MESSAGE_TYPE = Unit.MESSAGE_TYPE;
 
   /** Q and R in Cubed coordinates */
   q: number = 0;
@@ -235,14 +201,7 @@ export class Unit implements UnitInterface {
  Cleared when advancing to next step */
   chosenAlternative: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized Unit instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<Unit>(Unit.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -252,20 +211,14 @@ export class AttackRecord implements AttackRecordInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.AttackRecord";
+  readonly __MESSAGE_TYPE = AttackRecord.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   isRanged: boolean = false;
   turnNumber: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized AttackRecord instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<AttackRecord>(AttackRecord.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -277,6 +230,7 @@ export class TerrainDefinition implements TerrainDefinitionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TerrainDefinition";
+  readonly __MESSAGE_TYPE = TerrainDefinition.MESSAGE_TYPE;
 
   id: number = 0;
   name: string = "";
@@ -290,14 +244,7 @@ export class TerrainDefinition implements TerrainDefinitionInterface {
   buildableUnitIds: number[] = [];
   incomePerTurn: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized TerrainDefinition instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<TerrainDefinition>(TerrainDefinition.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -309,6 +256,7 @@ export class UnitDefinition implements UnitDefinitionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitDefinition";
+  readonly __MESSAGE_TYPE = UnitDefinition.MESSAGE_TYPE;
 
   id: number = 0;
   name: string = "";
@@ -343,14 +291,7 @@ export class UnitDefinition implements UnitDefinitionInterface {
  Default if not specified: 1 per action type */
   actionLimits: Record<string, number> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitDefinition instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitDefinition>(UnitDefinition.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -362,6 +303,7 @@ export class TerrainUnitProperties implements TerrainUnitPropertiesInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TerrainUnitProperties";
+  readonly __MESSAGE_TYPE = TerrainUnitProperties.MESSAGE_TYPE;
 
   terrainId: number = 0;
   unitId: number = 0;
@@ -374,14 +316,7 @@ export class TerrainUnitProperties implements TerrainUnitPropertiesInterface {
   attackRange: number = 0;
   minAttackRange: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized TerrainUnitProperties instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<TerrainUnitProperties>(TerrainUnitProperties.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -393,6 +328,7 @@ export class UnitUnitProperties implements UnitUnitPropertiesInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitUnitProperties";
+  readonly __MESSAGE_TYPE = UnitUnitProperties.MESSAGE_TYPE;
 
   attackerId: number = 0;
   defenderId: number = 0;
@@ -400,14 +336,7 @@ export class UnitUnitProperties implements UnitUnitPropertiesInterface {
   defenseOverride?: number | undefined;
   damage?: DamageDistribution;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitUnitProperties instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitUnitProperties>(UnitUnitProperties.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -419,20 +348,14 @@ export class DamageDistribution implements DamageDistributionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DamageDistribution";
+  readonly __MESSAGE_TYPE = DamageDistribution.MESSAGE_TYPE;
 
   minDamage: number = 0;
   maxDamage: number = 0;
   expectedDamage: number = 0;
   ranges: DamageRange[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DamageDistribution instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DamageDistribution>(DamageDistribution.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -442,19 +365,13 @@ export class DamageRange implements DamageRangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DamageRange";
+  readonly __MESSAGE_TYPE = DamageRange.MESSAGE_TYPE;
 
   minValue: number = 0;
   maxValue: number = 0;
   probability: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DamageRange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DamageRange>(DamageRange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -466,6 +383,7 @@ export class RulesEngine implements RulesEngineInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.RulesEngine";
+  readonly __MESSAGE_TYPE = RulesEngine.MESSAGE_TYPE;
 
   /** Core entity definitions */
   units: Record<number, UnitDefinition> = {};
@@ -476,14 +394,7 @@ export class RulesEngine implements RulesEngineInterface {
   /** Key format: "attacker_id:defender_id" (e.g., "1:2" for unit 1 attacking unit 2) */
   unitUnitProperties: Record<string, UnitUnitProperties> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized RulesEngine instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<RulesEngine>(RulesEngine.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -495,6 +406,7 @@ export class Game implements GameInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.Game";
+  readonly __MESSAGE_TYPE = Game.MESSAGE_TYPE;
 
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -520,14 +432,7 @@ export class Game implements GameInterface {
  Can be overridden to point to CDN or external hosting */
   previewUrls: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized Game instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<Game>(Game.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -537,6 +442,7 @@ export class GameConfiguration implements GameConfigurationInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameConfiguration";
+  readonly __MESSAGE_TYPE = GameConfiguration.MESSAGE_TYPE;
 
   /** Player configuration */
   players: GamePlayer[] = [];
@@ -547,14 +453,7 @@ export class GameConfiguration implements GameConfigurationInterface {
   /** Game settings */
   settings?: GameSettings;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameConfiguration instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameConfiguration>(GameConfiguration.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -564,6 +463,7 @@ export class IncomeConfig implements IncomeConfigInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.IncomeConfig";
+  readonly __MESSAGE_TYPE = IncomeConfig.MESSAGE_TYPE;
 
   /** How much starting coins to give each player */
   startingCoins: number = 0;
@@ -580,14 +480,7 @@ export class IncomeConfig implements IncomeConfigInterface {
   /** Income from each mine per turn */
   minesIncome: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized IncomeConfig instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<IncomeConfig>(IncomeConfig.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -597,6 +490,7 @@ export class GamePlayer implements GamePlayerInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GamePlayer";
+  readonly __MESSAGE_TYPE = GamePlayer.MESSAGE_TYPE;
 
   /** Player ID (1-based) */
   playerId: number = 0;
@@ -615,14 +509,7 @@ export class GamePlayer implements GamePlayerInterface {
   /** Player's current money/coins balance for building units */
   coins: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GamePlayer instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GamePlayer>(GamePlayer.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -632,6 +519,7 @@ export class GameTeam implements GameTeamInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameTeam";
+  readonly __MESSAGE_TYPE = GameTeam.MESSAGE_TYPE;
 
   /** ID of the team within the game (unique to the game) */
   teamId: number = 0;
@@ -642,14 +530,7 @@ export class GameTeam implements GameTeamInterface {
   /** Whether team has active players - can also be inferred */
   isActive: boolean = false;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameTeam instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameTeam>(GameTeam.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -659,6 +540,7 @@ export class GameSettings implements GameSettingsInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameSettings";
+  readonly __MESSAGE_TYPE = GameSettings.MESSAGE_TYPE;
 
   /** List of allowed unit type IDs */
   allowedUnits: number[] = [];
@@ -669,14 +551,7 @@ export class GameSettings implements GameSettingsInterface {
   /** Maximum number of turns (0 = unlimited) */
   maxTurns: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameSettings instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameSettings>(GameSettings.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -688,6 +563,7 @@ export class GameState implements GameStateInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameState";
+  readonly __MESSAGE_TYPE = GameState.MESSAGE_TYPE;
 
   updatedAt?: Timestamp;
   /** ID of the game whos state is being tracked */
@@ -706,14 +582,7 @@ export class GameState implements GameStateInterface {
   winningPlayer: number = 0;
   winningTeam: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameState instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameState>(GameState.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -725,20 +594,14 @@ export class GameMoveHistory implements GameMoveHistoryInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameMoveHistory";
+  readonly __MESSAGE_TYPE = GameMoveHistory.MESSAGE_TYPE;
 
   /** Move history for the game */
   gameId: string = "";
   /** Each entry in our history is a "group" of moves */
   groups: GameMoveGroup[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameMoveHistory instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameMoveHistory>(GameMoveHistory.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -750,6 +613,7 @@ export class GameMoveGroup implements GameMoveGroupInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameMoveGroup";
+  readonly __MESSAGE_TYPE = GameMoveGroup.MESSAGE_TYPE;
 
   /** When the moves happened (or were submitted) */
   startedAt?: Timestamp;
@@ -761,14 +625,7 @@ export class GameMoveGroup implements GameMoveGroupInterface {
  ie move_results[i] = ResultOfProcessing(ProcessMoveRequest.moves[i]) */
   moveResults: GameMoveResult[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameMoveGroup instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameMoveGroup>(GameMoveGroup.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -781,6 +638,7 @@ export class GameMove implements GameMoveInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameMove";
+  readonly __MESSAGE_TYPE = GameMove.MESSAGE_TYPE;
 
   player: number = 0;
   timestamp?: Timestamp;
@@ -792,14 +650,7 @@ export class GameMove implements GameMoveInterface {
   endTurn?: EndTurnAction;
   buildUnit?: BuildUnitAction;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameMove instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameMove>(GameMove.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -812,6 +663,7 @@ export class GameMoveResult implements GameMoveResultInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameMoveResult";
+  readonly __MESSAGE_TYPE = GameMoveResult.MESSAGE_TYPE;
 
   /** Whether the result is permenant and can be undone.
  Just moving a unit for example is not permanent, but attacking a unit
@@ -822,14 +674,7 @@ export class GameMoveResult implements GameMoveResultInterface {
   /** A set of changes to the world as a result of making this move */
   changes: WorldChange[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameMoveResult instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameMoveResult>(GameMoveResult.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -842,6 +687,7 @@ export class MoveUnitAction implements MoveUnitActionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.MoveUnitAction";
+  readonly __MESSAGE_TYPE = MoveUnitAction.MESSAGE_TYPE;
 
   fromQ: number = 0;
   fromR: number = 0;
@@ -852,14 +698,7 @@ export class MoveUnitAction implements MoveUnitActionInterface {
   /** Debug fields */
   reconstructedPath?: Path;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized MoveUnitAction instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<MoveUnitAction>(MoveUnitAction.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -872,6 +711,7 @@ export class AttackUnitAction implements AttackUnitActionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.AttackUnitAction";
+  readonly __MESSAGE_TYPE = AttackUnitAction.MESSAGE_TYPE;
 
   attackerQ: number = 0;
   attackerR: number = 0;
@@ -883,14 +723,7 @@ export class AttackUnitAction implements AttackUnitActionInterface {
   canAttack: boolean = false;
   damageEstimate: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized AttackUnitAction instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<AttackUnitAction>(AttackUnitAction.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -903,20 +736,14 @@ export class BuildUnitAction implements BuildUnitActionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.BuildUnitAction";
+  readonly __MESSAGE_TYPE = BuildUnitAction.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   unitType: number = 0;
   cost: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized BuildUnitAction instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<BuildUnitAction>(BuildUnitAction.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -929,19 +756,13 @@ export class CaptureBuildingAction implements CaptureBuildingActionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CaptureBuildingAction";
+  readonly __MESSAGE_TYPE = CaptureBuildingAction.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   tileType: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CaptureBuildingAction instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CaptureBuildingAction>(CaptureBuildingAction.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -954,16 +775,10 @@ export class EndTurnAction implements EndTurnActionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.EndTurnAction";
+  readonly __MESSAGE_TYPE = EndTurnAction.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized EndTurnAction instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<EndTurnAction>(EndTurnAction.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -976,6 +791,7 @@ export class WorldChange implements WorldChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.WorldChange";
+  readonly __MESSAGE_TYPE = WorldChange.MESSAGE_TYPE;
 
   unitMoved?: UnitMovedChange;
   unitDamaged?: UnitDamagedChange;
@@ -984,14 +800,7 @@ export class WorldChange implements WorldChangeInterface {
   unitBuilt?: UnitBuiltChange;
   coinsChanged?: CoinsChangedChange;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized WorldChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<WorldChange>(WorldChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1004,20 +813,14 @@ export class UnitMovedChange implements UnitMovedChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitMovedChange";
+  readonly __MESSAGE_TYPE = UnitMovedChange.MESSAGE_TYPE;
 
   /** Complete unit state before the move */
   previousUnit?: Unit;
   /** Complete unit state after the move (includes updated position, distanceLeft, etc.) */
   updatedUnit?: Unit;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitMovedChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitMovedChange>(UnitMovedChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1030,20 +833,14 @@ export class UnitDamagedChange implements UnitDamagedChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitDamagedChange";
+  readonly __MESSAGE_TYPE = UnitDamagedChange.MESSAGE_TYPE;
 
   /** Complete unit state before taking damage */
   previousUnit?: Unit;
   /** Complete unit state after taking damage */
   updatedUnit?: Unit;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitDamagedChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitDamagedChange>(UnitDamagedChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1056,18 +853,12 @@ export class UnitKilledChange implements UnitKilledChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitKilledChange";
+  readonly __MESSAGE_TYPE = UnitKilledChange.MESSAGE_TYPE;
 
   /** Complete unit state before being killed */
   previousUnit?: Unit;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitKilledChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitKilledChange>(UnitKilledChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1080,6 +871,7 @@ export class PlayerChangedChange implements PlayerChangedChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.PlayerChangedChange";
+  readonly __MESSAGE_TYPE = PlayerChangedChange.MESSAGE_TYPE;
 
   previousPlayer: number = 0;
   newPlayer: number = 0;
@@ -1088,14 +880,7 @@ export class PlayerChangedChange implements PlayerChangedChangeInterface {
   /** Units that had their movement/health reset for the new turn */
   resetUnits: Unit[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized PlayerChangedChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<PlayerChangedChange>(PlayerChangedChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1108,6 +893,7 @@ export class UnitBuiltChange implements UnitBuiltChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitBuiltChange";
+  readonly __MESSAGE_TYPE = UnitBuiltChange.MESSAGE_TYPE;
 
   /** The newly created unit */
   unit?: Unit;
@@ -1119,14 +905,7 @@ export class UnitBuiltChange implements UnitBuiltChangeInterface {
   /** Player's remaining coins after build */
   playerCoins: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitBuiltChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitBuiltChange>(UnitBuiltChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1139,6 +918,7 @@ export class CoinsChangedChange implements CoinsChangedChangeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CoinsChangedChange";
+  readonly __MESSAGE_TYPE = CoinsChangedChange.MESSAGE_TYPE;
 
   /** Which player's coins changed */
   playerId: number = 0;
@@ -1149,14 +929,7 @@ export class CoinsChangedChange implements CoinsChangedChangeInterface {
   /** Reason for change: "build", "income", "repair", etc. */
   reason: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CoinsChangedChange instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CoinsChangedChange>(CoinsChangedChange.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1168,6 +941,7 @@ export class AllPaths implements AllPathsInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.AllPaths";
+  readonly __MESSAGE_TYPE = AllPaths.MESSAGE_TYPE;
 
   /** Starting coordinate for all paths */
   sourceQ: number = 0;
@@ -1176,14 +950,7 @@ export class AllPaths implements AllPathsInterface {
  Each edge represents the optimal way to reach 'to' from its parent */
   edges: Record<string, PathEdge> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized AllPaths instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<AllPaths>(AllPaths.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1195,6 +962,7 @@ export class PathEdge implements PathEdgeInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.PathEdge";
+  readonly __MESSAGE_TYPE = PathEdge.MESSAGE_TYPE;
 
   fromQ: number = 0;
   fromR: number = 0;
@@ -1205,14 +973,7 @@ export class PathEdge implements PathEdgeInterface {
   terrainType: string = "";
   explanation: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized PathEdge instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<PathEdge>(PathEdge.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1224,6 +985,7 @@ export class Path implements PathInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.Path";
+  readonly __MESSAGE_TYPE = Path.MESSAGE_TYPE;
 
   /** Edges in order from source to destination */
   edges: PathEdge[] = [];
@@ -1233,14 +995,7 @@ export class Path implements PathInterface {
   /** Sum of all edge costs */
   totalCost: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized Path instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<Path>(Path.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1252,20 +1007,14 @@ export class ListGamesRequest implements ListGamesRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListGamesRequest";
+  readonly __MESSAGE_TYPE = ListGamesRequest.MESSAGE_TYPE;
 
   /** Pagination info */
   pagination?: Pagination;
   /** May be filter by owner id */
   ownerId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListGamesRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListGamesRequest>(ListGamesRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1275,18 +1024,12 @@ export class ListGamesResponse implements ListGamesResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListGamesResponse";
+  readonly __MESSAGE_TYPE = ListGamesResponse.MESSAGE_TYPE;
 
   items: Game[] = [];
   pagination?: PaginationResponse;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListGamesResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListGamesResponse>(ListGamesResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1296,18 +1039,12 @@ export class GetGameRequest implements GetGameRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameRequest";
+  readonly __MESSAGE_TYPE = GetGameRequest.MESSAGE_TYPE;
 
   id: string = "";
   version: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameRequest>(GetGameRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1317,19 +1054,13 @@ export class GetGameResponse implements GetGameResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameResponse";
+  readonly __MESSAGE_TYPE = GetGameResponse.MESSAGE_TYPE;
 
   game?: Game;
   state?: GameState;
   history?: GameMoveHistory;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameResponse>(GetGameResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1339,18 +1070,12 @@ export class GetGameContentRequest implements GetGameContentRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameContentRequest";
+  readonly __MESSAGE_TYPE = GetGameContentRequest.MESSAGE_TYPE;
 
   id: string = "";
   version: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameContentRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameContentRequest>(GetGameContentRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1360,19 +1085,13 @@ export class GetGameContentResponse implements GetGameContentResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameContentResponse";
+  readonly __MESSAGE_TYPE = GetGameContentResponse.MESSAGE_TYPE;
 
   weewarContent: string = "";
   recipeContent: string = "";
   readmeContent: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameContentResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameContentResponse>(GetGameContentResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1382,6 +1101,7 @@ export class UpdateGameRequest implements UpdateGameRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateGameRequest";
+  readonly __MESSAGE_TYPE = UpdateGameRequest.MESSAGE_TYPE;
 
   /** Game id to modify */
   gameId: string = "";
@@ -1396,14 +1116,7 @@ export class UpdateGameRequest implements UpdateGameRequestInterface {
  Mask of fields being updated in this Game to make partial changes. */
   updateMask?: FieldMask;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateGameRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateGameRequest>(UpdateGameRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1416,19 +1129,13 @@ export class UpdateGameResponse implements UpdateGameResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateGameResponse";
+  readonly __MESSAGE_TYPE = UpdateGameResponse.MESSAGE_TYPE;
 
   /** *
  Game being updated */
   game?: Game;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateGameResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateGameResponse>(UpdateGameResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1441,19 +1148,13 @@ export class DeleteGameRequest implements DeleteGameRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteGameRequest";
+  readonly __MESSAGE_TYPE = DeleteGameRequest.MESSAGE_TYPE;
 
   /** *
  ID of the game to be deleted. */
   id: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteGameRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteGameRequest>(DeleteGameRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1466,16 +1167,10 @@ export class DeleteGameResponse implements DeleteGameResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteGameResponse";
+  readonly __MESSAGE_TYPE = DeleteGameResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteGameResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteGameResponse>(DeleteGameResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1488,19 +1183,13 @@ export class GetGamesRequest implements GetGamesRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGamesRequest";
+  readonly __MESSAGE_TYPE = GetGamesRequest.MESSAGE_TYPE;
 
   /** *
  IDs of the game to be fetched */
   ids: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGamesRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGamesRequest>(GetGamesRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1513,17 +1202,11 @@ export class GetGamesResponse implements GetGamesResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGamesResponse";
+  readonly __MESSAGE_TYPE = GetGamesResponse.MESSAGE_TYPE;
 
   games: Record<string, Game> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGamesResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGamesResponse>(GetGamesResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1536,19 +1219,13 @@ export class CreateGameRequest implements CreateGameRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateGameRequest";
+  readonly __MESSAGE_TYPE = CreateGameRequest.MESSAGE_TYPE;
 
   /** *
  Game being updated */
   game?: Game;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateGameRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateGameRequest>(CreateGameRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1561,6 +1238,7 @@ export class CreateGameResponse implements CreateGameResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateGameResponse";
+  readonly __MESSAGE_TYPE = CreateGameResponse.MESSAGE_TYPE;
 
   /** *
  Game being created */
@@ -1571,14 +1249,7 @@ export class CreateGameResponse implements CreateGameResponseInterface {
  Error specific to a field if there are any errors. */
   fieldErrors: Record<string, string> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateGameResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateGameResponse>(CreateGameResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1598,6 +1269,7 @@ export class ProcessMovesRequest implements ProcessMovesRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ProcessMovesRequest";
+  readonly __MESSAGE_TYPE = ProcessMovesRequest.MESSAGE_TYPE;
 
   /** *
  Game ID to add moves to */
@@ -1612,14 +1284,7 @@ export class ProcessMovesRequest implements ProcessMovesRequestInterface {
  the changes. */
   expectedResponse?: ProcessMovesResponse;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ProcessMovesRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ProcessMovesRequest>(ProcessMovesRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1632,6 +1297,7 @@ export class ProcessMovesResponse implements ProcessMovesResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ProcessMovesResponse";
+  readonly __MESSAGE_TYPE = ProcessMovesResponse.MESSAGE_TYPE;
 
   /** *
  Each game move result stores the result of the individual Move in the request.
@@ -1646,14 +1312,7 @@ export class ProcessMovesResponse implements ProcessMovesResponseInterface {
  starting a snapshot (and not just a move) */
   changes: WorldChange[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ProcessMovesResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ProcessMovesResponse>(ProcessMovesResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1666,19 +1325,13 @@ export class GetGameStateRequest implements GetGameStateRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameStateRequest";
+  readonly __MESSAGE_TYPE = GetGameStateRequest.MESSAGE_TYPE;
 
   /** *
  Game ID to add moves to */
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameStateRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameStateRequest>(GetGameStateRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1691,17 +1344,11 @@ export class GetGameStateResponse implements GetGameStateResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetGameStateResponse";
+  readonly __MESSAGE_TYPE = GetGameStateResponse.MESSAGE_TYPE;
 
   state?: GameState;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetGameStateResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetGameStateResponse>(GetGameStateResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1714,6 +1361,7 @@ export class ListMovesRequest implements ListMovesRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListMovesRequest";
+  readonly __MESSAGE_TYPE = ListMovesRequest.MESSAGE_TYPE;
 
   /** *
  Game ID to add moves to */
@@ -1725,14 +1373,7 @@ export class ListMovesRequest implements ListMovesRequestInterface {
  Limit to last N moves (from offset).  if <= 0 return all moves */
   lastN: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListMovesRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListMovesRequest>(ListMovesRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1745,19 +1386,13 @@ export class ListMovesResponse implements ListMovesResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListMovesResponse";
+  readonly __MESSAGE_TYPE = ListMovesResponse.MESSAGE_TYPE;
 
   /** Whether there are more moves before this */
   hasMore: boolean = false;
   moveGroups: GameMoveGroup[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListMovesResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListMovesResponse>(ListMovesResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1770,19 +1405,13 @@ export class GetOptionsAtRequest implements GetOptionsAtRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetOptionsAtRequest";
+  readonly __MESSAGE_TYPE = GetOptionsAtRequest.MESSAGE_TYPE;
 
   gameId: string = "";
   q: number = 0;
   r: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetOptionsAtRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetOptionsAtRequest>(GetOptionsAtRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1795,6 +1424,7 @@ export class GetOptionsAtResponse implements GetOptionsAtResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetOptionsAtResponse";
+  readonly __MESSAGE_TYPE = GetOptionsAtResponse.MESSAGE_TYPE;
 
   options: GameOption[] = [];
   currentPlayer: number = 0;
@@ -1802,14 +1432,7 @@ export class GetOptionsAtResponse implements GetOptionsAtResponseInterface {
   /** A Path from source to dest along with cost on each tile for tracking */
   allPaths?: AllPaths;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetOptionsAtResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetOptionsAtResponse>(GetOptionsAtResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1822,6 +1445,7 @@ export class GameOption implements GameOptionInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GameOption";
+  readonly __MESSAGE_TYPE = GameOption.MESSAGE_TYPE;
 
   move?: MoveUnitAction;
   attack?: AttackUnitAction;
@@ -1829,14 +1453,7 @@ export class GameOption implements GameOptionInterface {
   capture?: CaptureBuildingAction;
   endTurn?: EndTurnAction;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GameOption instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GameOption>(GameOption.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1849,6 +1466,7 @@ export class SimulateAttackRequest implements SimulateAttackRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SimulateAttackRequest";
+  readonly __MESSAGE_TYPE = SimulateAttackRequest.MESSAGE_TYPE;
 
   attackerUnitType: number = 0;
   attackerTerrain: number = 0;
@@ -1859,14 +1477,7 @@ export class SimulateAttackRequest implements SimulateAttackRequestInterface {
   woundBonus: number = 0;
   numSimulations: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SimulateAttackRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SimulateAttackRequest>(SimulateAttackRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1879,6 +1490,7 @@ export class SimulateAttackResponse implements SimulateAttackResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SimulateAttackResponse";
+  readonly __MESSAGE_TYPE = SimulateAttackResponse.MESSAGE_TYPE;
 
   /** Damage distributions: damage_value -> number_of_occurrences */
   attackerDamageDistribution: Record<number, number> = {};
@@ -1889,14 +1501,7 @@ export class SimulateAttackResponse implements SimulateAttackResponseInterface {
   attackerKillProbability: number = 0;
   defenderKillProbability: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SimulateAttackResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SimulateAttackResponse>(SimulateAttackResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1906,16 +1511,10 @@ export class EmptyRequest implements EmptyRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.EmptyRequest";
+  readonly __MESSAGE_TYPE = EmptyRequest.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized EmptyRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<EmptyRequest>(EmptyRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1925,16 +1524,10 @@ export class EmptyResponse implements EmptyResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.EmptyResponse";
+  readonly __MESSAGE_TYPE = EmptyResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized EmptyResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<EmptyResponse>(EmptyResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1946,17 +1539,11 @@ export class SetContentRequest implements SetContentRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetContentRequest";
+  readonly __MESSAGE_TYPE = SetContentRequest.MESSAGE_TYPE;
 
   innerHtml: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetContentRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetContentRequest>(SetContentRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1968,16 +1555,10 @@ export class SetContentResponse implements SetContentResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetContentResponse";
+  readonly __MESSAGE_TYPE = SetContentResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetContentResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetContentResponse>(SetContentResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -1987,20 +1568,14 @@ export class ShowBuildOptionsRequest implements ShowBuildOptionsRequestInterface
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowBuildOptionsRequest";
+  readonly __MESSAGE_TYPE = ShowBuildOptionsRequest.MESSAGE_TYPE;
 
   innerHtml: string = "";
   hide: boolean = false;
   q: number = 0;
   r: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowBuildOptionsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowBuildOptionsRequest>(ShowBuildOptionsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2010,16 +1585,10 @@ export class ShowBuildOptionsResponse implements ShowBuildOptionsResponseInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowBuildOptionsResponse";
+  readonly __MESSAGE_TYPE = ShowBuildOptionsResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowBuildOptionsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowBuildOptionsResponse>(ShowBuildOptionsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2031,17 +1600,11 @@ export class LogMessageRequest implements LogMessageRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.LogMessageRequest";
+  readonly __MESSAGE_TYPE = LogMessageRequest.MESSAGE_TYPE;
 
   message: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized LogMessageRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<LogMessageRequest>(LogMessageRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2053,16 +1616,10 @@ export class LogMessageResponse implements LogMessageResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.LogMessageResponse";
+  readonly __MESSAGE_TYPE = LogMessageResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized LogMessageResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<LogMessageResponse>(LogMessageResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2074,18 +1631,12 @@ export class SetGameStateRequest implements SetGameStateRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetGameStateRequest";
+  readonly __MESSAGE_TYPE = SetGameStateRequest.MESSAGE_TYPE;
 
   game?: Game;
   state?: GameState;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetGameStateRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetGameStateRequest>(SetGameStateRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2097,16 +1648,10 @@ export class SetGameStateResponse implements SetGameStateResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetGameStateResponse";
+  readonly __MESSAGE_TYPE = SetGameStateResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetGameStateResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetGameStateResponse>(SetGameStateResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2118,18 +1663,12 @@ export class UpdateGameStatusRequest implements UpdateGameStatusRequestInterface
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateGameStatusRequest";
+  readonly __MESSAGE_TYPE = UpdateGameStatusRequest.MESSAGE_TYPE;
 
   currentPlayer: number = 0;
   turnCounter: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateGameStatusRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateGameStatusRequest>(UpdateGameStatusRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2139,16 +1678,10 @@ export class UpdateGameStatusResponse implements UpdateGameStatusResponseInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateGameStatusResponse";
+  readonly __MESSAGE_TYPE = UpdateGameStatusResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateGameStatusResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateGameStatusResponse>(UpdateGameStatusResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2160,19 +1693,13 @@ export class SetTileAtRequest implements SetTileAtRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetTileAtRequest";
+  readonly __MESSAGE_TYPE = SetTileAtRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   tile?: Tile;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetTileAtRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetTileAtRequest>(SetTileAtRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2182,16 +1709,10 @@ export class SetTileAtResponse implements SetTileAtResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetTileAtResponse";
+  readonly __MESSAGE_TYPE = SetTileAtResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetTileAtResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetTileAtResponse>(SetTileAtResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2203,6 +1724,7 @@ export class SetUnitAtRequest implements SetUnitAtRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetUnitAtRequest";
+  readonly __MESSAGE_TYPE = SetUnitAtRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
@@ -2210,14 +1732,7 @@ export class SetUnitAtRequest implements SetUnitAtRequestInterface {
   flash: boolean = false;
   appear: boolean = false;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetUnitAtRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetUnitAtRequest>(SetUnitAtRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2227,16 +1742,10 @@ export class SetUnitAtResponse implements SetUnitAtResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetUnitAtResponse";
+  readonly __MESSAGE_TYPE = SetUnitAtResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetUnitAtResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetUnitAtResponse>(SetUnitAtResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2248,19 +1757,13 @@ export class RemoveTileAtRequest implements RemoveTileAtRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.RemoveTileAtRequest";
+  readonly __MESSAGE_TYPE = RemoveTileAtRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   animate: boolean = false;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized RemoveTileAtRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<RemoveTileAtRequest>(RemoveTileAtRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2270,16 +1773,10 @@ export class RemoveTileAtResponse implements RemoveTileAtResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.RemoveTileAtResponse";
+  readonly __MESSAGE_TYPE = RemoveTileAtResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized RemoveTileAtResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<RemoveTileAtResponse>(RemoveTileAtResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2291,19 +1788,13 @@ export class RemoveUnitAtRequest implements RemoveUnitAtRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.RemoveUnitAtRequest";
+  readonly __MESSAGE_TYPE = RemoveUnitAtRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   animate: boolean = false;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized RemoveUnitAtRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<RemoveUnitAtRequest>(RemoveUnitAtRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2313,16 +1804,10 @@ export class RemoveUnitAtResponse implements RemoveUnitAtResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.RemoveUnitAtResponse";
+  readonly __MESSAGE_TYPE = RemoveUnitAtResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized RemoveUnitAtResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<RemoveUnitAtResponse>(RemoveUnitAtResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2334,17 +1819,11 @@ export class ShowHighlightsRequest implements ShowHighlightsRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowHighlightsRequest";
+  readonly __MESSAGE_TYPE = ShowHighlightsRequest.MESSAGE_TYPE;
 
   highlights: HighlightSpec[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowHighlightsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowHighlightsRequest>(ShowHighlightsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2354,16 +1833,10 @@ export class ShowHighlightsResponse implements ShowHighlightsResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowHighlightsResponse";
+  readonly __MESSAGE_TYPE = ShowHighlightsResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowHighlightsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowHighlightsResponse>(ShowHighlightsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2375,6 +1848,7 @@ export class HighlightSpec implements HighlightSpecInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.HighlightSpec";
+  readonly __MESSAGE_TYPE = HighlightSpec.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
@@ -2384,14 +1858,7 @@ export class HighlightSpec implements HighlightSpecInterface {
   build?: BuildUnitAction;
   capture?: CaptureBuildingAction;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized HighlightSpec instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<HighlightSpec>(HighlightSpec.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2403,17 +1870,11 @@ export class ClearHighlightsRequest implements ClearHighlightsRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ClearHighlightsRequest";
+  readonly __MESSAGE_TYPE = ClearHighlightsRequest.MESSAGE_TYPE;
 
   types: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ClearHighlightsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ClearHighlightsRequest>(ClearHighlightsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2423,16 +1884,10 @@ export class ClearHighlightsResponse implements ClearHighlightsResponseInterface
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ClearHighlightsResponse";
+  readonly __MESSAGE_TYPE = ClearHighlightsResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ClearHighlightsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ClearHighlightsResponse>(ClearHighlightsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2444,19 +1899,13 @@ export class ShowPathRequest implements ShowPathRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowPathRequest";
+  readonly __MESSAGE_TYPE = ShowPathRequest.MESSAGE_TYPE;
 
   coords: number[] = [];
   color: number = 0;
   thickness: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowPathRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowPathRequest>(ShowPathRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2466,16 +1915,10 @@ export class ShowPathResponse implements ShowPathResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowPathResponse";
+  readonly __MESSAGE_TYPE = ShowPathResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowPathResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowPathResponse>(ShowPathResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2487,16 +1930,10 @@ export class ClearPathsRequest implements ClearPathsRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ClearPathsRequest";
+  readonly __MESSAGE_TYPE = ClearPathsRequest.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ClearPathsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ClearPathsRequest>(ClearPathsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2506,16 +1943,10 @@ export class ClearPathsResponse implements ClearPathsResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ClearPathsResponse";
+  readonly __MESSAGE_TYPE = ClearPathsResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ClearPathsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ClearPathsResponse>(ClearPathsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2527,18 +1958,12 @@ export class MoveUnitRequest implements MoveUnitRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.MoveUnitRequest";
+  readonly __MESSAGE_TYPE = MoveUnitRequest.MESSAGE_TYPE;
 
   unit?: Unit;
   path: HexCoord[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized MoveUnitRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<MoveUnitRequest>(MoveUnitRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2548,16 +1973,10 @@ export class MoveUnitResponse implements MoveUnitResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.MoveUnitResponse";
+  readonly __MESSAGE_TYPE = MoveUnitResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized MoveUnitResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<MoveUnitResponse>(MoveUnitResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2569,18 +1988,12 @@ export class HexCoord implements HexCoordInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.HexCoord";
+  readonly __MESSAGE_TYPE = HexCoord.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized HexCoord instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<HexCoord>(HexCoord.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2592,6 +2005,7 @@ export class ShowAttackEffectRequest implements ShowAttackEffectRequestInterface
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowAttackEffectRequest";
+  readonly __MESSAGE_TYPE = ShowAttackEffectRequest.MESSAGE_TYPE;
 
   fromQ: number = 0;
   fromR: number = 0;
@@ -2600,14 +2014,7 @@ export class ShowAttackEffectRequest implements ShowAttackEffectRequestInterface
   damage: number = 0;
   splashTargets: SplashTarget[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowAttackEffectRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowAttackEffectRequest>(ShowAttackEffectRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2617,19 +2024,13 @@ export class SplashTarget implements SplashTargetInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SplashTarget";
+  readonly __MESSAGE_TYPE = SplashTarget.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   damage: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SplashTarget instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SplashTarget>(SplashTarget.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2639,16 +2040,10 @@ export class ShowAttackEffectResponse implements ShowAttackEffectResponseInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowAttackEffectResponse";
+  readonly __MESSAGE_TYPE = ShowAttackEffectResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowAttackEffectResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowAttackEffectResponse>(ShowAttackEffectResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2660,19 +2055,13 @@ export class ShowHealEffectRequest implements ShowHealEffectRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowHealEffectRequest";
+  readonly __MESSAGE_TYPE = ShowHealEffectRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
   amount: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowHealEffectRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowHealEffectRequest>(ShowHealEffectRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2682,16 +2071,10 @@ export class ShowHealEffectResponse implements ShowHealEffectResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowHealEffectResponse";
+  readonly __MESSAGE_TYPE = ShowHealEffectResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowHealEffectResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowHealEffectResponse>(ShowHealEffectResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2703,18 +2086,12 @@ export class ShowCaptureEffectRequest implements ShowCaptureEffectRequestInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowCaptureEffectRequest";
+  readonly __MESSAGE_TYPE = ShowCaptureEffectRequest.MESSAGE_TYPE;
 
   q: number = 0;
   r: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowCaptureEffectRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowCaptureEffectRequest>(ShowCaptureEffectRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2724,16 +2101,10 @@ export class ShowCaptureEffectResponse implements ShowCaptureEffectResponseInter
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ShowCaptureEffectResponse";
+  readonly __MESSAGE_TYPE = ShowCaptureEffectResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ShowCaptureEffectResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ShowCaptureEffectResponse>(ShowCaptureEffectResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2745,17 +2116,11 @@ export class SetAllowedPanelsRequest implements SetAllowedPanelsRequestInterface
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetAllowedPanelsRequest";
+  readonly __MESSAGE_TYPE = SetAllowedPanelsRequest.MESSAGE_TYPE;
 
   panelIds: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetAllowedPanelsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetAllowedPanelsRequest>(SetAllowedPanelsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2765,16 +2130,291 @@ export class SetAllowedPanelsResponse implements SetAllowedPanelsResponseInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SetAllowedPanelsResponse";
+  readonly __MESSAGE_TYPE = SetAllowedPanelsResponse.MESSAGE_TYPE;
 
 
+  
+}
+
+
+
+export class EntityIndexState implements EntityIndexStateInterface {
   /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SetAllowedPanelsResponse instance or null if creation failed
+   * Fully qualified message type for schema resolution
    */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SetAllowedPanelsResponse>(SetAllowedPanelsResponse.MESSAGE_TYPE, data);
-  }
+  static readonly MESSAGE_TYPE = "weewar.v1.EntityIndexState";
+  readonly __MESSAGE_TYPE = EntityIndexState.MESSAGE_TYPE;
+
+  entityType: string = "";
+  entityId: string = "";
+  /** eg "screenshots", "keywords" etc
+ EntityType + EntityId + IndexType should be  unique */
+  indexType: string = "";
+  /** When the last indexing was queued */
+  lastQueuedAt?: Timestamp;
+  /** when the last indexing was completed */
+  lastIndexedAt?: Timestamp;
+  /** "queued/pending", "indexing", "completed", "failed" */
+  status: string = "";
+  /** If there was an error in the last indexing */
+  lastError: string = "";
+  /** Keep a hash of the contents for quick check to check updated
+ (not sure if needed) - This should be provided by the source */
+  lastContentHash: string = "";
+  retryCount: number = 0;
+  /** Which LRO this entity has been updated via */
+  currentLroId: string = "";
+
+  
+}
+
+
+
+export class GetIndexStatesRequest implements GetIndexStatesRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetIndexStatesRequest";
+  readonly __MESSAGE_TYPE = GetIndexStatesRequest.MESSAGE_TYPE;
+
+  entityType: string = "";
+  entityIds: string[] = [];
+  /** Optional - can be used to get "all" indexer states or just once specified here */
+  indexTypes: string[] = [];
+
+  
+}
+
+
+
+export class EntityIndexStateList implements EntityIndexStateListInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.EntityIndexStateList";
+  readonly __MESSAGE_TYPE = EntityIndexStateList.MESSAGE_TYPE;
+
+  states: EntityIndexState[] = [];
+
+  
+}
+
+
+
+export class GetIndexStatesResponse implements GetIndexStatesResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetIndexStatesResponse";
+  readonly __MESSAGE_TYPE = GetIndexStatesResponse.MESSAGE_TYPE;
+
+  states: Record<string, EntityIndexStateList> = {};
+
+  
+}
+
+
+
+export class ListIndexStatesRequest implements ListIndexStatesRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.ListIndexStatesRequest";
+  readonly __MESSAGE_TYPE = ListIndexStatesRequest.MESSAGE_TYPE;
+
+  entityType: string = "";
+  /** Get records indexed "before" this time */
+  indexedBefore?: Timestamp | undefined;
+  /** Get records indexed "after" this time */
+  indexedAfter?: Timestamp | undefined;
+  /** Filter by index types or get all */
+  indexTypes: string[] = [];
+  /** "id" or "indexed_at" */
+  orderBy: string = "";
+  /** limit to max items */
+  count: number = 0;
+
+  
+}
+
+
+
+export class ListIndexStatesResponse implements ListIndexStatesResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.ListIndexStatesResponse";
+  readonly __MESSAGE_TYPE = ListIndexStatesResponse.MESSAGE_TYPE;
+
+  items: EntityIndexState[] = [];
+  /** How to identify the next "page" in this list */
+  nextPageKey: string = "";
+
+  
+}
+
+
+
+export class DeleteIndexStatesRequest implements DeleteIndexStatesRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.DeleteIndexStatesRequest";
+  readonly __MESSAGE_TYPE = DeleteIndexStatesRequest.MESSAGE_TYPE;
+
+  entityType: string = "";
+  entityIds: string[] = [];
+  /** Optional - can be used to get "all" indexer states or just once specified here */
+  indexTypes: string[] = [];
+
+  
+}
+
+
+
+export class DeleteIndexStatesResponse implements DeleteIndexStatesResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.DeleteIndexStatesResponse";
+  readonly __MESSAGE_TYPE = DeleteIndexStatesResponse.MESSAGE_TYPE;
+
+
+  
+}
+
+
+/**
+ * Request messages
+ */
+export class IndexRecord implements IndexRecordInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.IndexRecord";
+  readonly __MESSAGE_TYPE = IndexRecord.MESSAGE_TYPE;
+
+  entityId: string = "";
+  updatedAt?: Timestamp;
+  entityData?: Any;
+  indexerTypes: string[] = [];
+
+  
+}
+
+
+/**
+ * Each IndexRecords gets its own "long running operation" 
+ so we can track how things are
+ */
+export class IndexRecordsLRO implements IndexRecordsLROInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.IndexRecordsLRO";
+  readonly __MESSAGE_TYPE = IndexRecordsLRO.MESSAGE_TYPE;
+
+  lroId: string = "";
+  /** Single entity type in a index request */
+  entityType: string = "";
+  /** When this request was created */
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  /** Callback url for this request (if any)
+ All records indexed in this operation will be notified via this url */
+  callbackUrl: string = "";
+  /** Records to enqueue - note that indexing by its nature is asynchronous
+ so we wont wait for all the indexing to finish */
+  records: IndexRecord[] = [];
+
+  
+}
+
+
+
+export class CreateIndexRecordsLRORequest implements CreateIndexRecordsLRORequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.CreateIndexRecordsLRORequest";
+  readonly __MESSAGE_TYPE = CreateIndexRecordsLRORequest.MESSAGE_TYPE;
+
+  lro?: IndexRecordsLRO;
+
+  
+}
+
+
+
+export class CreateIndexRecordsLROResponse implements CreateIndexRecordsLROResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.CreateIndexRecordsLROResponse";
+  readonly __MESSAGE_TYPE = CreateIndexRecordsLROResponse.MESSAGE_TYPE;
+
+  lro?: IndexRecordsLRO;
+
+  
+}
+
+
+
+export class UpdateIndexRecordsLRORequest implements UpdateIndexRecordsLRORequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.UpdateIndexRecordsLRORequest";
+  readonly __MESSAGE_TYPE = UpdateIndexRecordsLRORequest.MESSAGE_TYPE;
+
+  lro?: IndexRecordsLRO;
+  /** *
+ Mask of fields being updated in this Game to make partial changes. */
+  updateMask?: FieldMask;
+
+  
+}
+
+
+
+export class UpdateIndexRecordsLROResponse implements UpdateIndexRecordsLROResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.UpdateIndexRecordsLROResponse";
+  readonly __MESSAGE_TYPE = UpdateIndexRecordsLROResponse.MESSAGE_TYPE;
+
+  lro?: IndexRecordsLRO;
+
+  
+}
+
+
+
+export class GetIndexRecordsLRORequest implements GetIndexRecordsLRORequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetIndexRecordsLRORequest";
+  readonly __MESSAGE_TYPE = GetIndexRecordsLRORequest.MESSAGE_TYPE;
+
+  lroId: string = "";
+
+  
+}
+
+
+
+export class GetIndexRecordsLROResponse implements GetIndexRecordsLROResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetIndexRecordsLROResponse";
+  readonly __MESSAGE_TYPE = GetIndexRecordsLROResponse.MESSAGE_TYPE;
+
+  lro?: IndexRecordsLRO;
+
+  
 }
 
 
@@ -2786,20 +2426,14 @@ export class InitializeSingletonRequest implements InitializeSingletonRequestInt
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.InitializeSingletonRequest";
+  readonly __MESSAGE_TYPE = InitializeSingletonRequest.MESSAGE_TYPE;
 
   gameId: string = "";
   gameData: string = "";
   gameState: string = "";
   moveHistory: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized InitializeSingletonRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<InitializeSingletonRequest>(InitializeSingletonRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2811,17 +2445,11 @@ export class InitializeSingletonResponse implements InitializeSingletonResponseI
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.InitializeSingletonResponse";
+  readonly __MESSAGE_TYPE = InitializeSingletonResponse.MESSAGE_TYPE;
 
   response?: InitializeGameResponse;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized InitializeSingletonResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<InitializeSingletonResponse>(InitializeSingletonResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2833,6 +2461,7 @@ export class TurnOptionClickedRequest implements TurnOptionClickedRequestInterfa
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TurnOptionClickedRequest";
+  readonly __MESSAGE_TYPE = TurnOptionClickedRequest.MESSAGE_TYPE;
 
   gameId: string = "";
   optionIndex: number = 0;
@@ -2840,14 +2469,7 @@ export class TurnOptionClickedRequest implements TurnOptionClickedRequestInterfa
   q: number = 0;
   r: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized TurnOptionClickedRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<TurnOptionClickedRequest>(TurnOptionClickedRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2859,17 +2481,11 @@ export class TurnOptionClickedResponse implements TurnOptionClickedResponseInter
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TurnOptionClickedResponse";
+  readonly __MESSAGE_TYPE = TurnOptionClickedResponse.MESSAGE_TYPE;
 
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized TurnOptionClickedResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<TurnOptionClickedResponse>(TurnOptionClickedResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2881,20 +2497,14 @@ export class SceneClickedRequest implements SceneClickedRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SceneClickedRequest";
+  readonly __MESSAGE_TYPE = SceneClickedRequest.MESSAGE_TYPE;
 
   gameId: string = "";
   q: number = 0;
   r: number = 0;
   layer: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SceneClickedRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SceneClickedRequest>(SceneClickedRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2906,17 +2516,11 @@ export class SceneClickedResponse implements SceneClickedResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.SceneClickedResponse";
+  readonly __MESSAGE_TYPE = SceneClickedResponse.MESSAGE_TYPE;
 
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized SceneClickedResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<SceneClickedResponse>(SceneClickedResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2928,17 +2532,11 @@ export class EndTurnButtonClickedRequest implements EndTurnButtonClickedRequestI
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.EndTurnButtonClickedRequest";
+  readonly __MESSAGE_TYPE = EndTurnButtonClickedRequest.MESSAGE_TYPE;
 
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized EndTurnButtonClickedRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<EndTurnButtonClickedRequest>(EndTurnButtonClickedRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2950,17 +2548,11 @@ export class EndTurnButtonClickedResponse implements EndTurnButtonClickedRespons
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.EndTurnButtonClickedResponse";
+  readonly __MESSAGE_TYPE = EndTurnButtonClickedResponse.MESSAGE_TYPE;
 
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized EndTurnButtonClickedResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<EndTurnButtonClickedResponse>(EndTurnButtonClickedResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2972,20 +2564,14 @@ export class BuildOptionClickedRequest implements BuildOptionClickedRequestInter
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.BuildOptionClickedRequest";
+  readonly __MESSAGE_TYPE = BuildOptionClickedRequest.MESSAGE_TYPE;
 
   gameId: string = "";
   q: number = 0;
   r: number = 0;
   unitType: number = 0;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized BuildOptionClickedRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<BuildOptionClickedRequest>(BuildOptionClickedRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -2997,16 +2583,10 @@ export class BuildOptionClickedResponse implements BuildOptionClickedResponseInt
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.BuildOptionClickedResponse";
+  readonly __MESSAGE_TYPE = BuildOptionClickedResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized BuildOptionClickedResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<BuildOptionClickedResponse>(BuildOptionClickedResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3018,17 +2598,11 @@ export class InitializeGameRequest implements InitializeGameRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.InitializeGameRequest";
+  readonly __MESSAGE_TYPE = InitializeGameRequest.MESSAGE_TYPE;
 
   gameId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized InitializeGameRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<InitializeGameRequest>(InitializeGameRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3040,6 +2614,7 @@ export class InitializeGameResponse implements InitializeGameResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.InitializeGameResponse";
+  readonly __MESSAGE_TYPE = InitializeGameResponse.MESSAGE_TYPE;
 
   success: boolean = false;
   error: string = "";
@@ -3048,14 +2623,7 @@ export class InitializeGameResponse implements InitializeGameResponseInterface {
   turnCounter: number = 0;
   gameName: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized InitializeGameResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<InitializeGameResponse>(InitializeGameResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3067,6 +2635,7 @@ export class ThemeInfo implements ThemeInfoInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ThemeInfo";
+  readonly __MESSAGE_TYPE = ThemeInfo.MESSAGE_TYPE;
 
   name: string = "";
   version: string = "";
@@ -3074,14 +2643,7 @@ export class ThemeInfo implements ThemeInfoInterface {
   assetType: string = "";
   needsPostProcessing: boolean = false;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ThemeInfo instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ThemeInfo>(ThemeInfo.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3093,20 +2655,14 @@ export class UnitMapping implements UnitMappingInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UnitMapping";
+  readonly __MESSAGE_TYPE = UnitMapping.MESSAGE_TYPE;
 
   old: string = "";
   name: string = "";
   image: string = "";
   description: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UnitMapping instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UnitMapping>(UnitMapping.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3118,20 +2674,14 @@ export class TerrainMapping implements TerrainMappingInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TerrainMapping";
+  readonly __MESSAGE_TYPE = TerrainMapping.MESSAGE_TYPE;
 
   old: string = "";
   name: string = "";
   image: string = "";
   description: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized TerrainMapping instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<TerrainMapping>(TerrainMapping.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3144,19 +2694,13 @@ export class ThemeManifest implements ThemeManifestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ThemeManifest";
+  readonly __MESSAGE_TYPE = ThemeManifest.MESSAGE_TYPE;
 
   themeInfo?: ThemeInfo;
   units: Record<number, UnitMapping> = {};
   terrains: Record<number, TerrainMapping> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ThemeManifest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ThemeManifest>(ThemeManifest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3168,18 +2712,12 @@ export class PlayerColor implements PlayerColorInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.PlayerColor";
+  readonly __MESSAGE_TYPE = PlayerColor.MESSAGE_TYPE;
 
   primary: string = "";
   secondary: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized PlayerColor instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<PlayerColor>(PlayerColor.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3191,18 +2729,12 @@ export class AssetResult implements AssetResultInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.AssetResult";
+  readonly __MESSAGE_TYPE = AssetResult.MESSAGE_TYPE;
 
   type: Type = Type.TYPE_UNSPECIFIED;
   data: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized AssetResult instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<AssetResult>(AssetResult.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3214,6 +2746,7 @@ export class UserInfo implements UserInfoInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UserInfo";
+  readonly __MESSAGE_TYPE = UserInfo.MESSAGE_TYPE;
 
   id: string = "";
   name: string = "";
@@ -3224,14 +2757,7 @@ export class UserInfo implements UserInfoInterface {
   icon: string = "";
   lastUpdated: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UserInfo instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UserInfo>(UserInfo.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3243,20 +2769,14 @@ export class ListUsersRequest implements ListUsersRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListUsersRequest";
+  readonly __MESSAGE_TYPE = ListUsersRequest.MESSAGE_TYPE;
 
   /** Pagination info */
   pagination?: Pagination;
   /** May be filter by owner id */
   ownerId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListUsersRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListUsersRequest>(ListUsersRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3266,18 +2786,12 @@ export class ListUsersResponse implements ListUsersResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListUsersResponse";
+  readonly __MESSAGE_TYPE = ListUsersResponse.MESSAGE_TYPE;
 
   items: User[] = [];
   pagination?: PaginationResponse;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListUsersResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListUsersResponse>(ListUsersResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3287,18 +2801,12 @@ export class GetUserRequest implements GetUserRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUserRequest";
+  readonly __MESSAGE_TYPE = GetUserRequest.MESSAGE_TYPE;
 
   id: string = "";
   version: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUserRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUserRequest>(GetUserRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3308,17 +2816,11 @@ export class GetUserResponse implements GetUserResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUserResponse";
+  readonly __MESSAGE_TYPE = GetUserResponse.MESSAGE_TYPE;
 
   user?: User;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUserResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUserResponse>(GetUserResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3328,18 +2830,12 @@ export class GetUserContentRequest implements GetUserContentRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUserContentRequest";
+  readonly __MESSAGE_TYPE = GetUserContentRequest.MESSAGE_TYPE;
 
   id: string = "";
   version: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUserContentRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUserContentRequest>(GetUserContentRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3349,19 +2845,13 @@ export class GetUserContentResponse implements GetUserContentResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUserContentResponse";
+  readonly __MESSAGE_TYPE = GetUserContentResponse.MESSAGE_TYPE;
 
   weewarContent: string = "";
   recipeContent: string = "";
   readmeContent: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUserContentResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUserContentResponse>(GetUserContentResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3371,6 +2861,7 @@ export class UpdateUserRequest implements UpdateUserRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateUserRequest";
+  readonly __MESSAGE_TYPE = UpdateUserRequest.MESSAGE_TYPE;
 
   /** *
  User being updated */
@@ -3379,14 +2870,7 @@ export class UpdateUserRequest implements UpdateUserRequestInterface {
  Mask of fields being updated in this User to make partial changes. */
   updateMask?: FieldMask;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateUserRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateUserRequest>(UpdateUserRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3399,19 +2883,13 @@ export class UpdateUserResponse implements UpdateUserResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateUserResponse";
+  readonly __MESSAGE_TYPE = UpdateUserResponse.MESSAGE_TYPE;
 
   /** *
  User being updated */
   user?: User;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateUserResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateUserResponse>(UpdateUserResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3424,19 +2902,13 @@ export class DeleteUserRequest implements DeleteUserRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteUserRequest";
+  readonly __MESSAGE_TYPE = DeleteUserRequest.MESSAGE_TYPE;
 
   /** *
  ID of the user to be deleted. */
   id: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteUserRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteUserRequest>(DeleteUserRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3449,16 +2921,10 @@ export class DeleteUserResponse implements DeleteUserResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteUserResponse";
+  readonly __MESSAGE_TYPE = DeleteUserResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteUserResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteUserResponse>(DeleteUserResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3471,19 +2937,13 @@ export class GetUsersRequest implements GetUsersRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUsersRequest";
+  readonly __MESSAGE_TYPE = GetUsersRequest.MESSAGE_TYPE;
 
   /** *
  IDs of the user to be fetched */
   ids: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUsersRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUsersRequest>(GetUsersRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3496,17 +2956,11 @@ export class GetUsersResponse implements GetUsersResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetUsersResponse";
+  readonly __MESSAGE_TYPE = GetUsersResponse.MESSAGE_TYPE;
 
   users: Record<string, User> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetUsersResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetUsersResponse>(GetUsersResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3519,19 +2973,13 @@ export class CreateUserRequest implements CreateUserRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateUserRequest";
+  readonly __MESSAGE_TYPE = CreateUserRequest.MESSAGE_TYPE;
 
   /** *
  User being updated */
   user?: User;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateUserRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateUserRequest>(CreateUserRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3544,6 +2992,7 @@ export class CreateUserResponse implements CreateUserResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateUserResponse";
+  readonly __MESSAGE_TYPE = CreateUserResponse.MESSAGE_TYPE;
 
   /** *
  User being created */
@@ -3552,14 +3001,7 @@ export class CreateUserResponse implements CreateUserResponseInterface {
  Error specific to a field if there are any errors. */
   fieldErrors: Record<string, string> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateUserResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateUserResponse>(CreateUserResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3571,6 +3013,7 @@ export class WorldInfo implements WorldInfoInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.WorldInfo";
+  readonly __MESSAGE_TYPE = WorldInfo.MESSAGE_TYPE;
 
   id: string = "";
   name: string = "";
@@ -3581,14 +3024,7 @@ export class WorldInfo implements WorldInfoInterface {
   icon: string = "";
   lastUpdated: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized WorldInfo instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<WorldInfo>(WorldInfo.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3600,20 +3036,14 @@ export class ListWorldsRequest implements ListWorldsRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListWorldsRequest";
+  readonly __MESSAGE_TYPE = ListWorldsRequest.MESSAGE_TYPE;
 
   /** Pagination info */
   pagination?: Pagination;
   /** May be filter by owner id */
   ownerId: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListWorldsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListWorldsRequest>(ListWorldsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3623,18 +3053,12 @@ export class ListWorldsResponse implements ListWorldsResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.ListWorldsResponse";
+  readonly __MESSAGE_TYPE = ListWorldsResponse.MESSAGE_TYPE;
 
   items: World[] = [];
   pagination?: PaginationResponse;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized ListWorldsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<ListWorldsResponse>(ListWorldsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3644,18 +3068,12 @@ export class GetWorldRequest implements GetWorldRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetWorldRequest";
+  readonly __MESSAGE_TYPE = GetWorldRequest.MESSAGE_TYPE;
 
   id: string = "";
   version: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetWorldRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetWorldRequest>(GetWorldRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3665,18 +3083,12 @@ export class GetWorldResponse implements GetWorldResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetWorldResponse";
+  readonly __MESSAGE_TYPE = GetWorldResponse.MESSAGE_TYPE;
 
   world?: World;
   worldData?: WorldData;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetWorldResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetWorldResponse>(GetWorldResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3686,6 +3098,7 @@ export class UpdateWorldRequest implements UpdateWorldRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateWorldRequest";
+  readonly __MESSAGE_TYPE = UpdateWorldRequest.MESSAGE_TYPE;
 
   /** *
  World being updated */
@@ -3696,14 +3109,7 @@ export class UpdateWorldRequest implements UpdateWorldRequestInterface {
  Mask of fields being updated in this World to make partial changes. */
   updateMask?: FieldMask;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateWorldRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateWorldRequest>(UpdateWorldRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3716,20 +3122,14 @@ export class UpdateWorldResponse implements UpdateWorldResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.UpdateWorldResponse";
+  readonly __MESSAGE_TYPE = UpdateWorldResponse.MESSAGE_TYPE;
 
   /** *
  World being updated */
   world?: World;
   worldData?: WorldData;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized UpdateWorldResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<UpdateWorldResponse>(UpdateWorldResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3742,19 +3142,13 @@ export class DeleteWorldRequest implements DeleteWorldRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteWorldRequest";
+  readonly __MESSAGE_TYPE = DeleteWorldRequest.MESSAGE_TYPE;
 
   /** *
  ID of the world to be deleted. */
   id: string = "";
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteWorldRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteWorldRequest>(DeleteWorldRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3767,16 +3161,10 @@ export class DeleteWorldResponse implements DeleteWorldResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.DeleteWorldResponse";
+  readonly __MESSAGE_TYPE = DeleteWorldResponse.MESSAGE_TYPE;
 
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized DeleteWorldResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<DeleteWorldResponse>(DeleteWorldResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3789,19 +3177,13 @@ export class GetWorldsRequest implements GetWorldsRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetWorldsRequest";
+  readonly __MESSAGE_TYPE = GetWorldsRequest.MESSAGE_TYPE;
 
   /** *
  IDs of the world to be fetched */
   ids: string[] = [];
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetWorldsRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetWorldsRequest>(GetWorldsRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3814,17 +3196,11 @@ export class GetWorldsResponse implements GetWorldsResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.GetWorldsResponse";
+  readonly __MESSAGE_TYPE = GetWorldsResponse.MESSAGE_TYPE;
 
   worlds: Record<string, World> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized GetWorldsResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<GetWorldsResponse>(GetWorldsResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3837,20 +3213,14 @@ export class CreateWorldRequest implements CreateWorldRequestInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateWorldRequest";
+  readonly __MESSAGE_TYPE = CreateWorldRequest.MESSAGE_TYPE;
 
   /** *
  World being updated */
   world?: World;
   worldData?: WorldData;
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateWorldRequest instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateWorldRequest>(CreateWorldRequest.MESSAGE_TYPE, data);
-  }
+  
 }
 
 
@@ -3863,6 +3233,7 @@ export class CreateWorldResponse implements CreateWorldResponseInterface {
    * Fully qualified message type for schema resolution
    */
   static readonly MESSAGE_TYPE = "weewar.v1.CreateWorldResponse";
+  readonly __MESSAGE_TYPE = CreateWorldResponse.MESSAGE_TYPE;
 
   /** *
  World being created */
@@ -3872,14 +3243,7 @@ export class CreateWorldResponse implements CreateWorldResponseInterface {
  Error specific to a field if there are any errors. */
   fieldErrors: Record<string, string> = {};
 
-  /**
-   * Create and deserialize an instance from raw data
-   * @param data Raw data to deserialize
-   * @returns Deserialized CreateWorldResponse instance or null if creation failed
-   */
-  static from(data: any) {
-    return Weewar_v1Deserializer.from<CreateWorldResponse>(CreateWorldResponse.MESSAGE_TYPE, data);
-  }
+  
 }
 
 

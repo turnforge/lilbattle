@@ -1,3 +1,4 @@
+import type { GameConfiguration, GamePlayer, IncomeConfig } from '../gen/wasmjs/weewar/v1/models/interfaces';
 import { BasePage } from '../lib/BasePage';
 import { EventBus } from '../lib/EventBus';
 import { LCMComponent } from '../lib/LCMComponent';
@@ -5,7 +6,6 @@ import { LifecycleController } from '../lib/LifecycleController';
 import { PhaserWorldScene } from './common/PhaserWorldScene';
 import { World } from './common/World';
 import { WorldEventTypes } from './common/events';
-import type { GameConfiguration, GamePlayer, IncomeConfig } from '../gen/wasmjs/weewar/v1/interfaces';
 
 /**
  * Start Game Page - Orchestrator for game configuration functionality

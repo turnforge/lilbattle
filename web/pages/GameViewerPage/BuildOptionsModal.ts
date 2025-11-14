@@ -1,7 +1,7 @@
 import { BaseComponent } from '../../lib/Component';
 import { EventBus } from '../../lib/EventBus';
 import { LCMComponent } from '../../lib/LCMComponent';
-import { GameViewPresenterClient as GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/gameViewPresenterClient';
+import { GameViewPresenterClient as GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/services/gameViewPresenterClient';
 import { ITheme } from '../../assets/themes/BaseTheme';
 import { ThemeUtils } from '../common/ThemeUtils';
 

@@ -5,29 +5,29 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    UpdateGameResponse,
-    GetGameStateRequest,
-    GetGameStateResponse,
-    ListMovesResponse,
-    ProcessMovesResponse,
-    GetOptionsAtRequest,
-    SimulateAttackResponse,
-    GetGamesRequest,
-    GetGameRequest,
-    GetGameResponse,
-    UpdateGameRequest,
-    ListMovesRequest,
-    ProcessMovesRequest,
-    SimulateAttackRequest,
     CreateGameRequest,
     CreateGameResponse,
-    ListGamesRequest,
-    ListGamesResponse,
-    GetGamesResponse,
     DeleteGameRequest,
     DeleteGameResponse,
+    GetGameRequest,
+    GetGameResponse,
+    GetGameStateRequest,
+    GetGameStateResponse,
+    GetGamesRequest,
+    GetGamesResponse,
+    GetOptionsAtRequest,
     GetOptionsAtResponse,
-} from './interfaces';
+    ListGamesRequest,
+    ListGamesResponse,
+    ListMovesRequest,
+    ListMovesResponse,
+    ProcessMovesRequest,
+    ProcessMovesResponse,
+    SimulateAttackRequest,
+    SimulateAttackResponse,
+    UpdateGameRequest,
+    UpdateGameResponse,
+} from '../models/interfaces';
 /**
  * GamesService service client interface
  * Fully typed method signatures with TypeScript interfaces

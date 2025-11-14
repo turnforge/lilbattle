@@ -8,7 +8,7 @@
 import * as Phaser from 'phaser';
 import { BaseLayer, LayerConfig, ClickContext, LayerHitResult } from './LayerSystem';
 import { hexToPixel } from './hexUtils';
-import { MoveUnitAction, AttackUnitAction } from '../../gen/wasmjs/weewar/v1/interfaces';
+import { MoveUnitAction, AttackUnitAction } from '../../gen/wasmjs/weewar/v1/models/interfaces';
 
 // =============================================================================
 // Hex Highlight Base Class

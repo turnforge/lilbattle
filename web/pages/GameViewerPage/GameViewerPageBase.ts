@@ -1,9 +1,9 @@
 import { BasePage } from '../../lib/BasePage';
 import WeewarBundle from '../../gen/wasmjs';
-import { GamesServiceClient } from '../../gen/wasmjs/weewar/v1/gamesServiceClient';
-import { GameViewerPageMethods, GameViewerPageClient as GameViewerPageClient } from '../../gen/wasmjs/weewar/v1/gameViewerPageClient';
-import { GameViewPresenterClient as GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/gameViewPresenterClient';
-import { SingletonInitializerServiceClient as SingletonInitializerClient } from '../../gen/wasmjs/weewar/v1/singletonInitializerServiceClient';
+import { GamesServiceClient } from '../../gen/wasmjs/weewar/v1/services/gamesServiceClient';
+import { GameViewerPageMethods, GameViewerPageClient as GameViewerPageClient } from '../../gen/wasmjs/weewar/v1/services/gameViewerPageClient';
+import { GameViewPresenterClient as GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/services/gameViewPresenterClient';
+import { SingletonInitializerServiceClient as SingletonInitializerClient } from '../../gen/wasmjs/weewar/v1/services/singletonInitializerServiceClient';
 import { EventBus } from '../../lib/EventBus';
 import { AssetThemePreference } from '../common/AssetThemePreference';
 import { PhaserGameScene } from './PhaserGameScene';
@@ -26,8 +26,8 @@ import {
     SetUnitAtRequest, SetUnitAtResponse,
     RemoveUnitAtRequest, RemoveUnitAtResponse,
     SetAllowedPanelsRequest, SetAllowedPanelsResponse,
-} from '../../gen/wasmjs/weewar/v1/interfaces';
-import * as models from '../../gen/wasmjs/weewar/v1/models';
+} from '../../gen/wasmjs/weewar/v1/models/interfaces';
+import * as models from '../../gen/wasmjs/weewar/v1/models/models';
 import { create } from '@bufbuild/protobuf';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { LifecycleController } from '../../lib/LifecycleController';

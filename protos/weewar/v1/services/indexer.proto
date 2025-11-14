@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package weewar.v1;
+
+import "google/api/annotations.proto";
+import "weewar/v1/models/indexer.proto";
+
+option go_package = "github.com/panyam/turnengine/games/weewar/gen/go/weewar/v1/services";
+
+// Manages indexing of entities
+service IndexerService {
+  /**
+   * Create a LRO for indexing records
+   */
+  rpc CreateIndexRecordsLRO(CreateIndexRecordsLRORequest) returns (CreateIndexRecordsLROResponse) {
+    option (google.api.http) = {
+      post: "/v1/indexlro",
+      body: "*",
+    };
+  }
+
+  /**
+   * Get the details of a LRO operation
+   */
+  rpc GetIndexRecordsLRO(GetIndexRecordsLRORequest) returns (GetIndexRecordsLROResponse) {
+    option (google.api.http) = {
+      post: "/v1/indexlro/{lro_id}",
+      body: "*",
+    };
+  }
+
+  /**
+   * Update an LRO operation - internal usage
+   */
+  rpc UpdateIndexRecordsLRO(UpdateIndexRecordsLRORequest) returns (UpdateIndexRecordsLROResponse) {
+    option (google.api.http) = {
+      patch: "/v1/indexlro/{lro.lro_id}",
+      body: "*",
+    };
+  }
+
+  /**
+   * Batch get multiple entity index states
+   */
+  rpc GetIndexStates(GetIndexStatesRequest) returns (GetIndexStatesResponse) {
+    option (google.api.http) = {
+      get: "/v1/index:batchGet/{entity_type}",
+    };
+  }
+
+  /**
+   * List index entity states by filtering
+   */
+  rpc ListIndexStates(ListIndexStatesRequest) returns (ListIndexStatesResponse) { 
+    option (google.api.http) = {
+      get: "/v1/index/{entity_type}",
+    };
+  }
+
+  rpc DeleteIndexStates(DeleteIndexStatesRequest) returns (DeleteIndexStatesResponse) { 
+    option (google.api.http) = {
+      delete: "/v1/index/{entity_type}",
+    };
+  }
+}
+

@@ -20,6 +20,7 @@ import (
 // Weewar_v1ServicesExports provides WASM exports for dependency injection
 type Weewar_v1ServicesExports struct {
 	GamesService                GamesServiceServer
+	IndexerService              IndexerServiceServer
 	SingletonInitializerService SingletonInitializerServiceServer
 	GameViewPresenter           GameViewPresenterServer
 	UsersService                UsersServiceServer
@@ -70,6 +71,26 @@ func (exports *Weewar_v1ServicesExports) RegisterAPI() {
 			}),
 			"simulateAttack": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.gamesServiceSimulateAttack(this, args)
+			}),
+		},
+		"indexerService": map[string]interface{}{
+			"createIndexRecordsLRO": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceCreateIndexRecordsLRO(this, args)
+			}),
+			"getIndexRecordsLRO": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceGetIndexRecordsLRO(this, args)
+			}),
+			"updateIndexRecordsLRO": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceUpdateIndexRecordsLRO(this, args)
+			}),
+			"getIndexStates": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceGetIndexStates(this, args)
+			}),
+			"listIndexStates": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceListIndexStates(this, args)
+			}),
+			"deleteIndexStates": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.indexerServiceDeleteIndexStates(this, args)
 			}),
 		},
 		"singletonInitializerService": map[string]interface{}{
@@ -655,6 +676,294 @@ func (exports *Weewar_v1ServicesExports) gamesServiceSimulateAttack(this js.Valu
 
 	// Call service method
 	resp, err := exports.GamesService.SimulateAttack(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceCreateIndexRecordsLRO handles the CreateIndexRecordsLRO method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceCreateIndexRecordsLRO(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.CreateIndexRecordsLRORequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.CreateIndexRecordsLRO(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceGetIndexRecordsLRO handles the GetIndexRecordsLRO method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceGetIndexRecordsLRO(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.GetIndexRecordsLRORequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.GetIndexRecordsLRO(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceUpdateIndexRecordsLRO handles the UpdateIndexRecordsLRO method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceUpdateIndexRecordsLRO(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.UpdateIndexRecordsLRORequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.UpdateIndexRecordsLRO(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceGetIndexStates handles the GetIndexStates method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceGetIndexStates(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.GetIndexStatesRequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.GetIndexStates(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceListIndexStates handles the ListIndexStates method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceListIndexStates(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.ListIndexStatesRequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.ListIndexStates(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// indexerServiceDeleteIndexStates handles the DeleteIndexStates method for IndexerService
+func (exports *Weewar_v1ServicesExports) indexerServiceDeleteIndexStates(this js.Value, args []js.Value) any {
+	if exports.IndexerService == nil {
+		return createJSResponse(false, "IndexerService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.DeleteIndexStatesRequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.IndexerService.DeleteIndexStates(ctx, req)
 	if err != nil {
 		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
 	}

@@ -8,7 +8,7 @@ import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { PhaserGameScene } from './PhaserGameScene';
-import { SetContentRequest, SetContentResponse, SetAllowedPanelsRequest, SetAllowedPanelsResponse } from '../../gen/wasmjs/weewar/v1/interfaces';
+import { SetContentRequest, SetContentResponse, SetAllowedPanelsRequest, SetAllowedPanelsResponse } from '../../gen/wasmjs/weewar/v1/models/interfaces';
 
 /**
  * Context-aware button ordering configuration

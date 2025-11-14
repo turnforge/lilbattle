@@ -41,6 +41,16 @@ plugins:
     out: gen/openapiv2
     opt: allow_merge=true,merge_file_name=services
 
+  # GORM DAL generator
+  - local: protoc-gen-dal-gorm
+    out: ./gen/gorm
+    opt: paths=source_relative
+
+  # Datastore DAL generator
+  - local: protoc-gen-dal-datastore
+    out: ./gen/datastore
+    opt: paths=source_relative
+
   # This will invoke protoc-gen-es and write output to web/gen
   - local: protoc-gen-es
     out: web/gen

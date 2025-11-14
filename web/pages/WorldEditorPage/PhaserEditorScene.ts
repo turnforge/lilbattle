@@ -1,4 +1,5 @@
-import * as models from '../../gen/wasmjs/weewar/v1/models'
+import * as models from '../../gen/wasmjs/weewar/v1/models/models'
+import { Weewar_v1Deserializer as WD } from '../../gen/wasmjs/weewar/v1/factory'
 import { EventBus } from '../../lib/EventBus';
 import { PhaserWorldScene } from '../common/PhaserWorldScene';
 import { Unit, Tile, World } from '../common/World';
@@ -348,7 +349,7 @@ export class PhaserEditorScene extends PhaserWorldScene {
             { q: -1, r: -1, unitType: 2, player: 2 }, // Tank
         ];
 
-        testUnits.forEach(unit => this.setUnit(models.Unit.from(unit)));
+        testUnits.forEach(unit => this.setUnit(WD.from(models.Unit, unit)));
     }
 
     // =============================================================================

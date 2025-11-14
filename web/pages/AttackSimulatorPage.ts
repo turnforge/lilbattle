@@ -5,8 +5,8 @@ import { LifecycleController } from '../lib/LifecycleController';
 import { ITheme } from '../assets/themes/BaseTheme';
 import DefaultTheme from '../assets/themes/default';
 import WeewarBundle from '../gen/wasmjs';
-import { GamesServiceClient } from '../gen/wasmjs/weewar/v1/gamesServiceClient';
-import { SimulateAttackRequest, SimulateAttackResponse } from '../gen/wasmjs/weewar/v1/interfaces';
+import { GamesServiceClient } from '../gen/wasmjs/weewar/v1/services/gamesServiceClient';
+import { SimulateAttackRequest, SimulateAttackResponse } from '../gen/wasmjs/weewar/v1/models/interfaces';
 
 /**
  * Attack Simulator Page - Interactive combat simulator

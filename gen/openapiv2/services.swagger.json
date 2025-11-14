@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "weewar/v1/models/models.proto",
+    "title": "dal/v1/annotations.proto",
     "version": "version not set"
   },
   "tags": [
@@ -10,6 +10,9 @@
     },
     {
       "name": "GameViewerPage"
+    },
+    {
+      "name": "IndexerService"
     },
     {
       "name": "SingletonInitializerService"
@@ -488,6 +491,329 @@
         ],
         "tags": [
           "GamesService"
+        ]
+      }
+    },
+    "/v1/index/{entityType}": {
+      "get": {
+        "summary": "*\nList index entity states by filtering",
+        "operationId": "IndexerService_ListIndexStates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListIndexStatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "indexedBefore",
+            "description": "Get records indexed \"before\" this time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "indexedAfter",
+            "description": "Get records indexed \"after\" this time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "indexTypes",
+            "description": "Filter by index types or get all",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "orderBy",
+            "description": "\"id\" or \"indexed_at\"",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "count",
+            "description": "limit to max items",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "IndexerService"
+        ]
+      },
+      "delete": {
+        "operationId": "IndexerService_DeleteIndexStates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteIndexStatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "entityIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "indexTypes",
+            "description": "Optional - can be used to get \"all\" indexer states or just once specified here",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "IndexerService"
+        ]
+      }
+    },
+    "/v1/index:batchGet/{entity_type}": {
+      "get": {
+        "summary": "*\nBatch get multiple entity index states",
+        "operationId": "IndexerService_GetIndexStates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetIndexStatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "entityIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "indexTypes",
+            "description": "Optional - can be used to get \"all\" indexer states or just once specified here",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "IndexerService"
+        ]
+      }
+    },
+    "/v1/indexlro": {
+      "post": {
+        "summary": "*\nCreate a LRO for indexing records",
+        "operationId": "IndexerService_CreateIndexRecordsLRO",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateIndexRecordsLROResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateIndexRecordsLRORequest"
+            }
+          }
+        ],
+        "tags": [
+          "IndexerService"
+        ]
+      }
+    },
+    "/v1/indexlro/{lro.lroId}": {
+      "patch": {
+        "summary": "*\nUpdate an LRO operation - internal usage",
+        "operationId": "IndexerService_UpdateIndexRecordsLRO",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateIndexRecordsLROResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "lro.lroId",
+            "description": "Customizable by source if it can guarantee uniqueness",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "lro": {
+                  "type": "object",
+                  "properties": {
+                    "entityType": {
+                      "type": "string",
+                      "title": "Single entity type in a index request"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "title": "When this request was created"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "callbackUrl": {
+                      "type": "string",
+                      "title": "Callback url for this request (if any)\nAll records indexed in this operation will be notified via this url"
+                    },
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/v1IndexRecord"
+                      },
+                      "title": "Records to enqueue - note that indexing by its nature is asynchronous\nso we wont wait for all the indexing to finish"
+                    }
+                  },
+                  "title": "Each IndexRecords gets its own \"long running operation\" \nso we can track how things are"
+                },
+                "updateMask": {
+                  "type": "string",
+                  "description": "*\nMask of fields being updated in this Game to make partial changes."
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "IndexerService"
+        ]
+      }
+    },
+    "/v1/indexlro/{lroId}": {
+      "post": {
+        "summary": "*\nGet the details of a LRO operation",
+        "operationId": "IndexerService_GetIndexRecordsLRO",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetIndexRecordsLROResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "lroId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "tags": [
+          "IndexerService"
         ]
       }
     },
@@ -1285,10 +1611,12 @@
       "type": "object",
       "properties": {
         "@type": {
-          "type": "string"
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
         }
       },
-      "additionalProperties": {}
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
     "rpcStatus": {
       "type": "object",
@@ -1500,6 +1828,22 @@
       },
       "description": "*\nResponse of an game creation."
     },
+    "v1CreateIndexRecordsLRORequest": {
+      "type": "object",
+      "properties": {
+        "lro": {
+          "$ref": "#/definitions/v1IndexRecordsLRO"
+        }
+      }
+    },
+    "v1CreateIndexRecordsLROResponse": {
+      "type": "object",
+      "properties": {
+        "lro": {
+          "$ref": "#/definitions/v1IndexRecordsLRO"
+        }
+      }
+    },
     "v1CreateUserRequest": {
       "type": "object",
       "properties": {
@@ -1564,6 +1908,9 @@
       "type": "object",
       "title": "*\nGame deletion response"
     },
+    "v1DeleteIndexStatesResponse": {
+      "type": "object"
+    },
     "v1DeleteUserResponse": {
       "type": "object",
       "title": "*\nUser deletion response"
@@ -1585,6 +1932,63 @@
         }
       },
       "title": "Response of a turn option click"
+    },
+    "v1EntityIndexState": {
+      "type": "object",
+      "properties": {
+        "entityType": {
+          "type": "string"
+        },
+        "entityId": {
+          "type": "string"
+        },
+        "indexType": {
+          "type": "string",
+          "title": "eg \"screenshots\", \"keywords\" etc\nEntityType + EntityId + IndexType should be  unique"
+        },
+        "lastQueuedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When the last indexing was queued"
+        },
+        "lastIndexedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "when the last indexing was completed"
+        },
+        "status": {
+          "type": "string",
+          "title": "\"queued/pending\", \"indexing\", \"completed\", \"failed\""
+        },
+        "lastError": {
+          "type": "string",
+          "title": "If there was an error in the last indexing"
+        },
+        "lastContentHash": {
+          "type": "string",
+          "title": "Keep a hash of the contents for quick check to check updated\n(not sure if needed) - This should be provided by the source"
+        },
+        "retryCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "currentLroId": {
+          "type": "string",
+          "title": "Which LRO this entity has been updated via"
+        }
+      }
+    },
+    "v1EntityIndexStateList": {
+      "type": "object",
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1EntityIndexState"
+          }
+        }
+      }
     },
     "v1Game": {
       "type": "object",
@@ -1988,6 +2392,25 @@
       },
       "title": "*\nGame batch-get response"
     },
+    "v1GetIndexRecordsLROResponse": {
+      "type": "object",
+      "properties": {
+        "lro": {
+          "$ref": "#/definitions/v1IndexRecordsLRO"
+        }
+      }
+    },
+    "v1GetIndexStatesResponse": {
+      "type": "object",
+      "properties": {
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1EntityIndexStateList"
+          }
+        }
+      }
+    },
     "v1GetOptionsAtResponse": {
       "type": "object",
       "properties": {
@@ -2141,6 +2564,63 @@
         }
       }
     },
+    "v1IndexRecord": {
+      "type": "object",
+      "properties": {
+        "entityId": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "entityData": {
+          "$ref": "#/definitions/protobufAny"
+        },
+        "indexerTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Request messages"
+    },
+    "v1IndexRecordsLRO": {
+      "type": "object",
+      "properties": {
+        "lroId": {
+          "type": "string",
+          "title": "Customizable by source if it can guarantee uniqueness"
+        },
+        "entityType": {
+          "type": "string",
+          "title": "Single entity type in a index request"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When this request was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "callbackUrl": {
+          "type": "string",
+          "title": "Callback url for this request (if any)\nAll records indexed in this operation will be notified via this url"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1IndexRecord"
+          },
+          "title": "Records to enqueue - note that indexing by its nature is asynchronous\nso we wont wait for all the indexing to finish"
+        }
+      },
+      "title": "Each IndexRecords gets its own \"long running operation\" \nso we can track how things are"
+    },
     "v1InitializeGameResponse": {
       "type": "object",
       "properties": {
@@ -2186,6 +2666,22 @@
         },
         "pagination": {
           "$ref": "#/definitions/v1PaginationResponse"
+        }
+      }
+    },
+    "v1ListIndexStatesResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1EntityIndexState"
+          }
+        },
+        "nextPageKey": {
+          "type": "string",
+          "title": "How to identify the next \"page\" in this list"
         }
       }
     },
@@ -2795,6 +3291,14 @@
     },
     "v1UpdateGameStatusResponse": {
       "type": "object"
+    },
+    "v1UpdateIndexRecordsLROResponse": {
+      "type": "object",
+      "properties": {
+        "lro": {
+          "$ref": "#/definitions/v1IndexRecordsLRO"
+        }
+      }
     },
     "v1UpdateUserResponse": {
       "type": "object",

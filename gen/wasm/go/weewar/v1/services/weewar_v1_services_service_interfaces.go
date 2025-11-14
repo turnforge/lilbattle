@@ -43,6 +43,26 @@ type GamesServiceServer interface {
 	SimulateAttack(context.Context, *v1models.SimulateAttackRequest) (*v1models.SimulateAttackResponse, error)
 }
 
+// IndexerServiceServer is the server API for IndexerService service (WASM version without gRPC embedding).
+type IndexerServiceServer interface {
+	/** *
+	Create a LRO for indexing records */
+	CreateIndexRecordsLRO(context.Context, *v1models.CreateIndexRecordsLRORequest) (*v1models.CreateIndexRecordsLROResponse, error)
+	/** *
+	Get the details of a LRO operation */
+	GetIndexRecordsLRO(context.Context, *v1models.GetIndexRecordsLRORequest) (*v1models.GetIndexRecordsLROResponse, error)
+	/** *
+	Update an LRO operation - internal usage */
+	UpdateIndexRecordsLRO(context.Context, *v1models.UpdateIndexRecordsLRORequest) (*v1models.UpdateIndexRecordsLROResponse, error)
+	/** *
+	Batch get multiple entity index states */
+	GetIndexStates(context.Context, *v1models.GetIndexStatesRequest) (*v1models.GetIndexStatesResponse, error)
+	/** *
+	List index entity states by filtering */
+	ListIndexStates(context.Context, *v1models.ListIndexStatesRequest) (*v1models.ListIndexStatesResponse, error)
+	DeleteIndexStates(context.Context, *v1models.DeleteIndexStatesRequest) (*v1models.DeleteIndexStatesResponse, error)
+}
+
 // SingletonInitializerServiceServer is the server API for SingletonInitializerService service (WASM version without gRPC embedding).
 type SingletonInitializerServiceServer interface {
 	InitializeSingleton(context.Context, *v1models.InitializeSingletonRequest) (*v1models.InitializeSingletonResponse, error)

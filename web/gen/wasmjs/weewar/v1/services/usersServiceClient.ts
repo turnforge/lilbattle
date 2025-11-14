@@ -5,19 +5,19 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 
 // Import TypeScript types for method signatures
 import {
-    ListUsersResponse,
-    DeleteUserRequest,
-    ListUsersRequest,
-    GetUserRequest,
-    GetUserResponse,
-    DeleteUserResponse,
-    UpdateUserRequest,
-    UpdateUserResponse,
     CreateUserRequest,
     CreateUserResponse,
+    DeleteUserRequest,
+    DeleteUserResponse,
+    GetUserRequest,
+    GetUserResponse,
     GetUsersRequest,
     GetUsersResponse,
-} from './interfaces';
+    ListUsersRequest,
+    ListUsersResponse,
+    UpdateUserRequest,
+    UpdateUserResponse,
+} from '../models/interfaces';
 /**
  * UsersService service client interface
  * Fully typed method signatures with TypeScript interfaces
