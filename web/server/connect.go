@@ -11,6 +11,15 @@ import (
 	"github.com/turnforge/weewar/services/fsbe"
 )
 
+// ConnectIndexerServiceAdapter adapts the gRPC IndexerService to Connect's interface
+type ConnectIndexerServiceAdapter struct {
+	svc *gormbe.IndexerService
+}
+
+func NewConnectIndexerServiceAdapter(svc *gormbe.IndexerService) *ConnectIndexerServiceAdapter {
+	return &ConnectIndexerServiceAdapter{svc: svc}
+}
+
 // ConnectGamesServiceAdapter adapts the gRPC GamesService to Connect's interface
 type ConnectGamesServiceAdapter struct {
 	svc *fsbe.FSGamesService

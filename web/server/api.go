@@ -27,53 +27,55 @@ type ApiHandler struct {
 
 	// Here we can have to ways of accessing the services - either via clients or by actual service instead if you are not
 	// running the services on a dedicated port
+	DisableIndexer       bool
+	DisableGamesService  bool
+	DisableWorldsService bool
 }
 
 func (n *ApiHandler) Handler() http.Handler {
 	return n.mux
 }
 
-func NewApiHandler(middleware *oa.Middleware, clients *server.ClientMgr) *ApiHandler {
-	out := ApiHandler{
-		mux:            http.NewServeMux(),
-		AuthMiddleware: middleware,
-		ClientMgr:      clients,
-	}
-	gwmux, err := out.createSvcMux(clients.Address())
+func (a *ApiHandler) Init() error {
+	a.mux = http.NewServeMux()
+	gwmux, err := a.createSvcMux(a.ClientMgr.Address())
 	if err != nil {
 		log.Println("error creating grpc mux: ", err)
 		panic(err)
 	}
-	out.mux.Handle("/v1/", gwmux)
+	a.mux.Handle("/v1/", gwmux)
 	log.Println("Registered gRPC-gateway at /v1/")
 
-	// Add Connect handlers
-	/*
-		if canvasService != nil {
-			log.Println("Adding Connect handler...")
-			adapter := NewConnectCanvasServiceAdapter(canvasService)
-			connectPath, connectHandler := v1connect.NewCanvasServiceHandler(adapter)
-			out.mux.Handle(connectPath, connectHandler)
-			log.Printf("Registered Connect handler at: %s", connectPath)
-		} else {
-			log.Println("No CanvasService provided, skipping Connect handler")
-		}
-	*/
+	return a.setupConnectHandlers()
+}
 
+func (out *ApiHandler) setupConnectHandlers() error {
 	// Add AppItems Connect handler
 	// We will do this for each service we have registered
-	log.Println("Adding Games Connect handler...")
-	gamesAdapter := NewConnectGamesServiceAdapter(fsbe.NewFSGamesService(""))
-	gamesConnectPath, gamesConnectHandler := v1connect.NewGamesServiceHandler(gamesAdapter)
-	out.mux.Handle(gamesConnectPath, gamesConnectHandler)
-	log.Printf("Registered Games Connect handler at: %s", gamesConnectPath)
+	if !out.DisableGamesService {
+		log.Println("Adding Games Connect handler...")
+		gamesAdapter := NewConnectGamesServiceAdapter(fsbe.NewFSGamesService(""))
+		gamesConnectPath, gamesConnectHandler := v1connect.NewGamesServiceHandler(gamesAdapter)
+		out.mux.Handle(gamesConnectPath, gamesConnectHandler)
+		log.Printf("Registered Games Connect handler at: %s", gamesConnectPath)
+	}
 
-	worldsAdapter := NewConnectWorldsServiceAdapter(fsbe.NewFSWorldsService(""))
-	worldsConnectPath, worldsConnectHandler := v1connect.NewWorldsServiceHandler(worldsAdapter)
-	out.mux.Handle(worldsConnectPath, worldsConnectHandler)
-	log.Printf("Registered Worlds Connect handler at: %s", worldsConnectPath)
+	if !out.DisableWorldsService {
+		worldsAdapter := NewConnectWorldsServiceAdapter(fsbe.NewFSWorldsService(""))
+		worldsConnectPath, worldsConnectHandler := v1connect.NewWorldsServiceHandler(worldsAdapter)
+		out.mux.Handle(worldsConnectPath, worldsConnectHandler)
+		log.Printf("Registered Worlds Connect handler at: %s", worldsConnectPath)
+	}
 
-	return &out
+	// if we are colocating indexer in our current bundle
+	if !out.DisableIndexer {
+		log.Println("Adding Indexer Connect handler...")
+		indexerAdapter := NewConnectIndexerServiceAdapter(gormbe.NewIndexerService(""))
+		indexerConnectPath, indexerConnectHandler := v1connect.NewIndexerServiceHandler(indexerAdapter)
+		out.mux.Handle(indexerConnectPath, indexerConnectHandler)
+		log.Printf("Registered Indexer Connect handler at: %s", indexerConnectPath)
+	}
+	return nil
 }
 
 func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error) {
@@ -130,17 +132,30 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 	// TODO - Secure credentials for etc
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	ctx := context.Background()
+	var err error
 
 	// Register existing services
-	err := v1s.RegisterGamesServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
-	if err != nil {
-		log.Fatal("Unable to register appitems service: ", err)
-		return nil, err
+	if !web.DisableGamesService {
+		err := v1s.RegisterGamesServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+		if err != nil {
+			log.Fatal("Unable to register games service: ", err)
+			return nil, err
+		}
 	}
-	err = v1s.RegisterWorldsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
-	if err != nil {
-		log.Fatal("Unable to register appitems service: ", err)
-		return nil, err
+	if !web.DisableWorldsService {
+		err = v1s.RegisterWorldsServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+		if err != nil {
+			log.Fatal("Unable to register worlds service: ", err)
+			return nil, err
+		}
+	}
+
+	if web.DisableIndexer {
+		err = v1s.RegisterIndexersServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+		if err != nil {
+			log.Fatal("Unable to register indexer service: ", err)
+			return nil, err
+		}
 	}
 	return svcMux, nil // Return nil error on success
 }
