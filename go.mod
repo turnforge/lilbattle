@@ -15,9 +15,9 @@ require (
 	github.com/panyam/oneauth v0.0.15
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.28
 	github.com/panyam/templar v0.0.22
-	github.com/panyam/turnengine v0.0.0-20251114194118-ec38784b561a
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
+	github.com/turnforge/turnengine v0.0.1
 	golang.org/x/oauth2 v0.33.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba
 	google.golang.org/grpc v1.76.0
@@ -67,3 +67,8 @@ require (
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 )
+
+// replace github.com/panyam/goutils v0.1.1 => ./locallinks/goutils/
+// replace github.com/panyam/s3gen v0.0.32 => ./locallinks/s3gen/
+// replace github.com/panyam/templar v0.0.2 => ./locallinks/templar/
+replace github.com/turnforge/turnengine v0.0.1 => ./locallinks/turnengine/

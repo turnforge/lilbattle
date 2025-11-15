@@ -88,8 +88,6 @@ github.com/panyam/servicekit v0.0.2 h1:ooMnIW/JXnbxpXPKRoLzgPtOIx+a4Up+T0AUoZXWx
 github.com/panyam/servicekit v0.0.2/go.mod h1:eKPuL3jur/XwTiM6SUaHTPdPZ/HQhkk/fwUP50UYP+8=
 github.com/panyam/templar v0.0.22 h1:qNXaap/atc/Jz9t6HfFV6GV8DzsyrHK9uVcwKf3ww2Q=
 github.com/panyam/templar v0.0.22/go.mod h1:sLx3m7TC/nuA1lPr7CitLwZfKlyVceUVujB/DFmIUws=
-github.com/panyam/turnengine v0.0.0-20251114194118-ec38784b561a h1:00z0jk994pmwMiRmwja0VIHGTtY9sWvv10ltmtK9f6o=
-github.com/panyam/turnengine v0.0.0-20251114194118-ec38784b561a/go.mod h1:WbRP45U9uQevcacCZ6fL1JlaWU0xEowlOmuJKmJAaUQ=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 h1:GFCKgmp0tecUJ0sJuv4pzYCqS9+RGSn52M3FUwPs+uo=

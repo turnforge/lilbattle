@@ -121,3 +121,11 @@ symlink-protos: remove-proto-symlinks
 remove-proto-symlinks:
 	echo "Removing turnengine proto symlink..."
 	# rm -Rf protos/wasmjs protos/turnengine
+
+resymlink:
+	mkdir -p locallinks
+	rm -Rf locallinks/*
+	cd locallinks && ln -s ../../templar
+	cd locallinks && ln -s ../../goutils
+	cd locallinks && ln -s ../../oneauth
+	cd locallinks && ln -s ../../turnengine

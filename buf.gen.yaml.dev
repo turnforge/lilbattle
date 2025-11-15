@@ -7,7 +7,8 @@ managed:
     - module: buf.build/googleapis/googleapis
     - module: buf.build/grpc-ecosystem/grpc-gateway
     - module: buf.build/panyam/protoc-gen-go-wasmjs
-    - module: buf.build/panyam/turnengine
+    - module: buf.build/turnforge/turnengine
+    - module: buf.build/prototools/protoc-gen-dal
     # - module: connectrpc.com/connect
   override:
     - file_option: go_package_prefix
