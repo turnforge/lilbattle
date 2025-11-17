@@ -69,11 +69,14 @@ func (out *ApiHandler) setupConnectHandlers() error {
 
 	// if we are colocating indexer in our current bundle
 	if !out.DisableIndexer {
+		/* - TODO we are creating a new service via NewIndexService - instead this pattern should be using the client.
+		* Needs to be investigated
 		log.Println("Adding Indexer Connect handler...")
 		indexerAdapter := NewConnectIndexerServiceAdapter(gormbe.NewIndexerService(""))
 		indexerConnectPath, indexerConnectHandler := v1connect.NewIndexerServiceHandler(indexerAdapter)
 		out.mux.Handle(indexerConnectPath, indexerConnectHandler)
 		log.Printf("Registered Indexer Connect handler at: %s", indexerConnectPath)
+		*/
 	}
 	return nil
 }
@@ -151,7 +154,7 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 	}
 
 	if web.DisableIndexer {
-		err = v1s.RegisterIndexersServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+		err = v1s.RegisterIndexerServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
 		if err != nil {
 			log.Fatal("Unable to register indexer service: ", err)
 			return nil, err

@@ -211,11 +211,12 @@ func NewApp(ClientMgr *server.ClientMgr) (app *App, err error) {
 		w.Write([]byte(`{"success": true}`))
 	}))
 
+	api := &ApiHandler{AuthMiddleware: &oneauth.Middleware, ClientMgr: ClientMgr}
 	app = &App{
 		Session:     session,
 		Auth:        oneauth,
 		AuthService: authService,
-		Api:         NewApiHandler(&oneauth.Middleware, ClientMgr),
+		Api:         api,
 		ViewsRoot:   NewRootViewsHandler(&oneauth.Middleware, authService, ClientMgr),
 	}
 

@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file weewar/v1/gorm/indexer.proto.
  */
 export const file_weewar_v1_gorm_indexer: GenFile = /*@__PURE__*/
-  fileDesc("Chx3ZWV3YXIvdjEvZ29ybS9pbmRleGVyLnByb3RvEgl3ZWV3YXIudjEiQQoOSW5kZXhTdGF0ZUdPUk06L8qmHSsKFHdlZXdhci52MS5JbmRleFN0YXRlEhNlbnRpdHlfaW5kZXhfc3RhdGVzIkoKE0luZGV4UmVjb3Jkc0xST0dPUk06M8qmHS8KGXdlZXdhci52MS5JbmRleFJlY29yZHNMUk8SEmluZGV4X3JlY29yZHNfbHJvc0KeAQoNY29tLndlZXdhci52MUIMSW5kZXhlclByb3RvUAFaOmdpdGh1Yi5jb20vdHVybmZvcmdlL3dlZXdhci9nZW4vZ28vd2Vld2FyL3YxL2dvcm07d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_dal_v1_annotations, file_weewar_v1_models_indexer]);
+  fileDesc("Chx3ZWV3YXIvdjEvZ29ybS9pbmRleGVyLnByb3RvEgl3ZWV3YXIudjEiQQoOSW5kZXhTdGF0ZUdPUk06L8qmHSsKFHdlZXdhci52MS5JbmRleFN0YXRlEhNlbnRpdHlfaW5kZXhfc3RhdGVzIhUKE0luZGV4UmVjb3Jkc0xST0dPUk1CngEKDWNvbS53ZWV3YXIudjFCDEluZGV4ZXJQcm90b1ABWjpnaXRodWIuY29tL3R1cm5mb3JnZS93ZWV3YXIvZ2VuL2dvL3dlZXdhci92MS9nb3JtO3dlZXdhcnYxogIDV1hYqgIJV2Vld2FyLlYxygIJV2Vld2FyXFYx4gIVV2Vld2FyXFYxXEdQQk1ldGFkYXRh6gIKV2Vld2FyOjpWMWIGcHJvdG8z", [file_dal_v1_annotations, file_weewar_v1_models_indexer]);
 
 /**
  * IndexStateGORM is the GORM representation for IndexState
@@ -31,6 +31,12 @@ export const IndexStateGORMSchema: GenMessage<IndexStateGORM> = /*@__PURE__*/
 
 /**
  * IndexRecordsLROGORM is the GORM representation for IndexRecordsLRO
+ *
+ *
+ * option (dal.v1.gorm) = {
+ * source: "weewar.v1.IndexRecordsLRO"
+ * table: "index_records_lros"
+ * };
  *
  * @generated from message weewar.v1.IndexRecordsLROGORM
  */

@@ -17,6 +17,8 @@ services:
 #        - ./.data/pgadmin:/var/lib/pgadmin
 
   postgres:
+    env_file:
+      - .env.dev
     networks:
       - weewarnetwork
     image: arm64v8/postgres:16.3

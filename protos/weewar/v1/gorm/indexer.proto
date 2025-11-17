@@ -20,8 +20,10 @@ message IndexStateGORM {
 
 // IndexRecordsLROGORM is the GORM representation for IndexRecordsLRO
 message IndexRecordsLROGORM {
+  /*
   option (dal.v1.gorm) = {
     source: "weewar.v1.IndexRecordsLRO"
     table: "index_records_lros"
   };
+  */
 }

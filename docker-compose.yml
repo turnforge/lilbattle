@@ -8,7 +8,7 @@ services:
       - weewarnetwork
     build:
       context: .
-      dockerfile: ./cmd/backend/Dockerfile.debug
+      dockerfile: ./cmd/backend/Dockerfile
     volumes:
       # - ./.air.toml:/app/.air.toml:ro
       # - ./go.mod:/app/go.mod:ro
@@ -26,10 +26,30 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ONEHUB_DB_ENDPOINT: ${ONEHUB_DB_ENDOINT}
+      WEEWAR_DB_ENDPOINT: ${WEEWAR_DB_ENDPOINT}
       OTEL_RESOURCE_ATTRIBUTES: service.name=onehub.backend,service.version=0.0.1
     ports:
       - 6060:6060
       - 7070:7070
       - 8080:8080
       - 9090:9090
+
+  postgres:
+    networks:
+      - weewarnetwork
+    image: arm64v8/postgres:16.3
+      # image: postgres:15.3
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./.data/pgdata:/var/lib/postgresql/data
+        # - ./configs/postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
+    ports:
+      - 54321:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

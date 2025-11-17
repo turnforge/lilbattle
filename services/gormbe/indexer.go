@@ -5,11 +5,15 @@ package gormbe
 
 import (
 	"context"
+	"time"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	v1services "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	v1gorm "github.com/turnforge/weewar/gen/gorm"
 	"github.com/turnforge/weewar/services"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	tspb "google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +27,7 @@ type IndexerService struct {
 
 // NewGamesService creates a new GamesService implementation for server mode
 func NewIndexerService(db *gorm.DB) *IndexerService {
-	db.AutoMigrate(&v1gorm.IndexRecordsLROGORM{})
+	// db.AutoMigrate(&v1gorm.IndexRecordsLROGORM{})
 	db.AutoMigrate(&v1gorm.IndexStateGORM{})
 
 	db.AutoMigrate(&GenId{}) // Move this to its own genid service?
@@ -82,7 +86,7 @@ func (i *IndexerService) ListIndexStates(ctx context.Context, req *v1.ListIndexS
 	if req.Count <= 0 {
 		req.Count = 1000
 	}
-	query = query.Limit(req.Count)
+	query = query.Limit(int(req.Count))
 	err = query.Find(&out).Error
 
 	resp = &v1.ListIndexStatesResponse{}
@@ -111,8 +115,8 @@ func (i *IndexerService) DeleteIndexStates(ctx context.Context, req *v1.DeleteIn
 	return
 }
 
-func (b *IndexerService) CreateIndexState(ctx context.Context, req *v1.CreateIndexStateRequest) (resp *v1.CreateIndexStateResponse, err error) {
-	ctx, span := Tracer.Start(ctx, "CreateIndexState")
+func (i *IndexerService) EnsureIndexState(ctx context.Context, req *v1.EnsureIndexStateRequest) (resp *v1.EnsureIndexStateResponse, err error) {
+	ctx, span := Tracer.Start(ctx, "EnsureIndexState")
 	defer span.End()
 	/*
 		req.CreatorId = GetAuthedUser(ctx)
@@ -121,16 +125,51 @@ func (b *IndexerService) CreateIndexState(ctx context.Context, req *v1.CreateInd
 			return nil, status.Error(codes.PermissionDenied, "User is not authenticated to create a topic.")
 		}
 	*/
-	indexState := req.IndexState
+	resp = &v1.EnsureIndexStateResponse{}
+	currIndexStateResp, err := i.GetIndexStates(ctx, &v1.GetIndexStatesRequest{
+		EntityType: req.IndexState.EntityType,
+		EntityId:   req.IndexState.EntityId})
 
-	dbIndexState := IndexStateFromProto(indexState)
-	err = s.DB.SaveIndexState(ctx, dbIndexState)
-	if err == nil {
-		resp = &protos.CreateIndexStateResponse{
-			IndexState: IndexStateToProto(dbIndexState),
-		}
-		// Increatement our indexState
-		indexStateCnt.Add(ctx, 1)
+	var indexState *v1.IndexState
+	newCreated := false
+	if currIndexStateResp == nil {
+		// doesnt exist so use what was given
+		newCreated = true
+		indexState = req.IndexState
+		indexState.CreatedAt = tspb.New(time.Now())
+	} else {
+		indexState = req.IndexState
 	}
-	return resp, err
+
+	indexState.UpdatedAt = tspb.New(time.Now())
+
+	// See if it index state already exists to see if we need to insert or update
+
+	// update_mask := req.UpdateMask
+	//has_update_mask := update_mask != nil && len(update_mask.Paths) > 0
+
+	// Apply the mask now
+	if req.UpdateMask != nil && !newCreated {
+		for _, path := range req.UpdateMask.Paths {
+			switch path {
+			default:
+				return nil, status.Errorf(codes.InvalidArgument, "UpdateIndexState - update_mask contains invalid path: %s", path)
+			}
+		}
+	}
+
+	dbIndexState := &v1gorm.IndexStateGORM{}
+	dbIndexState, err = v1gorm.IndexStateToIndexStateGORM(indexState, dbIndexState, nil)
+
+	result := i.storage.Save(dbIndexState)
+	err = result.Error
+	if err == nil && result.RowsAffected == 0 {
+		dbIndexState.CreatedAt = time.Now()
+		err = i.storage.Create(dbIndexState).Error
+	}
+
+	if err == nil {
+		resp.IndexState, err = v1gorm.IndexStateFromIndexStateGORM(resp.IndexState, dbIndexState, nil)
+	}
+	return
 }

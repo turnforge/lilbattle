@@ -3,6 +3,8 @@ package gorm
 
 import (
 	"time"
+
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 // IndexStateGORM is the GORM model for weewar.v1.IndexState
@@ -14,7 +16,7 @@ type IndexStateGORM struct {
 	UpdatedAt      time.Time
 	IndexedAt      time.Time
 	NeedsIndexing  bool
-	Status         interface{}
+	Status         models.IndexStatus
 	LastError      string
 	IdempotencyKey string
 	RetryCount     int32
@@ -23,19 +25,4 @@ type IndexStateGORM struct {
 // TableName returns the table name for IndexStateGORM
 func (*IndexStateGORM) TableName() string {
 	return "entity_index_states"
-}
-
-// IndexRecordsLROGORM is the GORM model for weewar.v1.IndexRecordsLRO
-type IndexRecordsLROGORM struct {
-	LroId       string
-	EntityType  string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	CallbackUrl string
-	Records     []IndexRecord
-}
-
-// TableName returns the table name for IndexRecordsLROGORM
-func (*IndexRecordsLROGORM) TableName() string {
-	return "index_records_lros"
 }

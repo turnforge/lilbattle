@@ -104,9 +104,8 @@ const file_weewar_v1_gorm_indexer_proto_rawDesc = "" +
 	"\n" +
 	"\x1cweewar/v1/gorm/indexer.proto\x12\tweewar.v1\x1a\x18dal/v1/annotations.proto\x1a\x1eweewar/v1/models/indexer.proto\"A\n" +
 	"\x0eIndexStateGORM:/ʦ\x1d+\n" +
-	"\x14weewar.v1.IndexState\x12\x13entity_index_states\"J\n" +
-	"\x13IndexRecordsLROGORM:3ʦ\x1d/\n" +
-	"\x19weewar.v1.IndexRecordsLRO\x12\x12index_records_lrosB\x9e\x01\n" +
+	"\x14weewar.v1.IndexState\x12\x13entity_index_states\"\x15\n" +
+	"\x13IndexRecordsLROGORMB\x9e\x01\n" +
 	"\rcom.weewar.v1B\fIndexerProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
