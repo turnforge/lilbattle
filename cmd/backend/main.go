@@ -73,7 +73,7 @@ func parseFlags() {
 	log.Println("loading env file: ", envfile)
 	err := godotenv.Load(envfile)
 	if err != nil {
-		log.Fatal("Error loading .env file", envfile, err)
+		log.Fatal("Error loading .env file: ", envfile, err)
 	}
 	flag.Parse()
 }

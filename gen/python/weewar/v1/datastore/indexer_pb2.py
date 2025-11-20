@@ -26,7 +26,7 @@ from dal.v1 import annotations_pb2 as dal_dot_v1_dot_annotations__pb2
 from weewar.v1.models import indexer_pb2 as weewar_dot_v1_dot_models_dot_indexer__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!weewar/v1/datastore/indexer.proto\x12\tweewar.v1\x1a\x18\x64\x61l/v1/annotations.proto\x1a\x1eweewar/v1/models/indexer.proto\"\xa4\x03\n\x19\x45ntityIndexStateDatastore\x12\x1f\n\x0b\x65ntity_type\x18\x01 \x01(\tR\nentityType\x12\x1b\n\tentity_id\x18\x02 \x01(\tR\x08\x65ntityId\x12\x1d\n\nindex_type\x18\x03 \x01(\tR\tindexType\x12$\n\x0elast_queued_at\x18\x04 \x01(\x03R\x0clastQueuedAt\x12&\n\x0flast_indexed_at\x18\x05 \x01(\x03R\rlastIndexedAt\x12\x16\n\x06status\x18\x06 \x01(\tR\x06status\x12\x1d\n\nlast_error\x18\x07 \x01(\tR\tlastError\x12*\n\x11last_content_hash\x18\x08 \x01(\tR\x0flastContentHash\x12\x1f\n\x0bretry_count\x18\t \x01(\x05R\nretryCount\x12$\n\x0e\x63urrent_lro_id\x18\n \x01(\tR\x0c\x63urrentLroId:2\xd2\xa6\x1d.\n\x10\x45ntityIndexState*\x1aweewar.v1.EntityIndexState\"\xa1\x01\n\x14IndexRecordDatastore\x12\x1b\n\tentity_id\x18\x02 \x01(\tR\x08\x65ntityId\x12\x1d\n\nupdated_at\x18\x03 \x01(\x03R\tupdatedAt\x12#\n\rindexer_types\x18\x05 \x03(\tR\x0cindexerTypes:(\xd2\xa6\x1d$\n\x0bIndexRecord*\x15weewar.v1.IndexRecord\"\xa0\x02\n\x18IndexRecordsLRODatastore\x12\x15\n\x06lro_id\x18\x01 \x01(\tR\x05lroId\x12\x1f\n\x0b\x65ntity_type\x18\x02 \x01(\tR\nentityType\x12\x1d\n\ncreated_at\x18\x03 \x01(\x03R\tcreatedAt\x12\x1d\n\nupdated_at\x18\x04 \x01(\x03R\tupdatedAt\x12!\n\x0c\x63\x61llback_url\x18\x05 \x01(\tR\x0b\x63\x61llbackUrl\x12\x39\n\x07records\x18\x06 \x03(\x0b\x32\x1f.weewar.v1.IndexRecordDatastoreR\x07records:0\xd2\xa6\x1d,\n\x0fIndexRecordsLRO*\x19weewar.v1.IndexRecordsLROB\xa3\x01\n\rcom.weewar.v1B\x0cIndexerProtoP\x01Z?github.com/turnforge/weewar/gen/go/weewar/v1/datastore;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!weewar/v1/datastore/indexer.proto\x12\tweewar.v1\x1a\x18\x64\x61l/v1/annotations.proto\x1a\x1eweewar/v1/models/indexer.proto\"=\n\x13IndexStateDatastore:&\xd2\xa6\x1d\"\n\nIndexState*\x14weewar.v1.IndexState\"@\n\x14IndexRecordDatastore:(\xd2\xa6\x1d$\n\x0bIndexRecord*\x15weewar.v1.IndexRecord\"L\n\x18IndexRecordsLRODatastore:0\xd2\xa6\x1d,\n\x0fIndexRecordsLRO*\x19weewar.v1.IndexRecordsLROB\xa3\x01\n\rcom.weewar.v1B\x0cIndexerProtoP\x01Z?github.com/turnforge/weewar/gen/go/weewar/v1/datastore;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,16 +34,16 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'weewar.v1.datastore.indexer
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\rcom.weewar.v1B\014IndexerProtoP\001Z?github.com/turnforge/weewar/gen/go/weewar/v1/datastore;weewarv1\242\002\003WXX\252\002\tWeewar.V1\312\002\tWeewar\\V1\342\002\025Weewar\\V1\\GPBMetadata\352\002\nWeewar::V1'
-  _globals['_ENTITYINDEXSTATEDATASTORE']._loaded_options = None
-  _globals['_ENTITYINDEXSTATEDATASTORE']._serialized_options = b'\322\246\035.\n\020EntityIndexState*\032weewar.v1.EntityIndexState'
+  _globals['_INDEXSTATEDATASTORE']._loaded_options = None
+  _globals['_INDEXSTATEDATASTORE']._serialized_options = b'\322\246\035\"\n\nIndexState*\024weewar.v1.IndexState'
   _globals['_INDEXRECORDDATASTORE']._loaded_options = None
   _globals['_INDEXRECORDDATASTORE']._serialized_options = b'\322\246\035$\n\013IndexRecord*\025weewar.v1.IndexRecord'
   _globals['_INDEXRECORDSLRODATASTORE']._loaded_options = None
   _globals['_INDEXRECORDSLRODATASTORE']._serialized_options = b'\322\246\035,\n\017IndexRecordsLRO*\031weewar.v1.IndexRecordsLRO'
-  _globals['_ENTITYINDEXSTATEDATASTORE']._serialized_start=107
-  _globals['_ENTITYINDEXSTATEDATASTORE']._serialized_end=527
-  _globals['_INDEXRECORDDATASTORE']._serialized_start=530
-  _globals['_INDEXRECORDDATASTORE']._serialized_end=691
-  _globals['_INDEXRECORDSLRODATASTORE']._serialized_start=694
-  _globals['_INDEXRECORDSLRODATASTORE']._serialized_end=982
+  _globals['_INDEXSTATEDATASTORE']._serialized_start=106
+  _globals['_INDEXSTATEDATASTORE']._serialized_end=167
+  _globals['_INDEXRECORDDATASTORE']._serialized_start=169
+  _globals['_INDEXRECORDDATASTORE']._serialized_end=233
+  _globals['_INDEXRECORDSLRODATASTORE']._serialized_start=235
+  _globals['_INDEXRECORDSLRODATASTORE']._serialized_end=311
 # @@protoc_insertion_point(module_scope)

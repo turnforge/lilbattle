@@ -9,6 +9,115 @@ import (
 	"github.com/panyam/protoc-gen-dal/pkg/converters"
 )
 
+// IndexStateToIndexStateDatastore converts a IndexState to IndexStateDatastore.
+//
+// The optional decorator function allows custom field transformations after conversion.
+//
+// Parameters:
+//   - src: Source IndexState message to convert from
+//   - dest: Destination IndexStateDatastore entity (if nil, a new one is created)
+//   - decorator: Optional function for custom transformations
+//
+// Returns:
+//   - Converted IndexStateDatastore entity
+//   - Error if conversion fails
+func IndexStateToIndexStateDatastore(
+	src *models.IndexState,
+	dest *IndexStateDatastore,
+	decorator func(*models.IndexState, *IndexStateDatastore) error,
+) (out *IndexStateDatastore, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &IndexStateDatastore{}
+	}
+
+	// Initialize struct with inline values
+	*dest = IndexStateDatastore{
+		EntityType:     src.EntityType,
+		EntityId:       src.EntityId,
+		IndexType:      src.IndexType,
+		NeedsIndexing:  src.NeedsIndexing,
+		Status:         src.Status,
+		LastError:      src.LastError,
+		IdempotencyKey: src.IdempotencyKey,
+		RetryCount:     src.RetryCount,
+	}
+	out = dest
+
+	if src.CreatedAt != nil {
+		out.CreatedAt = converters.TimestampToTime(src.CreatedAt)
+	}
+
+	if src.UpdatedAt != nil {
+		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
+	}
+
+	if src.IndexedAt != nil {
+		out.IndexedAt = converters.TimestampToTime(src.IndexedAt)
+	}
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(src, dest); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
+// IndexStateFromIndexStateDatastore converts a IndexStateDatastore back to IndexState.
+//
+// The optional decorator function allows custom field transformations after conversion.
+//
+// Parameters:
+//   - dest: Destination IndexState message (if nil, a new one is created)
+//   - src: Source IndexStateDatastore entity to convert from
+//   - decorator: Optional function for custom transformations
+//
+// Returns:
+//   - Converted IndexState message
+//   - Error if conversion fails
+func IndexStateFromIndexStateDatastore(
+	dest *models.IndexState,
+	src *IndexStateDatastore,
+	decorator func(*models.IndexState, *IndexStateDatastore) error,
+) (out *models.IndexState, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &models.IndexState{}
+	}
+
+	// Initialize struct with inline values
+	*dest = models.IndexState{
+		EntityType:     src.EntityType,
+		EntityId:       src.EntityId,
+		IndexType:      src.IndexType,
+		CreatedAt:      converters.TimeToTimestamp(src.CreatedAt),
+		UpdatedAt:      converters.TimeToTimestamp(src.UpdatedAt),
+		IndexedAt:      converters.TimeToTimestamp(src.IndexedAt),
+		NeedsIndexing:  src.NeedsIndexing,
+		Status:         src.Status,
+		LastError:      src.LastError,
+		IdempotencyKey: src.IdempotencyKey,
+		RetryCount:     src.RetryCount,
+	}
+	out = dest
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(dest, src); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
 // IndexRecordToIndexRecordDatastore converts a IndexRecord to IndexRecordDatastore.
 //
 // The optional decorator function allows custom field transformations after conversion.
@@ -41,8 +150,9 @@ func IndexRecordToIndexRecordDatastore(
 	out = dest
 
 	if src.UpdatedAt != nil {
-		out.UpdatedAt = converters.TimestampToInt64(src.UpdatedAt)
+		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
 	}
+
 	if src.EntityData != nil {
 		out.EntityData, err = converters.AnyToBytes(src.EntityData)
 		if err != nil {
@@ -87,16 +197,14 @@ func IndexRecordFromIndexRecordDatastore(
 	// Initialize struct with inline values
 	*dest = models.IndexRecord{
 		EntityId:     src.EntityId,
-		UpdatedAt:    converters.Int64ToTimestamp(src.UpdatedAt),
+		UpdatedAt:    converters.TimeToTimestamp(src.UpdatedAt),
 		IndexerTypes: src.IndexerTypes,
 	}
 	out = dest
 
-	if src.EntityData != nil {
-		out.EntityData, err = converters.BytesToAny(src.EntityData)
-		if err != nil {
-			return nil, fmt.Errorf("converting EntityData: %w", err)
-		}
+	out.EntityData, err = converters.BytesToAny(src.EntityData)
+	if err != nil {
+		return nil, fmt.Errorf("converting EntityData: %w", err)
 	}
 
 	// Apply decorator if provided
@@ -142,10 +250,11 @@ func IndexRecordsLROToIndexRecordsLRODatastore(
 	out = dest
 
 	if src.CreatedAt != nil {
-		out.CreatedAt = converters.TimestampToInt64(src.CreatedAt)
+		out.CreatedAt = converters.TimestampToTime(src.CreatedAt)
 	}
+
 	if src.UpdatedAt != nil {
-		out.UpdatedAt = converters.TimestampToInt64(src.UpdatedAt)
+		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
 	}
 
 	if src.Records != nil {
@@ -196,8 +305,8 @@ func IndexRecordsLROFromIndexRecordsLRODatastore(
 	*dest = models.IndexRecordsLRO{
 		LroId:       src.LroId,
 		EntityType:  src.EntityType,
-		CreatedAt:   converters.Int64ToTimestamp(src.CreatedAt),
-		UpdatedAt:   converters.Int64ToTimestamp(src.UpdatedAt),
+		CreatedAt:   converters.TimeToTimestamp(src.CreatedAt),
+		UpdatedAt:   converters.TimeToTimestamp(src.UpdatedAt),
 		CallbackUrl: src.CallbackUrl,
 	}
 	out = dest

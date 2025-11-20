@@ -10,9 +10,9 @@ import { weewar_v1SchemaRegistry } from "./schemas";
 
 
 
-import {AllPaths as AllPathsInterface,AttackRecord as AttackRecordInterface,AttackUnitAction as AttackUnitActionInterface,BuildUnitAction as BuildUnitActionInterface,CaptureBuildingAction as CaptureBuildingActionInterface,CoinsChangedChange as CoinsChangedChangeInterface,CreateIndexRecordsLRORequest as CreateIndexRecordsLRORequestInterface,CreateIndexRecordsLROResponse as CreateIndexRecordsLROResponseInterface,DamageDistribution as DamageDistributionInterface,DamageRange as DamageRangeInterface,DeleteIndexStatesRequest as DeleteIndexStatesRequestInterface,DeleteIndexStatesResponse as DeleteIndexStatesResponseInterface,EndTurnAction as EndTurnActionInterface,EnsureIndexStateRequest as EnsureIndexStateRequestInterface,EnsureIndexStateResponse as EnsureIndexStateResponseInterface,Game as GameInterface,GameConfiguration as GameConfigurationInterface,GameMove as GameMoveInterface,GameMoveGroup as GameMoveGroupInterface,GameMoveHistory as GameMoveHistoryInterface,GameMoveResult as GameMoveResultInterface,GamePlayer as GamePlayerInterface,GameSettings as GameSettingsInterface,GameState as GameStateInterface,GameTeam as GameTeamInterface,GetIndexRecordsLRORequest as GetIndexRecordsLRORequestInterface,GetIndexRecordsLROResponse as GetIndexRecordsLROResponseInterface,GetIndexStatesRequest as GetIndexStatesRequestInterface,GetIndexStatesResponse as GetIndexStatesResponseInterface,IncomeConfig as IncomeConfigInterface,IndexRecord as IndexRecordInterface,IndexRecordsLRO as IndexRecordsLROInterface,IndexState as IndexStateInterface,IndexStateList as IndexStateListInterface,ListIndexStatesRequest as ListIndexStatesRequestInterface,ListIndexStatesResponse as ListIndexStatesResponseInterface,MoveUnitAction as MoveUnitActionInterface,Pagination as PaginationInterface,PaginationResponse as PaginationResponseInterface,Path as PathInterface,PathEdge as PathEdgeInterface,PlayerChangedChange as PlayerChangedChangeInterface,RulesEngine as RulesEngineInterface,TerrainDefinition as TerrainDefinitionInterface,TerrainUnitProperties as TerrainUnitPropertiesInterface,Tile as TileInterface,Unit as UnitInterface,UnitBuiltChange as UnitBuiltChangeInterface,UnitDamagedChange as UnitDamagedChangeInterface,UnitDefinition as UnitDefinitionInterface,UnitKilledChange as UnitKilledChangeInterface,UnitMovedChange as UnitMovedChangeInterface,UnitUnitProperties as UnitUnitPropertiesInterface,UpdateIndexRecordsLRORequest as UpdateIndexRecordsLRORequestInterface,UpdateIndexRecordsLROResponse as UpdateIndexRecordsLROResponseInterface,User as UserInterface,World as WorldInterface,WorldChange as WorldChangeInterface,WorldData as WorldDataInterface} from "./models/interfaces";
+import {AllPaths as AllPathsInterface,AttackRecord as AttackRecordInterface,AttackUnitAction as AttackUnitActionInterface,BuildUnitAction as BuildUnitActionInterface,CaptureBuildingAction as CaptureBuildingActionInterface,CoinsChangedChange as CoinsChangedChangeInterface,CreateIndexRecordsLRORequest as CreateIndexRecordsLRORequestInterface,CreateIndexRecordsLROResponse as CreateIndexRecordsLROResponseInterface,DamageDistribution as DamageDistributionInterface,DamageRange as DamageRangeInterface,DeleteIndexStatesRequest as DeleteIndexStatesRequestInterface,DeleteIndexStatesResponse as DeleteIndexStatesResponseInterface,EndTurnAction as EndTurnActionInterface,EnsureIndexStateRequest as EnsureIndexStateRequestInterface,EnsureIndexStateResponse as EnsureIndexStateResponseInterface,Game as GameInterface,GameConfiguration as GameConfigurationInterface,GameMove as GameMoveInterface,GameMoveGroup as GameMoveGroupInterface,GameMoveHistory as GameMoveHistoryInterface,GamePlayer as GamePlayerInterface,GameSettings as GameSettingsInterface,GameState as GameStateInterface,GameTeam as GameTeamInterface,GetIndexRecordsLRORequest as GetIndexRecordsLRORequestInterface,GetIndexRecordsLROResponse as GetIndexRecordsLROResponseInterface,GetIndexStatesRequest as GetIndexStatesRequestInterface,GetIndexStatesResponse as GetIndexStatesResponseInterface,IncomeConfig as IncomeConfigInterface,IndexInfo as IndexInfoInterface,IndexRecord as IndexRecordInterface,IndexRecordsLRO as IndexRecordsLROInterface,IndexState as IndexStateInterface,IndexStateList as IndexStateListInterface,ListIndexStatesRequest as ListIndexStatesRequestInterface,ListIndexStatesResponse as ListIndexStatesResponseInterface,MoveUnitAction as MoveUnitActionInterface,Pagination as PaginationInterface,PaginationResponse as PaginationResponseInterface,Path as PathInterface,PathEdge as PathEdgeInterface,PlayerChangedChange as PlayerChangedChangeInterface,RulesEngine as RulesEngineInterface,TerrainDefinition as TerrainDefinitionInterface,TerrainUnitProperties as TerrainUnitPropertiesInterface,Tile as TileInterface,Unit as UnitInterface,UnitBuiltChange as UnitBuiltChangeInterface,UnitDamagedChange as UnitDamagedChangeInterface,UnitDefinition as UnitDefinitionInterface,UnitKilledChange as UnitKilledChangeInterface,UnitMovedChange as UnitMovedChangeInterface,UnitUnitProperties as UnitUnitPropertiesInterface,UpdateIndexRecordsLRORequest as UpdateIndexRecordsLRORequestInterface,UpdateIndexRecordsLROResponse as UpdateIndexRecordsLROResponseInterface,User as UserInterface,World as WorldInterface,WorldChange as WorldChangeInterface,WorldData as WorldDataInterface} from "./models/interfaces";
 
-import {AllPaths as ConcreteAllPaths,AttackRecord as ConcreteAttackRecord,AttackUnitAction as ConcreteAttackUnitAction,BuildUnitAction as ConcreteBuildUnitAction,CaptureBuildingAction as ConcreteCaptureBuildingAction,CoinsChangedChange as ConcreteCoinsChangedChange,CreateIndexRecordsLRORequest as ConcreteCreateIndexRecordsLRORequest,CreateIndexRecordsLROResponse as ConcreteCreateIndexRecordsLROResponse,DamageDistribution as ConcreteDamageDistribution,DamageRange as ConcreteDamageRange,DeleteIndexStatesRequest as ConcreteDeleteIndexStatesRequest,DeleteIndexStatesResponse as ConcreteDeleteIndexStatesResponse,EndTurnAction as ConcreteEndTurnAction,EnsureIndexStateRequest as ConcreteEnsureIndexStateRequest,EnsureIndexStateResponse as ConcreteEnsureIndexStateResponse,Game as ConcreteGame,GameConfiguration as ConcreteGameConfiguration,GameMove as ConcreteGameMove,GameMoveGroup as ConcreteGameMoveGroup,GameMoveHistory as ConcreteGameMoveHistory,GameMoveResult as ConcreteGameMoveResult,GamePlayer as ConcreteGamePlayer,GameSettings as ConcreteGameSettings,GameState as ConcreteGameState,GameTeam as ConcreteGameTeam,GetIndexRecordsLRORequest as ConcreteGetIndexRecordsLRORequest,GetIndexRecordsLROResponse as ConcreteGetIndexRecordsLROResponse,GetIndexStatesRequest as ConcreteGetIndexStatesRequest,GetIndexStatesResponse as ConcreteGetIndexStatesResponse,IncomeConfig as ConcreteIncomeConfig,IndexRecord as ConcreteIndexRecord,IndexRecordsLRO as ConcreteIndexRecordsLRO,IndexState as ConcreteIndexState,IndexStateList as ConcreteIndexStateList,ListIndexStatesRequest as ConcreteListIndexStatesRequest,ListIndexStatesResponse as ConcreteListIndexStatesResponse,MoveUnitAction as ConcreteMoveUnitAction,Pagination as ConcretePagination,PaginationResponse as ConcretePaginationResponse,Path as ConcretePath,PathEdge as ConcretePathEdge,PlayerChangedChange as ConcretePlayerChangedChange,RulesEngine as ConcreteRulesEngine,TerrainDefinition as ConcreteTerrainDefinition,TerrainUnitProperties as ConcreteTerrainUnitProperties,Tile as ConcreteTile,Unit as ConcreteUnit,UnitBuiltChange as ConcreteUnitBuiltChange,UnitDamagedChange as ConcreteUnitDamagedChange,UnitDefinition as ConcreteUnitDefinition,UnitKilledChange as ConcreteUnitKilledChange,UnitMovedChange as ConcreteUnitMovedChange,UnitUnitProperties as ConcreteUnitUnitProperties,UpdateIndexRecordsLRORequest as ConcreteUpdateIndexRecordsLRORequest,UpdateIndexRecordsLROResponse as ConcreteUpdateIndexRecordsLROResponse,User as ConcreteUser,World as ConcreteWorld,WorldChange as ConcreteWorldChange,WorldData as ConcreteWorldData} from "./models/models";
+import {AllPaths as ConcreteAllPaths,AttackRecord as ConcreteAttackRecord,AttackUnitAction as ConcreteAttackUnitAction,BuildUnitAction as ConcreteBuildUnitAction,CaptureBuildingAction as ConcreteCaptureBuildingAction,CoinsChangedChange as ConcreteCoinsChangedChange,CreateIndexRecordsLRORequest as ConcreteCreateIndexRecordsLRORequest,CreateIndexRecordsLROResponse as ConcreteCreateIndexRecordsLROResponse,DamageDistribution as ConcreteDamageDistribution,DamageRange as ConcreteDamageRange,DeleteIndexStatesRequest as ConcreteDeleteIndexStatesRequest,DeleteIndexStatesResponse as ConcreteDeleteIndexStatesResponse,EndTurnAction as ConcreteEndTurnAction,EnsureIndexStateRequest as ConcreteEnsureIndexStateRequest,EnsureIndexStateResponse as ConcreteEnsureIndexStateResponse,Game as ConcreteGame,GameConfiguration as ConcreteGameConfiguration,GameMove as ConcreteGameMove,GameMoveGroup as ConcreteGameMoveGroup,GameMoveHistory as ConcreteGameMoveHistory,GamePlayer as ConcreteGamePlayer,GameSettings as ConcreteGameSettings,GameState as ConcreteGameState,GameTeam as ConcreteGameTeam,GetIndexRecordsLRORequest as ConcreteGetIndexRecordsLRORequest,GetIndexRecordsLROResponse as ConcreteGetIndexRecordsLROResponse,GetIndexStatesRequest as ConcreteGetIndexStatesRequest,GetIndexStatesResponse as ConcreteGetIndexStatesResponse,IncomeConfig as ConcreteIncomeConfig,IndexInfo as ConcreteIndexInfo,IndexRecord as ConcreteIndexRecord,IndexRecordsLRO as ConcreteIndexRecordsLRO,IndexState as ConcreteIndexState,IndexStateList as ConcreteIndexStateList,ListIndexStatesRequest as ConcreteListIndexStatesRequest,ListIndexStatesResponse as ConcreteListIndexStatesResponse,MoveUnitAction as ConcreteMoveUnitAction,Pagination as ConcretePagination,PaginationResponse as ConcretePaginationResponse,Path as ConcretePath,PathEdge as ConcretePathEdge,PlayerChangedChange as ConcretePlayerChangedChange,RulesEngine as ConcreteRulesEngine,TerrainDefinition as ConcreteTerrainDefinition,TerrainUnitProperties as ConcreteTerrainUnitProperties,Tile as ConcreteTile,Unit as ConcreteUnit,UnitBuiltChange as ConcreteUnitBuiltChange,UnitDamagedChange as ConcreteUnitDamagedChange,UnitDefinition as ConcreteUnitDefinition,UnitKilledChange as ConcreteUnitKilledChange,UnitMovedChange as ConcreteUnitMovedChange,UnitUnitProperties as ConcreteUnitUnitProperties,UpdateIndexRecordsLRORequest as ConcreteUpdateIndexRecordsLRORequest,UpdateIndexRecordsLROResponse as ConcreteUpdateIndexRecordsLROResponse,User as ConcreteUser,World as ConcreteWorld,WorldChange as ConcreteWorldChange,WorldData as ConcreteWorldData} from "./models/models";
 
 
 
@@ -30,6 +30,26 @@ export interface FactoryResult<T> {
  */
 export class Weewar_v1Factory {
 
+
+  /**
+   * Enhanced factory method for IndexInfo
+   * @param parent Parent object containing this field
+   * @param attributeName Field name in parent object
+   * @param attributeKey Array index, map key, or union tag (for containers)
+   * @param data Raw data to potentially populate from
+   * @returns Factory result with instance and population status
+   */
+  newIndexInfo = (
+    parent?: any,
+    attributeName?: string,
+    attributeKey?: string | number,
+    data?: any
+  ): FactoryResult<IndexInfoInterface> => {
+    const out = new ConcreteIndexInfo();
+    
+    // Factory does not populate by default - let deserializer handle it
+    return { instance: out, fullyLoaded: false };
+  }
 
   /**
    * Enhanced factory method for User
@@ -526,26 +546,6 @@ export class Weewar_v1Factory {
     data?: any
   ): FactoryResult<GameMoveInterface> => {
     const out = new ConcreteGameMove();
-    
-    // Factory does not populate by default - let deserializer handle it
-    return { instance: out, fullyLoaded: false };
-  }
-
-  /**
-   * Enhanced factory method for GameMoveResult
-   * @param parent Parent object containing this field
-   * @param attributeName Field name in parent object
-   * @param attributeKey Array index, map key, or union tag (for containers)
-   * @param data Raw data to potentially populate from
-   * @returns Factory result with instance and population status
-   */
-  newGameMoveResult = (
-    parent?: any,
-    attributeName?: string,
-    attributeKey?: string | number,
-    data?: any
-  ): FactoryResult<GameMoveResultInterface> => {
-    const out = new ConcreteGameMoveResult();
     
     // Factory does not populate by default - let deserializer handle it
     return { instance: out, fullyLoaded: false };

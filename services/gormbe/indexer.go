@@ -33,9 +33,8 @@ func NewIndexerService(db *gorm.DB) *IndexerService {
 	db.AutoMigrate(&GenId{}) // Move this to its own genid service?
 
 	service := &IndexerService{
-		BaseIndexerService: services.BaseIndexerService{},
-		storage:            db,
-		MaxPageSize:        1000,
+		storage:     db,
+		MaxPageSize: 1000,
 	}
 	service.Self = service
 

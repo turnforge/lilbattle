@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package weewar.v1;
+
+import "dal/v1/annotations.proto";
+import "weewar/v1/models/models.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/turnforge/weewar/gen/gorm;weewargorm";
+
+
+message IndexInfoGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.IndexInfo" };
+}
+
+message TileGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.Tile" };
+}
+
+message UnitGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.Unit" };
+}
+
+message AttackRecordGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.AttackRecord" };
+}
+
+message WorldGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.World", table: "worlds" };
+}
+
+message WorldDataGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.WorldData", table: "world_data" };
+}
+
+///////// Game related models
+
+
+// Describes a game and its metadata
+message GameGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.Game", table: "games" };
+}
+
+message GameConfigurationGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameConfiguration" };
+}
+
+message IncomeConfigGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.IncomeConfig" };
+}
+
+message GamePlayerGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GamePlayer" };
+}
+
+message GameTeamGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameTeam" };
+}
+
+message GameSettingsGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameSettings" };
+}
+
+// Holds the game's Active/Current state (eg world state)
+message GameStateGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameState" };
+}
+
+// Holds the game's move history (can be used as a replay log)
+message GameMoveHistoryGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameMoveHistory" };
+}
+
+// A move group - we can allow X moves in one "tick"
+message GameMoveGroupGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameMoveGroup" };
+}
+
+/**
+ * Represents a single move which can be one of many actions in the game
+ */
+message GameMoveGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameMove" };
+
+  // Store the oneof move_type as serialized Any
+  google.protobuf.Any move_type = 1;
+
+  // Skip the individual oneof fields from the source (field names, not oneof name!)
+  bool move_unit = 4 [(dal.v1.skip_field) = true];
+  bool attack_unit = 5 [(dal.v1.skip_field) = true];
+  bool end_turn = 6 [(dal.v1.skip_field) = true];
+  bool build_unit = 7 [(dal.v1.skip_field) = true];
+
+  google.protobuf.Any changes = 2;
+}

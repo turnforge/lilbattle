@@ -11,7 +11,7 @@ option go_package = "github.com/turnforge/weewar/gen/gorm;weewargorm";
 message IndexStateGORM {
   option (dal.v1.gorm) = {
     source: "weewar.v1.IndexState"
-    table: "entity_index_states"
+    table: "index_states"
   };
 }
 

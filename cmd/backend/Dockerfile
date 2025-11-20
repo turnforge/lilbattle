@@ -12,6 +12,8 @@ COPY gen ./gen
 COPY locallinks ./locallinks
 COPY services ./services
 COPY utils ./utils
+COPY .env ./.env
+COPY .env.dev ./.env.dev
 
 RUN mkdir -p web web/server web/gen web/static
 COPY web/server ./web/server ./web/static

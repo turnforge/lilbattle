@@ -6,6 +6,33 @@ import { FieldType, FieldSchema, MessageSchema, BaseSchemaRegistry } from "@prot
 
 
 /**
+ * Schema for IndexInfo message
+ */
+export const IndexInfoSchema: MessageSchema = {
+  name: "IndexInfo",
+  fields: [
+    {
+      name: "lastUpdatedAt",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "google.protobuf.Timestamp",
+    },
+    {
+      name: "lastIndexedAt",
+      type: FieldType.MESSAGE,
+      id: 2,
+      messageType: "google.protobuf.Timestamp",
+    },
+    {
+      name: "needsIndexing",
+      type: FieldType.BOOLEAN,
+      id: 3,
+    },
+  ],
+};
+
+
+/**
  * Schema for User message
  */
 export const UserSchema: MessageSchema = {
@@ -184,6 +211,18 @@ export const WorldSchema: MessageSchema = {
       type: FieldType.MESSAGE,
       id: 12,
       messageType: "weewar.v1.GameConfiguration",
+    },
+    {
+      name: "screenshotIndexInfo",
+      type: FieldType.MESSAGE,
+      id: 13,
+      messageType: "weewar.v1.IndexInfo",
+    },
+    {
+      name: "searchIndexInfo",
+      type: FieldType.MESSAGE,
+      id: 14,
+      messageType: "weewar.v1.IndexInfo",
     },
   ],
 };
@@ -772,6 +811,18 @@ export const GameSchema: MessageSchema = {
       id: 12,
       repeated: true,
     },
+    {
+      name: "screenshotIndexInfo",
+      type: FieldType.MESSAGE,
+      id: 13,
+      messageType: "weewar.v1.IndexInfo",
+    },
+    {
+      name: "searchIndexInfo",
+      type: FieldType.MESSAGE,
+      id: 14,
+      messageType: "weewar.v1.IndexInfo",
+    },
   ],
 };
 
@@ -1082,13 +1133,6 @@ export const GameMoveGroupSchema: MessageSchema = {
       messageType: "weewar.v1.GameMove",
       repeated: true,
     },
-    {
-      name: "moveResults",
-      type: FieldType.MESSAGE,
-      id: 5,
-      messageType: "weewar.v1.GameMoveResult",
-      repeated: true,
-    },
   ],
 };
 
@@ -1109,11 +1153,6 @@ export const GameMoveSchema: MessageSchema = {
       type: FieldType.MESSAGE,
       id: 2,
       messageType: "google.protobuf.Timestamp",
-    },
-    {
-      name: "sequenceNum",
-      type: FieldType.NUMBER,
-      id: 3,
     },
     {
       name: "moveUnit",
@@ -1143,35 +1182,25 @@ export const GameMoveSchema: MessageSchema = {
       messageType: "weewar.v1.BuildUnitAction",
       oneofGroup: "move_type",
     },
-  ],
-  oneofGroups: ["move_type"],
-};
-
-
-/**
- * Schema for GameMoveResult message
- */
-export const GameMoveResultSchema: MessageSchema = {
-  name: "GameMoveResult",
-  fields: [
-    {
-      name: "isPermanent",
-      type: FieldType.BOOLEAN,
-      id: 1,
-    },
     {
       name: "sequenceNum",
       type: FieldType.NUMBER,
-      id: 2,
+      id: 8,
+    },
+    {
+      name: "isPermanent",
+      type: FieldType.BOOLEAN,
+      id: 9,
     },
     {
       name: "changes",
       type: FieldType.MESSAGE,
-      id: 3,
+      id: 10,
       messageType: "weewar.v1.WorldChange",
       repeated: true,
     },
   ],
+  oneofGroups: ["move_type"],
 };
 
 
@@ -1976,17 +2005,10 @@ export const ProcessMovesResponseSchema: MessageSchema = {
   name: "ProcessMovesResponse",
   fields: [
     {
-      name: "moveResults",
+      name: "moves",
       type: FieldType.MESSAGE,
-      id: 1,
-      messageType: "weewar.v1.GameMoveResult",
-      repeated: true,
-    },
-    {
-      name: "changes",
-      type: FieldType.MESSAGE,
-      id: 2,
-      messageType: "weewar.v1.WorldChange",
+      id: 3,
+      messageType: "weewar.v1.GameMove",
       repeated: true,
     },
   ],
@@ -4580,6 +4602,7 @@ export const CreateWorldResponseSchema: MessageSchema = {
  * Package-scoped schema registry for weewar.v1
  */
 export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
+  "weewar.v1.IndexInfo": IndexInfoSchema,
   "weewar.v1.User": UserSchema,
   "weewar.v1.Pagination": PaginationSchema,
   "weewar.v1.PaginationResponse": PaginationResponseSchema,
@@ -4605,7 +4628,6 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.GameMoveHistory": GameMoveHistorySchema,
   "weewar.v1.GameMoveGroup": GameMoveGroupSchema,
   "weewar.v1.GameMove": GameMoveSchema,
-  "weewar.v1.GameMoveResult": GameMoveResultSchema,
   "weewar.v1.MoveUnitAction": MoveUnitActionSchema,
   "weewar.v1.AttackUnitAction": AttackUnitActionSchema,
   "weewar.v1.BuildUnitAction": BuildUnitActionSchema,

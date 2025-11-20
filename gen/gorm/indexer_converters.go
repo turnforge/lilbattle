@@ -36,9 +36,11 @@ func IndexStateToIndexStateGORM(
 	if src.CreatedAt != nil {
 		out.CreatedAt = converters.TimestampToTime(src.CreatedAt)
 	}
+
 	if src.UpdatedAt != nil {
 		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
 	}
+
 	if src.IndexedAt != nil {
 		out.IndexedAt = converters.TimestampToTime(src.IndexedAt)
 	}

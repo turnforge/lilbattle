@@ -155,7 +155,7 @@ logs:
 # Bring everything down
 down:
 	docker compose --env-file .env.dev -f docker-compose.yml down --remove-orphans
-	# docker compose -f db-docker-compose.yml down --remove-orphans
+	docker compose --env-file .env.dev -f db-docker-compose.yml down --remove-orphans
 
 # Bring up DB - only brings down DB containers from before - only when we sepearte DB out of docker compose
 updb: dbdirs ensurenetworks
@@ -163,7 +163,7 @@ updb: dbdirs ensurenetworks
 	BUILDKIT_PROGRESS=plain docker compose --env-file .env.dev -f db-docker-compose.yml up -d
 
 dblogs:
-	docker compose --env-file .env.dev -f db-docker-compose.yml logs -f --tail 100
+	docker compose --env-file .env.dev -f db-docker-compose.yml logs -f
 
 ensurenetworks:
 	-docker network create weewarnetwork

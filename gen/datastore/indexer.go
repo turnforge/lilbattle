@@ -2,8 +2,43 @@
 package datastore
 
 import (
+	"time"
+
 	"cloud.google.com/go/datastore"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
+
+// IndexStateDatastore is the Datastore entity for the source message.
+type IndexStateDatastore struct {
+	Key *datastore.Key `datastore:"-"`
+
+	EntityType string `datastore:"entity_type"`
+
+	EntityId string `datastore:"entity_id"`
+
+	IndexType string `datastore:"index_type"`
+
+	CreatedAt time.Time `datastore:"created_at"`
+
+	UpdatedAt time.Time `datastore:"updated_at"`
+
+	IndexedAt time.Time `datastore:"indexed_at"`
+
+	NeedsIndexing bool `datastore:"needs_indexing"`
+
+	Status models.IndexStatus `datastore:"status"`
+
+	LastError string `datastore:"last_error"`
+
+	IdempotencyKey string `datastore:"idempotency_key"`
+
+	RetryCount int32 `datastore:"retry_count"`
+}
+
+// Kind returns the Datastore kind name for IndexStateDatastore.
+func (*IndexStateDatastore) Kind() string {
+	return "IndexState"
+}
 
 // IndexRecordDatastore is the Datastore entity for the source message.
 type IndexRecordDatastore struct {
@@ -11,7 +46,7 @@ type IndexRecordDatastore struct {
 
 	EntityId string `datastore:"entity_id"`
 
-	UpdatedAt int64 `datastore:"updated_at"`
+	UpdatedAt time.Time `datastore:"updated_at"`
 
 	EntityData []byte `datastore:"entity_data"`
 
@@ -31,9 +66,9 @@ type IndexRecordsLRODatastore struct {
 
 	EntityType string `datastore:"entity_type"`
 
-	CreatedAt int64 `datastore:"created_at"`
+	CreatedAt time.Time `datastore:"created_at"`
 
-	UpdatedAt int64 `datastore:"updated_at"`
+	UpdatedAt time.Time `datastore:"updated_at"`
 
 	CallbackUrl string `datastore:"callback_url"`
 

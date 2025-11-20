@@ -24,5 +24,5 @@ type IndexStateGORM struct {
 
 // TableName returns the table name for IndexStateGORM
 func (*IndexStateGORM) TableName() string {
-	return "entity_index_states"
+	return "index_states"
 }

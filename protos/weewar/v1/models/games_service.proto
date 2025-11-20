@@ -182,22 +182,10 @@ message ProcessMovesRequest {
  * Response after adding moves to game.
  */
 message ProcessMovesResponse {
-  // Returns the response of the moves along with all the changes incurred as a result
   /**
-   * Each game move result stores the result of the individual Move in the request.
-   * ie move_results[i] = ResultOfProcessing(ProcessMoveRequest.moves[i])
+   * Returns the moves that were passed in along wth changes and other data filled in.
    */
-  repeated GameMoveResult move_results = 1;
-
-  /**
-   * List of changes that resulted from the moves on the game state as a whole
-   * For example 10 moves could have resulted in 2 unit creations and 4 city changes
-   *
-   * It is not clear if this is needed.  For example concatenating all changes from all the move_results *may* suffice
-   * as long as the MoveProcessor is making sure that updates are atomic and snapshots the world state before 
-   * starting a snapshot (and not just a move)
-   */
-  repeated WorldChange changes = 2;
+  repeated GameMove moves = 3;
 }
 
 /**

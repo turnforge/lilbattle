@@ -25,6 +25,198 @@ export const IndexRecordsLROGORMSchema: MessageSchema = {
 };
 
 
+/**
+ * Schema for IndexInfoGORM message
+ */
+export const IndexInfoGORMSchema: MessageSchema = {
+  name: "IndexInfoGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for TileGORM message
+ */
+export const TileGORMSchema: MessageSchema = {
+  name: "TileGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for UnitGORM message
+ */
+export const UnitGORMSchema: MessageSchema = {
+  name: "UnitGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for AttackRecordGORM message
+ */
+export const AttackRecordGORMSchema: MessageSchema = {
+  name: "AttackRecordGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for WorldGORM message
+ */
+export const WorldGORMSchema: MessageSchema = {
+  name: "WorldGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for WorldDataGORM message
+ */
+export const WorldDataGORMSchema: MessageSchema = {
+  name: "WorldDataGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameGORM message
+ */
+export const GameGORMSchema: MessageSchema = {
+  name: "GameGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameConfigurationGORM message
+ */
+export const GameConfigurationGORMSchema: MessageSchema = {
+  name: "GameConfigurationGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for IncomeConfigGORM message
+ */
+export const IncomeConfigGORMSchema: MessageSchema = {
+  name: "IncomeConfigGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GamePlayerGORM message
+ */
+export const GamePlayerGORMSchema: MessageSchema = {
+  name: "GamePlayerGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameTeamGORM message
+ */
+export const GameTeamGORMSchema: MessageSchema = {
+  name: "GameTeamGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameSettingsGORM message
+ */
+export const GameSettingsGORMSchema: MessageSchema = {
+  name: "GameSettingsGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameStateGORM message
+ */
+export const GameStateGORMSchema: MessageSchema = {
+  name: "GameStateGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameMoveHistoryGORM message
+ */
+export const GameMoveHistoryGORMSchema: MessageSchema = {
+  name: "GameMoveHistoryGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameMoveGroupGORM message
+ */
+export const GameMoveGroupGORMSchema: MessageSchema = {
+  name: "GameMoveGroupGORM",
+  fields: [
+  ],
+};
+
+
+/**
+ * Schema for GameMoveGORM message
+ */
+export const GameMoveGORMSchema: MessageSchema = {
+  name: "GameMoveGORM",
+  fields: [
+    {
+      name: "moveType",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "google.protobuf.Any",
+    },
+    {
+      name: "moveUnit",
+      type: FieldType.BOOLEAN,
+      id: 4,
+    },
+    {
+      name: "attackUnit",
+      type: FieldType.BOOLEAN,
+      id: 5,
+    },
+    {
+      name: "endTurn",
+      type: FieldType.BOOLEAN,
+      id: 6,
+    },
+    {
+      name: "buildUnit",
+      type: FieldType.BOOLEAN,
+      id: 7,
+    },
+    {
+      name: "changes",
+      type: FieldType.MESSAGE,
+      id: 2,
+      messageType: "google.protobuf.Any",
+    },
+  ],
+};
+
+
 
 /**
  * Package-scoped schema registry for weewar.v1
@@ -32,6 +224,22 @@ export const IndexRecordsLROGORMSchema: MessageSchema = {
 export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.IndexStateGORM": IndexStateGORMSchema,
   "weewar.v1.IndexRecordsLROGORM": IndexRecordsLROGORMSchema,
+  "weewar.v1.IndexInfoGORM": IndexInfoGORMSchema,
+  "weewar.v1.TileGORM": TileGORMSchema,
+  "weewar.v1.UnitGORM": UnitGORMSchema,
+  "weewar.v1.AttackRecordGORM": AttackRecordGORMSchema,
+  "weewar.v1.WorldGORM": WorldGORMSchema,
+  "weewar.v1.WorldDataGORM": WorldDataGORMSchema,
+  "weewar.v1.GameGORM": GameGORMSchema,
+  "weewar.v1.GameConfigurationGORM": GameConfigurationGORMSchema,
+  "weewar.v1.IncomeConfigGORM": IncomeConfigGORMSchema,
+  "weewar.v1.GamePlayerGORM": GamePlayerGORMSchema,
+  "weewar.v1.GameTeamGORM": GameTeamGORMSchema,
+  "weewar.v1.GameSettingsGORM": GameSettingsGORMSchema,
+  "weewar.v1.GameStateGORM": GameStateGORMSchema,
+  "weewar.v1.GameMoveHistoryGORM": GameMoveHistoryGORMSchema,
+  "weewar.v1.GameMoveGroupGORM": GameMoveGroupGORMSchema,
+  "weewar.v1.GameMoveGORM": GameMoveGORMSchema,
 };
 
 /**

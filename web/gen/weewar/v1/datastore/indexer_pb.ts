@@ -12,85 +12,21 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file weewar/v1/datastore/indexer.proto.
  */
 export const file_weewar_v1_datastore_indexer: GenFile = /*@__PURE__*/
-  fileDesc("CiF3ZWV3YXIvdjEvZGF0YXN0b3JlL2luZGV4ZXIucHJvdG8SCXdlZXdhci52MSKoAgoZRW50aXR5SW5kZXhTdGF0ZURhdGFzdG9yZRITCgtlbnRpdHlfdHlwZRgBIAEoCRIRCgllbnRpdHlfaWQYAiABKAkSEgoKaW5kZXhfdHlwZRgDIAEoCRIWCg5sYXN0X3F1ZXVlZF9hdBgEIAEoAxIXCg9sYXN0X2luZGV4ZWRfYXQYBSABKAMSDgoGc3RhdHVzGAYgASgJEhIKCmxhc3RfZXJyb3IYByABKAkSGQoRbGFzdF9jb250ZW50X2hhc2gYCCABKAkSEwoLcmV0cnlfY291bnQYCSABKAUSFgoOY3VycmVudF9scm9faWQYCiABKAk6MtKmHS4KEEVudGl0eUluZGV4U3RhdGUqGndlZXdhci52MS5FbnRpdHlJbmRleFN0YXRlIn4KFEluZGV4UmVjb3JkRGF0YXN0b3JlEhEKCWVudGl0eV9pZBgCIAEoCRISCgp1cGRhdGVkX2F0GAMgASgDEhUKDWluZGV4ZXJfdHlwZXMYBSADKAk6KNKmHSQKC0luZGV4UmVjb3JkKhV3ZWV3YXIudjEuSW5kZXhSZWNvcmQi4QEKGEluZGV4UmVjb3Jkc0xST0RhdGFzdG9yZRIOCgZscm9faWQYASABKAkSEwoLZW50aXR5X3R5cGUYAiABKAkSEgoKY3JlYXRlZF9hdBgDIAEoAxISCgp1cGRhdGVkX2F0GAQgASgDEhQKDGNhbGxiYWNrX3VybBgFIAEoCRIwCgdyZWNvcmRzGAYgAygLMh8ud2Vld2FyLnYxLkluZGV4UmVjb3JkRGF0YXN0b3JlOjDSph0sCg9JbmRleFJlY29yZHNMUk8qGXdlZXdhci52MS5JbmRleFJlY29yZHNMUk9CowEKDWNvbS53ZWV3YXIudjFCDEluZGV4ZXJQcm90b1ABWj9naXRodWIuY29tL3R1cm5mb3JnZS93ZWV3YXIvZ2VuL2dvL3dlZXdhci92MS9kYXRhc3RvcmU7d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_dal_v1_annotations, file_weewar_v1_models_indexer]);
+  fileDesc("CiF3ZWV3YXIvdjEvZGF0YXN0b3JlL2luZGV4ZXIucHJvdG8SCXdlZXdhci52MSI9ChNJbmRleFN0YXRlRGF0YXN0b3JlOibSph0iCgpJbmRleFN0YXRlKhR3ZWV3YXIudjEuSW5kZXhTdGF0ZSJAChRJbmRleFJlY29yZERhdGFzdG9yZToo0qYdJAoLSW5kZXhSZWNvcmQqFXdlZXdhci52MS5JbmRleFJlY29yZCJMChhJbmRleFJlY29yZHNMUk9EYXRhc3RvcmU6MNKmHSwKD0luZGV4UmVjb3Jkc0xSTyoZd2Vld2FyLnYxLkluZGV4UmVjb3Jkc0xST0KjAQoNY29tLndlZXdhci52MUIMSW5kZXhlclByb3RvUAFaP2dpdGh1Yi5jb20vdHVybmZvcmdlL3dlZXdhci9nZW4vZ28vd2Vld2FyL3YxL2RhdGFzdG9yZTt3ZWV3YXJ2MaICA1dYWKoCCVdlZXdhci5WMcoCCVdlZXdhclxWMeICFVdlZXdhclxWMVxHUEJNZXRhZGF0YeoCCldlZXdhcjo6VjFiBnByb3RvMw", [file_dal_v1_annotations, file_weewar_v1_models_indexer]);
 
 /**
- * EntityIndexStateDatastore is the Datastore representation for EntityIndexState
+ * IndexStateDatastore is the Datastore representation for IndexState
  *
- * @generated from message weewar.v1.EntityIndexStateDatastore
+ * @generated from message weewar.v1.IndexStateDatastore
  */
-export type EntityIndexStateDatastore = Message<"weewar.v1.EntityIndexStateDatastore"> & {
-  /**
-   * Composite key in Datastore: entity_type + entity_id + index_type
-   * Datastore uses string IDs, so we'll concatenate them
-   *
-   * @generated from field: string entity_type = 1;
-   */
-  entityType: string;
-
-  /**
-   * @generated from field: string entity_id = 2;
-   */
-  entityId: string;
-
-  /**
-   * @generated from field: string index_type = 3;
-   */
-  indexType: string;
-
-  /**
-   * Timestamps stored as int64 (Unix time)
-   *
-   * @generated from field: int64 last_queued_at = 4;
-   */
-  lastQueuedAt: bigint;
-
-  /**
-   * @generated from field: int64 last_indexed_at = 5;
-   */
-  lastIndexedAt: bigint;
-
-  /**
-   * Status field
-   *
-   * @generated from field: string status = 6;
-   */
-  status: string;
-
-  /**
-   * Error tracking
-   *
-   * @generated from field: string last_error = 7;
-   */
-  lastError: string;
-
-  /**
-   * Content hash for change detection
-   *
-   * @generated from field: string last_content_hash = 8;
-   */
-  lastContentHash: string;
-
-  /**
-   * Retry tracking
-   *
-   * @generated from field: int32 retry_count = 9;
-   */
-  retryCount: number;
-
-  /**
-   * LRO tracking
-   *
-   * @generated from field: string current_lro_id = 10;
-   */
-  currentLroId: string;
+export type IndexStateDatastore = Message<"weewar.v1.IndexStateDatastore"> & {
 };
 
 /**
- * Describes the message weewar.v1.EntityIndexStateDatastore.
- * Use `create(EntityIndexStateDatastoreSchema)` to create a new message.
+ * Describes the message weewar.v1.IndexStateDatastore.
+ * Use `create(IndexStateDatastoreSchema)` to create a new message.
  */
-export const EntityIndexStateDatastoreSchema: GenMessage<EntityIndexStateDatastore> = /*@__PURE__*/
+export const IndexStateDatastoreSchema: GenMessage<IndexStateDatastore> = /*@__PURE__*/
   messageDesc(file_weewar_v1_datastore_indexer, 0);
 
 /**
@@ -99,24 +35,6 @@ export const EntityIndexStateDatastoreSchema: GenMessage<EntityIndexStateDatasto
  * @generated from message weewar.v1.IndexRecordDatastore
  */
 export type IndexRecordDatastore = Message<"weewar.v1.IndexRecordDatastore"> & {
-  /**
-   * @generated from field: string entity_id = 2;
-   */
-  entityId: string;
-
-  /**
-   * @generated from field: int64 updated_at = 3;
-   */
-  updatedAt: bigint;
-
-  /**
-   * Note: google.protobuf.Any requires special handling - typically stored as bytes
-   * We'll skip entity_data for now as it needs custom serialization
-   * bytes entity_data = 4;
-   *
-   * @generated from field: repeated string indexer_types = 5;
-   */
-  indexerTypes: string[];
 };
 
 /**
@@ -132,45 +50,6 @@ export const IndexRecordDatastoreSchema: GenMessage<IndexRecordDatastore> = /*@_
  * @generated from message weewar.v1.IndexRecordsLRODatastore
  */
 export type IndexRecordsLRODatastore = Message<"weewar.v1.IndexRecordsLRODatastore"> & {
-  /**
-   * Primary key
-   *
-   * @generated from field: string lro_id = 1;
-   */
-  lroId: string;
-
-  /**
-   * Entity type for all records in this LRO
-   *
-   * @generated from field: string entity_type = 2;
-   */
-  entityType: string;
-
-  /**
-   * Timestamps
-   *
-   * @generated from field: int64 created_at = 3;
-   */
-  createdAt: bigint;
-
-  /**
-   * @generated from field: int64 updated_at = 4;
-   */
-  updatedAt: bigint;
-
-  /**
-   * Callback URL
-   *
-   * @generated from field: string callback_url = 5;
-   */
-  callbackUrl: string;
-
-  /**
-   * Records - Datastore supports nested repeated message types natively
-   *
-   * @generated from field: repeated weewar.v1.IndexRecordDatastore records = 6;
-   */
-  records: IndexRecordDatastore[];
 };
 
 /**

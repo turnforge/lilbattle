@@ -7,37 +7,12 @@ import "weewar/v1/models/indexer.proto";
 
 option go_package = "github.com/turnforge/weewar/gen/datastore;weewardatastore";
 
-// EntityIndexStateDatastore is the Datastore representation for EntityIndexState
-message EntityIndexStateDatastore {
+// IndexStateDatastore is the Datastore representation for IndexState
+message IndexStateDatastore {
   option (dal.v1.datastore_options) = {
-    source: "weewar.v1.EntityIndexState"
-    kind: "EntityIndexState"
+    source: "weewar.v1.IndexState"
+    kind: "IndexState"
   };
-
-  // Composite key in Datastore: entity_type + entity_id + index_type
-  // Datastore uses string IDs, so we'll concatenate them
-  string entity_type = 1;
-  string entity_id = 2;
-  string index_type = 3;
-
-  // Timestamps stored as int64 (Unix time)
-  int64 last_queued_at = 4;
-  int64 last_indexed_at = 5;
-
-  // Status field
-  string status = 6;
-
-  // Error tracking
-  string last_error = 7;
-
-  // Content hash for change detection
-  string last_content_hash = 8;
-
-  // Retry tracking
-  int32 retry_count = 9;
-
-  // LRO tracking
-  string current_lro_id = 10;
 }
 
 // IndexRecordDatastore is the Datastore representation for IndexRecord
@@ -46,13 +21,6 @@ message IndexRecordDatastore {
     source: "weewar.v1.IndexRecord"
     kind: "IndexRecord"
   };
-
-  string entity_id = 2;
-  int64 updated_at = 3;
-  // Note: google.protobuf.Any requires special handling - typically stored as bytes
-  // We'll skip entity_data for now as it needs custom serialization
-  // bytes entity_data = 4;
-  repeated string indexer_types = 5;
 }
 
 // IndexRecordsLRODatastore is the Datastore representation for IndexRecordsLRO
@@ -61,20 +29,4 @@ message IndexRecordsLRODatastore {
     source: "weewar.v1.IndexRecordsLRO"
     kind: "IndexRecordsLRO"
   };
-
-  // Primary key
-  string lro_id = 1;
-
-  // Entity type for all records in this LRO
-  string entity_type = 2;
-
-  // Timestamps
-  int64 created_at = 3;
-  int64 updated_at = 4;
-
-  // Callback URL
-  string callback_url = 5;
-
-  // Records - Datastore supports nested repeated message types natively
-  repeated IndexRecordDatastore records = 6;
 }

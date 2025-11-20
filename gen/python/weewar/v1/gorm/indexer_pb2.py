@@ -26,7 +26,7 @@ from dal.v1 import annotations_pb2 as dal_dot_v1_dot_annotations__pb2
 from weewar.v1.models import indexer_pb2 as weewar_dot_v1_dot_models_dot_indexer__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1cweewar/v1/gorm/indexer.proto\x12\tweewar.v1\x1a\x18\x64\x61l/v1/annotations.proto\x1a\x1eweewar/v1/models/indexer.proto\"A\n\x0eIndexStateGORM:/\xca\xa6\x1d+\n\x14weewar.v1.IndexState\x12\x13\x65ntity_index_states\"\x15\n\x13IndexRecordsLROGORMB\x9e\x01\n\rcom.weewar.v1B\x0cIndexerProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1cweewar/v1/gorm/indexer.proto\x12\tweewar.v1\x1a\x18\x64\x61l/v1/annotations.proto\x1a\x1eweewar/v1/models/indexer.proto\":\n\x0eIndexStateGORM:(\xca\xa6\x1d$\n\x14weewar.v1.IndexState\x12\x0cindex_states\"\x15\n\x13IndexRecordsLROGORMB\x9e\x01\n\rcom.weewar.v1B\x0cIndexerProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,9 +35,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\rcom.weewar.v1B\014IndexerProtoP\001Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\242\002\003WXX\252\002\tWeewar.V1\312\002\tWeewar\\V1\342\002\025Weewar\\V1\\GPBMetadata\352\002\nWeewar::V1'
   _globals['_INDEXSTATEGORM']._loaded_options = None
-  _globals['_INDEXSTATEGORM']._serialized_options = b'\312\246\035+\n\024weewar.v1.IndexState\022\023entity_index_states'
+  _globals['_INDEXSTATEGORM']._serialized_options = b'\312\246\035$\n\024weewar.v1.IndexState\022\014index_states'
   _globals['_INDEXSTATEGORM']._serialized_start=101
-  _globals['_INDEXSTATEGORM']._serialized_end=166
-  _globals['_INDEXRECORDSLROGORM']._serialized_start=168
-  _globals['_INDEXRECORDSLROGORM']._serialized_end=189
+  _globals['_INDEXSTATEGORM']._serialized_end=159
+  _globals['_INDEXRECORDSLROGORM']._serialized_start=161
+  _globals['_INDEXRECORDSLROGORM']._serialized_end=182
 # @@protoc_insertion_point(module_scope)
