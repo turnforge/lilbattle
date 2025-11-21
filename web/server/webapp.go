@@ -212,6 +212,9 @@ func NewApp(ClientMgr *server.ClientMgr) (app *App, err error) {
 	}))
 
 	api := &ApiHandler{AuthMiddleware: &oneauth.Middleware, ClientMgr: ClientMgr}
+	if err := api.Init(); err != nil {
+		return nil, err
+	}
 	app = &App{
 		Session:     session,
 		Auth:        oneauth,

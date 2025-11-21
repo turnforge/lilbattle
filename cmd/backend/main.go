@@ -21,9 +21,11 @@ import (
 const DEFAULT_DB_ENDPOINT = "postgres://postgres:password@localhost:5432/weewardb"
 
 var (
-	grpcAddress    = flag.String("grpcAddress", DefaultServiceAddress(), "Address where the gRPC endpoint is running")
-	gatewayAddress = flag.String("gatewayAddress", DefaultGatewayAddress(), "Address where the http grpc gateway endpoint is running")
-	db_endpoint    = flag.String("db_endpoint", "", fmt.Sprintf("Endpoint of DB where all data is persisted.  Default value: WEEWAR_DB_ENDPOINT environment variable or %s", DEFAULT_DB_ENDPOINT))
+	grpcAddress       = flag.String("grpcAddress", DefaultServiceAddress(), "Address where the gRPC endpoint is running")
+	gatewayAddress    = flag.String("gatewayAddress", DefaultGatewayAddress(), "Address where the http grpc gateway endpoint is running")
+	db_endpoint       = flag.String("db_endpoint", "", fmt.Sprintf("Endpoint of DB where all data is persisted.  Default value: WEEWAR_DB_ENDPOINT environment variable or %s", DEFAULT_DB_ENDPOINT))
+	worlds_service_be = flag.String("worlds_service_be", "pg", "Storage for worlds service - 'local', 'pg', 'datastore'.  ")
+	games_service_be  = flag.String("games_service_be", "local", "Storage for games service - 'local', 'pg', 'datastore'.  ")
 )
 
 type Backend struct {
@@ -90,12 +92,28 @@ func (b *Backend) SetupApp() *utils.App {
 	log.Println("gateway, Address: ", gatewayAddress)
 	grpcServer := &server.Server{Address: b.GrpcAddress}
 	grpcServer.RegisterCallback = func(server *grpc.Server) error {
-		gamesService := fsbe.NewFSGamesService("")
-		v1s.RegisterGamesServiceServer(server, gamesService)
+		var gamesService v1s.GamesServiceServer
+		var worldsService v1s.WorldsServiceServer
 
 		db := gormbe.OpenWeewarDB(*db_endpoint, DEFAULT_DB_ENDPOINT)
 		// v1s.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
-		v1s.RegisterWorldsServiceServer(server, gormbe.NewWorldsService(db))
+		switch *worlds_service_be {
+		case "pg":
+			worldsService = gormbe.NewWorldsService(db)
+		case "local":
+			worldsService = fsbe.NewFSWorldsService("")
+		default:
+			panic("Invalid world service be: " + *worlds_service_be)
+		}
+
+		switch *games_service_be {
+		case "local":
+			gamesService = fsbe.NewFSGamesService("")
+		default:
+			panic("Invalid game service be: " + *games_service_be)
+		}
+		v1s.RegisterWorldsServiceServer(server, worldsService)
+		v1s.RegisterGamesServiceServer(server, gamesService)
 
 		// TODO - use diferent kinds of db based on setup
 		v1s.RegisterIndexerServiceServer(server, gormbe.NewIndexerService(db))

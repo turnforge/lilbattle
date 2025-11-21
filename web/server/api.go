@@ -98,10 +98,10 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 
 			// Prepare response body
 			body := struct {
-				Error   string        `json:"error"`
-				Message string        `json:"message"`
-				Code    int           `json:"code"` // gRPC code
-				Details []interface{} `json:"details,omitempty"`
+				Error   string `json:"error"`
+				Message string `json:"message"`
+				Code    int    `json:"code"` // gRPC code
+				Details []any  `json:"details,omitempty"`
 			}{
 				Error:   s.Code().String(),
 				Message: s.Message(),
