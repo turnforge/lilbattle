@@ -1,4 +1,6 @@
 __debug*
+buf.lock
+.data
 locallinks
 data
 bin
