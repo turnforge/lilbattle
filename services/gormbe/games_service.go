@@ -144,14 +144,10 @@ func (s *GamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest
 	if err != nil {
 		return
 	}
+	existingId := gameGorm.Id
+	gameGorm.Id = NewID(s.storage, "games", gameGorm.Id)
 	if gameGorm.Id == "" {
-		gameGorm.Id = NewID(s.storage, "games")
-	} else {
-		// Check if game with this ID already exists
-		existing, _ := s.GameDAL.Get(ctx, s.storage, gameGorm.Id)
-		if existing != nil {
-			return nil, fmt.Errorf("game with ID %q already exists", gameGorm.Id)
-		}
+		return nil, fmt.Errorf("game with ID %q already exists", existingId)
 	}
 	if err = s.GameDAL.Save(ctx, s.storage, gameGorm); err != nil {
 		return

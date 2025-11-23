@@ -61,14 +61,10 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	if err != nil {
 		return
 	}
+	existingId := worldGorm.Id
+	worldGorm.Id = NewID(s.storage, "worlds", worldGorm.Id)
 	if worldGorm.Id == "" {
-		worldGorm.Id = NewID(s.storage, "worlds")
-	} else {
-		// Check if world with this ID already exists
-		existing, _ := s.WorldDAL.Get(ctx, s.storage, worldGorm.Id)
-		if existing != nil {
-			return nil, fmt.Errorf("world with ID %q already exists", worldGorm.Id)
-		}
+		return nil, fmt.Errorf("world with ID %q already exists", existingId)
 	}
 	if err = s.WorldDAL.Save(ctx, s.storage, worldGorm); err != nil {
 		return

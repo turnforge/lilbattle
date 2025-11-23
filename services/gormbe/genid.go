@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -25,24 +26,45 @@ func randid() string {
 	return strconv.FormatInt(randval, 36)
 }
 
+func GetID(storage *gorm.DB, cls string, id string) *GenId {
+	return nil
+}
+
 // Generate 1 New ID
-func NewID(storage *gorm.DB, cls string) string {
-	for {
+func NewID(storage *gorm.DB, cls string, existingId string) string {
+	// if an existing Id was provided then see if it exists
+	existingId = strings.ToLower(existingId)
+	if existingId != "" {
+		gid := GetID(storage, cls, existingId)
+		if gid != nil {
+			return ""
+		}
+		gid = &GenId{Id: existingId, Class: cls, CreatedAt: time.Now()}
+		err := storage.Create(gid).Error
+		if err == nil {
+			return gid.Id
+		} else {
+			log.Println("Error blocking existing ID: ", err)
+			return ""
+		}
+	}
+	for i := range 5 {
 		gid := GenId{Id: randid(), Class: cls, CreatedAt: time.Now()}
 		err := storage.Create(gid).Error
 		if err == nil {
 			return gid.Id
 		} else {
-			log.Println("ID Create Error: ", err)
+			log.Printf("Trial: %d, ID Create Error: %v", i, err)
 		}
 	}
+	return ""
 }
 
 /**
  * Create N IDs in batch.
  */
 func NewIDs(storage *gorm.DB, cls string, numids int) (out []string) {
-	for i := 0; i < numids; i++ {
+	for i := range numids {
 		for {
 			gid := GenId{Id: randid(), Class: cls, CreatedAt: time.Now()}
 			err := storage.Create(gid).Error
@@ -59,6 +81,7 @@ func NewIDs(storage *gorm.DB, cls string, numids int) (out []string) {
 
 func VerifyID(storage *gorm.DB, cls string, id string) error {
 	var gid GenId
+	id = strings.ToLower(id)
 	err := storage.First(&gid, "cls = ? and id = ?", cls, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -72,6 +95,7 @@ func VerifyID(storage *gorm.DB, cls string, id string) error {
 
 func ReleaseID(storage *gorm.DB, cls string, id string) error {
 	var gid GenId
+	id = strings.ToLower(id)
 	err := storage.First(&gid, "cls = ? and id = ?", cls, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
