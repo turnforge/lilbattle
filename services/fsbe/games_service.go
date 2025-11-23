@@ -85,59 +85,6 @@ func (s *FSGamesService) DeleteGame(ctx context.Context, req *v1.DeleteGameReque
 	return
 }
 
-// CreateWorld creates a new world
-func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest) (resp *v1.CreateGameResponse, err error) {
-	if req.Game == nil {
-		return nil, fmt.Errorf("game data is required")
-	}
-
-	req.Game.Id, err = s.storage.CreateEntity(req.Game.Id)
-	if err != nil {
-		return resp, err
-	}
-
-	now := time.Now()
-	req.Game.CreatedAt = tspb.New(now)
-	req.Game.UpdatedAt = tspb.New(now)
-
-	// Save game metadta
-	if err := s.storage.SaveArtifact(req.Game.Id, "metadata", req.Game); err != nil {
-		return nil, fmt.Errorf("failed to create game: %w", err)
-	}
-
-	world, err := s.WorldsService.GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
-	if err != nil {
-		return nil, fmt.Errorf("Error loading world: %w", err)
-	}
-
-	// Save a new empty game state and a new move list
-	gs := &v1.GameState{
-		GameId:        req.Game.Id,
-		CurrentPlayer: 1, // Game starts with player 1
-		TurnCounter:   1, // First turn starts at 1 for lazy top-up pattern
-		WorldData:     world.WorldData,
-	}
-
-	// Units start with default zero values (current_turn=0, distance_left=0, available_health=0)
-	// They will be lazily topped-up when accessed if unit.current_turn < game.turn_counter
-	// This eliminates the need to initialize all units at game creation
-	if err := s.storage.SaveArtifact(req.Game.Id, "state", gs); err != nil {
-		log.Printf("Failed to create state for game %s: %v", req.Game.Id, err)
-	}
-
-	// Save a new empty game history and a new move list
-	if err := s.storage.SaveArtifact(req.Game.Id, "history", &v1.GameMoveHistory{GameId: req.Game.Id}); err != nil {
-		log.Printf("Failed to create state for game %s: %v", req.Game.Id, err)
-	}
-
-	resp = &v1.CreateGameResponse{
-		Game:      req.Game,
-		GameState: gs,
-	}
-
-	return resp, nil
-}
-
 // GetGame returns a specific game with complete data including tiles and units
 func (s *FSGamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (resp *v1.GetGameResponse, err error) {
 	if req.Id == "" {
@@ -189,6 +136,59 @@ func (s *FSGamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (r
 		Game:    game,
 		State:   gameState,
 		History: gameHistory,
+	}
+
+	return resp, nil
+}
+
+// CreateGame creates a new game
+func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest) (resp *v1.CreateGameResponse, err error) {
+	if req.Game == nil {
+		return nil, fmt.Errorf("game data is required")
+	}
+
+	req.Game.Id, err = s.storage.CreateEntity(req.Game.Id)
+	if err != nil {
+		return resp, err
+	}
+
+	now := time.Now()
+	req.Game.CreatedAt = tspb.New(now)
+	req.Game.UpdatedAt = tspb.New(now)
+
+	// Save game metadta
+	if err := s.storage.SaveArtifact(req.Game.Id, "metadata", req.Game); err != nil {
+		return nil, fmt.Errorf("failed to create game: %w", err)
+	}
+
+	world, err := s.WorldsService.GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
+	if err != nil {
+		return nil, fmt.Errorf("Error loading world: %w", err)
+	}
+
+	// Save a new empty game state and a new move list
+	gs := &v1.GameState{
+		GameId:        req.Game.Id,
+		CurrentPlayer: 1, // Game starts with player 1
+		TurnCounter:   1, // First turn starts at 1 for lazy top-up pattern
+		WorldData:     world.WorldData,
+	}
+
+	// Units start with default zero values (current_turn=0, distance_left=0, available_health=0)
+	// They will be lazily topped-up when accessed if unit.current_turn < game.turn_counter
+	// This eliminates the need to initialize all units at game creation
+	if err := s.storage.SaveArtifact(req.Game.Id, "state", gs); err != nil {
+		log.Printf("Failed to create state for game %s: %v", req.Game.Id, err)
+	}
+
+	// Save a new empty game history and a new move list
+	if err := s.storage.SaveArtifact(req.Game.Id, "history", &v1.GameMoveHistory{GameId: req.Game.Id}); err != nil {
+		log.Printf("Failed to create state for game %s: %v", req.Game.Id, err)
+	}
+
+	resp = &v1.CreateGameResponse{
+		Game:      req.Game,
+		GameState: gs,
 	}
 
 	return resp, nil

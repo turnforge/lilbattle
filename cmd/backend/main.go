@@ -25,7 +25,7 @@ var (
 	gatewayAddress    = flag.String("gatewayAddress", DefaultGatewayAddress(), "Address where the http grpc gateway endpoint is running")
 	db_endpoint       = flag.String("db_endpoint", "", fmt.Sprintf("Endpoint of DB where all data is persisted.  Default value: WEEWAR_DB_ENDPOINT environment variable or %s", DEFAULT_DB_ENDPOINT))
 	worlds_service_be = flag.String("worlds_service_be", "pg", "Storage for worlds service - 'local', 'pg', 'datastore'.  ")
-	games_service_be  = flag.String("games_service_be", "local", "Storage for games service - 'local', 'pg', 'datastore'.  ")
+	games_service_be  = flag.String("games_service_be", "pg", "Storage for games service - 'local', 'pg', 'datastore'.  ")
 )
 
 type Backend struct {
@@ -109,6 +109,8 @@ func (b *Backend) SetupApp() *utils.App {
 		switch *games_service_be {
 		case "local":
 			gamesService = fsbe.NewFSGamesService("")
+		case "pg":
+			gamesService = gormbe.NewGamesService(db, worldsService)
 		default:
 			panic("Invalid game service be: " + *games_service_be)
 		}

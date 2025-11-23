@@ -50,12 +50,12 @@ func NewWorldsService(db *gorm.DB) *WorldsService {
 
 // CreateWorld creates a new world
 func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequest) (resp *v1.CreateWorldResponse, err error) {
+	ctx, span := Tracer.Start(ctx, "CreateWorlds")
+	defer span.End()
 	resp = &v1.CreateWorldResponse{}
 	if req.World == nil {
 		return nil, fmt.Errorf("world data is required")
 	}
-	ctx, span := Tracer.Start(ctx, "CreateWorld")
-	defer span.End()
 
 	worldGorm, err := v1gorm.WorldToWorldGORM(req.World, nil, nil)
 	if err != nil {
@@ -83,6 +83,8 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	if worldDataGorm == nil {
 		worldDataGorm = &v1gorm.WorldDataGORM{}
 	}
+	log.Println("Req WorldData: ", req.WorldData)
+	log.Println("WorldData: ", worldDataGorm)
 	worldDataGorm.WorldId = worldGorm.Id
 	if err = s.WorldDataDAL.Save(ctx, s.storage, worldDataGorm); err != nil {
 		return

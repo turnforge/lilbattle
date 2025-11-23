@@ -150,8 +150,8 @@ func (*WorldGORM) TableName() string {
 // WorldDataGORM is the GORM model for weewar.v1.WorldData
 type WorldDataGORM struct {
 	Tiles   []TileGORM `gorm:"serializer:json"`
-	Units   []UnitGORM `gorm:"serializer:json"`
 	WorldId string     `gorm:"primaryKey"`
+	Units   []UnitGORM `gorm:"serializer:json"`
 }
 
 // TableName returns the table name for WorldDataGORM
@@ -340,6 +340,11 @@ type GameStateGORM struct {
 	WinningTeam   int32
 }
 
+// TableName returns the table name for GameStateGORM
+func (*GameStateGORM) TableName() string {
+	return "game_state"
+}
+
 // GameMoveHistoryGORM is the GORM model for weewar.v1.GameMoveHistory
 type GameMoveHistoryGORM struct {
 	GameId string
@@ -357,11 +362,16 @@ type GameMoveGroupGORM struct {
 type GameMoveGORM struct {
 	Player      int32
 	GameId      string `gorm:"primaryKey"`
-	GroupNumber string `gorm:"primaryKey"`
 	Timestamp   time.Time
+	GroupNumber string `gorm:"primaryKey"`
 	MoveNumber  int32  `gorm:"primaryKey"`
 	MoveType    []byte `gorm:"serializer:json"`
 	SequenceNum int64
 	IsPermanent bool
 	Changes     [][]byte `gorm:"serializer:json"`
+}
+
+// TableName returns the table name for GameMoveGORM
+func (*GameMoveGORM) TableName() string {
+	return "game_moves"
 }

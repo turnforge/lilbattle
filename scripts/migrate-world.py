@@ -45,11 +45,15 @@ def migrate_world(source_url: str, dest_url: str, token: str = None):
         print(f"Error from source: {data.get('message', data['error'])}")
         sys.exit(1)
 
+    print("Data here: ", list(data.keys()))
+
     # Transform GetWorldResponse to CreateWorldRequest format
     world = data.get('world', {})
-    world_data = world.pop('worldData', None)
+    world_data = data.get('worldData', None)
     world['id'] = dest_id
 
+    print("World: ", world)
+    print("WorldData: ", world_data)
     request_payload = {
         'world': world,
         'worldData': world_data

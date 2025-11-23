@@ -848,15 +848,16 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x12weewar.v1.GameTeam \x01\"l\n" +
 	"\x10GameSettingsGORM\x12:\n" +
 	"\rallowed_units\x18\x01 \x03(\x05B\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\fallowedUnits:\x1cʦ\x1d\x18\n" +
-	"\x16weewar.v1.GameSettings\"U\n" +
+	"\x16weewar.v1.GameSettings\"a\n" +
 	"\rGameStateGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
-	"primaryKeyR\x06gameId:\x19ʦ\x1d\x15\n" +
-	"\x13weewar.v1.GameState\"6\n" +
+	"primaryKeyR\x06gameId:%ʦ\x1d!\n" +
+	"\x13weewar.v1.GameState\x12\n" +
+	"game_state\"6\n" +
 	"\x13GameMoveHistoryGORM:\x1fʦ\x1d\x1b\n" +
 	"\x19weewar.v1.GameMoveHistory\"2\n" +
 	"\x11GameMoveGroupGORM:\x1dʦ\x1d\x19\n" +
-	"\x17weewar.v1.GameMoveGroup\"\xcc\x02\n" +
+	"\x17weewar.v1.GameMoveGroup\"\xd8\x02\n" +
 	"\fGameMoveGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\x06gameId\x123\n" +
@@ -866,8 +867,9 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"primaryKeyR\n" +
 	"moveNumber\x12H\n" +
 	"\tmove_type\x18\x04 \x01(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\bmoveType\x12E\n" +
-	"\achanges\x18\x05 \x03(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\achanges:\x18ʦ\x1d\x14\n" +
-	"\x12weewar.v1.GameMoveB\x9d\x01\n" +
+	"\achanges\x18\x05 \x03(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\achanges:$ʦ\x1d \n" +
+	"\x12weewar.v1.GameMove\x12\n" +
+	"game_movesB\x9d\x01\n" +
 	"\rcom.weewar.v1B\vModelsProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 

@@ -131,7 +131,7 @@ message GameSettingsGORM {
 
 // Holds the game's Active/Current state (eg world state)
 message GameStateGORM {
-  option (dal.v1.gorm) = { source: "weewar.v1.GameState" };
+  option (dal.v1.gorm) = { source: "weewar.v1.GameState", table: "game_state"};
   string game_id = 1 [(dal.v1.column) = {
     gorm_tags: ["primaryKey"]
   }];
@@ -151,7 +151,7 @@ message GameMoveGroupGORM {
  * Represents a single move which can be one of many actions in the game
  */
 message GameMoveGORM {
-  option (dal.v1.gorm) = { source: "weewar.v1.GameMove" };
+  option (dal.v1.gorm) = { source: "weewar.v1.GameMove", table: "game_moves" };
 
   string game_id = 1 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
   string group_number = 2 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
