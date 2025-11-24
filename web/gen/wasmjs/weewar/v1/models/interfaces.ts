@@ -51,6 +51,62 @@ export enum Type {
 
 
 
+export interface File {
+  /** Unique path of the file */
+  path: string;
+  /** Type of file */
+  contentType: string;
+  fileSize: number;
+  /** Public visibility or not */
+  isPublic: boolean;
+  /** When the last indexing was queued */
+  createdAt?: Timestamp;
+  /** when the last time the file was updated */
+  updatedAt?: Timestamp;
+  /** The download/get URL for this file
+ This will be generated */
+  downloadUrl: string;
+}
+
+
+
+export interface PutFileRequest {
+  file?: File;
+  content: Uint8Array;
+}
+
+
+
+export interface PutFileResponse {
+  file?: File;
+}
+
+
+
+export interface GetFileRequest {
+  path: string;
+}
+
+
+
+export interface GetFileResponse {
+  file?: File;
+}
+
+
+
+export interface DeleteFileRequest {
+  path: string;
+}
+
+
+
+export interface DeleteFileResponse {
+  file?: File;
+}
+
+
+
 export interface IndexInfo {
   /** We maintain an IndexInfo for each type of "indexing" operation needed
  For example one update may change the keywords (so we need to update indexes for search)

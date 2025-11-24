@@ -6,6 +6,9 @@
   },
   "tags": [
     {
+      "name": "FileStoreService"
+    },
+    {
       "name": "GamesService"
     },
     {
@@ -34,6 +37,146 @@
     "application/json"
   ],
   "paths": {
+    "/v1/files/{file.path}": {
+      "post": {
+        "summary": "*\nCreate a LRO for indexing records",
+        "operationId": "FileStoreService_PutFile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PutFileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "file.path",
+            "description": "Unique path of the file",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "[^/]+"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "object",
+                  "properties": {
+                    "contentType": {
+                      "type": "string",
+                      "title": "Type of file"
+                    },
+                    "fileSize": {
+                      "type": "string",
+                      "format": "uint64"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "title": "Public visibility or not"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "title": "When the last indexing was queued"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "title": "when the last time the file was updated"
+                    },
+                    "downloadUrl": {
+                      "type": "string",
+                      "title": "The download/get URL for this file\nThis will be generated"
+                    }
+                  }
+                },
+                "content": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "FileStoreService"
+        ]
+      }
+    },
+    "/v1/files/{path}": {
+      "get": {
+        "summary": "*\nGets the metadata about a file",
+        "operationId": "FileStoreService_GetFile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetFileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "[^/]+"
+          }
+        ],
+        "tags": [
+          "FileStoreService"
+        ]
+      },
+      "delete": {
+        "summary": "*\nDeletes a file",
+        "operationId": "FileStoreService_DeleteFile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteFileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "pattern": "[^/]+"
+          }
+        ],
+        "tags": [
+          "FileStoreService"
+        ]
+      }
+    },
     "/v1/games": {
       "get": {
         "summary": "ListGames returns all available games",
@@ -1828,6 +1971,14 @@
       },
       "description": "*\nResponse of an world creation."
     },
+    "v1DeleteFileResponse": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/definitions/v1File"
+        }
+      }
+    },
     "v1DeleteGameResponse": {
       "type": "object",
       "title": "*\nGame deletion response"
@@ -1862,6 +2013,41 @@
       "properties": {
         "indexState": {
           "$ref": "#/definitions/v1IndexState"
+        }
+      }
+    },
+    "v1File": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "title": "Unique path of the file"
+        },
+        "contentType": {
+          "type": "string",
+          "title": "Type of file"
+        },
+        "fileSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "isPublic": {
+          "type": "boolean",
+          "title": "Public visibility or not"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When the last indexing was queued"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "when the last time the file was updated"
+        },
+        "downloadUrl": {
+          "type": "string",
+          "title": "The download/get URL for this file\nThis will be generated"
         }
       }
     },
@@ -2216,6 +2402,14 @@
         "isActive": {
           "type": "boolean",
           "title": "Whether team has active players - can also be inferred"
+        }
+      }
+    },
+    "v1GetFileResponse": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/definitions/v1File"
         }
       }
     },
@@ -2813,6 +3007,14 @@
         }
       },
       "description": "*\nResponse after adding moves to game."
+    },
+    "v1PutFileResponse": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/definitions/v1File"
+        }
+      }
     },
     "v1RemoveTileAtResponse": {
       "type": "object"

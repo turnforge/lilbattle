@@ -1,9 +1,121 @@
 import { Any, FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
 
 
-import { IndexInfo as IndexInfoInterface, User as UserInterface, Pagination as PaginationInterface, PaginationResponse as PaginationResponseInterface, World as WorldInterface, WorldData as WorldDataInterface, Tile as TileInterface, Unit as UnitInterface, AttackRecord as AttackRecordInterface, TerrainDefinition as TerrainDefinitionInterface, UnitDefinition as UnitDefinitionInterface, TerrainUnitProperties as TerrainUnitPropertiesInterface, UnitUnitProperties as UnitUnitPropertiesInterface, DamageDistribution as DamageDistributionInterface, DamageRange as DamageRangeInterface, RulesEngine as RulesEngineInterface, Game as GameInterface, GameConfiguration as GameConfigurationInterface, IncomeConfig as IncomeConfigInterface, GamePlayer as GamePlayerInterface, GameTeam as GameTeamInterface, GameSettings as GameSettingsInterface, GameState as GameStateInterface, GameMoveHistory as GameMoveHistoryInterface, GameMoveGroup as GameMoveGroupInterface, GameMove as GameMoveInterface, MoveUnitAction as MoveUnitActionInterface, AttackUnitAction as AttackUnitActionInterface, BuildUnitAction as BuildUnitActionInterface, CaptureBuildingAction as CaptureBuildingActionInterface, EndTurnAction as EndTurnActionInterface, WorldChange as WorldChangeInterface, UnitMovedChange as UnitMovedChangeInterface, UnitDamagedChange as UnitDamagedChangeInterface, UnitKilledChange as UnitKilledChangeInterface, PlayerChangedChange as PlayerChangedChangeInterface, UnitBuiltChange as UnitBuiltChangeInterface, CoinsChangedChange as CoinsChangedChangeInterface, AllPaths as AllPathsInterface, PathEdge as PathEdgeInterface, Path as PathInterface, ListGamesRequest as ListGamesRequestInterface, ListGamesResponse as ListGamesResponseInterface, GetGameRequest as GetGameRequestInterface, GetGameResponse as GetGameResponseInterface, GetGameContentRequest as GetGameContentRequestInterface, GetGameContentResponse as GetGameContentResponseInterface, UpdateGameRequest as UpdateGameRequestInterface, UpdateGameResponse as UpdateGameResponseInterface, DeleteGameRequest as DeleteGameRequestInterface, DeleteGameResponse as DeleteGameResponseInterface, GetGamesRequest as GetGamesRequestInterface, GetGamesResponse as GetGamesResponseInterface, CreateGameRequest as CreateGameRequestInterface, CreateGameResponse as CreateGameResponseInterface, ProcessMovesRequest as ProcessMovesRequestInterface, ProcessMovesResponse as ProcessMovesResponseInterface, GetGameStateRequest as GetGameStateRequestInterface, GetGameStateResponse as GetGameStateResponseInterface, ListMovesRequest as ListMovesRequestInterface, ListMovesResponse as ListMovesResponseInterface, GetOptionsAtRequest as GetOptionsAtRequestInterface, GetOptionsAtResponse as GetOptionsAtResponseInterface, GameOption as GameOptionInterface, SimulateAttackRequest as SimulateAttackRequestInterface, SimulateAttackResponse as SimulateAttackResponseInterface, EmptyRequest as EmptyRequestInterface, EmptyResponse as EmptyResponseInterface, SetContentRequest as SetContentRequestInterface, SetContentResponse as SetContentResponseInterface, ShowBuildOptionsRequest as ShowBuildOptionsRequestInterface, ShowBuildOptionsResponse as ShowBuildOptionsResponseInterface, LogMessageRequest as LogMessageRequestInterface, LogMessageResponse as LogMessageResponseInterface, SetGameStateRequest as SetGameStateRequestInterface, SetGameStateResponse as SetGameStateResponseInterface, UpdateGameStatusRequest as UpdateGameStatusRequestInterface, UpdateGameStatusResponse as UpdateGameStatusResponseInterface, SetTileAtRequest as SetTileAtRequestInterface, SetTileAtResponse as SetTileAtResponseInterface, SetUnitAtRequest as SetUnitAtRequestInterface, SetUnitAtResponse as SetUnitAtResponseInterface, RemoveTileAtRequest as RemoveTileAtRequestInterface, RemoveTileAtResponse as RemoveTileAtResponseInterface, RemoveUnitAtRequest as RemoveUnitAtRequestInterface, RemoveUnitAtResponse as RemoveUnitAtResponseInterface, ShowHighlightsRequest as ShowHighlightsRequestInterface, ShowHighlightsResponse as ShowHighlightsResponseInterface, HighlightSpec as HighlightSpecInterface, ClearHighlightsRequest as ClearHighlightsRequestInterface, ClearHighlightsResponse as ClearHighlightsResponseInterface, ShowPathRequest as ShowPathRequestInterface, ShowPathResponse as ShowPathResponseInterface, ClearPathsRequest as ClearPathsRequestInterface, ClearPathsResponse as ClearPathsResponseInterface, MoveUnitRequest as MoveUnitRequestInterface, MoveUnitResponse as MoveUnitResponseInterface, HexCoord as HexCoordInterface, ShowAttackEffectRequest as ShowAttackEffectRequestInterface, SplashTarget as SplashTargetInterface, ShowAttackEffectResponse as ShowAttackEffectResponseInterface, ShowHealEffectRequest as ShowHealEffectRequestInterface, ShowHealEffectResponse as ShowHealEffectResponseInterface, ShowCaptureEffectRequest as ShowCaptureEffectRequestInterface, ShowCaptureEffectResponse as ShowCaptureEffectResponseInterface, SetAllowedPanelsRequest as SetAllowedPanelsRequestInterface, SetAllowedPanelsResponse as SetAllowedPanelsResponseInterface, IndexState as IndexStateInterface, EnsureIndexStateRequest as EnsureIndexStateRequestInterface, EnsureIndexStateResponse as EnsureIndexStateResponseInterface, GetIndexStatesRequest as GetIndexStatesRequestInterface, IndexStateList as IndexStateListInterface, GetIndexStatesResponse as GetIndexStatesResponseInterface, ListIndexStatesRequest as ListIndexStatesRequestInterface, ListIndexStatesResponse as ListIndexStatesResponseInterface, DeleteIndexStatesRequest as DeleteIndexStatesRequestInterface, DeleteIndexStatesResponse as DeleteIndexStatesResponseInterface, IndexRecord as IndexRecordInterface, IndexRecordsLRO as IndexRecordsLROInterface, CreateIndexRecordsLRORequest as CreateIndexRecordsLRORequestInterface, CreateIndexRecordsLROResponse as CreateIndexRecordsLROResponseInterface, UpdateIndexRecordsLRORequest as UpdateIndexRecordsLRORequestInterface, UpdateIndexRecordsLROResponse as UpdateIndexRecordsLROResponseInterface, GetIndexRecordsLRORequest as GetIndexRecordsLRORequestInterface, GetIndexRecordsLROResponse as GetIndexRecordsLROResponseInterface, Job as JobInterface, RepeatInfo as RepeatInfoInterface, Run as RunInterface, InitializeSingletonRequest as InitializeSingletonRequestInterface, InitializeSingletonResponse as InitializeSingletonResponseInterface, TurnOptionClickedRequest as TurnOptionClickedRequestInterface, TurnOptionClickedResponse as TurnOptionClickedResponseInterface, SceneClickedRequest as SceneClickedRequestInterface, SceneClickedResponse as SceneClickedResponseInterface, EndTurnButtonClickedRequest as EndTurnButtonClickedRequestInterface, EndTurnButtonClickedResponse as EndTurnButtonClickedResponseInterface, BuildOptionClickedRequest as BuildOptionClickedRequestInterface, BuildOptionClickedResponse as BuildOptionClickedResponseInterface, InitializeGameRequest as InitializeGameRequestInterface, InitializeGameResponse as InitializeGameResponseInterface, ThemeInfo as ThemeInfoInterface, UnitMapping as UnitMappingInterface, TerrainMapping as TerrainMappingInterface, ThemeManifest as ThemeManifestInterface, PlayerColor as PlayerColorInterface, AssetResult as AssetResultInterface, UserInfo as UserInfoInterface, ListUsersRequest as ListUsersRequestInterface, ListUsersResponse as ListUsersResponseInterface, GetUserRequest as GetUserRequestInterface, GetUserResponse as GetUserResponseInterface, GetUserContentRequest as GetUserContentRequestInterface, GetUserContentResponse as GetUserContentResponseInterface, UpdateUserRequest as UpdateUserRequestInterface, UpdateUserResponse as UpdateUserResponseInterface, DeleteUserRequest as DeleteUserRequestInterface, DeleteUserResponse as DeleteUserResponseInterface, GetUsersRequest as GetUsersRequestInterface, GetUsersResponse as GetUsersResponseInterface, CreateUserRequest as CreateUserRequestInterface, CreateUserResponse as CreateUserResponseInterface, WorldInfo as WorldInfoInterface, ListWorldsRequest as ListWorldsRequestInterface, ListWorldsResponse as ListWorldsResponseInterface, GetWorldRequest as GetWorldRequestInterface, GetWorldResponse as GetWorldResponseInterface, UpdateWorldRequest as UpdateWorldRequestInterface, UpdateWorldResponse as UpdateWorldResponseInterface, DeleteWorldRequest as DeleteWorldRequestInterface, DeleteWorldResponse as DeleteWorldResponseInterface, GetWorldsRequest as GetWorldsRequestInterface, GetWorldsResponse as GetWorldsResponseInterface, CreateWorldRequest as CreateWorldRequestInterface, CreateWorldResponse as CreateWorldResponseInterface, GameStatus, PathDirection, IndexStatus, RunState, Type } from "./interfaces";
+import { File as FileInterface, PutFileRequest as PutFileRequestInterface, PutFileResponse as PutFileResponseInterface, GetFileRequest as GetFileRequestInterface, GetFileResponse as GetFileResponseInterface, DeleteFileRequest as DeleteFileRequestInterface, DeleteFileResponse as DeleteFileResponseInterface, IndexInfo as IndexInfoInterface, User as UserInterface, Pagination as PaginationInterface, PaginationResponse as PaginationResponseInterface, World as WorldInterface, WorldData as WorldDataInterface, Tile as TileInterface, Unit as UnitInterface, AttackRecord as AttackRecordInterface, TerrainDefinition as TerrainDefinitionInterface, UnitDefinition as UnitDefinitionInterface, TerrainUnitProperties as TerrainUnitPropertiesInterface, UnitUnitProperties as UnitUnitPropertiesInterface, DamageDistribution as DamageDistributionInterface, DamageRange as DamageRangeInterface, RulesEngine as RulesEngineInterface, Game as GameInterface, GameConfiguration as GameConfigurationInterface, IncomeConfig as IncomeConfigInterface, GamePlayer as GamePlayerInterface, GameTeam as GameTeamInterface, GameSettings as GameSettingsInterface, GameState as GameStateInterface, GameMoveHistory as GameMoveHistoryInterface, GameMoveGroup as GameMoveGroupInterface, GameMove as GameMoveInterface, MoveUnitAction as MoveUnitActionInterface, AttackUnitAction as AttackUnitActionInterface, BuildUnitAction as BuildUnitActionInterface, CaptureBuildingAction as CaptureBuildingActionInterface, EndTurnAction as EndTurnActionInterface, WorldChange as WorldChangeInterface, UnitMovedChange as UnitMovedChangeInterface, UnitDamagedChange as UnitDamagedChangeInterface, UnitKilledChange as UnitKilledChangeInterface, PlayerChangedChange as PlayerChangedChangeInterface, UnitBuiltChange as UnitBuiltChangeInterface, CoinsChangedChange as CoinsChangedChangeInterface, AllPaths as AllPathsInterface, PathEdge as PathEdgeInterface, Path as PathInterface, ListGamesRequest as ListGamesRequestInterface, ListGamesResponse as ListGamesResponseInterface, GetGameRequest as GetGameRequestInterface, GetGameResponse as GetGameResponseInterface, GetGameContentRequest as GetGameContentRequestInterface, GetGameContentResponse as GetGameContentResponseInterface, UpdateGameRequest as UpdateGameRequestInterface, UpdateGameResponse as UpdateGameResponseInterface, DeleteGameRequest as DeleteGameRequestInterface, DeleteGameResponse as DeleteGameResponseInterface, GetGamesRequest as GetGamesRequestInterface, GetGamesResponse as GetGamesResponseInterface, CreateGameRequest as CreateGameRequestInterface, CreateGameResponse as CreateGameResponseInterface, ProcessMovesRequest as ProcessMovesRequestInterface, ProcessMovesResponse as ProcessMovesResponseInterface, GetGameStateRequest as GetGameStateRequestInterface, GetGameStateResponse as GetGameStateResponseInterface, ListMovesRequest as ListMovesRequestInterface, ListMovesResponse as ListMovesResponseInterface, GetOptionsAtRequest as GetOptionsAtRequestInterface, GetOptionsAtResponse as GetOptionsAtResponseInterface, GameOption as GameOptionInterface, SimulateAttackRequest as SimulateAttackRequestInterface, SimulateAttackResponse as SimulateAttackResponseInterface, EmptyRequest as EmptyRequestInterface, EmptyResponse as EmptyResponseInterface, SetContentRequest as SetContentRequestInterface, SetContentResponse as SetContentResponseInterface, ShowBuildOptionsRequest as ShowBuildOptionsRequestInterface, ShowBuildOptionsResponse as ShowBuildOptionsResponseInterface, LogMessageRequest as LogMessageRequestInterface, LogMessageResponse as LogMessageResponseInterface, SetGameStateRequest as SetGameStateRequestInterface, SetGameStateResponse as SetGameStateResponseInterface, UpdateGameStatusRequest as UpdateGameStatusRequestInterface, UpdateGameStatusResponse as UpdateGameStatusResponseInterface, SetTileAtRequest as SetTileAtRequestInterface, SetTileAtResponse as SetTileAtResponseInterface, SetUnitAtRequest as SetUnitAtRequestInterface, SetUnitAtResponse as SetUnitAtResponseInterface, RemoveTileAtRequest as RemoveTileAtRequestInterface, RemoveTileAtResponse as RemoveTileAtResponseInterface, RemoveUnitAtRequest as RemoveUnitAtRequestInterface, RemoveUnitAtResponse as RemoveUnitAtResponseInterface, ShowHighlightsRequest as ShowHighlightsRequestInterface, ShowHighlightsResponse as ShowHighlightsResponseInterface, HighlightSpec as HighlightSpecInterface, ClearHighlightsRequest as ClearHighlightsRequestInterface, ClearHighlightsResponse as ClearHighlightsResponseInterface, ShowPathRequest as ShowPathRequestInterface, ShowPathResponse as ShowPathResponseInterface, ClearPathsRequest as ClearPathsRequestInterface, ClearPathsResponse as ClearPathsResponseInterface, MoveUnitRequest as MoveUnitRequestInterface, MoveUnitResponse as MoveUnitResponseInterface, HexCoord as HexCoordInterface, ShowAttackEffectRequest as ShowAttackEffectRequestInterface, SplashTarget as SplashTargetInterface, ShowAttackEffectResponse as ShowAttackEffectResponseInterface, ShowHealEffectRequest as ShowHealEffectRequestInterface, ShowHealEffectResponse as ShowHealEffectResponseInterface, ShowCaptureEffectRequest as ShowCaptureEffectRequestInterface, ShowCaptureEffectResponse as ShowCaptureEffectResponseInterface, SetAllowedPanelsRequest as SetAllowedPanelsRequestInterface, SetAllowedPanelsResponse as SetAllowedPanelsResponseInterface, IndexState as IndexStateInterface, EnsureIndexStateRequest as EnsureIndexStateRequestInterface, EnsureIndexStateResponse as EnsureIndexStateResponseInterface, GetIndexStatesRequest as GetIndexStatesRequestInterface, IndexStateList as IndexStateListInterface, GetIndexStatesResponse as GetIndexStatesResponseInterface, ListIndexStatesRequest as ListIndexStatesRequestInterface, ListIndexStatesResponse as ListIndexStatesResponseInterface, DeleteIndexStatesRequest as DeleteIndexStatesRequestInterface, DeleteIndexStatesResponse as DeleteIndexStatesResponseInterface, IndexRecord as IndexRecordInterface, IndexRecordsLRO as IndexRecordsLROInterface, CreateIndexRecordsLRORequest as CreateIndexRecordsLRORequestInterface, CreateIndexRecordsLROResponse as CreateIndexRecordsLROResponseInterface, UpdateIndexRecordsLRORequest as UpdateIndexRecordsLRORequestInterface, UpdateIndexRecordsLROResponse as UpdateIndexRecordsLROResponseInterface, GetIndexRecordsLRORequest as GetIndexRecordsLRORequestInterface, GetIndexRecordsLROResponse as GetIndexRecordsLROResponseInterface, Job as JobInterface, RepeatInfo as RepeatInfoInterface, Run as RunInterface, InitializeSingletonRequest as InitializeSingletonRequestInterface, InitializeSingletonResponse as InitializeSingletonResponseInterface, TurnOptionClickedRequest as TurnOptionClickedRequestInterface, TurnOptionClickedResponse as TurnOptionClickedResponseInterface, SceneClickedRequest as SceneClickedRequestInterface, SceneClickedResponse as SceneClickedResponseInterface, EndTurnButtonClickedRequest as EndTurnButtonClickedRequestInterface, EndTurnButtonClickedResponse as EndTurnButtonClickedResponseInterface, BuildOptionClickedRequest as BuildOptionClickedRequestInterface, BuildOptionClickedResponse as BuildOptionClickedResponseInterface, InitializeGameRequest as InitializeGameRequestInterface, InitializeGameResponse as InitializeGameResponseInterface, ThemeInfo as ThemeInfoInterface, UnitMapping as UnitMappingInterface, TerrainMapping as TerrainMappingInterface, ThemeManifest as ThemeManifestInterface, PlayerColor as PlayerColorInterface, AssetResult as AssetResultInterface, UserInfo as UserInfoInterface, ListUsersRequest as ListUsersRequestInterface, ListUsersResponse as ListUsersResponseInterface, GetUserRequest as GetUserRequestInterface, GetUserResponse as GetUserResponseInterface, GetUserContentRequest as GetUserContentRequestInterface, GetUserContentResponse as GetUserContentResponseInterface, UpdateUserRequest as UpdateUserRequestInterface, UpdateUserResponse as UpdateUserResponseInterface, DeleteUserRequest as DeleteUserRequestInterface, DeleteUserResponse as DeleteUserResponseInterface, GetUsersRequest as GetUsersRequestInterface, GetUsersResponse as GetUsersResponseInterface, CreateUserRequest as CreateUserRequestInterface, CreateUserResponse as CreateUserResponseInterface, WorldInfo as WorldInfoInterface, ListWorldsRequest as ListWorldsRequestInterface, ListWorldsResponse as ListWorldsResponseInterface, GetWorldRequest as GetWorldRequestInterface, GetWorldResponse as GetWorldResponseInterface, UpdateWorldRequest as UpdateWorldRequestInterface, UpdateWorldResponse as UpdateWorldResponseInterface, DeleteWorldRequest as DeleteWorldRequestInterface, DeleteWorldResponse as DeleteWorldResponseInterface, GetWorldsRequest as GetWorldsRequestInterface, GetWorldsResponse as GetWorldsResponseInterface, CreateWorldRequest as CreateWorldRequestInterface, CreateWorldResponse as CreateWorldResponseInterface, GameStatus, PathDirection, IndexStatus, RunState, Type } from "./interfaces";
 
 
+
+
+
+export class File implements FileInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.File";
+  readonly __MESSAGE_TYPE = File.MESSAGE_TYPE;
+
+  /** Unique path of the file */
+  path: string = "";
+  /** Type of file */
+  contentType: string = "";
+  fileSize: number = 0;
+  /** Public visibility or not */
+  isPublic: boolean = false;
+  /** When the last indexing was queued */
+  createdAt?: Timestamp;
+  /** when the last time the file was updated */
+  updatedAt?: Timestamp;
+  /** The download/get URL for this file
+ This will be generated */
+  downloadUrl: string = "";
+
+  
+}
+
+
+
+export class PutFileRequest implements PutFileRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.PutFileRequest";
+  readonly __MESSAGE_TYPE = PutFileRequest.MESSAGE_TYPE;
+
+  file?: File;
+  content: Uint8Array = new Uint8Array();
+
+  
+}
+
+
+
+export class PutFileResponse implements PutFileResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.PutFileResponse";
+  readonly __MESSAGE_TYPE = PutFileResponse.MESSAGE_TYPE;
+
+  file?: File;
+
+  
+}
+
+
+
+export class GetFileRequest implements GetFileRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetFileRequest";
+  readonly __MESSAGE_TYPE = GetFileRequest.MESSAGE_TYPE;
+
+  path: string = "";
+
+  
+}
+
+
+
+export class GetFileResponse implements GetFileResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GetFileResponse";
+  readonly __MESSAGE_TYPE = GetFileResponse.MESSAGE_TYPE;
+
+  file?: File;
+
+  
+}
+
+
+
+export class DeleteFileRequest implements DeleteFileRequestInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.DeleteFileRequest";
+  readonly __MESSAGE_TYPE = DeleteFileRequest.MESSAGE_TYPE;
+
+  path: string = "";
+
+  
+}
+
+
+
+export class DeleteFileResponse implements DeleteFileResponseInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.DeleteFileResponse";
+  readonly __MESSAGE_TYPE = DeleteFileResponse.MESSAGE_TYPE;
+
+  file?: File;
+
+  
+}
 
 
 
