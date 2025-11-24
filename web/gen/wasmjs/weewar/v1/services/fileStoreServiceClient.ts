@@ -9,6 +9,8 @@ import {
     DeleteFileResponse,
     GetFileRequest,
     GetFileResponse,
+    ListFilesRequest,
+    ListFilesResponse,
     PutFileRequest,
     PutFileResponse,
 } from '../models/interfaces';
@@ -20,6 +22,7 @@ export interface FileStoreServiceMethods {
 	putFile(request: PutFileRequest): Promise<PutFileResponse>;
 	getFile(request: GetFileRequest): Promise<GetFileResponse>;
 	deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse>;
+	listFiles(request: ListFilesRequest): Promise<ListFilesResponse>;
 }
 /**
  * FileStoreService service client implementation
@@ -34,5 +37,8 @@ export class FileStoreServiceClient extends ServiceClient implements FileStoreSe
     }
     async deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse> {
         return this.callMethod('fileStoreService.deleteFile', request);
+    }
+    async listFiles(request: ListFilesRequest): Promise<ListFilesResponse> {
+        return this.callMethod('fileStoreService.listFiles', request);
     }
 }

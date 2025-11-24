@@ -51,62 +51,6 @@ export enum Type {
 
 
 
-export interface File {
-  /** Unique path of the file */
-  path: string;
-  /** Type of file */
-  contentType: string;
-  fileSize: number;
-  /** Public visibility or not */
-  isPublic: boolean;
-  /** When the last indexing was queued */
-  createdAt?: Timestamp;
-  /** when the last time the file was updated */
-  updatedAt?: Timestamp;
-  /** The download/get URL for this file
- This will be generated */
-  downloadUrl: string;
-}
-
-
-
-export interface PutFileRequest {
-  file?: File;
-  content: Uint8Array;
-}
-
-
-
-export interface PutFileResponse {
-  file?: File;
-}
-
-
-
-export interface GetFileRequest {
-  path: string;
-}
-
-
-
-export interface GetFileResponse {
-  file?: File;
-}
-
-
-
-export interface DeleteFileRequest {
-  path: string;
-}
-
-
-
-export interface DeleteFileResponse {
-  file?: File;
-}
-
-
-
 export interface IndexInfo {
   /** We maintain an IndexInfo for each type of "indexing" operation needed
  For example one update may change the keywords (so we need to update indexes for search)
@@ -773,6 +717,84 @@ export interface Path {
   directions: PathDirection[];
   /** Sum of all edge costs */
   totalCost: number;
+}
+
+
+
+export interface File {
+  /** Unique path of the file */
+  path: string;
+  /** Type of file */
+  contentType: string;
+  fileSize: number;
+  /** Public visibility or not */
+  isPublic: boolean;
+  /** When the last indexing was queued */
+  createdAt?: Timestamp;
+  /** when the last time the file was updated */
+  updatedAt?: Timestamp;
+  /** The download/get URL for this file (public URL or default signed URL) */
+  downloadUrl: string;
+  /** Signed URLs with different expiries (e.g., "15m", "1h", "24h")
+ Only populated when requested */
+  signedUrls: Record<string, string>;
+}
+
+
+
+export interface PutFileRequest {
+  file?: File;
+  content: Uint8Array;
+}
+
+
+
+export interface PutFileResponse {
+  file?: File;
+}
+
+
+
+export interface GetFileRequest {
+  path: string;
+  /** If true, populate signed_urls in the File response */
+  includeSignedUrls: boolean;
+}
+
+
+
+export interface GetFileResponse {
+  file?: File;
+}
+
+
+
+export interface DeleteFileRequest {
+  path: string;
+}
+
+
+
+export interface DeleteFileResponse {
+  file?: File;
+}
+
+
+
+export interface ListFilesRequest {
+  /** Directory path to list files from (relative to base path) */
+  path: string;
+  /** Pagination info */
+  pagination?: Pagination;
+  /** If true, populate signed_urls in each File response */
+  includeSignedUrls: boolean;
+}
+
+
+
+export interface ListFilesResponse {
+  items?: File[];
+  pagination?: PaginationResponse;
 }
 
 

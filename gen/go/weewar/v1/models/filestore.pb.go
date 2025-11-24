@@ -38,9 +38,11 @@ type File struct {
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// when the last time the file was updated
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// The download/get URL for this file
-	// This will be generated
-	DownloadUrl   string `protobuf:"bytes,7,opt,name=download_url,json=downloadUrl,proto3" json:"download_url,omitempty"`
+	// The download/get URL for this file (public URL or default signed URL)
+	DownloadUrl string `protobuf:"bytes,7,opt,name=download_url,json=downloadUrl,proto3" json:"download_url,omitempty"`
+	// Signed URLs with different expiries (e.g., "15m", "1h", "24h")
+	// Only populated when requested
+	SignedUrls    map[string]string `protobuf:"bytes,8,rep,name=signed_urls,json=signedUrls,proto3" json:"signed_urls,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -122,6 +124,13 @@ func (x *File) GetDownloadUrl() string {
 		return x.DownloadUrl
 	}
 	return ""
+}
+
+func (x *File) GetSignedUrls() map[string]string {
+	if x != nil {
+		return x.SignedUrls
+	}
+	return nil
 }
 
 type PutFileRequest struct {
@@ -221,10 +230,12 @@ func (x *PutFileResponse) GetFile() *File {
 }
 
 type GetFileRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Path  string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// If true, populate signed_urls in the File response
+	IncludeSignedUrls bool `protobuf:"varint,2,opt,name=include_signed_urls,json=includeSignedUrls,proto3" json:"include_signed_urls,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GetFileRequest) Reset() {
@@ -262,6 +273,13 @@ func (x *GetFileRequest) GetPath() string {
 		return x.Path
 	}
 	return ""
+}
+
+func (x *GetFileRequest) GetIncludeSignedUrls() bool {
+	if x != nil {
+		return x.IncludeSignedUrls
+	}
+	return false
 }
 
 type GetFileResponse struct {
@@ -396,11 +414,126 @@ func (x *DeleteFileResponse) GetFile() *File {
 	return nil
 }
 
+type ListFilesRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Directory path to list files from (relative to base path)
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// Pagination info
+	Pagination *Pagination `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// If true, populate signed_urls in each File response
+	IncludeSignedUrls bool `protobuf:"varint,3,opt,name=include_signed_urls,json=includeSignedUrls,proto3" json:"include_signed_urls,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ListFilesRequest) Reset() {
+	*x = ListFilesRequest{}
+	mi := &file_weewar_v1_models_filestore_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListFilesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListFilesRequest) ProtoMessage() {}
+
+func (x *ListFilesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_models_filestore_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListFilesRequest.ProtoReflect.Descriptor instead.
+func (*ListFilesRequest) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_models_filestore_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ListFilesRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *ListFilesRequest) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+func (x *ListFilesRequest) GetIncludeSignedUrls() bool {
+	if x != nil {
+		return x.IncludeSignedUrls
+	}
+	return false
+}
+
+type ListFilesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*File                `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Pagination    *PaginationResponse    `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListFilesResponse) Reset() {
+	*x = ListFilesResponse{}
+	mi := &file_weewar_v1_models_filestore_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListFilesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListFilesResponse) ProtoMessage() {}
+
+func (x *ListFilesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_models_filestore_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListFilesResponse.ProtoReflect.Descriptor instead.
+func (*ListFilesResponse) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_models_filestore_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListFilesResponse) GetItems() []*File {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *ListFilesResponse) GetPagination() *PaginationResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 var File_weewar_v1_models_filestore_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_models_filestore_proto_rawDesc = "" +
 	"\n" +
-	" weewar/v1/models/filestore.proto\x12\tweewar.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\x1a google/protobuf/field_mask.proto\"\x90\x02\n" +
+	" weewar/v1/models/filestore.proto\x12\tweewar.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\"\x91\x03\n" +
 	"\x04File\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1b\n" +
@@ -410,20 +543,37 @@ const file_weewar_v1_models_filestore_proto_rawDesc = "" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12!\n" +
-	"\fdownload_url\x18\a \x01(\tR\vdownloadUrl\"O\n" +
+	"\fdownload_url\x18\a \x01(\tR\vdownloadUrl\x12@\n" +
+	"\vsigned_urls\x18\b \x03(\v2\x1f.weewar.v1.File.SignedUrlsEntryR\n" +
+	"signedUrls\x1a=\n" +
+	"\x0fSignedUrlsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"O\n" +
 	"\x0ePutFileRequest\x12#\n" +
 	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04file\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\fR\acontent\"6\n" +
 	"\x0fPutFileResponse\x12#\n" +
-	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04file\"$\n" +
+	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04file\"T\n" +
 	"\x0eGetFileRequest\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\"6\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12.\n" +
+	"\x13include_signed_urls\x18\x02 \x01(\bR\x11includeSignedUrls\"6\n" +
 	"\x0fGetFileResponse\x12#\n" +
 	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04file\"'\n" +
 	"\x11DeleteFileRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\"9\n" +
 	"\x12DeleteFileResponse\x12#\n" +
-	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04fileB\xa2\x01\n" +
+	"\x04file\x18\x01 \x01(\v2\x0f.weewar.v1.FileR\x04file\"\x8d\x01\n" +
+	"\x10ListFilesRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x125\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x15.weewar.v1.PaginationR\n" +
+	"pagination\x12.\n" +
+	"\x13include_signed_urls\x18\x03 \x01(\bR\x11includeSignedUrls\"y\n" +
+	"\x11ListFilesResponse\x12%\n" +
+	"\x05items\x18\x01 \x03(\v2\x0f.weewar.v1.FileR\x05items\x12=\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x1d.weewar.v1.PaginationResponseR\n" +
+	"paginationB\xa2\x01\n" +
 	"\rcom.weewar.v1B\x0eFilestoreProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
@@ -439,7 +589,7 @@ func file_weewar_v1_models_filestore_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_models_filestore_proto_rawDescData
 }
 
-var file_weewar_v1_models_filestore_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_weewar_v1_models_filestore_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_weewar_v1_models_filestore_proto_goTypes = []any{
 	(*File)(nil),                  // 0: weewar.v1.File
 	(*PutFileRequest)(nil),        // 1: weewar.v1.PutFileRequest
@@ -448,20 +598,29 @@ var file_weewar_v1_models_filestore_proto_goTypes = []any{
 	(*GetFileResponse)(nil),       // 4: weewar.v1.GetFileResponse
 	(*DeleteFileRequest)(nil),     // 5: weewar.v1.DeleteFileRequest
 	(*DeleteFileResponse)(nil),    // 6: weewar.v1.DeleteFileResponse
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*ListFilesRequest)(nil),      // 7: weewar.v1.ListFilesRequest
+	(*ListFilesResponse)(nil),     // 8: weewar.v1.ListFilesResponse
+	nil,                           // 9: weewar.v1.File.SignedUrlsEntry
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
+	(*Pagination)(nil),            // 11: weewar.v1.Pagination
+	(*PaginationResponse)(nil),    // 12: weewar.v1.PaginationResponse
 }
 var file_weewar_v1_models_filestore_proto_depIdxs = []int32{
-	7, // 0: weewar.v1.File.created_at:type_name -> google.protobuf.Timestamp
-	7, // 1: weewar.v1.File.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 2: weewar.v1.PutFileRequest.file:type_name -> weewar.v1.File
-	0, // 3: weewar.v1.PutFileResponse.file:type_name -> weewar.v1.File
-	0, // 4: weewar.v1.GetFileResponse.file:type_name -> weewar.v1.File
-	0, // 5: weewar.v1.DeleteFileResponse.file:type_name -> weewar.v1.File
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	10, // 0: weewar.v1.File.created_at:type_name -> google.protobuf.Timestamp
+	10, // 1: weewar.v1.File.updated_at:type_name -> google.protobuf.Timestamp
+	9,  // 2: weewar.v1.File.signed_urls:type_name -> weewar.v1.File.SignedUrlsEntry
+	0,  // 3: weewar.v1.PutFileRequest.file:type_name -> weewar.v1.File
+	0,  // 4: weewar.v1.PutFileResponse.file:type_name -> weewar.v1.File
+	0,  // 5: weewar.v1.GetFileResponse.file:type_name -> weewar.v1.File
+	0,  // 6: weewar.v1.DeleteFileResponse.file:type_name -> weewar.v1.File
+	11, // 7: weewar.v1.ListFilesRequest.pagination:type_name -> weewar.v1.Pagination
+	0,  // 8: weewar.v1.ListFilesResponse.items:type_name -> weewar.v1.File
+	12, // 9: weewar.v1.ListFilesResponse.pagination:type_name -> weewar.v1.PaginationResponse
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_filestore_proto_init() }
@@ -469,13 +628,14 @@ func file_weewar_v1_models_filestore_proto_init() {
 	if File_weewar_v1_models_filestore_proto != nil {
 		return
 	}
+	file_weewar_v1_models_models_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_models_filestore_proto_rawDesc), len(file_weewar_v1_models_filestore_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

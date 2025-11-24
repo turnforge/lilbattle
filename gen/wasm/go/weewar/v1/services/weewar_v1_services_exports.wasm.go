@@ -49,6 +49,9 @@ func (exports *Weewar_v1ServicesExports) RegisterAPI() {
 			"deleteFile": js.FuncOf(func(this js.Value, args []js.Value) any {
 				return exports.fileStoreServiceDeleteFile(this, args)
 			}),
+			"listFiles": js.FuncOf(func(this js.Value, args []js.Value) any {
+				return exports.fileStoreServiceListFiles(this, args)
+			}),
 		},
 		"gamesService": map[string]interface{}{
 			"createGame": js.FuncOf(func(this js.Value, args []js.Value) any {
@@ -298,6 +301,54 @@ func (exports *Weewar_v1ServicesExports) fileStoreServiceDeleteFile(this js.Valu
 
 	// Call service method
 	resp, err := exports.FileStoreService.DeleteFile(ctx, req)
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
+	}
+
+	// Marshal response with options for better TypeScript compatibility
+	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
+		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
+		UseEnumNumbers:  false, // Use enum string values
+	})
+	if err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
+	}
+
+	return createJSResponse(true, "Success", json.RawMessage(responseJSON))
+}
+
+// fileStoreServiceListFiles handles the ListFiles method for FileStoreService
+func (exports *Weewar_v1ServicesExports) fileStoreServiceListFiles(this js.Value, args []js.Value) any {
+	if exports.FileStoreService == nil {
+		return createJSResponse(false, "FileStoreService not initialized", nil)
+	}
+	// Synchronous method
+	if len(args) < 1 {
+		return createJSResponse(false, "Request JSON required", nil)
+	}
+
+	requestJSON := args[0].String()
+	if requestJSON == "" {
+		return createJSResponse(false, "Request JSON is empty", nil)
+	}
+
+	// Parse request
+	req := &v1models.ListFilesRequest{}
+	marshaller := wasm.GetGlobalMarshaller()
+	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
+		DiscardUnknown: true,
+		AllowPartial:   true, // Allow partial messages for better compatibility
+	}); err != nil {
+		return createJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Call service method
+	resp, err := exports.FileStoreService.ListFiles(ctx, req)
 	if err != nil {
 		return createJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
 	}

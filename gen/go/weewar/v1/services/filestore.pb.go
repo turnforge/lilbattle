@@ -27,12 +27,13 @@ var File_weewar_v1_services_filestore_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_services_filestore_proto_rawDesc = "" +
 	"\n" +
-	"\"weewar/v1/services/filestore.proto\x12\tweewar.v1\x1a\x1cgoogle/api/annotations.proto\x1a weewar/v1/models/filestore.proto2\xbd\x02\n" +
+	"\"weewar/v1/services/filestore.proto\x12\tweewar.v1\x1a\x1cgoogle/api/annotations.proto\x1a weewar/v1/models/filestore.proto2\x98\x03\n" +
 	"\x10FileStoreService\x12d\n" +
 	"\aPutFile\x12\x19.weewar.v1.PutFileRequest\x1a\x1a.weewar.v1.PutFileResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/files/{file.path=*}\x12\\\n" +
 	"\aGetFile\x12\x19.weewar.v1.GetFileRequest\x1a\x1a.weewar.v1.GetFileResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/files/{path=*}\x12e\n" +
 	"\n" +
-	"DeleteFile\x12\x1c.weewar.v1.DeleteFileRequest\x1a\x1d.weewar.v1.DeleteFileResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/files/{path=*}B\xa4\x01\n" +
+	"DeleteFile\x12\x1c.weewar.v1.DeleteFileRequest\x1a\x1d.weewar.v1.DeleteFileResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/files/{path=*}\x12Y\n" +
+	"\tListFiles\x12\x1b.weewar.v1.ListFilesRequest\x1a\x1c.weewar.v1.ListFilesResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/v1/filesB\xa4\x01\n" +
 	"\rcom.weewar.v1B\x0eFilestoreProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 
@@ -40,19 +41,23 @@ var file_weewar_v1_services_filestore_proto_goTypes = []any{
 	(*models.PutFileRequest)(nil),     // 0: weewar.v1.PutFileRequest
 	(*models.GetFileRequest)(nil),     // 1: weewar.v1.GetFileRequest
 	(*models.DeleteFileRequest)(nil),  // 2: weewar.v1.DeleteFileRequest
-	(*models.PutFileResponse)(nil),    // 3: weewar.v1.PutFileResponse
-	(*models.GetFileResponse)(nil),    // 4: weewar.v1.GetFileResponse
-	(*models.DeleteFileResponse)(nil), // 5: weewar.v1.DeleteFileResponse
+	(*models.ListFilesRequest)(nil),   // 3: weewar.v1.ListFilesRequest
+	(*models.PutFileResponse)(nil),    // 4: weewar.v1.PutFileResponse
+	(*models.GetFileResponse)(nil),    // 5: weewar.v1.GetFileResponse
+	(*models.DeleteFileResponse)(nil), // 6: weewar.v1.DeleteFileResponse
+	(*models.ListFilesResponse)(nil),  // 7: weewar.v1.ListFilesResponse
 }
 var file_weewar_v1_services_filestore_proto_depIdxs = []int32{
 	0, // 0: weewar.v1.FileStoreService.PutFile:input_type -> weewar.v1.PutFileRequest
 	1, // 1: weewar.v1.FileStoreService.GetFile:input_type -> weewar.v1.GetFileRequest
 	2, // 2: weewar.v1.FileStoreService.DeleteFile:input_type -> weewar.v1.DeleteFileRequest
-	3, // 3: weewar.v1.FileStoreService.PutFile:output_type -> weewar.v1.PutFileResponse
-	4, // 4: weewar.v1.FileStoreService.GetFile:output_type -> weewar.v1.GetFileResponse
-	5, // 5: weewar.v1.FileStoreService.DeleteFile:output_type -> weewar.v1.DeleteFileResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	3, // 3: weewar.v1.FileStoreService.ListFiles:input_type -> weewar.v1.ListFilesRequest
+	4, // 4: weewar.v1.FileStoreService.PutFile:output_type -> weewar.v1.PutFileResponse
+	5, // 5: weewar.v1.FileStoreService.GetFile:output_type -> weewar.v1.GetFileResponse
+	6, // 6: weewar.v1.FileStoreService.DeleteFile:output_type -> weewar.v1.DeleteFileResponse
+	7, // 7: weewar.v1.FileStoreService.ListFiles:output_type -> weewar.v1.ListFilesResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

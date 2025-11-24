@@ -81,6 +81,8 @@ func local_request_FileStoreService_PutFile_0(ctx context.Context, marshaler run
 	return msg, metadata, err
 }
 
+var filter_FileStoreService_GetFile_0 = &utilities.DoubleArray{Encoding: map[string]int{"path": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+
 func request_FileStoreService_GetFile_0(ctx context.Context, marshaler runtime.Marshaler, client FileStoreServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq weewarv1.GetFileRequest
@@ -97,6 +99,12 @@ func request_FileStoreService_GetFile_0(ctx context.Context, marshaler runtime.M
 	protoReq.Path, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_FileStoreService_GetFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.GetFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -115,6 +123,12 @@ func local_request_FileStoreService_GetFile_0(ctx context.Context, marshaler run
 	protoReq.Path, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_FileStoreService_GetFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.GetFile(ctx, &protoReq)
 	return msg, metadata, err
@@ -156,6 +170,41 @@ func local_request_FileStoreService_DeleteFile_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	msg, err := server.DeleteFile(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_FileStoreService_ListFiles_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_FileStoreService_ListFiles_0(ctx context.Context, marshaler runtime.Marshaler, client FileStoreServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq weewarv1.ListFilesRequest
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_FileStoreService_ListFiles_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.ListFiles(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_FileStoreService_ListFiles_0(ctx context.Context, marshaler runtime.Marshaler, server FileStoreServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq weewarv1.ListFilesRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_FileStoreService_ListFiles_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListFiles(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -224,6 +273,26 @@ func RegisterFileStoreServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 			return
 		}
 		forward_FileStoreService_DeleteFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_FileStoreService_ListFiles_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.FileStoreService/ListFiles", runtime.WithHTTPPathPattern("/v1/files"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_FileStoreService_ListFiles_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_FileStoreService_ListFiles_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -316,6 +385,23 @@ func RegisterFileStoreServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_FileStoreService_DeleteFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_FileStoreService_ListFiles_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.FileStoreService/ListFiles", runtime.WithHTTPPathPattern("/v1/files"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_FileStoreService_ListFiles_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_FileStoreService_ListFiles_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
@@ -323,10 +409,12 @@ var (
 	pattern_FileStoreService_PutFile_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "files", "file.path"}, ""))
 	pattern_FileStoreService_GetFile_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "files", "path"}, ""))
 	pattern_FileStoreService_DeleteFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "files", "path"}, ""))
+	pattern_FileStoreService_ListFiles_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "files"}, ""))
 )
 
 var (
 	forward_FileStoreService_PutFile_0    = runtime.ForwardResponseMessage
 	forward_FileStoreService_GetFile_0    = runtime.ForwardResponseMessage
 	forward_FileStoreService_DeleteFile_0 = runtime.ForwardResponseMessage
+	forward_FileStoreService_ListFiles_0  = runtime.ForwardResponseMessage
 )

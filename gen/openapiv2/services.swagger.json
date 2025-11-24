@@ -37,6 +37,68 @@
     "application/json"
   ],
   "paths": {
+    "/v1/files": {
+      "get": {
+        "summary": "*\nLists files in a directory",
+        "operationId": "FileStoreService_ListFiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListFilesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "path",
+            "description": "Directory path to list files from (relative to base path)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.pageKey",
+            "description": "*\nInstead of an offset an abstract  \"page\" key is provided that offers\nan opaque \"pointer\" into some offset in a result set.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.pageOffset",
+            "description": "*\nIf a pagekey is not supported we can also support a direct integer offset\nfor cases where it makes sense.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pagination.pageSize",
+            "description": "*\nNumber of results to return.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "includeSignedUrls",
+            "description": "If true, populate signed_urls in each File response",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "FileStoreService"
+        ]
+      }
+    },
     "/v1/files/{file.path}": {
       "post": {
         "summary": "*\nCreate a LRO for indexing records",
@@ -98,7 +160,14 @@
                     },
                     "downloadUrl": {
                       "type": "string",
-                      "title": "The download/get URL for this file\nThis will be generated"
+                      "title": "The download/get URL for this file (public URL or default signed URL)"
+                    },
+                    "signedUrls": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "title": "Signed URLs with different expiries (e.g., \"15m\", \"1h\", \"24h\")\nOnly populated when requested"
                     }
                   }
                 },
@@ -140,6 +209,13 @@
             "required": true,
             "type": "string",
             "pattern": "[^/]+"
+          },
+          {
+            "name": "includeSignedUrls",
+            "description": "If true, populate signed_urls in the File response",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2047,7 +2123,14 @@
         },
         "downloadUrl": {
           "type": "string",
-          "title": "The download/get URL for this file\nThis will be generated"
+          "title": "The download/get URL for this file (public URL or default signed URL)"
+        },
+        "signedUrls": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Signed URLs with different expiries (e.g., \"15m\", \"1h\", \"24h\")\nOnly populated when requested"
         }
       }
     },
@@ -2722,6 +2805,21 @@
         }
       },
       "title": "Response of a turn option click"
+    },
+    "v1ListFilesResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1File"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1PaginationResponse"
+        }
+      }
     },
     "v1ListGamesResponse": {
       "type": "object",

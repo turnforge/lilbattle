@@ -25,6 +25,9 @@ type FileStoreServiceServer interface {
 	/** *
 	Deletes a file */
 	DeleteFile(context.Context, *v1models.DeleteFileRequest) (*v1models.DeleteFileResponse, error)
+	/** *
+	Lists files in a directory */
+	ListFiles(context.Context, *v1models.ListFilesRequest) (*v1models.ListFilesResponse, error)
 }
 
 // GamesServiceServer is the server API for GamesService service (WASM version without gRPC embedding).

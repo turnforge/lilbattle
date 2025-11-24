@@ -6,152 +6,6 @@ import { FieldType, FieldSchema, MessageSchema, BaseSchemaRegistry } from "@prot
 
 
 /**
- * Schema for File message
- */
-export const FileSchema: MessageSchema = {
-  name: "File",
-  fields: [
-    {
-      name: "path",
-      type: FieldType.STRING,
-      id: 1,
-    },
-    {
-      name: "contentType",
-      type: FieldType.STRING,
-      id: 2,
-    },
-    {
-      name: "fileSize",
-      type: FieldType.NUMBER,
-      id: 3,
-    },
-    {
-      name: "isPublic",
-      type: FieldType.BOOLEAN,
-      id: 4,
-    },
-    {
-      name: "createdAt",
-      type: FieldType.MESSAGE,
-      id: 5,
-      messageType: "google.protobuf.Timestamp",
-    },
-    {
-      name: "updatedAt",
-      type: FieldType.MESSAGE,
-      id: 6,
-      messageType: "google.protobuf.Timestamp",
-    },
-    {
-      name: "downloadUrl",
-      type: FieldType.STRING,
-      id: 7,
-    },
-  ],
-};
-
-
-/**
- * Schema for PutFileRequest message
- */
-export const PutFileRequestSchema: MessageSchema = {
-  name: "PutFileRequest",
-  fields: [
-    {
-      name: "file",
-      type: FieldType.MESSAGE,
-      id: 1,
-      messageType: "weewar.v1.File",
-    },
-    {
-      name: "content",
-      type: FieldType.STRING,
-      id: 2,
-    },
-  ],
-};
-
-
-/**
- * Schema for PutFileResponse message
- */
-export const PutFileResponseSchema: MessageSchema = {
-  name: "PutFileResponse",
-  fields: [
-    {
-      name: "file",
-      type: FieldType.MESSAGE,
-      id: 1,
-      messageType: "weewar.v1.File",
-    },
-  ],
-};
-
-
-/**
- * Schema for GetFileRequest message
- */
-export const GetFileRequestSchema: MessageSchema = {
-  name: "GetFileRequest",
-  fields: [
-    {
-      name: "path",
-      type: FieldType.STRING,
-      id: 1,
-    },
-  ],
-};
-
-
-/**
- * Schema for GetFileResponse message
- */
-export const GetFileResponseSchema: MessageSchema = {
-  name: "GetFileResponse",
-  fields: [
-    {
-      name: "file",
-      type: FieldType.MESSAGE,
-      id: 1,
-      messageType: "weewar.v1.File",
-    },
-  ],
-};
-
-
-/**
- * Schema for DeleteFileRequest message
- */
-export const DeleteFileRequestSchema: MessageSchema = {
-  name: "DeleteFileRequest",
-  fields: [
-    {
-      name: "path",
-      type: FieldType.STRING,
-      id: 1,
-    },
-  ],
-};
-
-
-/**
- * Schema for DeleteFileResponse message
- */
-export const DeleteFileResponseSchema: MessageSchema = {
-  name: "DeleteFileResponse",
-  fields: [
-    {
-      name: "file",
-      type: FieldType.MESSAGE,
-      id: 1,
-      messageType: "weewar.v1.File",
-    },
-  ],
-};
-
-
-/**
  * Schema for IndexInfo message
  */
 export const IndexInfoSchema: MessageSchema = {
@@ -1819,6 +1673,211 @@ export const PathSchema: MessageSchema = {
       name: "totalCost",
       type: FieldType.NUMBER,
       id: 3,
+    },
+  ],
+};
+
+
+/**
+ * Schema for File message
+ */
+export const FileSchema: MessageSchema = {
+  name: "File",
+  fields: [
+    {
+      name: "path",
+      type: FieldType.STRING,
+      id: 1,
+    },
+    {
+      name: "contentType",
+      type: FieldType.STRING,
+      id: 2,
+    },
+    {
+      name: "fileSize",
+      type: FieldType.NUMBER,
+      id: 3,
+    },
+    {
+      name: "isPublic",
+      type: FieldType.BOOLEAN,
+      id: 4,
+    },
+    {
+      name: "createdAt",
+      type: FieldType.MESSAGE,
+      id: 5,
+      messageType: "google.protobuf.Timestamp",
+    },
+    {
+      name: "updatedAt",
+      type: FieldType.MESSAGE,
+      id: 6,
+      messageType: "google.protobuf.Timestamp",
+    },
+    {
+      name: "downloadUrl",
+      type: FieldType.STRING,
+      id: 7,
+    },
+    {
+      name: "signedUrls",
+      type: FieldType.STRING,
+      id: 8,
+    },
+  ],
+};
+
+
+/**
+ * Schema for PutFileRequest message
+ */
+export const PutFileRequestSchema: MessageSchema = {
+  name: "PutFileRequest",
+  fields: [
+    {
+      name: "file",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.File",
+    },
+    {
+      name: "content",
+      type: FieldType.STRING,
+      id: 2,
+    },
+  ],
+};
+
+
+/**
+ * Schema for PutFileResponse message
+ */
+export const PutFileResponseSchema: MessageSchema = {
+  name: "PutFileResponse",
+  fields: [
+    {
+      name: "file",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.File",
+    },
+  ],
+};
+
+
+/**
+ * Schema for GetFileRequest message
+ */
+export const GetFileRequestSchema: MessageSchema = {
+  name: "GetFileRequest",
+  fields: [
+    {
+      name: "path",
+      type: FieldType.STRING,
+      id: 1,
+    },
+    {
+      name: "includeSignedUrls",
+      type: FieldType.BOOLEAN,
+      id: 2,
+    },
+  ],
+};
+
+
+/**
+ * Schema for GetFileResponse message
+ */
+export const GetFileResponseSchema: MessageSchema = {
+  name: "GetFileResponse",
+  fields: [
+    {
+      name: "file",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.File",
+    },
+  ],
+};
+
+
+/**
+ * Schema for DeleteFileRequest message
+ */
+export const DeleteFileRequestSchema: MessageSchema = {
+  name: "DeleteFileRequest",
+  fields: [
+    {
+      name: "path",
+      type: FieldType.STRING,
+      id: 1,
+    },
+  ],
+};
+
+
+/**
+ * Schema for DeleteFileResponse message
+ */
+export const DeleteFileResponseSchema: MessageSchema = {
+  name: "DeleteFileResponse",
+  fields: [
+    {
+      name: "file",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.File",
+    },
+  ],
+};
+
+
+/**
+ * Schema for ListFilesRequest message
+ */
+export const ListFilesRequestSchema: MessageSchema = {
+  name: "ListFilesRequest",
+  fields: [
+    {
+      name: "path",
+      type: FieldType.STRING,
+      id: 1,
+    },
+    {
+      name: "pagination",
+      type: FieldType.MESSAGE,
+      id: 2,
+      messageType: "weewar.v1.Pagination",
+    },
+    {
+      name: "includeSignedUrls",
+      type: FieldType.BOOLEAN,
+      id: 3,
+    },
+  ],
+};
+
+
+/**
+ * Schema for ListFilesResponse message
+ */
+export const ListFilesResponseSchema: MessageSchema = {
+  name: "ListFilesResponse",
+  fields: [
+    {
+      name: "items",
+      type: FieldType.MESSAGE,
+      id: 1,
+      messageType: "weewar.v1.File",
+      repeated: true,
+    },
+    {
+      name: "pagination",
+      type: FieldType.MESSAGE,
+      id: 2,
+      messageType: "weewar.v1.PaginationResponse",
     },
   ],
 };
@@ -4747,13 +4806,6 @@ export const CreateWorldResponseSchema: MessageSchema = {
  * Package-scoped schema registry for weewar.v1
  */
 export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
-  "weewar.v1.File": FileSchema,
-  "weewar.v1.PutFileRequest": PutFileRequestSchema,
-  "weewar.v1.PutFileResponse": PutFileResponseSchema,
-  "weewar.v1.GetFileRequest": GetFileRequestSchema,
-  "weewar.v1.GetFileResponse": GetFileResponseSchema,
-  "weewar.v1.DeleteFileRequest": DeleteFileRequestSchema,
-  "weewar.v1.DeleteFileResponse": DeleteFileResponseSchema,
   "weewar.v1.IndexInfo": IndexInfoSchema,
   "weewar.v1.User": UserSchema,
   "weewar.v1.Pagination": PaginationSchema,
@@ -4795,6 +4847,15 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.AllPaths": AllPathsSchema,
   "weewar.v1.PathEdge": PathEdgeSchema,
   "weewar.v1.Path": PathSchema,
+  "weewar.v1.File": FileSchema,
+  "weewar.v1.PutFileRequest": PutFileRequestSchema,
+  "weewar.v1.PutFileResponse": PutFileResponseSchema,
+  "weewar.v1.GetFileRequest": GetFileRequestSchema,
+  "weewar.v1.GetFileResponse": GetFileResponseSchema,
+  "weewar.v1.DeleteFileRequest": DeleteFileRequestSchema,
+  "weewar.v1.DeleteFileResponse": DeleteFileResponseSchema,
+  "weewar.v1.ListFilesRequest": ListFilesRequestSchema,
+  "weewar.v1.ListFilesResponse": ListFilesResponseSchema,
   "weewar.v1.ListGamesRequest": ListGamesRequestSchema,
   "weewar.v1.ListGamesResponse": ListGamesResponseSchema,
   "weewar.v1.GetGameRequest": GetGameRequestSchema,

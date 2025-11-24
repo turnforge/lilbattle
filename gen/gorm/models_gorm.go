@@ -361,8 +361,8 @@ type GameMoveGroupGORM struct {
 
 // GameMoveGORM is the GORM model for weewar.v1.GameMove
 type GameMoveGORM struct {
-	GameId      string `gorm:"primaryKey"`
 	Player      int32
+	GameId      string `gorm:"primaryKey"`
 	Timestamp   time.Time
 	GroupNumber string `gorm:"primaryKey"`
 	MoveNumber  int32  `gorm:"primaryKey"`

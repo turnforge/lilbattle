@@ -44,6 +44,9 @@ const (
 	// FileStoreServiceDeleteFileProcedure is the fully-qualified name of the FileStoreService's
 	// DeleteFile RPC.
 	FileStoreServiceDeleteFileProcedure = "/weewar.v1.FileStoreService/DeleteFile"
+	// FileStoreServiceListFilesProcedure is the fully-qualified name of the FileStoreService's
+	// ListFiles RPC.
+	FileStoreServiceListFilesProcedure = "/weewar.v1.FileStoreService/ListFiles"
 )
 
 // FileStoreServiceClient is a client for the weewar.v1.FileStoreService service.
@@ -57,6 +60,9 @@ type FileStoreServiceClient interface {
 	// *
 	// Deletes a file
 	DeleteFile(context.Context, *connect.Request[models.DeleteFileRequest]) (*connect.Response[models.DeleteFileResponse], error)
+	// *
+	// Lists files in a directory
+	ListFiles(context.Context, *connect.Request[models.ListFilesRequest]) (*connect.Response[models.ListFilesResponse], error)
 }
 
 // NewFileStoreServiceClient constructs a client for the weewar.v1.FileStoreService service. By
@@ -88,6 +94,12 @@ func NewFileStoreServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(fileStoreServiceMethods.ByName("DeleteFile")),
 			connect.WithClientOptions(opts...),
 		),
+		listFiles: connect.NewClient[models.ListFilesRequest, models.ListFilesResponse](
+			httpClient,
+			baseURL+FileStoreServiceListFilesProcedure,
+			connect.WithSchema(fileStoreServiceMethods.ByName("ListFiles")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -96,6 +108,7 @@ type fileStoreServiceClient struct {
 	putFile    *connect.Client[models.PutFileRequest, models.PutFileResponse]
 	getFile    *connect.Client[models.GetFileRequest, models.GetFileResponse]
 	deleteFile *connect.Client[models.DeleteFileRequest, models.DeleteFileResponse]
+	listFiles  *connect.Client[models.ListFilesRequest, models.ListFilesResponse]
 }
 
 // PutFile calls weewar.v1.FileStoreService.PutFile.
@@ -113,6 +126,11 @@ func (c *fileStoreServiceClient) DeleteFile(ctx context.Context, req *connect.Re
 	return c.deleteFile.CallUnary(ctx, req)
 }
 
+// ListFiles calls weewar.v1.FileStoreService.ListFiles.
+func (c *fileStoreServiceClient) ListFiles(ctx context.Context, req *connect.Request[models.ListFilesRequest]) (*connect.Response[models.ListFilesResponse], error) {
+	return c.listFiles.CallUnary(ctx, req)
+}
+
 // FileStoreServiceHandler is an implementation of the weewar.v1.FileStoreService service.
 type FileStoreServiceHandler interface {
 	// *
@@ -124,6 +142,9 @@ type FileStoreServiceHandler interface {
 	// *
 	// Deletes a file
 	DeleteFile(context.Context, *connect.Request[models.DeleteFileRequest]) (*connect.Response[models.DeleteFileResponse], error)
+	// *
+	// Lists files in a directory
+	ListFiles(context.Context, *connect.Request[models.ListFilesRequest]) (*connect.Response[models.ListFilesResponse], error)
 }
 
 // NewFileStoreServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -151,6 +172,12 @@ func NewFileStoreServiceHandler(svc FileStoreServiceHandler, opts ...connect.Han
 		connect.WithSchema(fileStoreServiceMethods.ByName("DeleteFile")),
 		connect.WithHandlerOptions(opts...),
 	)
+	fileStoreServiceListFilesHandler := connect.NewUnaryHandler(
+		FileStoreServiceListFilesProcedure,
+		svc.ListFiles,
+		connect.WithSchema(fileStoreServiceMethods.ByName("ListFiles")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/weewar.v1.FileStoreService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case FileStoreServicePutFileProcedure:
@@ -159,6 +186,8 @@ func NewFileStoreServiceHandler(svc FileStoreServiceHandler, opts ...connect.Han
 			fileStoreServiceGetFileHandler.ServeHTTP(w, r)
 		case FileStoreServiceDeleteFileProcedure:
 			fileStoreServiceDeleteFileHandler.ServeHTTP(w, r)
+		case FileStoreServiceListFilesProcedure:
+			fileStoreServiceListFilesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -178,4 +207,8 @@ func (UnimplementedFileStoreServiceHandler) GetFile(context.Context, *connect.Re
 
 func (UnimplementedFileStoreServiceHandler) DeleteFile(context.Context, *connect.Request[models.DeleteFileRequest]) (*connect.Response[models.DeleteFileResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.FileStoreService.DeleteFile is not implemented"))
+}
+
+func (UnimplementedFileStoreServiceHandler) ListFiles(context.Context, *connect.Request[models.ListFilesRequest]) (*connect.Response[models.ListFilesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.FileStoreService.ListFiles is not implemented"))
 }

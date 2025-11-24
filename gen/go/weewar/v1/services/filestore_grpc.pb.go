@@ -24,6 +24,7 @@ const (
 	FileStoreService_PutFile_FullMethodName    = "/weewar.v1.FileStoreService/PutFile"
 	FileStoreService_GetFile_FullMethodName    = "/weewar.v1.FileStoreService/GetFile"
 	FileStoreService_DeleteFile_FullMethodName = "/weewar.v1.FileStoreService/DeleteFile"
+	FileStoreService_ListFiles_FullMethodName  = "/weewar.v1.FileStoreService/ListFiles"
 )
 
 // FileStoreServiceClient is the client API for FileStoreService service.
@@ -41,6 +42,9 @@ type FileStoreServiceClient interface {
 	// *
 	// Deletes a file
 	DeleteFile(ctx context.Context, in *models.DeleteFileRequest, opts ...grpc.CallOption) (*models.DeleteFileResponse, error)
+	// *
+	// Lists files in a directory
+	ListFiles(ctx context.Context, in *models.ListFilesRequest, opts ...grpc.CallOption) (*models.ListFilesResponse, error)
 }
 
 type fileStoreServiceClient struct {
@@ -81,6 +85,16 @@ func (c *fileStoreServiceClient) DeleteFile(ctx context.Context, in *models.Dele
 	return out, nil
 }
 
+func (c *fileStoreServiceClient) ListFiles(ctx context.Context, in *models.ListFilesRequest, opts ...grpc.CallOption) (*models.ListFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(models.ListFilesResponse)
+	err := c.cc.Invoke(ctx, FileStoreService_ListFiles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileStoreServiceServer is the server API for FileStoreService service.
 // All implementations should embed UnimplementedFileStoreServiceServer
 // for forward compatibility.
@@ -96,6 +110,9 @@ type FileStoreServiceServer interface {
 	// *
 	// Deletes a file
 	DeleteFile(context.Context, *models.DeleteFileRequest) (*models.DeleteFileResponse, error)
+	// *
+	// Lists files in a directory
+	ListFiles(context.Context, *models.ListFilesRequest) (*models.ListFilesResponse, error)
 }
 
 // UnimplementedFileStoreServiceServer should be embedded to have
@@ -113,6 +130,9 @@ func (UnimplementedFileStoreServiceServer) GetFile(context.Context, *models.GetF
 }
 func (UnimplementedFileStoreServiceServer) DeleteFile(context.Context, *models.DeleteFileRequest) (*models.DeleteFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
+}
+func (UnimplementedFileStoreServiceServer) ListFiles(context.Context, *models.ListFilesRequest) (*models.ListFilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFiles not implemented")
 }
 func (UnimplementedFileStoreServiceServer) testEmbeddedByValue() {}
 
@@ -188,6 +208,24 @@ func _FileStoreService_DeleteFile_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileStoreService_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(models.ListFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileStoreServiceServer).ListFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileStoreService_ListFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileStoreServiceServer).ListFiles(ctx, req.(*models.ListFilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileStoreService_ServiceDesc is the grpc.ServiceDesc for FileStoreService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +244,10 @@ var FileStoreService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteFile",
 			Handler:    _FileStoreService_DeleteFile_Handler,
+		},
+		{
+			MethodName: "ListFiles",
+			Handler:    _FileStoreService_ListFiles_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

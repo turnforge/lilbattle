@@ -30,6 +30,11 @@ class FileStoreServiceStub(object):
                 request_serializer=weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileResponse.FromString,
                 _registered_method=True)
+        self.ListFiles = channel.unary_unary(
+                '/weewar.v1.FileStoreService/ListFiles',
+                request_serializer=weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesResponse.FromString,
+                _registered_method=True)
 
 
 class FileStoreServiceServicer(object):
@@ -60,6 +65,14 @@ class FileStoreServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListFiles(self, request, context):
+        """*
+        Lists files in a directory
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FileStoreServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -77,6 +90,11 @@ def add_FileStoreServiceServicer_to_server(servicer, server):
                     servicer.DeleteFile,
                     request_deserializer=weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileResponse.SerializeToString,
+            ),
+            'ListFiles': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListFiles,
+                    request_deserializer=weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -161,6 +179,33 @@ class FileStoreService(object):
             '/weewar.v1.FileStoreService/DeleteFile',
             weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileRequest.SerializeToString,
             weewar_dot_v1_dot_models_dot_filestore__pb2.DeleteFileResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListFiles(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.FileStoreService/ListFiles',
+            weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesRequest.SerializeToString,
+            weewar_dot_v1_dot_models_dot_filestore__pb2.ListFilesResponse.FromString,
             options,
             channel_credentials,
             insecure,

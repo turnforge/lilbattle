@@ -6,13 +6,15 @@ import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_any, file_google_protobuf_field_mask, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { Pagination, PaginationResponse } from "./models_pb";
+import { file_weewar_v1_models_models } from "./models_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file weewar/v1/models/filestore.proto.
  */
 export const file_weewar_v1_models_filestore: GenFile = /*@__PURE__*/
-  fileDesc("CiB3ZWV3YXIvdjEvbW9kZWxzL2ZpbGVzdG9yZS5wcm90bxIJd2Vld2FyLnYxIsYBCgRGaWxlEgwKBHBhdGgYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhEKCWZpbGVfc2l6ZRgDIAEoBBIRCglpc19wdWJsaWMYBCABKAgSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG93bmxvYWRfdXJsGAcgASgJIkAKDlB1dEZpbGVSZXF1ZXN0Eh0KBGZpbGUYASABKAsyDy53ZWV3YXIudjEuRmlsZRIPCgdjb250ZW50GAIgASgMIjAKD1B1dEZpbGVSZXNwb25zZRIdCgRmaWxlGAEgASgLMg8ud2Vld2FyLnYxLkZpbGUiHgoOR2V0RmlsZVJlcXVlc3QSDAoEcGF0aBgBIAEoCSIwCg9HZXRGaWxlUmVzcG9uc2USHQoEZmlsZRgBIAEoCzIPLndlZXdhci52MS5GaWxlIiEKEURlbGV0ZUZpbGVSZXF1ZXN0EgwKBHBhdGgYASABKAkiMwoSRGVsZXRlRmlsZVJlc3BvbnNlEh0KBGZpbGUYASABKAsyDy53ZWV3YXIudjEuRmlsZUKiAQoNY29tLndlZXdhci52MUIORmlsZXN0b3JlUHJvdG9QAVo8Z2l0aHViLmNvbS90dXJuZm9yZ2Uvd2Vld2FyL2dlbi9nby93ZWV3YXIvdjEvbW9kZWxzO3dlZXdhcnYxogIDV1hYqgIJV2Vld2FyLlYxygIJV2Vld2FyXFYx4gIVV2Vld2FyXFYxXEdQQk1ldGFkYXRh6gIKV2Vld2FyOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp, file_google_protobuf_any, file_google_protobuf_field_mask]);
+  fileDesc("CiB3ZWV3YXIvdjEvbW9kZWxzL2ZpbGVzdG9yZS5wcm90bxIJd2Vld2FyLnYxIq8CCgRGaWxlEgwKBHBhdGgYASABKAkSFAoMY29udGVudF90eXBlGAIgASgJEhEKCWZpbGVfc2l6ZRgDIAEoBBIRCglpc19wdWJsaWMYBCABKAgSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFAoMZG93bmxvYWRfdXJsGAcgASgJEjQKC3NpZ25lZF91cmxzGAggAygLMh8ud2Vld2FyLnYxLkZpbGUuU2lnbmVkVXJsc0VudHJ5GjEKD1NpZ25lZFVybHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIkAKDlB1dEZpbGVSZXF1ZXN0Eh0KBGZpbGUYASABKAsyDy53ZWV3YXIudjEuRmlsZRIPCgdjb250ZW50GAIgASgMIjAKD1B1dEZpbGVSZXNwb25zZRIdCgRmaWxlGAEgASgLMg8ud2Vld2FyLnYxLkZpbGUiOwoOR2V0RmlsZVJlcXVlc3QSDAoEcGF0aBgBIAEoCRIbChNpbmNsdWRlX3NpZ25lZF91cmxzGAIgASgIIjAKD0dldEZpbGVSZXNwb25zZRIdCgRmaWxlGAEgASgLMg8ud2Vld2FyLnYxLkZpbGUiIQoRRGVsZXRlRmlsZVJlcXVlc3QSDAoEcGF0aBgBIAEoCSIzChJEZWxldGVGaWxlUmVzcG9uc2USHQoEZmlsZRgBIAEoCzIPLndlZXdhci52MS5GaWxlImgKEExpc3RGaWxlc1JlcXVlc3QSDAoEcGF0aBgBIAEoCRIpCgpwYWdpbmF0aW9uGAIgASgLMhUud2Vld2FyLnYxLlBhZ2luYXRpb24SGwoTaW5jbHVkZV9zaWduZWRfdXJscxgDIAEoCCJmChFMaXN0RmlsZXNSZXNwb25zZRIeCgVpdGVtcxgBIAMoCzIPLndlZXdhci52MS5GaWxlEjEKCnBhZ2luYXRpb24YAiABKAsyHS53ZWV3YXIudjEuUGFnaW5hdGlvblJlc3BvbnNlQqIBCg1jb20ud2Vld2FyLnYxQg5GaWxlc3RvcmVQcm90b1ABWjxnaXRodWIuY29tL3R1cm5mb3JnZS93ZWV3YXIvZ2VuL2dvL3dlZXdhci92MS9tb2RlbHM7d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_google_protobuf_any, file_google_protobuf_field_mask, file_weewar_v1_models_models]);
 
 /**
  * @generated from message weewar.v1.File
@@ -59,12 +61,19 @@ export type File = Message<"weewar.v1.File"> & {
   updatedAt?: Timestamp;
 
   /**
-   * The download/get URL for this file
-   * This will be generated
+   * The download/get URL for this file (public URL or default signed URL)
    *
    * @generated from field: string download_url = 7;
    */
   downloadUrl: string;
+
+  /**
+   * Signed URLs with different expiries (e.g., "15m", "1h", "24h")
+   * Only populated when requested
+   *
+   * @generated from field: map<string, string> signed_urls = 8;
+   */
+  signedUrls: { [key: string]: string };
 };
 
 /**
@@ -121,6 +130,13 @@ export type GetFileRequest = Message<"weewar.v1.GetFileRequest"> & {
    * @generated from field: string path = 1;
    */
   path: string;
+
+  /**
+   * If true, populate signed_urls in the File response
+   *
+   * @generated from field: bool include_signed_urls = 2;
+   */
+  includeSignedUrls: boolean;
 };
 
 /**
@@ -180,4 +196,59 @@ export type DeleteFileResponse = Message<"weewar.v1.DeleteFileResponse"> & {
  */
 export const DeleteFileResponseSchema: GenMessage<DeleteFileResponse> = /*@__PURE__*/
   messageDesc(file_weewar_v1_models_filestore, 6);
+
+/**
+ * @generated from message weewar.v1.ListFilesRequest
+ */
+export type ListFilesRequest = Message<"weewar.v1.ListFilesRequest"> & {
+  /**
+   * Directory path to list files from (relative to base path)
+   *
+   * @generated from field: string path = 1;
+   */
+  path: string;
+
+  /**
+   * Pagination info
+   *
+   * @generated from field: weewar.v1.Pagination pagination = 2;
+   */
+  pagination?: Pagination;
+
+  /**
+   * If true, populate signed_urls in each File response
+   *
+   * @generated from field: bool include_signed_urls = 3;
+   */
+  includeSignedUrls: boolean;
+};
+
+/**
+ * Describes the message weewar.v1.ListFilesRequest.
+ * Use `create(ListFilesRequestSchema)` to create a new message.
+ */
+export const ListFilesRequestSchema: GenMessage<ListFilesRequest> = /*@__PURE__*/
+  messageDesc(file_weewar_v1_models_filestore, 7);
+
+/**
+ * @generated from message weewar.v1.ListFilesResponse
+ */
+export type ListFilesResponse = Message<"weewar.v1.ListFilesResponse"> & {
+  /**
+   * @generated from field: repeated weewar.v1.File items = 1;
+   */
+  items: File[];
+
+  /**
+   * @generated from field: weewar.v1.PaginationResponse pagination = 2;
+   */
+  pagination?: PaginationResponse;
+};
+
+/**
+ * Describes the message weewar.v1.ListFilesResponse.
+ * Use `create(ListFilesResponseSchema)` to create a new message.
+ */
+export const ListFilesResponseSchema: GenMessage<ListFilesResponse> = /*@__PURE__*/
+  messageDesc(file_weewar_v1_models_filestore, 8);
 
