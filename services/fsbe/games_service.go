@@ -13,7 +13,6 @@ import (
 
 	"github.com/turnforge/turnengine/engine/storage"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	v1services "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/protobuf/proto"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -24,8 +23,7 @@ var GAMES_STORAGE_DIR = ""
 // FSGamesService implements the GamesService gRPC interface
 type FSGamesService struct {
 	services.BaseGamesService
-	WorldsService v1services.WorldsServiceServer
-	storage       *storage.FileStorage // Storage area for all files
+	storage *storage.FileStorage // Storage area for all files
 
 	// Simple caches - maps with game ID as key
 	gameCache    map[string]*v1.Game
@@ -35,7 +33,7 @@ type FSGamesService struct {
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
-func NewFSGamesService(storageDir string) *FSGamesService {
+func NewFSGamesService(storageDir string, clientMgr *services.ClientMgr) *FSGamesService {
 	if storageDir == "" {
 		if GAMES_STORAGE_DIR == "" {
 			GAMES_STORAGE_DIR = DevDataPath("storage/games")
@@ -43,8 +41,7 @@ func NewFSGamesService(storageDir string) *FSGamesService {
 		storageDir = GAMES_STORAGE_DIR
 	}
 	service := &FSGamesService{
-		BaseGamesService: services.BaseGamesService{},
-		WorldsService:    NewFSWorldsService(""),
+		BaseGamesService: services.BaseGamesService{ClientMgr: clientMgr},
 		storage:          storage.NewFileStorage(storageDir),
 		gameCache:        make(map[string]*v1.Game),
 		stateCache:       make(map[string]*v1.GameState),
@@ -161,7 +158,8 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 		return nil, fmt.Errorf("failed to create game: %w", err)
 	}
 
-	world, err := s.WorldsService.GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
+	worldsSvcClient := s.ClientMgr.GetWorldsSvcClient()
+	world, err := worldsSvcClient.GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
 	if err != nil {
 		return nil, fmt.Errorf("Error loading world: %w", err)
 	}

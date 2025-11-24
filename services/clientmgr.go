@@ -5,15 +5,15 @@
 // It contains gRPC client code that requires net/http packages
 // which are not supported by TinyGo's WASM target.
 
-package server
+package services
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	v1s "github.com/turnforge/weewar/gen/go/weewar/v1/services"
-	"github.com/turnforge/weewar/services/fsbe"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -24,10 +24,11 @@ const APP_ID = "weewar"
 var ErrNoSuchEntity = errors.New("entity not found")
 
 type ClientMgr struct {
-	svcAddr         string
-	gamesSvcClient  v1s.GamesServiceClient
-	worldsSvcClient v1s.WorldsServiceClient
-	authSvc         *fsbe.AuthService
+	svcAddr          string
+	indexerSvcClient v1s.IndexerServiceClient
+	worldsSvcClient  v1s.WorldsServiceClient
+	gamesSvcClient   v1s.GamesServiceClient
+	authSvc          *AuthService
 	// We may need an auth svc at some point
 }
 
@@ -35,6 +36,7 @@ func NewClientMgr(svc_addr string) *ClientMgr {
 	if svc_addr == "" {
 		panic("Service Address is nil")
 	}
+	log.Println("Client Mgr Svc Addr: ", svc_addr)
 	return &ClientMgr{svcAddr: svc_addr}
 }
 
@@ -49,39 +51,51 @@ func (c *ClientMgr) ClientContext(ctx context.Context, loggedInUserId string) co
 	return metadata.AppendToOutgoingContext(context.Background(), "LoggedInUserId", loggedInUserId)
 }
 
-func (c *ClientMgr) GetAuthService() *fsbe.AuthService {
+func (c *ClientMgr) GetAuthService() *AuthService {
 	if c.authSvc == nil {
-		c.authSvc = &fsbe.AuthService{
+		c.authSvc = &AuthService{
 			// clients: c
 		}
 	}
 	return c.authSvc
 }
 
-// We will have one client per service here
-func (c *ClientMgr) GetWorldsSvcClient() (out v1s.WorldsServiceClient, err error) {
-	if c.worldsSvcClient == nil {
-		worldsSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func (c *ClientMgr) GetIndexerSvcClient() (out v1s.IndexerServiceClient) {
+	if c.indexerSvcClient == nil {
+		indexerSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Printf("cannot connect with server %v", err)
-			return nil, err
+			panic(fmt.Sprintf("cannot connect with server %v", err))
+			// return nil, err
 		}
 
-		c.worldsSvcClient = v1s.NewWorldsServiceClient(worldsSvcConn)
+		c.indexerSvcClient = v1s.NewIndexerServiceClient(indexerSvcConn)
 	}
-	return c.worldsSvcClient, nil
+	return c.indexerSvcClient
 }
 
-// We will have one client per service here
-func (c *ClientMgr) GetGamesSvcClient() (out v1s.GamesServiceClient, err error) {
+func (c *ClientMgr) GetGamesSvcClient() (out v1s.GamesServiceClient) {
 	if c.gamesSvcClient == nil {
 		gamesSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Printf("cannot connect with server %v", err)
-			return nil, err
+			panic(fmt.Sprintf("cannot connect with server %v", err))
+			// return nil, err
 		}
 
 		c.gamesSvcClient = v1s.NewGamesServiceClient(gamesSvcConn)
 	}
-	return c.gamesSvcClient, nil
+	return c.gamesSvcClient
+
+}
+
+func (c *ClientMgr) GetWorldsSvcClient() (out v1s.WorldsServiceClient) {
+	if c.worldsSvcClient == nil {
+		worldsSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			panic(fmt.Sprintf("cannot connect with server %v", err))
+			// return nil
+		}
+
+		c.worldsSvcClient = v1s.NewWorldsServiceClient(worldsSvcConn)
+	}
+	return c.worldsSvcClient
 }

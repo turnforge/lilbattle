@@ -24,7 +24,7 @@ type FSWorldsService struct {
 }
 
 // NewFSWorldsService creates a new FSWorldsService implementation
-func NewFSWorldsService(storageDir string) *FSWorldsService {
+func NewFSWorldsService(storageDir string, clientMgr *services.ClientMgr) *FSWorldsService {
 	if storageDir == "" {
 		if WORLDS_STORAGE_DIR == "" {
 			WORLDS_STORAGE_DIR = DevDataPath("storage/worlds")
@@ -32,6 +32,7 @@ func NewFSWorldsService(storageDir string) *FSWorldsService {
 		storageDir = WORLDS_STORAGE_DIR
 	}
 	service := &FSWorldsService{storage: storage.NewFileStorage(storageDir)}
+	service.ClientMgr = clientMgr
 	return service
 }
 

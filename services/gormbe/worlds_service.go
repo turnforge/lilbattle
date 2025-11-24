@@ -11,6 +11,7 @@ import (
 	"time"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	v1s "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	v1gorm "github.com/turnforge/weewar/gen/gorm"
 	v1dal "github.com/turnforge/weewar/gen/gorm/dal"
 	"github.com/turnforge/weewar/services"
@@ -22,10 +23,14 @@ import (
 // WorldsService implements the WorldsService gRPC interface
 type WorldsService struct {
 	services.BaseWorldsService
-	storage      *gorm.DB
-	MaxPageSize  int
-	WorldDAL     v1dal.WorldGORMDAL
-	WorldDataDAL v1dal.WorldDataGORMDAL
+	indexerClient v1s.IndexerServiceClient
+	storage       *gorm.DB
+	MaxPageSize   int
+	WorldDAL      v1dal.WorldGORMDAL
+	WorldDataDAL  v1dal.WorldDataGORMDAL
+
+	// The chan where we write world event updates to
+	updateEventChan chan *v1gorm.WorldDataGORM
 }
 
 // NewWorldsService creates a new WorldsService implementation
@@ -35,8 +40,9 @@ func NewWorldsService(db *gorm.DB) *WorldsService {
 	db.AutoMigrate(&v1gorm.WorldDataGORM{})
 
 	service := &WorldsService{
-		storage:     db,
-		MaxPageSize: 1000,
+		storage:         db,
+		MaxPageSize:     1000,
+		updateEventChan: make(chan *v1gorm.WorldDataGORM),
 	}
 	service.WorldDAL.WillCreate = func(ctx context.Context, world *v1gorm.WorldGORM) error {
 		world.UpdatedAt = time.Now()
@@ -45,7 +51,44 @@ func NewWorldsService(db *gorm.DB) *WorldsService {
 	}
 	service.Self = service
 
+	go service.StartIndexer()
 	return service
+}
+
+func (b *WorldsService) StartIndexer() {
+	pickedInWindow := map[string]*v1gorm.WorldDataGORM{}
+	windowTimer := time.NewTimer(10 * time.Second)  // does the actual actioning the index update
+	checkerTimer := time.NewTimer(10 * time.Second) // we also see which items have "changed" but missed the indexing through some loss
+	startedBatchProcessing := false
+
+	// TODO - Put this into a worker pool later
+	startBatchProcessing := func(batch map[string]*v1gorm.WorldDataGORM) {
+		for worldId, worldData := range batch {
+			log.Println("Creating screenthots for: ", worldId, worldData)
+			// imageBytes := generateScreenshot(worldId, worldData)
+		}
+		startedBatchProcessing = false
+	}
+
+	for {
+		select {
+		case <-windowTimer.C:
+			log.Println("Time to update screenshots on batch")
+			if !startedBatchProcessing {
+				// if a batch process is already running then wait for next time to do this
+				startedBatchProcessing = true
+				go startBatchProcessing(pickedInWindow)
+				pickedInWindow = map[string]*v1gorm.WorldDataGORM{}
+			}
+		case newWorldData := <-b.updateEventChan:
+			curr, ok := pickedInWindow[newWorldData.WorldId]
+			if curr == nil || !ok || curr.ScreenshotIndexInfo.LastUpdatedAt.Before(newWorldData.ScreenshotIndexInfo.LastUpdatedAt) {
+				pickedInWindow[newWorldData.WorldId] = newWorldData
+			}
+		case <-checkerTimer.C:
+			log.Println("Time to proactively find items that need to be re-indexed")
+		}
+	}
 }
 
 // CreateWorld creates a new world
@@ -196,11 +239,6 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 	}
 	world.UpdatedAt = time.Now()
 
-	err = s.WorldDAL.Save(ctx, s.storage, world)
-	if err != nil {
-		return
-	}
-
 	// Update world data if provided
 	worldDataSaved := false
 	if req.ClearWorld {
@@ -225,14 +263,25 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		worldData.WorldId = req.World.Id
 	}
 
+	err = s.WorldDAL.Save(ctx, s.storage, world)
+	if err != nil {
+		return
+	}
+
 	log.Println("On Update, err: ", err)
 	log.Println("On Update, wds: ", worldDataSaved)
 	if err == nil && worldDataSaved {
+		worldData.ScreenshotIndexInfo.LastUpdatedAt = time.Now()
+		worldData.ScreenshotIndexInfo.NeedsIndexing = true
 		err = s.WorldDataDAL.Save(ctx, s.storage, worldData)
 		log.Println("New world data: ", worldData, err)
 		resp.World, err = v1gorm.WorldFromWorldGORM(nil, world, nil)
 		resp.WorldData, err = v1gorm.WorldDataFromWorldDataGORM(nil, worldData, nil)
+
+		// Queue it for being screenshotted
+		s.updateEventChan <- worldData
 	}
+
 	return resp, err
 }
 

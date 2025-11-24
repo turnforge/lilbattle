@@ -34,28 +34,6 @@ type Tag struct {
 	NumAppItems    int64
 }
 
-type AppItem struct {
-	BaseModel
-	Id         string   `datastore:"id" json:"id"`
-	OwnerId    string   `datastore:"ownerId" json:"ownerId"`
-	Visibility string   `datastore:"visibility" json:"visibility"`
-	VisibleTo  []string `datastore:"visibleTo" json:"visibleTo"`
-
-	/**
-	 * Name of the appitem
-	 */
-	Name string `datastore:"name" json:"name"`
-
-	/**
-	 * Description of this appitem.
-	 */
-	Description string `datastore:"description" json:"description"`
-
-	// Metadata about the content itself that user may want to
-	// highlight (or the system extracts)
-	// ContentMetadata StringMapField `datastore:"contentMetadata,noindex" json:"contentMetadata,noindex"`
-}
-
 /**
  * An identify is a unique global "address" corresponding to a user.
  * For example the identify abc@example.com is a unique identify regardless
@@ -106,7 +84,7 @@ func (i *Identity) Key() string {
 type User struct {
 	BaseModel
 
-	Id string `datastore:"id" json:"id"`
+	ID string `datastore:"id" json:"id"`
 
 	IsActive bool `datastore:"isActive" json:"isActive"`
 	// A globally unique user ID.  This User ID cannot be used as a login key.
@@ -117,7 +95,15 @@ type User struct {
 	// Name    string `datastore:"name" json:"name"`
 	// Email   string `datastore:"email" json:"email"`
 	// Picture string `datastore:"picture" json:"picture"`
-	Profile StringMapField `datastore:"profile" json:"profile"`
+	ProfileInfo StringMapField `datastore:"profile" json:"profile"`
+}
+
+func (u *User) Id() string {
+	return u.ID
+}
+
+func (u *User) Profile() map[string]any {
+	return u.ProfileInfo.Properties
 }
 
 type AuthFlow struct {

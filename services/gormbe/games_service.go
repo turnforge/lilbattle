@@ -9,7 +9,6 @@ import (
 
 	gfn "github.com/panyam/goutils/fn"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	v1services "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	v1gorm "github.com/turnforge/weewar/gen/gorm"
 	v1dal "github.com/turnforge/weewar/gen/gorm/dal"
 	"github.com/turnforge/weewar/services"
@@ -22,26 +21,25 @@ import (
 // GamesService implements the GamesService gRPC interface
 type GamesService struct {
 	services.BaseGamesService
-	WorldsService v1services.WorldsServiceServer
-	storage       *gorm.DB
-	MaxPageSize   int
-	GameDAL       v1dal.GameGORMDAL
-	GameStateDAL  v1dal.GameStateGORMDAL
-	GameMoveDAL   v1dal.GameMoveGORMDAL
+	storage      *gorm.DB
+	MaxPageSize  int
+	GameDAL      v1dal.GameGORMDAL
+	GameStateDAL v1dal.GameStateGORMDAL
+	GameMoveDAL  v1dal.GameMoveGORMDAL
 }
 
 // NewGamesService creates a new GamesService implementation
-func NewGamesService(db *gorm.DB, worldsService v1services.WorldsServiceServer) *GamesService {
+func NewGamesService(db *gorm.DB, clientMgr *services.ClientMgr) *GamesService {
 	// db.AutoMigrate(&v1gorm.IndexRecordsLROGORM{})
 	db.AutoMigrate(&v1gorm.GameGORM{})
 	db.AutoMigrate(&v1gorm.GameStateGORM{})
 	db.AutoMigrate(&v1gorm.GameMoveGORM{})
 
 	service := &GamesService{
-		storage:       db,
-		MaxPageSize:   1000,
-		WorldsService: worldsService,
+		storage:     db,
+		MaxPageSize: 1000,
 	}
+	service.ClientMgr = clientMgr
 	service.GameDAL.WillCreate = func(ctx context.Context, game *v1gorm.GameGORM) error {
 		game.UpdatedAt = time.Now()
 		game.CreatedAt = time.Now()
@@ -131,7 +129,7 @@ func (s *GamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest
 	}
 
 	// Make sure world exists - for now we must be given a worldId to create game from
-	world, err := s.WorldsService.GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
+	world, err := s.ClientMgr.GetWorldsSvcClient().GetWorld(ctx, &v1.GetWorldRequest{Id: req.Game.WorldId})
 	if err != nil {
 		return nil, fmt.Errorf("Error loading world: %w", err)
 	}
