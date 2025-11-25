@@ -59,7 +59,6 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 		log.Println("error getting notations: ", err)
 		return err, false
 	}
-	log.Println("Found Worlds: ", resp.Items)
 	p.Worlds = resp.Items
 	p.Paginator.HasPrevPage = p.Paginator.CurrentPage > 0
 	if resp.Pagination != nil {

@@ -38,7 +38,6 @@ import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { BuildOptionsModal } from './BuildOptionsModal';
-import { GameEventTypes, WorldEventTypes } from '../common/events';
 import { RulesTable, TerrainStats } from '../common/RulesTable';
 
 /**
@@ -144,9 +143,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
             throw new Error("Game Id Not Found");
         }
 
-        // Subscribe to events BEFORE creating components
-        this.subscribeToGameStateEvents();
-
         // Initialize layout system (DockView/Grid/Mobile)
         await this.initializeLayout();
 
@@ -220,10 +216,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     async activate(): Promise<void> {
         // Bind events now that all components are ready
         this.bindGameSpecificEvents();
-
-        // Subscribe to path visualization events
-        this.eventBus.addSubscription('show-path-visualization', null, this);
-        this.eventBus.addSubscription('clear-path-visualization', null, this);
 
         // Register browser service
         this.wasmBundle.registerBrowserService('GameViewerPage', this);
@@ -301,17 +293,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         if (!response.response!.success) {
             throw new Error(`WASM load failed: ${response.response!.error}`);
         }
-    }
-
-    /**
-     * Subscribe to GameState events
-     */
-    protected subscribeToGameStateEvents(): void {
-        this.addSubscription(WorldEventTypes.WORLD_VIEWER_READY, this);
-        this.addSubscription(GameEventTypes.GAME_DATA_LOADED, this);
-        this.addSubscription('unit-moved', this);
-        this.addSubscription('unit-attacked', this);
-        this.addSubscription('turn-ended', this);
     }
 
     /**
@@ -458,59 +439,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
                     }
                 }, 100);
             }
-        }
-    }
-
-    // =========================================================================
-    // Event Bus Handling
-    // =========================================================================
-
-    /**
-     * Handle events from the EventBus
-     */
-    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
-        switch(eventType) {
-            case 'show-path-visualization':
-                this.showPathVisualization(data.coords, data.color, data.thickness);
-                break;
-
-            case 'clear-path-visualization':
-                this.clearPathVisualization();
-                break;
-
-            case 'unit-moved':
-            case 'unit-attacked':
-            case 'turn-ended':
-                // Could trigger animations, sound effects, etc.
-                break;
-
-            default:
-                super.handleBusEvent(eventType, data, target, emitter);
-        }
-    }
-
-    /**
-     * Show path visualization on the game scene
-     */
-    protected showPathVisualization(coords: number[], color: number, thickness: number): void {
-        if (!this.gameScene) return;
-
-        const movementLayer = this.gameScene.movementHighlightLayer;
-        if (movementLayer) {
-            movementLayer.clearAllPaths();
-            movementLayer.addPath(coords, color, thickness);
-        }
-    }
-
-    /**
-     * Clear path visualization from the game scene
-     */
-    protected clearPathVisualization(): void {
-        if (!this.gameScene) return;
-
-        const movementLayer = this.gameScene.movementHighlightLayer;
-        if (movementLayer) {
-            movementLayer.clearAllPaths();
         }
     }
 

@@ -1,17 +1,14 @@
 import { EventBus } from '../../lib/EventBus';
-import { BaseComponent } from '../../lib/Component';
 import { WorldEventTypes, WorldEventType } from './events';
-import { HexCoord, rowColToHex, hexToRowCol, axialNeighbors, hexDistance } from "./hexUtils";
+import { rowColToHex, hexToRowCol, axialNeighbors, hexDistance } from "./hexUtils";
 import { Weewar_v1Deserializer as WD } from '../../gen/wasmjs/weewar/v1/factory';
-import { 
-    World as ProtoWorld, 
-    WorldData as ProtoWorldData, 
-    Tile, 
+import {
+    World as ProtoWorld,
+    WorldData as ProtoWorldData,
+    Tile,
     Unit,
-    TerrainDefinition, UnitDefinition, 
     UpdateWorldRequest,
     CreateWorldRequest,
-    WorldChange,
 } from '../../gen/wasmjs/weewar/v1/models/interfaces'
 import * as models from '../../gen/wasmjs/weewar/v1/models/models'
 import { create, toJson } from '@bufbuild/protobuf';
@@ -111,76 +108,8 @@ export class World {
     constructor(eventBus: EventBus, public name: string = 'New World', width: number = 40, height: number = 40) {
         this.eventBus = eventBus;
         this.metadata = { name, width, height };
-        this.subscribeToServerChanges();
     }
-    
-    /**
-     * Subscribe to server-changes events to coordinate world updates
-     */
-    private subscribeToServerChanges(): void {
-        // World subscribes first to ensure it's always up-to-date before other components
-        this.eventBus.addSubscription('server-changes', null, this);
-    }
-    
-    /**
-     * Handle EventBus events - specifically server-changes
-     */
-    public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
-        if (eventType === 'server-changes') {
-            // 1. Apply changes to World's internal state first
-            this.applyServerChanges(data.changes);
-            
-            // 2. Publish world-updated event for other components (GameScene, etc.)
-            this.eventBus.emit('world-updated', {
-                changes: data.changes,
-                world: this
-            }, this, this);
-        } else {
-            console.log(`[World.handleBusEvent] ❓ Ignoring unhandled event: ${eventType}`);
-        }
-    }
-    
-    /**
-     * Apply server changes to World's internal data structures
-     */
-    private applyServerChanges(changes: WorldChange[]): void {
-        for (const change of changes) {
-            if (change.unitMoved) {
-                // Remove unit from previous position
-                if (change.unitMoved.previousUnit) {
-                    const prevKey = `${change.unitMoved.previousUnit.q},${change.unitMoved.previousUnit.r}`;
-                    this.removeUnitAt(change.unitMoved.previousUnit.q, change.unitMoved.previousUnit.r);
-                }
-                // Add unit to new position
-                if (change.unitMoved.updatedUnit) {
-                    const newKey = `${change.unitMoved.updatedUnit.q},${change.unitMoved.updatedUnit.r}`;
-                    this.setUnitDirect(change.unitMoved.updatedUnit);
-                }
-            }
-            
-            if (change.unitDamaged) {
-                // Update unit health
-                if (change.unitDamaged.updatedUnit) {
-                    this.setUnitDirect(change.unitDamaged.updatedUnit);
-                }
-            }
-            
-            if (change.unitKilled) {
-                // Remove killed unit
-                if (change.unitKilled.previousUnit) {
-                    this.removeUnitAt(change.unitKilled.previousUnit.q, change.unitKilled.previousUnit.r);
-                }
-            }
-            
-            // Handle player changes (turn transitions with unit resets)
-            if (change.playerChanged && change.playerChanged.resetUnits) {
-                for (const resetUnit of change.playerChanged.resetUnits) {
-                    this.setUnitDirect(resetUnit);
-                }
-            }
-        }
-    }
-    
+
     // EventBus communication - emit state changes as events
     private emitStateChange(eventType: WorldEventType, data: any, emitter: any = null): void {
         this.eventBus.emit(eventType, data, emitter || this, this);
