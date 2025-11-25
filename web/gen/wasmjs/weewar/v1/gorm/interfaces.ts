@@ -73,8 +73,6 @@ export interface GameGORM {
   tags: string[];
   /** PreviewUrls as JSON for cross-DB compatibility */
   previewUrls: string[];
-  /** ScreenshotIndexInfo embedded */
-  screenshotIndexInfo?: IndexInfoGORM;
   /** SearchIndexInfo embedded */
   searchIndexInfo?: IndexInfoGORM;
 }
@@ -112,10 +110,26 @@ export interface GameSettingsGORM {
 
 
 /**
+ * GameWorldDataGORM is same as WorldDataGORM but without the
+ primary key so it can be embedded
+ */
+export interface GameWorldDataGORM {
+  /** Tiles as JSON for cross-DB compatibility */
+  tiles?: TileGORM[];
+  /** Units as JSON for cross-DB compatibility */
+  units?: UnitGORM[];
+  /** ScreenshotIndexInfo embedded */
+  screenshotIndexInfo?: IndexInfoGORM;
+}
+
+
+/**
  * Holds the game's Active/Current state (eg world state)
  */
 export interface GameStateGORM {
   gameId: string;
+  /** ScreenshotIndexInfo embedded */
+  worldData?: GameWorldDataGORM;
 }
 
 

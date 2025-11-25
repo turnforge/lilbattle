@@ -228,12 +228,16 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 	// Update world data if provided
 	worldDataSaved := false
 	if req.ClearWorld {
+		oldVersion := worldData.Version
 		req.WorldData = &v1.WorldData{}
+		req.WorldData.Version = oldVersion
 		worldData = &v1gorm.WorldDataGORM{}
+		worldData.Version = oldVersion
 		worldDataSaved = true
 	} else if req.WorldData != nil {
 		worldDataSaved = true
 		protoWorldData, err := v1gorm.WorldDataFromWorldDataGORM(nil, worldData, nil)
+		req.WorldData.Version = protoWorldData.Version
 		if err != nil {
 			return resp, err
 		}
@@ -257,10 +261,6 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		worldData.ScreenshotIndexInfo.LastUpdatedAt = time.Now()
 		worldData.ScreenshotIndexInfo.NeedsIndexing = true
 		worldData.Version = worldData.Version + 1
-
-		// Optimistic lock: update only if version hasn't changed
-		// err := s.WorldDataDAL.Save(ctx, s.storage.Where("world_id = ? AND version = ?", worldData.WorldId, oldVersion), worldData)
-		// if err != nil { log.Println("Could not save world data: ", err) }
 
 		// Optimistic lock: update only if version hasn't changed
 		result := s.storage.Model(&v1gorm.WorldDataGORM{}).

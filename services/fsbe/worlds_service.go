@@ -162,11 +162,16 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	// Update world data if provided
 	worldDataSaved := false
 	if req.ClearWorld {
+		oldVersion := worldData.Version
 		req.WorldData = &v1.WorldData{}
+		req.WorldData.Version = oldVersion
 		worldData = &v1.WorldData{}
+		worldData.Version = oldVersion
 		worldDataSaved = true
 	} else if req.WorldData != nil {
 		worldDataSaved = true
+		// Server controls version - don't trust client
+		req.WorldData.Version = worldData.Version
 		if req.WorldData.Tiles == nil {
 			req.WorldData.Tiles = worldData.Tiles
 		}

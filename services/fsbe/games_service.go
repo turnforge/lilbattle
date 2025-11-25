@@ -22,9 +22,8 @@ var GAMES_STORAGE_DIR = ""
 
 // FSGamesService implements the GamesService gRPC interface
 type FSGamesService struct {
-	services.BaseGamesService
-	storage   *storage.FileStorage // Storage area for all files
-	ClientMgr *services.ClientMgr
+	services.BackendGamesService
+	storage *storage.FileStorage // Storage area for all files
 
 	// Simple caches - maps with game ID as key
 	gameCache    map[string]*v1.Game
@@ -42,17 +41,51 @@ func NewFSGamesService(storageDir string, clientMgr *services.ClientMgr) *FSGame
 		storageDir = GAMES_STORAGE_DIR
 	}
 	service := &FSGamesService{
-		BaseGamesService: services.BaseGamesService{},
-		ClientMgr:        clientMgr,
-		storage:          storage.NewFileStorage(storageDir),
-		gameCache:        make(map[string]*v1.Game),
-		stateCache:       make(map[string]*v1.GameState),
-		historyCache:     make(map[string]*v1.GameMoveHistory),
-		runtimeCache:     make(map[string]*services.Game),
+		storage:      storage.NewFileStorage(storageDir),
+		gameCache:    make(map[string]*v1.Game),
+		stateCache:   make(map[string]*v1.GameState),
+		historyCache: make(map[string]*v1.GameMoveHistory),
+		runtimeCache: make(map[string]*services.Game),
 	}
+	service.ClientMgr = clientMgr
 	service.Self = service
+	service.GameStateUpdater = service // Implement GameStateUpdater interface
+	service.InitializeScreenshotIndexer()
 
 	return service
+}
+
+// GetGameStateVersion implements GameStateUpdater interface
+func (s *FSGamesService) GetGameStateVersion(ctx context.Context, id string) (int64, error) {
+	gameState, err := storage.LoadFSArtifact[*v1.GameState](s.storage, id, "state")
+	if err != nil {
+		return 0, err
+	}
+	return gameState.Version, nil
+}
+
+// UpdateGameStateScreenshotIndexInfo implements GameStateUpdater interface
+func (s *FSGamesService) UpdateGameStateScreenshotIndexInfo(ctx context.Context, id string, oldVersion int64, lastIndexedAt time.Time, needsIndexing bool) error {
+	gameState, err := storage.LoadFSArtifact[*v1.GameState](s.storage, id, "state")
+	if err != nil {
+		return err
+	}
+
+	// Check version matches (optimistic lock)
+	if gameState.Version != oldVersion {
+		return fmt.Errorf("optimistic lock failed: expected version %d, got %d", oldVersion, gameState.Version)
+	}
+
+	gameState.WorldData.ScreenshotIndexInfo.LastIndexedAt = tspb.New(lastIndexedAt)
+	gameState.WorldData.ScreenshotIndexInfo.NeedsIndexing = needsIndexing
+	gameState.Version = oldVersion + 1
+
+	// Save updated game state
+	err = s.storage.SaveArtifact(id, "state", gameState)
+	if err != nil {
+		return fmt.Errorf("failed to save game state: %w", err)
+	}
+	return nil
 }
 
 // ListGames returns all available games (metadata only for performance)
@@ -236,6 +269,12 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 	}
 
 	if req.NewState != nil {
+		// Load current game state to get version
+		gameState, err := storage.LoadFSArtifact[*v1.GameState](s.storage, req.GameId, "state")
+		if err != nil {
+			return nil, fmt.Errorf("failed to load game state: %w", err)
+		}
+
 		// Make sure to topup units
 		if req.NewState.WorldData != nil {
 			rg, err := s.GetRuntimeGame(game, req.NewState)
@@ -247,6 +286,11 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 			}
 		}
 
+		oldVersion := gameState.Version
+		req.NewState.WorldData.ScreenshotIndexInfo.LastUpdatedAt = tspb.New(time.Now())
+		req.NewState.WorldData.ScreenshotIndexInfo.NeedsIndexing = true
+		req.NewState.Version = oldVersion + 1
+
 		if err := s.storage.SaveArtifact(req.GameId, "state", req.NewState); err != nil {
 			return nil, fmt.Errorf("failed to update game state: %w", err)
 		}
@@ -254,6 +298,9 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 		// Update cache and invalidate runtime game
 		s.stateCache[req.GameId] = req.NewState
 		delete(s.runtimeCache, req.GameId)
+
+		// Queue it for being screenshotted
+		s.ScreenShotIndexer.Send("games", req.GameId, req.NewState.Version, req.NewState.WorldData)
 	}
 
 	if req.NewHistory != nil {

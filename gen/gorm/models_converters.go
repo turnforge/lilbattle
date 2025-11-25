@@ -1042,6 +1042,118 @@ func GameSettingsFromGameSettingsGORM(
 	return out, nil
 }
 
+// WorldDataToGameWorldDataGORM converts a models.WorldData to GameWorldDataGORM.
+// The optional decorator function allows custom field transformations.
+func WorldDataToGameWorldDataGORM(
+	src *models.WorldData,
+	dest *GameWorldDataGORM,
+	decorator func(*models.WorldData, *GameWorldDataGORM) error,
+) (out *GameWorldDataGORM, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &GameWorldDataGORM{}
+	}
+
+	// Initialize struct with inline values
+	*dest = GameWorldDataGORM{
+		ContentHash: src.ContentHash,
+		Version:     src.Version,
+	}
+	out = dest
+
+	if src.ScreenshotIndexInfo != nil {
+		_, err = IndexInfoToIndexInfoGORM(src.ScreenshotIndexInfo, &out.ScreenshotIndexInfo, nil)
+		if err != nil {
+			return nil, fmt.Errorf("converting ScreenshotIndexInfo: %w", err)
+		}
+	}
+
+	if src.Tiles != nil {
+		out.Tiles = make([]TileGORM, len(src.Tiles))
+		for i, item := range src.Tiles {
+			_, err = TileToTileGORM(item, &out.Tiles[i], nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Tiles[%d]: %w", i, err)
+			}
+		}
+	}
+	if src.Units != nil {
+		out.Units = make([]UnitGORM, len(src.Units))
+		for i, item := range src.Units {
+			_, err = UnitToUnitGORM(item, &out.Units[i], nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
+			}
+		}
+	}
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(src, dest); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
+// WorldDataFromGameWorldDataGORM converts a GameWorldDataGORM back to models.WorldData.
+// The optional decorator function allows custom field transformations.
+func WorldDataFromGameWorldDataGORM(
+	dest *models.WorldData,
+	src *GameWorldDataGORM,
+	decorator func(dest *models.WorldData, src *GameWorldDataGORM) error,
+) (out *models.WorldData, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &models.WorldData{}
+	}
+
+	// Initialize struct with inline values
+	*dest = models.WorldData{
+		ContentHash: src.ContentHash,
+		Version:     src.Version,
+	}
+	out = dest
+
+	out.ScreenshotIndexInfo, err = IndexInfoFromIndexInfoGORM(nil, &src.ScreenshotIndexInfo, nil)
+	if err != nil {
+		return nil, fmt.Errorf("converting ScreenshotIndexInfo: %w", err)
+	}
+
+	if src.Tiles != nil {
+		out.Tiles = make([]*models.Tile, len(src.Tiles))
+		for i, item := range src.Tiles {
+			out.Tiles[i], err = TileFromTileGORM(nil, &item, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Tiles[%d]: %w", i, err)
+			}
+		}
+	}
+	if src.Units != nil {
+		out.Units = make([]*models.Unit, len(src.Units))
+		for i, item := range src.Units {
+			out.Units[i], err = UnitFromUnitGORM(nil, &item, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
+			}
+		}
+	}
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(dest, src); err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
 // GameStateToGameStateGORM converts a models.GameState to GameStateGORM.
 // The optional decorator function allows custom field transformations.
 func GameStateToGameStateGORM(
@@ -1075,7 +1187,7 @@ func GameStateToGameStateGORM(
 	}
 
 	if src.WorldData != nil {
-		_, err = WorldDataToWorldDataGORM(src.WorldData, &out.WorldData, nil)
+		_, err = WorldDataToGameWorldDataGORM(src.WorldData, &out.WorldData, nil)
 		if err != nil {
 			return nil, fmt.Errorf("converting WorldData: %w", err)
 		}
@@ -1120,7 +1232,7 @@ func GameStateFromGameStateGORM(
 	}
 	out = dest
 
-	out.WorldData, err = WorldDataFromWorldDataGORM(nil, &src.WorldData, nil)
+	out.WorldData, err = WorldDataFromGameWorldDataGORM(nil, &src.WorldData, nil)
 	if err != nil {
 		return nil, fmt.Errorf("converting WorldData: %w", err)
 	}

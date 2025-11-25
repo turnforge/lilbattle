@@ -320,8 +320,6 @@ type GameGORM struct {
 	Tags []string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
 	// PreviewUrls as JSON for cross-DB compatibility
 	PreviewUrls []string `protobuf:"bytes,11,rep,name=preview_urls,json=previewUrls,proto3" json:"preview_urls,omitempty"`
-	// ScreenshotIndexInfo embedded
-	ScreenshotIndexInfo *IndexInfoGORM `protobuf:"bytes,12,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
 	// SearchIndexInfo embedded
 	SearchIndexInfo *IndexInfoGORM `protobuf:"bytes,13,opt,name=search_index_info,json=searchIndexInfo,proto3" json:"search_index_info,omitempty"`
 	unknownFields   protoimpl.UnknownFields
@@ -375,13 +373,6 @@ func (x *GameGORM) GetTags() []string {
 func (x *GameGORM) GetPreviewUrls() []string {
 	if x != nil {
 		return x.PreviewUrls
-	}
-	return nil
-}
-
-func (x *GameGORM) GetScreenshotIndexInfo() *IndexInfoGORM {
-	if x != nil {
-		return x.ScreenshotIndexInfo
 	}
 	return nil
 }
@@ -600,17 +591,84 @@ func (x *GameSettingsGORM) GetAllowedUnits() []int32 {
 	return nil
 }
 
+// GameWorldDataGORM is same as WorldDataGORM but without the
+// primary key so it can be embedded
+type GameWorldDataGORM struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Tiles as JSON for cross-DB compatibility
+	Tiles []*TileGORM `protobuf:"bytes,2,rep,name=tiles,proto3" json:"tiles,omitempty"`
+	// Units as JSON for cross-DB compatibility
+	Units []*UnitGORM `protobuf:"bytes,3,rep,name=units,proto3" json:"units,omitempty"`
+	// ScreenshotIndexInfo embedded
+	ScreenshotIndexInfo *IndexInfoGORM `protobuf:"bytes,4,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *GameWorldDataGORM) Reset() {
+	*x = GameWorldDataGORM{}
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GameWorldDataGORM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GameWorldDataGORM) ProtoMessage() {}
+
+func (x *GameWorldDataGORM) ProtoReflect() protoreflect.Message {
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GameWorldDataGORM.ProtoReflect.Descriptor instead.
+func (*GameWorldDataGORM) Descriptor() ([]byte, []int) {
+	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GameWorldDataGORM) GetTiles() []*TileGORM {
+	if x != nil {
+		return x.Tiles
+	}
+	return nil
+}
+
+func (x *GameWorldDataGORM) GetUnits() []*UnitGORM {
+	if x != nil {
+		return x.Units
+	}
+	return nil
+}
+
+func (x *GameWorldDataGORM) GetScreenshotIndexInfo() *IndexInfoGORM {
+	if x != nil {
+		return x.ScreenshotIndexInfo
+	}
+	return nil
+}
+
 // Holds the game's Active/Current state (eg world state)
 type GameStateGORM struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	GameId string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	// ScreenshotIndexInfo embedded
+	WorldData     *GameWorldDataGORM `protobuf:"bytes,4,opt,name=world_data,json=worldData,proto3" json:"world_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GameStateGORM) Reset() {
 	*x = GameStateGORM{}
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[12]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -622,7 +680,7 @@ func (x *GameStateGORM) String() string {
 func (*GameStateGORM) ProtoMessage() {}
 
 func (x *GameStateGORM) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[12]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -635,7 +693,7 @@ func (x *GameStateGORM) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameStateGORM.ProtoReflect.Descriptor instead.
 func (*GameStateGORM) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{12}
+	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GameStateGORM) GetGameId() string {
@@ -643,6 +701,13 @@ func (x *GameStateGORM) GetGameId() string {
 		return x.GameId
 	}
 	return ""
+}
+
+func (x *GameStateGORM) GetWorldData() *GameWorldDataGORM {
+	if x != nil {
+		return x.WorldData
+	}
+	return nil
 }
 
 // Holds the game's move history (can be used as a replay log)
@@ -654,7 +719,7 @@ type GameMoveHistoryGORM struct {
 
 func (x *GameMoveHistoryGORM) Reset() {
 	*x = GameMoveHistoryGORM{}
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[13]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -666,7 +731,7 @@ func (x *GameMoveHistoryGORM) String() string {
 func (*GameMoveHistoryGORM) ProtoMessage() {}
 
 func (x *GameMoveHistoryGORM) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[13]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -679,7 +744,7 @@ func (x *GameMoveHistoryGORM) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameMoveHistoryGORM.ProtoReflect.Descriptor instead.
 func (*GameMoveHistoryGORM) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{13}
+	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{14}
 }
 
 // A move group - we can allow X moves in one "tick"
@@ -691,7 +756,7 @@ type GameMoveGroupGORM struct {
 
 func (x *GameMoveGroupGORM) Reset() {
 	*x = GameMoveGroupGORM{}
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[14]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -703,7 +768,7 @@ func (x *GameMoveGroupGORM) String() string {
 func (*GameMoveGroupGORM) ProtoMessage() {}
 
 func (x *GameMoveGroupGORM) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[14]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -716,7 +781,7 @@ func (x *GameMoveGroupGORM) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameMoveGroupGORM.ProtoReflect.Descriptor instead.
 func (*GameMoveGroupGORM) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{14}
+	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{15}
 }
 
 // *
@@ -738,7 +803,7 @@ type GameMoveGORM struct {
 
 func (x *GameMoveGORM) Reset() {
 	*x = GameMoveGORM{}
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[15]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +815,7 @@ func (x *GameMoveGORM) String() string {
 func (*GameMoveGORM) ProtoMessage() {}
 
 func (x *GameMoveGORM) ProtoReflect() protoreflect.Message {
-	mi := &file_weewar_v1_gorm_models_proto_msgTypes[15]
+	mi := &file_weewar_v1_gorm_models_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +828,7 @@ func (x *GameMoveGORM) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameMoveGORM.ProtoReflect.Descriptor instead.
 func (*GameMoveGORM) Descriptor() ([]byte, []int) {
-	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{15}
+	return file_weewar_v1_gorm_models_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GameMoveGORM) GetGameId() string {
@@ -835,13 +900,12 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x05units\x18\x03 \x03(\v2\x13.weewar.v1.UnitGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05units\x12~\n" +
 	"\x15screenshot_index_info\x18\x04 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo:'ʦ\x1d#\n" +
 	"\x13weewar.v1.WorldData\x12\n" +
-	"world_data \x01\"\xa2\x03\n" +
+	"world_data \x01\"\xa2\x02\n" +
 	"\bGameGORM\x12 \n" +
 	"\x02id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\x02id\x12)\n" +
 	"\x04tags\x18\a \x03(\tB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x04tags\x128\n" +
-	"\fpreview_urls\x18\v \x03(\tB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\vpreviewUrls\x12~\n" +
-	"\x15screenshot_index_info\x18\f \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo\x12r\n" +
+	"\fpreview_urls\x18\v \x03(\tB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\vpreviewUrls\x12r\n" +
 	"\x11search_index_info\x18\r \x01(\v2\x18.weewar.v1.IndexInfoGORMB,\x92\xa6\x1d(R\bembeddedR\x1cembeddedPrefix:search_index_R\x0fsearchIndexInfo:\x1bʦ\x1d\x17\n" +
 	"\x0eweewar.v1.Game\x12\x05games\"\xc9\x01\n" +
 	"\x15GameConfigurationGORM\x12R\n" +
@@ -857,10 +921,17 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x12weewar.v1.GameTeam \x01\"l\n" +
 	"\x10GameSettingsGORM\x12:\n" +
 	"\rallowed_units\x18\x01 \x03(\x05B\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\fallowedUnits:\x1cʦ\x1d\x18\n" +
-	"\x16weewar.v1.GameSettings\"a\n" +
+	"\x16weewar.v1.GameSettings\"\xb2\x02\n" +
+	"\x11GameWorldDataGORM\x12@\n" +
+	"\x05tiles\x18\x02 \x03(\v2\x13.weewar.v1.TileGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05tiles\x12@\n" +
+	"\x05units\x18\x03 \x03(\v2\x13.weewar.v1.UnitGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05units\x12~\n" +
+	"\x15screenshot_index_info\x18\x04 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo:\x19ʦ\x1d\x15\n" +
+	"\x13weewar.v1.WorldData\"\xca\x01\n" +
 	"\rGameStateGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
-	"primaryKeyR\x06gameId:%ʦ\x1d!\n" +
+	"primaryKeyR\x06gameId\x12g\n" +
+	"\n" +
+	"world_data\x18\x04 \x01(\v2\x1c.weewar.v1.GameWorldDataGORMB*\x92\xa6\x1d&R\bembeddedR\x1aembeddedPrefix:world_data_R\tworldData:%ʦ\x1d!\n" +
 	"\x13weewar.v1.GameState\x12\n" +
 	"game_state\"6\n" +
 	"\x13GameMoveHistoryGORM:\x1fʦ\x1d\x1b\n" +
@@ -895,7 +966,7 @@ func file_weewar_v1_gorm_models_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_gorm_models_proto_rawDescData
 }
 
-var file_weewar_v1_gorm_models_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_weewar_v1_gorm_models_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_weewar_v1_gorm_models_proto_goTypes = []any{
 	(*IndexInfoGORM)(nil),         // 0: weewar.v1.IndexInfoGORM
 	(*TileGORM)(nil),              // 1: weewar.v1.TileGORM
@@ -909,28 +980,32 @@ var file_weewar_v1_gorm_models_proto_goTypes = []any{
 	(*GamePlayerGORM)(nil),        // 9: weewar.v1.GamePlayerGORM
 	(*GameTeamGORM)(nil),          // 10: weewar.v1.GameTeamGORM
 	(*GameSettingsGORM)(nil),      // 11: weewar.v1.GameSettingsGORM
-	(*GameStateGORM)(nil),         // 12: weewar.v1.GameStateGORM
-	(*GameMoveHistoryGORM)(nil),   // 13: weewar.v1.GameMoveHistoryGORM
-	(*GameMoveGroupGORM)(nil),     // 14: weewar.v1.GameMoveGroupGORM
-	(*GameMoveGORM)(nil),          // 15: weewar.v1.GameMoveGORM
-	(*anypb.Any)(nil),             // 16: google.protobuf.Any
+	(*GameWorldDataGORM)(nil),     // 12: weewar.v1.GameWorldDataGORM
+	(*GameStateGORM)(nil),         // 13: weewar.v1.GameStateGORM
+	(*GameMoveHistoryGORM)(nil),   // 14: weewar.v1.GameMoveHistoryGORM
+	(*GameMoveGroupGORM)(nil),     // 15: weewar.v1.GameMoveGroupGORM
+	(*GameMoveGORM)(nil),          // 16: weewar.v1.GameMoveGORM
+	(*anypb.Any)(nil),             // 17: google.protobuf.Any
 }
 var file_weewar_v1_gorm_models_proto_depIdxs = []int32{
 	0,  // 0: weewar.v1.WorldGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
 	1,  // 1: weewar.v1.WorldDataGORM.tiles:type_name -> weewar.v1.TileGORM
 	2,  // 2: weewar.v1.WorldDataGORM.units:type_name -> weewar.v1.UnitGORM
 	0,  // 3: weewar.v1.WorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
-	0,  // 4: weewar.v1.GameGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
-	0,  // 5: weewar.v1.GameGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
-	8,  // 6: weewar.v1.GameConfigurationGORM.income_configs:type_name -> weewar.v1.IncomeConfigGORM
-	11, // 7: weewar.v1.GameConfigurationGORM.settings:type_name -> weewar.v1.GameSettingsGORM
-	16, // 8: weewar.v1.GameMoveGORM.move_type:type_name -> google.protobuf.Any
-	16, // 9: weewar.v1.GameMoveGORM.changes:type_name -> google.protobuf.Any
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	0,  // 4: weewar.v1.GameGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
+	8,  // 5: weewar.v1.GameConfigurationGORM.income_configs:type_name -> weewar.v1.IncomeConfigGORM
+	11, // 6: weewar.v1.GameConfigurationGORM.settings:type_name -> weewar.v1.GameSettingsGORM
+	1,  // 7: weewar.v1.GameWorldDataGORM.tiles:type_name -> weewar.v1.TileGORM
+	2,  // 8: weewar.v1.GameWorldDataGORM.units:type_name -> weewar.v1.UnitGORM
+	0,  // 9: weewar.v1.GameWorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
+	12, // 10: weewar.v1.GameStateGORM.world_data:type_name -> weewar.v1.GameWorldDataGORM
+	17, // 11: weewar.v1.GameMoveGORM.move_type:type_name -> google.protobuf.Any
+	17, // 12: weewar.v1.GameMoveGORM.changes:type_name -> google.protobuf.Any
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_gorm_models_proto_init() }
@@ -944,7 +1019,7 @@ func file_weewar_v1_gorm_models_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_gorm_models_proto_rawDesc), len(file_weewar_v1_gorm_models_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

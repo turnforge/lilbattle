@@ -92,10 +92,6 @@ message GameGORM {
   repeated string preview_urls = 11 [(dal.v1.column) = {
     gorm_tags: ["serializer:json"]
   }];
-  // ScreenshotIndexInfo embedded
-  IndexInfoGORM screenshot_index_info = 12 [(dal.v1.column) = {
-    gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
-  }];
   // SearchIndexInfo embedded
   IndexInfoGORM search_index_info = 13 [(dal.v1.column) = {
     gorm_tags: ["embedded", "embeddedPrefix:search_index_"]
@@ -132,11 +128,34 @@ message GameSettingsGORM {
   }];
 }
 
+// GameWorldDataGORM is same as WorldDataGORM but without the
+// primary key so it can be embedded
+message GameWorldDataGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.WorldData" };
+  // Tiles as JSON for cross-DB compatibility
+  repeated TileGORM tiles = 2 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
+  }];
+  // Units as JSON for cross-DB compatibility
+  repeated UnitGORM units = 3 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
+  }];
+  // ScreenshotIndexInfo embedded
+  IndexInfoGORM screenshot_index_info = 4 [(dal.v1.column) = {
+    gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
+  }];
+}
+
 // Holds the game's Active/Current state (eg world state)
 message GameStateGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.GameState", table: "game_state"};
   string game_id = 1 [(dal.v1.column) = {
     gorm_tags: ["primaryKey"]
+  }];
+
+  // ScreenshotIndexInfo embedded
+  GameWorldDataGORM world_data = 4 [(dal.v1.column) = {
+    gorm_tags: ["embedded", "embeddedPrefix:world_data_"]
   }];
 }
 

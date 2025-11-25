@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file weewar/v1/gorm/models.proto.
  */
 export const file_weewar_v1_gorm_models: GenFile = /*@__PURE__*/
-  fileDesc("Cht3ZWV3YXIvdjEvZ29ybS9tb2RlbHMucHJvdG8SCXdlZXdhci52MSIqCg1JbmRleEluZm9HT1JNOhnKph0VChN3ZWV3YXIudjEuSW5kZXhJbmZvIiIKCFRpbGVHT1JNOhbKph0SCg53ZWV3YXIudjEuVGlsZSABIiIKCFVuaXRHT1JNOhbKph0SCg53ZWV3YXIudjEuVW5pdCABIjIKEEF0dGFja1JlY29yZEdPUk06HsqmHRoKFndlZXdhci52MS5BdHRhY2tSZWNvcmQgASL9AQoJV29ybGRHT1JNEhwKAmlkGAEgASgJQhCSph0MUgpwcmltYXJ5S2V5EiMKBHRhZ3MYByADKAlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhIrCgxwcmV2aWV3X3VybHMYCyADKAlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhJhChFzZWFyY2hfaW5kZXhfaW5mbxgNIAEoCzIYLndlZXdhci52MS5JbmRleEluZm9HT1JNQiySph0oUghlbWJlZGRlZFIcZW1iZWRkZWRQcmVmaXg6c2VhcmNoX2luZGV4XzodyqYdGQoPd2Vld2FyLnYxLldvcmxkEgZ3b3JsZHMivQIKDVdvcmxkRGF0YUdPUk0SIgoId29ybGRfaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXkSOQoFdGlsZXMYAiADKAsyEy53ZWV3YXIudjEuVGlsZUdPUk1CFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhI5CgV1bml0cxgDIAMoCzITLndlZXdhci52MS5Vbml0R09STUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEmkKFXNjcmVlbnNob3RfaW5kZXhfaW5mbxgEIAEoCzIYLndlZXdhci52MS5JbmRleEluZm9HT1JNQjCSph0sUghlbWJlZGRlZFIgZW1iZWRkZWRQcmVmaXg6c2NyZWVuc2hvdF9pbmRleF86J8qmHSMKE3dlZXdhci52MS5Xb3JsZERhdGESCndvcmxkX2RhdGEgASLlAgoIR2FtZUdPUk0SHAoCaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXkSIwoEdGFncxgHIAMoCUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEisKDHByZXZpZXdfdXJscxgLIAMoCUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEmkKFXNjcmVlbnNob3RfaW5kZXhfaW5mbxgMIAEoCzIYLndlZXdhci52MS5JbmRleEluZm9HT1JNQjCSph0sUghlbWJlZGRlZFIgZW1iZWRkZWRQcmVmaXg6c2NyZWVuc2hvdF9pbmRleF8SYQoRc2VhcmNoX2luZGV4X2luZm8YDSABKAsyGC53ZWV3YXIudjEuSW5kZXhJbmZvR09STUIskqYdKFIIZW1iZWRkZWRSHGVtYmVkZGVkUHJlZml4OnNlYXJjaF9pbmRleF86G8qmHRcKDndlZXdhci52MS5HYW1lEgVnYW1lcyKwAQoVR2FtZUNvbmZpZ3VyYXRpb25HT1JNEkMKDmluY29tZV9jb25maWdzGAMgASgLMhsud2Vld2FyLnYxLkluY29tZUNvbmZpZ0dPUk1CDpKmHQpSCGVtYmVkZGVkEi0KCHNldHRpbmdzGAQgASgLMhsud2Vld2FyLnYxLkdhbWVTZXR0aW5nc0dPUk06I8qmHR8KG3dlZXdhci52MS5HYW1lQ29uZmlndXJhdGlvbiABIjAKEEluY29tZUNvbmZpZ0dPUk06HMqmHRgKFndlZXdhci52MS5JbmNvbWVDb25maWciLgoOR2FtZVBsYXllckdPUk06HMqmHRgKFHdlZXdhci52MS5HYW1lUGxheWVyIAEiKgoMR2FtZVRlYW1HT1JNOhrKph0WChJ3ZWV3YXIudjEuR2FtZVRlYW0gASJeChBHYW1lU2V0dGluZ3NHT1JNEiwKDWFsbG93ZWRfdW5pdHMYASADKAVCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbjocyqYdGAoWd2Vld2FyLnYxLkdhbWVTZXR0aW5ncyJZCg1HYW1lU3RhdGVHT1JNEiEKB2dhbWVfaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXk6JcqmHSEKE3dlZXdhci52MS5HYW1lU3RhdGUSCmdhbWVfc3RhdGUiNgoTR2FtZU1vdmVIaXN0b3J5R09STTofyqYdGwoZd2Vld2FyLnYxLkdhbWVNb3ZlSGlzdG9yeSIyChFHYW1lTW92ZUdyb3VwR09STTodyqYdGQoXd2Vld2FyLnYxLkdhbWVNb3ZlR3JvdXAitQIKDEdhbWVNb3ZlR09STRIhCgdnYW1lX2lkGAEgASgJQhCSph0MUgpwcmltYXJ5S2V5EiYKDGdyb3VwX251bWJlchgCIAEoCUIQkqYdDFIKcHJpbWFyeUtleRIlCgttb3ZlX251bWJlchgDIAEoBUIQkqYdDFIKcHJpbWFyeUtleRIPCgd2ZXJzaW9uGAQgASgDEj4KCW1vdmVfdHlwZRgFIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhI8CgdjaGFuZ2VzGAYgAygLMhQuZ29vZ2xlLnByb3RvYnVmLkFueUIVkqYdEVIPc2VyaWFsaXplcjpqc29uOiTKph0gChJ3ZWV3YXIudjEuR2FtZU1vdmUSCmdhbWVfbW92ZXNCnQEKDWNvbS53ZWV3YXIudjFCC01vZGVsc1Byb3RvUAFaOmdpdGh1Yi5jb20vdHVybmZvcmdlL3dlZXdhci9nZW4vZ28vd2Vld2FyL3YxL2dvcm07d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_dal_v1_annotations, file_weewar_v1_models_models, file_google_protobuf_any]);
+  fileDesc("Cht3ZWV3YXIvdjEvZ29ybS9tb2RlbHMucHJvdG8SCXdlZXdhci52MSIqCg1JbmRleEluZm9HT1JNOhnKph0VChN3ZWV3YXIudjEuSW5kZXhJbmZvIiIKCFRpbGVHT1JNOhbKph0SCg53ZWV3YXIudjEuVGlsZSABIiIKCFVuaXRHT1JNOhbKph0SCg53ZWV3YXIudjEuVW5pdCABIjIKEEF0dGFja1JlY29yZEdPUk06HsqmHRoKFndlZXdhci52MS5BdHRhY2tSZWNvcmQgASL9AQoJV29ybGRHT1JNEhwKAmlkGAEgASgJQhCSph0MUgpwcmltYXJ5S2V5EiMKBHRhZ3MYByADKAlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhIrCgxwcmV2aWV3X3VybHMYCyADKAlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhJhChFzZWFyY2hfaW5kZXhfaW5mbxgNIAEoCzIYLndlZXdhci52MS5JbmRleEluZm9HT1JNQiySph0oUghlbWJlZGRlZFIcZW1iZWRkZWRQcmVmaXg6c2VhcmNoX2luZGV4XzodyqYdGQoPd2Vld2FyLnYxLldvcmxkEgZ3b3JsZHMivQIKDVdvcmxkRGF0YUdPUk0SIgoId29ybGRfaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXkSOQoFdGlsZXMYAiADKAsyEy53ZWV3YXIudjEuVGlsZUdPUk1CFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhI5CgV1bml0cxgDIAMoCzITLndlZXdhci52MS5Vbml0R09STUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEmkKFXNjcmVlbnNob3RfaW5kZXhfaW5mbxgEIAEoCzIYLndlZXdhci52MS5JbmRleEluZm9HT1JNQjCSph0sUghlbWJlZGRlZFIgZW1iZWRkZWRQcmVmaXg6c2NyZWVuc2hvdF9pbmRleF86J8qmHSMKE3dlZXdhci52MS5Xb3JsZERhdGESCndvcmxkX2RhdGEgASL6AQoIR2FtZUdPUk0SHAoCaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXkSIwoEdGFncxgHIAMoCUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEisKDHByZXZpZXdfdXJscxgLIAMoCUIVkqYdEVIPc2VyaWFsaXplcjpqc29uEmEKEXNlYXJjaF9pbmRleF9pbmZvGA0gASgLMhgud2Vld2FyLnYxLkluZGV4SW5mb0dPUk1CLJKmHShSCGVtYmVkZGVkUhxlbWJlZGRlZFByZWZpeDpzZWFyY2hfaW5kZXhfOhvKph0XCg53ZWV3YXIudjEuR2FtZRIFZ2FtZXMisAEKFUdhbWVDb25maWd1cmF0aW9uR09STRJDCg5pbmNvbWVfY29uZmlncxgDIAEoCzIbLndlZXdhci52MS5JbmNvbWVDb25maWdHT1JNQg6Sph0KUghlbWJlZGRlZBItCghzZXR0aW5ncxgEIAEoCzIbLndlZXdhci52MS5HYW1lU2V0dGluZ3NHT1JNOiPKph0fCht3ZWV3YXIudjEuR2FtZUNvbmZpZ3VyYXRpb24gASIwChBJbmNvbWVDb25maWdHT1JNOhzKph0YChZ3ZWV3YXIudjEuSW5jb21lQ29uZmlnIi4KDkdhbWVQbGF5ZXJHT1JNOhzKph0YChR3ZWV3YXIudjEuR2FtZVBsYXllciABIioKDEdhbWVUZWFtR09STToayqYdFgoSd2Vld2FyLnYxLkdhbWVUZWFtIAEiXgoQR2FtZVNldHRpbmdzR09STRIsCg1hbGxvd2VkX3VuaXRzGAEgAygFQhWSph0RUg9zZXJpYWxpemVyOmpzb246HMqmHRgKFndlZXdhci52MS5HYW1lU2V0dGluZ3MijwIKEUdhbWVXb3JsZERhdGFHT1JNEjkKBXRpbGVzGAIgAygLMhMud2Vld2FyLnYxLlRpbGVHT1JNQhWSph0RUg9zZXJpYWxpemVyOmpzb24SOQoFdW5pdHMYAyADKAsyEy53ZWV3YXIudjEuVW5pdEdPUk1CFZKmHRFSD3NlcmlhbGl6ZXI6anNvbhJpChVzY3JlZW5zaG90X2luZGV4X2luZm8YBCABKAsyGC53ZWV3YXIudjEuSW5kZXhJbmZvR09STUIwkqYdLFIIZW1iZWRkZWRSIGVtYmVkZGVkUHJlZml4OnNjcmVlbnNob3RfaW5kZXhfOhnKph0VChN3ZWV3YXIudjEuV29ybGREYXRhIrcBCg1HYW1lU3RhdGVHT1JNEiEKB2dhbWVfaWQYASABKAlCEJKmHQxSCnByaW1hcnlLZXkSXAoKd29ybGRfZGF0YRgEIAEoCzIcLndlZXdhci52MS5HYW1lV29ybGREYXRhR09STUIqkqYdJlIIZW1iZWRkZWRSGmVtYmVkZGVkUHJlZml4OndvcmxkX2RhdGFfOiXKph0hChN3ZWV3YXIudjEuR2FtZVN0YXRlEgpnYW1lX3N0YXRlIjYKE0dhbWVNb3ZlSGlzdG9yeUdPUk06H8qmHRsKGXdlZXdhci52MS5HYW1lTW92ZUhpc3RvcnkiMgoRR2FtZU1vdmVHcm91cEdPUk06HcqmHRkKF3dlZXdhci52MS5HYW1lTW92ZUdyb3VwIrUCCgxHYW1lTW92ZUdPUk0SIQoHZ2FtZV9pZBgBIAEoCUIQkqYdDFIKcHJpbWFyeUtleRImCgxncm91cF9udW1iZXIYAiABKAlCEJKmHQxSCnByaW1hcnlLZXkSJQoLbW92ZV9udW1iZXIYAyABKAVCEJKmHQxSCnByaW1hcnlLZXkSDwoHdmVyc2lvbhgEIAEoAxI+Cgltb3ZlX3R5cGUYBSABKAsyFC5nb29nbGUucHJvdG9idWYuQW55QhWSph0RUg9zZXJpYWxpemVyOmpzb24SPAoHY2hhbmdlcxgGIAMoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnlCFZKmHRFSD3NlcmlhbGl6ZXI6anNvbjokyqYdIAoSd2Vld2FyLnYxLkdhbWVNb3ZlEgpnYW1lX21vdmVzQp0BCg1jb20ud2Vld2FyLnYxQgtNb2RlbHNQcm90b1ABWjpnaXRodWIuY29tL3R1cm5mb3JnZS93ZWV3YXIvZ2VuL2dvL3dlZXdhci92MS9nb3JtO3dlZXdhcnYxogIDV1hYqgIJV2Vld2FyLlYxygIJV2Vld2FyXFYx4gIVV2Vld2FyXFYxXEdQQk1ldGFkYXRh6gIKV2Vld2FyOjpWMWIGcHJvdG8z", [file_dal_v1_annotations, file_weewar_v1_models_models, file_google_protobuf_any]);
 
 /**
  * @generated from message weewar.v1.IndexInfoGORM
@@ -174,13 +174,6 @@ export type GameGORM = Message<"weewar.v1.GameGORM"> & {
   previewUrls: string[];
 
   /**
-   * ScreenshotIndexInfo embedded
-   *
-   * @generated from field: weewar.v1.IndexInfoGORM screenshot_index_info = 12;
-   */
-  screenshotIndexInfo?: IndexInfoGORM;
-
-  /**
    * SearchIndexInfo embedded
    *
    * @generated from field: weewar.v1.IndexInfoGORM search_index_info = 13;
@@ -280,6 +273,42 @@ export const GameSettingsGORMSchema: GenMessage<GameSettingsGORM> = /*@__PURE__*
   messageDesc(file_weewar_v1_gorm_models, 11);
 
 /**
+ * GameWorldDataGORM is same as WorldDataGORM but without the
+ * primary key so it can be embedded
+ *
+ * @generated from message weewar.v1.GameWorldDataGORM
+ */
+export type GameWorldDataGORM = Message<"weewar.v1.GameWorldDataGORM"> & {
+  /**
+   * Tiles as JSON for cross-DB compatibility
+   *
+   * @generated from field: repeated weewar.v1.TileGORM tiles = 2;
+   */
+  tiles: TileGORM[];
+
+  /**
+   * Units as JSON for cross-DB compatibility
+   *
+   * @generated from field: repeated weewar.v1.UnitGORM units = 3;
+   */
+  units: UnitGORM[];
+
+  /**
+   * ScreenshotIndexInfo embedded
+   *
+   * @generated from field: weewar.v1.IndexInfoGORM screenshot_index_info = 4;
+   */
+  screenshotIndexInfo?: IndexInfoGORM;
+};
+
+/**
+ * Describes the message weewar.v1.GameWorldDataGORM.
+ * Use `create(GameWorldDataGORMSchema)` to create a new message.
+ */
+export const GameWorldDataGORMSchema: GenMessage<GameWorldDataGORM> = /*@__PURE__*/
+  messageDesc(file_weewar_v1_gorm_models, 12);
+
+/**
  * Holds the game's Active/Current state (eg world state)
  *
  * @generated from message weewar.v1.GameStateGORM
@@ -289,6 +318,13 @@ export type GameStateGORM = Message<"weewar.v1.GameStateGORM"> & {
    * @generated from field: string game_id = 1;
    */
   gameId: string;
+
+  /**
+   * ScreenshotIndexInfo embedded
+   *
+   * @generated from field: weewar.v1.GameWorldDataGORM world_data = 4;
+   */
+  worldData?: GameWorldDataGORM;
 };
 
 /**
@@ -296,7 +332,7 @@ export type GameStateGORM = Message<"weewar.v1.GameStateGORM"> & {
  * Use `create(GameStateGORMSchema)` to create a new message.
  */
 export const GameStateGORMSchema: GenMessage<GameStateGORM> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gorm_models, 12);
+  messageDesc(file_weewar_v1_gorm_models, 13);
 
 /**
  * Holds the game's move history (can be used as a replay log)
@@ -311,7 +347,7 @@ export type GameMoveHistoryGORM = Message<"weewar.v1.GameMoveHistoryGORM"> & {
  * Use `create(GameMoveHistoryGORMSchema)` to create a new message.
  */
 export const GameMoveHistoryGORMSchema: GenMessage<GameMoveHistoryGORM> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gorm_models, 13);
+  messageDesc(file_weewar_v1_gorm_models, 14);
 
 /**
  * A move group - we can allow X moves in one "tick"
@@ -326,7 +362,7 @@ export type GameMoveGroupGORM = Message<"weewar.v1.GameMoveGroupGORM"> & {
  * Use `create(GameMoveGroupGORMSchema)` to create a new message.
  */
 export const GameMoveGroupGORMSchema: GenMessage<GameMoveGroupGORM> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gorm_models, 14);
+  messageDesc(file_weewar_v1_gorm_models, 15);
 
 /**
  * *
@@ -376,5 +412,5 @@ export type GameMoveGORM = Message<"weewar.v1.GameMoveGORM"> & {
  * Use `create(GameMoveGORMSchema)` to create a new message.
  */
 export const GameMoveGORMSchema: GenMessage<GameMoveGORM> = /*@__PURE__*/
-  messageDesc(file_weewar_v1_gorm_models, 15);
+  messageDesc(file_weewar_v1_gorm_models, 16);
 

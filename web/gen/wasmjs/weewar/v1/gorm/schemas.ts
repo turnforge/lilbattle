@@ -157,12 +157,6 @@ export const GameGORMSchema: MessageSchema = {
       repeated: true,
     },
     {
-      name: "screenshotIndexInfo",
-      type: FieldType.MESSAGE,
-      id: 12,
-      messageType: "weewar.v1.IndexInfoGORM",
-    },
-    {
       name: "searchIndexInfo",
       type: FieldType.MESSAGE,
       id: 13,
@@ -241,6 +235,36 @@ export const GameSettingsGORMSchema: MessageSchema = {
 
 
 /**
+ * Schema for GameWorldDataGORM message
+ */
+export const GameWorldDataGORMSchema: MessageSchema = {
+  name: "GameWorldDataGORM",
+  fields: [
+    {
+      name: "tiles",
+      type: FieldType.MESSAGE,
+      id: 2,
+      messageType: "weewar.v1.TileGORM",
+      repeated: true,
+    },
+    {
+      name: "units",
+      type: FieldType.MESSAGE,
+      id: 3,
+      messageType: "weewar.v1.UnitGORM",
+      repeated: true,
+    },
+    {
+      name: "screenshotIndexInfo",
+      type: FieldType.MESSAGE,
+      id: 4,
+      messageType: "weewar.v1.IndexInfoGORM",
+    },
+  ],
+};
+
+
+/**
  * Schema for GameStateGORM message
  */
 export const GameStateGORMSchema: MessageSchema = {
@@ -250,6 +274,12 @@ export const GameStateGORMSchema: MessageSchema = {
       name: "gameId",
       type: FieldType.STRING,
       id: 1,
+    },
+    {
+      name: "worldData",
+      type: FieldType.MESSAGE,
+      id: 4,
+      messageType: "weewar.v1.GameWorldDataGORM",
     },
   ],
 };
@@ -337,6 +367,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.GamePlayerGORM": GamePlayerGORMSchema,
   "weewar.v1.GameTeamGORM": GameTeamGORMSchema,
   "weewar.v1.GameSettingsGORM": GameSettingsGORMSchema,
+  "weewar.v1.GameWorldDataGORM": GameWorldDataGORMSchema,
   "weewar.v1.GameStateGORM": GameStateGORMSchema,
   "weewar.v1.GameMoveHistoryGORM": GameMoveHistoryGORMSchema,
   "weewar.v1.GameMoveGroupGORM": GameMoveGroupGORMSchema,

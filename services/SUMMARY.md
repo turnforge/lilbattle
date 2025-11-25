@@ -8,6 +8,7 @@ This package contains the core service implementations for the Weewar backend, i
 
 The service layer uses an embedding pattern for code reuse:
 
+**Worlds Services:**
 ```
 BaseWorldsService (base interface methods)
     ↓ embeds
@@ -16,13 +17,28 @@ BackendWorldsService (screenshot indexing, optimistic locking)
 GORMWorldsService / FSWorldsService (storage-specific implementations)
 ```
 
+**Games Services:**
+```
+BaseGamesService (base interface methods)
+    ↓ embeds
+BackendGamesService (screenshot indexing, optimistic locking)
+    ↓ embeds
+GORMGamesService / FSGamesService (storage-specific implementations)
+```
+
 ### Key Components
 
 **Base Services**
 - `BaseWorldsService`: Core world service interface
-- `BackendWorldsService`: Mixin providing screenshot indexing and completion handling
+- `BackendWorldsService`: Mixin providing screenshot indexing and completion handling for worlds
   - Uses `WorldDataUpdater` interface for storage-agnostic operations
   - Handles screenshot completion callbacks with optimistic locking
+  - Shared between GORM and filesystem implementations
+- `BaseGamesService`: Core game service interface
+- `BackendGamesService`: Mixin providing screenshot indexing and completion handling for games
+  - Uses `GameStateUpdater` interface for storage-agnostic operations
+  - Updates GameState.WorldData.ScreenshotIndexInfo (GameWorldDataGORM embedded without table)
+  - GameState table includes flattened WorldData fields with screenshot_index_ prefix
   - Shared between GORM and filesystem implementations
 
 **Storage Implementations**
@@ -31,6 +47,11 @@ GORMWorldsService / FSWorldsService (storage-specific implementations)
 - Both implement `WorldDataUpdater` interface:
   - `GetWorldData(ctx, id)`: Get current version for optimistic locking
   - `UpdateWorldDataIndexInfo(ctx, id, oldVersion, lastIndexedAt, needsIndexing)`: Update index info with version check
+- `gormbe/games_service.go`: Database-backed game storage using GORM
+- `fsbe/games_service.go`: Filesystem-backed game storage using JSON files
+- Both implement `GameStateUpdater` interface:
+  - `GetGameStateVersion(ctx, id)`: Get current version for optimistic locking
+  - `UpdateGameStateScreenshotIndexInfo(ctx, id, oldVersion, lastIndexedAt, needsIndexing)`: Update GameState's WorldData screenshot index info with version check
 
 **FileStore Services**
 - `fsbe/filestore.go`: Local filesystem storage with path security

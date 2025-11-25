@@ -1,7 +1,7 @@
 import { Any } from "@bufbuild/protobuf/wkt";
 
 
-import { IndexStateGORM as IndexStateGORMInterface, IndexRecordsLROGORM as IndexRecordsLROGORMInterface, IndexInfoGORM as IndexInfoGORMInterface, TileGORM as TileGORMInterface, UnitGORM as UnitGORMInterface, AttackRecordGORM as AttackRecordGORMInterface, WorldGORM as WorldGORMInterface, WorldDataGORM as WorldDataGORMInterface, GameGORM as GameGORMInterface, GameConfigurationGORM as GameConfigurationGORMInterface, IncomeConfigGORM as IncomeConfigGORMInterface, GamePlayerGORM as GamePlayerGORMInterface, GameTeamGORM as GameTeamGORMInterface, GameSettingsGORM as GameSettingsGORMInterface, GameStateGORM as GameStateGORMInterface, GameMoveHistoryGORM as GameMoveHistoryGORMInterface, GameMoveGroupGORM as GameMoveGroupGORMInterface, GameMoveGORM as GameMoveGORMInterface } from "./interfaces";
+import { IndexStateGORM as IndexStateGORMInterface, IndexRecordsLROGORM as IndexRecordsLROGORMInterface, IndexInfoGORM as IndexInfoGORMInterface, TileGORM as TileGORMInterface, UnitGORM as UnitGORMInterface, AttackRecordGORM as AttackRecordGORMInterface, WorldGORM as WorldGORMInterface, WorldDataGORM as WorldDataGORMInterface, GameGORM as GameGORMInterface, GameConfigurationGORM as GameConfigurationGORMInterface, IncomeConfigGORM as IncomeConfigGORMInterface, GamePlayerGORM as GamePlayerGORMInterface, GameTeamGORM as GameTeamGORMInterface, GameSettingsGORM as GameSettingsGORMInterface, GameWorldDataGORM as GameWorldDataGORMInterface, GameStateGORM as GameStateGORMInterface, GameMoveHistoryGORM as GameMoveHistoryGORMInterface, GameMoveGroupGORM as GameMoveGroupGORMInterface, GameMoveGORM as GameMoveGORMInterface } from "./interfaces";
 
 
 
@@ -144,8 +144,6 @@ export class GameGORM implements GameGORMInterface {
   tags: string[] = [];
   /** PreviewUrls as JSON for cross-DB compatibility */
   previewUrls: string[] = [];
-  /** ScreenshotIndexInfo embedded */
-  screenshotIndexInfo?: IndexInfoGORM;
   /** SearchIndexInfo embedded */
   searchIndexInfo?: IndexInfoGORM;
 
@@ -225,6 +223,28 @@ export class GameSettingsGORM implements GameSettingsGORMInterface {
 
 
 /**
+ * GameWorldDataGORM is same as WorldDataGORM but without the
+ primary key so it can be embedded
+ */
+export class GameWorldDataGORM implements GameWorldDataGORMInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.GameWorldDataGORM";
+  readonly __MESSAGE_TYPE = GameWorldDataGORM.MESSAGE_TYPE;
+
+  /** Tiles as JSON for cross-DB compatibility */
+  tiles: TileGORM[] = [];
+  /** Units as JSON for cross-DB compatibility */
+  units: UnitGORM[] = [];
+  /** ScreenshotIndexInfo embedded */
+  screenshotIndexInfo?: IndexInfoGORM;
+
+  
+}
+
+
+/**
  * Holds the game's Active/Current state (eg world state)
  */
 export class GameStateGORM implements GameStateGORMInterface {
@@ -235,6 +255,8 @@ export class GameStateGORM implements GameStateGORMInterface {
   readonly __MESSAGE_TYPE = GameStateGORM.MESSAGE_TYPE;
 
   gameId: string = "";
+  /** ScreenshotIndexInfo embedded */
+  worldData?: GameWorldDataGORM;
 
   
 }

@@ -20,9 +20,8 @@ import (
 
 // GamesService implements the GamesService gRPC interface
 type GamesService struct {
-	services.BaseGamesService
+	services.BackendGamesService
 	storage      *gorm.DB
-	ClientMgr    *services.ClientMgr
 	MaxPageSize  int
 	GameDAL      v1dal.GameGORMDAL
 	GameStateDAL v1dal.GameStateGORMDAL
@@ -39,16 +38,46 @@ func NewGamesService(db *gorm.DB, clientMgr *services.ClientMgr) *GamesService {
 	service := &GamesService{
 		storage:     db,
 		MaxPageSize: 1000,
-		ClientMgr:   clientMgr,
 	}
+	service.ClientMgr = clientMgr
 	service.GameDAL.WillCreate = func(ctx context.Context, game *v1gorm.GameGORM) error {
 		game.UpdatedAt = time.Now()
 		game.CreatedAt = time.Now()
 		return nil
 	}
 	service.Self = service
+	service.GameStateUpdater = service // Implement GameStateUpdater interface
+	service.InitializeScreenshotIndexer()
 
 	return service
+}
+
+// GetGameStateVersion implements GameStateUpdater interface
+func (s *GamesService) GetGameStateVersion(ctx context.Context, id string) (int64, error) {
+	gameState, err := s.GameStateDAL.Get(ctx, s.storage, id)
+	if err != nil {
+		return 0, err
+	}
+	return gameState.Version, nil
+}
+
+// UpdateGameStateScreenshotIndexInfo implements GameStateUpdater interface
+func (s *GamesService) UpdateGameStateScreenshotIndexInfo(ctx context.Context, id string, oldVersion int64, lastIndexedAt time.Time, needsIndexing bool) error {
+	gameState, err := s.GameStateDAL.Get(ctx, s.storage, id)
+	if err != nil {
+		return err
+	}
+
+	gameState.WorldData.ScreenshotIndexInfo.LastIndexedAt = lastIndexedAt
+	gameState.WorldData.ScreenshotIndexInfo.NeedsIndexing = needsIndexing
+	gameState.Version = oldVersion + 1
+
+	// Optimistic lock: update only if version matches
+	err = s.GameStateDAL.Save(ctx, s.storage.Where("game_id = ? AND version = ?", id, oldVersion), gameState)
+	if err != nil {
+		return fmt.Errorf("optimistic lock failed or save error: %w", err)
+	}
+	return nil
 }
 
 // ListGames returns all available games (metadata only for performance)
@@ -232,6 +261,12 @@ func (s *GamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest
 	}
 
 	if req.NewState != nil {
+		// Load current game state to get version
+		gameStateGorm, err := s.GameStateDAL.Get(ctx, s.storage, req.GameId)
+		if err != nil {
+			return resp, fmt.Errorf("failed to get game state: %w", err)
+		}
+
 		// Make sure to topup units
 		if req.NewState.WorldData != nil {
 			rg, err := s.GetRuntimeGame(currGame, req.NewState)
@@ -243,10 +278,32 @@ func (s *GamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest
 			}
 		}
 
-		gameStateGorm, _ := v1gorm.GameStateToGameStateGORM(req.NewState, nil, nil)
-		if err = s.GameStateDAL.Save(ctx, s.storage, gameStateGorm); err != nil {
-			return
+		oldVersion := gameStateGorm.Version
+
+		// Server controls version - don't trust client
+		req.NewState.Version = oldVersion
+
+		// Update the gameStateGorm with new state data
+		newGameStateGorm, _ := v1gorm.GameStateToGameStateGORM(req.NewState, nil, nil)
+		newGameStateGorm.GameId = req.GameId
+		newGameStateGorm.WorldData.ScreenshotIndexInfo.LastUpdatedAt = time.Now()
+		newGameStateGorm.WorldData.ScreenshotIndexInfo.NeedsIndexing = true
+		newGameStateGorm.Version = oldVersion + 1
+
+		// Optimistic lock: update GameState with version check
+		result := s.storage.Model(&v1gorm.GameStateGORM{}).
+			Where("game_id = ? AND version = ?", req.GameId, oldVersion).
+			Updates(newGameStateGorm)
+
+		if result.Error != nil {
+			return resp, fmt.Errorf("failed to update GameState: %w", result.Error)
 		}
+		if result.RowsAffected == 0 {
+			return resp, fmt.Errorf("optimistic lock failed: GameState was modified by another request")
+		}
+
+		// Queue it for being screenshotted
+		s.ScreenShotIndexer.Send("games", req.GameId, newGameStateGorm.Version, req.NewState.WorldData)
 	}
 
 	// Ignore history for now
