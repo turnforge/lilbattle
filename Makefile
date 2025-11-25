@@ -132,6 +132,7 @@ dockerbuild:
 copylinks:
 	rm -Rf locallinks/*
 	cp -r ../goutils locallinks/
+	cp -r ../gocurrent locallinks/
 	cp -r ../templar locallinks/
 	cp -r ../protoc-gen-dal locallinks/
 	cp -r ../oneauth locallinks/
@@ -143,6 +144,7 @@ resymlink:
 	cd locallinks && ln -s ../../templar
 	cd locallinks && ln -s ../../protoc-gen-dal
 	cd locallinks && ln -s ../../goutils
+	cd locallinks && ln -s ../../gocurrent
 	cd locallinks && ln -s ../../oneauth
 	cd locallinks && ln -s ../../turnengine
 
