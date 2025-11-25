@@ -21,73 +21,62 @@ import (
 
 // WorldsService implements the WorldsService gRPC interface
 type WorldsService struct {
-	services.BaseWorldsService
-	ClientMgr    *services.ClientMgr
+	services.BackendWorldsService
 	storage      *gorm.DB
 	MaxPageSize  int
 	WorldDAL     v1dal.WorldGORMDAL
 	WorldDataDAL v1dal.WorldDataGORMDAL
-
-	// The chan where we write world event updates to
-	updateEventChan chan *v1gorm.WorldDataGORM
 }
 
 // NewWorldsService creates a new WorldsService implementation
-func NewWorldsService(db *gorm.DB) *WorldsService {
+func NewWorldsService(db *gorm.DB, clientMgr *services.ClientMgr) *WorldsService {
 	// db.AutoMigrate(&v1gorm.IndexRecordsLROGORM{})
 	db.AutoMigrate(&v1gorm.WorldGORM{})
 	db.AutoMigrate(&v1gorm.WorldDataGORM{})
 
 	service := &WorldsService{
-		storage:         db,
-		MaxPageSize:     1000,
-		updateEventChan: make(chan *v1gorm.WorldDataGORM),
+		storage:     db,
+		MaxPageSize: 1000,
 	}
+	service.ClientMgr = clientMgr
 	service.WorldDAL.WillCreate = func(ctx context.Context, world *v1gorm.WorldGORM) error {
 		world.UpdatedAt = time.Now()
 		world.CreatedAt = time.Now()
 		return nil
 	}
 	service.Self = service
+	service.WorldDataUpdater = service // Implement WorldDataUpdater interface
+	service.InitializeScreenshotIndexer()
 
-	go service.StartIndexer()
 	return service
 }
 
-func (b *WorldsService) StartIndexer() {
-	pickedInWindow := map[string]*v1gorm.WorldDataGORM{}
-	windowTimer := time.NewTimer(10 * time.Second)  // does the actual actioning the index update
-	checkerTimer := time.NewTimer(10 * time.Second) // we also see which items have "changed" but missed the indexing through some loss
-	startedBatchProcessing := false
+// GetWorldData implements WorldDataUpdater interface
+func (s *WorldsService) GetWorldData(ctx context.Context, id string) (int64, error) {
+	worldData, err := s.WorldDataDAL.Get(ctx, s.storage, id)
+	if err != nil {
+		return 0, err
+	}
+	return worldData.Version, nil
+}
 
-	// TODO - Put this into a worker pool later
-	startBatchProcessing := func(batch map[string]*v1gorm.WorldDataGORM) {
-		for worldId, worldData := range batch {
-			log.Println("Creating screenthots for: ", worldId, worldData)
-			// imageBytes := generateScreenshot(worldId, worldData)
-		}
-		startedBatchProcessing = false
+// UpdateWorldDataIndexInfo implements WorldDataUpdater interface
+func (s *WorldsService) UpdateWorldDataIndexInfo(ctx context.Context, id string, oldVersion int64, lastIndexedAt time.Time, needsIndexing bool) error {
+	worldData, err := s.WorldDataDAL.Get(ctx, s.storage, id)
+	if err != nil {
+		return err
 	}
 
-	for {
-		select {
-		case <-windowTimer.C:
-			log.Println("Time to update screenshots on batch")
-			if !startedBatchProcessing {
-				// if a batch process is already running then wait for next time to do this
-				startedBatchProcessing = true
-				go startBatchProcessing(pickedInWindow)
-				pickedInWindow = map[string]*v1gorm.WorldDataGORM{}
-			}
-		case newWorldData := <-b.updateEventChan:
-			curr, ok := pickedInWindow[newWorldData.WorldId]
-			if curr == nil || !ok || curr.ScreenshotIndexInfo.LastUpdatedAt.Before(newWorldData.ScreenshotIndexInfo.LastUpdatedAt) {
-				pickedInWindow[newWorldData.WorldId] = newWorldData
-			}
-		case <-checkerTimer.C:
-			log.Println("Time to proactively find items that need to be re-indexed")
-		}
+	worldData.ScreenshotIndexInfo.LastIndexedAt = lastIndexedAt
+	worldData.ScreenshotIndexInfo.NeedsIndexing = needsIndexing
+	worldData.Version = oldVersion + 1
+
+	// Optimistic lock: update only if version matches
+	err = s.WorldDataDAL.Save(ctx, s.storage.Where("version = ?", id, oldVersion), worldData)
+	if err != nil {
+		return fmt.Errorf("optimistic lock failed or save error: %w", err)
 	}
+	return nil
 }
 
 // CreateWorld creates a new world
@@ -121,8 +110,6 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	if worldDataGorm == nil {
 		worldDataGorm = &v1gorm.WorldDataGORM{}
 	}
-	log.Println("Req WorldData: ", req.WorldData)
-	log.Println("WorldData: ", worldDataGorm)
 	worldDataGorm.WorldId = worldGorm.Id
 	if err = s.WorldDataDAL.Save(ctx, s.storage, worldDataGorm); err != nil {
 		return
@@ -256,8 +243,6 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		if req.WorldData.Units == nil {
 			req.WorldData.Units = protoWorldData.Units
 		}
-		log.Println("Req world data: ", req.WorldData)
-		log.Println("New Proto world data: ", protoWorldData)
 		worldData, err = v1gorm.WorldDataToWorldDataGORM(req.WorldData, nil, nil)
 		worldData.WorldId = req.World.Id
 	}
@@ -267,18 +252,33 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		return
 	}
 
-	log.Println("On Update, err: ", err)
-	log.Println("On Update, wds: ", worldDataSaved)
 	if err == nil && worldDataSaved {
+		oldVersion := worldData.Version
 		worldData.ScreenshotIndexInfo.LastUpdatedAt = time.Now()
 		worldData.ScreenshotIndexInfo.NeedsIndexing = true
-		err = s.WorldDataDAL.Save(ctx, s.storage, worldData)
-		log.Println("New world data: ", worldData, err)
+		worldData.Version = worldData.Version + 1
+
+		// Optimistic lock: update only if version hasn't changed
+		// err := s.WorldDataDAL.Save(ctx, s.storage.Where("world_id = ? AND version = ?", worldData.WorldId, oldVersion), worldData)
+		// if err != nil { log.Println("Could not save world data: ", err) }
+
+		// Optimistic lock: update only if version hasn't changed
+		result := s.storage.Model(&v1gorm.WorldDataGORM{}).
+			Where("world_id = ? AND version = ?", worldData.WorldId, oldVersion).
+			Updates(worldData)
+
+		if result.Error != nil {
+			return resp, fmt.Errorf("failed to update WorldData: %w", result.Error)
+		}
+		if result.RowsAffected == 0 {
+			return resp, fmt.Errorf("optimistic lock failed: WorldData was modified by another request")
+		}
+
 		resp.World, err = v1gorm.WorldFromWorldGORM(nil, world, nil)
 		resp.WorldData, err = v1gorm.WorldDataFromWorldDataGORM(nil, worldData, nil)
 
 		// Queue it for being screenshotted
-		s.updateEventChan <- worldData
+		s.ScreenShotIndexer.Send("worlds", worldData.WorldId, worldData.Version, resp.WorldData)
 	}
 
 	return resp, err

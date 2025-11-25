@@ -1,0 +1,104 @@
+# Services Package Summary
+
+This package contains the core service implementations for the Weewar backend, including game logic, world management, and storage abstractions.
+
+## Architecture
+
+### Service Hierarchy
+
+The service layer uses an embedding pattern for code reuse:
+
+```
+BaseWorldsService (base interface methods)
+    ↓ embeds
+BackendWorldsService (screenshot indexing, optimistic locking)
+    ↓ embeds
+GORMWorldsService / FSWorldsService (storage-specific implementations)
+```
+
+### Key Components
+
+**Base Services**
+- `BaseWorldsService`: Core world service interface
+- `BackendWorldsService`: Mixin providing screenshot indexing and completion handling
+  - Uses `WorldDataUpdater` interface for storage-agnostic operations
+  - Handles screenshot completion callbacks with optimistic locking
+  - Shared between GORM and filesystem implementations
+
+**Storage Implementations**
+- `gormbe/worlds_service.go`: Database-backed world storage using GORM
+- `fsbe/worlds_service.go`: Filesystem-backed world storage using JSON files
+- Both implement `WorldDataUpdater` interface:
+  - `GetWorldData(ctx, id)`: Get current version for optimistic locking
+  - `UpdateWorldDataIndexInfo(ctx, id, oldVersion, lastIndexedAt, needsIndexing)`: Update index info with version check
+
+**FileStore Services**
+- `fsbe/filestore.go`: Local filesystem storage with path security
+  - Prevents directory traversal attacks (rejects `..`, absolute paths)
+  - Resolves all paths relative to BasePath
+- `r2/filestore.go`: Cloudflare R2 object storage backend
+  - Generates presigned URLs with multiple expiries (15m, 1h, 24h)
+  - Uses S3-compatible API
+
+**Screenshot Pipeline**
+- `screenshots.go`: Batch processing screenshot indexer
+  - Groups updates within 30-second windows (using gocurrent.Reducer)
+  - Renders multiple themes per world/game (default, modern, fantasy)
+  - Uploads to filestore at: `screenshots/{kind}/{id}/{theme}.{ext}`
+  - Tracks errors per theme in `ThemeErrors` map
+  - Calls completion callback after batch finishes
+
+**Game Logic**
+- `game.go`: Core game state management
+- `world.go`: Hex grid coordinate system and tile/unit operations
+- `moves.go`: Move processing and validation
+- `rules_engine.go`: Game rules (movement costs, combat, unit data)
+- `panels.go`: UI state management for game views
+- `singleton_gameview_presenter.go`: Orchestrates UI updates
+
+**Position Parsing**
+- `position_parser.go`: Unified parser supporting multiple formats
+  - Unit shortcuts: `A1`, `B2`
+  - Q,R coordinates: `0,-3`, `5,2`
+  - Row,Col coordinates: `r4,5`
+  - Direction shortcuts: `L`, `R`, `TL`, `TR`, `BL`, `BR`
+  - Tile prefix: `t:A1` (forces tile lookup instead of unit)
+
+## Key Patterns
+
+### Optimistic Locking
+WorldData uses version-based optimistic locking to prevent concurrent update conflicts:
+- Each update increments `WorldData.Version`
+- Save operations include WHERE clause checking old version
+- Screenshot indexer checks version before updating IndexInfo
+
+### Screenshot Indexing Flow
+1. `UpdateWorld` increments version, sets `NeedsIndexing=true`
+2. Sends item to `ScreenShotIndexer` with new version
+3. Indexer batches items (30s window), renders all themes
+4. Completion callback checks version matches, updates IndexInfo
+5. If version mismatch, skip update (world was modified again)
+
+### Path Security (FileStore)
+Multi-layered validation prevents directory traversal:
+1. Reject absolute paths
+2. Clean path (removes redundant separators)
+3. Check for `..` prefix
+4. Resolve to absolute path and verify within BasePath
+
+### Lazy Top-Up Pattern
+Units don't automatically reset movement at turn start. Instead, they're "topped up" on-demand:
+- `LastToppedupTurn`: Last turn unit was refreshed
+- `LastActedTurn`: Last turn unit performed action
+- `topUpUnitIfNeeded()` called before movement/attack/options
+
+### Presenter Architecture
+CLI → FSGamesService.GetGame() → SingletonGamesService (in-memory) → SingletonGameViewPresenterImpl
+
+## File Organization
+
+- `services/` - Core service implementations
+  - `gormbe/` - Database-backed services (GORM)
+  - `fsbe/` - Filesystem-backed services
+  - `r2/` - Cloudflare R2 storage client
+- Proto-generated code in `gen/go/weewar/v1/`

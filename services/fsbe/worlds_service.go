@@ -19,9 +19,8 @@ var WORLDS_STORAGE_DIR = ""
 
 // FSWorldsService implements the FSWorldsService gRPC interface
 type FSWorldsService struct {
-	services.BaseWorldsService
-	storage   *storage.FileStorage
-	ClientMgr *services.ClientMgr
+	services.BackendWorldsService
+	storage *storage.FileStorage
 }
 
 // NewFSWorldsService creates a new FSWorldsService implementation
@@ -34,7 +33,43 @@ func NewFSWorldsService(storageDir string, clientMgr *services.ClientMgr) *FSWor
 	}
 	service := &FSWorldsService{storage: storage.NewFileStorage(storageDir)}
 	service.ClientMgr = clientMgr
+	service.Self = service
+	service.WorldDataUpdater = service // Implement WorldDataUpdater interface
+	service.InitializeScreenshotIndexer()
 	return service
+}
+
+// GetWorldData implements WorldDataUpdater interface
+func (s *FSWorldsService) GetWorldData(ctx context.Context, id string) (int64, error) {
+	worldData, err := storage.LoadFSArtifact[*v1.WorldData](s.storage, id, "data")
+	if err != nil {
+		return 0, err
+	}
+	return worldData.Version, nil
+}
+
+// UpdateWorldDataIndexInfo implements WorldDataUpdater interface
+func (s *FSWorldsService) UpdateWorldDataIndexInfo(ctx context.Context, id string, oldVersion int64, lastIndexedAt time.Time, needsIndexing bool) error {
+	worldData, err := storage.LoadFSArtifact[*v1.WorldData](s.storage, id, "data")
+	if err != nil {
+		return err
+	}
+
+	// Check version matches (optimistic lock)
+	if worldData.Version != oldVersion {
+		return fmt.Errorf("optimistic lock failed: expected version %d, got %d", oldVersion, worldData.Version)
+	}
+
+	worldData.ScreenshotIndexInfo.LastIndexedAt = tspb.New(lastIndexedAt)
+	worldData.ScreenshotIndexInfo.NeedsIndexing = needsIndexing
+	worldData.Version = oldVersion + 1
+
+	// Save updated data
+	err = s.storage.SaveArtifact(id, "data", worldData)
+	if err != nil {
+		return fmt.Errorf("failed to save world data: %w", err)
+	}
+	return nil
 }
 
 // ListWorlds returns all available worlds (metadata only for performance)
@@ -125,24 +160,47 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	}
 
 	// Update world data if provided
-	var updated bool
+	worldDataSaved := false
 	if req.ClearWorld {
-		updated = true
 		req.WorldData = &v1.WorldData{}
+		worldData = &v1.WorldData{}
+		worldDataSaved = true
 	} else if req.WorldData != nil {
-		updated = true
-		if req.WorldData.Tiles != nil {
-			worldData.Tiles = req.WorldData.Tiles
+		worldDataSaved = true
+		if req.WorldData.Tiles == nil {
+			req.WorldData.Tiles = worldData.Tiles
 		}
-		if req.WorldData.Units != nil {
-			worldData.Units = req.WorldData.Units
+		if req.WorldData.Units == nil {
+			req.WorldData.Units = worldData.Units
+		}
+		worldData = req.WorldData
+	}
+
+	if worldDataSaved {
+		worldData.ScreenshotIndexInfo.LastUpdatedAt = tspb.New(time.Now())
+		worldData.ScreenshotIndexInfo.NeedsIndexing = true
+		worldData.Version = worldData.Version + 1
+
+		err = s.storage.SaveArtifact(req.World.Id, "data", worldData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to save world data: %w", err)
+		}
+
+		resp = &v1.UpdateWorldResponse{
+			World:     world,
+			WorldData: worldData,
+		}
+
+		// Queue it for being screenshotted
+		s.ScreenShotIndexer.Send("worlds", world.Id, worldData.Version, resp.WorldData)
+	} else {
+		resp = &v1.UpdateWorldResponse{
+			World:     world,
+			WorldData: worldData,
 		}
 	}
 
-	if updated {
-		err = s.storage.SaveArtifact(req.World.Id, "data", req.WorldData)
-	}
-	return resp, err
+	return resp, nil
 }
 
 // DeleteWorld deletes a world
