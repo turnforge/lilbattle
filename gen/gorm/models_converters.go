@@ -334,6 +334,7 @@ func WorldToWorldGORM(
 
 	// Initialize struct with inline values
 	*dest = WorldGORM{
+		Version:     src.Version,
 		Id:          src.Id,
 		CreatorId:   src.CreatorId,
 		Name:        src.Name,
@@ -394,6 +395,7 @@ func WorldFromWorldGORM(
 	*dest = models.World{
 		CreatedAt:   converters.TimeToTimestamp(src.CreatedAt),
 		UpdatedAt:   converters.TimeToTimestamp(src.UpdatedAt),
+		Version:     src.Version,
 		Id:          src.Id,
 		CreatorId:   src.CreatorId,
 		Name:        src.Name,
@@ -441,6 +443,7 @@ func WorldDataToWorldDataGORM(
 	// Initialize struct with inline values
 	*dest = WorldDataGORM{
 		ContentHash: src.ContentHash,
+		Version:     src.Version,
 	}
 	out = dest
 
@@ -497,6 +500,7 @@ func WorldDataFromWorldDataGORM(
 	// Initialize struct with inline values
 	*dest = models.WorldData{
 		ContentHash: src.ContentHash,
+		Version:     src.Version,
 	}
 	out = dest
 
@@ -550,6 +554,7 @@ func GameToGameGORM(
 
 	// Initialize struct with inline values
 	*dest = GameGORM{
+		Version:     src.Version,
 		Id:          src.Id,
 		CreatorId:   src.CreatorId,
 		WorldId:     src.WorldId,
@@ -574,12 +579,6 @@ func GameToGameGORM(
 		_, err = GameConfigurationToGameConfigurationGORM(src.Config, &out.Config, nil)
 		if err != nil {
 			return nil, fmt.Errorf("converting Config: %w", err)
-		}
-	}
-	if src.ScreenshotIndexInfo != nil {
-		_, err = IndexInfoToIndexInfoGORM(src.ScreenshotIndexInfo, &out.ScreenshotIndexInfo, nil)
-		if err != nil {
-			return nil, fmt.Errorf("converting ScreenshotIndexInfo: %w", err)
 		}
 	}
 	if src.SearchIndexInfo != nil {
@@ -617,6 +616,7 @@ func GameFromGameGORM(
 	*dest = models.Game{
 		CreatedAt:   converters.TimeToTimestamp(src.CreatedAt),
 		UpdatedAt:   converters.TimeToTimestamp(src.UpdatedAt),
+		Version:     src.Version,
 		Id:          src.Id,
 		CreatorId:   src.CreatorId,
 		WorldId:     src.WorldId,
@@ -632,10 +632,6 @@ func GameFromGameGORM(
 	out.Config, err = GameConfigurationFromGameConfigurationGORM(nil, &src.Config, nil)
 	if err != nil {
 		return nil, fmt.Errorf("converting Config: %w", err)
-	}
-	out.ScreenshotIndexInfo, err = IndexInfoFromIndexInfoGORM(nil, &src.ScreenshotIndexInfo, nil)
-	if err != nil {
-		return nil, fmt.Errorf("converting ScreenshotIndexInfo: %w", err)
 	}
 	out.SearchIndexInfo, err = IndexInfoFromIndexInfoGORM(nil, &src.SearchIndexInfo, nil)
 	if err != nil {

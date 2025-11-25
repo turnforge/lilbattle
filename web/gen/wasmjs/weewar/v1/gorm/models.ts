@@ -284,6 +284,8 @@ export class GameMoveGORM implements GameMoveGORMInterface {
   gameId: string = "";
   groupNumber: string = "";
   moveNumber: number = 0;
+  /** Version number for optimistic locking */
+  version: number = 0;
   /** Field named "move_type" matches the oneof name in source
  This automatically skips all oneof members (move_unit, attack_unit, end_turn, build_unit) */
   moveType?: Any;

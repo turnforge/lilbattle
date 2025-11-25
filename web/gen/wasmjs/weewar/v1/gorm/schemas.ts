@@ -297,15 +297,20 @@ export const GameMoveGORMSchema: MessageSchema = {
       id: 3,
     },
     {
+      name: "version",
+      type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
       name: "moveType",
       type: FieldType.MESSAGE,
-      id: 4,
+      id: 5,
       messageType: "google.protobuf.Any",
     },
     {
       name: "changes",
       type: FieldType.MESSAGE,
-      id: 5,
+      id: 6,
       messageType: "google.protobuf.Any",
       repeated: true,
     },

@@ -129,6 +129,7 @@ func (m *AttackRecordGORM) Scan(value interface{}) error {
 type WorldGORM struct {
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	Version           int64
 	Id                string `gorm:"primaryKey"`
 	CreatorId         string
 	Name              string
@@ -153,6 +154,7 @@ type WorldDataGORM struct {
 	Units               []UnitGORM    `gorm:"serializer:json"`
 	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
+	Version             int64
 }
 
 // TableName returns the table name for WorldDataGORM
@@ -188,6 +190,7 @@ func (m *WorldDataGORM) Scan(value interface{}) error {
 type GameGORM struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+	Version             int64
 	Id                  string `gorm:"primaryKey"`
 	CreatorId           string
 	WorldId             string
@@ -196,9 +199,9 @@ type GameGORM struct {
 	Tags                []string `gorm:"serializer:json"`
 	ImageUrl            string
 	Difficulty          string
+	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	Config              GameConfigurationGORM
 	PreviewUrls         []string      `gorm:"serializer:json"`
-	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	SearchIndexInfo     IndexInfoGORM `gorm:"embedded;embeddedPrefix:search_index_"`
 }
 
@@ -363,9 +366,10 @@ type GameMoveGroupGORM struct {
 type GameMoveGORM struct {
 	Player      int32
 	GameId      string `gorm:"primaryKey"`
-	Timestamp   time.Time
 	GroupNumber string `gorm:"primaryKey"`
-	MoveNumber  int32  `gorm:"primaryKey"`
+	Timestamp   time.Time
+	MoveNumber  int32 `gorm:"primaryKey"`
+	Version     int64
 	MoveType    []byte `gorm:"serializer:json"`
 	SequenceNum int64
 	IsPermanent bool

@@ -119,6 +119,8 @@ export interface PaginationResponse {
 export interface World {
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  /** Version for Optimistic concurrent locking */
+  version: number;
   /** Unique ID for the world */
   id: string;
   /** User that created the world */
@@ -152,6 +154,8 @@ export interface WorldData {
   screenshotIndexInfo?: IndexInfo;
   /** We will only update if hash's are different */
   contentHash: string;
+  /** Version for Optimistic concurrent locking */
+  version: number;
 }
 
 
@@ -343,6 +347,8 @@ export interface RulesEngine {
 export interface Game {
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  /** Version number for optimistic locking */
+  version: number;
   /** Unique ID for the game */
   id: string;
   /** User who started/created the game */
@@ -364,7 +370,6 @@ export interface Game {
   /** URL to screenshot/preview image (defaults to /games/{id}/screenshots/{screenshotName})
  Can be overridden to point to CDN or external hosting */
   previewUrls: string[];
-  screenshotIndexInfo?: IndexInfo;
   searchIndexInfo?: IndexInfo;
 }
 

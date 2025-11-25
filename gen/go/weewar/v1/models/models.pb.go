@@ -456,20 +456,22 @@ type World struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Version for Optimistic concurrent locking
+	Version int64 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
 	// Unique ID for the world
-	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	// User that created the world
-	CreatorId string `protobuf:"bytes,4,opt,name=creator_id,json=creatorId,proto3" json:"creator_id,omitempty"`
+	CreatorId string `protobuf:"bytes,5,opt,name=creator_id,json=creatorId,proto3" json:"creator_id,omitempty"`
 	// Name if items have names
-	Name string `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
 	// Description if world has a description
-	Description string `protobuf:"bytes,6,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`
 	// Some tags
-	Tags []string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
+	Tags []string `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
 	// A possible image url
-	ImageUrl string `protobuf:"bytes,8,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	ImageUrl string `protobuf:"bytes,9,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
 	// Difficulty - example attribute
-	Difficulty string `protobuf:"bytes,9,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
+	Difficulty string `protobuf:"bytes,10,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// URL to screenshot/preview image (defaults to /worlds/{id}/screenshots/{screenshotName})
 	// Can be overridden to point to CDN or external hosting
 	PreviewUrls []string `protobuf:"bytes,11,rep,name=preview_urls,json=previewUrls,proto3" json:"preview_urls,omitempty"`
@@ -522,6 +524,13 @@ func (x *World) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *World) GetVersion() int64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 func (x *World) GetId() string {
@@ -603,7 +612,9 @@ type WorldData struct {
 	// When this world data was updated (may have happened without world updating)
 	ScreenshotIndexInfo *IndexInfo `protobuf:"bytes,3,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
 	// We will only update if hash's are different
-	ContentHash   string `protobuf:"bytes,4,opt,name=content_hash,json=contentHash,proto3" json:"content_hash,omitempty"`
+	ContentHash string `protobuf:"bytes,4,opt,name=content_hash,json=contentHash,proto3" json:"content_hash,omitempty"`
+	// Version for Optimistic concurrent locking
+	Version       int64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -664,6 +675,13 @@ func (x *WorldData) GetContentHash() string {
 		return x.ContentHash
 	}
 	return ""
+}
+
+func (x *WorldData) GetVersion() int64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 type Tile struct {
@@ -1684,31 +1702,32 @@ type Game struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Version number for optimistic locking
+	Version int64 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
 	// Unique ID for the game
-	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	Id string `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	// User who started/created the game
-	CreatorId string `protobuf:"bytes,4,opt,name=creator_id,json=creatorId,proto3" json:"creator_id,omitempty"`
+	CreatorId string `protobuf:"bytes,5,opt,name=creator_id,json=creatorId,proto3" json:"creator_id,omitempty"`
 	// The world this game was created from
-	WorldId string `protobuf:"bytes,5,opt,name=world_id,json=worldId,proto3" json:"world_id,omitempty"`
+	WorldId string `protobuf:"bytes,6,opt,name=world_id,json=worldId,proto3" json:"world_id,omitempty"`
 	// Name if items have names
-	Name string `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,7,opt,name=name,proto3" json:"name,omitempty"`
 	// Description if game has a description
-	Description string `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,8,opt,name=description,proto3" json:"description,omitempty"`
 	// Some tags
-	Tags []string `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
+	Tags []string `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty"`
 	// A possible image url
-	ImageUrl string `protobuf:"bytes,9,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	ImageUrl string `protobuf:"bytes,10,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
 	// Difficulty - example attribute
-	Difficulty string `protobuf:"bytes,10,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
+	Difficulty string `protobuf:"bytes,11,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
 	// Game configuration
-	Config *GameConfiguration `protobuf:"bytes,11,opt,name=config,proto3" json:"config,omitempty"`
+	Config *GameConfiguration `protobuf:"bytes,12,opt,name=config,proto3" json:"config,omitempty"`
 	// URL to screenshot/preview image (defaults to /games/{id}/screenshots/{screenshotName})
 	// Can be overridden to point to CDN or external hosting
-	PreviewUrls         []string   `protobuf:"bytes,12,rep,name=preview_urls,json=previewUrls,proto3" json:"preview_urls,omitempty"`
-	ScreenshotIndexInfo *IndexInfo `protobuf:"bytes,13,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
-	SearchIndexInfo     *IndexInfo `protobuf:"bytes,14,opt,name=search_index_info,json=searchIndexInfo,proto3" json:"search_index_info,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	PreviewUrls     []string   `protobuf:"bytes,13,rep,name=preview_urls,json=previewUrls,proto3" json:"preview_urls,omitempty"`
+	SearchIndexInfo *IndexInfo `protobuf:"bytes,15,opt,name=search_index_info,json=searchIndexInfo,proto3" json:"search_index_info,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Game) Reset() {
@@ -1753,6 +1772,13 @@ func (x *Game) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Game) GetVersion() int64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 func (x *Game) GetId() string {
@@ -1821,13 +1847,6 @@ func (x *Game) GetConfig() *GameConfiguration {
 func (x *Game) GetPreviewUrls() []string {
 	if x != nil {
 		return x.PreviewUrls
-	}
-	return nil
-}
-
-func (x *Game) GetScreenshotIndexInfo() *IndexInfo {
-	if x != nil {
-		return x.ScreenshotIndexInfo
 	}
 	return nil
 }
@@ -3841,30 +3860,33 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"\rnext_page_key\x18\x02 \x01(\tR\vnextPageKey\x12(\n" +
 	"\x10next_page_offset\x18\x03 \x01(\x05R\x0enextPageOffset\x12\x19\n" +
 	"\bhas_more\x18\x04 \x01(\bR\ahasMore\x12#\n" +
-	"\rtotal_results\x18\x05 \x01(\x05R\ftotalResults\"\xe6\x03\n" +
+	"\rtotal_results\x18\x05 \x01(\x05R\ftotalResults\"\x80\x04\n" +
 	"\x05World\x129\n" +
 	"\n" +
 	"created_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x0e\n" +
-	"\x02id\x18\x03 \x01(\tR\x02id\x12\x1d\n" +
+	"updated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\x03R\aversion\x12\x0e\n" +
+	"\x02id\x18\x04 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
-	"creator_id\x18\x04 \x01(\tR\tcreatorId\x12\x12\n" +
-	"\x04name\x18\x05 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x06 \x01(\tR\vdescription\x12\x12\n" +
-	"\x04tags\x18\a \x03(\tR\x04tags\x12\x1b\n" +
-	"\timage_url\x18\b \x01(\tR\bimageUrl\x12\x1e\n" +
+	"creator_id\x18\x05 \x01(\tR\tcreatorId\x12\x12\n" +
+	"\x04name\x18\x06 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\a \x01(\tR\vdescription\x12\x12\n" +
+	"\x04tags\x18\b \x03(\tR\x04tags\x12\x1b\n" +
+	"\timage_url\x18\t \x01(\tR\bimageUrl\x12\x1e\n" +
 	"\n" +
-	"difficulty\x18\t \x01(\tR\n" +
+	"difficulty\x18\n" +
+	" \x01(\tR\n" +
 	"difficulty\x12!\n" +
 	"\fpreview_urls\x18\v \x03(\tR\vpreviewUrls\x12L\n" +
 	"\x13default_game_config\x18\f \x01(\v2\x1c.weewar.v1.GameConfigurationR\x11defaultGameConfig\x12@\n" +
-	"\x11search_index_info\x18\r \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xc6\x01\n" +
+	"\x11search_index_info\x18\r \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xe0\x01\n" +
 	"\tWorldData\x12%\n" +
 	"\x05tiles\x18\x01 \x03(\v2\x0f.weewar.v1.TileR\x05tiles\x12%\n" +
 	"\x05units\x18\x02 \x03(\v2\x0f.weewar.v1.UnitR\x05units\x12H\n" +
 	"\x15screenshot_index_info\x18\x03 \x01(\v2\x14.weewar.v1.IndexInfoR\x13screenshotIndexInfo\x12!\n" +
-	"\fcontent_hash\x18\x04 \x01(\tR\vcontentHash\"\xc9\x01\n" +
+	"\fcontent_hash\x18\x04 \x01(\tR\vcontentHash\x12\x18\n" +
+	"\aversion\x18\x05 \x01(\x03R\aversion\"\xc9\x01\n" +
 	"\x04Tile\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +
@@ -3989,28 +4011,28 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\v2 .weewar.v1.TerrainUnitPropertiesR\x05value:\x028\x01\x1ad\n" +
 	"\x17UnitUnitPropertiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x123\n" +
-	"\x05value\x18\x02 \x01(\v2\x1d.weewar.v1.UnitUnitPropertiesR\x05value:\x028\x01\"\xb2\x04\n" +
+	"\x05value\x18\x02 \x01(\v2\x1d.weewar.v1.UnitUnitPropertiesR\x05value:\x028\x01\"\x82\x04\n" +
 	"\x04Game\x129\n" +
 	"\n" +
 	"created_at\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x0e\n" +
-	"\x02id\x18\x03 \x01(\tR\x02id\x12\x1d\n" +
+	"updated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\x03R\aversion\x12\x0e\n" +
+	"\x02id\x18\x04 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
-	"creator_id\x18\x04 \x01(\tR\tcreatorId\x12\x19\n" +
-	"\bworld_id\x18\x05 \x01(\tR\aworldId\x12\x12\n" +
-	"\x04name\x18\x06 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\a \x01(\tR\vdescription\x12\x12\n" +
-	"\x04tags\x18\b \x03(\tR\x04tags\x12\x1b\n" +
-	"\timage_url\x18\t \x01(\tR\bimageUrl\x12\x1e\n" +
+	"creator_id\x18\x05 \x01(\tR\tcreatorId\x12\x19\n" +
+	"\bworld_id\x18\x06 \x01(\tR\aworldId\x12\x12\n" +
+	"\x04name\x18\a \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\b \x01(\tR\vdescription\x12\x12\n" +
+	"\x04tags\x18\t \x03(\tR\x04tags\x12\x1b\n" +
+	"\timage_url\x18\n" +
+	" \x01(\tR\bimageUrl\x12\x1e\n" +
 	"\n" +
-	"difficulty\x18\n" +
-	" \x01(\tR\n" +
+	"difficulty\x18\v \x01(\tR\n" +
 	"difficulty\x124\n" +
-	"\x06config\x18\v \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\x12!\n" +
-	"\fpreview_urls\x18\f \x03(\tR\vpreviewUrls\x12H\n" +
-	"\x15screenshot_index_info\x18\r \x01(\v2\x14.weewar.v1.IndexInfoR\x13screenshotIndexInfo\x12@\n" +
-	"\x11search_index_info\x18\x0e \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xe4\x01\n" +
+	"\x06config\x18\f \x01(\v2\x1c.weewar.v1.GameConfigurationR\x06config\x12!\n" +
+	"\fpreview_urls\x18\r \x03(\tR\vpreviewUrls\x12@\n" +
+	"\x11search_index_info\x18\x0f \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xe4\x01\n" +
 	"\x11GameConfiguration\x12/\n" +
 	"\aplayers\x18\x01 \x03(\v2\x15.weewar.v1.GamePlayerR\aplayers\x12)\n" +
 	"\x05teams\x18\x02 \x03(\v2\x13.weewar.v1.GameTeamR\x05teams\x12>\n" +
@@ -4291,54 +4313,53 @@ var file_weewar_v1_models_models_proto_depIdxs = []int32{
 	52, // 22: weewar.v1.Game.created_at:type_name -> google.protobuf.Timestamp
 	52, // 23: weewar.v1.Game.updated_at:type_name -> google.protobuf.Timestamp
 	19, // 24: weewar.v1.Game.config:type_name -> weewar.v1.GameConfiguration
-	2,  // 25: weewar.v1.Game.screenshot_index_info:type_name -> weewar.v1.IndexInfo
-	2,  // 26: weewar.v1.Game.search_index_info:type_name -> weewar.v1.IndexInfo
-	21, // 27: weewar.v1.GameConfiguration.players:type_name -> weewar.v1.GamePlayer
-	22, // 28: weewar.v1.GameConfiguration.teams:type_name -> weewar.v1.GameTeam
-	20, // 29: weewar.v1.GameConfiguration.income_configs:type_name -> weewar.v1.IncomeConfig
-	23, // 30: weewar.v1.GameConfiguration.settings:type_name -> weewar.v1.GameSettings
-	52, // 31: weewar.v1.GameState.updated_at:type_name -> google.protobuf.Timestamp
-	7,  // 32: weewar.v1.GameState.world_data:type_name -> weewar.v1.WorldData
-	0,  // 33: weewar.v1.GameState.status:type_name -> weewar.v1.GameStatus
-	26, // 34: weewar.v1.GameMoveHistory.groups:type_name -> weewar.v1.GameMoveGroup
-	52, // 35: weewar.v1.GameMoveGroup.started_at:type_name -> google.protobuf.Timestamp
-	52, // 36: weewar.v1.GameMoveGroup.ended_at:type_name -> google.protobuf.Timestamp
-	27, // 37: weewar.v1.GameMoveGroup.moves:type_name -> weewar.v1.GameMove
-	52, // 38: weewar.v1.GameMove.timestamp:type_name -> google.protobuf.Timestamp
-	28, // 39: weewar.v1.GameMove.move_unit:type_name -> weewar.v1.MoveUnitAction
-	29, // 40: weewar.v1.GameMove.attack_unit:type_name -> weewar.v1.AttackUnitAction
-	32, // 41: weewar.v1.GameMove.end_turn:type_name -> weewar.v1.EndTurnAction
-	30, // 42: weewar.v1.GameMove.build_unit:type_name -> weewar.v1.BuildUnitAction
-	33, // 43: weewar.v1.GameMove.changes:type_name -> weewar.v1.WorldChange
-	42, // 44: weewar.v1.MoveUnitAction.reconstructed_path:type_name -> weewar.v1.Path
-	34, // 45: weewar.v1.WorldChange.unit_moved:type_name -> weewar.v1.UnitMovedChange
-	35, // 46: weewar.v1.WorldChange.unit_damaged:type_name -> weewar.v1.UnitDamagedChange
-	36, // 47: weewar.v1.WorldChange.unit_killed:type_name -> weewar.v1.UnitKilledChange
-	37, // 48: weewar.v1.WorldChange.player_changed:type_name -> weewar.v1.PlayerChangedChange
-	38, // 49: weewar.v1.WorldChange.unit_built:type_name -> weewar.v1.UnitBuiltChange
-	39, // 50: weewar.v1.WorldChange.coins_changed:type_name -> weewar.v1.CoinsChangedChange
-	9,  // 51: weewar.v1.UnitMovedChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 52: weewar.v1.UnitMovedChange.updated_unit:type_name -> weewar.v1.Unit
-	9,  // 53: weewar.v1.UnitDamagedChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 54: weewar.v1.UnitDamagedChange.updated_unit:type_name -> weewar.v1.Unit
-	9,  // 55: weewar.v1.UnitKilledChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 56: weewar.v1.PlayerChangedChange.reset_units:type_name -> weewar.v1.Unit
-	9,  // 57: weewar.v1.UnitBuiltChange.unit:type_name -> weewar.v1.Unit
-	51, // 58: weewar.v1.AllPaths.edges:type_name -> weewar.v1.AllPaths.EdgesEntry
-	41, // 59: weewar.v1.Path.edges:type_name -> weewar.v1.PathEdge
-	1,  // 60: weewar.v1.Path.directions:type_name -> weewar.v1.PathDirection
-	13, // 61: weewar.v1.TerrainDefinition.UnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	13, // 62: weewar.v1.UnitDefinition.TerrainPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	12, // 63: weewar.v1.RulesEngine.UnitsEntry.value:type_name -> weewar.v1.UnitDefinition
-	11, // 64: weewar.v1.RulesEngine.TerrainsEntry.value:type_name -> weewar.v1.TerrainDefinition
-	13, // 65: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	14, // 66: weewar.v1.RulesEngine.UnitUnitPropertiesEntry.value:type_name -> weewar.v1.UnitUnitProperties
-	41, // 67: weewar.v1.AllPaths.EdgesEntry.value:type_name -> weewar.v1.PathEdge
-	68, // [68:68] is the sub-list for method output_type
-	68, // [68:68] is the sub-list for method input_type
-	68, // [68:68] is the sub-list for extension type_name
-	68, // [68:68] is the sub-list for extension extendee
-	0,  // [0:68] is the sub-list for field type_name
+	2,  // 25: weewar.v1.Game.search_index_info:type_name -> weewar.v1.IndexInfo
+	21, // 26: weewar.v1.GameConfiguration.players:type_name -> weewar.v1.GamePlayer
+	22, // 27: weewar.v1.GameConfiguration.teams:type_name -> weewar.v1.GameTeam
+	20, // 28: weewar.v1.GameConfiguration.income_configs:type_name -> weewar.v1.IncomeConfig
+	23, // 29: weewar.v1.GameConfiguration.settings:type_name -> weewar.v1.GameSettings
+	52, // 30: weewar.v1.GameState.updated_at:type_name -> google.protobuf.Timestamp
+	7,  // 31: weewar.v1.GameState.world_data:type_name -> weewar.v1.WorldData
+	0,  // 32: weewar.v1.GameState.status:type_name -> weewar.v1.GameStatus
+	26, // 33: weewar.v1.GameMoveHistory.groups:type_name -> weewar.v1.GameMoveGroup
+	52, // 34: weewar.v1.GameMoveGroup.started_at:type_name -> google.protobuf.Timestamp
+	52, // 35: weewar.v1.GameMoveGroup.ended_at:type_name -> google.protobuf.Timestamp
+	27, // 36: weewar.v1.GameMoveGroup.moves:type_name -> weewar.v1.GameMove
+	52, // 37: weewar.v1.GameMove.timestamp:type_name -> google.protobuf.Timestamp
+	28, // 38: weewar.v1.GameMove.move_unit:type_name -> weewar.v1.MoveUnitAction
+	29, // 39: weewar.v1.GameMove.attack_unit:type_name -> weewar.v1.AttackUnitAction
+	32, // 40: weewar.v1.GameMove.end_turn:type_name -> weewar.v1.EndTurnAction
+	30, // 41: weewar.v1.GameMove.build_unit:type_name -> weewar.v1.BuildUnitAction
+	33, // 42: weewar.v1.GameMove.changes:type_name -> weewar.v1.WorldChange
+	42, // 43: weewar.v1.MoveUnitAction.reconstructed_path:type_name -> weewar.v1.Path
+	34, // 44: weewar.v1.WorldChange.unit_moved:type_name -> weewar.v1.UnitMovedChange
+	35, // 45: weewar.v1.WorldChange.unit_damaged:type_name -> weewar.v1.UnitDamagedChange
+	36, // 46: weewar.v1.WorldChange.unit_killed:type_name -> weewar.v1.UnitKilledChange
+	37, // 47: weewar.v1.WorldChange.player_changed:type_name -> weewar.v1.PlayerChangedChange
+	38, // 48: weewar.v1.WorldChange.unit_built:type_name -> weewar.v1.UnitBuiltChange
+	39, // 49: weewar.v1.WorldChange.coins_changed:type_name -> weewar.v1.CoinsChangedChange
+	9,  // 50: weewar.v1.UnitMovedChange.previous_unit:type_name -> weewar.v1.Unit
+	9,  // 51: weewar.v1.UnitMovedChange.updated_unit:type_name -> weewar.v1.Unit
+	9,  // 52: weewar.v1.UnitDamagedChange.previous_unit:type_name -> weewar.v1.Unit
+	9,  // 53: weewar.v1.UnitDamagedChange.updated_unit:type_name -> weewar.v1.Unit
+	9,  // 54: weewar.v1.UnitKilledChange.previous_unit:type_name -> weewar.v1.Unit
+	9,  // 55: weewar.v1.PlayerChangedChange.reset_units:type_name -> weewar.v1.Unit
+	9,  // 56: weewar.v1.UnitBuiltChange.unit:type_name -> weewar.v1.Unit
+	51, // 57: weewar.v1.AllPaths.edges:type_name -> weewar.v1.AllPaths.EdgesEntry
+	41, // 58: weewar.v1.Path.edges:type_name -> weewar.v1.PathEdge
+	1,  // 59: weewar.v1.Path.directions:type_name -> weewar.v1.PathDirection
+	13, // 60: weewar.v1.TerrainDefinition.UnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	13, // 61: weewar.v1.UnitDefinition.TerrainPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	12, // 62: weewar.v1.RulesEngine.UnitsEntry.value:type_name -> weewar.v1.UnitDefinition
+	11, // 63: weewar.v1.RulesEngine.TerrainsEntry.value:type_name -> weewar.v1.TerrainDefinition
+	13, // 64: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	14, // 65: weewar.v1.RulesEngine.UnitUnitPropertiesEntry.value:type_name -> weewar.v1.UnitUnitProperties
+	41, // 66: weewar.v1.AllPaths.EdgesEntry.value:type_name -> weewar.v1.PathEdge
+	67, // [67:67] is the sub-list for method output_type
+	67, // [67:67] is the sub-list for method input_type
+	67, // [67:67] is the sub-list for extension type_name
+	67, // [67:67] is the sub-list for extension extendee
+	0,  // [0:67] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_models_proto_init() }

@@ -141,6 +141,8 @@ export interface GameMoveGORM {
   gameId: string;
   groupNumber: string;
   moveNumber: number;
+  /** Version number for optimistic locking */
+  version: number;
   /** Field named "move_type" matches the oneof name in source
  This automatically skips all oneof members (move_unit, attack_unit, end_turn, build_unit) */
   moveType?: Any;

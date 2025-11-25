@@ -726,10 +726,12 @@ type GameMoveGORM struct {
 	GameId      string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
 	GroupNumber string                 `protobuf:"bytes,2,opt,name=group_number,json=groupNumber,proto3" json:"group_number,omitempty"`
 	MoveNumber  int32                  `protobuf:"varint,3,opt,name=move_number,json=moveNumber,proto3" json:"move_number,omitempty"`
+	// Version number for optimistic locking
+	Version int64 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
 	// Field named "move_type" matches the oneof name in source
 	// This automatically skips all oneof members (move_unit, attack_unit, end_turn, build_unit)
-	MoveType      *anypb.Any   `protobuf:"bytes,4,opt,name=move_type,json=moveType,proto3" json:"move_type,omitempty"`
-	Changes       []*anypb.Any `protobuf:"bytes,5,rep,name=changes,proto3" json:"changes,omitempty"`
+	MoveType      *anypb.Any   `protobuf:"bytes,5,opt,name=move_type,json=moveType,proto3" json:"move_type,omitempty"`
+	Changes       []*anypb.Any `protobuf:"bytes,6,rep,name=changes,proto3" json:"changes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -781,6 +783,13 @@ func (x *GameMoveGORM) GetGroupNumber() string {
 func (x *GameMoveGORM) GetMoveNumber() int32 {
 	if x != nil {
 		return x.MoveNumber
+	}
+	return 0
+}
+
+func (x *GameMoveGORM) GetVersion() int64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -857,7 +866,7 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x13GameMoveHistoryGORM:\x1fʦ\x1d\x1b\n" +
 	"\x19weewar.v1.GameMoveHistory\"2\n" +
 	"\x11GameMoveGroupGORM:\x1dʦ\x1d\x19\n" +
-	"\x17weewar.v1.GameMoveGroup\"\xd8\x02\n" +
+	"\x17weewar.v1.GameMoveGroup\"\xf2\x02\n" +
 	"\fGameMoveGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\x06gameId\x123\n" +
@@ -865,9 +874,10 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"primaryKeyR\vgroupNumber\x121\n" +
 	"\vmove_number\x18\x03 \x01(\x05B\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\n" +
-	"moveNumber\x12H\n" +
-	"\tmove_type\x18\x04 \x01(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\bmoveType\x12E\n" +
-	"\achanges\x18\x05 \x03(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\achanges:$ʦ\x1d \n" +
+	"moveNumber\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x03R\aversion\x12H\n" +
+	"\tmove_type\x18\x05 \x01(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\bmoveType\x12E\n" +
+	"\achanges\x18\x06 \x03(\v2\x14.google.protobuf.AnyB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\achanges:$ʦ\x1d \n" +
 	"\x12weewar.v1.GameMove\x12\n" +
 	"game_movesB\x9d\x01\n" +
 	"\rcom.weewar.v1B\vModelsProtoP\x01Z:github.com/turnforge/weewar/gen/go/weewar/v1/gorm;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +

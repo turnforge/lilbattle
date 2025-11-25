@@ -1664,6 +1664,11 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "version": {
+                      "type": "string",
+                      "format": "int64",
+                      "title": "Version for Optimistic concurrent locking"
+                    },
                     "creatorId": {
                       "type": "string",
                       "title": "User that created the world"
@@ -2145,6 +2150,11 @@
           "type": "string",
           "format": "date-time"
         },
+        "version": {
+          "type": "string",
+          "format": "int64",
+          "title": "Version number for optimistic locking"
+        },
         "id": {
           "type": "string",
           "title": "Unique ID for the game"
@@ -2190,9 +2200,6 @@
             "type": "string"
           },
           "title": "URL to screenshot/preview image (defaults to /games/{id}/screenshots/{screenshotName})\nCan be overridden to point to CDN or external hosting"
-        },
-        "screenshotIndexInfo": {
-          "$ref": "#/definitions/v1IndexInfo"
         },
         "searchIndexInfo": {
           "$ref": "#/definitions/v1IndexInfo"
@@ -3534,6 +3541,11 @@
           "type": "string",
           "format": "date-time"
         },
+        "version": {
+          "type": "string",
+          "format": "int64",
+          "title": "Version for Optimistic concurrent locking"
+        },
         "id": {
           "type": "string",
           "title": "Unique ID for the world"
@@ -3631,6 +3643,11 @@
         "contentHash": {
           "type": "string",
           "title": "We will only update if hash's are different"
+        },
+        "version": {
+          "type": "string",
+          "format": "int64",
+          "title": "Version for Optimistic concurrent locking"
         }
       }
     }
