@@ -104,7 +104,7 @@ func (b *Backend) SetupApp() *utils.App {
 		// v1s.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
 		switch *worlds_service_be {
 		case "pg":
-			worldsService = gormbe.NewWorldsService(db)
+			worldsService = gormbe.NewWorldsService(db, clientMgr)
 		case "local":
 			worldsService = fsbe.NewFSWorldsService("", clientMgr)
 		default:
