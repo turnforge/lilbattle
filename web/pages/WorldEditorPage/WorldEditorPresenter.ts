@@ -461,8 +461,10 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
     }
 
     private getPlayerIdForTerrain(terrainType: number): number {
-        const cityTerrains = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
-        return cityTerrains.includes(terrainType) ? this.toolState.selectedPlayer : 0;
+        // Use theme to determine if terrain is a city tile that supports player ownership
+        const theme = this.phaserEditor?.editorScene?.getAssetProvider()?.getTheme();
+        const isCityTile = theme?.isCityTile(terrainType) ?? false;
+        return isCityTile ? this.toolState.selectedPlayer : 0;
     }
 
     // =========================================================================
