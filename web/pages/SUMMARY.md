@@ -31,7 +31,7 @@ World/map editor with tools and visualization:
 *   **index.ts** - Main editor page orchestrator
 *   **PageState.ts** - Editor state management
 *   **PhaserEditorComponent.ts**, **PhaserEditorScene.ts** - Phaser integration for editing
-*   **ToolsPanel.ts**, **TileStatsPanel.ts**, **ReferenceImagePanel.ts** - UI panels
+*   **ToolsPanel.ts**, **ReferenceImagePanel.ts** - UI panels
 *   **ReferenceImageDB.ts**, **ReferenceImageLayer.ts** - Reference image system
 *   **tools/** - Shape drawing tools (ShapeTool, CircleTool, LineTool, OvalTool, RectangleTool)
 
@@ -40,7 +40,7 @@ Shared code across all pages:
 *   **Core** - `World.ts`, `PhaserWorldScene.ts`, `LayerSystem.ts`, `BaseMapLayer.ts`, `HexHighlightLayer.ts`
 *   **Utils** - `hexUtils.ts`, `ColorsAndNames.ts`, `ThemeUtils.ts`, `AssetThemePreference.ts`, `RulesTable.ts`
 *   **Events** - `events.ts` (GameEventTypes, WorldEventTypes, EditorEventTypes)
-*   **Panels** - `WorldStatsPanel.ts`
+*   **Panels** - `WorldStatsPanel.ts` (unified world statistics panel with tile/unit breakdowns and player distribution)
 *   **animations/** - Animation system (`AnimationConfig.ts`, `effects/`)
 
 ## Key Architecture Principles
@@ -67,6 +67,35 @@ Shared code across all pages:
 *   **Canvas/WebGL**: Specialized initialization patterns for graphics contexts
 *   **Toast/Modal Systems**: User feedback and interaction patterns
 *   **Theme Management**: Coordinated theming across component boundaries
+
+## Recent Session Work (2025-11-26)
+
+### WorldStatsPanel Unification
+Merged TileStatsPanel (WorldEditorPage) and WorldStatsPanel (common) into a single unified component:
+
+**Features:**
+- Grid-based tile/unit breakdown with theme-specific icons and names
+- Responsive flex-wrap layout for totals (adjusts columns based on width)
+- Alphabetical sorting by terrain/unit name using theme's naming methods
+- Player distribution tables with centered icon+name in first column
+- Listens to TILES_CHANGED, UNITS_CHANGED, WORLD_LOADED events for auto-refresh
+- Takes a World instance via `setWorld()` method
+
+**Usage Pattern:**
+```typescript
+// Create panel and inject World dependency
+this.worldStatsPanel = new WorldStatsPanel(container, this.eventBus, debugMode);
+this.worldStatsPanel.setWorld(this.world);
+
+// Panel auto-updates on world events, or manually refresh:
+this.worldStatsPanel.refreshStats();
+```
+
+**Files Changed:**
+- Removed: `WorldEditorPage/TileStatsPanel.ts`
+- Updated: `common/WorldStatsPanel.ts` (complete rewrite)
+- Updated: `WorldEditorPage/index.ts`, `WorldEditorPage/WorldEditorPresenter.ts`
+- Updated: `WorldViewerPage.ts`
 
 ## Recent Session Work (2025-01-05)
 
