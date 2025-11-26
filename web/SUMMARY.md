@@ -365,9 +365,36 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - Fixed: First click in shape mode no longer sets tile on underlying layer (handleTap override)
 - Fixed: Escape cancels current shape but stays in shape mode (cancelCurrentShape vs exitShapeMode)
 
+### Recent Achievements (Session 2025-11-25)
+
+#### WorldEditorPresenter Architecture Refactoring (Complete)
+- **Presenter Pattern Implementation**: Created WorldEditorPage/WorldEditorPresenter to manage all UI state and component orchestration
+  - Single source of truth for tool state (selectedTerrain, selectedUnit, selectedPlayer, brushMode, brushSize, placementMode)
+  - Single source of truth for visual state (showGrid, showCoordinates, showHealth)
+  - Direct presenter method calls replace EventBus for UI state changes
+- **PageState Elimination**: Deleted WorldEditorPage/PageState.ts, merged all functionality into WorldEditorPresenter
+- **Event Cleanup**: Removed obsolete event types from common/events.ts
+  - Removed: TOOL_STATE_CHANGED, VISUAL_STATE_CHANGED, WORKFLOW_STATE_CHANGED, PAGE_STATE_CHANGED
+  - Removed: GRID_SET_VISIBILITY, COORDINATES_SET_VISIBILITY, HEALTH_SET_VISIBILITY
+  - Removed: GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload, PageStateChangedPayload
+- **Console Panel Removal**: Removed unused console panel code from WorldEditorPage
+  - Removed editorOutput property and initialization
+  - Removed console panel sizing from setPanelSizes()
+- **Simplified Data Flow**:
+  - Tool selection: ToolsPanel.onClick() → presenter.selectTerrain() → updates state + calls phaserEditor directly
+  - Visual state: index.ts.setShowGrid() → presenter.setShowGrid() → updates state + calls phaserEditor directly
+  - Tile clicks: PhaserEditorComponent.handleTileClick() → presenter.handleTileClick() → modifies World data
+
+**Architecture Benefits**:
+- Eliminated EventBus intermediary for UI state, reducing indirection
+- Traceable data flow (search for `presenter.` to find all actions)
+- World events still use EventBus (TILES_CHANGED, UNITS_CHANGED) - unchanged for cross-page compatibility
+- Components receive presenter via setPresenter() for dependency injection
+- Simpler debugging with direct method calls instead of pub/sub events
+
 ## Status
-**Current Version**: 8.12 (Complete Shape Tool Suite)
-**Status**: Production-ready - Circle, Oval, Line, and Rectangle tools fully implemented
+**Current Version**: 8.13 (WorldEditorPresenter Architecture)
+**Status**: Production-ready - Presenter pattern replaces PageState for cleaner state management
 **Build Status**: Clean compilation with all TypeScript errors resolved
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds
-**Architecture**: Flexible AssetProvider system with presenter-driven animation framework and layer-based interaction system
+**Architecture**: Flexible AssetProvider system with presenter-driven animation framework, layer-based interaction system, and presenter-based UI state management

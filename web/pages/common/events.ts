@@ -55,16 +55,7 @@ export const EditorEventTypes = {
     // Tools events
     TOOLS_UI_UPDATED: 'tools-ui-updated',
     GRID_TOGGLE: 'grid-toggle',
-    COORDINATES_TOGGLE: 'coordinates-toggle',
-    GRID_SET_VISIBILITY: 'grid-set-visibility',
-    COORDINATES_SET_VISIBILITY: 'coordinates-set-visibility',
-    HEALTH_SET_VISIBILITY: 'health-set-visibility',
-    
-    // Page state events (centralized state management)
-    PAGE_STATE_CHANGED: 'page-state-changed',
-    TOOL_STATE_CHANGED: 'tool-state-changed',
-    VISUAL_STATE_CHANGED: 'visual-state-changed',
-    WORKFLOW_STATE_CHANGED: 'workflow-state-changed'
+    COORDINATES_TOGGLE: 'coordinates-toggle'
 } as const;
 
 // Event payload type definitions for type safety
@@ -150,18 +141,6 @@ export interface CoordinatesTogglePayload {
     showCoordinates: boolean;
 }
 
-export interface GridSetVisibilityPayload {
-    show: boolean;
-}
-
-export interface CoordinatesSetVisibilityPayload {
-    show: boolean;
-}
-
-export interface HealthSetVisibilityPayload {
-    show: boolean;
-}
-
 // Reference image event payloads
 
 // ReferenceImagePanel → PhaserEditorComponent events
@@ -245,12 +224,6 @@ export interface TileClearedPayload {
 export interface UnitRemovedPayload {
     q: number;
     r: number;
-}
-
-// Page state event payloads (import from WorldEditorPageState.ts)
-export interface PageStateChangedPayload {
-    eventType: 'tool-state-changed' | 'visual-state-changed' | 'workflow-state-changed';
-    data: any; // Will be ToolStateChangedEventData | VisualStateChangedEventData | WorkflowStateChangedEventData
 }
 
 export type WorldEventType = typeof WorldEventTypes[keyof typeof WorldEventTypes];

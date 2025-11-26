@@ -1,9 +1,9 @@
 import { BaseComponent } from '../../lib/Component';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { EventBus } from '../../lib/EventBus';
-import { WorldEventType, WorldEventTypes, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from '../common/events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TileClickedPayload, PhaserReadyPayload, TilePaintedPayload, UnitPlacedPayload, TileClearedPayload, UnitRemovedPayload, ReferenceImageLoadedPayload, ReferenceSetModePayload, ReferenceSetAlphaPayload, ReferenceSetPositionPayload, ReferenceSetScalePayload } from '../common/events';
 import { PhaserEditorScene } from './PhaserEditorScene';
-import { PageState, PageStateEventType } from './PageState';
+import { IWorldEditorPresenter } from './WorldEditorPresenter';
 import { Unit, Tile, World } from '../common/World';
 
 /**
@@ -27,9 +27,9 @@ import { Unit, Tile, World } from '../common/World';
 export class PhaserEditorComponent extends BaseComponent implements LCMComponent {
     public editorScene: PhaserEditorScene;
     private isInitialized: boolean = false;
-    
+
     // Dependencies (injected in phase 2)
-    private pageState: PageState;
+    private presenter: IWorldEditorPresenter | null = null;
     private world: World;
     
     // =============================================================================
@@ -62,13 +62,13 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      */
     public setupDependencies(): void {
         this.log('PhaserEditorComponent: setupDependencies() - Phase 2');
-        
+
         // Dependencies should be set by parent using setters
         // This phase validates that required dependencies are available
-        if (!this.pageState) {
-            throw new Error('PhaserEditorComponent requires pageState - use setPageState()');
+        if (!this.presenter) {
+            throw new Error('PhaserEditorComponent requires presenter - use setPresenter()');
         }
-        
+
         this.log('PhaserEditorComponent: Dependencies validation complete');
     }
 
@@ -85,9 +85,9 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     }
 
     // Explicit dependency setters
-    public setPageState(pageState: PageState): void {
-        this.pageState = pageState;
-        this.log('PageState dependency set via explicit setter');
+    public setPresenter(presenter: IWorldEditorPresenter): void {
+        this.presenter = presenter;
+        this.log('Presenter dependency set via explicit setter');
     }
 
     public setWorld(world: World): void {
@@ -96,8 +96,8 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     }
 
     // Explicit dependency getters
-    public getPageState(): PageState | null {
-        return this.pageState;
+    public getPresenter(): IWorldEditorPresenter | null {
+        return this.presenter;
     }
 
     public getWorld(): World | null {
@@ -110,23 +110,13 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     private subscribeToEvents(): void {
         this.log('Subscribing to EventBus events');
 
-        // Subscribe to grid visibility events from WorldEditorPage
-        this.addSubscription(EditorEventTypes.GRID_SET_VISIBILITY, this);
-
-        // Subscribe to coordinates visibility events from WorldEditorPage
-        this.addSubscription(EditorEventTypes.COORDINATES_SET_VISIBILITY, this);
-
-        // Subscribe to health visibility events from WorldEditorPage
-        this.addSubscription(EditorEventTypes.HEALTH_SET_VISIBILITY, this);
-
+        // Presenter handles visual state and tool state directly (no EventBus needed)
         // Subscribe to reference image control events from ReferenceImagePanel
+        // TODO: These could be migrated to presenter in a future refactor
         this.addSubscription(EditorEventTypes.REFERENCE_SET_MODE, this);
         this.addSubscription(EditorEventTypes.REFERENCE_SET_ALPHA, this);
         this.addSubscription(EditorEventTypes.REFERENCE_SET_POSITION, this);
         this.addSubscription(EditorEventTypes.REFERENCE_SET_SCALE, this);
-
-        // Subscribe to tool state changes via EventBus
-        this.addSubscription(PageStateEventType.TOOL_STATE_CHANGED, this);
 
         // World events are now handled by PhaserWorldScene directly
         // Note: Reference image loading is now handled directly by ReferenceImagePanel
@@ -139,18 +129,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      */
     public handleBusEvent(eventType: string, data: any, target: any, emitter: any): void {
         switch(eventType) {
-            case EditorEventTypes.GRID_SET_VISIBILITY:
-                this.handleGridSetVisibility(data);
-                break;
-
-            case EditorEventTypes.COORDINATES_SET_VISIBILITY:
-                this.handleCoordinatesSetVisibility(data);
-                break;
-
-            case EditorEventTypes.HEALTH_SET_VISIBILITY:
-                this.handleHealthSetVisibility(data);
-                break;
-
             case EditorEventTypes.REFERENCE_SET_MODE:
                 this.handleReferenceSetMode(data);
                 break;
@@ -167,12 +145,9 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
                 this.handleReferenceSetScale(data);
                 break;
 
-            case PageStateEventType.TOOL_STATE_CHANGED:
-                this.handleToolStateChanged(data);
-                break;
-
             // World events are now handled by PhaserWorldScene directly
             // Note: Reference image loading/clearing now handled directly by ReferenceImagePanel
+            // Note: Visual state (grid, coordinates, health) and tool state handled by presenter
 
             default:
                 // Call parent implementation for unhandled events
@@ -198,10 +173,8 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
      * Activate clear mode
      */
     private activateClearMode(): void {
-        if (this.pageState) {
-            this.pageState.setPlacementMode('clear');
-            this.log('Clear mode activated via toolbar button');
-        }
+        this.presenter!.setPlacementMode('clear');
+        this.log('Clear mode activated via toolbar button');
     }
     
     /**
@@ -319,79 +292,6 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     }
     
     /**
-     * Handle tool state changes from PageState
-     */
-    private handleToolStateChanged(eventData: any): void {
-        if (!this.editorScene || !this.isInitialized) {
-            return;
-        }
-        
-        // Extract the new tool state from the event data
-        const toolState = eventData.newState;
-        
-        // Update Phaser editor settings based on tool state
-        if (toolState.selectedTerrain !== undefined) {
-            this.editorScene.setTerrain(toolState.selectedTerrain).catch(error => {
-                console.error('[PhaserEditorComponent] Failed to set terrain:', error);
-            });
-            this.log(`Updated Phaser terrain to: ${toolState.selectedTerrain}`);
-        }
-        
-        if (toolState.selectedPlayer !== undefined) {
-            this.editorScene.setColor(toolState.selectedPlayer).catch(error => {
-                console.error('[PhaserEditorComponent] Failed to set player:', error);
-            });
-            this.log(`Updated Phaser player to: ${toolState.selectedPlayer}`);
-        }
-
-        if (toolState.brushSize !== undefined) {
-            this.editorScene.setBrushSize(toolState.brushSize);
-            this.log(`Updated Phaser brush to: ${toolState.brushMode} mode, size ${toolState.brushSize}`);
-        }
-    }
-    
-    // World event handlers removed - now handled by PhaserWorldScene directly
-    
-    /**
-     * Handle grid visibility set event from WorldEditorPage
-     */
-    private handleGridSetVisibility(data: GridSetVisibilityPayload): void {
-        if (!this.editorScene || !this.isInitialized) {
-            this.log('Phaser not ready, cannot set grid visibility');
-            return;
-        }
-        
-        this.editorScene.setShowGrid(data.show);
-        this.log(`Grid visibility set to: ${data.show}`);
-    }
-    
-    /**
-     * Handle coordinates visibility set event from WorldEditorPage
-     */
-    private handleCoordinatesSetVisibility(data: CoordinatesSetVisibilityPayload): void {
-        if (!this.editorScene || !this.isInitialized) {
-            this.log('Phaser not ready, cannot set coordinates visibility');
-            return;
-        }
-        
-        this.editorScene.setShowCoordinates(data.show);
-        this.log(`Coordinates visibility set to: ${data.show}`);
-    }
-    
-    /**
-     * Handle health visibility set event from WorldEditorPage
-     */
-    private handleHealthSetVisibility(data: HealthSetVisibilityPayload): void {
-        if (!this.editorScene || !this.isInitialized) {
-            this.log('Phaser not ready, cannot set health visibility');
-            return;
-        }
-        
-        this.editorScene.setShowUnitHealth(data.show);
-        this.log(`Health visibility set to: ${data.show}`);
-    }
-    
-    /**
      * Handle reference image mode set event from ReferenceImagePanel
      */
     private handleReferenceSetMode(data: ReferenceSetModePayload): void {
@@ -445,107 +345,13 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
     
     
     /**
-     * Handle tile clicks for painting
+     * Handle tile clicks for painting - delegates to presenter
      */
     private handleTileClick(q: number, r: number): void {
         if (!this.editorScene || !this.isInitialized) {
             return;
         }
-        
-        // Get current tool state from pageState
-        const toolState = this.pageState?.getToolState();
-        if (!toolState) {
-            this.log('No tool state available for tile click');
-            return;
-        }
-        
-        switch (toolState.placementMode) {
-            case 'terrain':
-                // Update World data (single source of truth) with brush size support
-                let playerId = 0;
-                if (this.world) {
-                    playerId = this.getPlayerIdForTerrain(toolState.selectedTerrain, toolState);
-                    
-                    if (toolState.brushSize === 0) {
-                        // Single tile
-                        this.world.setTileAt(q, r, toolState.selectedTerrain, playerId);
-                    } else {
-                        // Multiple tiles in radius
-                        const radius = toolState.brushSize;
-                        const minq = q - radius;
-                        const maxq = q + radius;
-                        const minr = r - radius;
-                        const maxr = r + radius;
-                        const startingTile = this.world.getTileAt(q, r)
-                        let touchingNeighbours = [] as [number, number][]
-                        if (toolState.brushMode == "brush") {
-                            touchingNeighbours = this.world.radialNeighbours(q, r, toolState.brushSize)
-                        } else if (toolState.brushMode == "fill") { // flood fill
-                            touchingNeighbours = this.world.floodNeighbors(q, r, toolState.brushSize)
-                        } else {
-                          throw new Error("Invalid brush mode: ")
-                        }
-                        for (var i = 0;i < touchingNeighbours.length;i++) {
-                            const [nq, nr] = touchingNeighbours[i]
-                            this.world.setTileAt(nq, nr, toolState.selectedTerrain, playerId);
-                        }
-                    }
-                }
-                
-                this.log(`Painted terrain ${toolState.selectedTerrain} (player ${playerId}) at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
-                break;
-                
-            case 'unit':
-                // Update World data (single source of truth)
-                if (this.world) {
-                    this.world.setUnitAt(q, r, toolState.selectedUnit, toolState.selectedPlayer);
-                }
-                
-                this.log(`Painted unit ${toolState.selectedUnit} (player ${toolState.selectedPlayer}) at Q=${q}, R=${r}`);
-                break;
-                
-            case 'clear':
-                // Update World data (single source of truth) with brush size support
-                if (this.world) {
-                    if (toolState.brushSize === 0) {
-                        // Single tile
-                        this.world.removeTileAt(q, r);
-                        this.world.removeUnitAt(q, r);
-                    } else {
-                        // Multiple tiles in radius
-                        const radius = toolState.brushSize;
-                        for (let bq = q - radius; bq <= q + radius; bq++) {
-                            for (let br = r - radius; br <= r + radius; br++) {
-                                // Use cube distance to determine if tile is within brush radius
-                                const distance = Math.abs(bq - q) + Math.abs(br - r) + Math.abs(-bq - br - (-q - r));
-                                if (distance <= radius * 2) { // Hex distance formula
-                                    this.world.removeTileAt(bq, br);
-                                    this.world.removeUnitAt(bq, br);
-                                }
-                            }
-                        }
-                    }
-                }
-                this.log(`Cleared tile and unit at Q=${q}, R=${r} with brush size ${toolState.brushSize}`);
-                break;
-        }
-    }
-    
-    /**
-     * Determine the correct player ID for a terrain type
-     * City terrains use the selected player, nature terrains always use 0
-     */
-    private getPlayerIdForTerrain(terrainType: number, toolState: any): number {
-        // Define city terrains that support player ownership
-        const cityTerrains = [1, 2, 3, 16, 20]; // Land Base, Naval Base, Airport Base, Missile Silo, Mines
-
-        if (cityTerrains.includes(terrainType)) {
-            // City terrain - use selected player from city tab
-            return toolState.selectedPlayer ?? 1; // Default to player 1 if not set (use ?? to preserve 0)
-        } else {
-            // Nature terrain - always use neutral (0)
-            return 0;
-        }
+        this.presenter!.handleTileClick(q, r);
     }
     
     /**

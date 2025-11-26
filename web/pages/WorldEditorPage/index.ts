@@ -6,13 +6,14 @@ import { AssetThemePreference } from '../common/AssetThemePreference';
 import { KeyboardShortcutManager, ShortcutConfig, KeyboardState } from '../../lib/KeyboardShortcutManager';
 import { shouldIgnoreShortcut } from '../../lib/DOMUtils';
 import { Unit, Tile, World, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../common/World';
-import { PageState, PageStateEventType, ToolStateChangedEventData, VisualStateChangedEventData, WorkflowStateChangedEventData, ToolState } from './PageState';
+import { ToolState } from './WorldEditorPresenter';
 import { EventBus } from '../../lib/EventBus';
-import { WorldEventType, WorldEventTypes, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload, GridSetVisibilityPayload, CoordinatesSetVisibilityPayload, HealthSetVisibilityPayload } from '../common/events';
+import { WorldEventType, WorldEventTypes, EditorEventTypes, TerrainSelectedPayload, UnitSelectedPayload, BrushSizeChangedPayload, PlacementModeChangedPayload, PlayerChangedPayload, TileClickedPayload, PhaserReadyPayload } from '../common/events';
 import { EditorToolsPanel } from './ToolsPanel';
 import { ReferenceImagePanel } from './ReferenceImagePanel';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { LifecycleController } from '../../lib/LifecycleController';
+import { WorldEditorPresenter } from './WorldEditorPresenter';
 
 /**
  * World Editor page with unified World architecture and centralized page state
@@ -20,8 +21,7 @@ import { LifecycleController } from '../../lib/LifecycleController';
  */
 class WorldEditorPage extends BasePage {
     private world: World;
-    private pageState: PageState;
-    private editorOutput: HTMLElement;
+    private presenter: WorldEditorPresenter;
 
     // Dockview interface
     private dockview: DockviewApi;
@@ -57,10 +57,17 @@ class WorldEditorPage extends BasePage {
      * Phase 1: Initialize DOM and discover child components
      */
     public performLocalInit(): LCMComponent[] {
-        this.pageState = new PageState(this.eventBus);
-        
         // Create World instance early so child components can use it
         this.createWorldInstance();
+
+        // Create presenter and initialize with world
+        this.presenter = new WorldEditorPresenter(this.eventBus);
+        this.presenter.initialize(this.world);
+
+        // Register callbacks for presenter to update UI
+        this.presenter.setStatusChangeCallback((status) => this.updateEditorStatus(status));
+        this.presenter.setToastCallback((title, message, type) => this.showToast(title, message, type));
+        this.presenter.setSaveButtonStateCallback((hasChanges) => this.updateSaveButtonStateFromPresenter(hasChanges));
 
         this.subscribeToEditorEvents();
 
@@ -88,10 +95,9 @@ class WorldEditorPage extends BasePage {
         if (toolsTemplate) {
             // Use the template element directly - it already has proper structure and styling
             this.editorToolsPanel = new EditorToolsPanel(toolsTemplate, this.eventBus, true);
-            
-            // Set dependencies directly using explicit setters  
-            this.editorToolsPanel.setPageState(this.pageState);
-            
+
+            // Set dependencies directly using explicit setters
+            this.editorToolsPanel.setPresenter(this.presenter);
             childComponents.push(this.editorToolsPanel);
         }
         
@@ -119,12 +125,19 @@ class WorldEditorPage extends BasePage {
         
         // Use the template element directly - it already has proper structure and styling
         this.phaserEditorComponent = new PhaserEditorComponent("PhaseEditorComponent", canvasTemplate, this.eventBus, true);
-        
+
         // Set dependencies directly using explicit setters
-        this.phaserEditorComponent.setPageState(this.pageState);
+        this.phaserEditorComponent.setPresenter(this.presenter);
         this.phaserEditorComponent.setWorld(this.world);
-        
+
         childComponents.push(this.phaserEditorComponent);
+
+        // Register components with presenter
+        this.presenter.registerPhaserEditor(this.phaserEditorComponent);
+        this.presenter.registerToolsPanel(this.editorToolsPanel);
+        this.presenter.registerTileStatsPanel(this.tileStatsPanel);
+        this.presenter.registerReferenceImagePanel(this.referenceImagePanel);
+
         // Initialize dockview now that all child components are ready
         this.initializeDockview();
         
@@ -243,8 +256,8 @@ class WorldEditorPage extends BasePage {
         this.addSubscription(WorldEventTypes.WORLD_CLEARED, this);
         this.addSubscription(WorldEventTypes.WORLD_METADATA_CHANGED, this);
         
-        // Note: Tool state changes now handled via PageState Observer pattern
-        // EditorToolsPanel directly updates pageState, which notifies observers
+        // Note: Tool state changes now handled via presenter
+        // EditorToolsPanel directly calls presenter methods, which updates components
         
         // Subscribe to Phaser ready event
         this.addSubscription(EditorEventTypes.PHASER_READY, this);
@@ -287,8 +300,6 @@ class WorldEditorPage extends BasePage {
         const isNewWorldInput = document.getElementById("isNewWorld") as HTMLInputElement | null;
         
         // World ID and new world state are now handled by the World instance
-
-        this.editorOutput = document.getElementById('editor-output')!;
         return [];
     }
 
@@ -333,7 +344,6 @@ class WorldEditorPage extends BasePage {
                         return this.createPhaserComponent();
                     case 'tilestats':
                         return this.createTileStatsComponent();
-                    // case 'console': return this.createConsoleComponent();
                     case 'gameConfig':
                         return this.createGameConfigComponent();
                     case 'referenceImage':
@@ -408,12 +418,6 @@ class WorldEditorPage extends BasePage {
         const screenshotButton = document.getElementById('capture-screenshot-btn');
         if (screenshotButton) {
             screenshotButton.addEventListener('click', this.handleScreenshotClick.bind(this));
-        }
-
-
-        const clearConsoleButton = document.getElementById('clear-console-btn');
-        if (clearConsoleButton) {
-            clearConsoleButton.addEventListener('click', this.clearConsole.bind(this));
         }
 
         // World title editing
@@ -806,19 +810,12 @@ class WorldEditorPage extends BasePage {
     // Editor functions called by the template
 
     public setBrushTerrain(terrain: number): void {
-        if (this.pageState) {
-            this.pageState.setSelectedTerrain(terrain);
-        }
-        
+        this.presenter.selectTerrain(terrain);
         this.updateBrushInfo();
-        // Button selection now handled by EditorToolsPanel component
     }
 
     public setBrushSize(mode: string, size: number): void {
-        if (this.pageState) {
-            this.pageState.setBrushSize(mode, size);
-        }
-
+        this.presenter.setBrushSize(mode, size);
         this.updateBrushInfo();
     }
 
@@ -936,50 +933,17 @@ class WorldEditorPage extends BasePage {
     }
     
     public setShowGrid(showGrid: boolean): void {
-        // Update page state - this will emit visual state changed event
-        if (this.pageState) {
-            this.pageState.setShowGrid(showGrid);
-        }
-        
-        // Emit event to PhaserEditorComponent via EventBus
-        this.eventBus.emit<GridSetVisibilityPayload>(
-            EditorEventTypes.GRID_SET_VISIBILITY,
-            { show: showGrid },
-            this,
-            this.pageState
-        );
+        this.presenter.setShowGrid(showGrid);
         console.log(`Grid visibility set to: ${showGrid}`);
     }
-    
+
     public setShowCoordinates(showCoordinates: boolean): void {
-        // Update page state - this will emit visual state changed event
-        if (this.pageState) {
-            this.pageState.setShowCoordinates(showCoordinates);
-        }
-        
-        // Emit event to PhaserEditorComponent via EventBus
-        this.eventBus.emit<CoordinatesSetVisibilityPayload>(
-            EditorEventTypes.COORDINATES_SET_VISIBILITY,
-            { show: showCoordinates },
-            this,
-            this.pageState
-        );
+        this.presenter.setShowCoordinates(showCoordinates);
         console.log(`Coordinates visibility set to: ${showCoordinates}`);
     }
-    
+
     public setShowHealth(showHealth: boolean): void {
-        // Update page state - this will emit visual state changed event
-        if (this.pageState) {
-            this.pageState.setShowHealth(showHealth);
-        }
-        
-        // Emit event to PhaserEditorComponent via EventBus
-        this.eventBus.emit<HealthSetVisibilityPayload>(
-            EditorEventTypes.HEALTH_SET_VISIBILITY,
-            { show: showHealth },
-            this,
-            this.pageState
-        );
+        this.presenter.setShowHealth(showHealth);
         console.log(`Health visibility set to: ${showHealth}`);
     }
 
@@ -1235,32 +1199,6 @@ class WorldEditorPage extends BasePage {
         }
     }
 
-
-    private clearConsole(): void {
-        if (this.editorOutput) {
-            this.editorOutput.innerHTML = '';
-        }
-    }
-
-    // Utility methods
-    private logToConsole(message: string): void {
-        if (this.editorOutput) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}`;
-            
-            // Use innerHTML to properly handle line breaks
-            const currentContent = this.editorOutput.innerHTML;
-            this.editorOutput.innerHTML = currentContent + (currentContent ? '<br>' : '') + this.escapeHtml(logEntry);
-            this.editorOutput.scrollTop = this.editorOutput.scrollHeight;
-        }
-    }
-
-    private escapeHtml(text: string): string {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
     private updateEditorStatus(status: string): void {
         const statusElement = document.getElementById('editor-status');
         if (statusElement) {
@@ -1310,8 +1248,9 @@ class WorldEditorPage extends BasePage {
     private updateBrushInfo(): void {
         const brushInfo = document.getElementById('brush-info');
         if (brushInfo) {
-            const currentTerrain = this.pageState?.getToolState().selectedTerrain || 1;
-            const currentBrushSize = this.pageState?.getToolState().brushSize || 0;
+            const toolState = this.presenter.getToolState();
+            const currentTerrain = toolState.selectedTerrain;
+            const currentBrushSize = toolState.brushSize;
             const brushSizeName = this.getBrushSizeName(currentBrushSize);
             brushInfo.textContent = `Current: Terrain ${currentTerrain}, ${brushSizeName}`;
         }
@@ -1436,29 +1375,6 @@ class WorldEditorPage extends BasePage {
             element: template,
             init: () => {
                 console.log('TileStatsPanel dockview component initialized (fallback mode using template)');
-            },
-            dispose: () => {}
-        };
-    }
-
-    private createConsoleComponent() {
-        const template = document.getElementById('console-panel-template');
-        if (!template) {
-            console.error('Console panel template not found');
-            return { element: document.createElement('div'), init: () => {}, dispose: () => {} };
-        }
-        
-        // Use the template element directly - no cloning needed
-        template.style.display = 'block';
-        
-        return {
-            element: template,
-            init: () => {
-                // Find the editor output element within the template
-                const outputElement = template.querySelector('#editor-output');
-                if (outputElement) {
-                    this.editorOutput = outputElement as HTMLElement;
-                }
             },
             dispose: () => {}
         };
@@ -1592,11 +1508,6 @@ class WorldEditorPage extends BasePage {
                 gameConfigPanel.api.setSize({ width: 260 });
             }
 
-            const consolePanel = this.dockview.getPanel('console');
-            if (consolePanel) {
-                consolePanel.api.setSize({ height: 250 });
-            }
-            
             // Set reference image panel to 300px height to accommodate controls
             const referenceImagePanel = this.dockview.getPanel('referenceImage');
             if (referenceImagePanel) {
@@ -1642,6 +1553,22 @@ class WorldEditorPage extends BasePage {
         const saveButton = document.getElementById('save-world-btn');
         if (saveButton && this.world) {
             if (this.world.getHasUnsavedChanges()) {
+                saveButton.classList.remove('opacity-50');
+                saveButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                saveButton.removeAttribute('disabled');
+            } else {
+                saveButton.classList.add('opacity-50');
+                saveButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                saveButton.setAttribute('disabled', 'true');
+            }
+        }
+    }
+
+    // Callback from presenter for save button state changes
+    private updateSaveButtonStateFromPresenter(hasChanges: boolean): void {
+        const saveButton = document.getElementById('save-world-btn');
+        if (saveButton) {
+            if (hasChanges) {
                 saveButton.classList.remove('opacity-50');
                 saveButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 saveButton.removeAttribute('disabled');
@@ -1706,26 +1633,19 @@ class WorldEditorPage extends BasePage {
     
     // Simplified state management for preview/cancel functionality
     private saveUIState(): void {
-        if (this.pageState) {
-            // Save current tool state as a snapshot
-            this.savedToolState = { ...this.pageState.getToolState() };
-        }
+        this.savedToolState = { ...this.presenter.getToolState() };
     }
-    
+
     private restoreUIState(): void {
-        if (this.savedToolState && this.pageState) {
-            // Restore tool state via pageState methods
-            this.pageState.setSelectedTerrain(this.savedToolState.selectedTerrain);
-            this.pageState.setSelectedUnit(this.savedToolState.selectedUnit);
-            this.pageState.setSelectedPlayer(this.savedToolState.selectedPlayer);
-            this.pageState.setBrushSize(this.savedToolState.brushMode, this.savedToolState.brushSize);
-            // placementMode is automatically set by setSelectedTerrain/setSelectedUnit
-            
-            // UI element updates are handled by EditorToolsPanel via pageState observers
-            
-            // Clear saved state
-            this.savedToolState = null as any;
-        }
+        if (!this.savedToolState) return;
+
+        this.presenter.selectTerrain(this.savedToolState.selectedTerrain);
+        this.presenter.selectUnit(this.savedToolState.selectedUnit);
+        this.presenter.selectPlayer(this.savedToolState.selectedPlayer);
+        this.presenter.setBrushSize(this.savedToolState.brushMode, this.savedToolState.brushSize);
+
+        // Clear saved state
+        this.savedToolState = null as any;
     }
     
     private showPreviewIndicator(message: string): void {
@@ -1815,79 +1735,67 @@ class WorldEditorPage extends BasePage {
     // Preview handlers for immediate execution mode
     private previewNatureTerrain(args?: string): void {
         const index = parseInt(args || '1');
-        
+
         if (index === 0) {
             // N+0 for clear mode
             this.saveUIState();
-            if (this.pageState) {
-                this.pageState.setSelectedTerrain(0);
-            }
-            // Button selection handled by EditorToolsPanel
+            this.presenter.selectTerrain(0);
             this.showPreviewIndicator('Preview: Clear mode');
             return;
         }
-        
+
         // Use visual index worldping
         const terrainId = this.getTerrainIdByNatureIndex(index);
         const terrainName = this.getTerrainNameByNatureIndex(index);
-        
+
         if (terrainId !== null) {
             this.saveUIState();
             this.setBrushTerrain(terrainId);
-            // Placement mode updated via pageState.setSelectedTerrain()
-            // Button selection handled by EditorToolsPanel
             this.showPreviewIndicator(`Preview: ${terrainName} terrain`);
         }
     }
-    
+
     private previewCityTerrain(args?: string): void {
         const index = parseInt(args || '1');
-        
+
         // Use visual index worldping
         const terrainId = this.getTerrainIdByCityIndex(index);
         const terrainName = this.getTerrainNameByCityIndex(index);
-        
+
         if (terrainId !== null) {
             this.saveUIState();
             this.setBrushTerrain(terrainId);
-            // Placement mode updated via pageState.setSelectedTerrain()
-            // Button selection handled by EditorToolsPanel
             this.showPreviewIndicator(`Preview: ${terrainName}`);
         }
     }
-    
+
     private previewUnit(args?: string): void {
         const index = parseInt(args || '1');
-        
+
         // Use visual index worldping
         const unitId = this.getUnitIdByIndex(index);
         const unitName = this.getUnitNameByIndex(index);
-        
+
         if (unitId !== null) {
             this.saveUIState();
-            if (this.pageState) {
-                this.pageState.setSelectedUnit(unitId);
-            }
-            // Button selection handled by EditorToolsPanel
-            const currentPlayer = this.pageState?.getToolState().selectedPlayer || 1;
+            this.presenter.selectUnit(unitId);
+            const currentPlayer = this.presenter.getToolState().selectedPlayer;
             this.showPreviewIndicator(`Preview: ${unitName} for player ${currentPlayer}`);
         }
     }
-    
+
     private previewPlayer(args?: string): void {
         const playerId = parseInt(args || '1');
-        
+
         if (playerId >= 1 && playerId <= 4) {
             this.saveUIState();
-            if (this.pageState) {
-                this.pageState.setSelectedPlayer(playerId);
-            }
-            
+            this.presenter.selectPlayer(playerId);
+
             const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
             if (unitPlayerSelect) {
                 unitPlayerSelect.value = playerId.toString();
             }
-            
+
             this.showPreviewIndicator(`Preview: Player ${playerId} selected`);
         }
     }
@@ -2185,17 +2093,14 @@ class WorldEditorPage extends BasePage {
         this.hidePreviewIndicator(); // Hide preview indicator when committing
         
         if (playerId >= 1 && playerId <= 4) {
-            if (this.pageState) {
-                this.pageState.setSelectedPlayer(playerId);
-            }
-            
+            this.presenter.selectPlayer(playerId);
+
             // Update player selector in UI
             const unitPlayerSelect = document.getElementById('unit-player-color') as HTMLSelectElement;
             if (unitPlayerSelect) {
                 unitPlayerSelect.value = playerId.toString();
             }
-            
-            // Show toast notification
+
             this.showToast('Player Selected', `Player ${playerId} selected`, 'success');
         } else {
             this.showToast('Invalid Selection', `Player ${playerId} not available`, 'error');
@@ -2305,25 +2210,20 @@ class WorldEditorPage extends BasePage {
     private activateClearMode(): void {
         // Clear any pending number input
         this.clearNumberInput();
-        
-        if (this.pageState) {
-            this.pageState.setPlacementMode('clear');
-        }
+        this.presenter.setPlacementMode('clear');
         this.showToast('Clear Mode', 'Clear mode activated - press R to reset', 'info');
     }
-    
+
     private resetToDefaults(): void {
         if (this.editorToolsPanel) {
             this.editorToolsPanel.hideNumberOverlays();
         }
-        
-        // Reset to default terrain (grass) via pageState
-        if (this.pageState) {
-            this.pageState.setSelectedTerrain(1);
-            this.pageState.setBrushSize("brush", 0);
-            this.pageState.setSelectedPlayer(1);
-        }
-        
+
+        // Reset to default terrain (grass)
+        this.presenter.selectTerrain(1);
+        this.presenter.setBrushSize("brush", 0);
+        this.presenter.selectPlayer(1);
+
         // Update UI elements
         this.setBrushTerrain(1);
         
@@ -2357,7 +2257,7 @@ class WorldEditorPage extends BasePage {
         console.log('Phaser initialization now handled by PhaserEditorComponent in dockview');
     }
     
-    // Old EventBus handlers removed - components now use pageState directly
+    // Old EventBus handlers removed - components now use presenter directly
     
     private async handlePhaserReady() {
         console.log('EventBus: Phaser editor is ready');
