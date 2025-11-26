@@ -109,7 +109,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         // Theme fallback priority: URL param > localStorage > default
         let themeName = urlParams.get('theme');
         if (!themeName) {
-            themeName = localStorage.getItem('assetTheme') || 'fantasy';
+            themeName = localStorage.getItem('assetTheme') || AssetThemePreference.DEFAULT_THEME;
         }
 
         const svgSize = urlParams.get('svgSize');

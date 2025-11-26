@@ -8,7 +8,7 @@ export class AssetThemePreference {
     private static readonly STORAGE_KEY = 'assetTheme';
     private static readonly COOKIE_NAME = 'assetTheme';
     private static readonly COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year in seconds
-    private static readonly DEFAULT_THEME = 'fantasy';
+    public static readonly DEFAULT_THEME = 'default';
 
     /**
      * Get the current asset theme preference

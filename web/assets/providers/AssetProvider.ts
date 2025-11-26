@@ -43,11 +43,9 @@ export class AssetProvider {
         // Initialize the theme
         const ThemeClass = THEME_REGISTRY[themeName];
         if (!ThemeClass) {
-            console.warn(`[AssetProvider] Theme "${themeName}" not found, defaulting to fantasy`);
-            // this.theme = new FantasyTheme();
-            // this.themeName = 'fantasy';
-            this.theme = new FantasyTheme();
-            this.themeName = 'fantasy';
+            console.warn(`[AssetProvider] Theme "${themeName}" not found, defaulting to 'default'`);
+            this.theme = new DefaultTheme();
+            this.themeName = 'default';
         } else {
             this.theme = new ThemeClass();
         }

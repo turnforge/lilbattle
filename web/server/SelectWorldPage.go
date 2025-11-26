@@ -11,6 +11,7 @@ type SelectWorldPage struct {
 
 func (m *SelectWorldPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
 	m.Title = "Select a World"
+	m.DisableSplashScreen = true
 	m.Header.Load(r, w, vc)
 
 	// Set action mode to "select" to show Play buttons instead of action menus
