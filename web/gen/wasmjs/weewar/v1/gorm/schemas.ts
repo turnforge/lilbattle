@@ -124,10 +124,25 @@ export const WorldDataGORMSchema: MessageSchema = {
       repeated: true,
     },
     {
+      name: "crossings",
+      type: FieldType.STRING,
+      id: 4,
+    },
+    {
       name: "screenshotIndexInfo",
       type: FieldType.MESSAGE,
-      id: 4,
+      id: 5,
       messageType: "weewar.v1.IndexInfoGORM",
+    },
+    {
+      name: "tilesMap",
+      type: FieldType.STRING,
+      id: 6,
+    },
+    {
+      name: "unitsMap",
+      type: FieldType.STRING,
+      id: 7,
     },
   ],
 };
@@ -259,6 +274,21 @@ export const GameWorldDataGORMSchema: MessageSchema = {
       type: FieldType.MESSAGE,
       id: 4,
       messageType: "weewar.v1.IndexInfoGORM",
+    },
+    {
+      name: "crossings",
+      type: FieldType.STRING,
+      id: 5,
+    },
+    {
+      name: "tilesMap",
+      type: FieldType.STRING,
+      id: 6,
+    },
+    {
+      name: "unitsMap",
+      type: FieldType.STRING,
+      id: 7,
     },
   ],
 };

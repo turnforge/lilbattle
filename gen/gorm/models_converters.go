@@ -454,6 +454,10 @@ func WorldDataToWorldDataGORM(
 		}
 	}
 
+	if src.Crossings != nil {
+		out.Crossings = src.Crossings
+	}
+
 	if src.Tiles != nil {
 		out.Tiles = make([]TileGORM, len(src.Tiles))
 		for i, item := range src.Tiles {
@@ -470,6 +474,28 @@ func WorldDataToWorldDataGORM(
 			if err != nil {
 				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
 			}
+		}
+	}
+	if src.TilesMap != nil {
+		out.TilesMap = make(map[string]TileGORM, len(src.TilesMap))
+		for key, value := range src.TilesMap {
+			var converted TileGORM
+			_, err = TileToTileGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+			}
+			out.TilesMap[key] = converted
+		}
+	}
+	if src.UnitsMap != nil {
+		out.UnitsMap = make(map[string]UnitGORM, len(src.UnitsMap))
+		for key, value := range src.UnitsMap {
+			var converted UnitGORM
+			_, err = UnitToUnitGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+			}
+			out.UnitsMap[key] = converted
 		}
 	}
 
@@ -501,6 +527,7 @@ func WorldDataFromWorldDataGORM(
 	*dest = models.WorldData{
 		ContentHash: src.ContentHash,
 		Version:     src.Version,
+		Crossings:   src.Crossings,
 	}
 	out = dest
 
@@ -524,6 +551,24 @@ func WorldDataFromWorldDataGORM(
 			out.Units[i], err = UnitFromUnitGORM(nil, &item, nil)
 			if err != nil {
 				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
+			}
+		}
+	}
+	if src.TilesMap != nil {
+		out.TilesMap = make(map[string]*models.Tile, len(src.TilesMap))
+		for key, value := range src.TilesMap {
+			out.TilesMap[key], err = TileFromTileGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+			}
+		}
+	}
+	if src.UnitsMap != nil {
+		out.UnitsMap = make(map[string]*models.Unit, len(src.UnitsMap))
+		for key, value := range src.UnitsMap {
+			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
 			}
 		}
 	}
@@ -1070,6 +1115,10 @@ func WorldDataToGameWorldDataGORM(
 		}
 	}
 
+	if src.Crossings != nil {
+		out.Crossings = src.Crossings
+	}
+
 	if src.Tiles != nil {
 		out.Tiles = make([]TileGORM, len(src.Tiles))
 		for i, item := range src.Tiles {
@@ -1086,6 +1135,28 @@ func WorldDataToGameWorldDataGORM(
 			if err != nil {
 				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
 			}
+		}
+	}
+	if src.TilesMap != nil {
+		out.TilesMap = make(map[string]TileGORM, len(src.TilesMap))
+		for key, value := range src.TilesMap {
+			var converted TileGORM
+			_, err = TileToTileGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+			}
+			out.TilesMap[key] = converted
+		}
+	}
+	if src.UnitsMap != nil {
+		out.UnitsMap = make(map[string]UnitGORM, len(src.UnitsMap))
+		for key, value := range src.UnitsMap {
+			var converted UnitGORM
+			_, err = UnitToUnitGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+			}
+			out.UnitsMap[key] = converted
 		}
 	}
 
@@ -1117,6 +1188,7 @@ func WorldDataFromGameWorldDataGORM(
 	*dest = models.WorldData{
 		ContentHash: src.ContentHash,
 		Version:     src.Version,
+		Crossings:   src.Crossings,
 	}
 	out = dest
 
@@ -1140,6 +1212,24 @@ func WorldDataFromGameWorldDataGORM(
 			out.Units[i], err = UnitFromUnitGORM(nil, &item, nil)
 			if err != nil {
 				return nil, fmt.Errorf("converting Units[%d]: %w", i, err)
+			}
+		}
+	}
+	if src.TilesMap != nil {
+		out.TilesMap = make(map[string]*models.Tile, len(src.TilesMap))
+		for key, value := range src.TilesMap {
+			out.TilesMap[key], err = TileFromTileGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+			}
+		}
+	}
+	if src.UnitsMap != nil {
+		out.UnitsMap = make(map[string]*models.Unit, len(src.UnitsMap))
+		for key, value := range src.UnitsMap {
+			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
 			}
 		}
 	}

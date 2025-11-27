@@ -702,8 +702,8 @@ func (s *GameViewPresenter) refreshExhaustedHighlights(ctx context.Context, _ *v
 	// Build list of exhausted units/tiles
 	var exhaustedHighlights []*v1.HighlightSpec
 
-	// Check all units for the current player
-	for _, unit := range gameState.WorldData.Units {
+	// Check all units for the current player (using map-based storage)
+	for _, unit := range gameState.WorldData.UnitsMap {
 		if unit.Player == gameState.CurrentPlayer {
 			// Mark as exhausted if no movement points left
 			if unit.DistanceLeft <= 0 {

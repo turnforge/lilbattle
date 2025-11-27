@@ -473,40 +473,9 @@ func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGa
 }
 
 // convertRuntimeWorldToProto converts runtime world state to protobuf WorldData
+// Since World now holds proto data directly, this just returns the underlying WorldData
 func (b *BaseGamesService) convertRuntimeWorldToProto(world *World) *v1.WorldData {
-	worldData := &v1.WorldData{
-		Tiles: []*v1.Tile{},
-		Units: []*v1.Unit{},
-	}
-
-	// Convert runtime tiles to protobuf tiles
-	for coord, tile := range world.TilesByCoord() {
-		protoTile := &v1.Tile{
-			Q:        int32(coord.Q),
-			R:        int32(coord.R),
-			TileType: int32(tile.TileType),
-			Player:   int32(tile.Player),
-		}
-		worldData.Tiles = append(worldData.Tiles, protoTile)
-	}
-
-	// Convert runtime units to protobuf units
-	for coord, unit := range world.UnitsByCoord() {
-		protoUnit := &v1.Unit{
-			Q:                int32(coord.Q),
-			R:                int32(coord.R),
-			Player:           int32(unit.Player),
-			UnitType:         int32(unit.UnitType),
-			Shortcut:         unit.Shortcut, // Preserve shortcut
-			AvailableHealth:  int32(unit.AvailableHealth),
-			DistanceLeft:     unit.DistanceLeft,
-			LastActedTurn:    int32(unit.LastActedTurn),
-			LastToppedupTurn: int32(unit.LastToppedupTurn),
-		}
-		worldData.Units = append(worldData.Units, protoUnit)
-	}
-
-	return worldData
+	return world.WorldData()
 }
 
 // SimulateAttack simulates combat between two units and returns damage distributions

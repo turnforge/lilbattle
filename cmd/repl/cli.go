@@ -497,8 +497,8 @@ func (cli *CLI) handleStatus() string {
 
 	// Count units per player
 	unitCounts := make(map[int32]int)
-	if resp.State.WorldData != nil && resp.State.WorldData.Units != nil {
-		for _, unit := range resp.State.WorldData.Units {
+	if resp.State.WorldData != nil && resp.State.WorldData.UnitsMap != nil {
+		for _, unit := range resp.State.WorldData.UnitsMap {
 			if unit != nil {
 				unitCounts[unit.Player]++
 			}
@@ -583,8 +583,8 @@ func (cli *CLI) handlePlayer(args []string) string {
 
 	// Count units for this player
 	unitCount := 0
-	if resp.State.WorldData != nil && resp.State.WorldData.Units != nil {
-		for _, unit := range resp.State.WorldData.Units {
+	if resp.State.WorldData != nil && resp.State.WorldData.UnitsMap != nil {
+		for _, unit := range resp.State.WorldData.UnitsMap {
 			if unit != nil && unit.Player == playerID {
 				unitCount++
 			}

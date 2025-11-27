@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/panyam/gocurrent"
@@ -123,8 +125,12 @@ func (s *ScreenShotIndexer) renderScreenshot(themeName string, item *ScreenShotI
 		return err
 	}
 
+	// Convert maps to slices for renderer
+	tiles := slices.Collect(maps.Values(item.WorldData.TilesMap))
+	units := slices.Collect(maps.Values(item.WorldData.UnitsMap))
+
 	// Render the image
-	imageBytes, contentType, err := renderer.Render(item.WorldData.Tiles, item.WorldData.Units, nil)
+	imageBytes, contentType, err := renderer.Render(tiles, units, nil)
 	if err != nil {
 		log.Printf("Failed to render screenshot: %v", err)
 		return err

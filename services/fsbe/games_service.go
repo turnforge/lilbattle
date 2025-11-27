@@ -284,7 +284,7 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 			if err != nil {
 				panic(err)
 			}
-			for _, unit := range req.NewState.WorldData.Units {
+			for _, unit := range req.NewState.WorldData.UnitsMap {
 				rg.TopUpUnitIfNeeded(unit)
 			}
 		}

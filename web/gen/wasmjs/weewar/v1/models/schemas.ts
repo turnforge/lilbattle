@@ -257,6 +257,21 @@ export const WorldDataSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 5,
     },
+    {
+      name: "tilesMap",
+      type: FieldType.STRING,
+      id: 6,
+    },
+    {
+      name: "unitsMap",
+      type: FieldType.STRING,
+      id: 7,
+    },
+    {
+      name: "crossings",
+      type: FieldType.STRING,
+      id: 8,
+    },
   ],
 };
 
@@ -658,7 +673,7 @@ export const UnitUnitPropertiesSchema: MessageSchema = {
       messageType: "weewar.v1.DamageDistribution",
     },
   ],
-  oneofGroups: ["_defense_override", "_attack_override"],
+  oneofGroups: ["_attack_override", "_defense_override"],
 };
 
 
@@ -3416,7 +3431,7 @@ export const ListIndexStatesRequestSchema: MessageSchema = {
       id: 6,
     },
   ],
-  oneofGroups: ["_updated_before", "_updated_after"],
+  oneofGroups: ["_updated_after", "_updated_before"],
 };
 
 

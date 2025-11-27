@@ -275,6 +275,32 @@ func (c AxialCoord) String() string {
 	// return fmt.Sprintf("(%d,%d,%d)", c.Q, c.R, c.S())
 }
 
+// =============================================================================
+// Coordinate Map Key Functions
+// =============================================================================
+// These functions provide a consistent way to use coordinates as map keys
+// in the format "q,r" for use with proto map<string, T> fields.
+
+// CoordKey returns the map key for a coordinate in "q,r" format
+func CoordKey(q, r int32) string {
+	return fmt.Sprintf("%d,%d", q, r)
+}
+
+// CoordKeyFromAxial returns the map key for an AxialCoord in "q,r" format
+func CoordKeyFromAxial(coord AxialCoord) string {
+	return fmt.Sprintf("%d,%d", coord.Q, coord.R)
+}
+
+// ParseCoordKey parses a "q,r" format string back to an AxialCoord
+func ParseCoordKey(key string) (AxialCoord, error) {
+	var q, r int
+	_, err := fmt.Sscanf(key, "%d,%d", &q, &r)
+	if err != nil {
+		return AxialCoord{}, fmt.Errorf("invalid coord key %q: %w", key, err)
+	}
+	return AxialCoord{Q: q, R: r}, nil
+}
+
 func (c AxialCoord) Plus(dQ, dR int) AxialCoord {
 	return AxialCoord{c.Q + dQ, c.R + dR}
 }

@@ -122,8 +122,14 @@ export class WorldDataGORM implements WorldDataGORMInterface {
   tiles: TileGORM[] = [];
   /** Units as JSON for cross-DB compatibility */
   units: UnitGORM[] = [];
+  /** Units as JSON for cross-DB compatibility */
+  crossings: Record<string, any> = {};
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
+  /** Tiles as JSON for cross-DB compatibility */
+  tilesMap: Record<string, TileGORM> = {};
+  /** Units as JSON for cross-DB compatibility */
+  unitsMap: Record<string, UnitGORM> = {};
 
   
 }
@@ -239,6 +245,12 @@ export class GameWorldDataGORM implements GameWorldDataGORMInterface {
   units: UnitGORM[] = [];
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
+  /** Units as JSON for cross-DB compatibility */
+  crossings: Record<string, any> = {};
+  /** Tiles as JSON for cross-DB compatibility */
+  tilesMap: Record<string, TileGORM> = {};
+  /** Units as JSON for cross-DB compatibility */
+  unitsMap: Record<string, UnitGORM> = {};
 
   
 }

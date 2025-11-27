@@ -5,6 +5,15 @@ import { Any, FieldMask, Timestamp } from "@bufbuild/protobuf/wkt";
 
 
 /**
+ * Crossing types for terrain improvements (roads on land, bridges on water)
+ */
+export enum CrossingType {
+  CROSSING_TYPE_UNSPECIFIED = 0,
+  CROSSING_TYPE_ROAD = 1,
+  CROSSING_TYPE_BRIDGE = 2,
+}
+
+/**
  * /////// Game related models
  */
 export enum GameStatus {
@@ -146,9 +155,9 @@ export interface World {
 
 
 export interface WorldData {
-  /** JSON-fied tile data about what units and terrains are at each location */
+  /** DEPRECATED: Use tiles_map instead - kept for backward compatibility during migration */
   tiles?: Tile[];
-  /** All units on the world and who they belong to */
+  /** DEPRECATED: Use units_map instead - kept for backward compatibility during migration */
   units?: Unit[];
   /** When this world data was updated (may have happened without world updating) */
   screenshotIndexInfo?: IndexInfo;
@@ -156,6 +165,11 @@ export interface WorldData {
   contentHash: string;
   /** Version for Optimistic concurrent locking */
   version: number;
+  /** New map-based storage (key = "q,r" coordinate string) */
+  tilesMap: Record<string, Tile>;
+  unitsMap: Record<string, Unit>;
+  /** Improvement layer - crossings (roads on land, bridges on water) */
+  crossings: Record<string, any>;
 }
 
 

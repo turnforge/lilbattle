@@ -12,7 +12,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/panyam/protoc-gen-dal/protos/gen/dal/v1"
-	_ "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -248,10 +248,16 @@ type WorldDataGORM struct {
 	Tiles []*TileGORM `protobuf:"bytes,2,rep,name=tiles,proto3" json:"tiles,omitempty"`
 	// Units as JSON for cross-DB compatibility
 	Units []*UnitGORM `protobuf:"bytes,3,rep,name=units,proto3" json:"units,omitempty"`
+	// Units as JSON for cross-DB compatibility
+	Crossings map[string]models.CrossingType `protobuf:"bytes,4,rep,name=crossings,proto3" json:"crossings,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=weewar.v1.CrossingType"`
 	// ScreenshotIndexInfo embedded
-	ScreenshotIndexInfo *IndexInfoGORM `protobuf:"bytes,4,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	ScreenshotIndexInfo *IndexInfoGORM `protobuf:"bytes,5,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
+	// Tiles as JSON for cross-DB compatibility
+	TilesMap map[string]*TileGORM `protobuf:"bytes,6,rep,name=tiles_map,json=tilesMap,proto3" json:"tiles_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Units as JSON for cross-DB compatibility
+	UnitsMap      map[string]*UnitGORM `protobuf:"bytes,7,rep,name=units_map,json=unitsMap,proto3" json:"units_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *WorldDataGORM) Reset() {
@@ -305,9 +311,30 @@ func (x *WorldDataGORM) GetUnits() []*UnitGORM {
 	return nil
 }
 
+func (x *WorldDataGORM) GetCrossings() map[string]models.CrossingType {
+	if x != nil {
+		return x.Crossings
+	}
+	return nil
+}
+
 func (x *WorldDataGORM) GetScreenshotIndexInfo() *IndexInfoGORM {
 	if x != nil {
 		return x.ScreenshotIndexInfo
+	}
+	return nil
+}
+
+func (x *WorldDataGORM) GetTilesMap() map[string]*TileGORM {
+	if x != nil {
+		return x.TilesMap
+	}
+	return nil
+}
+
+func (x *WorldDataGORM) GetUnitsMap() map[string]*UnitGORM {
+	if x != nil {
+		return x.UnitsMap
 	}
 	return nil
 }
@@ -601,8 +628,14 @@ type GameWorldDataGORM struct {
 	Units []*UnitGORM `protobuf:"bytes,3,rep,name=units,proto3" json:"units,omitempty"`
 	// ScreenshotIndexInfo embedded
 	ScreenshotIndexInfo *IndexInfoGORM `protobuf:"bytes,4,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Units as JSON for cross-DB compatibility
+	Crossings map[string]models.CrossingType `protobuf:"bytes,5,rep,name=crossings,proto3" json:"crossings,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=weewar.v1.CrossingType"`
+	// Tiles as JSON for cross-DB compatibility
+	TilesMap map[string]*TileGORM `protobuf:"bytes,6,rep,name=tiles_map,json=tilesMap,proto3" json:"tiles_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Units as JSON for cross-DB compatibility
+	UnitsMap      map[string]*UnitGORM `protobuf:"bytes,7,rep,name=units_map,json=unitsMap,proto3" json:"units_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GameWorldDataGORM) Reset() {
@@ -652,6 +685,27 @@ func (x *GameWorldDataGORM) GetUnits() []*UnitGORM {
 func (x *GameWorldDataGORM) GetScreenshotIndexInfo() *IndexInfoGORM {
 	if x != nil {
 		return x.ScreenshotIndexInfo
+	}
+	return nil
+}
+
+func (x *GameWorldDataGORM) GetCrossings() map[string]models.CrossingType {
+	if x != nil {
+		return x.Crossings
+	}
+	return nil
+}
+
+func (x *GameWorldDataGORM) GetTilesMap() map[string]*TileGORM {
+	if x != nil {
+		return x.TilesMap
+	}
+	return nil
+}
+
+func (x *GameWorldDataGORM) GetUnitsMap() map[string]*UnitGORM {
+	if x != nil {
+		return x.UnitsMap
 	}
 	return nil
 }
@@ -892,13 +946,25 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x04tags\x18\a \x03(\tB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x04tags\x128\n" +
 	"\fpreview_urls\x18\v \x03(\tB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\vpreviewUrls\x12r\n" +
 	"\x11search_index_info\x18\r \x01(\v2\x18.weewar.v1.IndexInfoGORMB,\x92\xa6\x1d(R\bembeddedR\x1cembeddedPrefix:search_index_R\x0fsearchIndexInfo:\x1dʦ\x1d\x19\n" +
-	"\x0fweewar.v1.World\x12\x06worlds\"\xe9\x02\n" +
+	"\x0fweewar.v1.World\x12\x06worlds\"\xfa\x06\n" +
 	"\rWorldDataGORM\x12+\n" +
 	"\bworld_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\aworldId\x12@\n" +
 	"\x05tiles\x18\x02 \x03(\v2\x13.weewar.v1.TileGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05tiles\x12@\n" +
-	"\x05units\x18\x03 \x03(\v2\x13.weewar.v1.UnitGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05units\x12~\n" +
-	"\x15screenshot_index_info\x18\x04 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo:'ʦ\x1d#\n" +
+	"\x05units\x18\x03 \x03(\v2\x13.weewar.v1.UnitGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05units\x12\\\n" +
+	"\tcrossings\x18\x04 \x03(\v2'.weewar.v1.WorldDataGORM.CrossingsEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\tcrossings\x12~\n" +
+	"\x15screenshot_index_info\x18\x05 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo\x12Z\n" +
+	"\ttiles_map\x18\x06 \x03(\v2&.weewar.v1.WorldDataGORM.TilesMapEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\btilesMap\x12Z\n" +
+	"\tunits_map\x18\a \x03(\v2&.weewar.v1.WorldDataGORM.UnitsMapEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\bunitsMap\x1aU\n" +
+	"\x0eCrossingsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\x0e2\x17.weewar.v1.CrossingTypeR\x05value:\x028\x01\x1aP\n" +
+	"\rTilesMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
+	"\x05value\x18\x02 \x01(\v2\x13.weewar.v1.TileGORMR\x05value:\x028\x01\x1aP\n" +
+	"\rUnitsMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
+	"\x05value\x18\x02 \x01(\v2\x13.weewar.v1.UnitGORMR\x05value:\x028\x01:'ʦ\x1d#\n" +
 	"\x13weewar.v1.WorldData\x12\n" +
 	"world_data \x01\"\xa2\x02\n" +
 	"\bGameGORM\x12 \n" +
@@ -921,11 +987,23 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\x12weewar.v1.GameTeam \x01\"l\n" +
 	"\x10GameSettingsGORM\x12:\n" +
 	"\rallowed_units\x18\x01 \x03(\x05B\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\fallowedUnits:\x1cʦ\x1d\x18\n" +
-	"\x16weewar.v1.GameSettings\"\xb2\x02\n" +
+	"\x16weewar.v1.GameSettings\"\xcf\x06\n" +
 	"\x11GameWorldDataGORM\x12@\n" +
 	"\x05tiles\x18\x02 \x03(\v2\x13.weewar.v1.TileGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05tiles\x12@\n" +
 	"\x05units\x18\x03 \x03(\v2\x13.weewar.v1.UnitGORMB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\x05units\x12~\n" +
-	"\x15screenshot_index_info\x18\x04 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo:\x19ʦ\x1d\x15\n" +
+	"\x15screenshot_index_info\x18\x04 \x01(\v2\x18.weewar.v1.IndexInfoGORMB0\x92\xa6\x1d,R\bembeddedR embeddedPrefix:screenshot_index_R\x13screenshotIndexInfo\x12`\n" +
+	"\tcrossings\x18\x05 \x03(\v2+.weewar.v1.GameWorldDataGORM.CrossingsEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\tcrossings\x12^\n" +
+	"\ttiles_map\x18\x06 \x03(\v2*.weewar.v1.GameWorldDataGORM.TilesMapEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\btilesMap\x12^\n" +
+	"\tunits_map\x18\a \x03(\v2*.weewar.v1.GameWorldDataGORM.UnitsMapEntryB\x15\x92\xa6\x1d\x11R\x0fserializer:jsonR\bunitsMap\x1aU\n" +
+	"\x0eCrossingsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\x0e2\x17.weewar.v1.CrossingTypeR\x05value:\x028\x01\x1aP\n" +
+	"\rTilesMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
+	"\x05value\x18\x02 \x01(\v2\x13.weewar.v1.TileGORMR\x05value:\x028\x01\x1aP\n" +
+	"\rUnitsMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
+	"\x05value\x18\x02 \x01(\v2\x13.weewar.v1.UnitGORMR\x05value:\x028\x01:\x19ʦ\x1d\x15\n" +
 	"\x13weewar.v1.WorldData\"\xca\x01\n" +
 	"\rGameStateGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
@@ -966,7 +1044,7 @@ func file_weewar_v1_gorm_models_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_gorm_models_proto_rawDescData
 }
 
-var file_weewar_v1_gorm_models_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_weewar_v1_gorm_models_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_weewar_v1_gorm_models_proto_goTypes = []any{
 	(*IndexInfoGORM)(nil),         // 0: weewar.v1.IndexInfoGORM
 	(*TileGORM)(nil),              // 1: weewar.v1.TileGORM
@@ -985,27 +1063,46 @@ var file_weewar_v1_gorm_models_proto_goTypes = []any{
 	(*GameMoveHistoryGORM)(nil),   // 14: weewar.v1.GameMoveHistoryGORM
 	(*GameMoveGroupGORM)(nil),     // 15: weewar.v1.GameMoveGroupGORM
 	(*GameMoveGORM)(nil),          // 16: weewar.v1.GameMoveGORM
-	(*anypb.Any)(nil),             // 17: google.protobuf.Any
+	nil,                           // 17: weewar.v1.WorldDataGORM.CrossingsEntry
+	nil,                           // 18: weewar.v1.WorldDataGORM.TilesMapEntry
+	nil,                           // 19: weewar.v1.WorldDataGORM.UnitsMapEntry
+	nil,                           // 20: weewar.v1.GameWorldDataGORM.CrossingsEntry
+	nil,                           // 21: weewar.v1.GameWorldDataGORM.TilesMapEntry
+	nil,                           // 22: weewar.v1.GameWorldDataGORM.UnitsMapEntry
+	(*anypb.Any)(nil),             // 23: google.protobuf.Any
+	(models.CrossingType)(0),      // 24: weewar.v1.CrossingType
 }
 var file_weewar_v1_gorm_models_proto_depIdxs = []int32{
 	0,  // 0: weewar.v1.WorldGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
 	1,  // 1: weewar.v1.WorldDataGORM.tiles:type_name -> weewar.v1.TileGORM
 	2,  // 2: weewar.v1.WorldDataGORM.units:type_name -> weewar.v1.UnitGORM
-	0,  // 3: weewar.v1.WorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
-	0,  // 4: weewar.v1.GameGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
-	8,  // 5: weewar.v1.GameConfigurationGORM.income_configs:type_name -> weewar.v1.IncomeConfigGORM
-	11, // 6: weewar.v1.GameConfigurationGORM.settings:type_name -> weewar.v1.GameSettingsGORM
-	1,  // 7: weewar.v1.GameWorldDataGORM.tiles:type_name -> weewar.v1.TileGORM
-	2,  // 8: weewar.v1.GameWorldDataGORM.units:type_name -> weewar.v1.UnitGORM
-	0,  // 9: weewar.v1.GameWorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
-	12, // 10: weewar.v1.GameStateGORM.world_data:type_name -> weewar.v1.GameWorldDataGORM
-	17, // 11: weewar.v1.GameMoveGORM.move_type:type_name -> google.protobuf.Any
-	17, // 12: weewar.v1.GameMoveGORM.changes:type_name -> google.protobuf.Any
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	17, // 3: weewar.v1.WorldDataGORM.crossings:type_name -> weewar.v1.WorldDataGORM.CrossingsEntry
+	0,  // 4: weewar.v1.WorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
+	18, // 5: weewar.v1.WorldDataGORM.tiles_map:type_name -> weewar.v1.WorldDataGORM.TilesMapEntry
+	19, // 6: weewar.v1.WorldDataGORM.units_map:type_name -> weewar.v1.WorldDataGORM.UnitsMapEntry
+	0,  // 7: weewar.v1.GameGORM.search_index_info:type_name -> weewar.v1.IndexInfoGORM
+	8,  // 8: weewar.v1.GameConfigurationGORM.income_configs:type_name -> weewar.v1.IncomeConfigGORM
+	11, // 9: weewar.v1.GameConfigurationGORM.settings:type_name -> weewar.v1.GameSettingsGORM
+	1,  // 10: weewar.v1.GameWorldDataGORM.tiles:type_name -> weewar.v1.TileGORM
+	2,  // 11: weewar.v1.GameWorldDataGORM.units:type_name -> weewar.v1.UnitGORM
+	0,  // 12: weewar.v1.GameWorldDataGORM.screenshot_index_info:type_name -> weewar.v1.IndexInfoGORM
+	20, // 13: weewar.v1.GameWorldDataGORM.crossings:type_name -> weewar.v1.GameWorldDataGORM.CrossingsEntry
+	21, // 14: weewar.v1.GameWorldDataGORM.tiles_map:type_name -> weewar.v1.GameWorldDataGORM.TilesMapEntry
+	22, // 15: weewar.v1.GameWorldDataGORM.units_map:type_name -> weewar.v1.GameWorldDataGORM.UnitsMapEntry
+	12, // 16: weewar.v1.GameStateGORM.world_data:type_name -> weewar.v1.GameWorldDataGORM
+	23, // 17: weewar.v1.GameMoveGORM.move_type:type_name -> google.protobuf.Any
+	23, // 18: weewar.v1.GameMoveGORM.changes:type_name -> google.protobuf.Any
+	24, // 19: weewar.v1.WorldDataGORM.CrossingsEntry.value:type_name -> weewar.v1.CrossingType
+	1,  // 20: weewar.v1.WorldDataGORM.TilesMapEntry.value:type_name -> weewar.v1.TileGORM
+	2,  // 21: weewar.v1.WorldDataGORM.UnitsMapEntry.value:type_name -> weewar.v1.UnitGORM
+	24, // 22: weewar.v1.GameWorldDataGORM.CrossingsEntry.value:type_name -> weewar.v1.CrossingType
+	1,  // 23: weewar.v1.GameWorldDataGORM.TilesMapEntry.value:type_name -> weewar.v1.TileGORM
+	2,  // 24: weewar.v1.GameWorldDataGORM.UnitsMapEntry.value:type_name -> weewar.v1.UnitGORM
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_gorm_models_proto_init() }
@@ -1019,7 +1116,7 @@ func file_weewar_v1_gorm_models_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_gorm_models_proto_rawDesc), len(file_weewar_v1_gorm_models_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

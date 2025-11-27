@@ -68,9 +68,20 @@ message WorldDataGORM {
   repeated UnitGORM units = 3 [(dal.v1.column) = {
     gorm_tags: ["serializer:json"]
   }];
+  // Units as JSON for cross-DB compatibility
+  map<string, CrossingType> crossings = 4 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
   // ScreenshotIndexInfo embedded
-  IndexInfoGORM screenshot_index_info = 4 [(dal.v1.column) = {
+  IndexInfoGORM screenshot_index_info = 5 [(dal.v1.column) = {
     gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
+  }];
+
+  // Tiles as JSON for cross-DB compatibility
+  map<string,TileGORM> tiles_map = 6 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
+  }];
+  // Units as JSON for cross-DB compatibility
+  map<string, UnitGORM> units_map = 7 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
   }];
 }
 
@@ -143,6 +154,17 @@ message GameWorldDataGORM {
   // ScreenshotIndexInfo embedded
   IndexInfoGORM screenshot_index_info = 4 [(dal.v1.column) = {
     gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
+  }];
+  // Units as JSON for cross-DB compatibility
+  map<string, CrossingType> crossings = 5 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
+
+  // Tiles as JSON for cross-DB compatibility
+  map<string,TileGORM> tiles_map = 6 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
+  }];
+  // Units as JSON for cross-DB compatibility
+  map<string, UnitGORM> units_map = 7 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
   }];
 }
 

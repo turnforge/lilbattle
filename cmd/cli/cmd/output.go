@@ -201,7 +201,7 @@ func FormatGameStatus(game *v1.Game, state *v1.GameState) string {
 	// Count units per player
 	unitCounts := make(map[int32]int)
 	if state.WorldData != nil {
-		for _, unit := range state.WorldData.Units {
+		for _, unit := range state.WorldData.UnitsMap {
 			if unit != nil {
 				unitCounts[unit.Player]++
 			}
@@ -211,7 +211,7 @@ func FormatGameStatus(game *v1.Game, state *v1.GameState) string {
 	// Count tiles per player
 	tileCounts := make(map[int32]int)
 	if state.WorldData != nil {
-		for _, tile := range state.WorldData.Tiles {
+		for _, tile := range state.WorldData.TilesMap {
 			if tile != nil && tile.Player > 0 {
 				tileCounts[tile.Player]++
 			}
@@ -247,7 +247,7 @@ func FormatGameStatus(game *v1.Game, state *v1.GameState) string {
 
 // FormatUnits formats all units as text
 func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
-	if state.WorldData == nil || len(state.WorldData.Units) == 0 {
+	if state.WorldData == nil || len(state.WorldData.UnitsMap) == 0 {
 		return "No units found\n"
 	}
 
@@ -260,7 +260,7 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 	unitsByPlayer := make(map[int32][]*v1.Unit)
 	numPlayers := int32(0)
 
-	for _, unit := range state.WorldData.Units {
+	for _, unit := range state.WorldData.UnitsMap {
 		if unit != nil {
 			if err := rtGame.TopUpUnitIfNeeded(unit); err != nil {
 				panic(err)
@@ -307,9 +307,9 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 	return sb.String()
 }
 
-// FormatTiles formats all units as text
+// FormatTiles formats all tiles as text
 func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
-	if state.WorldData == nil || len(state.WorldData.Tiles) == 0 {
+	if state.WorldData == nil || len(state.WorldData.TilesMap) == 0 {
 		return "No tiles found\n"
 	}
 
@@ -322,7 +322,7 @@ func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
 	tilesByPlayer := make(map[int32][]*v1.Tile)
 	numPlayers := int32(0)
 
-	for _, tile := range state.WorldData.Tiles {
+	for _, tile := range state.WorldData.TilesMap {
 		if tile != nil && tile.Player > 0 {
 			if err := rtGame.TopUpTileIfNeeded(tile); err != nil {
 				panic(err)

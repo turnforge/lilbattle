@@ -255,11 +255,14 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		}
 
 		// Use client version for the update
-		if req.WorldData.Tiles == nil {
-			req.WorldData.Tiles = protoWorldData.Tiles
+		if req.WorldData.TilesMap == nil {
+			req.WorldData.TilesMap = protoWorldData.TilesMap
 		}
-		if req.WorldData.Units == nil {
-			req.WorldData.Units = protoWorldData.Units
+		if req.WorldData.UnitsMap == nil {
+			req.WorldData.UnitsMap = protoWorldData.UnitsMap
+		}
+		if req.WorldData.Crossings == nil {
+			req.WorldData.Crossings = protoWorldData.Crossings
 		}
 		worldData, err = v1gorm.WorldDataToWorldDataGORM(req.WorldData, nil, nil)
 		worldData.WorldId = req.World.Id

@@ -48,7 +48,7 @@ func runTiles(cmd *cobra.Command, args []string) error {
 		// JSON output
 		tiles := []map[string]any{}
 		if pc.GameState.State.WorldData != nil {
-			for _, tile := range pc.GameState.State.WorldData.Tiles {
+			for _, tile := range pc.GameState.State.WorldData.TilesMap {
 				if tile != nil {
 					tiles = append(tiles, map[string]any{
 						"player":    tile.Player,

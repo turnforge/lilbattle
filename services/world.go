@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/turnforge/weewar/lib"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
@@ -33,12 +34,13 @@ type World struct {
 
 	// JSON-friendly representation
 	Name string
-	// PlayerCount int `json:"playerCount"` // Number of players in the game
 
-	// Ways to identify various kinds of units and tiles
-	unitsByPlayer [][]*v1.Unit            `json:"-"` // All units in the game world by player ID
-	unitsByCoord  map[AxialCoord]*v1.Unit `json:"-"` // All units in the game world by player ID
-	tilesByCoord  map[AxialCoord]*v1.Tile `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
+	// Proto WorldData - the actual storage for tiles, units, and crossings
+	// This is the source of truth for spatial data
+	data *v1.WorldData
+
+	// Ways to identify various kinds of units by player
+	unitsByPlayer [][]*v1.Unit `json:"-"` // All units in the game world by player ID
 
 	// Unit shortcut tracking (A1, B12, C3, etc.)
 	unitsByShortcut      map[string]*v1.Unit `json:"-"` // Quick lookup by shortcut
@@ -49,10 +51,10 @@ type World struct {
 
 	// In case we are pushed environment this will tell us
 	// if a unit was "deleted" in this layer so not to recurse
-	//up when looking up a missing unit
-	unitDeleted map[AxialCoord]bool `json:"-"`
+	// up when looking up a missing unit
+	unitDeleted map[string]bool `json:"-"`
 	// Same as above but for tiles
-	tileDeleted map[AxialCoord]bool `json:"-"` // Direct cube coordinate lookup (custom JSON handling)
+	tileDeleted map[string]bool `json:"-"`
 
 	// Transaction layer counters for efficient NumUnits calculation
 	unitsAdded   int32 `json:"-"` // Number of units added in this layer
@@ -81,75 +83,106 @@ type World struct {
 func NewWorld(name string, protoWorld *v1.WorldData) *World {
 	w := &World{
 		Name:                 name,
-		tilesByCoord:         map[AxialCoord]*v1.Tile{},
-		unitsByCoord:         map[AxialCoord]*v1.Unit{},
 		unitsByShortcut:      map[string]*v1.Unit{},
 		unitCountersByPlayer: map[int32]int32{},
 		tilesByShortcut:      map[string]*v1.Tile{},
 		tileCountersByPlayer: map[int32]int32{},
-		tileDeleted:          map[AxialCoord]bool{},
-		unitDeleted:          map[AxialCoord]bool{},
+		tileDeleted:          map[string]bool{},
+		unitDeleted:          map[string]bool{},
 	}
 
-	// Convert protobuf tiles and units to runtime structures
+	// Use the provided WorldData or create a new one
 	if protoWorld != nil {
-		// First pass: track existing tile shortcuts and find max counters
-		for _, protoTile := range protoWorld.Tiles {
-			if protoTile.Player > 0 && protoTile.Shortcut != "" {
-				// Parse existing shortcut to update counter
-				if len(protoTile.Shortcut) >= 2 {
-					playerLetter := protoTile.Shortcut[0]
-					if playerLetter >= 'A' && playerLetter <= 'Z' {
-						if num, err := strconv.Atoi(protoTile.Shortcut[1:]); err == nil {
-							// Player 1 -> 'A', Player 2 -> 'B', etc.
-							playerID := int32(playerLetter - 'A' + 1)
-							if current, ok := w.tileCountersByPlayer[playerID]; !ok || int32(num) >= current {
-								w.tileCountersByPlayer[playerID] = int32(num + 1)
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// First pass: track existing unit shortcuts and find max counters
-		for _, protoUnit := range protoWorld.Units {
-			if protoUnit.Shortcut != "" {
-				// Parse existing shortcut to update counter
-				if len(protoUnit.Shortcut) >= 2 {
-					playerLetter := protoUnit.Shortcut[0]
-					if playerLetter >= 'A' && playerLetter <= 'Z' {
-						if num, err := strconv.Atoi(protoUnit.Shortcut[1:]); err == nil {
-							// Player 1 -> 'A', Player 2 -> 'B', etc.
-							playerID := int32(playerLetter - 'A' + 1)
-							if current, ok := w.unitCountersByPlayer[playerID]; !ok || int32(num) >= current {
-								w.unitCountersByPlayer[playerID] = int32(num + 1)
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// Second pass: add tiles (use original proto objects to preserve references)
-		for _, protoTile := range protoWorld.Tiles {
-			// Use the original proto object directly so shortcuts are preserved
-			w.AddTile(protoTile)
-		}
-
-		// Second pass: add units (use original proto objects to preserve references)
-		for _, protoUnit := range protoWorld.Units {
-			// Use the original proto object directly so shortcuts are preserved
-			w.AddUnit(protoUnit)
+		// Migrate if needed (converts lists to maps, extracts crossings)
+		MigrateWorldData(protoWorld)
+		w.data = protoWorld
+	} else {
+		w.data = &v1.WorldData{
+			TilesMap:  make(map[string]*v1.Tile),
+			UnitsMap:  make(map[string]*v1.Unit),
+			Crossings: make(map[string]v1.CrossingType),
 		}
 	}
+
+	// Build supplementary indexes from the proto data
+	w.buildIndexes()
 
 	return w
 }
 
+// buildIndexes builds the shortcut and player indexes from proto data
+func (w *World) buildIndexes() {
+	// First pass: track existing tile shortcuts and find max counters
+	for _, tile := range w.data.TilesMap {
+		if tile.Player > 0 && tile.Shortcut != "" {
+			w.tilesByShortcut[tile.Shortcut] = tile
+			// Parse existing shortcut to update counter
+			if len(tile.Shortcut) >= 2 {
+				playerLetter := tile.Shortcut[0]
+				if playerLetter >= 'A' && playerLetter <= 'Z' {
+					if num, err := strconv.Atoi(tile.Shortcut[1:]); err == nil {
+						playerID := int32(playerLetter - 'A' + 1)
+						if current, ok := w.tileCountersByPlayer[playerID]; !ok || int32(num) >= current {
+							w.tileCountersByPlayer[playerID] = int32(num + 1)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// First pass: track existing unit shortcuts and find max counters
+	for _, unit := range w.data.UnitsMap {
+		if unit.Shortcut != "" {
+			w.unitsByShortcut[unit.Shortcut] = unit
+			// Parse existing shortcut to update counter
+			if len(unit.Shortcut) >= 2 {
+				playerLetter := unit.Shortcut[0]
+				if playerLetter >= 'A' && playerLetter <= 'Z' {
+					if num, err := strconv.Atoi(unit.Shortcut[1:]); err == nil {
+						playerID := int32(playerLetter - 'A' + 1)
+						if current, ok := w.unitCountersByPlayer[playerID]; !ok || int32(num) >= current {
+							w.unitCountersByPlayer[playerID] = int32(num + 1)
+						}
+					}
+				}
+			}
+		}
+
+		// Build unitsByPlayer index
+		playerID := int(unit.Player)
+		for playerID >= len(w.unitsByPlayer) {
+			w.unitsByPlayer = append(w.unitsByPlayer, nil)
+		}
+		w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
+	}
+}
+
+// WorldData returns the underlying proto WorldData
+func (w *World) WorldData() *v1.WorldData {
+	return w.data
+}
+
 func (w *World) Push() *World {
-	out := NewWorld(w.Name, nil)
-	out.parent = w
+	// Create a new WorldData for the transaction layer
+	childData := &v1.WorldData{
+		TilesMap:  make(map[string]*v1.Tile),
+		UnitsMap:  make(map[string]*v1.Unit),
+		Crossings: make(map[string]v1.CrossingType),
+	}
+
+	out := &World{
+		Name:                 w.Name,
+		parent:               w,
+		data:                 childData,
+		unitsByShortcut:      map[string]*v1.Unit{},
+		unitCountersByPlayer: map[int32]int32{},
+		tilesByShortcut:      map[string]*v1.Tile{},
+		tileCountersByPlayer: map[int32]int32{},
+		tileDeleted:          map[string]bool{},
+		unitDeleted:          map[string]bool{},
+	}
+
 	// Inherit unit counters from parent
 	for playerID, counter := range w.unitCountersByPlayer {
 		out.unitCountersByPlayer[playerID] = counter
@@ -171,7 +204,7 @@ func (w *World) Pop() *World {
 
 func (w *World) PlayerCount() int32 {
 	if w.parent != nil {
-		return w.parent.PlayerCount() // FIX: Call parent.PlayerCount(), not w.PlayerCount()
+		return w.parent.PlayerCount()
 	}
 	return int32(len(w.unitsByPlayer) - 1)
 }
@@ -197,11 +230,12 @@ func (w *World) Neighbors(coord AxialCoord) iter.Seq2[AxialCoord, *v1.Tile] {
 func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 	// Merged iteration: child tiles override parent tiles, respect deletions
 	return func(yield func(AxialCoord, *v1.Tile) bool) {
-		seen := make(map[AxialCoord]bool)
+		seen := make(map[string]bool)
 
 		// First iterate current layer (child overrides parent)
-		for coord, tile := range w.tilesByCoord {
-			seen[coord] = true
+		for key, tile := range w.data.TilesMap {
+			seen[key] = true
+			coord, _ := lib.ParseCoordKey(key)
 			if !yield(coord, tile) {
 				return
 			}
@@ -210,8 +244,9 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, tile := range w.parent.TilesByCoord() {
+				key := lib.CoordKeyFromAxial(coord)
 				// Skip if already seen in child or explicitly deleted in child
-				if seen[coord] || w.tileDeleted[coord] {
+				if seen[key] || w.tileDeleted[key] {
 					continue
 				}
 				if !yield(coord, tile) {
@@ -228,7 +263,7 @@ func (w *World) NumUnits() int32 {
 		return w.parent.NumUnits() + w.unitsAdded - w.unitsDeleted
 	}
 	// Root layer: just count the units in this layer
-	return int32(len(w.unitsByCoord))
+	return int32(len(w.data.UnitsMap))
 }
 
 // GenerateUnitShortcut creates a new shortcut for a unit of the given player
@@ -296,11 +331,12 @@ func (w *World) GetTileByShortcut(shortcut string) *v1.Tile {
 func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 	// Merged iteration: child units override parent units, respect deletions
 	return func(yield func(AxialCoord, *v1.Unit) bool) {
-		seen := make(map[AxialCoord]bool)
+		seen := make(map[string]bool)
 
 		// First iterate current layer (child overrides parent)
-		for coord, unit := range w.unitsByCoord {
-			seen[coord] = true
+		for key, unit := range w.data.UnitsMap {
+			seen[key] = true
+			coord, _ := lib.ParseCoordKey(key)
 			if !yield(coord, unit) {
 				return
 			}
@@ -309,8 +345,9 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, unit := range w.parent.UnitsByCoord() {
+				key := lib.CoordKeyFromAxial(coord)
 				// Skip if already seen in child or explicitly deleted in child
-				if seen[coord] || w.unitDeleted[coord] {
+				if seen[key] || w.unitDeleted[key] {
 					continue
 				}
 				if !yield(coord, unit) {
@@ -323,8 +360,9 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 
 // UnitAt returns the unit at the specified coordinate, respecting transaction deletions
 func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
-	out = w.unitsByCoord[coord]
-	if out == nil && w.parent != nil && !w.unitDeleted[coord] {
+	key := lib.CoordKeyFromAxial(coord)
+	out = w.data.UnitsMap[key]
+	if out == nil && w.parent != nil && !w.unitDeleted[key] {
 		out = w.parent.UnitAt(coord)
 	}
 	return
@@ -332,8 +370,9 @@ func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
 
 // TileAt returns the tile at the specified cube coordinates
 func (w *World) TileAt(coord AxialCoord) (out *v1.Tile) {
-	out = w.tilesByCoord[coord]
-	if out == nil && w.parent != nil {
+	key := lib.CoordKeyFromAxial(coord)
+	out = w.data.TilesMap[key]
+	if out == nil && w.parent != nil && !w.tileDeleted[key] {
 		out = w.parent.TileAt(coord)
 	}
 	return
@@ -353,6 +392,47 @@ func (w *World) GetPlayerUnits(playerID int) []*v1.Unit {
 
 	// No units found in any layer
 	return nil
+}
+
+// =============================================================================
+// Crossing (Road/Bridge) Access Methods
+// =============================================================================
+
+// CrossingAt returns the crossing type at the specified coordinate
+func (w *World) CrossingAt(coord AxialCoord) v1.CrossingType {
+	key := lib.CoordKeyFromAxial(coord)
+	if crossing, ok := w.data.Crossings[key]; ok {
+		return crossing
+	}
+	if w.parent != nil {
+		return w.parent.CrossingAt(coord)
+	}
+	return v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
+}
+
+// HasCrossing checks if there's any crossing at the given coordinate
+func (w *World) HasCrossing(coord AxialCoord) bool {
+	return w.CrossingAt(coord) != v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
+}
+
+// HasRoad checks if there's a road at the given coordinate
+func (w *World) HasRoad(coord AxialCoord) bool {
+	return w.CrossingAt(coord) == v1.CrossingType_CROSSING_TYPE_ROAD
+}
+
+// HasBridge checks if there's a bridge at the given coordinate
+func (w *World) HasBridge(coord AxialCoord) bool {
+	return w.CrossingAt(coord) == v1.CrossingType_CROSSING_TYPE_BRIDGE
+}
+
+// SetCrossing sets or removes a crossing at the given coordinate
+func (w *World) SetCrossing(coord AxialCoord, crossingType v1.CrossingType) {
+	key := lib.CoordKeyFromAxial(coord)
+	if crossingType == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
+		delete(w.data.Crossings, key)
+	} else {
+		w.data.Crossings[key] = crossingType
+	}
 }
 
 // =============================================================================
@@ -378,12 +458,13 @@ func (w *World) SetTileType(coord AxialCoord, terrainType int) bool {
 // AddTileCube adds a tile at the specified cube coordinate (primary method)
 func (w *World) AddTile(tile *v1.Tile) {
 	coord := TileGetCoord(tile)
+	key := lib.CoordKeyFromAxial(coord)
 	q, r := coord.Q, coord.R
 	if q < w.minQ || q > w.maxQ || r < w.minR || r > w.maxR {
 		w.boundsChanged = true
 	}
-	w.tileDeleted[coord] = false
-	w.tilesByCoord[coord] = tile
+	w.tileDeleted[key] = false
+	w.data.TilesMap[key] = tile
 
 	// Generate shortcut if not already set and tile is player-owned
 	if tile.Player > 0 && tile.Shortcut == "" {
@@ -400,8 +481,9 @@ func (w *World) AddTile(tile *v1.Tile) {
 func (w *World) DeleteTile(coord AxialCoord) {
 	tile := w.TileAt(coord)
 	if tile != nil {
-		w.tileDeleted[coord] = true
-		delete(w.tilesByCoord, coord)
+		key := lib.CoordKeyFromAxial(coord)
+		w.tileDeleted[key] = true
+		delete(w.data.TilesMap, key)
 
 		// Remove from shortcut map
 		if tile.Shortcut != "" {
@@ -425,6 +507,7 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	}
 
 	coord := UnitGetCoord(unit)
+	key := lib.CoordKeyFromAxial(coord)
 	oldunit = w.UnitAt(coord)
 
 	// Update transaction counters
@@ -433,10 +516,10 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 		if oldunit == nil {
 			w.unitsAdded++
 		}
-		w.unitDeleted[coord] = false
+		w.unitDeleted[key] = false
 	} else {
 		// Root layer: clear any deletion marks
-		delete(w.unitDeleted, coord)
+		delete(w.unitDeleted, key)
 	}
 
 	// Remove old unit from player's unit list if replacing
@@ -468,7 +551,7 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	}
 
 	w.unitsByPlayer[playerID] = append(w.unitsByPlayer[playerID], unit)
-	w.unitsByCoord[coord] = unit
+	w.data.UnitsMap[key] = unit
 
 	return
 }
@@ -480,22 +563,23 @@ func (w *World) RemoveUnit(unit *v1.Unit) error {
 	}
 
 	coord := UnitGetCoord(unit)
+	key := lib.CoordKeyFromAxial(coord)
 	p := int(unit.Player)
 
 	// Update transaction counters
 	if w.parent != nil {
 		// Transaction layer: check if we're deleting a unit from current layer or parent
-		if _, existsInThisLayer := w.unitsByCoord[coord]; existsInThisLayer {
+		if _, existsInThisLayer := w.data.UnitsMap[key]; existsInThisLayer {
 			// Deleting from current layer
 			w.unitsAdded--
 		} else {
 			// Deleting from parent layer
 			w.unitsDeleted++
 		}
-		w.unitDeleted[coord] = true
+		w.unitDeleted[key] = true
 	}
 
-	delete(w.unitsByCoord, coord)
+	delete(w.data.UnitsMap, key)
 
 	// Remove from shortcut map
 	if unit.Shortcut != "" {
@@ -526,8 +610,9 @@ func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 	unitToMove := unit
 	if w.parent != nil {
 		currentCoord := UnitGetCoord(unit)
+		currentKey := lib.CoordKeyFromAxial(currentCoord)
 		// Check if unit exists in current layer or comes from parent
-		if _, existsInCurrentLayer := w.unitsByCoord[currentCoord]; !existsInCurrentLayer {
+		if _, existsInCurrentLayer := w.data.UnitsMap[currentKey]; !existsInCurrentLayer {
 			// Unit comes from parent layer - make a copy to avoid modifying parent objects
 			unitToMove = &v1.Unit{
 				Q:                unit.Q,
@@ -538,6 +623,7 @@ func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 				DistanceLeft:     unit.DistanceLeft,
 				LastActedTurn:    unit.LastActedTurn,
 				LastToppedupTurn: unit.LastToppedupTurn,
+				Shortcut:         unit.Shortcut,
 			}
 		}
 	}
@@ -569,37 +655,45 @@ func (w *World) Clone() *World {
 		return nil
 	}
 
-	out := NewWorld(w.Name, nil)
-	// Clone map
-	for _, tile := range w.tilesByCoord {
-		if tile != nil {
-			// Create a copy of the proto tile
-			clonedTile := &v1.Tile{
-				Q:        tile.Q,
-				R:        tile.R,
-				TileType: tile.TileType,
-				Player:   tile.Player,
-			}
-			out.AddTile(clonedTile)
+	// Create new WorldData with cloned maps
+	clonedData := &v1.WorldData{
+		TilesMap:  make(map[string]*v1.Tile),
+		UnitsMap:  make(map[string]*v1.Unit),
+		Crossings: make(map[string]v1.CrossingType),
+	}
+
+	// Clone tiles
+	for key, tile := range w.data.TilesMap {
+		clonedData.TilesMap[key] = &v1.Tile{
+			Q:        tile.Q,
+			R:        tile.R,
+			TileType: tile.TileType,
+			Player:   tile.Player,
+			Shortcut: tile.Shortcut,
 		}
 	}
-	for _, unit := range w.unitsByCoord {
-		if unit != nil {
-			// Create a copy of the proto unit
-			clonedUnit := &v1.Unit{
-				Q:                unit.Q,
-				R:                unit.R,
-				Player:           unit.Player,
-				UnitType:         unit.UnitType,
-				AvailableHealth:  unit.AvailableHealth,
-				DistanceLeft:     unit.DistanceLeft,
-				LastActedTurn:    unit.LastActedTurn,
-				LastToppedupTurn: unit.LastToppedupTurn,
-			}
-			out.AddUnit(clonedUnit)
+
+	// Clone units
+	for key, unit := range w.data.UnitsMap {
+		clonedData.UnitsMap[key] = &v1.Unit{
+			Q:                unit.Q,
+			R:                unit.R,
+			Player:           unit.Player,
+			UnitType:         unit.UnitType,
+			AvailableHealth:  unit.AvailableHealth,
+			DistanceLeft:     unit.DistanceLeft,
+			LastActedTurn:    unit.LastActedTurn,
+			LastToppedupTurn: unit.LastToppedupTurn,
+			Shortcut:         unit.Shortcut,
 		}
 	}
-	return out
+
+	// Clone crossings
+	for key, crossing := range w.data.Crossings {
+		clonedData.Crossings[key] = crossing
+	}
+
+	return NewWorld(w.Name, clonedData)
 }
 
 // =============================================================================
@@ -612,11 +706,14 @@ func (w *World) Clone() *World {
 
 // MarshalJSON implements custom JSON marshaling for World
 func (w *World) MarshalJSON() ([]byte, error) {
-	// Convert cube map to tile list for JSON
+	// Convert to tile/unit lists for JSON compatibility
+	tiles := slices.Collect(maps.Values(w.data.TilesMap))
+	units := slices.Collect(maps.Values(w.data.UnitsMap))
+
 	out := map[string]any{
 		"Name":  w.Name,
-		"Tiles": slices.Collect(maps.Values(w.tilesByCoord)),
-		"Units": slices.Collect(maps.Values(w.unitsByCoord)),
+		"Tiles": tiles,
+		"Units": units,
 	}
 	return json.Marshal(out)
 }
@@ -637,7 +734,16 @@ func (w *World) UnmarshalJSON(data []byte) error {
 	}
 
 	w.Name = dict.Name
-	// w.PlayerCount = dict.PlayerCount
+
+	// Initialize data if needed
+	if w.data == nil {
+		w.data = &v1.WorldData{
+			TilesMap:  make(map[string]*v1.Tile),
+			UnitsMap:  make(map[string]*v1.Unit),
+			Crossings: make(map[string]v1.CrossingType),
+		}
+	}
+
 	for _, tile := range dict.Tiles {
 		w.AddTile(tile)
 	}

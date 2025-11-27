@@ -48,7 +48,7 @@ func runUnits(cmd *cobra.Command, args []string) error {
 		// JSON output
 		units := []map[string]any{}
 		if pc.GameState.State.WorldData != nil {
-			for _, unit := range pc.GameState.State.WorldData.Units {
+			for _, unit := range pc.GameState.State.WorldData.UnitsMap {
 				if unit != nil {
 					units = append(units, map[string]any{
 						"player":           unit.Player,

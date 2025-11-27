@@ -54,7 +54,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		// Count units per player
 		unitCounts := make(map[int32]int)
 		if pc.GameState.State.WorldData != nil {
-			for _, unit := range pc.GameState.State.WorldData.Units {
+			for _, unit := range pc.GameState.State.WorldData.UnitsMap {
 				if unit != nil {
 					unitCounts[unit.Player]++
 				}
@@ -64,7 +64,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		// Count tiles per player
 		tileCounts := make(map[int32]int)
 		if pc.GameState.State.WorldData != nil {
-			for _, tile := range pc.GameState.State.WorldData.Tiles {
+			for _, tile := range pc.GameState.State.WorldData.TilesMap {
 				if tile != nil && tile.Player > 0 {
 					tileCounts[tile.Player]++
 				}

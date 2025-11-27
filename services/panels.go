@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/web/assets/themes"
 )
 
@@ -41,19 +42,14 @@ func (b *BaseGameState) SetUnitAt(_ context.Context, req *v1.SetUnitAtRequest) (
 		return nil, fmt.Errorf("game state not initialized")
 	}
 
-	// Find and update or add unit
-	found := false
-	for i, unit := range b.State.WorldData.Units {
-		if unit.Q == req.Q && unit.R == req.R {
-			b.State.WorldData.Units[i] = req.Unit
-			found = true
-			break
-		}
+	// Initialize map if needed
+	if b.State.WorldData.UnitsMap == nil {
+		b.State.WorldData.UnitsMap = make(map[string]*v1.Unit)
 	}
 
-	if !found {
-		b.State.WorldData.Units = append(b.State.WorldData.Units, req.Unit)
-	}
+	// Set unit at coordinate using map-based storage
+	key := lib.CoordKey(req.Q, req.R)
+	b.State.WorldData.UnitsMap[key] = req.Unit
 
 	return nil, nil
 }
@@ -63,12 +59,10 @@ func (b *BaseGameState) RemoveUnitAt(_ context.Context, req *v1.RemoveUnitAtRequ
 		return nil, fmt.Errorf("game state not initialized")
 	}
 
-	// Remove unit at coordinate
-	for i, unit := range b.State.WorldData.Units {
-		if unit.Q == req.Q && unit.R == req.R {
-			b.State.WorldData.Units = append(b.State.WorldData.Units[:i], b.State.WorldData.Units[i+1:]...)
-			break
-		}
+	// Remove unit at coordinate using map-based storage
+	if b.State.WorldData.UnitsMap != nil {
+		key := lib.CoordKey(req.Q, req.R)
+		delete(b.State.WorldData.UnitsMap, key)
 	}
 
 	return nil, nil

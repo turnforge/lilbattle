@@ -182,11 +182,14 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 		}
 
 		// Use client version for the update
-		if req.WorldData.Tiles == nil {
-			req.WorldData.Tiles = worldData.Tiles
+		if req.WorldData.TilesMap == nil {
+			req.WorldData.TilesMap = worldData.TilesMap
 		}
-		if req.WorldData.Units == nil {
-			req.WorldData.Units = worldData.Units
+		if req.WorldData.UnitsMap == nil {
+			req.WorldData.UnitsMap = worldData.UnitsMap
+		}
+		if req.WorldData.Crossings == nil {
+			req.WorldData.Crossings = worldData.Crossings
 		}
 		worldData = req.WorldData
 	}

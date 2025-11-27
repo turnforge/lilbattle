@@ -149,12 +149,15 @@ func (*WorldGORM) TableName() string {
 
 // WorldDataGORM is the GORM model for weewar.v1.WorldData
 type WorldDataGORM struct {
-	Tiles               []TileGORM    `gorm:"serializer:json"`
 	WorldId             string        `gorm:"primaryKey"`
+	Tiles               []TileGORM    `gorm:"serializer:json"`
 	Units               []UnitGORM    `gorm:"serializer:json"`
 	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
 	Version             int64
+	TilesMap            map[string]TileGORM            `gorm:"serializer:json"`
+	UnitsMap            map[string]UnitGORM            `gorm:"serializer:json"`
+	Crossings           map[string]models.CrossingType `gorm:"serializer:json"`
 }
 
 // TableName returns the table name for WorldDataGORM
@@ -335,6 +338,9 @@ type GameWorldDataGORM struct {
 	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
 	Version             int64
+	TilesMap            map[string]TileGORM            `gorm:"serializer:json"`
+	UnitsMap            map[string]UnitGORM            `gorm:"serializer:json"`
+	Crossings           map[string]models.CrossingType `gorm:"serializer:json"`
 }
 
 // GameStateGORM is the GORM model for weewar.v1.GameState
@@ -372,11 +378,11 @@ type GameMoveGroupGORM struct {
 
 // GameMoveGORM is the GORM model for weewar.v1.GameMove
 type GameMoveGORM struct {
-	GameId      string `gorm:"primaryKey"`
 	Player      int32
-	Timestamp   time.Time
+	GameId      string `gorm:"primaryKey"`
 	GroupNumber string `gorm:"primaryKey"`
-	MoveNumber  int32  `gorm:"primaryKey"`
+	Timestamp   time.Time
+	MoveNumber  int32 `gorm:"primaryKey"`
 	Version     int64
 	MoveType    []byte `gorm:"serializer:json"`
 	SequenceNum int64

@@ -124,11 +124,11 @@ message World {
 }
 
 message WorldData {
-  // JSON-fied tile data about what units and terrains are at each location
-  repeated Tile tiles = 1;
+  // DEPRECATED: Use tiles_map instead - kept for backward compatibility during migration
+  repeated Tile tiles = 1 [deprecated = true];
 
-  // All units on the world and who they belong to
-  repeated Unit units = 2;
+  // DEPRECATED: Use units_map instead - kept for backward compatibility during migration
+  repeated Unit units = 2 [deprecated = true];
 
   // When this world data was updated (may have happened without world updating)
   IndexInfo screenshot_index_info = 3;
@@ -138,6 +138,20 @@ message WorldData {
 
   // Version for Optimistic concurrent locking
   int64 version = 5;
+
+  // New map-based storage (key = "q,r" coordinate string)
+  map<string, Tile> tiles_map = 6;
+  map<string, Unit> units_map = 7;
+
+  // Improvement layer - crossings (roads on land, bridges on water)
+  map<string, CrossingType> crossings = 8;  // key = "q,r", value = crossing type
+}
+
+// Crossing types for terrain improvements (roads on land, bridges on water)
+enum CrossingType {
+  CROSSING_TYPE_UNSPECIFIED = 0;
+  CROSSING_TYPE_ROAD = 1;     // Road on land terrain
+  CROSSING_TYPE_BRIDGE = 2;   // Bridge over water terrain
 }
 
 message Tile {

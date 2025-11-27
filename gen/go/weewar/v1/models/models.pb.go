@@ -23,6 +23,56 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Crossing types for terrain improvements (roads on land, bridges on water)
+type CrossingType int32
+
+const (
+	CrossingType_CROSSING_TYPE_UNSPECIFIED CrossingType = 0
+	CrossingType_CROSSING_TYPE_ROAD        CrossingType = 1 // Road on land terrain
+	CrossingType_CROSSING_TYPE_BRIDGE      CrossingType = 2 // Bridge over water terrain
+)
+
+// Enum value maps for CrossingType.
+var (
+	CrossingType_name = map[int32]string{
+		0: "CROSSING_TYPE_UNSPECIFIED",
+		1: "CROSSING_TYPE_ROAD",
+		2: "CROSSING_TYPE_BRIDGE",
+	}
+	CrossingType_value = map[string]int32{
+		"CROSSING_TYPE_UNSPECIFIED": 0,
+		"CROSSING_TYPE_ROAD":        1,
+		"CROSSING_TYPE_BRIDGE":      2,
+	}
+)
+
+func (x CrossingType) Enum() *CrossingType {
+	p := new(CrossingType)
+	*p = x
+	return p
+}
+
+func (x CrossingType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CrossingType) Descriptor() protoreflect.EnumDescriptor {
+	return file_weewar_v1_models_models_proto_enumTypes[0].Descriptor()
+}
+
+func (CrossingType) Type() protoreflect.EnumType {
+	return &file_weewar_v1_models_models_proto_enumTypes[0]
+}
+
+func (x CrossingType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CrossingType.Descriptor instead.
+func (CrossingType) EnumDescriptor() ([]byte, []int) {
+	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{0}
+}
+
 // /////// Game related models
 type GameStatus int32
 
@@ -60,11 +110,11 @@ func (x GameStatus) String() string {
 }
 
 func (GameStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_weewar_v1_models_models_proto_enumTypes[0].Descriptor()
+	return file_weewar_v1_models_models_proto_enumTypes[1].Descriptor()
 }
 
 func (GameStatus) Type() protoreflect.EnumType {
-	return &file_weewar_v1_models_models_proto_enumTypes[0]
+	return &file_weewar_v1_models_models_proto_enumTypes[1]
 }
 
 func (x GameStatus) Number() protoreflect.EnumNumber {
@@ -73,7 +123,7 @@ func (x GameStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GameStatus.Descriptor instead.
 func (GameStatus) EnumDescriptor() ([]byte, []int) {
-	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{0}
+	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{1}
 }
 
 type PathDirection int32
@@ -121,11 +171,11 @@ func (x PathDirection) String() string {
 }
 
 func (PathDirection) Descriptor() protoreflect.EnumDescriptor {
-	return file_weewar_v1_models_models_proto_enumTypes[1].Descriptor()
+	return file_weewar_v1_models_models_proto_enumTypes[2].Descriptor()
 }
 
 func (PathDirection) Type() protoreflect.EnumType {
-	return &file_weewar_v1_models_models_proto_enumTypes[1]
+	return &file_weewar_v1_models_models_proto_enumTypes[2]
 }
 
 func (x PathDirection) Number() protoreflect.EnumNumber {
@@ -134,7 +184,7 @@ func (x PathDirection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PathDirection.Descriptor instead.
 func (PathDirection) EnumDescriptor() ([]byte, []int) {
-	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{1}
+	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{2}
 }
 
 type IndexInfo struct {
@@ -605,16 +655,25 @@ func (x *World) GetSearchIndexInfo() *IndexInfo {
 
 type WorldData struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// JSON-fied tile data about what units and terrains are at each location
+	// DEPRECATED: Use tiles_map instead - kept for backward compatibility during migration
+	//
+	// Deprecated: Marked as deprecated in weewar/v1/models/models.proto.
 	Tiles []*Tile `protobuf:"bytes,1,rep,name=tiles,proto3" json:"tiles,omitempty"`
-	// All units on the world and who they belong to
+	// DEPRECATED: Use units_map instead - kept for backward compatibility during migration
+	//
+	// Deprecated: Marked as deprecated in weewar/v1/models/models.proto.
 	Units []*Unit `protobuf:"bytes,2,rep,name=units,proto3" json:"units,omitempty"`
 	// When this world data was updated (may have happened without world updating)
 	ScreenshotIndexInfo *IndexInfo `protobuf:"bytes,3,opt,name=screenshot_index_info,json=screenshotIndexInfo,proto3" json:"screenshot_index_info,omitempty"`
 	// We will only update if hash's are different
 	ContentHash string `protobuf:"bytes,4,opt,name=content_hash,json=contentHash,proto3" json:"content_hash,omitempty"`
 	// Version for Optimistic concurrent locking
-	Version       int64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
+	Version int64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
+	// New map-based storage (key = "q,r" coordinate string)
+	TilesMap map[string]*Tile `protobuf:"bytes,6,rep,name=tiles_map,json=tilesMap,proto3" json:"tiles_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	UnitsMap map[string]*Unit `protobuf:"bytes,7,rep,name=units_map,json=unitsMap,proto3" json:"units_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Improvement layer - crossings (roads on land, bridges on water)
+	Crossings     map[string]CrossingType `protobuf:"bytes,8,rep,name=crossings,proto3" json:"crossings,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=weewar.v1.CrossingType"` // key = "q,r", value = crossing type
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -649,6 +708,7 @@ func (*WorldData) Descriptor() ([]byte, []int) {
 	return file_weewar_v1_models_models_proto_rawDescGZIP(), []int{5}
 }
 
+// Deprecated: Marked as deprecated in weewar/v1/models/models.proto.
 func (x *WorldData) GetTiles() []*Tile {
 	if x != nil {
 		return x.Tiles
@@ -656,6 +716,7 @@ func (x *WorldData) GetTiles() []*Tile {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in weewar/v1/models/models.proto.
 func (x *WorldData) GetUnits() []*Unit {
 	if x != nil {
 		return x.Units
@@ -682,6 +743,27 @@ func (x *WorldData) GetVersion() int64 {
 		return x.Version
 	}
 	return 0
+}
+
+func (x *WorldData) GetTilesMap() map[string]*Tile {
+	if x != nil {
+		return x.TilesMap
+	}
+	return nil
+}
+
+func (x *WorldData) GetUnitsMap() map[string]*Unit {
+	if x != nil {
+		return x.UnitsMap
+	}
+	return nil
+}
+
+func (x *WorldData) GetCrossings() map[string]CrossingType {
+	if x != nil {
+		return x.Crossings
+	}
+	return nil
 }
 
 type Tile struct {
@@ -3880,13 +3962,25 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"difficulty\x12!\n" +
 	"\fpreview_urls\x18\v \x03(\tR\vpreviewUrls\x12L\n" +
 	"\x13default_game_config\x18\f \x01(\v2\x1c.weewar.v1.GameConfigurationR\x11defaultGameConfig\x12@\n" +
-	"\x11search_index_info\x18\r \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xe0\x01\n" +
-	"\tWorldData\x12%\n" +
-	"\x05tiles\x18\x01 \x03(\v2\x0f.weewar.v1.TileR\x05tiles\x12%\n" +
-	"\x05units\x18\x02 \x03(\v2\x0f.weewar.v1.UnitR\x05units\x12H\n" +
+	"\x11search_index_info\x18\r \x01(\v2\x14.weewar.v1.IndexInfoR\x0fsearchIndexInfo\"\xa0\x05\n" +
+	"\tWorldData\x12)\n" +
+	"\x05tiles\x18\x01 \x03(\v2\x0f.weewar.v1.TileB\x02\x18\x01R\x05tiles\x12)\n" +
+	"\x05units\x18\x02 \x03(\v2\x0f.weewar.v1.UnitB\x02\x18\x01R\x05units\x12H\n" +
 	"\x15screenshot_index_info\x18\x03 \x01(\v2\x14.weewar.v1.IndexInfoR\x13screenshotIndexInfo\x12!\n" +
 	"\fcontent_hash\x18\x04 \x01(\tR\vcontentHash\x12\x18\n" +
-	"\aversion\x18\x05 \x01(\x03R\aversion\"\xc9\x01\n" +
+	"\aversion\x18\x05 \x01(\x03R\aversion\x12?\n" +
+	"\ttiles_map\x18\x06 \x03(\v2\".weewar.v1.WorldData.TilesMapEntryR\btilesMap\x12?\n" +
+	"\tunits_map\x18\a \x03(\v2\".weewar.v1.WorldData.UnitsMapEntryR\bunitsMap\x12A\n" +
+	"\tcrossings\x18\b \x03(\v2#.weewar.v1.WorldData.CrossingsEntryR\tcrossings\x1aL\n" +
+	"\rTilesMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.weewar.v1.TileR\x05value:\x028\x01\x1aL\n" +
+	"\rUnitsMapEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12%\n" +
+	"\x05value\x18\x02 \x01(\v2\x0f.weewar.v1.UnitR\x05value:\x028\x01\x1aU\n" +
+	"\x0eCrossingsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\x0e2\x17.weewar.v1.CrossingTypeR\x05value:\x028\x01\"\xc9\x01\n" +
 	"\x04Tile\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
 	"\x01r\x18\x02 \x01(\x05R\x01r\x12\x1b\n" +
@@ -4200,7 +4294,11 @@ const file_weewar_v1_models_models_proto_rawDesc = "" +
 	"directions\x18\x02 \x03(\x0e2\x18.weewar.v1.PathDirectionR\n" +
 	"directions\x12\x1d\n" +
 	"\n" +
-	"total_cost\x18\x03 \x01(\x01R\ttotalCost*q\n" +
+	"total_cost\x18\x03 \x01(\x01R\ttotalCost*_\n" +
+	"\fCrossingType\x12\x1d\n" +
+	"\x19CROSSING_TYPE_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12CROSSING_TYPE_ROAD\x10\x01\x12\x18\n" +
+	"\x14CROSSING_TYPE_BRIDGE\x10\x02*q\n" +
 	"\n" +
 	"GameStatus\x12\x1b\n" +
 	"\x17GAME_STATUS_UNSPECIFIED\x10\x00\x12\x17\n" +
@@ -4230,136 +4328,146 @@ func file_weewar_v1_models_models_proto_rawDescGZIP() []byte {
 	return file_weewar_v1_models_models_proto_rawDescData
 }
 
-var file_weewar_v1_models_models_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_weewar_v1_models_models_proto_msgTypes = make([]protoimpl.MessageInfo, 50)
+var file_weewar_v1_models_models_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_weewar_v1_models_models_proto_msgTypes = make([]protoimpl.MessageInfo, 53)
 var file_weewar_v1_models_models_proto_goTypes = []any{
-	(GameStatus)(0),               // 0: weewar.v1.GameStatus
-	(PathDirection)(0),            // 1: weewar.v1.PathDirection
-	(*IndexInfo)(nil),             // 2: weewar.v1.IndexInfo
-	(*User)(nil),                  // 3: weewar.v1.User
-	(*Pagination)(nil),            // 4: weewar.v1.Pagination
-	(*PaginationResponse)(nil),    // 5: weewar.v1.PaginationResponse
-	(*World)(nil),                 // 6: weewar.v1.World
-	(*WorldData)(nil),             // 7: weewar.v1.WorldData
-	(*Tile)(nil),                  // 8: weewar.v1.Tile
-	(*Unit)(nil),                  // 9: weewar.v1.Unit
-	(*AttackRecord)(nil),          // 10: weewar.v1.AttackRecord
-	(*TerrainDefinition)(nil),     // 11: weewar.v1.TerrainDefinition
-	(*UnitDefinition)(nil),        // 12: weewar.v1.UnitDefinition
-	(*TerrainUnitProperties)(nil), // 13: weewar.v1.TerrainUnitProperties
-	(*UnitUnitProperties)(nil),    // 14: weewar.v1.UnitUnitProperties
-	(*DamageDistribution)(nil),    // 15: weewar.v1.DamageDistribution
-	(*DamageRange)(nil),           // 16: weewar.v1.DamageRange
-	(*RulesEngine)(nil),           // 17: weewar.v1.RulesEngine
-	(*Game)(nil),                  // 18: weewar.v1.Game
-	(*GameConfiguration)(nil),     // 19: weewar.v1.GameConfiguration
-	(*IncomeConfig)(nil),          // 20: weewar.v1.IncomeConfig
-	(*GamePlayer)(nil),            // 21: weewar.v1.GamePlayer
-	(*GameTeam)(nil),              // 22: weewar.v1.GameTeam
-	(*GameSettings)(nil),          // 23: weewar.v1.GameSettings
-	(*GameState)(nil),             // 24: weewar.v1.GameState
-	(*GameMoveHistory)(nil),       // 25: weewar.v1.GameMoveHistory
-	(*GameMoveGroup)(nil),         // 26: weewar.v1.GameMoveGroup
-	(*GameMove)(nil),              // 27: weewar.v1.GameMove
-	(*MoveUnitAction)(nil),        // 28: weewar.v1.MoveUnitAction
-	(*AttackUnitAction)(nil),      // 29: weewar.v1.AttackUnitAction
-	(*BuildUnitAction)(nil),       // 30: weewar.v1.BuildUnitAction
-	(*CaptureBuildingAction)(nil), // 31: weewar.v1.CaptureBuildingAction
-	(*EndTurnAction)(nil),         // 32: weewar.v1.EndTurnAction
-	(*WorldChange)(nil),           // 33: weewar.v1.WorldChange
-	(*UnitMovedChange)(nil),       // 34: weewar.v1.UnitMovedChange
-	(*UnitDamagedChange)(nil),     // 35: weewar.v1.UnitDamagedChange
-	(*UnitKilledChange)(nil),      // 36: weewar.v1.UnitKilledChange
-	(*PlayerChangedChange)(nil),   // 37: weewar.v1.PlayerChangedChange
-	(*UnitBuiltChange)(nil),       // 38: weewar.v1.UnitBuiltChange
-	(*CoinsChangedChange)(nil),    // 39: weewar.v1.CoinsChangedChange
-	(*AllPaths)(nil),              // 40: weewar.v1.AllPaths
-	(*PathEdge)(nil),              // 41: weewar.v1.PathEdge
-	(*Path)(nil),                  // 42: weewar.v1.Path
-	nil,                           // 43: weewar.v1.TerrainDefinition.UnitPropertiesEntry
-	nil,                           // 44: weewar.v1.UnitDefinition.TerrainPropertiesEntry
-	nil,                           // 45: weewar.v1.UnitDefinition.AttackVsClassEntry
-	nil,                           // 46: weewar.v1.UnitDefinition.ActionLimitsEntry
-	nil,                           // 47: weewar.v1.RulesEngine.UnitsEntry
-	nil,                           // 48: weewar.v1.RulesEngine.TerrainsEntry
-	nil,                           // 49: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry
-	nil,                           // 50: weewar.v1.RulesEngine.UnitUnitPropertiesEntry
-	nil,                           // 51: weewar.v1.AllPaths.EdgesEntry
-	(*timestamppb.Timestamp)(nil), // 52: google.protobuf.Timestamp
+	(CrossingType)(0),             // 0: weewar.v1.CrossingType
+	(GameStatus)(0),               // 1: weewar.v1.GameStatus
+	(PathDirection)(0),            // 2: weewar.v1.PathDirection
+	(*IndexInfo)(nil),             // 3: weewar.v1.IndexInfo
+	(*User)(nil),                  // 4: weewar.v1.User
+	(*Pagination)(nil),            // 5: weewar.v1.Pagination
+	(*PaginationResponse)(nil),    // 6: weewar.v1.PaginationResponse
+	(*World)(nil),                 // 7: weewar.v1.World
+	(*WorldData)(nil),             // 8: weewar.v1.WorldData
+	(*Tile)(nil),                  // 9: weewar.v1.Tile
+	(*Unit)(nil),                  // 10: weewar.v1.Unit
+	(*AttackRecord)(nil),          // 11: weewar.v1.AttackRecord
+	(*TerrainDefinition)(nil),     // 12: weewar.v1.TerrainDefinition
+	(*UnitDefinition)(nil),        // 13: weewar.v1.UnitDefinition
+	(*TerrainUnitProperties)(nil), // 14: weewar.v1.TerrainUnitProperties
+	(*UnitUnitProperties)(nil),    // 15: weewar.v1.UnitUnitProperties
+	(*DamageDistribution)(nil),    // 16: weewar.v1.DamageDistribution
+	(*DamageRange)(nil),           // 17: weewar.v1.DamageRange
+	(*RulesEngine)(nil),           // 18: weewar.v1.RulesEngine
+	(*Game)(nil),                  // 19: weewar.v1.Game
+	(*GameConfiguration)(nil),     // 20: weewar.v1.GameConfiguration
+	(*IncomeConfig)(nil),          // 21: weewar.v1.IncomeConfig
+	(*GamePlayer)(nil),            // 22: weewar.v1.GamePlayer
+	(*GameTeam)(nil),              // 23: weewar.v1.GameTeam
+	(*GameSettings)(nil),          // 24: weewar.v1.GameSettings
+	(*GameState)(nil),             // 25: weewar.v1.GameState
+	(*GameMoveHistory)(nil),       // 26: weewar.v1.GameMoveHistory
+	(*GameMoveGroup)(nil),         // 27: weewar.v1.GameMoveGroup
+	(*GameMove)(nil),              // 28: weewar.v1.GameMove
+	(*MoveUnitAction)(nil),        // 29: weewar.v1.MoveUnitAction
+	(*AttackUnitAction)(nil),      // 30: weewar.v1.AttackUnitAction
+	(*BuildUnitAction)(nil),       // 31: weewar.v1.BuildUnitAction
+	(*CaptureBuildingAction)(nil), // 32: weewar.v1.CaptureBuildingAction
+	(*EndTurnAction)(nil),         // 33: weewar.v1.EndTurnAction
+	(*WorldChange)(nil),           // 34: weewar.v1.WorldChange
+	(*UnitMovedChange)(nil),       // 35: weewar.v1.UnitMovedChange
+	(*UnitDamagedChange)(nil),     // 36: weewar.v1.UnitDamagedChange
+	(*UnitKilledChange)(nil),      // 37: weewar.v1.UnitKilledChange
+	(*PlayerChangedChange)(nil),   // 38: weewar.v1.PlayerChangedChange
+	(*UnitBuiltChange)(nil),       // 39: weewar.v1.UnitBuiltChange
+	(*CoinsChangedChange)(nil),    // 40: weewar.v1.CoinsChangedChange
+	(*AllPaths)(nil),              // 41: weewar.v1.AllPaths
+	(*PathEdge)(nil),              // 42: weewar.v1.PathEdge
+	(*Path)(nil),                  // 43: weewar.v1.Path
+	nil,                           // 44: weewar.v1.WorldData.TilesMapEntry
+	nil,                           // 45: weewar.v1.WorldData.UnitsMapEntry
+	nil,                           // 46: weewar.v1.WorldData.CrossingsEntry
+	nil,                           // 47: weewar.v1.TerrainDefinition.UnitPropertiesEntry
+	nil,                           // 48: weewar.v1.UnitDefinition.TerrainPropertiesEntry
+	nil,                           // 49: weewar.v1.UnitDefinition.AttackVsClassEntry
+	nil,                           // 50: weewar.v1.UnitDefinition.ActionLimitsEntry
+	nil,                           // 51: weewar.v1.RulesEngine.UnitsEntry
+	nil,                           // 52: weewar.v1.RulesEngine.TerrainsEntry
+	nil,                           // 53: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry
+	nil,                           // 54: weewar.v1.RulesEngine.UnitUnitPropertiesEntry
+	nil,                           // 55: weewar.v1.AllPaths.EdgesEntry
+	(*timestamppb.Timestamp)(nil), // 56: google.protobuf.Timestamp
 }
 var file_weewar_v1_models_models_proto_depIdxs = []int32{
-	52, // 0: weewar.v1.IndexInfo.last_updated_at:type_name -> google.protobuf.Timestamp
-	52, // 1: weewar.v1.IndexInfo.last_indexed_at:type_name -> google.protobuf.Timestamp
-	52, // 2: weewar.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	52, // 3: weewar.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	52, // 4: weewar.v1.World.created_at:type_name -> google.protobuf.Timestamp
-	52, // 5: weewar.v1.World.updated_at:type_name -> google.protobuf.Timestamp
-	19, // 6: weewar.v1.World.default_game_config:type_name -> weewar.v1.GameConfiguration
-	2,  // 7: weewar.v1.World.search_index_info:type_name -> weewar.v1.IndexInfo
-	8,  // 8: weewar.v1.WorldData.tiles:type_name -> weewar.v1.Tile
-	9,  // 9: weewar.v1.WorldData.units:type_name -> weewar.v1.Unit
-	2,  // 10: weewar.v1.WorldData.screenshot_index_info:type_name -> weewar.v1.IndexInfo
-	10, // 11: weewar.v1.Unit.attack_history:type_name -> weewar.v1.AttackRecord
-	43, // 12: weewar.v1.TerrainDefinition.unit_properties:type_name -> weewar.v1.TerrainDefinition.UnitPropertiesEntry
-	44, // 13: weewar.v1.UnitDefinition.terrain_properties:type_name -> weewar.v1.UnitDefinition.TerrainPropertiesEntry
-	45, // 14: weewar.v1.UnitDefinition.attack_vs_class:type_name -> weewar.v1.UnitDefinition.AttackVsClassEntry
-	46, // 15: weewar.v1.UnitDefinition.action_limits:type_name -> weewar.v1.UnitDefinition.ActionLimitsEntry
-	15, // 16: weewar.v1.UnitUnitProperties.damage:type_name -> weewar.v1.DamageDistribution
-	16, // 17: weewar.v1.DamageDistribution.ranges:type_name -> weewar.v1.DamageRange
-	47, // 18: weewar.v1.RulesEngine.units:type_name -> weewar.v1.RulesEngine.UnitsEntry
-	48, // 19: weewar.v1.RulesEngine.terrains:type_name -> weewar.v1.RulesEngine.TerrainsEntry
-	49, // 20: weewar.v1.RulesEngine.terrain_unit_properties:type_name -> weewar.v1.RulesEngine.TerrainUnitPropertiesEntry
-	50, // 21: weewar.v1.RulesEngine.unit_unit_properties:type_name -> weewar.v1.RulesEngine.UnitUnitPropertiesEntry
-	52, // 22: weewar.v1.Game.created_at:type_name -> google.protobuf.Timestamp
-	52, // 23: weewar.v1.Game.updated_at:type_name -> google.protobuf.Timestamp
-	19, // 24: weewar.v1.Game.config:type_name -> weewar.v1.GameConfiguration
-	2,  // 25: weewar.v1.Game.search_index_info:type_name -> weewar.v1.IndexInfo
-	21, // 26: weewar.v1.GameConfiguration.players:type_name -> weewar.v1.GamePlayer
-	22, // 27: weewar.v1.GameConfiguration.teams:type_name -> weewar.v1.GameTeam
-	20, // 28: weewar.v1.GameConfiguration.income_configs:type_name -> weewar.v1.IncomeConfig
-	23, // 29: weewar.v1.GameConfiguration.settings:type_name -> weewar.v1.GameSettings
-	52, // 30: weewar.v1.GameState.updated_at:type_name -> google.protobuf.Timestamp
-	7,  // 31: weewar.v1.GameState.world_data:type_name -> weewar.v1.WorldData
-	0,  // 32: weewar.v1.GameState.status:type_name -> weewar.v1.GameStatus
-	26, // 33: weewar.v1.GameMoveHistory.groups:type_name -> weewar.v1.GameMoveGroup
-	52, // 34: weewar.v1.GameMoveGroup.started_at:type_name -> google.protobuf.Timestamp
-	52, // 35: weewar.v1.GameMoveGroup.ended_at:type_name -> google.protobuf.Timestamp
-	27, // 36: weewar.v1.GameMoveGroup.moves:type_name -> weewar.v1.GameMove
-	52, // 37: weewar.v1.GameMove.timestamp:type_name -> google.protobuf.Timestamp
-	28, // 38: weewar.v1.GameMove.move_unit:type_name -> weewar.v1.MoveUnitAction
-	29, // 39: weewar.v1.GameMove.attack_unit:type_name -> weewar.v1.AttackUnitAction
-	32, // 40: weewar.v1.GameMove.end_turn:type_name -> weewar.v1.EndTurnAction
-	30, // 41: weewar.v1.GameMove.build_unit:type_name -> weewar.v1.BuildUnitAction
-	33, // 42: weewar.v1.GameMove.changes:type_name -> weewar.v1.WorldChange
-	42, // 43: weewar.v1.MoveUnitAction.reconstructed_path:type_name -> weewar.v1.Path
-	34, // 44: weewar.v1.WorldChange.unit_moved:type_name -> weewar.v1.UnitMovedChange
-	35, // 45: weewar.v1.WorldChange.unit_damaged:type_name -> weewar.v1.UnitDamagedChange
-	36, // 46: weewar.v1.WorldChange.unit_killed:type_name -> weewar.v1.UnitKilledChange
-	37, // 47: weewar.v1.WorldChange.player_changed:type_name -> weewar.v1.PlayerChangedChange
-	38, // 48: weewar.v1.WorldChange.unit_built:type_name -> weewar.v1.UnitBuiltChange
-	39, // 49: weewar.v1.WorldChange.coins_changed:type_name -> weewar.v1.CoinsChangedChange
-	9,  // 50: weewar.v1.UnitMovedChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 51: weewar.v1.UnitMovedChange.updated_unit:type_name -> weewar.v1.Unit
-	9,  // 52: weewar.v1.UnitDamagedChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 53: weewar.v1.UnitDamagedChange.updated_unit:type_name -> weewar.v1.Unit
-	9,  // 54: weewar.v1.UnitKilledChange.previous_unit:type_name -> weewar.v1.Unit
-	9,  // 55: weewar.v1.PlayerChangedChange.reset_units:type_name -> weewar.v1.Unit
-	9,  // 56: weewar.v1.UnitBuiltChange.unit:type_name -> weewar.v1.Unit
-	51, // 57: weewar.v1.AllPaths.edges:type_name -> weewar.v1.AllPaths.EdgesEntry
-	41, // 58: weewar.v1.Path.edges:type_name -> weewar.v1.PathEdge
-	1,  // 59: weewar.v1.Path.directions:type_name -> weewar.v1.PathDirection
-	13, // 60: weewar.v1.TerrainDefinition.UnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	13, // 61: weewar.v1.UnitDefinition.TerrainPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	12, // 62: weewar.v1.RulesEngine.UnitsEntry.value:type_name -> weewar.v1.UnitDefinition
-	11, // 63: weewar.v1.RulesEngine.TerrainsEntry.value:type_name -> weewar.v1.TerrainDefinition
-	13, // 64: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
-	14, // 65: weewar.v1.RulesEngine.UnitUnitPropertiesEntry.value:type_name -> weewar.v1.UnitUnitProperties
-	41, // 66: weewar.v1.AllPaths.EdgesEntry.value:type_name -> weewar.v1.PathEdge
-	67, // [67:67] is the sub-list for method output_type
-	67, // [67:67] is the sub-list for method input_type
-	67, // [67:67] is the sub-list for extension type_name
-	67, // [67:67] is the sub-list for extension extendee
-	0,  // [0:67] is the sub-list for field type_name
+	56, // 0: weewar.v1.IndexInfo.last_updated_at:type_name -> google.protobuf.Timestamp
+	56, // 1: weewar.v1.IndexInfo.last_indexed_at:type_name -> google.protobuf.Timestamp
+	56, // 2: weewar.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	56, // 3: weewar.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	56, // 4: weewar.v1.World.created_at:type_name -> google.protobuf.Timestamp
+	56, // 5: weewar.v1.World.updated_at:type_name -> google.protobuf.Timestamp
+	20, // 6: weewar.v1.World.default_game_config:type_name -> weewar.v1.GameConfiguration
+	3,  // 7: weewar.v1.World.search_index_info:type_name -> weewar.v1.IndexInfo
+	9,  // 8: weewar.v1.WorldData.tiles:type_name -> weewar.v1.Tile
+	10, // 9: weewar.v1.WorldData.units:type_name -> weewar.v1.Unit
+	3,  // 10: weewar.v1.WorldData.screenshot_index_info:type_name -> weewar.v1.IndexInfo
+	44, // 11: weewar.v1.WorldData.tiles_map:type_name -> weewar.v1.WorldData.TilesMapEntry
+	45, // 12: weewar.v1.WorldData.units_map:type_name -> weewar.v1.WorldData.UnitsMapEntry
+	46, // 13: weewar.v1.WorldData.crossings:type_name -> weewar.v1.WorldData.CrossingsEntry
+	11, // 14: weewar.v1.Unit.attack_history:type_name -> weewar.v1.AttackRecord
+	47, // 15: weewar.v1.TerrainDefinition.unit_properties:type_name -> weewar.v1.TerrainDefinition.UnitPropertiesEntry
+	48, // 16: weewar.v1.UnitDefinition.terrain_properties:type_name -> weewar.v1.UnitDefinition.TerrainPropertiesEntry
+	49, // 17: weewar.v1.UnitDefinition.attack_vs_class:type_name -> weewar.v1.UnitDefinition.AttackVsClassEntry
+	50, // 18: weewar.v1.UnitDefinition.action_limits:type_name -> weewar.v1.UnitDefinition.ActionLimitsEntry
+	16, // 19: weewar.v1.UnitUnitProperties.damage:type_name -> weewar.v1.DamageDistribution
+	17, // 20: weewar.v1.DamageDistribution.ranges:type_name -> weewar.v1.DamageRange
+	51, // 21: weewar.v1.RulesEngine.units:type_name -> weewar.v1.RulesEngine.UnitsEntry
+	52, // 22: weewar.v1.RulesEngine.terrains:type_name -> weewar.v1.RulesEngine.TerrainsEntry
+	53, // 23: weewar.v1.RulesEngine.terrain_unit_properties:type_name -> weewar.v1.RulesEngine.TerrainUnitPropertiesEntry
+	54, // 24: weewar.v1.RulesEngine.unit_unit_properties:type_name -> weewar.v1.RulesEngine.UnitUnitPropertiesEntry
+	56, // 25: weewar.v1.Game.created_at:type_name -> google.protobuf.Timestamp
+	56, // 26: weewar.v1.Game.updated_at:type_name -> google.protobuf.Timestamp
+	20, // 27: weewar.v1.Game.config:type_name -> weewar.v1.GameConfiguration
+	3,  // 28: weewar.v1.Game.search_index_info:type_name -> weewar.v1.IndexInfo
+	22, // 29: weewar.v1.GameConfiguration.players:type_name -> weewar.v1.GamePlayer
+	23, // 30: weewar.v1.GameConfiguration.teams:type_name -> weewar.v1.GameTeam
+	21, // 31: weewar.v1.GameConfiguration.income_configs:type_name -> weewar.v1.IncomeConfig
+	24, // 32: weewar.v1.GameConfiguration.settings:type_name -> weewar.v1.GameSettings
+	56, // 33: weewar.v1.GameState.updated_at:type_name -> google.protobuf.Timestamp
+	8,  // 34: weewar.v1.GameState.world_data:type_name -> weewar.v1.WorldData
+	1,  // 35: weewar.v1.GameState.status:type_name -> weewar.v1.GameStatus
+	27, // 36: weewar.v1.GameMoveHistory.groups:type_name -> weewar.v1.GameMoveGroup
+	56, // 37: weewar.v1.GameMoveGroup.started_at:type_name -> google.protobuf.Timestamp
+	56, // 38: weewar.v1.GameMoveGroup.ended_at:type_name -> google.protobuf.Timestamp
+	28, // 39: weewar.v1.GameMoveGroup.moves:type_name -> weewar.v1.GameMove
+	56, // 40: weewar.v1.GameMove.timestamp:type_name -> google.protobuf.Timestamp
+	29, // 41: weewar.v1.GameMove.move_unit:type_name -> weewar.v1.MoveUnitAction
+	30, // 42: weewar.v1.GameMove.attack_unit:type_name -> weewar.v1.AttackUnitAction
+	33, // 43: weewar.v1.GameMove.end_turn:type_name -> weewar.v1.EndTurnAction
+	31, // 44: weewar.v1.GameMove.build_unit:type_name -> weewar.v1.BuildUnitAction
+	34, // 45: weewar.v1.GameMove.changes:type_name -> weewar.v1.WorldChange
+	43, // 46: weewar.v1.MoveUnitAction.reconstructed_path:type_name -> weewar.v1.Path
+	35, // 47: weewar.v1.WorldChange.unit_moved:type_name -> weewar.v1.UnitMovedChange
+	36, // 48: weewar.v1.WorldChange.unit_damaged:type_name -> weewar.v1.UnitDamagedChange
+	37, // 49: weewar.v1.WorldChange.unit_killed:type_name -> weewar.v1.UnitKilledChange
+	38, // 50: weewar.v1.WorldChange.player_changed:type_name -> weewar.v1.PlayerChangedChange
+	39, // 51: weewar.v1.WorldChange.unit_built:type_name -> weewar.v1.UnitBuiltChange
+	40, // 52: weewar.v1.WorldChange.coins_changed:type_name -> weewar.v1.CoinsChangedChange
+	10, // 53: weewar.v1.UnitMovedChange.previous_unit:type_name -> weewar.v1.Unit
+	10, // 54: weewar.v1.UnitMovedChange.updated_unit:type_name -> weewar.v1.Unit
+	10, // 55: weewar.v1.UnitDamagedChange.previous_unit:type_name -> weewar.v1.Unit
+	10, // 56: weewar.v1.UnitDamagedChange.updated_unit:type_name -> weewar.v1.Unit
+	10, // 57: weewar.v1.UnitKilledChange.previous_unit:type_name -> weewar.v1.Unit
+	10, // 58: weewar.v1.PlayerChangedChange.reset_units:type_name -> weewar.v1.Unit
+	10, // 59: weewar.v1.UnitBuiltChange.unit:type_name -> weewar.v1.Unit
+	55, // 60: weewar.v1.AllPaths.edges:type_name -> weewar.v1.AllPaths.EdgesEntry
+	42, // 61: weewar.v1.Path.edges:type_name -> weewar.v1.PathEdge
+	2,  // 62: weewar.v1.Path.directions:type_name -> weewar.v1.PathDirection
+	9,  // 63: weewar.v1.WorldData.TilesMapEntry.value:type_name -> weewar.v1.Tile
+	10, // 64: weewar.v1.WorldData.UnitsMapEntry.value:type_name -> weewar.v1.Unit
+	0,  // 65: weewar.v1.WorldData.CrossingsEntry.value:type_name -> weewar.v1.CrossingType
+	14, // 66: weewar.v1.TerrainDefinition.UnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	14, // 67: weewar.v1.UnitDefinition.TerrainPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	13, // 68: weewar.v1.RulesEngine.UnitsEntry.value:type_name -> weewar.v1.UnitDefinition
+	12, // 69: weewar.v1.RulesEngine.TerrainsEntry.value:type_name -> weewar.v1.TerrainDefinition
+	14, // 70: weewar.v1.RulesEngine.TerrainUnitPropertiesEntry.value:type_name -> weewar.v1.TerrainUnitProperties
+	15, // 71: weewar.v1.RulesEngine.UnitUnitPropertiesEntry.value:type_name -> weewar.v1.UnitUnitProperties
+	42, // 72: weewar.v1.AllPaths.EdgesEntry.value:type_name -> weewar.v1.PathEdge
+	73, // [73:73] is the sub-list for method output_type
+	73, // [73:73] is the sub-list for method input_type
+	73, // [73:73] is the sub-list for extension type_name
+	73, // [73:73] is the sub-list for extension extendee
+	0,  // [0:73] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_models_proto_init() }
@@ -4387,8 +4495,8 @@ func file_weewar_v1_models_models_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_models_models_proto_rawDesc), len(file_weewar_v1_models_models_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   50,
+			NumEnums:      3,
+			NumMessages:   53,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

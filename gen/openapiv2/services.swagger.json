@@ -2052,6 +2052,17 @@
       },
       "description": "*\nResponse of an world creation."
     },
+    "v1CrossingType": {
+      "type": "string",
+      "enum": [
+        "CROSSING_TYPE_UNSPECIFIED",
+        "CROSSING_TYPE_ROAD",
+        "CROSSING_TYPE_BRIDGE"
+      ],
+      "default": "CROSSING_TYPE_UNSPECIFIED",
+      "description": "- CROSSING_TYPE_ROAD: Road on land terrain\n - CROSSING_TYPE_BRIDGE: Bridge over water terrain",
+      "title": "Crossing types for terrain improvements (roads on land, bridges on water)"
+    },
     "v1DeleteFileResponse": {
       "type": "object",
       "properties": {
@@ -3626,7 +3637,7 @@
             "type": "object",
             "$ref": "#/definitions/v1Tile"
           },
-          "title": "JSON-fied tile data about what units and terrains are at each location"
+          "title": "DEPRECATED: Use tiles_map instead - kept for backward compatibility during migration"
         },
         "units": {
           "type": "array",
@@ -3634,7 +3645,7 @@
             "type": "object",
             "$ref": "#/definitions/v1Unit"
           },
-          "title": "All units on the world and who they belong to"
+          "title": "DEPRECATED: Use units_map instead - kept for backward compatibility during migration"
         },
         "screenshotIndexInfo": {
           "$ref": "#/definitions/v1IndexInfo",
@@ -3648,6 +3659,27 @@
           "type": "string",
           "format": "int64",
           "title": "Version for Optimistic concurrent locking"
+        },
+        "tilesMap": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1Tile"
+          },
+          "title": "New map-based storage (key = \"q,r\" coordinate string)"
+        },
+        "unitsMap": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1Unit"
+          }
+        },
+        "crossings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1CrossingType"
+          },
+          "description": "key = \"q,r\", value = crossing type",
+          "title": "Improvement layer - crossings (roads on land, bridges on water)"
         }
       }
     }
