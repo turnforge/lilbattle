@@ -105,6 +105,66 @@
             </button>
             {{ end }}
           </div>
+
+          <!-- Crossing Direction Preset Selector -->
+          <div class="mt-3">
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Direction Preset:</label>
+            <div id="crossing-direction-preset" class="flex flex-col gap-2">
+              <!-- Interactive Hex with clickable directions -->
+              <div class="relative w-32 h-32 flex-shrink-0 mx-auto">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  <!-- Center hex (visual reference) -->
+                  <polygon points="50,15 85,32.5 85,67.5 50,85 15,67.5 15,32.5"
+                           fill="none" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+
+                  <!-- Direction indicators (clickable) -->
+                  <!-- 0: LEFT (-1,0) - default active for horizontal preset -->
+                  <line id="crossing-dir-0" x1="50" y1="50" x2="15" y2="50"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d97706"/>
+
+                  <!-- 1: TOP_LEFT (0,-1) -->
+                  <line id="crossing-dir-1" x1="50" y1="50" x2="32.5" y2="23.75"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d1d5db"/>
+
+                  <!-- 2: TOP_RIGHT (1,-1) -->
+                  <line id="crossing-dir-2" x1="50" y1="50" x2="67.5" y2="23.75"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d1d5db"/>
+
+                  <!-- 3: RIGHT (1,0) - default active for horizontal preset -->
+                  <line id="crossing-dir-3" x1="50" y1="50" x2="85" y2="50"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d97706"/>
+
+                  <!-- 4: BOTTOM_RIGHT (0,1) -->
+                  <line id="crossing-dir-4" x1="50" y1="50" x2="67.5" y2="76.25"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d1d5db"/>
+
+                  <!-- 5: BOTTOM_LEFT (-1,1) -->
+                  <line id="crossing-dir-5" x1="50" y1="50" x2="32.5" y2="76.25"
+                        stroke-width="8" stroke-linecap="round" class="cursor-pointer"
+                        stroke="#d1d5db"/>
+
+                  <!-- Center dot -->
+                  <circle cx="50" cy="50" r="4" fill="currentColor" class="text-gray-500"/>
+                </svg>
+              </div>
+
+              <!-- Quick presets dropdown -->
+              <select id="crossing-preset-select" class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <option value="horizontal">Horizontal (L-R)</option>
+                <option value="diagonal-tlbr">Diagonal (TL-BR)</option>
+                <option value="diagonal-trbl">Diagonal (TR-BL)</option>
+                <option value="t-left">T-Junction Left</option>
+                <option value="t-right">T-Junction Right</option>
+                <option value="cross">Crossroad (4-way)</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- Divider -->
