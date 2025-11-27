@@ -553,11 +553,11 @@ func (re *RulesEngine) GetEffectiveTileType(world *World, coord AxialCoord) int3
 	}
 
 	// Check for crossing - crossings override terrain for movement
-	crossing := world.CrossingAt(coord)
-	if crossing == v1.CrossingType_CROSSING_TYPE_ROAD {
+	crossingType := world.CrossingTypeAt(coord)
+	if crossingType == v1.CrossingType_CROSSING_TYPE_ROAD {
 		return TileTypeRoad // Road tile type ID (22)
 	}
-	if crossing == v1.CrossingType_CROSSING_TYPE_BRIDGE {
+	if crossingType == v1.CrossingType_CROSSING_TYPE_BRIDGE {
 		// Bridge type depends on underlying water terrain
 		switch tile.TileType {
 		case TileTypeWaterShallow:

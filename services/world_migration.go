@@ -33,7 +33,7 @@ func MigrateWorldData(wd *v1.WorldData) {
 		wd.UnitsMap = make(map[string]*v1.Unit)
 	}
 	if wd.Crossings == nil {
-		wd.Crossings = make(map[string]v1.CrossingType)
+		wd.Crossings = make(map[string]*v1.Crossing)
 	}
 
 	// Migrate tiles from deprecated list to map (if not already done)
@@ -69,22 +69,22 @@ func extractCrossings(wd *v1.WorldData) {
 		switch tile.TileType {
 		case TileTypeRoad:
 			// Road -> Plains with road crossing
-			wd.Crossings[key] = v1.CrossingType_CROSSING_TYPE_ROAD
+			wd.Crossings[key] = &v1.Crossing{Type: v1.CrossingType_CROSSING_TYPE_ROAD, ConnectsTo: make([]bool, 6)}
 			tile.TileType = TileTypePlains
 
 		case TileTypeBridgeShallow:
 			// Bridge over shallow water
-			wd.Crossings[key] = v1.CrossingType_CROSSING_TYPE_BRIDGE
+			wd.Crossings[key] = &v1.Crossing{Type: v1.CrossingType_CROSSING_TYPE_BRIDGE, ConnectsTo: make([]bool, 6)}
 			tile.TileType = TileTypeWaterShallow
 
 		case TileTypeBridgeRegular:
 			// Bridge over regular water
-			wd.Crossings[key] = v1.CrossingType_CROSSING_TYPE_BRIDGE
+			wd.Crossings[key] = &v1.Crossing{Type: v1.CrossingType_CROSSING_TYPE_BRIDGE, ConnectsTo: make([]bool, 6)}
 			tile.TileType = TileTypeWaterRegular
 
 		case TileTypeBridgeDeep:
 			// Bridge over deep water
-			wd.Crossings[key] = v1.CrossingType_CROSSING_TYPE_BRIDGE
+			wd.Crossings[key] = &v1.Crossing{Type: v1.CrossingType_CROSSING_TYPE_BRIDGE, ConnectsTo: make([]bool, 6)}
 			tile.TileType = TileTypeWaterDeep
 		}
 	}
@@ -96,7 +96,10 @@ func GetCrossingType(wd *v1.WorldData, q, r int32) v1.CrossingType {
 		return v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
 	}
 	key := lib.CoordKey(q, r)
-	return wd.Crossings[key]
+	if crossing := wd.Crossings[key]; crossing != nil {
+		return crossing.Type
+	}
+	return v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
 }
 
 // HasCrossing checks if there's any crossing at the given coordinates
@@ -180,17 +183,26 @@ func MoveUnitInMap(wd *v1.WorldData, unit *v1.Unit, toQ, toR int32) {
 }
 
 // SetCrossing sets or removes a crossing at the given coordinates
-func SetCrossing(wd *v1.WorldData, q, r int32, crossingType v1.CrossingType) {
+func SetCrossing(wd *v1.WorldData, q, r int32, crossing *v1.Crossing) {
 	if wd == nil {
 		return
 	}
 	if wd.Crossings == nil {
-		wd.Crossings = make(map[string]v1.CrossingType)
+		wd.Crossings = make(map[string]*v1.Crossing)
 	}
 	key := lib.CoordKey(q, r)
-	if crossingType == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
+	if crossing == nil || crossing.Type == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
 		delete(wd.Crossings, key)
 	} else {
-		wd.Crossings[key] = crossingType
+		wd.Crossings[key] = crossing
+	}
+}
+
+// SetCrossingType sets or removes a crossing with just the type (no connectivity info)
+func SetCrossingType(wd *v1.WorldData, q, r int32, crossingType v1.CrossingType) {
+	if crossingType == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
+		SetCrossing(wd, q, r, nil)
+	} else {
+		SetCrossing(wd, q, r, &v1.Crossing{Type: crossingType, ConnectsTo: make([]bool, 6)})
 	}
 }

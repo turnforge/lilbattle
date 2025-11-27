@@ -100,7 +100,7 @@ func NewWorld(name string, protoWorld *v1.WorldData) *World {
 		w.data = &v1.WorldData{
 			TilesMap:  make(map[string]*v1.Tile),
 			UnitsMap:  make(map[string]*v1.Unit),
-			Crossings: make(map[string]v1.CrossingType),
+			Crossings: make(map[string]*v1.Crossing),
 		}
 	}
 
@@ -168,7 +168,7 @@ func (w *World) Push() *World {
 	childData := &v1.WorldData{
 		TilesMap:  make(map[string]*v1.Tile),
 		UnitsMap:  make(map[string]*v1.Unit),
-		Crossings: make(map[string]v1.CrossingType),
+		Crossings: make(map[string]*v1.Crossing),
 	}
 
 	out := &World{
@@ -398,8 +398,8 @@ func (w *World) GetPlayerUnits(playerID int) []*v1.Unit {
 // Crossing (Road/Bridge) Access Methods
 // =============================================================================
 
-// CrossingAt returns the crossing type at the specified coordinate
-func (w *World) CrossingAt(coord AxialCoord) v1.CrossingType {
+// CrossingAt returns the crossing at the specified coordinate
+func (w *World) CrossingAt(coord AxialCoord) *v1.Crossing {
 	key := lib.CoordKeyFromAxial(coord)
 	if crossing, ok := w.data.Crossings[key]; ok {
 		return crossing
@@ -407,31 +407,49 @@ func (w *World) CrossingAt(coord AxialCoord) v1.CrossingType {
 	if w.parent != nil {
 		return w.parent.CrossingAt(coord)
 	}
+	return nil
+}
+
+// CrossingTypeAt returns the crossing type at the specified coordinate
+func (w *World) CrossingTypeAt(coord AxialCoord) v1.CrossingType {
+	crossing := w.CrossingAt(coord)
+	if crossing != nil {
+		return crossing.Type
+	}
 	return v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
 }
 
 // HasCrossing checks if there's any crossing at the given coordinate
 func (w *World) HasCrossing(coord AxialCoord) bool {
-	return w.CrossingAt(coord) != v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
+	return w.CrossingAt(coord) != nil
 }
 
 // HasRoad checks if there's a road at the given coordinate
 func (w *World) HasRoad(coord AxialCoord) bool {
-	return w.CrossingAt(coord) == v1.CrossingType_CROSSING_TYPE_ROAD
+	return w.CrossingTypeAt(coord) == v1.CrossingType_CROSSING_TYPE_ROAD
 }
 
 // HasBridge checks if there's a bridge at the given coordinate
 func (w *World) HasBridge(coord AxialCoord) bool {
-	return w.CrossingAt(coord) == v1.CrossingType_CROSSING_TYPE_BRIDGE
+	return w.CrossingTypeAt(coord) == v1.CrossingType_CROSSING_TYPE_BRIDGE
 }
 
 // SetCrossing sets or removes a crossing at the given coordinate
-func (w *World) SetCrossing(coord AxialCoord, crossingType v1.CrossingType) {
+func (w *World) SetCrossing(coord AxialCoord, crossing *v1.Crossing) {
 	key := lib.CoordKeyFromAxial(coord)
-	if crossingType == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
+	if crossing == nil || crossing.Type == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
 		delete(w.data.Crossings, key)
 	} else {
-		w.data.Crossings[key] = crossingType
+		w.data.Crossings[key] = crossing
+	}
+}
+
+// SetCrossingType sets or removes a crossing with just the type (no connectivity info)
+func (w *World) SetCrossingType(coord AxialCoord, crossingType v1.CrossingType) {
+	if crossingType == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
+		w.SetCrossing(coord, nil)
+	} else {
+		w.SetCrossing(coord, &v1.Crossing{Type: crossingType, ConnectsTo: make([]bool, 6)})
 	}
 }
 
@@ -659,7 +677,7 @@ func (w *World) Clone() *World {
 	clonedData := &v1.WorldData{
 		TilesMap:  make(map[string]*v1.Tile),
 		UnitsMap:  make(map[string]*v1.Unit),
-		Crossings: make(map[string]v1.CrossingType),
+		Crossings: make(map[string]*v1.Crossing),
 	}
 
 	// Clone tiles
@@ -690,7 +708,12 @@ func (w *World) Clone() *World {
 
 	// Clone crossings
 	for key, crossing := range w.data.Crossings {
-		clonedData.Crossings[key] = crossing
+		clonedCrossing := &v1.Crossing{
+			Type:       crossing.Type,
+			ConnectsTo: make([]bool, 6),
+		}
+		copy(clonedCrossing.ConnectsTo, crossing.ConnectsTo)
+		clonedData.Crossings[key] = clonedCrossing
 	}
 
 	return NewWorld(w.Name, clonedData)
@@ -740,7 +763,7 @@ func (w *World) UnmarshalJSON(data []byte) error {
 		w.data = &v1.WorldData{
 			TilesMap:  make(map[string]*v1.Tile),
 			UnitsMap:  make(map[string]*v1.Unit),
-			Crossings: make(map[string]v1.CrossingType),
+			Crossings: make(map[string]*v1.Crossing),
 		}
 	}
 
