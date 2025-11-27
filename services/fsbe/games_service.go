@@ -162,6 +162,12 @@ func (s *FSGamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (r
 		return nil, fmt.Errorf("game state not found: %w", err)
 	}
 
+	// Auto-migrate WorldData from old list-based format to new map-based format
+	// This does not persist the migration - subsequent writes will save the new format
+	if gameState.WorldData != nil {
+		services.MigrateWorldData(gameState.WorldData)
+	}
+
 	// Cache everything
 	s.gameCache[req.Id] = game
 	s.stateCache[req.Id] = gameState
@@ -209,6 +215,9 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 		TurnCounter:   1, // First turn starts at 1 for lazy top-up pattern
 		WorldData:     world.WorldData,
 	}
+
+	// Auto-migrate WorldData from old list-based format to new map-based format
+	services.MigrateWorldData(gs.WorldData)
 
 	// Units start with default zero values (current_turn=0, distance_left=0, available_health=0)
 	// They will be lazily topped-up when accessed if unit.current_turn < game.turn_counter
@@ -276,6 +285,11 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 		gameState, err := storage.LoadFSArtifact[*v1.GameState](s.storage, req.GameId, "state")
 		if err != nil {
 			return nil, fmt.Errorf("failed to load game state: %w", err)
+		}
+
+		// Auto-migrate WorldData from old list-based format to new map-based format
+		if req.NewState.WorldData != nil {
+			services.MigrateWorldData(req.NewState.WorldData)
 		}
 
 		// Make sure to topup units

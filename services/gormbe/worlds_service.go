@@ -108,6 +108,9 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	}
 	resp.World, err = v1gorm.WorldFromWorldGORM(nil, worldGorm, nil)
 
+	// Auto-migrate from old list-based format to new map-based format before saving
+	services.MigrateWorldData(req.WorldData)
+
 	// see if we have world data too
 	worldDataGorm, err := v1gorm.WorldDataToWorldDataGORM(req.WorldData, nil, nil)
 	if err != nil {
@@ -197,6 +200,11 @@ func (s *WorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest) (
 	if err != nil {
 		return
 	}
+
+	// Auto-migrate from old list-based format to new map-based format
+	// This does not persist the migration - subsequent writes will save the new format
+	services.MigrateWorldData(resp.WorldData)
+
 	return
 }
 
@@ -241,11 +249,17 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		worldData.Version = oldVersion
 		worldDataSaved = true
 	} else if req.WorldData != nil {
+		// Auto-migrate incoming request data from old list-based format
+		services.MigrateWorldData(req.WorldData)
+
 		worldDataSaved = true
 		protoWorldData, err := v1gorm.WorldDataFromWorldDataGORM(nil, worldData, nil)
 		if err != nil {
 			return resp, err
 		}
+
+		// Also migrate existing data for proper comparison
+		services.MigrateWorldData(protoWorldData)
 
 		// Optimistic lock: verify client version matches server version
 		clientVersion := req.WorldData.Version

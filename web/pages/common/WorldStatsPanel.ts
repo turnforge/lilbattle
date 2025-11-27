@@ -2,7 +2,7 @@ import { BaseComponent } from '../../lib/Component';
 import { EventBus } from '../../lib/EventBus';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { WorldEventTypes } from './events';
-import { Unit, Tile, World } from './World';
+import { Unit, Tile, World, CrossingType } from './World';
 import { ITheme } from '../../assets/themes/BaseTheme';
 import DefaultTheme from '../../assets/themes/default';
 import ModernTheme from '../../assets/themes/modern';
@@ -194,6 +194,16 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
                     </div>
                 </div>
 
+                <!-- Crossings Section -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Crossings</h4>
+                    </div>
+                    <div id="crossings-grid" class="flex flex-wrap gap-2">
+                        <!-- Crossing stats will be populated here -->
+                    </div>
+                </div>
+
                 <!-- Player Tile Distribution -->
                 <div class="mb-4">
                     <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tiles by Player</h4>
@@ -315,9 +325,11 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
 
         const tiles = this.world.getAllTiles();
         const units = this.world.getAllUnits();
+        const crossings = this.world.getAllCrossings();
 
         this.updateTilesGrid(tiles);
         this.updateUnitsGrid(units);
+        this.updateCrossingsGrid(crossings, tiles);
 
         // Collect all unique players from both tiles and units for consistent table columns
         const allPlayers = this.collectAllPlayers(tiles, units);
@@ -485,6 +497,104 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
             if (iconContainer) {
                 // Use player 0 (neutral) for the overview
                 await this.theme.setUnitImage(unitType, 0, iconContainer as HTMLElement);
+            }
+        }
+    }
+
+    // =========================================================================
+    // Crossings Grid
+    // =========================================================================
+
+    // Tile type constants - crossings map to these for display purposes
+    private static readonly TILE_TYPE_ROAD = 22;
+    private static readonly TILE_TYPE_BRIDGE_SHALLOW = 18;
+    private static readonly TILE_TYPE_BRIDGE_REGULAR = 17;
+    private static readonly TILE_TYPE_BRIDGE_DEEP = 19;
+
+    // Underlying water tile types for determining bridge depth
+    private static readonly TILE_TYPE_WATER_SHALLOW = 14;
+    private static readonly TILE_TYPE_WATER_REGULAR = 10;
+    private static readonly TILE_TYPE_WATER_DEEP = 15;
+
+    private updateCrossingsGrid(
+        crossings: Array<{ q: number; r: number; crossingType: CrossingType }>,
+        tiles: Tile[]
+    ): void {
+        const container = this.findElement('#crossings-grid');
+        if (!container) return;
+
+        if (crossings.length === 0) {
+            container.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400 italic">No crossings</div>';
+            return;
+        }
+
+        // Build a map of tile coordinates to tile types for determining bridge depth
+        const tileTypeMap = new Map<string, number>();
+        tiles.forEach(tile => {
+            tileTypeMap.set(`${tile.q},${tile.r}`, tile.tileType);
+        });
+
+        // Count crossings by their display tile type (road=22, bridges=17/18/19)
+        const crossingCounts = new Map<number, number>();
+
+        crossings.forEach(({ q, r, crossingType }) => {
+            let displayTileType: number;
+
+            if (crossingType === CrossingType.CROSSING_TYPE_ROAD) {
+                displayTileType = WorldStatsPanel.TILE_TYPE_ROAD;
+            } else if (crossingType === CrossingType.CROSSING_TYPE_BRIDGE) {
+                // Determine bridge type based on underlying water tile
+                const tileType = tileTypeMap.get(`${q},${r}`) || WorldStatsPanel.TILE_TYPE_WATER_REGULAR;
+                switch (tileType) {
+                    case WorldStatsPanel.TILE_TYPE_WATER_SHALLOW:
+                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_SHALLOW;
+                        break;
+                    case WorldStatsPanel.TILE_TYPE_WATER_DEEP:
+                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_DEEP;
+                        break;
+                    default:
+                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_REGULAR;
+                        break;
+                }
+            } else {
+                return; // Skip unspecified crossings
+            }
+
+            crossingCounts.set(displayTileType, (crossingCounts.get(displayTileType) || 0) + 1);
+        });
+
+        // Build array with names from theme for display (sorted by name)
+        const crossingData = Array.from(crossingCounts.entries())
+            .map(([tileType, count]) => ({
+                tileType,
+                count,
+                name: this.theme.getTerrainName(tileType) || `Type ${tileType}`
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        // Generate grid items with icon from theme
+        let html = '';
+        for (const { tileType, count, name } of crossingData) {
+            html += `
+                <div class="flex items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600" title="${name}">
+                    <div class="w-6 h-6 flex-shrink-0 flex items-center justify-center" data-crossing-icon="${tileType}"></div>
+                    <span class="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">${name}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">×${count}</span>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+
+        // Load crossing icons using the theme's tile images
+        this.loadCrossingIcons(crossingData.map(d => d.tileType));
+    }
+
+    private async loadCrossingIcons(tileTypes: number[]): Promise<void> {
+        for (const tileType of tileTypes) {
+            const iconContainer = this.findElement(`[data-crossing-icon="${tileType}"]`);
+            if (iconContainer) {
+                await this.theme.setTileImage(tileType, 0, iconContainer as HTMLElement);
             }
         }
     }

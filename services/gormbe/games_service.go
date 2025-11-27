@@ -148,6 +148,12 @@ func (s *GamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (res
 	// TODO - convert move list to groups of moves and GroupMoveHistory
 	// resp.History, _ = v1gorm.GameStateFromGameStateGORM(nil, state, nil)
 
+	// Auto-migrate WorldData from old list-based format to new map-based format
+	// This does not persist the migration - subsequent writes will save the new format
+	if resp.State != nil && resp.State.WorldData != nil {
+		services.MigrateWorldData(resp.State.WorldData)
+	}
+
 	return resp, nil
 }
 
@@ -202,6 +208,10 @@ func (s *GamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest
 		TurnCounter:   1, // First turn starts at 1 for lazy top-up pattern
 		WorldData:     world.WorldData,
 	}
+
+	// Auto-migrate WorldData from old list-based format to new map-based format
+	services.MigrateWorldData(gs.WorldData)
+
 	gameStateGorm, err := v1gorm.GameStateToGameStateGORM(gs, nil, nil)
 	if err != nil {
 		log.Println("Here 1 ????: ", err)
@@ -276,6 +286,11 @@ func (s *GamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest
 		gameStateGorm, err := s.GameStateDAL.Get(ctx, s.storage, req.GameId)
 		if err != nil {
 			return resp, fmt.Errorf("failed to get game state: %w", err)
+		}
+
+		// Auto-migrate WorldData from old list-based format to new map-based format
+		if req.NewState.WorldData != nil {
+			services.MigrateWorldData(req.NewState.WorldData)
 		}
 
 		// Make sure to topup units

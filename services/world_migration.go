@@ -56,8 +56,10 @@ func MigrateWorldData(wd *v1.WorldData) {
 	extractCrossings(wd)
 
 	// Clear deprecated lists after migration
-	wd.Tiles = nil
-	wd.Units = nil
+	// Use empty slices instead of nil to ensure they're serialized as empty arrays
+	// This ensures the old data is actually removed from storage on save
+	wd.Tiles = []*v1.Tile{}
+	wd.Units = []*v1.Unit{}
 }
 
 // extractCrossings extracts roads and bridges from tile types into the crossings map

@@ -9,6 +9,7 @@ import {
     Unit,
     UpdateWorldRequest,
     CreateWorldRequest,
+    CrossingType,
 } from '../../gen/wasmjs/weewar/v1/models/interfaces'
 import * as models from '../../gen/wasmjs/weewar/v1/models/models'
 import { create, toJson } from '@bufbuild/protobuf';
@@ -18,8 +19,8 @@ export interface WorldEvent {
     data: any;
 }
 
-// Using proto-generated Tile and Unit types directly
-export { Tile, Unit };
+// Using proto-generated Tile, Unit, and CrossingType types directly
+export { Tile, Unit, CrossingType };
 
 // Batch event data types
 export interface TileChange {
@@ -90,6 +91,7 @@ export class World {
     private metadata: WorldMetadata;
     public tiles: { [key: string]: Tile} = {};
     public units: { [key: string]: Unit} = {};
+    public crossings: { [key: string]: CrossingType } = {};
     
     // Persistence state
     private worldId: string | null = null;
@@ -382,18 +384,71 @@ export class World {
         // Batch all unit removals
         const allUnits = this.getAllUnits();
         this.units = {};
-        
+
         // Add all removals to pending changes
         allUnits.forEach(unit => {
             this.addUnitChange(unit.q, unit.r, null);
         });
     }
-    
+
+    // Crossing management methods
+    public getCrossingAt(q: number, r: number): CrossingType {
+        const key = `${q},${r}`;
+        return this.crossings[key] || CrossingType.CROSSING_TYPE_UNSPECIFIED;
+    }
+
+    public hasCrossing(q: number, r: number): boolean {
+        const key = `${q},${r}`;
+        const crossing = this.crossings[key];
+        return crossing !== undefined && crossing !== CrossingType.CROSSING_TYPE_UNSPECIFIED;
+    }
+
+    public hasRoad(q: number, r: number): boolean {
+        return this.getCrossingAt(q, r) === CrossingType.CROSSING_TYPE_ROAD;
+    }
+
+    public hasBridge(q: number, r: number): boolean {
+        return this.getCrossingAt(q, r) === CrossingType.CROSSING_TYPE_BRIDGE;
+    }
+
+    public setCrossing(q: number, r: number, crossingType: CrossingType): void {
+        const key = `${q},${r}`;
+        if (crossingType === CrossingType.CROSSING_TYPE_UNSPECIFIED) {
+            delete this.crossings[key];
+        } else {
+            this.crossings[key] = crossingType;
+        }
+        this.hasUnsavedChanges = true;
+    }
+
+    public removeCrossing(q: number, r: number): boolean {
+        const key = `${q},${r}`;
+        if (key in this.crossings) {
+            delete this.crossings[key];
+            this.hasUnsavedChanges = true;
+            return true;
+        }
+        return false;
+    }
+
+    public getAllCrossings(): Array<{ q: number; r: number; crossingType: CrossingType }> {
+        return Object.entries(this.crossings).map(([key, crossingType]) => {
+            const [q, r] = key.split(',').map(Number);
+            return { q, r, crossingType };
+        });
+    }
+
+    public clearAllCrossings(): void {
+        this.crossings = {};
+        this.hasUnsavedChanges = true;
+    }
+
     // Utility methods
     public clearAll(): void {
         this.clearAllTiles();
         this.clearAllUnits();
-        
+        this.clearAllCrossings();
+
         this.emitStateChange(WorldEventTypes.WORLD_CLEARED, {});
     }
     
@@ -456,10 +511,6 @@ export class World {
     
     // Self-contained persistence methods
     public async save(): Promise<SaveResult> {
-        // Transform TypeScript World data into protobuf-compatible format
-        const tiles: Array<Tile> = Object.values(this.tiles)
-        const units: Array<Unit> = Object.values(this.units)
-
         // Build World metadata (separate from WorldData)
         const worldMetadata: ProtoWorld = WD.from(models.World,{
             id: this.worldId || undefined,
@@ -471,10 +522,17 @@ export class World {
             defaultGameConfig: this.metadata.defaultGameConfig || undefined
         });
 
-        // Build WorldData (tiles, units, and version for optimistic locking)
+        // Build WorldData using new map-based storage
+        // Convert crossings map to use number values for proto enum
+        const crossingsForProto: Record<string, number> = {};
+        for (const [key, value] of Object.entries(this.crossings)) {
+            crossingsForProto[key] = value as number;
+        }
+
         const worldData: ProtoWorldData = WD.from(models.WorldData,{
-            tiles: tiles,
-            units: units,
+            tilesMap: this.tiles,
+            unitsMap: this.units,
+            crossings: crossingsForProto,
             version: this.version
         });
 
@@ -559,6 +617,10 @@ export class World {
             throw new Error('Failed to parse world metadata or tiles data');
         }
         // Combine into format expected by loadFromData()
+        // Support both old array format and new map format
+        const tilesSource = worldTilesData.tilesMap || worldTilesData.tiles_map || worldTilesData.tiles || {};
+        const unitsSource = worldTilesData.unitsMap || worldTilesData.units_map || worldTilesData.units || {};
+
         const combinedData = {
             // World metadata
             name: worldMetadata.name || 'Untitled World',
@@ -570,18 +632,20 @@ export class World {
             width: 40,  // Default
             height: 40, // Default
 
-            // World tiles and units
-            tiles: worldTilesData.tiles || [],
-            units: worldTilesData.units || [],
+            // World tiles, units, and crossings - pass through for loadFromData to handle
+            tilesMap: tilesSource,
+            unitsMap: unitsSource,
+            crossings: worldTilesData.crossings || {},
 
             // Version for optimistic locking
             version: worldTilesData.version || 0
         };
-        
+
         // Calculate actual dimensions from tile bounds
-        if (combinedData.tiles && combinedData.tiles.length > 0) {
+        const tileValues = Array.isArray(tilesSource) ? tilesSource : Object.values(tilesSource);
+        if (tileValues.length > 0) {
             let maxQ = 0, maxR = 0, minQ = 0, minR = 0;
-            combinedData.tiles.forEach((tile: any) => {
+            tileValues.forEach((tile: any) => {
                 if (tile.q > maxQ) maxQ = tile.q;
                 if (tile.q < minQ) minQ = tile.q;
                 if (tile.r > maxR) maxR = tile.r;
@@ -598,11 +662,12 @@ export class World {
         if (!data) {
             throw new Error('No world data provided');
         }
-        
+
         // Clear existing data without emitting events
         this.tiles = {};
         this.units = {};
-        
+        this.crossings = {};
+
         // Load metadata - handle both old and new formats
         if (data.name) this.metadata.name = data.name;
         if (data.Name) this.metadata.name = data.Name; // Backend format
@@ -613,71 +678,96 @@ export class World {
         // Load version for optimistic locking
         if (data.version !== undefined) this.version = data.version;
 
-        return this.loadTilesAndUnits(data.tiles, data.units)
+        // Determine tiles and units source - prefer new map format, fall back to array format
+        let tiles = data.tilesMap || data.tiles_map || data.tiles || [];
+        let units = data.unitsMap || data.units_map || data.units || [];
+
+        // Load crossings if present
+        const crossings = data.crossings || {};
+        for (const [key, value] of Object.entries(crossings)) {
+            this.crossings[key] = value as CrossingType;
+        }
+
+        return this.loadTilesAndUnits(tiles, units);
     }
 
     loadTilesAndUnits(tiles: any, units: any): World {
         // Batch load tiles - handle both array and map formats
         const tileChanges: TileChange[] = [];
-        tiles = tiles || []
-        // Old map format for backward compatibility
-        tiles.forEach((tileData: any) => {
-            const q = tileData.q || 0
-            const r = tileData.r || 0
-            const key = q + "," + r;
+        tiles = tiles || {};
+
+        // Process tiles - check if it's array (old format) or map (new format)
+        const tileEntries = Array.isArray(tiles)
+            ? tiles.map((t: any) => [`${t.q || 0},${t.r || 0}`, t])
+            : Object.entries(tiles);
+
+        for (const [key, tileData] of tileEntries) {
+            // Parse coordinates from key if needed (map format uses "q,r" keys)
+            const [keyQ, keyR] = key.split(',').map(Number);
+            const q = (tileData as any).q ?? keyQ ?? 0;
+            const r = (tileData as any).r ?? keyR ?? 0;
+            const coordKey = `${q},${r}`;
             let tileType: number;
-            let player = 0
-            
-            if (tileData.tileType !== undefined) {
-                tileType = tileData.tileType;
-                player = tileData.player;
-            } else if (tileData.tile_type !== undefined) {
-                tileType = tileData.tile_type;
-                player = tileData.player || 0;
+            let player = 0;
+
+            if ((tileData as any).tileType !== undefined) {
+                tileType = (tileData as any).tileType;
+                player = (tileData as any).player || 0;
+            } else if ((tileData as any).tile_type !== undefined) {
+                tileType = (tileData as any).tile_type;
+                player = (tileData as any).player || 0;
             } else {
-                return; // Skip invalid tile
+                continue; // Skip invalid tile
             }
-            
-            const tile: Tile = { q, r, tileType, player, shortcut: "", lastActedTurn: 0, lastToppedupTurn: 0 };
-            this.tiles[key] = tile;
+
+            const tile: Tile = { q, r, tileType, player, shortcut: (tileData as any).shortcut || "", lastActedTurn: 0, lastToppedupTurn: 0 };
+            this.tiles[coordKey] = tile;
             tileChanges.push({ q, r, tile });
-        });
-        
+        }
+
         // Batch load units - handle both array and map formats
         const unitChanges: UnitChange[] = [];
-        units = units || []
-        // Old map format for backward compatibility
-        units.forEach((unitData: any) => {
-            const q = unitData.q || 0
-            const r = unitData.r || 0
-            const key = q + "," + r;
+        units = units || {};
+
+        // Process units - check if it's array (old format) or map (new format)
+        const unitEntries = Array.isArray(units)
+            ? units.map((u: any) => [`${u.q || 0},${u.r || 0}`, u])
+            : Object.entries(units);
+
+        for (const [key, unitData] of unitEntries) {
+            // Parse coordinates from key if needed (map format uses "q,r" keys)
+            const [keyQ, keyR] = key.split(',').map(Number);
+            const q = (unitData as any).q ?? keyQ ?? 0;
+            const r = (unitData as any).r ?? keyR ?? 0;
+            const coordKey = `${q},${r}`;
             let unitType: number, player: number;
-            
-            if (unitData.unitType !== undefined && unitData.player !== undefined) {
-                unitType = unitData.unitType;
-                player = unitData.player;
-            } else if (unitData.unit_type !== undefined && unitData.player !== undefined) {
-                unitType = unitData.unit_type;
-                player = unitData.player;
+
+            if ((unitData as any).unitType !== undefined && (unitData as any).player !== undefined) {
+                unitType = (unitData as any).unitType;
+                player = (unitData as any).player;
+            } else if ((unitData as any).unit_type !== undefined && (unitData as any).player !== undefined) {
+                unitType = (unitData as any).unit_type;
+                player = (unitData as any).player;
             } else {
-                return; // Skip invalid unit
+                continue; // Skip invalid unit
             }
-            
-            // Pass all unit data from WASM, including runtime state (distanceLeft, availableHealth, etc.)
-            const unit: Unit = WD.from(models.Unit,{ 
-                q, 
-                r, 
-                unitType, 
+
+            // Pass all unit data, including runtime state (distanceLeft, availableHealth, etc.)
+            const unit: Unit = WD.from(models.Unit,{
+                q,
+                r,
+                unitType,
                 player,
-                // Include runtime state from WASM
-                availableHealth: unitData.availableHealth || unitData.available_health || 100,
-                distanceLeft: (unitData.distanceLeft && unitData.distanceLeft > 0) ? unitData.distanceLeft : 
-                             (unitData.distance_left && unitData.distance_left > 0) ? unitData.distance_left : 3,
-                turnCounter: unitData.turnCounter || unitData.turn_counter || 1
+                shortcut: (unitData as any).shortcut || "",
+                // Include runtime state
+                availableHealth: (unitData as any).availableHealth || (unitData as any).available_health || 100,
+                distanceLeft: ((unitData as any).distanceLeft && (unitData as any).distanceLeft > 0) ? (unitData as any).distanceLeft :
+                             ((unitData as any).distance_left && (unitData as any).distance_left > 0) ? (unitData as any).distance_left : 3,
+                turnCounter: (unitData as any).turnCounter || (unitData as any).turn_counter || 1
             });
-            this.units[key] = unit;
+            this.units[coordKey] = unit;
             unitChanges.push({ q, r, unit });
-        });
+        }
         
         // Emit batched changes immediately
         if (tileChanges.length > 0) {

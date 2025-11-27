@@ -347,11 +347,12 @@ func (re *RulesEngine) IsValidPath(unit *v1.Unit, path []AxialCoord, world *Worl
 			return false, fmt.Errorf("path step %d: destination tile %v does not exist", i, toCoord)
 		}
 
-		// 3. Check terrain traversability
-		stepCost, err := re.GetUnitTerrainCost(unit.UnitType, toTile.TileType)
+		// 3. Check terrain traversability (use effective tile type for crossings)
+		effectiveTileType := re.GetEffectiveTileType(world, toCoord)
+		stepCost, err := re.GetUnitTerrainCost(unit.UnitType, effectiveTileType)
 		if err != nil {
 			return false, fmt.Errorf("path step %d: unit type %d cannot traverse terrain %d: %w",
-				i, unit.UnitType, toTile.TileType, err)
+				i, unit.UnitType, effectiveTileType, err)
 		}
 
 		// 4. Check for blocking units
@@ -453,14 +454,17 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 		}
 
 		// Explore neighbors
-		for neighborCoord, tile := range world.Neighbors(current.coord) {
+		for neighborCoord, _ := range world.Neighbors(current.coord) {
 			// Skip if occupied by another unit (movement rule: only empty tiles)
 			if world.UnitAt(neighborCoord) != nil {
 				continue // Occupied tile
 			}
 
-			// Get movement cost to this terrain
-			moveCost, err := re.GetUnitTerrainCost(unitType, tile.TileType)
+			// Get effective tile type (considers crossings like roads/bridges)
+			effectiveTileType := re.GetEffectiveTileType(world, neighborCoord)
+
+			// Get movement cost to this terrain (using effective type)
+			moveCost, err := re.GetUnitTerrainCost(unitType, effectiveTileType)
 			if err != nil {
 				continue // Cannot move on this terrain
 			}
@@ -472,8 +476,8 @@ func (re *RulesEngine) dijkstraMovement(world *World, unitType int32, startCoord
 				if existingCost, exists := visited[neighborCoord]; !exists || newCost < existingCost {
 					visited[neighborCoord] = newCost
 
-					// Get terrain data for explanation
-					terrainData, _ := re.GetTerrainData(tile.TileType)
+					// Get terrain data for explanation (use effective type for display)
+					terrainData, _ := re.GetTerrainData(effectiveTileType)
 					terrainName := "unknown"
 					if terrainData != nil {
 						terrainName = terrainData.Name
@@ -532,4 +536,48 @@ func (re *RulesEngine) GetUnitTerrainCost(unitID, terrainID int32) (float64, err
 
 	// Final fallback to default movement cost of 1.0
 	return 1.0, nil
+}
+
+// =============================================================================
+// Crossing (Road/Bridge) Support
+// =============================================================================
+
+// GetEffectiveTileType returns the tile type to use for rules lookups,
+// considering crossings (roads/bridges) that override the base terrain.
+// Roads return the Road tile type (22), bridges return the appropriate bridge type
+// based on the underlying water depth.
+func (re *RulesEngine) GetEffectiveTileType(world *World, coord AxialCoord) int32 {
+	tile := world.TileAt(coord)
+	if tile == nil {
+		return 0
+	}
+
+	// Check for crossing - crossings override terrain for movement
+	crossing := world.CrossingAt(coord)
+	if crossing == v1.CrossingType_CROSSING_TYPE_ROAD {
+		return TileTypeRoad // Road tile type ID (22)
+	}
+	if crossing == v1.CrossingType_CROSSING_TYPE_BRIDGE {
+		// Bridge type depends on underlying water terrain
+		switch tile.TileType {
+		case TileTypeWaterShallow:
+			return TileTypeBridgeShallow // Bridge over shallow water (18)
+		case TileTypeWaterRegular:
+			return TileTypeBridgeRegular // Bridge over regular water (17)
+		case TileTypeWaterDeep:
+			return TileTypeBridgeDeep // Bridge over deep water (19)
+		default:
+			// Default to regular bridge if terrain doesn't match expected water types
+			return TileTypeBridgeRegular
+		}
+	}
+
+	return tile.TileType
+}
+
+// GetUnitTerrainCostAt returns movement cost for a unit at a specific coordinate,
+// considering crossings (roads/bridges) that may override the terrain type.
+func (re *RulesEngine) GetUnitTerrainCostAt(world *World, unitID int32, coord AxialCoord) (float64, error) {
+	effectiveTileType := re.GetEffectiveTileType(world, coord)
+	return re.GetUnitTerrainCost(unitID, effectiveTileType)
 }
