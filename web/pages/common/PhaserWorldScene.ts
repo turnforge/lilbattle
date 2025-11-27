@@ -1,8 +1,9 @@
 import * as Phaser from 'phaser';
 import { TILE_HEIGHT, TILE_WIDTH, Y_INCREMENT, hexToRowCol, hexToPixel, pixelToHex, HexCoord, PixelCoord } from './hexUtils';
-import { TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData, Unit, Tile, World } from './World';
+import { TilesChangedEventData, UnitsChangedEventData, CrossingsChangedEventData, WorldLoadedEventData, Unit, Tile, World } from './World';
 import { LayerManager } from './LayerSystem';
 import { BaseMapLayer } from './BaseMapLayer';
+import { CrossingLayer } from './CrossingLayer';
 import { ClickContext } from './LayerSystem';
 import { WorldEventType, WorldEventTypes } from './events';
 import { LCMComponent } from '../../lib/LCMComponent';
@@ -62,6 +63,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Layer system for managing overlays and interactions
     protected layerManager: LayerManager;
     protected baseMapLayer: BaseMapLayer | null = null;
+    protected crossingLayer: CrossingLayer | null = null;
     protected exhaustedUnitsLayer: ExhaustedUnitsHighlightLayer | null = null;
 
     // Game interaction callback (unified, only used by GameViewerPage)
@@ -164,7 +166,11 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             case WorldEventTypes.UNITS_CHANGED:
                 this.handleUnitsChanged(data);
                 break;
-            
+
+            case WorldEventTypes.CROSSINGS_CHANGED:
+                this.handleCrossingsChanged(data);
+                break;
+
             case WorldEventTypes.WORLD_CLEARED:
                 this.handleWorldCleared();
                 break;
@@ -188,6 +194,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         this.eventBus.addSubscription(WorldEventTypes.WORLD_LOADED, null, this);
         this.eventBus.addSubscription(WorldEventTypes.TILES_CHANGED, null, this);
         this.eventBus.addSubscription(WorldEventTypes.UNITS_CHANGED, null, this);
+        this.eventBus.addSubscription(WorldEventTypes.CROSSINGS_CHANGED, null, this);
         this.eventBus.addSubscription(WorldEventTypes.WORLD_CLEARED, null, this);
     }
 
@@ -198,6 +205,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         this.eventBus.removeSubscription(WorldEventTypes.WORLD_LOADED, null, this);
         this.eventBus.removeSubscription(WorldEventTypes.TILES_CHANGED, null, this);
         this.eventBus.removeSubscription(WorldEventTypes.UNITS_CHANGED, null, this);
+        this.eventBus.removeSubscription(WorldEventTypes.CROSSINGS_CHANGED, null, this);
         this.eventBus.removeSubscription(WorldEventTypes.WORLD_CLEARED, null, this);
     }
 
@@ -222,10 +230,15 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             if (tiles.length > 0) {
                 tiles.forEach(tile => this.setTile(tile));
             }
-            
+
             const units = this.world.getAllUnits();
             if (units.length > 0) {
                 units.forEach(unit => this.setUnit(unit));
+            }
+
+            // Load crossings from World (using raw crossings map)
+            if (this.crossingLayer) {
+                this.crossingLayer.loadCrossings(this.world.crossings);
             }
         }
     }
@@ -275,15 +288,39 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     }
     
     /**
+     * Handle crossings changed event - sync crossing updates
+     */
+    private handleCrossingsChanged(data: CrossingsChangedEventData): void {
+        if (!this.crossingLayer) return;
+
+        if (this.debugMode) {
+            console.log(`[PhaserWorldScene] Updating ${data.changes.length} crossing changes in scene`);
+        }
+
+        // Update individual crossings in scene based on World changes
+        for (const change of data.changes) {
+            if (change.crossingType !== null) {
+                this.crossingLayer.setCrossing(change.q, change.r, change.crossingType);
+            } else {
+                // Crossing was removed
+                this.crossingLayer.removeCrossing(change.q, change.r);
+            }
+        }
+    }
+
+    /**
      * Handle world cleared event - clear all display
      */
     private handleWorldCleared(): void {
         if (this.debugMode) {
             console.log('[PhaserWorldScene] World cleared, clearing scene display');
         }
-        
+
         this.clearAllTiles();
         this.clearAllUnits();
+        if (this.crossingLayer) {
+            this.crossingLayer.clearAllCrossings();
+        }
     }
 
     // =========================================================
@@ -441,7 +478,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
             this.layerManager.destroy();
         }
         this.baseMapLayer = null;
-        
+        this.crossingLayer = null;
+
         if (this.phaserGame) {
             this.phaserGame.destroy(true);
             this.phaserGame = null;
@@ -454,9 +492,14 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
     /**
      * Set the World instance as the single source of truth for game data
+     * Also loads crossings if the crossing layer is ready
      */
     public setWorld(world: World): void {
         this.world = world;
+        // Load crossings if the layer is ready
+        if (this.crossingLayer && world.crossings) {
+            this.crossingLayer.loadCrossings(world.crossings);
+        }
     }
     
     async preload() {
@@ -507,7 +550,12 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         
         // Set up layer system
         this.setupLayerSystem();
-        
+
+        // Load crossings if world was set before create() was called
+        if (this.world && this.crossingLayer && this.world.crossings) {
+            this.crossingLayer.loadCrossings(this.world.crossings);
+        }
+
         // Set up input handling
         this.setupInputHandling();
         
@@ -623,6 +671,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
         // Add base map layer to manager
         this.layerManager.addLayer(this.baseMapLayer);
+
+        // Create crossing layer for roads and bridges (depth 5, between tiles and units)
+        this.crossingLayer = new CrossingLayer(this, this.tileWidth);
+        this.layerManager.addLayer(this.crossingLayer);
 
         // Create exhausted units highlight layer
         this.exhaustedUnitsLayer = new ExhaustedUnitsHighlightLayer(this, this.tileWidth);

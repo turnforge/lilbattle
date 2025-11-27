@@ -92,6 +92,10 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
 
     public setWorld(world: World): void {
         this.world = world;
+        // Also set world on the editor scene so it can access crossings, etc.
+        if (this.editorScene) {
+            this.editorScene.setWorld(world);
+        }
         this.log('World dependency set via explicit setter');
     }
 

@@ -692,17 +692,9 @@ class WorldEditorPage extends BasePage {
         const shortcuts: ShortcutConfig[] = [
             // Tab switching shortcuts (single key press)
             {
-                key: 'n',
-                handler: () => this.switchToNatureTab(),
-                description: 'Switch to Nature terrain tab',
-                category: 'Navigation',
-                requiresArgs: false,
-                contextFilter: noModifiersFilter
-            },
-            {
-                key: 'c',
-                handler: () => this.switchToCityTab(),
-                description: 'Switch to City terrain tab',
+                key: 't',
+                handler: () => this.switchToTilesTab(),
+                description: 'Switch to Tiles tab',
                 category: 'Navigation',
                 requiresArgs: false,
                 contextFilter: noModifiersFilter
@@ -1798,36 +1790,21 @@ class WorldEditorPage extends BasePage {
     }
 
     // Tab switching handlers
-    private switchToNatureTab(): void {
+    private switchToTilesTab(): void {
         if (this.editorToolsPanel) {
-            // If already on nature tab, toggle overlay for nature tab
-            if (this.editorToolsPanel.getActiveTab() === 'nature') {
-                this.toggleOverlayForTab('nature');
+            // If already on tiles tab, toggle overlay for tiles tab
+            if (this.editorToolsPanel.getActiveTab() === 'tiles') {
+                this.toggleOverlayForTab('tiles');
                 return;
             }
-            
-            // Switch to nature tab and turn on overlay
-            this.editorToolsPanel.switchToTab('nature');
-            this.setOverlayForTab('nature', true);
-            console.log('Switched to Nature terrain tab');
+
+            // Switch to tiles tab and turn on overlay
+            this.editorToolsPanel.switchToTab('tiles');
+            this.setOverlayForTab('tiles', true);
+            console.log('Switched to Tiles tab');
         }
     }
-    
-    private switchToCityTab(): void {
-        if (this.editorToolsPanel) {
-            // If already on city tab, toggle overlay for city tab
-            if (this.editorToolsPanel.getActiveTab() === 'city') {
-                this.toggleOverlayForTab('city');
-                return;
-            }
-            
-            // Switch to city tab and turn on overlay
-            this.editorToolsPanel.switchToTab('city');
-            this.setOverlayForTab('city', true);
-            console.log('Switched to City terrain tab');
-        }
-    }
-    
+
     private switchToUnitTab(): void {
         if (this.editorToolsPanel) {
             // If already on unit tab, toggle overlay for unit tab
@@ -1835,20 +1812,20 @@ class WorldEditorPage extends BasePage {
                 this.toggleOverlayForTab('unit');
                 return;
             }
-            
+
             // Switch to unit tab and turn on overlay
             this.editorToolsPanel.switchToTab('unit');
             this.setOverlayForTab('unit', true);
             console.log('Switched to Unit tab');
         }
     }
-    
+
     // Number overlay control methods per tab
-    private setOverlayForTab(tab: 'nature' | 'city' | 'unit', visible: boolean): void {
+    private setOverlayForTab(tab: 'tiles' | 'unit', visible: boolean): void {
         if (!this.editorToolsPanel) return;
-        
+
         this.overlayState[tab] = visible;
-        
+
         // If this is the active tab, update the visual overlay
         if (this.editorToolsPanel.getActiveTab() === tab) {
             if (visible) {
@@ -1857,24 +1834,24 @@ class WorldEditorPage extends BasePage {
                 this.editorToolsPanel.hideNumberOverlays();
             }
         }
-        
+
         console.log(`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab overlay ${visible ? 'shown' : 'hidden'}`);
     }
-    
-    private toggleOverlayForTab(tab: 'nature' | 'city' | 'unit'): void {
+
+    private toggleOverlayForTab(tab: 'tiles' | 'unit'): void {
         const currentState = this.overlayState[tab];
         this.setOverlayForTab(tab, !currentState);
     }
-    
+
     private isAnyOverlayVisible(): boolean {
         return Object.values(this.overlayState).some(visible => visible);
     }
-    
+
     // Called when tab is switched (not via keyboard shortcuts)
-    private onTabSwitched(tabName: 'nature' | 'city' | 'unit'): void {
+    private onTabSwitched(tabName: 'tiles' | 'unit'): void {
         // Update overlay visibility based on the new tab's state
         const shouldShow = this.overlayState[tabName];
-        
+
         if (this.editorToolsPanel) {
             if (shouldShow) {
                 this.editorToolsPanel.showNumberOverlays();
@@ -1891,8 +1868,7 @@ class WorldEditorPage extends BasePage {
     
     // Number overlay toggle state per tab
     private overlayState = {
-        nature: false,
-        city: false,
+        tiles: false,
         unit: false
     };
     

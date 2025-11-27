@@ -7,6 +7,7 @@ export const WorldEventTypes = {
     WORLD_VIEWER_READY: 'world-viewer-ready',
     TILES_CHANGED: 'tiles-changed',      // Batch tile operations
     UNITS_CHANGED: 'units-changed',      // Batch unit operations
+    CROSSINGS_CHANGED: 'crossings-changed', // Batch crossing operations (roads/bridges)
     WORLD_LOADED: 'world-loaded',
     WORLD_SAVED: 'world-saved',
     WORLD_CLEARED: 'world-cleared',

@@ -35,12 +35,22 @@ export interface UnitChange {
     unit: Unit| null;  // null means unit was removed
 }
 
+export interface CrossingChange {
+    q: number;
+    r: number;
+    crossingType: CrossingType | null;  // null means crossing was removed
+}
+
 export interface TilesChangedEventData {
     changes: TileChange[];
 }
 
 export interface UnitsChangedEventData {
     changes: UnitChange[];
+}
+
+export interface CrossingsChangedEventData {
+    changes: CrossingChange[];
 }
 
 export interface WorldLoadedEventData {
@@ -106,6 +116,7 @@ export class World {
     private isBatching: boolean = false;
     private pendingTileChanges: TileChange[] = [];
     private pendingUnitChanges: UnitChange[] = [];
+    private pendingCrossingChanges: CrossingChange[] = [];
     
     constructor(eventBus: EventBus, public name: string = 'New World', width: number = 40, height: number = 40) {
         this.eventBus = eventBus;
@@ -130,7 +141,7 @@ export class World {
         if (!this.isBatching) {
             return;
         }
-        
+
         // Emit batched changes
         if (this.pendingTileChanges.length > 0) {
             this.emitStateChange(WorldEventTypes.TILES_CHANGED, {
@@ -138,21 +149,29 @@ export class World {
             } as TilesChangedEventData);
             this.pendingTileChanges = [];
         }
-        
+
         if (this.pendingUnitChanges.length > 0) {
             this.emitStateChange(WorldEventTypes.UNITS_CHANGED, {
                 changes: [...this.pendingUnitChanges]
             } as UnitsChangedEventData);
             this.pendingUnitChanges = [];
         }
-        
+
+        if (this.pendingCrossingChanges.length > 0) {
+            this.emitStateChange(WorldEventTypes.CROSSINGS_CHANGED, {
+                changes: [...this.pendingCrossingChanges]
+            } as CrossingsChangedEventData);
+            this.pendingCrossingChanges = [];
+        }
+
         this.isBatching = false;
     }
-    
+
     public cancelBatch(): void {
         this.isBatching = false;
         this.pendingTileChanges = [];
         this.pendingUnitChanges = [];
+        this.pendingCrossingChanges = [];
     }
     
     private addTileChange(q: number, r: number, tile: Tile | null): void {
@@ -171,7 +190,7 @@ export class World {
     
     private addUnitChange(q: number, r: number, unit: Unit | null): void {
         this.hasUnsavedChanges = true;
-        
+
         if (this.isBatching) {
             // Add to batch
             this.pendingUnitChanges.push({ q, r, unit });
@@ -182,7 +201,21 @@ export class World {
             } as UnitsChangedEventData);
         }
     }
-    
+
+    private addCrossingChange(q: number, r: number, crossingType: CrossingType | null): void {
+        this.hasUnsavedChanges = true;
+
+        if (this.isBatching) {
+            // Add to batch
+            this.pendingCrossingChanges.push({ q, r, crossingType });
+        } else {
+            // Emit immediately
+            this.emitStateChange(WorldEventTypes.CROSSINGS_CHANGED, {
+                changes: [{ q, r, crossingType }]
+            } as CrossingsChangedEventData);
+        }
+    }
+
     // Persistence methods
     public getWorldId(): string | null {
         return this.worldId;
@@ -415,17 +448,18 @@ export class World {
         const key = `${q},${r}`;
         if (crossingType === CrossingType.CROSSING_TYPE_UNSPECIFIED) {
             delete this.crossings[key];
+            this.addCrossingChange(q, r, null);
         } else {
             this.crossings[key] = crossingType;
+            this.addCrossingChange(q, r, crossingType);
         }
-        this.hasUnsavedChanges = true;
     }
 
     public removeCrossing(q: number, r: number): boolean {
         const key = `${q},${r}`;
         if (key in this.crossings) {
             delete this.crossings[key];
-            this.hasUnsavedChanges = true;
+            this.addCrossingChange(q, r, null);
             return true;
         }
         return false;

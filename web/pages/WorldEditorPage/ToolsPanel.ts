@@ -38,7 +38,7 @@ export class EditorToolsPanel extends BaseComponent {
     private pendingOperations: Array<() => void> = [];
     
     // Tab state management
-    private activeTab: 'nature' | 'city' | 'unit' = 'nature';
+    private activeTab: 'tiles' | 'unit' = 'tiles';
     
     constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
         super('editor-tools-panel', rootElement, eventBus, debugMode);
@@ -56,6 +56,7 @@ export class EditorToolsPanel extends BaseComponent {
         // Set up UI elements and event handlers (independent of dependencies)
         this.bindTabButtons();
         this.bindTerrainButtons();
+        this.bindCrossingButtons();
         this.bindUnitButtons();
         this.bindBrushSizeControl();
         this.bindPlayerControl();
@@ -129,7 +130,7 @@ export class EditorToolsPanel extends BaseComponent {
         // Reset state
         this.isActivated = false;
         this.presenter = null;
-        this.activeTab = 'nature';
+        this.activeTab = 'tiles';
 
         // Clean up overlays
         this.hideNumberOverlays();
@@ -178,27 +179,27 @@ export class EditorToolsPanel extends BaseComponent {
      */
     private bindTabButtons(): void {
         const tabButtons = this.findElements('.tab-button');
-        
+
         tabButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 const clickedButton = e.currentTarget as HTMLElement;
-                const tabName = clickedButton.getAttribute('data-tab') as 'nature' | 'city' | 'unit';
-                
+                const tabName = clickedButton.getAttribute('data-tab') as 'tiles' | 'unit';
+
                 if (tabName) {
                     this.switchToTab(tabName);
                 }
             });
         });
-        
+
         this.log(`Bound ${tabButtons.length} tab buttons`);
     }
-    
+
     /**
      * Switch to a specific tab
      */
-    public switchToTab(tabName: 'nature' | 'city' | 'unit'): void {
+    public switchToTab(tabName: 'tiles' | 'unit'): void {
         this.activeTab = tabName;
-        
+
         // Update tab button active states
         const tabButtons = this.findElements('.tab-button');
         tabButtons.forEach(button => {
@@ -209,7 +210,7 @@ export class EditorToolsPanel extends BaseComponent {
                 button.classList.remove('active-tab');
             }
         });
-        
+
         // Show/hide tab content
         const tabContents = this.findElements('.tab-content');
         tabContents.forEach(content => {
@@ -220,14 +221,14 @@ export class EditorToolsPanel extends BaseComponent {
                 content.classList.add('hidden');
             }
         });
-        
+
         this.log(`Switched to ${tabName} tab`);
     }
-    
+
     /**
      * Get current active tab
      */
-    public getActiveTab(): 'nature' | 'city' | 'unit' {
+    public getActiveTab(): 'tiles' | 'unit' {
         return this.activeTab;
     }
     
@@ -237,11 +238,8 @@ export class EditorToolsPanel extends BaseComponent {
     public selectByIndex(index: number): void {
         this.executeWhenReady(() => {
             switch (this.activeTab) {
-                case 'nature':
-                    this.selectNatureTerrainByIndex(index);
-                    break;
-                case 'city':
-                    this.selectCityTerrainByIndex(index);
+                case 'tiles':
+                    this.selectTilesByIndex(index);
                     break;
                 case 'unit':
                     this.selectUnitByIndex(index);
@@ -249,33 +247,31 @@ export class EditorToolsPanel extends BaseComponent {
             }
         });
     }
-    
+
     /**
      * Show number overlays for the active tab
      */
     public showNumberOverlays(): void {
         let selector = '';
-        
+
         switch (this.activeTab) {
-            case 'nature':
-                selector = '[data-nature-index]';
-                break;
-            case 'city':
-                selector = '[data-city-index]';
+            case 'tiles':
+                selector = '[data-tiles-index]';
                 break;
             case 'unit':
                 selector = '[data-unit-index]';
                 break;
         }
-        
+
         const buttons = this.findElements(selector);
         buttons.forEach(button => {
-            const index = button.getAttribute(`data-${this.activeTab}-index`);
+            const indexAttr = this.activeTab === 'tiles' ? 'data-tiles-index' : 'data-unit-index';
+            const index = button.getAttribute(indexAttr);
             if (index && parseInt(index) > 0) {
                 this.addNumberOverlay(button as HTMLElement, index);
             }
         });
-        
+
         this.log(`Showing number overlays for ${this.activeTab} tab`);
     }
     
@@ -308,25 +304,22 @@ export class EditorToolsPanel extends BaseComponent {
     }
     
     /**
-     * Select nature terrain by index
+     * Select tile/crossing by index in the tiles tab
      */
-    private selectNatureTerrainByIndex(index: number): void {
-        const button = this.findElement(`[data-nature-index="${index}"]`);
+    private selectTilesByIndex(index: number): void {
+        // Try terrain button first
+        let button = this.findElement(`[data-tiles-index="${index}"]`);
+        if (button) {
+            (button as HTMLElement).click();
+            return;
+        }
+        // Try crossing button
+        button = this.findElement(`[data-crossing-index="${index}"]`);
         if (button) {
             (button as HTMLElement).click();
         }
     }
-    
-    /**
-     * Select city terrain by index
-     */
-    private selectCityTerrainByIndex(index: number): void {
-        const button = this.findElement(`[data-city-index="${index}"]`);
-        if (button) {
-            (button as HTMLElement).click();
-        }
-    }
-    
+
     /**
      * Select unit by index
      */
@@ -375,7 +368,35 @@ export class EditorToolsPanel extends BaseComponent {
         
         this.log(`Bound ${terrainButtons.length} terrain buttons`);
     }
-    
+
+    /**
+     * Bind crossing button click events (Road/Bridge)
+     */
+    private bindCrossingButtons(): void {
+        const crossingButtons = this.findElements('.crossing-button');
+
+        crossingButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const clickedButton = e.currentTarget as HTMLElement;
+                const crossing = clickedButton.getAttribute('data-crossing');
+
+                if (crossing) {
+                    // Get crossing name from button's text content
+                    const crossingNameEl = clickedButton.querySelector('.text-xs.truncate');
+                    const crossingName = crossingNameEl?.textContent || crossing;
+
+                    this.executeWhenReady(() => {
+                        this.updateButtonSelection(clickedButton);
+                        this.presenter!.selectCrossing(crossing as 'road' | 'bridge');
+                        this.log(`Selected crossing: ${crossing} (${crossingName})`);
+                    });
+                }
+            });
+        });
+
+        this.log(`Bound ${crossingButtons.length} crossing buttons`);
+    }
+
     /**
      * Bind unit button click events
      */
@@ -521,15 +542,15 @@ export class EditorToolsPanel extends BaseComponent {
     }
     
     /**
-     * Update visual selection state for terrain/unit buttons
+     * Update visual selection state for terrain/unit/crossing buttons
      */
     private updateButtonSelection(selectedButton: HTMLElement): void {
-        // Remove selection from all terrain and unit buttons within this component
-        const allButtons = this.findElements('.terrain-button, .unit-button');
+        // Remove selection from all terrain, unit, and crossing buttons within this component
+        const allButtons = this.findElements('.terrain-button, .unit-button, .crossing-button');
         allButtons.forEach(btn => {
             btn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
         });
-        
+
         // Add selection to clicked button
         selectedButton.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-500');
     }

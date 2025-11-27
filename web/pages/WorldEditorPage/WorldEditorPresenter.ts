@@ -12,7 +12,7 @@
  */
 
 import { EventBus, EventSubscriber } from '../../lib/EventBus';
-import { World, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData } from '../common/World';
+import { World, TilesChangedEventData, UnitsChangedEventData, WorldLoadedEventData, CrossingType } from '../common/World';
 import { WorldEventTypes } from '../common/events';
 import { PhaserEditorComponent } from './PhaserEditorComponent';
 import { EditorToolsPanel } from './ToolsPanel';
@@ -27,7 +27,8 @@ export interface ToolState {
     selectedTerrain: number;
     selectedUnit: number;
     selectedPlayer: number;
-    placementMode: 'terrain' | 'unit' | 'clear';
+    selectedCrossing: 'road' | 'bridge' | null;
+    placementMode: 'terrain' | 'unit' | 'crossing' | 'clear';
     brushMode: string;
     brushSize: number;
 }
@@ -48,9 +49,10 @@ export interface SavedUIState {
     terrain: number;
     unit: number;
     playerId: number;
+    crossing: 'road' | 'bridge' | null;
     brushMode: string;
     brushSize: number;
-    placementMode: 'terrain' | 'unit' | 'clear';
+    placementMode: 'terrain' | 'unit' | 'crossing' | 'clear';
 }
 
 // =========================================================================
@@ -62,8 +64,9 @@ export interface IWorldEditorPresenter {
     selectTerrain(terrainType: number): void;
     selectUnit(unitType: number): void;
     selectPlayer(playerId: number): void;
+    selectCrossing(crossingType: 'road' | 'bridge'): void;
     setBrushSize(mode: string, size: number): void;
-    setPlacementMode(mode: 'terrain' | 'unit' | 'clear'): void;
+    setPlacementMode(mode: 'terrain' | 'unit' | 'crossing' | 'clear'): void;
 
     // Visual State Actions
     setShowGrid(show: boolean): void;
@@ -99,7 +102,8 @@ export interface IWorldEditorPresenter {
     getCurrentTerrain(): number;
     getCurrentUnit(): number;
     getCurrentPlayer(): number;
-    getCurrentPlacementMode(): 'terrain' | 'unit' | 'clear';
+    getCurrentPlacementMode(): 'terrain' | 'unit' | 'crossing' | 'clear';
+    getCurrentCrossing(): 'road' | 'bridge' | null;
     getCurrentBrushMode(): string;
     getCurrentBrushSize(): number;
     getShowGrid(): boolean;
@@ -108,8 +112,8 @@ export interface IWorldEditorPresenter {
     getWorld(): World | null;
 
     // Tab State
-    getActiveTab(): 'nature' | 'city' | 'unit';
-    setActiveTab(tab: 'nature' | 'city' | 'unit'): void;
+    getActiveTab(): 'tiles' | 'unit';
+    setActiveTab(tab: 'tiles' | 'unit'): void;
 
     // State Persistence
     saveUIState(): void;
@@ -145,6 +149,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         selectedTerrain: 1,
         selectedUnit: 0,
         selectedPlayer: 1,
+        selectedCrossing: null,
         placementMode: 'terrain',
         brushMode: 'brush',
         brushSize: 0
@@ -172,7 +177,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
     private shapeFillMode: boolean = true;
 
     // Tab state
-    private activeTab: 'nature' | 'city' | 'unit' = 'nature';
+    private activeTab: 'tiles' | 'unit' = 'tiles';
 
     // Callbacks
     private onStatusChange?: (status: string) => void;
@@ -307,6 +312,13 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         this.syncToolStateToPhaser();
     }
 
+    public selectCrossing(crossingType: 'road' | 'bridge'): void {
+        this.toolState.selectedCrossing = crossingType;
+        this.toolState.placementMode = 'crossing';
+        this.workflowState.lastAction = 'select-crossing';
+        this.syncToolStateToPhaser();
+    }
+
     public setBrushSize(mode: string, size: number): void {
         this.toolState.brushMode = mode;
         this.toolState.brushSize = size;
@@ -314,7 +326,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         this.syncToolStateToPhaser();
     }
 
-    public setPlacementMode(mode: 'terrain' | 'unit' | 'clear'): void {
+    public setPlacementMode(mode: 'terrain' | 'unit' | 'crossing' | 'clear'): void {
         this.toolState.placementMode = mode;
         this.workflowState.lastAction = 'set-placement-mode';
         this.syncToolStateToPhaser();
@@ -402,6 +414,9 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
             case 'unit':
                 this.placeUnit(q, r);
                 break;
+            case 'crossing':
+                this.toggleCrossing(q, r);
+                break;
             case 'clear':
                 this.clearTile(q, r);
                 break;
@@ -434,17 +449,80 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         }
     }
 
+    // Terrain type constants
+    private static readonly TILE_PLAINS = 5;
+    private static readonly TILE_WATER_REGULAR = 10;
+    private static readonly TILE_WATER_SHALLOW = 14;
+    private static readonly TILE_WATER_DEEP = 15;
+
+    private isWaterTile(tileType: number): boolean {
+        return tileType === WorldEditorPresenter.TILE_WATER_REGULAR ||
+               tileType === WorldEditorPresenter.TILE_WATER_SHALLOW ||
+               tileType === WorldEditorPresenter.TILE_WATER_DEEP;
+    }
+
+    /**
+     * Ensure appropriate terrain exists for a crossing
+     * - Roads require land (non-water) - if water or empty, set to Plains
+     * - Bridges require water - if not water or empty, set to regular water
+     */
+    private ensureTerrainForCrossing(q: number, r: number, crossingType: CrossingType): void {
+        if (!this.world) return;
+
+        const tile = this.world.getTileAt(q, r);
+        const isRoad = crossingType === CrossingType.CROSSING_TYPE_ROAD;
+
+        if (isRoad) {
+            // Roads need land - if tile is empty or water, set to Plains
+            if (!tile || this.isWaterTile(tile.tileType)) {
+                this.world.setTileAt(q, r, WorldEditorPresenter.TILE_PLAINS, 0);
+            }
+        } else {
+            // Bridges need water - if tile is empty or not water, set to regular water
+            if (!tile || !this.isWaterTile(tile.tileType)) {
+                this.world.setTileAt(q, r, WorldEditorPresenter.TILE_WATER_REGULAR, 0);
+            }
+        }
+    }
+
+    private toggleCrossing(q: number, r: number): void {
+        if (!this.world || !this.toolState.selectedCrossing) return;
+
+        const crossingType = this.toolState.selectedCrossing === 'road'
+            ? CrossingType.CROSSING_TYPE_ROAD
+            : CrossingType.CROSSING_TYPE_BRIDGE;
+
+        if (this.toolState.brushSize === 0) {
+            // Toggle behavior: if crossing exists, remove it; otherwise add it
+            if (this.world.hasCrossing(q, r)) {
+                this.world.removeCrossing(q, r);
+            } else {
+                this.ensureTerrainForCrossing(q, r, crossingType);
+                this.world.setCrossing(q, r, crossingType);
+            }
+        } else {
+            const tiles = this.getTilesForBrush(q, r);
+            tiles.forEach(([tq, tr]) => {
+                // For brush mode, just place crossings (no toggle)
+                this.ensureTerrainForCrossing(tq, tr, crossingType);
+                this.world!.setCrossing(tq, tr, crossingType);
+            });
+        }
+    }
+
     private clearTile(q: number, r: number): void {
         if (!this.world) return;
 
         if (this.toolState.brushSize === 0) {
             this.world.removeTileAt(q, r);
             this.world.removeUnitAt(q, r);
+            this.world.removeCrossing(q, r);
         } else {
             const tiles = this.getTilesForBrush(q, r);
             tiles.forEach(([tq, tr]) => {
                 this.world!.removeTileAt(tq, tr);
                 this.world!.removeUnitAt(tq, tr);
+                this.world!.removeCrossing(tq, tr);
             });
         }
     }
@@ -557,8 +635,12 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         return this.toolState.selectedPlayer;
     }
 
-    public getCurrentPlacementMode(): 'terrain' | 'unit' | 'clear' {
+    public getCurrentPlacementMode(): 'terrain' | 'unit' | 'crossing' | 'clear' {
         return this.toolState.placementMode;
+    }
+
+    public getCurrentCrossing(): 'road' | 'bridge' | null {
+        return this.toolState.selectedCrossing;
     }
 
     public getCurrentBrushMode(): string {
@@ -589,11 +671,11 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
     // Tab State
     // =========================================================================
 
-    public getActiveTab(): 'nature' | 'city' | 'unit' {
+    public getActiveTab(): 'tiles' | 'unit' {
         return this.activeTab;
     }
 
-    public setActiveTab(tab: 'nature' | 'city' | 'unit'): void {
+    public setActiveTab(tab: 'tiles' | 'unit'): void {
         this.activeTab = tab;
         this.toolsPanel?.switchToTab?.(tab);
     }
@@ -607,6 +689,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
             terrain: this.toolState.selectedTerrain,
             unit: this.toolState.selectedUnit,
             playerId: this.toolState.selectedPlayer,
+            crossing: this.toolState.selectedCrossing,
             brushMode: this.toolState.brushMode,
             brushSize: this.toolState.brushSize,
             placementMode: this.toolState.placementMode
@@ -622,6 +705,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
         this.toolState.selectedTerrain = this.savedUIState.terrain;
         this.toolState.selectedUnit = this.savedUIState.unit;
         this.toolState.selectedPlayer = this.savedUIState.playerId;
+        this.toolState.selectedCrossing = this.savedUIState.crossing;
         this.toolState.brushMode = this.savedUIState.brushMode;
         this.toolState.brushSize = this.savedUIState.brushSize;
         this.toolState.placementMode = this.savedUIState.placementMode;
@@ -640,6 +724,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
             selectedTerrain: 1,
             selectedUnit: 0,
             selectedPlayer: 1,
+            selectedCrossing: null,
             placementMode: 'terrain',
             brushMode: 'brush',
             brushSize: 0
@@ -696,7 +781,7 @@ export class WorldEditorPresenter implements IWorldEditorPresenter, EventSubscri
             errors.push(`Invalid brush size: ${this.toolState.brushSize}`);
         }
 
-        const validModes = ['terrain', 'unit', 'clear'];
+        const validModes = ['terrain', 'unit', 'crossing', 'clear'];
         if (!validModes.includes(this.toolState.placementMode)) {
             errors.push(`Invalid placement mode: ${this.toolState.placementMode}`);
         }

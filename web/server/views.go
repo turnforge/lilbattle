@@ -103,7 +103,10 @@ func NewRootViewsHandler(middleware *oa.Middleware, authService oa.AuthUserStore
 			// Use protojson.Marshal for protobuf types, regular json.Marshal for others
 			// Check if it's a protobuf message using proto.Message interface
 			if msg, ok := v.(proto.Message); ok {
-				jsonBytes, err := protojson.Marshal(msg)
+				marshaler := protojson.MarshalOptions{
+					UseEnumNumbers: true, // Output enum values as numbers instead of strings
+				}
+				jsonBytes, err := marshaler.Marshal(msg)
 				if err == nil {
 					return template.JS(jsonBytes)
 				}

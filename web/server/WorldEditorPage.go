@@ -51,6 +51,13 @@ type UnitType struct {
 	IconDataURL string `json:"iconDataURL"`
 }
 
+// CrossingType represents a road or bridge crossing
+type CrossingType struct {
+	ID          string `json:"id"`   // "road" or "bridge"
+	Name        string `json:"name"` // Display name
+	IconDataURL string `json:"iconDataURL"`
+}
+
 type WorldEditorPage struct {
 	BasePage
 	Header         Header
@@ -64,6 +71,7 @@ type WorldEditorPage struct {
 	NatureTerrains []TerrainType
 	CityTerrains   []TerrainType
 	UnitTypes      []UnitType
+	Crossings      []CrossingType // Road and Bridge crossings
 	PlayerCount    int
 	Theme          string // Theme name from query parameter (default, fantasy, modern)
 }
@@ -81,6 +89,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 	// Initialize terrain types with actual asset images
 	v.NatureTerrains = []TerrainType{}
 	v.CityTerrains = []TerrainType{}
+	v.Crossings = []CrossingType{}
 	v.PlayerCount = 4 // Default player count for world editor
 
 	// Determine whether to use theme-based assets or PNG assets
@@ -91,10 +100,24 @@ func (v *WorldEditorPage) SetupDefaults() {
 	// Get the theme manager
 	tm := GetThemeManager()
 
+	// Crossing tile IDs that should be excluded from terrain palettes
+	// These are now placed via the Crossings tab instead
+	crossingTileIDs := map[int32]bool{
+		17: true, // Bridge Regular
+		18: true, // Bridge Shallow
+		19: true, // Bridge Deep
+		22: true, // Road
+	}
+
 	rulesEngine := weewar.DefaultRulesEngine()
 	for i := int32(0); i <= 30; i++ {
 		terrainData, err := rulesEngine.GetTerrainData(i)
 		if err == nil && terrainData != nil {
+			// Skip crossing tiles - they're handled separately
+			if crossingTileIDs[terrainData.Id] {
+				continue
+			}
+
 			// Get the appropriate icon URL from theme manager
 			iconDataURL := tm.GetTerrainIconURL(i, useTheme, themeName)
 
@@ -132,6 +155,20 @@ func (v *WorldEditorPage) SetupDefaults() {
 			}
 		}
 	}
+
+	// Add crossing types (Road and Bridge)
+	// Use tile type 22 (Road) icon for roads
+	v.Crossings = append(v.Crossings, CrossingType{
+		ID:          "road",
+		Name:        tm.GetTerrainName(22, "Road", useTheme, themeName),
+		IconDataURL: tm.GetTerrainIconURL(22, useTheme, themeName),
+	})
+	// Use tile type 17 (Bridge Regular) icon for bridges
+	v.Crossings = append(v.Crossings, CrossingType{
+		ID:          "bridge",
+		Name:        tm.GetTerrainName(17, "Bridge", useTheme, themeName),
+		IconDataURL: tm.GetTerrainIconURL(17, useTheme, themeName),
+	})
 
 	// Sort terrain lists by name for easier visual grouping
 	// Clear should always be first in Nature Terrains

@@ -346,3 +346,44 @@ class GameListingPage {
 - Both pages now properly initialize JavaScript functionality
 
 **Result:** Splash screens now properly dismissed on /worlds/ and /games/ listing pages
+
+## Recent Session Work (2025-11-27)
+
+### Crossing Layer Implementation (Roads & Bridges)
+
+Implemented a complete crossing layer system for roads and bridges in the world editor:
+
+**Architecture:**
+- **CrossingType enum** (from proto): `CROSSING_TYPE_UNSPECIFIED`, `CROSSING_TYPE_ROAD`, `CROSSING_TYPE_BRIDGE`
+- **CrossingLayer** (`common/CrossingLayer.ts`): Phaser layer at depth 5 (between tiles and units)
+- **Connection-based rendering**: Crossings draw lines from center to center of neighboring compatible crossings
+- **Type compatibility**: Roads only connect to roads, bridges only connect to bridges
+
+**Event System:**
+- Added `CROSSINGS_CHANGED` event type to `events.ts`
+- `World.ts` emits `CROSSINGS_CHANGED` events on crossing modifications
+- `PhaserWorldScene.ts` subscribes to events and updates `CrossingLayer`
+
+**Editor UI Changes:**
+- Reduced from 3 tabs (Nature, City, Units) to 2 tabs (Tiles, Units)
+- Tiles tab contains: Clear button, Nature section, Crossings section (Road/Bridge), Structures section
+- Crossings have toggle behavior (click to place, click again to remove)
+- Auto-terrain placement: Roads set land (Plains) if on water/empty, bridges set water if on non-water/empty
+
+**Persistence:**
+- Crossings stored in proto `WorldData.crossings` map (key = "q,r", value = CrossingType)
+- Fixed JSON serialization: Added `UseEnumNumbers: true` to protojson marshaling for proper TypeScript enum compatibility
+- Fixed loading order: Crossings load in both `setWorld()` and `create()` to handle initialization timing
+
+**Files Changed:**
+- `common/events.ts`: Added CROSSINGS_CHANGED
+- `common/World.ts`: Added crossing change tracking and event emission
+- `common/CrossingLayer.ts`: Complete rewrite with connection-based rendering
+- `common/PhaserWorldScene.ts`: CrossingLayer integration, event handling, loading
+- `WorldEditorPage/WorldEditorPresenter.ts`: Crossing placement logic with auto-terrain
+- `WorldEditorPage/ToolsPanel.ts`: Updated for 2-tab layout with crossings section
+- `WorldEditorPage/PhaserEditorComponent.ts`: Pass world to scene
+- `WorldEditorPage/index.ts`: Tab switching updates
+- `web/server/WorldEditorPage.go`: Crossings palette data
+- `web/server/views.go`: UseEnumNumbers for proto JSON
+- `web/templates/panels/ToolsPanel.html`: Restructured layout
