@@ -5,28 +5,29 @@
  * as visual overlays on the hex grid. Roads and bridges are stored separately
  * from tiles to allow independent terrain modification while preserving crossings.
  *
- * Connection-based rendering:
- * - If a crossing has no neighbors with crossings, draws a horizontal line (left to right edge)
- * - If there are neighboring crossings, draws lines from center to center of connected tiles
+ * Explicit connectivity rendering:
+ * - Each crossing stores which of its 6 hex neighbors it connects to via connectsTo array
+ * - If a crossing has no connections (all false), draws a horizontal line (left to right edge)
+ * - Otherwise, draws lines from center toward each connected direction
  *
  * Depth: 5 (between tiles at 0 and units at 10)
  */
 
 import * as Phaser from 'phaser';
 import { BaseLayer, LayerConfig, ClickContext, LayerHitResult } from './LayerSystem';
-import { hexToPixel, axialNeighbors } from './hexUtils';
-import { CrossingType } from './World';
+import { hexToPixel, getNeighborCoord } from './hexUtils';
+import { CrossingType, Crossing } from './World';
 
 // =============================================================================
 // Crossing Layer
 // =============================================================================
 
 /**
- * Layer for rendering roads and bridges with connection-based graphics
+ * Layer for rendering roads and bridges with explicit connection-based graphics
  */
 export class CrossingLayer extends BaseLayer {
     private crossingGraphics = new Map<string, Phaser.GameObjects.Graphics>();
-    private crossingData = new Map<string, CrossingType>();
+    private crossingData = new Map<string, Crossing>();
     private tileWidth: number;
     private tileHeight: number;
 
@@ -54,58 +55,38 @@ export class CrossingLayer extends BaseLayer {
     }
 
     /**
-     * Get neighboring hex coordinates
+     * Get the direction indices where this crossing has connections
+     * Reads directly from connectsTo array
      */
-    private getNeighbors(q: number, r: number): { q: number, r: number }[] {
-        return axialNeighbors(q, r).map(([nq, nr]) => ({ q: nq, r: nr }));
-    }
+    private getConnectionDirections(q: number, r: number): number[] {
+        const crossing = this.crossingData.get(this.getKey(q, r));
+        if (!crossing) return [];
 
-    /**
-     * Check if two crossing types are compatible for connection
-     * Roads only connect to roads, bridges only connect to bridges
-     */
-    private areTypesCompatible(type1: CrossingType, type2: CrossingType): boolean {
-        const isRoad1 = type1 === CrossingType.CROSSING_TYPE_ROAD;
-        const isRoad2 = type2 === CrossingType.CROSSING_TYPE_ROAD;
-        // Both must be roads, or both must be bridges
-        return isRoad1 === isRoad2;
-    }
-
-    /**
-     * Get neighbors that have compatible crossings
-     */
-    private getConnectedNeighbors(q: number, r: number): { q: number, r: number }[] {
-        const currentType = this.crossingData.get(this.getKey(q, r));
-        if (!currentType) return [];
-
-        return this.getNeighbors(q, r).filter(n => {
-            const neighborType = this.crossingData.get(this.getKey(n.q, n.r));
-            return neighborType && this.areTypesCompatible(currentType, neighborType);
-        });
+        const directions: number[] = [];
+        for (let i = 0; i < 6; i++) {
+            if (crossing.connectsTo[i]) {
+                directions.push(i);
+            }
+        }
+        return directions;
     }
 
     /**
      * Add or update a crossing at a hex coordinate
      */
-    public setCrossing(q: number, r: number, crossingType: CrossingType): void {
+    public setCrossing(q: number, r: number, crossing: Crossing): void {
         const key = this.getKey(q, r);
 
-        if (crossingType === CrossingType.CROSSING_TYPE_UNSPECIFIED) {
+        if (crossing.type === CrossingType.CROSSING_TYPE_UNSPECIFIED) {
             this.removeCrossing(q, r);
             return;
         }
 
         // Store the crossing data
-        this.crossingData.set(key, crossingType);
+        this.crossingData.set(key, crossing);
 
-        // Redraw this tile and all compatible neighbors that might be affected
+        // Redraw this tile
         this.redrawTile(q, r);
-        for (const neighbor of this.getNeighbors(q, r)) {
-            const neighborType = this.crossingData.get(this.getKey(neighbor.q, neighbor.r));
-            if (neighborType && this.areTypesCompatible(crossingType, neighborType)) {
-                this.redrawTile(neighbor.q, neighbor.r);
-            }
-        }
     }
 
     /**
@@ -113,9 +94,6 @@ export class CrossingLayer extends BaseLayer {
      */
     public removeCrossing(q: number, r: number): void {
         const key = this.getKey(q, r);
-
-        // Get neighbors before removing (to redraw them after)
-        const connectedNeighbors = this.getConnectedNeighbors(q, r);
 
         // Remove graphics
         const graphics = this.crossingGraphics.get(key);
@@ -126,21 +104,16 @@ export class CrossingLayer extends BaseLayer {
 
         // Remove data
         this.crossingData.delete(key);
-
-        // Redraw neighbors that were connected
-        for (const neighbor of connectedNeighbors) {
-            this.redrawTile(neighbor.q, neighbor.r);
-        }
     }
 
     /**
-     * Redraw the crossing graphic for a single tile based on its connections
+     * Redraw the crossing graphic for a single tile based on its explicit connections
      */
     private redrawTile(q: number, r: number): void {
         const key = this.getKey(q, r);
-        const crossingType = this.crossingData.get(key);
+        const crossing = this.crossingData.get(key);
 
-        if (!crossingType) return;
+        if (!crossing) return;
 
         // Remove existing graphic
         const existing = this.crossingGraphics.get(key);
@@ -156,18 +129,16 @@ export class CrossingLayer extends BaseLayer {
         const position = hexToPixel(q, r);
         graphics.setPosition(position.x, position.y);
 
-        // Find connected neighbors
-        const connectedNeighbors = this.getConnectedNeighbors(q, r);
+        // Get explicit connection directions
+        const connectionDirections = this.getConnectionDirections(q, r);
 
-        if (connectedNeighbors.length === 0) {
+        if (connectionDirections.length === 0) {
             // No connections - draw default horizontal crossing
-            this.drawDefaultCrossing(graphics, crossingType);
+            this.drawDefaultCrossing(graphics, crossing.type);
         } else {
-            // Draw connections to each neighbor
-            // We only draw from current tile to neighbors, not back
-            // This is handled by each tile drawing its own outgoing connections
-            for (const neighbor of connectedNeighbors) {
-                this.drawConnectionToNeighbor(graphics, q, r, neighbor.q, neighbor.r, crossingType);
+            // Draw connections in each specified direction
+            for (const direction of connectionDirections) {
+                this.drawConnectionInDirection(graphics, q, r, direction, crossing.type);
             }
         }
 
@@ -175,7 +146,7 @@ export class CrossingLayer extends BaseLayer {
     }
 
     /**
-     * Draw the default crossing (horizontal line) when no neighbors are connected
+     * Draw the default crossing (horizontal line) when no connections are specified
      */
     private drawDefaultCrossing(graphics: Phaser.GameObjects.Graphics, crossingType: CrossingType): void {
         const halfWidth = this.tileWidth / 2;
@@ -201,15 +172,18 @@ export class CrossingLayer extends BaseLayer {
     }
 
     /**
-     * Draw a connection line from current tile center toward a neighbor
+     * Draw a connection line from current tile center toward a neighbor in the given direction
      * We draw from center to the edge (halfway to neighbor center)
      */
-    private drawConnectionToNeighbor(
+    private drawConnectionInDirection(
         graphics: Phaser.GameObjects.Graphics,
         fromQ: number, fromR: number,
-        toQ: number, toR: number,
+        direction: number,
         crossingType: CrossingType
     ): void {
+        // Get neighbor coordinate in this direction
+        const [toQ, toR] = getNeighborCoord(fromQ, fromR, direction);
+
         // Calculate relative position of neighbor center from our center
         const fromPos = hexToPixel(fromQ, fromR);
         const toPos = hexToPixel(toQ, toR);
@@ -267,21 +241,21 @@ export class CrossingLayer extends BaseLayer {
     }
 
     /**
-     * Load crossings from a map of coordinate keys to CrossingType values
+     * Load crossings from a map of coordinate keys to Crossing objects
      */
-    public loadCrossings(crossings: { [key: string]: CrossingType }): void {
+    public loadCrossings(crossings: { [key: string]: Crossing }): void {
         // Clear existing crossings
         this.clearAllCrossings();
 
         // First, store all crossing data
-        for (const [key, crossingType] of Object.entries(crossings)) {
+        for (const [key, crossing] of Object.entries(crossings)) {
             const [q, r] = key.split(',').map(Number);
-            if (!isNaN(q) && !isNaN(r) && crossingType !== CrossingType.CROSSING_TYPE_UNSPECIFIED) {
-                this.crossingData.set(key, crossingType);
+            if (!isNaN(q) && !isNaN(r) && crossing.type !== CrossingType.CROSSING_TYPE_UNSPECIFIED) {
+                this.crossingData.set(key, crossing);
             }
         }
 
-        // Then, draw all tiles (now that we know all neighbors)
+        // Then, draw all tiles
         for (const [key] of this.crossingData) {
             const [q, r] = key.split(',').map(Number);
             this.redrawTile(q, r);

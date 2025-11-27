@@ -57,6 +57,7 @@ export class EditorToolsPanel extends BaseComponent {
         this.bindTabButtons();
         this.bindTerrainButtons();
         this.bindCrossingButtons();
+        this.bindCrossingDirectionPreset();
         this.bindUnitButtons();
         this.bindBrushSizeControl();
         this.bindPlayerControl();
@@ -395,6 +396,86 @@ export class EditorToolsPanel extends BaseComponent {
         });
 
         this.log(`Bound ${crossingButtons.length} crossing buttons`);
+    }
+
+    // Crossing direction presets: [LEFT, TOP_LEFT, TOP_RIGHT, RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT]
+    private static readonly CROSSING_PRESETS: { [key: string]: boolean[] } = {
+        'horizontal': [true, false, false, true, false, false],        // L + R
+        'diagonal-tlbr': [false, true, false, false, true, false],     // TL + BR
+        'diagonal-trbl': [false, false, true, false, false, true],     // TR + BL
+        't-left': [true, true, false, false, true, false],             // L + TL + BR
+        't-right': [false, false, true, true, false, true],            // TR + R + BL
+        'cross': [true, false, false, true, true, true],               // L + R + BR + BL (4-way)
+        'custom': [false, false, false, false, false, false],          // User-defined
+    };
+
+    /** Current crossing direction state */
+    private crossingDirections: boolean[] = [true, false, false, true, false, false]; // Default: horizontal
+
+    /**
+     * Bind crossing direction preset controls
+     */
+    private bindCrossingDirectionPreset(): void {
+        const presetSelect = this.findElement('#crossing-preset-select') as HTMLSelectElement;
+
+        if (!presetSelect) {
+            this.log('Crossing preset select not found');
+            return;
+        }
+
+        // Bind preset dropdown change
+        presetSelect.addEventListener('change', () => {
+            const preset = presetSelect.value;
+            if (preset !== 'custom' && EditorToolsPanel.CROSSING_PRESETS[preset]) {
+                this.crossingDirections = [...EditorToolsPanel.CROSSING_PRESETS[preset]];
+                this.updateCrossingDirectionVisuals();
+                this.executeWhenReady(() => {
+                    this.presenter!.setCrossingConnectsTo(this.crossingDirections);
+                    this.log(`Set crossing preset: ${preset}`);
+                });
+            }
+        });
+
+        // Bind individual direction line clicks
+        for (let i = 0; i < 6; i++) {
+            const line = document.getElementById(`crossing-dir-${i}`);
+            if (line) {
+                line.addEventListener('click', () => {
+                    this.crossingDirections[i] = !this.crossingDirections[i];
+                    this.updateCrossingDirectionVisuals();
+
+                    // Switch to "custom" in dropdown
+                    presetSelect.value = 'custom';
+
+                    this.executeWhenReady(() => {
+                        this.presenter!.setCrossingConnectsTo(this.crossingDirections);
+                        this.log(`Toggled crossing direction ${i}: ${this.crossingDirections[i]}`);
+                    });
+                });
+            }
+        }
+
+        // Initialize visual state
+        this.updateCrossingDirectionVisuals();
+        this.log('Bound crossing direction preset controls');
+    }
+
+    /**
+     * Update the visual state of crossing direction lines
+     */
+    private updateCrossingDirectionVisuals(): void {
+        for (let i = 0; i < 6; i++) {
+            const line = document.getElementById(`crossing-dir-${i}`);
+            if (line) {
+                if (this.crossingDirections[i]) {
+                    // Active: show in brown/road color
+                    line.setAttribute('stroke', '#d97706'); // amber-600
+                } else {
+                    // Inactive: dim gray
+                    line.setAttribute('stroke', '#d1d5db'); // gray-300
+                }
+            }
+        }
     }
 
     /**

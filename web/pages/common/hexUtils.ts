@@ -104,3 +104,47 @@ export function hexDistance(q1: number, r1: number, q2: number, r2: number): num
     const dr = r2 - r1;
     return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
 }
+
+/**
+ * Get the direction index (0-5) from one hex to a neighbor hex
+ * Returns null if the hexes are not neighbors
+ *
+ * Direction indices match AxialNeighborDeltas:
+ * 0: LEFT (-1,0), 1: TOP_LEFT (0,-1), 2: TOP_RIGHT (1,-1),
+ * 3: RIGHT (1,0), 4: BOTTOM_RIGHT (0,1), 5: BOTTOM_LEFT (-1,1)
+ */
+export function getDirectionIndex(fromQ: number, fromR: number, toQ: number, toR: number): number | null {
+    const dq = toQ - fromQ;
+    const dr = toR - fromR;
+    for (let i = 0; i < 6; i++) {
+        if (AxialNeighborDeltas[i].q === dq && AxialNeighborDeltas[i].r === dr) {
+            return i;
+        }
+    }
+    return null;
+}
+
+/**
+ * Get the opposite direction index
+ * 0 (LEFT) <-> 3 (RIGHT)
+ * 1 (TOP_LEFT) <-> 4 (BOTTOM_RIGHT)
+ * 2 (TOP_RIGHT) <-> 5 (BOTTOM_LEFT)
+ */
+export function getOppositeDirection(dirIndex: number): number {
+    return (dirIndex + 3) % 6;
+}
+
+/**
+ * Check if two hexes are immediate neighbors
+ */
+export function areNeighbors(q1: number, r1: number, q2: number, r2: number): boolean {
+    return getDirectionIndex(q1, r1, q2, r2) !== null;
+}
+
+/**
+ * Get the neighbor coordinate in a given direction
+ */
+export function getNeighborCoord(q: number, r: number, direction: number): [number, number] {
+    const delta = AxialNeighborDeltas[direction];
+    return [q + delta.q, r + delta.r];
+}

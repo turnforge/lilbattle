@@ -299,8 +299,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
 
         // Update individual crossings in scene based on World changes
         for (const change of data.changes) {
-            if (change.crossingType !== null) {
-                this.crossingLayer.setCrossing(change.q, change.r, change.crossingType);
+            if (change.crossing !== null) {
+                this.crossingLayer.setCrossing(change.q, change.r, change.crossing);
             } else {
                 // Crossing was removed
                 this.crossingLayer.removeCrossing(change.q, change.r);

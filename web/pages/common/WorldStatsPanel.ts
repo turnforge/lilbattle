@@ -2,12 +2,26 @@ import { BaseComponent } from '../../lib/Component';
 import { EventBus } from '../../lib/EventBus';
 import { LCMComponent } from '../../lib/LCMComponent';
 import { WorldEventTypes } from './events';
-import { Unit, Tile, World, CrossingType } from './World';
+import { Unit, Tile, World, CrossingType, Crossing } from './World';
 import { ITheme } from '../../assets/themes/BaseTheme';
 import DefaultTheme from '../../assets/themes/default';
 import ModernTheme from '../../assets/themes/modern';
 import FantasyTheme from '../../assets/themes/fantasy';
 import { AssetThemePreference } from './AssetThemePreference';
+import {
+    TILE_TYPE_PLAINS,
+    TILE_TYPE_ROAD, 
+    TILE_TYPE_BRIDGE_SHALLOW, 
+    TILE_TYPE_BRIDGE_REGULAR, 
+    TILE_TYPE_BRIDGE_ROCKY, 
+    TILE_TYPE_BRIDGE_DEEP, 
+
+    // Underlying water tile types for determining bridge depth
+    TILE_TYPE_WATER_SHALLOW, 
+    TILE_TYPE_WATER_REGULAR, 
+    TILE_TYPE_WATER_ROCKY, 
+    TILE_TYPE_WATER_DEEP, 
+} from "../../assets/themes/default"
 
 /**
  * Theme registry for creating theme instances
@@ -505,19 +519,8 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
     // Crossings Grid
     // =========================================================================
 
-    // Tile type constants - crossings map to these for display purposes
-    private static readonly TILE_TYPE_ROAD = 22;
-    private static readonly TILE_TYPE_BRIDGE_SHALLOW = 18;
-    private static readonly TILE_TYPE_BRIDGE_REGULAR = 17;
-    private static readonly TILE_TYPE_BRIDGE_DEEP = 19;
-
-    // Underlying water tile types for determining bridge depth
-    private static readonly TILE_TYPE_WATER_SHALLOW = 14;
-    private static readonly TILE_TYPE_WATER_REGULAR = 10;
-    private static readonly TILE_TYPE_WATER_DEEP = 15;
-
     private updateCrossingsGrid(
-        crossings: Array<{ q: number; r: number; crossingType: CrossingType }>,
+        crossings: Array<{ q: number; r: number; crossing: Crossing }>,
         tiles: Tile[]
     ): void {
         const container = this.findElement('#crossings-grid');
@@ -537,23 +540,26 @@ export class WorldStatsPanel extends BaseComponent implements LCMComponent {
         // Count crossings by their display tile type (road=22, bridges=17/18/19)
         const crossingCounts = new Map<number, number>();
 
-        crossings.forEach(({ q, r, crossingType }) => {
+        crossings.forEach(({ q, r, crossing }) => {
             let displayTileType: number;
 
-            if (crossingType === CrossingType.CROSSING_TYPE_ROAD) {
-                displayTileType = WorldStatsPanel.TILE_TYPE_ROAD;
-            } else if (crossingType === CrossingType.CROSSING_TYPE_BRIDGE) {
+            if (crossing.type === CrossingType.CROSSING_TYPE_ROAD) {
+                displayTileType = TILE_TYPE_ROAD;
+            } else if (crossing.type === CrossingType.CROSSING_TYPE_BRIDGE) {
                 // Determine bridge type based on underlying water tile
-                const tileType = tileTypeMap.get(`${q},${r}`) || WorldStatsPanel.TILE_TYPE_WATER_REGULAR;
+                const tileType = tileTypeMap.get(`${q},${r}`) || TILE_TYPE_WATER_REGULAR;
                 switch (tileType) {
-                    case WorldStatsPanel.TILE_TYPE_WATER_SHALLOW:
-                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_SHALLOW;
+                    case TILE_TYPE_WATER_SHALLOW:
+                        displayTileType = TILE_TYPE_BRIDGE_SHALLOW;
                         break;
-                    case WorldStatsPanel.TILE_TYPE_WATER_DEEP:
-                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_DEEP;
+                    case TILE_TYPE_WATER_ROCKY:
+                        displayTileType = TILE_TYPE_BRIDGE_SHALLOW;
+                        break;
+                    case TILE_TYPE_WATER_DEEP:
+                        displayTileType = TILE_TYPE_BRIDGE_DEEP;
                         break;
                     default:
-                        displayTileType = WorldStatsPanel.TILE_TYPE_BRIDGE_REGULAR;
+                        displayTileType = TILE_TYPE_BRIDGE_REGULAR;
                         break;
                 }
             } else {

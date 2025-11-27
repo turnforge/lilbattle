@@ -1,6 +1,6 @@
 import { EventBus } from '../../lib/EventBus';
 import { WorldEventTypes, WorldEventType } from './events';
-import { rowColToHex, hexToRowCol, axialNeighbors, hexDistance } from "./hexUtils";
+import { rowColToHex, hexToRowCol, axialNeighbors, hexDistance, getDirectionIndex, getOppositeDirection, getNeighborCoord } from "./hexUtils";
 import { Weewar_v1Deserializer as WD } from '../../gen/wasmjs/weewar/v1/factory';
 import {
     World as ProtoWorld,
@@ -10,6 +10,7 @@ import {
     UpdateWorldRequest,
     CreateWorldRequest,
     CrossingType,
+    Crossing,
 } from '../../gen/wasmjs/weewar/v1/models/interfaces'
 import * as models from '../../gen/wasmjs/weewar/v1/models/models'
 import { create, toJson } from '@bufbuild/protobuf';
@@ -19,8 +20,8 @@ export interface WorldEvent {
     data: any;
 }
 
-// Using proto-generated Tile, Unit, and CrossingType types directly
-export { Tile, Unit, CrossingType };
+// Using proto-generated Tile, Unit, CrossingType, and Crossing types directly
+export { Tile, Unit, CrossingType, Crossing };
 
 // Batch event data types
 export interface TileChange {
@@ -38,7 +39,7 @@ export interface UnitChange {
 export interface CrossingChange {
     q: number;
     r: number;
-    crossingType: CrossingType | null;  // null means crossing was removed
+    crossing: Crossing | null;  // null means crossing was removed
 }
 
 export interface TilesChangedEventData {
@@ -101,7 +102,7 @@ export class World {
     private metadata: WorldMetadata;
     public tiles: { [key: string]: Tile} = {};
     public units: { [key: string]: Unit} = {};
-    public crossings: { [key: string]: CrossingType } = {};
+    public crossings: { [key: string]: Crossing } = {};
     
     // Persistence state
     private worldId: string | null = null;
@@ -202,16 +203,16 @@ export class World {
         }
     }
 
-    private addCrossingChange(q: number, r: number, crossingType: CrossingType | null): void {
+    private addCrossingChange(q: number, r: number, crossing: Crossing | null): void {
         this.hasUnsavedChanges = true;
 
         if (this.isBatching) {
             // Add to batch
-            this.pendingCrossingChanges.push({ q, r, crossingType });
+            this.pendingCrossingChanges.push({ q, r, crossing });
         } else {
             // Emit immediately
             this.emitStateChange(WorldEventTypes.CROSSINGS_CHANGED, {
-                changes: [{ q, r, crossingType }]
+                changes: [{ q, r, crossing }]
             } as CrossingsChangedEventData);
         }
     }
@@ -425,50 +426,175 @@ export class World {
     }
 
     // Crossing management methods
-    public getCrossingAt(q: number, r: number): CrossingType {
+
+    /**
+     * Get the crossing at a hex coordinate (returns null if none)
+     */
+    public getCrossingAt(q: number, r: number): Crossing | null {
         const key = `${q},${r}`;
-        return this.crossings[key] || CrossingType.CROSSING_TYPE_UNSPECIFIED;
+        return this.crossings[key] || null;
+    }
+
+    /**
+     * Get the crossing type at a hex coordinate
+     */
+    public getCrossingTypeAt(q: number, r: number): CrossingType {
+        const crossing = this.getCrossingAt(q, r);
+        return crossing?.type || CrossingType.CROSSING_TYPE_UNSPECIFIED;
     }
 
     public hasCrossing(q: number, r: number): boolean {
-        const key = `${q},${r}`;
-        const crossing = this.crossings[key];
-        return crossing !== undefined && crossing !== CrossingType.CROSSING_TYPE_UNSPECIFIED;
+        const crossing = this.getCrossingAt(q, r);
+        return crossing !== null && crossing.type !== CrossingType.CROSSING_TYPE_UNSPECIFIED;
     }
 
     public hasRoad(q: number, r: number): boolean {
-        return this.getCrossingAt(q, r) === CrossingType.CROSSING_TYPE_ROAD;
+        return this.getCrossingTypeAt(q, r) === CrossingType.CROSSING_TYPE_ROAD;
     }
 
     public hasBridge(q: number, r: number): boolean {
-        return this.getCrossingAt(q, r) === CrossingType.CROSSING_TYPE_BRIDGE;
+        return this.getCrossingTypeAt(q, r) === CrossingType.CROSSING_TYPE_BRIDGE;
     }
 
+    /**
+     * Create an empty crossing with no connections
+     */
+    private createEmptyCrossing(type: CrossingType): Crossing {
+        return {
+            type,
+            connectsTo: [false, false, false, false, false, false]
+        };
+    }
+
+    /**
+     * Add a bidirectional crossing connection between two neighboring tiles.
+     * Creates crossings if they don't exist. Extends existing crossings.
+     *
+     * @param fromQ Source tile Q coordinate
+     * @param fromR Source tile R coordinate
+     * @param toQ Target tile Q coordinate
+     * @param toR Target tile R coordinate
+     * @param type Crossing type (road or bridge)
+     * @returns true if connection was added, false if tiles are not neighbors
+     */
+    public addCrossingConnection(fromQ: number, fromR: number, toQ: number, toR: number, type: CrossingType): boolean {
+        // Get direction from fromTile to toTile
+        const directionToTarget = getDirectionIndex(fromQ, fromR, toQ, toR);
+        if (directionToTarget === null) {
+            // Tiles are not neighbors
+            return false;
+        }
+
+        const directionToSource = getOppositeDirection(directionToTarget);
+        const fromKey = `${fromQ},${fromR}`;
+        const toKey = `${toQ},${toR}`;
+
+        // Get or create crossing at source tile
+        let fromCrossing = this.crossings[fromKey];
+        if (!fromCrossing) {
+            fromCrossing = this.createEmptyCrossing(type);
+            this.crossings[fromKey] = fromCrossing;
+        }
+        fromCrossing.connectsTo[directionToTarget] = true;
+
+        // Get or create crossing at target tile
+        let toCrossing = this.crossings[toKey];
+        if (!toCrossing) {
+            toCrossing = this.createEmptyCrossing(type);
+            this.crossings[toKey] = toCrossing;
+        }
+        toCrossing.connectsTo[directionToSource] = true;
+
+        // Emit changes for both tiles
+        this.addCrossingChange(fromQ, fromR, fromCrossing);
+        this.addCrossingChange(toQ, toR, toCrossing);
+
+        return true;
+    }
+
+    /**
+     * Remove a crossing at a hex coordinate and update all connected neighbors.
+     * Connected neighbors have their reciprocal connections cleared.
+     * Neighbors with no remaining connections are also removed.
+     *
+     * @param q Q coordinate
+     * @param r R coordinate
+     * @returns true if crossing was removed
+     */
+    public removeCrossing(q: number, r: number): boolean {
+        const key = `${q},${r}`;
+        const crossing = this.crossings[key];
+
+        if (!crossing) {
+            return false;
+        }
+
+        // Update all connected neighbors
+        for (let dir = 0; dir < 6; dir++) {
+            if (crossing.connectsTo[dir]) {
+                const [nq, nr] = getNeighborCoord(q, r, dir);
+                const neighborKey = `${nq},${nr}`;
+                const neighborCrossing = this.crossings[neighborKey];
+
+                if (neighborCrossing) {
+                    const oppositeDir = getOppositeDirection(dir);
+                    neighborCrossing.connectsTo[oppositeDir] = false;
+
+                    // Check if neighbor has any remaining connections
+                    const hasConnections = neighborCrossing.connectsTo.some(c => c);
+                    if (!hasConnections) {
+                        // Remove neighbor crossing entirely
+                        delete this.crossings[neighborKey];
+                        this.addCrossingChange(nq, nr, null);
+                    } else {
+                        // Update neighbor crossing
+                        this.addCrossingChange(nq, nr, neighborCrossing);
+                    }
+                }
+            }
+        }
+
+        // Remove the crossing itself
+        delete this.crossings[key];
+        this.addCrossingChange(q, r, null);
+
+        return true;
+    }
+
+    /**
+     * Delete crossing at specified location without affecting neighbors
+     * Use this for simple toggle behavior in the editor
+     */
+    public deleteCrossing(q: number, r: number): boolean {
+        const key = `${q},${r}`;
+        if (!this.crossings[key]) {
+            return false;
+        }
+        delete this.crossings[key];
+        this.addCrossingChange(q, r, null);
+        return true;
+    }
+
+    /**
+     * Legacy method for simple crossing placement (creates isolated crossing)
+     * @deprecated Use addCrossingConnection for explicit connectivity
+     */
     public setCrossing(q: number, r: number, crossingType: CrossingType): void {
         const key = `${q},${r}`;
         if (crossingType === CrossingType.CROSSING_TYPE_UNSPECIFIED) {
-            delete this.crossings[key];
-            this.addCrossingChange(q, r, null);
+            this.removeCrossing(q, r);
         } else {
-            this.crossings[key] = crossingType;
-            this.addCrossingChange(q, r, crossingType);
+            // Create crossing with no connections (isolated)
+            const crossing = this.createEmptyCrossing(crossingType);
+            this.crossings[key] = crossing;
+            this.addCrossingChange(q, r, crossing);
         }
     }
 
-    public removeCrossing(q: number, r: number): boolean {
-        const key = `${q},${r}`;
-        if (key in this.crossings) {
-            delete this.crossings[key];
-            this.addCrossingChange(q, r, null);
-            return true;
-        }
-        return false;
-    }
-
-    public getAllCrossings(): Array<{ q: number; r: number; crossingType: CrossingType }> {
-        return Object.entries(this.crossings).map(([key, crossingType]) => {
+    public getAllCrossings(): Array<{ q: number; r: number; crossing: Crossing }> {
+        return Object.entries(this.crossings).map(([key, crossing]) => {
             const [q, r] = key.split(',').map(Number);
-            return { q, r, crossingType };
+            return { q, r, crossing };
         });
     }
 
@@ -557,10 +683,13 @@ export class World {
         });
 
         // Build WorldData using new map-based storage
-        // Convert crossings map to use number values for proto enum
-        const crossingsForProto: Record<string, number> = {};
-        for (const [key, value] of Object.entries(this.crossings)) {
-            crossingsForProto[key] = value as number;
+        // Convert crossings to proto format (Crossing objects with type as number)
+        const crossingsForProto: Record<string, any> = {};
+        for (const [key, crossing] of Object.entries(this.crossings)) {
+            crossingsForProto[key] = {
+                type: crossing.type as number,
+                connectsTo: crossing.connectsTo
+            };
         }
 
         const worldData: ProtoWorldData = WD.from(models.WorldData,{
@@ -719,7 +848,11 @@ export class World {
         // Load crossings if present
         const crossings = data.crossings || {};
         for (const [key, value] of Object.entries(crossings)) {
-            this.crossings[key] = value as CrossingType;
+            const crossingData = value as any;
+            this.crossings[key] = {
+                type: crossingData.type ?? CrossingType.CROSSING_TYPE_UNSPECIFIED,
+                connectsTo: crossingData.connectsTo || crossingData.connects_to || [false, false, false, false, false, false]
+            };
         }
 
         return this.loadTilesAndUnits(tiles, units);
