@@ -150,6 +150,68 @@ func TileFromTileGORM(
 	return out, nil
 }
 
+// CrossingToCrossingGORM converts a models.Crossing to CrossingGORM.
+// The optional decorator function allows custom field transformations.
+func CrossingToCrossingGORM(
+	src *models.Crossing,
+	dest *CrossingGORM,
+	decorator func(*models.Crossing, *CrossingGORM) error,
+) (out *CrossingGORM, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &CrossingGORM{}
+	}
+
+	// Initialize struct with inline values
+	*dest = CrossingGORM{
+		Type:       src.Type,
+		ConnectsTo: src.ConnectsTo,
+	}
+	out = dest
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(src, dest); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
+// CrossingFromCrossingGORM converts a CrossingGORM back to models.Crossing.
+// The optional decorator function allows custom field transformations.
+func CrossingFromCrossingGORM(
+	dest *models.Crossing,
+	src *CrossingGORM,
+	decorator func(dest *models.Crossing, src *CrossingGORM) error,
+) (out *models.Crossing, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &models.Crossing{}
+	}
+
+	// Initialize struct with inline values
+	*dest = models.Crossing{
+		Type:       src.Type,
+		ConnectsTo: src.ConnectsTo,
+	}
+	out = dest
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(dest, src); err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
 // UnitToUnitGORM converts a models.Unit to UnitGORM.
 // The optional decorator function allows custom field transformations.
 func UnitToUnitGORM(
@@ -454,10 +516,6 @@ func WorldDataToWorldDataGORM(
 		}
 	}
 
-	if src.Crossings != nil {
-		out.Crossings = src.Crossings
-	}
-
 	if src.Tiles != nil {
 		out.Tiles = make([]TileGORM, len(src.Tiles))
 		for i, item := range src.Tiles {
@@ -498,6 +556,17 @@ func WorldDataToWorldDataGORM(
 			out.UnitsMap[key] = converted
 		}
 	}
+	if src.Crossings != nil {
+		out.Crossings = make(map[string]CrossingGORM, len(src.Crossings))
+		for key, value := range src.Crossings {
+			var converted CrossingGORM
+			_, err = CrossingToCrossingGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+			}
+			out.Crossings[key] = converted
+		}
+	}
 
 	// Apply decorator if provided
 	if decorator != nil {
@@ -527,7 +596,6 @@ func WorldDataFromWorldDataGORM(
 	*dest = models.WorldData{
 		ContentHash: src.ContentHash,
 		Version:     src.Version,
-		Crossings:   src.Crossings,
 	}
 	out = dest
 
@@ -569,6 +637,15 @@ func WorldDataFromWorldDataGORM(
 			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
 			if err != nil {
 				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+			}
+		}
+	}
+	if src.Crossings != nil {
+		out.Crossings = make(map[string]*models.Crossing, len(src.Crossings))
+		for key, value := range src.Crossings {
+			out.Crossings[key], err = CrossingFromCrossingGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
 			}
 		}
 	}
@@ -1115,10 +1192,6 @@ func WorldDataToGameWorldDataGORM(
 		}
 	}
 
-	if src.Crossings != nil {
-		out.Crossings = src.Crossings
-	}
-
 	if src.Tiles != nil {
 		out.Tiles = make([]TileGORM, len(src.Tiles))
 		for i, item := range src.Tiles {
@@ -1159,6 +1232,17 @@ func WorldDataToGameWorldDataGORM(
 			out.UnitsMap[key] = converted
 		}
 	}
+	if src.Crossings != nil {
+		out.Crossings = make(map[string]CrossingGORM, len(src.Crossings))
+		for key, value := range src.Crossings {
+			var converted CrossingGORM
+			_, err = CrossingToCrossingGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+			}
+			out.Crossings[key] = converted
+		}
+	}
 
 	// Apply decorator if provided
 	if decorator != nil {
@@ -1188,7 +1272,6 @@ func WorldDataFromGameWorldDataGORM(
 	*dest = models.WorldData{
 		ContentHash: src.ContentHash,
 		Version:     src.Version,
-		Crossings:   src.Crossings,
 	}
 	out = dest
 
@@ -1230,6 +1313,15 @@ func WorldDataFromGameWorldDataGORM(
 			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
 			if err != nil {
 				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+			}
+		}
+	}
+	if src.Crossings != nil {
+		out.Crossings = make(map[string]*models.Crossing, len(src.Crossings))
+		for key, value := range src.Crossings {
+			out.Crossings[key], err = CrossingFromCrossingGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
 			}
 		}
 	}

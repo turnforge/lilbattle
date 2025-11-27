@@ -169,7 +169,20 @@ export interface WorldData {
   tilesMap: Record<string, Tile>;
   unitsMap: Record<string, Unit>;
   /** Improvement layer - crossings (roads on land, bridges on water) */
-  crossings: Record<string, any>;
+  crossings: Record<string, Crossing>;
+}
+
+
+/**
+ * Crossing with explicit connectivity data
+ Each crossing stores which of its 6 hex neighbors it connects to
+ */
+export interface Crossing {
+  type: CrossingType;
+  /** 6 booleans for hex neighbors in order matching AxialNeighborDeltas:
+ 0: LEFT (-1,0), 1: TOP_LEFT (0,-1), 2: TOP_RIGHT (1,-1),
+ 3: RIGHT (1,0), 4: BOTTOM_RIGHT (0,1), 5: BOTTOM_LEFT (-1,1) */
+  connectsTo: boolean[];
 }
 
 

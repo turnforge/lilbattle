@@ -7,38 +7,38 @@ type TilesMapEntry struct {
 	Value TileGORM
 }
 
+// UnitsMapEntry
+type UnitsMapEntry struct {
+	Key   string
+	Value UnitGORM
+}
+
+// UnitsMapEntry
+type UnitsMapEntry struct {
+	Key   string
+	Value UnitGORM
+}
+
+// CrossingsEntry
+type CrossingsEntry struct {
+	Key   string
+	Value CrossingGORM
+}
+
 // Any
 type Any struct {
 	TypeUrl string
 	Value   []byte
 }
 
+// CrossingsEntry
+type CrossingsEntry struct {
+	Key   string
+	Value CrossingGORM
+}
+
 // TilesMapEntry
 type TilesMapEntry struct {
 	Key   string
 	Value TileGORM
-}
-
-// CrossingsEntry
-type CrossingsEntry struct {
-	Key   string
-	Value gorm.CrossingType
-}
-
-// UnitsMapEntry
-type UnitsMapEntry struct {
-	Key   string
-	Value UnitGORM
-}
-
-// CrossingsEntry
-type CrossingsEntry struct {
-	Key   string
-	Value gorm.CrossingType
-}
-
-// UnitsMapEntry
-type UnitsMapEntry struct {
-	Key   string
-	Value UnitGORM
 }

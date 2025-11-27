@@ -30,6 +30,11 @@ export interface TileGORM {
 
 
 
+export interface CrossingGORM {
+}
+
+
+
 export interface UnitGORM {
 }
 
@@ -60,7 +65,7 @@ export interface WorldDataGORM {
   /** Units as JSON for cross-DB compatibility */
   units?: UnitGORM[];
   /** Units as JSON for cross-DB compatibility */
-  crossings: Record<string, any>;
+  crossings: Record<string, CrossingGORM>;
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
   /** Tiles as JSON for cross-DB compatibility */
@@ -127,7 +132,7 @@ export interface GameWorldDataGORM {
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
   /** Units as JSON for cross-DB compatibility */
-  crossings: Record<string, any>;
+  crossings: Record<string, CrossingGORM>;
   /** Tiles as JSON for cross-DB compatibility */
   tilesMap: Record<string, TileGORM>;
   /** Units as JSON for cross-DB compatibility */

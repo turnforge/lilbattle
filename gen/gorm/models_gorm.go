@@ -52,6 +52,36 @@ func (m *TileGORM) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, m)
 }
 
+// CrossingGORM is the GORM model for weewar.v1.Crossing
+type CrossingGORM struct {
+	Type       models.CrossingType
+	ConnectsTo []bool
+}
+
+// Value implements driver.Valuer for CrossingGORM
+func (m CrossingGORM) Value() (driver.Value, error) {
+	return json.Marshal(m)
+}
+
+// Scan implements sql.Scanner for CrossingGORM
+func (m *CrossingGORM) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to scan CrossingGORM: unsupported type %T", value)
+	}
+
+	return json.Unmarshal(bytes, m)
+}
+
 // UnitGORM is the GORM model for weewar.v1.Unit
 type UnitGORM struct {
 	Q                       int32
@@ -155,9 +185,9 @@ type WorldDataGORM struct {
 	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
 	Version             int64
-	TilesMap            map[string]TileGORM            `gorm:"serializer:json"`
-	UnitsMap            map[string]UnitGORM            `gorm:"serializer:json"`
-	Crossings           map[string]models.CrossingType `gorm:"serializer:json"`
+	TilesMap            map[string]TileGORM     `gorm:"serializer:json"`
+	UnitsMap            map[string]UnitGORM     `gorm:"serializer:json"`
+	Crossings           map[string]CrossingGORM `gorm:"serializer:json"`
 }
 
 // TableName returns the table name for WorldDataGORM
@@ -338,9 +368,9 @@ type GameWorldDataGORM struct {
 	ScreenshotIndexInfo IndexInfoGORM `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
 	Version             int64
-	TilesMap            map[string]TileGORM            `gorm:"serializer:json"`
-	UnitsMap            map[string]UnitGORM            `gorm:"serializer:json"`
-	Crossings           map[string]models.CrossingType `gorm:"serializer:json"`
+	TilesMap            map[string]TileGORM     `gorm:"serializer:json"`
+	UnitsMap            map[string]UnitGORM     `gorm:"serializer:json"`
+	Crossings           map[string]CrossingGORM `gorm:"serializer:json"`
 }
 
 // GameStateGORM is the GORM model for weewar.v1.GameState
@@ -378,8 +408,8 @@ type GameMoveGroupGORM struct {
 
 // GameMoveGORM is the GORM model for weewar.v1.GameMove
 type GameMoveGORM struct {
-	GameId      string `gorm:"primaryKey"`
 	Player      int32
+	GameId      string `gorm:"primaryKey"`
 	Timestamp   time.Time
 	GroupNumber string `gorm:"primaryKey"`
 	MoveNumber  int32  `gorm:"primaryKey"`

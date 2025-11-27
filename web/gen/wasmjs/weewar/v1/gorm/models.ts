@@ -1,7 +1,7 @@
 import { Any } from "@bufbuild/protobuf/wkt";
 
 
-import { IndexStateGORM as IndexStateGORMInterface, IndexRecordsLROGORM as IndexRecordsLROGORMInterface, IndexInfoGORM as IndexInfoGORMInterface, TileGORM as TileGORMInterface, UnitGORM as UnitGORMInterface, AttackRecordGORM as AttackRecordGORMInterface, WorldGORM as WorldGORMInterface, WorldDataGORM as WorldDataGORMInterface, GameGORM as GameGORMInterface, GameConfigurationGORM as GameConfigurationGORMInterface, IncomeConfigGORM as IncomeConfigGORMInterface, GamePlayerGORM as GamePlayerGORMInterface, GameTeamGORM as GameTeamGORMInterface, GameSettingsGORM as GameSettingsGORMInterface, GameWorldDataGORM as GameWorldDataGORMInterface, GameStateGORM as GameStateGORMInterface, GameMoveHistoryGORM as GameMoveHistoryGORMInterface, GameMoveGroupGORM as GameMoveGroupGORMInterface, GameMoveGORM as GameMoveGORMInterface } from "./interfaces";
+import { IndexStateGORM as IndexStateGORMInterface, IndexRecordsLROGORM as IndexRecordsLROGORMInterface, IndexInfoGORM as IndexInfoGORMInterface, TileGORM as TileGORMInterface, CrossingGORM as CrossingGORMInterface, UnitGORM as UnitGORMInterface, AttackRecordGORM as AttackRecordGORMInterface, WorldGORM as WorldGORMInterface, WorldDataGORM as WorldDataGORMInterface, GameGORM as GameGORMInterface, GameConfigurationGORM as GameConfigurationGORMInterface, IncomeConfigGORM as IncomeConfigGORMInterface, GamePlayerGORM as GamePlayerGORMInterface, GameTeamGORM as GameTeamGORMInterface, GameSettingsGORM as GameSettingsGORMInterface, GameWorldDataGORM as GameWorldDataGORMInterface, GameStateGORM as GameStateGORMInterface, GameMoveHistoryGORM as GameMoveHistoryGORMInterface, GameMoveGroupGORM as GameMoveGroupGORMInterface, GameMoveGORM as GameMoveGORMInterface } from "./interfaces";
 
 
 
@@ -56,6 +56,19 @@ export class TileGORM implements TileGORMInterface {
    */
   static readonly MESSAGE_TYPE = "weewar.v1.TileGORM";
   readonly __MESSAGE_TYPE = TileGORM.MESSAGE_TYPE;
+
+
+  
+}
+
+
+
+export class CrossingGORM implements CrossingGORMInterface {
+  /**
+   * Fully qualified message type for schema resolution
+   */
+  static readonly MESSAGE_TYPE = "weewar.v1.CrossingGORM";
+  readonly __MESSAGE_TYPE = CrossingGORM.MESSAGE_TYPE;
 
 
   
@@ -123,7 +136,7 @@ export class WorldDataGORM implements WorldDataGORMInterface {
   /** Units as JSON for cross-DB compatibility */
   units: UnitGORM[] = [];
   /** Units as JSON for cross-DB compatibility */
-  crossings: Record<string, any> = {};
+  crossings: Record<string, CrossingGORM> = {};
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
   /** Tiles as JSON for cross-DB compatibility */
@@ -246,7 +259,7 @@ export class GameWorldDataGORM implements GameWorldDataGORMInterface {
   /** ScreenshotIndexInfo embedded */
   screenshotIndexInfo?: IndexInfoGORM;
   /** Units as JSON for cross-DB compatibility */
-  crossings: Record<string, any> = {};
+  crossings: Record<string, CrossingGORM> = {};
   /** Tiles as JSON for cross-DB compatibility */
   tilesMap: Record<string, TileGORM> = {};
   /** Units as JSON for cross-DB compatibility */

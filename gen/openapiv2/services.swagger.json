@@ -2052,6 +2052,22 @@
       },
       "description": "*\nResponse of an world creation."
     },
+    "v1Crossing": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/v1CrossingType"
+        },
+        "connectsTo": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          },
+          "title": "6 booleans for hex neighbors in order matching AxialNeighborDeltas:\n0: LEFT (-1,0), 1: TOP_LEFT (0,-1), 2: TOP_RIGHT (1,-1),\n3: RIGHT (1,0), 4: BOTTOM_RIGHT (0,1), 5: BOTTOM_LEFT (-1,1)"
+        }
+      },
+      "title": "Crossing with explicit connectivity data\nEach crossing stores which of its 6 hex neighbors it connects to"
+    },
     "v1CrossingType": {
       "type": "string",
       "enum": [
@@ -3676,9 +3692,9 @@
         "crossings": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/v1CrossingType"
+            "$ref": "#/definitions/v1Crossing"
           },
-          "description": "key = \"q,r\", value = crossing type",
+          "description": "key = \"q,r\", value = crossing with connectivity",
           "title": "Improvement layer - crossings (roads on land, bridges on water)"
         }
       }

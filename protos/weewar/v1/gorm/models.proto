@@ -17,6 +17,10 @@ message TileGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.Tile", implement_scanner: true  };
 }
 
+message CrossingGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.Crossing", implement_scanner: true  };
+}
+
 message UnitGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.Unit", implement_scanner: true };
   /*
@@ -69,7 +73,7 @@ message WorldDataGORM {
     gorm_tags: ["serializer:json"]
   }];
   // Units as JSON for cross-DB compatibility
-  map<string, CrossingType> crossings = 4 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
+  map<string, CrossingGORM> crossings = 4 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
   // ScreenshotIndexInfo embedded
   IndexInfoGORM screenshot_index_info = 5 [(dal.v1.column) = {
     gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
@@ -156,7 +160,7 @@ message GameWorldDataGORM {
     gorm_tags: ["embedded", "embeddedPrefix:screenshot_index_"]
   }];
   // Units as JSON for cross-DB compatibility
-  map<string, CrossingType> crossings = 5 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
+  map<string, CrossingGORM> crossings = 5 [(dal.v1.column) = { gorm_tags: ["serializer:json"] }];
 
   // Tiles as JSON for cross-DB compatibility
   map<string,TileGORM> tiles_map = 6 [(dal.v1.column) = {

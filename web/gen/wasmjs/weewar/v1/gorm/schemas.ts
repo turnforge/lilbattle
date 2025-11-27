@@ -46,6 +46,16 @@ export const TileGORMSchema: MessageSchema = {
 
 
 /**
+ * Schema for CrossingGORM message
+ */
+export const CrossingGORMSchema: MessageSchema = {
+  name: "CrossingGORM",
+  fields: [
+  ],
+};
+
+
+/**
  * Schema for UnitGORM message
  */
 export const UnitGORMSchema: MessageSchema = {
@@ -387,6 +397,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.IndexRecordsLROGORM": IndexRecordsLROGORMSchema,
   "weewar.v1.IndexInfoGORM": IndexInfoGORMSchema,
   "weewar.v1.TileGORM": TileGORMSchema,
+  "weewar.v1.CrossingGORM": CrossingGORMSchema,
   "weewar.v1.UnitGORM": UnitGORMSchema,
   "weewar.v1.AttackRecordGORM": AttackRecordGORMSchema,
   "weewar.v1.WorldGORM": WorldGORMSchema,

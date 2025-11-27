@@ -144,7 +144,7 @@ message WorldData {
   map<string, Unit> units_map = 7;
 
   // Improvement layer - crossings (roads on land, bridges on water)
-  map<string, CrossingType> crossings = 8;  // key = "q,r", value = crossing type
+  map<string, Crossing> crossings = 8;  // key = "q,r", value = crossing with connectivity
 }
 
 // Crossing types for terrain improvements (roads on land, bridges on water)
@@ -152,6 +152,16 @@ enum CrossingType {
   CROSSING_TYPE_UNSPECIFIED = 0;
   CROSSING_TYPE_ROAD = 1;     // Road on land terrain
   CROSSING_TYPE_BRIDGE = 2;   // Bridge over water terrain
+}
+
+// Crossing with explicit connectivity data
+// Each crossing stores which of its 6 hex neighbors it connects to
+message Crossing {
+  CrossingType type = 1;
+  // 6 booleans for hex neighbors in order matching AxialNeighborDeltas:
+  // 0: LEFT (-1,0), 1: TOP_LEFT (0,-1), 2: TOP_RIGHT (1,-1),
+  // 3: RIGHT (1,0), 4: BOTTOM_RIGHT (0,1), 5: BOTTOM_LEFT (-1,1)
+  repeated bool connects_to = 2;
 }
 
 message Tile {

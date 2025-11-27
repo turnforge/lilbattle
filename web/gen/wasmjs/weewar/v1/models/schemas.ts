@@ -277,6 +277,27 @@ export const WorldDataSchema: MessageSchema = {
 
 
 /**
+ * Schema for Crossing message
+ */
+export const CrossingSchema: MessageSchema = {
+  name: "Crossing",
+  fields: [
+    {
+      name: "type",
+      type: FieldType.STRING,
+      id: 1,
+    },
+    {
+      name: "connectsTo",
+      type: FieldType.REPEATED,
+      id: 2,
+      repeated: true,
+    },
+  ],
+};
+
+
+/**
  * Schema for Tile message
  */
 export const TileSchema: MessageSchema = {
@@ -673,7 +694,7 @@ export const UnitUnitPropertiesSchema: MessageSchema = {
       messageType: "weewar.v1.DamageDistribution",
     },
   ],
-  oneofGroups: ["_defense_override", "_attack_override"],
+  oneofGroups: ["_attack_override", "_defense_override"],
 };
 
 
@@ -4836,6 +4857,7 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.PaginationResponse": PaginationResponseSchema,
   "weewar.v1.World": WorldSchema,
   "weewar.v1.WorldData": WorldDataSchema,
+  "weewar.v1.Crossing": CrossingSchema,
   "weewar.v1.Tile": TileSchema,
   "weewar.v1.Unit": UnitSchema,
   "weewar.v1.AttackRecord": AttackRecordSchema,
