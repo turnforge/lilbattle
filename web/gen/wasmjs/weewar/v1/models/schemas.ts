@@ -4098,6 +4098,36 @@ export const InitializeGameResponseSchema: MessageSchema = {
 
 
 /**
+ * Schema for ClientReadyRequest message
+ */
+export const ClientReadyRequestSchema: MessageSchema = {
+  name: "ClientReadyRequest",
+  fields: [
+    {
+      name: "gameId",
+      type: FieldType.STRING,
+      id: 1,
+    },
+  ],
+};
+
+
+/**
+ * Schema for ClientReadyResponse message
+ */
+export const ClientReadyResponseSchema: MessageSchema = {
+  name: "ClientReadyResponse",
+  fields: [
+    {
+      name: "success",
+      type: FieldType.BOOLEAN,
+      id: 1,
+    },
+  ],
+};
+
+
+/**
  * Schema for ThemeInfo message
  */
 export const ThemeInfoSchema: MessageSchema = {
@@ -5027,6 +5057,8 @@ export const weewar_v1SchemaRegistry: Record<string, MessageSchema> = {
   "weewar.v1.BuildOptionClickedResponse": BuildOptionClickedResponseSchema,
   "weewar.v1.InitializeGameRequest": InitializeGameRequestSchema,
   "weewar.v1.InitializeGameResponse": InitializeGameResponseSchema,
+  "weewar.v1.ClientReadyRequest": ClientReadyRequestSchema,
+  "weewar.v1.ClientReadyResponse": ClientReadyResponseSchema,
   "weewar.v1.ThemeInfo": ThemeInfoSchema,
   "weewar.v1.UnitMapping": UnitMappingSchema,
   "weewar.v1.TerrainMapping": TerrainMappingSchema,

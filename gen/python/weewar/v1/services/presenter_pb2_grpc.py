@@ -104,6 +104,11 @@ class GameViewPresenterStub(object):
                 request_serializer=weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameResponse.FromString,
                 _registered_method=True)
+        self.ClientReady = channel.unary_unary(
+                '/weewar.v1.GameViewPresenter/ClientReady',
+                request_serializer=weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyResponse.FromString,
+                _registered_method=True)
         self.SceneClicked = channel.unary_unary(
                 '/weewar.v1.GameViewPresenter/SceneClicked',
                 request_serializer=weewar_dot_v1_dot_models_dot_presenter__pb2.SceneClickedRequest.SerializeToString,
@@ -145,6 +150,15 @@ class GameViewPresenterServicer(object):
     def InitializeGame(self, request, context):
         """*
         Called on first init based on the game and world data
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClientReady(self, request, context):
+        """*
+        Called by the browser after the UI/scene is fully initialized and ready
+        to receive visual updates (highlights, paths, etc.)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -193,6 +207,11 @@ def add_GameViewPresenterServicer_to_server(servicer, server):
                     servicer.InitializeGame,
                     request_deserializer=weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameResponse.SerializeToString,
+            ),
+            'ClientReady': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClientReady,
+                    request_deserializer=weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyResponse.SerializeToString,
             ),
             'SceneClicked': grpc.unary_unary_rpc_method_handler(
                     servicer.SceneClicked,
@@ -255,6 +274,33 @@ class GameViewPresenter(object):
             '/weewar.v1.GameViewPresenter/InitializeGame',
             weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameRequest.SerializeToString,
             weewar_dot_v1_dot_models_dot_presenter__pb2.InitializeGameResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ClientReady(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.GameViewPresenter/ClientReady',
+            weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyRequest.SerializeToString,
+            weewar_dot_v1_dot_models_dot_presenter__pb2.ClientReadyResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file weewar/v1/models/presenter.proto.
  */
 export const file_weewar_v1_models_presenter: GenFile = /*@__PURE__*/
-  fileDesc("CiB3ZWV3YXIvdjEvbW9kZWxzL3ByZXNlbnRlci5wcm90bxIJd2Vld2FyLnYxImoKGkluaXRpYWxpemVTaW5nbGV0b25SZXF1ZXN0Eg8KB2dhbWVfaWQYASABKAkSEQoJZ2FtZV9kYXRhGAIgASgJEhIKCmdhbWVfc3RhdGUYAyABKAkSFAoMbW92ZV9oaXN0b3J5GAQgASgJIlIKG0luaXRpYWxpemVTaW5nbGV0b25SZXNwb25zZRIzCghyZXNwb25zZRgBIAEoCzIhLndlZXdhci52MS5Jbml0aWFsaXplR2FtZVJlc3BvbnNlImwKGFR1cm5PcHRpb25DbGlja2VkUmVxdWVzdBIPCgdnYW1lX2lkGAEgASgJEhQKDG9wdGlvbl9pbmRleBgCIAEoBRITCgtvcHRpb25fdHlwZRgDIAEoCRIJCgFxGAQgASgFEgkKAXIYBSABKAUiLAoZVHVybk9wdGlvbkNsaWNrZWRSZXNwb25zZRIPCgdnYW1lX2lkGAEgASgJIksKE1NjZW5lQ2xpY2tlZFJlcXVlc3QSDwoHZ2FtZV9pZBgBIAEoCRIJCgFxGAIgASgFEgkKAXIYAyABKAUSDQoFbGF5ZXIYBCABKAkiJwoUU2NlbmVDbGlja2VkUmVzcG9uc2USDwoHZ2FtZV9pZBgBIAEoCSIuChtFbmRUdXJuQnV0dG9uQ2xpY2tlZFJlcXVlc3QSDwoHZ2FtZV9pZBgBIAEoCSIvChxFbmRUdXJuQnV0dG9uQ2xpY2tlZFJlc3BvbnNlEg8KB2dhbWVfaWQYASABKAkiVQoZQnVpbGRPcHRpb25DbGlja2VkUmVxdWVzdBIPCgdnYW1lX2lkGAEgASgJEgkKAXEYAiABKAUSCQoBchgDIAEoBRIRCgl1bml0X3R5cGUYBCABKAUiHAoaQnVpbGRPcHRpb25DbGlja2VkUmVzcG9uc2UiKAoVSW5pdGlhbGl6ZUdhbWVSZXF1ZXN0Eg8KB2dhbWVfaWQYASABKAkieQoWSW5pdGlhbGl6ZUdhbWVSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg0KBWVycm9yGAIgASgJEhYKDmN1cnJlbnRfcGxheWVyGAMgASgFEhQKDHR1cm5fY291bnRlchgEIAEoBRIRCglnYW1lX25hbWUYBSABKAlCogEKDWNvbS53ZWV3YXIudjFCDlByZXNlbnRlclByb3RvUAFaPGdpdGh1Yi5jb20vdHVybmZvcmdlL3dlZXdhci9nZW4vZ28vd2Vld2FyL3YxL21vZGVsczt3ZWV3YXJ2MaICA1dYWKoCCVdlZXdhci5WMcoCCVdlZXdhclxWMeICFVdlZXdhclxWMVxHUEJNZXRhZGF0YeoCCldlZXdhcjo6VjFiBnByb3RvMw", [file_google_protobuf_field_mask, file_weewar_v1_models_models, file_google_api_annotations, file_protoc_gen_openapiv2_options_annotations]);
+  fileDesc("CiB3ZWV3YXIvdjEvbW9kZWxzL3ByZXNlbnRlci5wcm90bxIJd2Vld2FyLnYxImoKGkluaXRpYWxpemVTaW5nbGV0b25SZXF1ZXN0Eg8KB2dhbWVfaWQYASABKAkSEQoJZ2FtZV9kYXRhGAIgASgJEhIKCmdhbWVfc3RhdGUYAyABKAkSFAoMbW92ZV9oaXN0b3J5GAQgASgJIlIKG0luaXRpYWxpemVTaW5nbGV0b25SZXNwb25zZRIzCghyZXNwb25zZRgBIAEoCzIhLndlZXdhci52MS5Jbml0aWFsaXplR2FtZVJlc3BvbnNlImwKGFR1cm5PcHRpb25DbGlja2VkUmVxdWVzdBIPCgdnYW1lX2lkGAEgASgJEhQKDG9wdGlvbl9pbmRleBgCIAEoBRITCgtvcHRpb25fdHlwZRgDIAEoCRIJCgFxGAQgASgFEgkKAXIYBSABKAUiLAoZVHVybk9wdGlvbkNsaWNrZWRSZXNwb25zZRIPCgdnYW1lX2lkGAEgASgJIksKE1NjZW5lQ2xpY2tlZFJlcXVlc3QSDwoHZ2FtZV9pZBgBIAEoCRIJCgFxGAIgASgFEgkKAXIYAyABKAUSDQoFbGF5ZXIYBCABKAkiJwoUU2NlbmVDbGlja2VkUmVzcG9uc2USDwoHZ2FtZV9pZBgBIAEoCSIuChtFbmRUdXJuQnV0dG9uQ2xpY2tlZFJlcXVlc3QSDwoHZ2FtZV9pZBgBIAEoCSIvChxFbmRUdXJuQnV0dG9uQ2xpY2tlZFJlc3BvbnNlEg8KB2dhbWVfaWQYASABKAkiVQoZQnVpbGRPcHRpb25DbGlja2VkUmVxdWVzdBIPCgdnYW1lX2lkGAEgASgJEgkKAXEYAiABKAUSCQoBchgDIAEoBRIRCgl1bml0X3R5cGUYBCABKAUiHAoaQnVpbGRPcHRpb25DbGlja2VkUmVzcG9uc2UiKAoVSW5pdGlhbGl6ZUdhbWVSZXF1ZXN0Eg8KB2dhbWVfaWQYASABKAkieQoWSW5pdGlhbGl6ZUdhbWVSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg0KBWVycm9yGAIgASgJEhYKDmN1cnJlbnRfcGxheWVyGAMgASgFEhQKDHR1cm5fY291bnRlchgEIAEoBRIRCglnYW1lX25hbWUYBSABKAkiJQoSQ2xpZW50UmVhZHlSZXF1ZXN0Eg8KB2dhbWVfaWQYASABKAkiJgoTQ2xpZW50UmVhZHlSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIQqIBCg1jb20ud2Vld2FyLnYxQg5QcmVzZW50ZXJQcm90b1ABWjxnaXRodWIuY29tL3R1cm5mb3JnZS93ZWV3YXIvZ2VuL2dvL3dlZXdhci92MS9tb2RlbHM7d2Vld2FydjGiAgNXWFiqAglXZWV3YXIuVjHKAglXZWV3YXJcVjHiAhVXZWV3YXJcVjFcR1BCTWV0YWRhdGHqAgpXZWV3YXI6OlYxYgZwcm90bzM", [file_google_protobuf_field_mask, file_weewar_v1_models_models, file_google_api_annotations, file_protoc_gen_openapiv2_options_annotations]);
 
 /**
  * Called when the end turn button was clicked
@@ -340,4 +340,42 @@ export type InitializeGameResponse = Message<"weewar.v1.InitializeGameResponse">
  */
 export const InitializeGameResponseSchema: GenMessage<InitializeGameResponse> = /*@__PURE__*/
   messageDesc(file_weewar_v1_models_presenter, 11);
+
+/**
+ * Called by browser after UI/scene is fully initialized and ready for visual updates
+ *
+ * @generated from message weewar.v1.ClientReadyRequest
+ */
+export type ClientReadyRequest = Message<"weewar.v1.ClientReadyRequest"> & {
+  /**
+   * @generated from field: string game_id = 1;
+   */
+  gameId: string;
+};
+
+/**
+ * Describes the message weewar.v1.ClientReadyRequest.
+ * Use `create(ClientReadyRequestSchema)` to create a new message.
+ */
+export const ClientReadyRequestSchema: GenMessage<ClientReadyRequest> = /*@__PURE__*/
+  messageDesc(file_weewar_v1_models_presenter, 12);
+
+/**
+ * Response for ClientReady
+ *
+ * @generated from message weewar.v1.ClientReadyResponse
+ */
+export type ClientReadyResponse = Message<"weewar.v1.ClientReadyResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+};
+
+/**
+ * Describes the message weewar.v1.ClientReadyResponse.
+ * Use `create(ClientReadyResponseSchema)` to create a new message.
+ */
+export const ClientReadyResponseSchema: GenMessage<ClientReadyResponse> = /*@__PURE__*/
+  messageDesc(file_weewar_v1_models_presenter, 13);
 

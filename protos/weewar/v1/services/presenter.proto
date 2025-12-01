@@ -37,6 +37,13 @@ service GameViewPresenter {
   }
 
   /**
+   * Called by the browser after the UI/scene is fully initialized and ready
+   * to receive visual updates (highlights, paths, etc.)
+   */
+  rpc ClientReady(ClientReadyRequest) returns (ClientReadyResponse) {
+  }
+
+  /**
    * This is called when the user clicks a tile on the Game Scene
    * The tile can have a unit or just be a plain tile.  It is upto the presenter to
    * change the various view states

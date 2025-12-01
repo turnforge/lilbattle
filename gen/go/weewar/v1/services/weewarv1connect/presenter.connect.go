@@ -44,6 +44,9 @@ const (
 	// GameViewPresenterInitializeGameProcedure is the fully-qualified name of the GameViewPresenter's
 	// InitializeGame RPC.
 	GameViewPresenterInitializeGameProcedure = "/weewar.v1.GameViewPresenter/InitializeGame"
+	// GameViewPresenterClientReadyProcedure is the fully-qualified name of the GameViewPresenter's
+	// ClientReady RPC.
+	GameViewPresenterClientReadyProcedure = "/weewar.v1.GameViewPresenter/ClientReady"
 	// GameViewPresenterSceneClickedProcedure is the fully-qualified name of the GameViewPresenter's
 	// SceneClicked RPC.
 	GameViewPresenterSceneClickedProcedure = "/weewar.v1.GameViewPresenter/SceneClicked"
@@ -136,6 +139,10 @@ type GameViewPresenterClient interface {
 	// Called on first init based on the game and world data
 	InitializeGame(context.Context, *connect.Request[models.InitializeGameRequest]) (*connect.Response[models.InitializeGameResponse], error)
 	// *
+	// Called by the browser after the UI/scene is fully initialized and ready
+	// to receive visual updates (highlights, paths, etc.)
+	ClientReady(context.Context, *connect.Request[models.ClientReadyRequest]) (*connect.Response[models.ClientReadyResponse], error)
+	// *
 	// This is called when the user clicks a tile on the Game Scene
 	// The tile can have a unit or just be a plain tile.  It is upto the presenter to
 	// change the various view states
@@ -170,6 +177,12 @@ func NewGameViewPresenterClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(gameViewPresenterMethods.ByName("InitializeGame")),
 			connect.WithClientOptions(opts...),
 		),
+		clientReady: connect.NewClient[models.ClientReadyRequest, models.ClientReadyResponse](
+			httpClient,
+			baseURL+GameViewPresenterClientReadyProcedure,
+			connect.WithSchema(gameViewPresenterMethods.ByName("ClientReady")),
+			connect.WithClientOptions(opts...),
+		),
 		sceneClicked: connect.NewClient[models.SceneClickedRequest, models.SceneClickedResponse](
 			httpClient,
 			baseURL+GameViewPresenterSceneClickedProcedure,
@@ -200,6 +213,7 @@ func NewGameViewPresenterClient(httpClient connect.HTTPClient, baseURL string, o
 // gameViewPresenterClient implements GameViewPresenterClient.
 type gameViewPresenterClient struct {
 	initializeGame       *connect.Client[models.InitializeGameRequest, models.InitializeGameResponse]
+	clientReady          *connect.Client[models.ClientReadyRequest, models.ClientReadyResponse]
 	sceneClicked         *connect.Client[models.SceneClickedRequest, models.SceneClickedResponse]
 	turnOptionClicked    *connect.Client[models.TurnOptionClickedRequest, models.TurnOptionClickedResponse]
 	endTurnButtonClicked *connect.Client[models.EndTurnButtonClickedRequest, models.EndTurnButtonClickedResponse]
@@ -209,6 +223,11 @@ type gameViewPresenterClient struct {
 // InitializeGame calls weewar.v1.GameViewPresenter.InitializeGame.
 func (c *gameViewPresenterClient) InitializeGame(ctx context.Context, req *connect.Request[models.InitializeGameRequest]) (*connect.Response[models.InitializeGameResponse], error) {
 	return c.initializeGame.CallUnary(ctx, req)
+}
+
+// ClientReady calls weewar.v1.GameViewPresenter.ClientReady.
+func (c *gameViewPresenterClient) ClientReady(ctx context.Context, req *connect.Request[models.ClientReadyRequest]) (*connect.Response[models.ClientReadyResponse], error) {
+	return c.clientReady.CallUnary(ctx, req)
 }
 
 // SceneClicked calls weewar.v1.GameViewPresenter.SceneClicked.
@@ -236,6 +255,10 @@ type GameViewPresenterHandler interface {
 	// *
 	// Called on first init based on the game and world data
 	InitializeGame(context.Context, *connect.Request[models.InitializeGameRequest]) (*connect.Response[models.InitializeGameResponse], error)
+	// *
+	// Called by the browser after the UI/scene is fully initialized and ready
+	// to receive visual updates (highlights, paths, etc.)
+	ClientReady(context.Context, *connect.Request[models.ClientReadyRequest]) (*connect.Response[models.ClientReadyResponse], error)
 	// *
 	// This is called when the user clicks a tile on the Game Scene
 	// The tile can have a unit or just be a plain tile.  It is upto the presenter to
@@ -267,6 +290,12 @@ func NewGameViewPresenterHandler(svc GameViewPresenterHandler, opts ...connect.H
 		connect.WithSchema(gameViewPresenterMethods.ByName("InitializeGame")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gameViewPresenterClientReadyHandler := connect.NewUnaryHandler(
+		GameViewPresenterClientReadyProcedure,
+		svc.ClientReady,
+		connect.WithSchema(gameViewPresenterMethods.ByName("ClientReady")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gameViewPresenterSceneClickedHandler := connect.NewUnaryHandler(
 		GameViewPresenterSceneClickedProcedure,
 		svc.SceneClicked,
@@ -295,6 +324,8 @@ func NewGameViewPresenterHandler(svc GameViewPresenterHandler, opts ...connect.H
 		switch r.URL.Path {
 		case GameViewPresenterInitializeGameProcedure:
 			gameViewPresenterInitializeGameHandler.ServeHTTP(w, r)
+		case GameViewPresenterClientReadyProcedure:
+			gameViewPresenterClientReadyHandler.ServeHTTP(w, r)
 		case GameViewPresenterSceneClickedProcedure:
 			gameViewPresenterSceneClickedHandler.ServeHTTP(w, r)
 		case GameViewPresenterTurnOptionClickedProcedure:
@@ -314,6 +345,10 @@ type UnimplementedGameViewPresenterHandler struct{}
 
 func (UnimplementedGameViewPresenterHandler) InitializeGame(context.Context, *connect.Request[models.InitializeGameRequest]) (*connect.Response[models.InitializeGameResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewPresenter.InitializeGame is not implemented"))
+}
+
+func (UnimplementedGameViewPresenterHandler) ClientReady(context.Context, *connect.Request[models.ClientReadyRequest]) (*connect.Response[models.ClientReadyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("weewar.v1.GameViewPresenter.ClientReady is not implemented"))
 }
 
 func (UnimplementedGameViewPresenterHandler) SceneClicked(context.Context, *connect.Request[models.SceneClickedRequest]) (*connect.Response[models.SceneClickedResponse], error) {

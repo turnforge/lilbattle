@@ -1940,6 +1940,15 @@
     "v1ClearPathsResponse": {
       "type": "object"
     },
+    "v1ClientReadyResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "title": "Response for ClientReady"
+    },
     "v1CoinsChangedChange": {
       "type": "object",
       "properties": {

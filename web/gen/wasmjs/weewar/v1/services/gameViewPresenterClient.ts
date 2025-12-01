@@ -7,6 +7,8 @@ import { ServiceClient } from '@protoc-gen-go-wasmjs/runtime';
 import {
     BuildOptionClickedRequest,
     BuildOptionClickedResponse,
+    ClientReadyRequest,
+    ClientReadyResponse,
     EndTurnButtonClickedRequest,
     EndTurnButtonClickedResponse,
     InitializeGameRequest,
@@ -22,6 +24,7 @@ import {
  */
 export interface GameViewPresenterMethods {
 	initializeGame(request: InitializeGameRequest): Promise<InitializeGameResponse>;
+	clientReady(request: ClientReadyRequest): Promise<ClientReadyResponse>;
 	sceneClicked(request: SceneClickedRequest): Promise<SceneClickedResponse>;
 	turnOptionClicked(request: TurnOptionClickedRequest): Promise<TurnOptionClickedResponse>;
 	endTurnButtonClicked(request: EndTurnButtonClickedRequest): Promise<EndTurnButtonClickedResponse>;
@@ -34,6 +37,9 @@ export interface GameViewPresenterMethods {
 export class GameViewPresenterClient extends ServiceClient implements GameViewPresenterMethods {
     async initializeGame(request: InitializeGameRequest): Promise<InitializeGameResponse> {
         return this.callMethod('gameViewPresenter.initializeGame', request);
+    }
+    async clientReady(request: ClientReadyRequest): Promise<ClientReadyResponse> {
+        return this.callMethod('gameViewPresenter.clientReady', request);
     }
     async sceneClicked(request: SceneClickedRequest): Promise<SceneClickedResponse> {
         return this.callMethod('gameViewPresenter.sceneClicked', request);

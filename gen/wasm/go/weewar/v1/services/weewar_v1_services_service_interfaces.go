@@ -84,6 +84,10 @@ type GameViewPresenterServer interface {
 	Called on first init based on the game and world data */
 	InitializeGame(context.Context, *v1models.InitializeGameRequest) (*v1models.InitializeGameResponse, error)
 	/** *
+	Called by the browser after the UI/scene is fully initialized and ready
+	to receive visual updates (highlights, paths, etc.) */
+	ClientReady(context.Context, *v1models.ClientReadyRequest) (*v1models.ClientReadyResponse, error)
+	/** *
 	This is called when the user clicks a tile on the Game Scene
 	The tile can have a unit or just be a plain tile.  It is upto the presenter to
 	change the various view states */

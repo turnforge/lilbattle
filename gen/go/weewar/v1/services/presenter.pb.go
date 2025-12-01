@@ -31,9 +31,10 @@ const file_weewar_v1_services_presenter_proto_rawDesc = "" +
 	"\n" +
 	"\"weewar/v1/services/presenter.proto\x12\tweewar.v1\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a weewar/v1/models/presenter.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\x85\x01\n" +
 	"\x1bSingletonInitializerService\x12f\n" +
-	"\x13InitializeSingleton\x12%.weewar.v1.InitializeSingletonRequest\x1a&.weewar.v1.InitializeSingletonResponse\"\x002\x8c\x06\n" +
+	"\x13InitializeSingleton\x12%.weewar.v1.InitializeSingletonRequest\x1a&.weewar.v1.InitializeSingletonResponse\"\x002\xdc\x06\n" +
 	"\x11GameViewPresenter\x12W\n" +
-	"\x0eInitializeGame\x12 .weewar.v1.InitializeGameRequest\x1a!.weewar.v1.InitializeGameResponse\"\x00\x12\x92\x01\n" +
+	"\x0eInitializeGame\x12 .weewar.v1.InitializeGameRequest\x1a!.weewar.v1.InitializeGameResponse\"\x00\x12N\n" +
+	"\vClientReady\x12\x1d.weewar.v1.ClientReadyRequest\x1a\x1e.weewar.v1.ClientReadyResponse\"\x00\x12\x92\x01\n" +
 	"\fSceneClicked\x12\x1e.weewar.v1.SceneClickedRequest\x1a\x1f.weewar.v1.SceneClickedResponse\"A\x82\xd3\xe4\x93\x02;:\x01*\"6/v1/presenters/gameview/action:clicked:scene/{game_id}\x12\xa6\x01\n" +
 	"\x11TurnOptionClicked\x12#.weewar.v1.TurnOptionClickedRequest\x1a$.weewar.v1.TurnOptionClickedResponse\"F\x82\xd3\xe4\x93\x02@:\x01*\";/v1/presenters/gameview/action:clicked:turnOption/{game_id}\x12\xb2\x01\n" +
 	"\x14EndTurnButtonClicked\x12&.weewar.v1.EndTurnButtonClickedRequest\x1a'.weewar.v1.EndTurnButtonClickedResponse\"I\x82\xd3\xe4\x93\x02C:\x01*\">/v1/presenters/gameview/action:clicked:endTurnButton/{game_id}\x12\xaa\x01\n" +
@@ -44,32 +45,36 @@ const file_weewar_v1_services_presenter_proto_rawDesc = "" +
 var file_weewar_v1_services_presenter_proto_goTypes = []any{
 	(*models.InitializeSingletonRequest)(nil),   // 0: weewar.v1.InitializeSingletonRequest
 	(*models.InitializeGameRequest)(nil),        // 1: weewar.v1.InitializeGameRequest
-	(*models.SceneClickedRequest)(nil),          // 2: weewar.v1.SceneClickedRequest
-	(*models.TurnOptionClickedRequest)(nil),     // 3: weewar.v1.TurnOptionClickedRequest
-	(*models.EndTurnButtonClickedRequest)(nil),  // 4: weewar.v1.EndTurnButtonClickedRequest
-	(*models.BuildOptionClickedRequest)(nil),    // 5: weewar.v1.BuildOptionClickedRequest
-	(*models.InitializeSingletonResponse)(nil),  // 6: weewar.v1.InitializeSingletonResponse
-	(*models.InitializeGameResponse)(nil),       // 7: weewar.v1.InitializeGameResponse
-	(*models.SceneClickedResponse)(nil),         // 8: weewar.v1.SceneClickedResponse
-	(*models.TurnOptionClickedResponse)(nil),    // 9: weewar.v1.TurnOptionClickedResponse
-	(*models.EndTurnButtonClickedResponse)(nil), // 10: weewar.v1.EndTurnButtonClickedResponse
-	(*models.BuildOptionClickedResponse)(nil),   // 11: weewar.v1.BuildOptionClickedResponse
+	(*models.ClientReadyRequest)(nil),           // 2: weewar.v1.ClientReadyRequest
+	(*models.SceneClickedRequest)(nil),          // 3: weewar.v1.SceneClickedRequest
+	(*models.TurnOptionClickedRequest)(nil),     // 4: weewar.v1.TurnOptionClickedRequest
+	(*models.EndTurnButtonClickedRequest)(nil),  // 5: weewar.v1.EndTurnButtonClickedRequest
+	(*models.BuildOptionClickedRequest)(nil),    // 6: weewar.v1.BuildOptionClickedRequest
+	(*models.InitializeSingletonResponse)(nil),  // 7: weewar.v1.InitializeSingletonResponse
+	(*models.InitializeGameResponse)(nil),       // 8: weewar.v1.InitializeGameResponse
+	(*models.ClientReadyResponse)(nil),          // 9: weewar.v1.ClientReadyResponse
+	(*models.SceneClickedResponse)(nil),         // 10: weewar.v1.SceneClickedResponse
+	(*models.TurnOptionClickedResponse)(nil),    // 11: weewar.v1.TurnOptionClickedResponse
+	(*models.EndTurnButtonClickedResponse)(nil), // 12: weewar.v1.EndTurnButtonClickedResponse
+	(*models.BuildOptionClickedResponse)(nil),   // 13: weewar.v1.BuildOptionClickedResponse
 }
 var file_weewar_v1_services_presenter_proto_depIdxs = []int32{
 	0,  // 0: weewar.v1.SingletonInitializerService.InitializeSingleton:input_type -> weewar.v1.InitializeSingletonRequest
 	1,  // 1: weewar.v1.GameViewPresenter.InitializeGame:input_type -> weewar.v1.InitializeGameRequest
-	2,  // 2: weewar.v1.GameViewPresenter.SceneClicked:input_type -> weewar.v1.SceneClickedRequest
-	3,  // 3: weewar.v1.GameViewPresenter.TurnOptionClicked:input_type -> weewar.v1.TurnOptionClickedRequest
-	4,  // 4: weewar.v1.GameViewPresenter.EndTurnButtonClicked:input_type -> weewar.v1.EndTurnButtonClickedRequest
-	5,  // 5: weewar.v1.GameViewPresenter.BuildOptionClicked:input_type -> weewar.v1.BuildOptionClickedRequest
-	6,  // 6: weewar.v1.SingletonInitializerService.InitializeSingleton:output_type -> weewar.v1.InitializeSingletonResponse
-	7,  // 7: weewar.v1.GameViewPresenter.InitializeGame:output_type -> weewar.v1.InitializeGameResponse
-	8,  // 8: weewar.v1.GameViewPresenter.SceneClicked:output_type -> weewar.v1.SceneClickedResponse
-	9,  // 9: weewar.v1.GameViewPresenter.TurnOptionClicked:output_type -> weewar.v1.TurnOptionClickedResponse
-	10, // 10: weewar.v1.GameViewPresenter.EndTurnButtonClicked:output_type -> weewar.v1.EndTurnButtonClickedResponse
-	11, // 11: weewar.v1.GameViewPresenter.BuildOptionClicked:output_type -> weewar.v1.BuildOptionClickedResponse
-	6,  // [6:12] is the sub-list for method output_type
-	0,  // [0:6] is the sub-list for method input_type
+	2,  // 2: weewar.v1.GameViewPresenter.ClientReady:input_type -> weewar.v1.ClientReadyRequest
+	3,  // 3: weewar.v1.GameViewPresenter.SceneClicked:input_type -> weewar.v1.SceneClickedRequest
+	4,  // 4: weewar.v1.GameViewPresenter.TurnOptionClicked:input_type -> weewar.v1.TurnOptionClickedRequest
+	5,  // 5: weewar.v1.GameViewPresenter.EndTurnButtonClicked:input_type -> weewar.v1.EndTurnButtonClickedRequest
+	6,  // 6: weewar.v1.GameViewPresenter.BuildOptionClicked:input_type -> weewar.v1.BuildOptionClickedRequest
+	7,  // 7: weewar.v1.SingletonInitializerService.InitializeSingleton:output_type -> weewar.v1.InitializeSingletonResponse
+	8,  // 8: weewar.v1.GameViewPresenter.InitializeGame:output_type -> weewar.v1.InitializeGameResponse
+	9,  // 9: weewar.v1.GameViewPresenter.ClientReady:output_type -> weewar.v1.ClientReadyResponse
+	10, // 10: weewar.v1.GameViewPresenter.SceneClicked:output_type -> weewar.v1.SceneClickedResponse
+	11, // 11: weewar.v1.GameViewPresenter.TurnOptionClicked:output_type -> weewar.v1.TurnOptionClickedResponse
+	12, // 12: weewar.v1.GameViewPresenter.EndTurnButtonClicked:output_type -> weewar.v1.EndTurnButtonClickedResponse
+	13, // 13: weewar.v1.GameViewPresenter.BuildOptionClicked:output_type -> weewar.v1.BuildOptionClickedResponse
+	7,  // [7:14] is the sub-list for method output_type
+	0,  // [0:7] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

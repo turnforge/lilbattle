@@ -90,3 +90,13 @@ message InitializeGameResponse {
   // GameState state = 7;
   // GameMoveHistory history = 8;
 }
+
+// Called by browser after UI/scene is fully initialized and ready for visual updates
+message ClientReadyRequest {
+  string game_id = 1;
+}
+
+// Response for ClientReady
+message ClientReadyResponse {
+  bool success = 1;
+}

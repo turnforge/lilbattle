@@ -122,6 +122,7 @@ var SingletonInitializerService_ServiceDesc = grpc.ServiceDesc{
 
 const (
 	GameViewPresenter_InitializeGame_FullMethodName       = "/weewar.v1.GameViewPresenter/InitializeGame"
+	GameViewPresenter_ClientReady_FullMethodName          = "/weewar.v1.GameViewPresenter/ClientReady"
 	GameViewPresenter_SceneClicked_FullMethodName         = "/weewar.v1.GameViewPresenter/SceneClicked"
 	GameViewPresenter_TurnOptionClicked_FullMethodName    = "/weewar.v1.GameViewPresenter/TurnOptionClicked"
 	GameViewPresenter_EndTurnButtonClicked_FullMethodName = "/weewar.v1.GameViewPresenter/EndTurnButtonClicked"
@@ -149,6 +150,10 @@ type GameViewPresenterClient interface {
 	// *
 	// Called on first init based on the game and world data
 	InitializeGame(ctx context.Context, in *models.InitializeGameRequest, opts ...grpc.CallOption) (*models.InitializeGameResponse, error)
+	// *
+	// Called by the browser after the UI/scene is fully initialized and ready
+	// to receive visual updates (highlights, paths, etc.)
+	ClientReady(ctx context.Context, in *models.ClientReadyRequest, opts ...grpc.CallOption) (*models.ClientReadyResponse, error)
 	// *
 	// This is called when the user clicks a tile on the Game Scene
 	// The tile can have a unit or just be a plain tile.  It is upto the presenter to
@@ -179,6 +184,16 @@ func (c *gameViewPresenterClient) InitializeGame(ctx context.Context, in *models
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(models.InitializeGameResponse)
 	err := c.cc.Invoke(ctx, GameViewPresenter_InitializeGame_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gameViewPresenterClient) ClientReady(ctx context.Context, in *models.ClientReadyRequest, opts ...grpc.CallOption) (*models.ClientReadyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(models.ClientReadyResponse)
+	err := c.cc.Invoke(ctx, GameViewPresenter_ClientReady_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +262,10 @@ type GameViewPresenterServer interface {
 	// Called on first init based on the game and world data
 	InitializeGame(context.Context, *models.InitializeGameRequest) (*models.InitializeGameResponse, error)
 	// *
+	// Called by the browser after the UI/scene is fully initialized and ready
+	// to receive visual updates (highlights, paths, etc.)
+	ClientReady(context.Context, *models.ClientReadyRequest) (*models.ClientReadyResponse, error)
+	// *
 	// This is called when the user clicks a tile on the Game Scene
 	// The tile can have a unit or just be a plain tile.  It is upto the presenter to
 	// change the various view states
@@ -273,6 +292,9 @@ type UnimplementedGameViewPresenterServer struct{}
 
 func (UnimplementedGameViewPresenterServer) InitializeGame(context.Context, *models.InitializeGameRequest) (*models.InitializeGameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitializeGame not implemented")
+}
+func (UnimplementedGameViewPresenterServer) ClientReady(context.Context, *models.ClientReadyRequest) (*models.ClientReadyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientReady not implemented")
 }
 func (UnimplementedGameViewPresenterServer) SceneClicked(context.Context, *models.SceneClickedRequest) (*models.SceneClickedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SceneClicked not implemented")
@@ -320,6 +342,24 @@ func _GameViewPresenter_InitializeGame_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GameViewPresenterServer).InitializeGame(ctx, req.(*models.InitializeGameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GameViewPresenter_ClientReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(models.ClientReadyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameViewPresenterServer).ClientReady(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameViewPresenter_ClientReady_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameViewPresenterServer).ClientReady(ctx, req.(*models.ClientReadyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -406,6 +446,10 @@ var GameViewPresenter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InitializeGame",
 			Handler:    _GameViewPresenter_InitializeGame_Handler,
+		},
+		{
+			MethodName: "ClientReady",
+			Handler:    _GameViewPresenter_ClientReady_Handler,
 		},
 		{
 			MethodName: "SceneClicked",

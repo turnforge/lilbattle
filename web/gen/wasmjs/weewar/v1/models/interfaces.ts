@@ -1781,6 +1781,22 @@ export interface InitializeGameResponse {
 
 
 /**
+ * Called by browser after UI/scene is fully initialized and ready for visual updates
+ */
+export interface ClientReadyRequest {
+  gameId: string;
+}
+
+
+/**
+ * Response for ClientReady
+ */
+export interface ClientReadyResponse {
+  success: boolean;
+}
+
+
+/**
  * ThemeInfo contains metadata about a theme
  */
 export interface ThemeInfo {
