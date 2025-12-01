@@ -37,6 +37,13 @@ type GamesService interface {
 	// This is a stateless utility method that doesn't require game state
 	SimulateAttack(context.Context, *v1.SimulateAttackRequest) (*v1.SimulateAttackResponse, error)
 	GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error)
+
+	// SaveMoveGroup saves a move group atomically with the game state.
+	// Each backend implements this with appropriate transactionality:
+	// - GORM: uses database transaction
+	// - FS: writes history then state (pseudo-atomic)
+	// - Non-transactional: writes moves first, then commits via state update (checkpoint pattern)
+	SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error
 }
 
 type BaseGamesService struct {
@@ -47,8 +54,8 @@ func (s *BaseGamesService) ListMoves(ctx context.Context, req *v1.ListMovesReque
 	return nil, nil
 }
 
-// ProcessMoves processes moves for an existing game on the wasm side.
-// Unlike the service side games service - it wont persist any changes - it only will return the diffs.
+// ProcessMoves processes moves for an existing game.
+// It validates and applies moves, then delegates persistence to SaveMoveGroup.
 func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMovesRequest) (resp *v1.ProcessMovesResponse, err error) {
 	if len(req.Moves) == 0 {
 		return nil, fmt.Errorf("at least one move is required")
@@ -59,14 +66,10 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 		return nil, err
 	}
 	if gameresp.State == nil {
-		panic("Game state cannot be nil")
-	}
-	if gameresp.History == nil {
-		panic("Game history cannot cannot be nil")
+		return nil, fmt.Errorf("game state cannot be nil")
 	}
 
-	// Get the runtime game corresponding to this game Id, we can create it on the fly
-	// or we can cache it somewhere, or in the case of wasm just have a singleton
+	// Get the runtime game corresponding to this game Id
 	rtGame, err := s.Self.GetRuntimeGame(gameresp.Game, gameresp.State)
 	if err != nil {
 		return nil, err
@@ -76,11 +79,8 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 	// ProcessMoves will operate on the snapshot, ApplyChangeResults will apply to original
 	originalWorld := rtGame.World
 	rtGame.World = originalWorld.Push() // Create transaction layer
-	// Get the moves validted by the move processor, it is upto the move processor
-	// to decide how "transactional" it wants to be - ie fail after  N moves,
-	// success only if all moves succeeds etc.  Note that at this point the game
-	// state has not changed and neither has the Runtime Game object.  Both the
-	// GameState and the Runtime Game are checkpointed at before the moves started
+
+	// Validate and process moves in transaction layer
 	var dmp lib.MoveProcessor
 	err = dmp.ProcessMoves(rtGame, req.Moves)
 	if err != nil {
@@ -88,34 +88,32 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 	}
 	resp = &v1.ProcessMovesResponse{Moves: req.Moves}
 
+	// Increment group number for this batch
+	nextGroupNumber := gameresp.State.CurrentGroupNumber + 1
+
 	// Create a new move group to track this batch of processed moves
 	startTime := time.Now()
 	moveGroup := &v1.GameMoveGroup{
-		StartedAt: timestamppb.New(startTime),
-		EndedAt:   timestamppb.New(startTime), // TODO: Set proper end time after processing
-		Moves:     req.Moves,
+		StartedAt:   timestamppb.New(startTime),
+		EndedAt:     timestamppb.New(startTime),
+		Moves:       req.Moves,
+		GroupNumber: nextGroupNumber,
 	}
 
-	// Add the move group to history
-	gameresp.History.Groups = append(gameresp.History.Groups, moveGroup)
+	// Apply the changes to update gamestate
+	s.ApplyChangeResults(req.Moves, rtGame, gameresp.Game, gameresp.State)
 
-	// Now that we have the results, we want to update our gamestate by applying the
-	// results - this would also set the next "checkoint" to after the reuslts.
-	// It is upto the storage to see how the runtime game is also updated.  For example
-	// a storage that persists the gameState may just not do anythign and let it be
-	// reconstructed on the next load
-	s.ApplyChangeResults(req.Moves, rtGame, gameresp.Game, gameresp.State, gameresp.History)
+	// Update state with new group number (this is the "commit marker")
+	gameresp.State.CurrentGroupNumber = nextGroupNumber
 
 	// Update the end time after processing is complete
 	moveGroup.EndedAt = timestamppb.New(time.Now())
 
-	// And then save it
-	_, err = s.Self.UpdateGame(ctx, &v1.UpdateGameRequest{
-		GameId:     req.GameId,
-		NewGame:    gameresp.Game,
-		NewState:   gameresp.State,
-		NewHistory: gameresp.History,
-	})
+	// Delegate persistence to SaveMoveGroup - backend handles atomicity
+	err = s.Self.SaveMoveGroup(ctx, req.GameId, gameresp.State, moveGroup)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save move group: %w", err)
+	}
 
 	return resp, err
 }
@@ -325,7 +323,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 	}, nil
 }
 
-func (b *BaseGamesService) ApplyChangeResults(changes []*v1.GameMove, rtGame *lib.Game, game *v1.Game, state *v1.GameState, history *v1.GameMoveHistory) error {
+func (b *BaseGamesService) ApplyChangeResults(changes []*v1.GameMove, rtGame *lib.Game, game *v1.Game, state *v1.GameState) error {
 
 	// TRANSACTIONAL FIX: Temporary rollback to original world for ordered application
 	if parent := rtGame.World.Pop(); parent != nil {

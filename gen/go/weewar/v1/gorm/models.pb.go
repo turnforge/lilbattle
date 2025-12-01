@@ -843,8 +843,8 @@ func (*GameMoveGroupGORM) Descriptor() ([]byte, []int) {
 type GameMoveGORM struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	GameId      string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	GroupNumber int32                  `protobuf:"varint,2,opt,name=group_number,json=groupNumber,proto3" json:"group_number,omitempty"`
-	MoveNumber  int32                  `protobuf:"varint,3,opt,name=move_number,json=moveNumber,proto3" json:"move_number,omitempty"`
+	GroupNumber int64                  `protobuf:"varint,2,opt,name=group_number,json=groupNumber,proto3" json:"group_number,omitempty"`
+	MoveNumber  int64                  `protobuf:"varint,3,opt,name=move_number,json=moveNumber,proto3" json:"move_number,omitempty"`
 	// Version number for optimistic locking
 	Version int64 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
 	// Field named "move_type" matches the oneof name in source
@@ -892,14 +892,14 @@ func (x *GameMoveGORM) GetGameId() string {
 	return ""
 }
 
-func (x *GameMoveGORM) GetGroupNumber() int32 {
+func (x *GameMoveGORM) GetGroupNumber() int64 {
 	if x != nil {
 		return x.GroupNumber
 	}
 	return 0
 }
 
-func (x *GameMoveGORM) GetMoveNumber() int32 {
+func (x *GameMoveGORM) GetMoveNumber() int64 {
 	if x != nil {
 		return x.MoveNumber
 	}
@@ -1017,9 +1017,9 @@ const file_weewar_v1_gorm_models_proto_rawDesc = "" +
 	"\fGameMoveGORM\x12)\n" +
 	"\agame_id\x18\x01 \x01(\tB\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\x06gameId\x123\n" +
-	"\fgroup_number\x18\x02 \x01(\x05B\x10\x92\xa6\x1d\fR\n" +
+	"\fgroup_number\x18\x02 \x01(\x03B\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\vgroupNumber\x121\n" +
-	"\vmove_number\x18\x03 \x01(\x05B\x10\x92\xa6\x1d\fR\n" +
+	"\vmove_number\x18\x03 \x01(\x03B\x10\x92\xa6\x1d\fR\n" +
 	"primaryKeyR\n" +
 	"moveNumber\x12\x18\n" +
 	"\aversion\x18\x04 \x01(\x03R\aversion\x12H\n" +

@@ -1546,8 +1546,8 @@ func GameMoveToGameMoveGORM(
 	// Initialize struct with inline values
 	*dest = GameMoveGORM{
 		Player:      src.Player,
-		GroupNumber: int32(src.GroupNumber),
-		MoveNumber:  int32(src.MoveNumber),
+		GroupNumber: src.GroupNumber,
+		MoveNumber:  src.MoveNumber,
 		SequenceNum: src.SequenceNum,
 		IsPermanent: src.IsPermanent,
 	}
@@ -1594,8 +1594,8 @@ func GameMoveFromGameMoveGORM(
 	// Initialize struct with inline values
 	*dest = models.GameMove{
 		Player:      src.Player,
-		GroupNumber: int64(src.GroupNumber),
-		MoveNumber:  int64(src.MoveNumber),
+		GroupNumber: src.GroupNumber,
+		MoveNumber:  src.MoveNumber,
 		Timestamp:   converters.TimeToTimestamp(src.Timestamp),
 		SequenceNum: src.SequenceNum,
 		IsPermanent: src.IsPermanent,

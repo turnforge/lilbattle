@@ -106,3 +106,5 @@ replace github.com/turnforge/turnengine v0.0.1 => ./locallinks/turnengine/
 replace github.com/panyam/protoc-gen-dal v0.0.2 => ./locallinks/protoc-gen-dal
 
 replace github.com/panyam/gocurrent v0.0.9 => ./locallinks/gocurrent
+
+replace github.com/panyam/goutils v0.1.11 => ./locallinks/goutils

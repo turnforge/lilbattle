@@ -37,6 +37,11 @@ func (w *SingletonGamesService) WorldData() *v1.WorldData {
 	return w.SingletonGameState.WorldData
 }
 
+func (w *SingletonGamesService) SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error {
+	// NOOP - Will have to do local first coordination etc
+	return nil
+}
+
 func (w *SingletonGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *lib.Game, err error) {
 	if w.RuntimeGame == nil {
 		w.RuntimeGame = lib.ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)

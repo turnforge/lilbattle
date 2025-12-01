@@ -341,6 +341,39 @@ func (s *FSGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) 
 	return lib.ProtoToRuntimeGame(game, gameState), nil
 }
 
+// SaveMoveGroup saves a move group atomically with the game state.
+// For FS backend, this appends to history file then saves state (pseudo-atomic).
+func (s *FSGamesService) SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error {
+	// Load current history (or create empty)
+	history, _ := storage.LoadFSArtifact[*v1.GameMoveHistory](s.storage, gameId, "history")
+	if history == nil {
+		history = &v1.GameMoveHistory{GameId: gameId}
+	}
+
+	// Append group to history
+	history.Groups = append(history.Groups, group)
+
+	// Save history first (moves are the "uncommitted" data)
+	if err := s.storage.SaveArtifact(gameId, "history", history); err != nil {
+		return fmt.Errorf("failed to save history: %w", err)
+	}
+
+	// Save state (this is the "commit point")
+	if err := s.storage.SaveArtifact(gameId, "state", state); err != nil {
+		return fmt.Errorf("failed to save state: %w", err)
+	}
+
+	// Update caches
+	s.historyCache[gameId] = history
+	s.stateCache[gameId] = state
+	delete(s.runtimeCache, gameId)
+
+	// Queue for screenshot
+	s.ScreenShotIndexer.Send("games", gameId, state.Version, state.WorldData)
+
+	return nil
+}
+
 // GetRuntimeGameByID returns a cached runtime game instance for the given game ID
 func (s *FSGamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*lib.Game, error) {
 	// Check runtime cache first

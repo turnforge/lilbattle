@@ -512,8 +512,8 @@ func (d *GameStateGORMDAL) BatchGet(ctx context.Context, db *gormlib.DB, gameIds
 // GameMoveKey represents the composite primary key for gorm.GameMoveGORM
 type GameMoveKey struct {
 	GameId      string
-	GroupNumber int32
-	MoveNumber  int32
+	GroupNumber int64
+	MoveNumber  int64
 }
 
 // GameMoveGORMDAL provides database access helper methods for gorm.GameMoveGORM.
@@ -610,7 +610,7 @@ func (d *GameMoveGORMDAL) Save(ctx context.Context, db *gormlib.DB, obj *gorm.Ga
 
 // Get retrieves a gorm.GameMoveGORM record by primary keys.
 // Returns (nil, nil) if the record is not found (not an error).
-func (d *GameMoveGORMDAL) Get(ctx context.Context, db *gormlib.DB, gameId string, groupNumber int32, moveNumber int32) (*gorm.GameMoveGORM, error) {
+func (d *GameMoveGORMDAL) Get(ctx context.Context, db *gormlib.DB, gameId string, groupNumber int64, moveNumber int64) (*gorm.GameMoveGORM, error) {
 	var out gorm.GameMoveGORM
 	err := d.db(db).First(&out, "game_id = ? AND group_number = ? AND move_number = ?", gameId, groupNumber, moveNumber).Error
 	if err != nil {
@@ -623,7 +623,7 @@ func (d *GameMoveGORMDAL) Get(ctx context.Context, db *gormlib.DB, gameId string
 }
 
 // Delete removes a gorm.GameMoveGORM record by primary keys.
-func (d *GameMoveGORMDAL) Delete(ctx context.Context, db *gormlib.DB, gameId string, groupNumber int32, moveNumber int32) error {
+func (d *GameMoveGORMDAL) Delete(ctx context.Context, db *gormlib.DB, gameId string, groupNumber int64, moveNumber int64) error {
 	return d.db(db).Where("game_id = ? AND group_number = ? AND move_number = ?", gameId, groupNumber, moveNumber).Delete(&gorm.GameMoveGORM{}).Error
 }
 

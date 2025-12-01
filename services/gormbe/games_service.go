@@ -18,6 +18,7 @@ import (
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
@@ -377,4 +378,62 @@ func (s *GamesService) getGameStateAndMoves(ctx context.Context, gameId string) 
 	}
 	// get the moves
 	return
+}
+
+// SaveMoveGroup saves a move group atomically with the game state using checkpoint pattern.
+// Moves are written first (orphans OK), then GameState is updated as the "commit point".
+// Only moves with groupNumber <= currentGroupNumber are considered valid.
+func (s *GamesService) SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error {
+	ctx, span := Tracer.Start(ctx, "SaveMoveGroup")
+	defer span.End()
+
+	// 0. Delete any orphan moves from previous failed ProcessMoves calls
+	// (moves with group_number > current_group_number are orphans)
+	if err := s.storage.Where("game_id = ? AND group_number > ?", gameId, state.CurrentGroupNumber-1).
+		Delete(&v1gorm.GameMoveGORM{}).Error; err != nil {
+		return fmt.Errorf("failed to delete orphan moves: %w", err)
+	}
+
+	// 1. Save each move in the group as individual rows (orphans OK if state save fails)
+	for i, move := range group.Moves {
+		move.GroupNumber = group.GroupNumber
+		move.MoveNumber = int64(i)
+
+		moveGorm, err := v1gorm.GameMoveToGameMoveGORM(move, nil, func(src *v1.GameMove, dest *v1gorm.GameMoveGORM) error {
+			dest.GameId = gameId
+			// Handle oneof move_type by serializing to JSON bytes
+			if src.GetMoveType() != nil {
+				moveTypeBytes, err := protojson.Marshal(src)
+				if err != nil {
+					return fmt.Errorf("failed to serialize move_type: %w", err)
+				}
+				dest.MoveType = moveTypeBytes
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to convert move %d: %w", i, err)
+		}
+
+		if err := s.storage.Create(moveGorm).Error; err != nil {
+			return fmt.Errorf("failed to save move %d: %w", i, err)
+		}
+	}
+
+	// 2. Save GameState as the "commit point" - this makes the moves valid
+	stateGorm, err := v1gorm.GameStateToGameStateGORM(state, nil, nil)
+	if err != nil {
+		return fmt.Errorf("failed to convert game state: %w", err)
+	}
+	stateGorm.GameId = gameId
+	stateGorm.Version = state.Version + 1
+
+	if err := s.GameStateDAL.Save(ctx, s.storage, stateGorm); err != nil {
+		return fmt.Errorf("failed to save game state: %w", err)
+	}
+
+	// Queue for screenshot indexing
+	s.ScreenShotIndexer.Send("games", gameId, stateGorm.Version, state.WorldData)
+
+	return nil
 }

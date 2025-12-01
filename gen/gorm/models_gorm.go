@@ -408,8 +408,8 @@ type GameMoveGroupGORM struct {
 type GameMoveGORM struct {
 	Player      int32
 	GameId      string `gorm:"primaryKey"`
-	GroupNumber int32  `gorm:"primaryKey"`
-	MoveNumber  int32  `gorm:"primaryKey"`
+	GroupNumber int64  `gorm:"primaryKey"`
+	MoveNumber  int64  `gorm:"primaryKey"`
 	Timestamp   time.Time
 	Version     int64
 	MoveType    []byte `gorm:"serializer:json"`

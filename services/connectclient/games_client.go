@@ -30,6 +30,13 @@ func NewConnectGamesClient(serverURL string) *ConnectGamesClient {
 	return gc
 }
 
+func (c *ConnectGamesClient) SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error {
+	// SaveMoveGroup is internal-only and not exposed as an RPC.
+	// The server's ProcessMoves handles validation + save atomically.
+	// This client's ProcessMoves delegates to the server, so SaveMoveGroup should never be called.
+	panic("SaveMoveGroup should not be called on ConnectGamesClient - use ProcessMoves RPC instead")
+}
+
 // CreateGame creates a new game via Connect
 func (c *ConnectGamesClient) CreateGame(ctx context.Context, req *v1.CreateGameRequest) (*v1.CreateGameResponse, error) {
 	resp, err := c.client.CreateGame(ctx, connect.NewRequest(req))
