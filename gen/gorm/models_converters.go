@@ -1280,15 +1280,16 @@ func GameStateToGameStateGORM(
 
 	// Initialize struct with inline values
 	*dest = GameStateGORM{
-		GameId:        src.GameId,
-		TurnCounter:   src.TurnCounter,
-		CurrentPlayer: src.CurrentPlayer,
-		StateHash:     src.StateHash,
-		Version:       src.Version,
-		Status:        src.Status,
-		Finished:      src.Finished,
-		WinningPlayer: src.WinningPlayer,
-		WinningTeam:   src.WinningTeam,
+		GameId:             src.GameId,
+		TurnCounter:        src.TurnCounter,
+		CurrentPlayer:      src.CurrentPlayer,
+		StateHash:          src.StateHash,
+		Version:            src.Version,
+		Status:             src.Status,
+		Finished:           src.Finished,
+		WinningPlayer:      src.WinningPlayer,
+		WinningTeam:        src.WinningTeam,
+		CurrentGroupNumber: src.CurrentGroupNumber,
 	}
 	out = dest
 
@@ -1329,16 +1330,17 @@ func GameStateFromGameStateGORM(
 
 	// Initialize struct with inline values
 	*dest = models.GameState{
-		UpdatedAt:     converters.TimeToTimestamp(src.UpdatedAt),
-		GameId:        src.GameId,
-		TurnCounter:   src.TurnCounter,
-		CurrentPlayer: src.CurrentPlayer,
-		StateHash:     src.StateHash,
-		Version:       src.Version,
-		Status:        src.Status,
-		Finished:      src.Finished,
-		WinningPlayer: src.WinningPlayer,
-		WinningTeam:   src.WinningTeam,
+		UpdatedAt:          converters.TimeToTimestamp(src.UpdatedAt),
+		GameId:             src.GameId,
+		TurnCounter:        src.TurnCounter,
+		CurrentPlayer:      src.CurrentPlayer,
+		StateHash:          src.StateHash,
+		Version:            src.Version,
+		Status:             src.Status,
+		Finished:           src.Finished,
+		WinningPlayer:      src.WinningPlayer,
+		WinningTeam:        src.WinningTeam,
+		CurrentGroupNumber: src.CurrentGroupNumber,
 	}
 	out = dest
 
@@ -1452,7 +1454,9 @@ func GameMoveGroupToGameMoveGroupGORM(
 	}
 
 	// Initialize struct with inline values
-	*dest = GameMoveGroupGORM{}
+	*dest = GameMoveGroupGORM{
+		GroupNumber: src.GroupNumber,
+	}
 	out = dest
 
 	if src.StartedAt != nil {
@@ -1499,8 +1503,9 @@ func GameMoveGroupFromGameMoveGroupGORM(
 
 	// Initialize struct with inline values
 	*dest = models.GameMoveGroup{
-		StartedAt: converters.TimeToTimestamp(src.StartedAt),
-		EndedAt:   converters.TimeToTimestamp(src.EndedAt),
+		StartedAt:   converters.TimeToTimestamp(src.StartedAt),
+		EndedAt:     converters.TimeToTimestamp(src.EndedAt),
+		GroupNumber: src.GroupNumber,
 	}
 	out = dest
 
@@ -1541,6 +1546,8 @@ func GameMoveToGameMoveGORM(
 	// Initialize struct with inline values
 	*dest = GameMoveGORM{
 		Player:      src.Player,
+		GroupNumber: int32(src.GroupNumber),
+		MoveNumber:  int32(src.MoveNumber),
 		SequenceNum: src.SequenceNum,
 		IsPermanent: src.IsPermanent,
 	}
@@ -1587,6 +1594,8 @@ func GameMoveFromGameMoveGORM(
 	// Initialize struct with inline values
 	*dest = models.GameMove{
 		Player:      src.Player,
+		GroupNumber: int64(src.GroupNumber),
+		MoveNumber:  int64(src.MoveNumber),
 		Timestamp:   converters.TimeToTimestamp(src.Timestamp),
 		SequenceNum: src.SequenceNum,
 		IsPermanent: src.IsPermanent,

@@ -186,7 +186,7 @@ message GameMoveGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.GameMove", table: "game_moves" };
 
   string game_id = 1 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
-  string group_number = 2 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
+  int32 group_number = 2 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
   int32 move_number = 3 [(dal.v1.column) = { gorm_tags: ["primaryKey"] }];
 
   // Version number for optimistic locking

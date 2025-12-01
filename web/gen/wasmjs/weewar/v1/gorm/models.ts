@@ -321,7 +321,7 @@ export class GameMoveGORM implements GameMoveGORMInterface {
   readonly __MESSAGE_TYPE = GameMoveGORM.MESSAGE_TYPE;
 
   gameId: string = "";
-  groupNumber: string = "";
+  groupNumber: number = 0;
   moveNumber: number = 0;
   /** Version number for optimistic locking */
   version: number = 0;

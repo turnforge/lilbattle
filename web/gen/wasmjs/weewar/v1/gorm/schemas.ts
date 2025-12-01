@@ -330,7 +330,7 @@ export const GameMoveGORMSchema: MessageSchema = {
     },
     {
       name: "groupNumber",
-      type: FieldType.STRING,
+      type: FieldType.NUMBER,
       id: 2,
     },
     {

@@ -680,7 +680,7 @@ export const UnitUnitPropertiesSchema: MessageSchema = {
       messageType: "weewar.v1.DamageDistribution",
     },
   ],
-  oneofGroups: ["_defense_override", "_attack_override"],
+  oneofGroups: ["_attack_override", "_defense_override"],
 };
 
 
@@ -1117,6 +1117,11 @@ export const GameStateSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 13,
     },
+    {
+      name: "currentGroupNumber",
+      type: FieldType.NUMBER,
+      id: 14,
+    },
   ],
 };
 
@@ -1162,9 +1167,14 @@ export const GameMoveGroupSchema: MessageSchema = {
       messageType: "google.protobuf.Timestamp",
     },
     {
+      name: "groupNumber",
+      type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
       name: "moves",
       type: FieldType.MESSAGE,
-      id: 4,
+      id: 5,
       messageType: "weewar.v1.GameMove",
       repeated: true,
     },
@@ -1184,53 +1194,63 @@ export const GameMoveSchema: MessageSchema = {
       id: 1,
     },
     {
+      name: "groupNumber",
+      type: FieldType.NUMBER,
+      id: 2,
+    },
+    {
+      name: "moveNumber",
+      type: FieldType.NUMBER,
+      id: 3,
+    },
+    {
       name: "timestamp",
       type: FieldType.MESSAGE,
-      id: 2,
+      id: 4,
       messageType: "google.protobuf.Timestamp",
     },
     {
       name: "moveUnit",
       type: FieldType.MESSAGE,
-      id: 4,
+      id: 5,
       messageType: "weewar.v1.MoveUnitAction",
       oneofGroup: "move_type",
     },
     {
       name: "attackUnit",
       type: FieldType.MESSAGE,
-      id: 5,
+      id: 6,
       messageType: "weewar.v1.AttackUnitAction",
       oneofGroup: "move_type",
     },
     {
       name: "endTurn",
       type: FieldType.MESSAGE,
-      id: 6,
+      id: 7,
       messageType: "weewar.v1.EndTurnAction",
       oneofGroup: "move_type",
     },
     {
       name: "buildUnit",
       type: FieldType.MESSAGE,
-      id: 7,
+      id: 8,
       messageType: "weewar.v1.BuildUnitAction",
       oneofGroup: "move_type",
     },
     {
       name: "sequenceNum",
       type: FieldType.NUMBER,
-      id: 8,
+      id: 9,
     },
     {
       name: "isPermanent",
       type: FieldType.BOOLEAN,
-      id: 9,
+      id: 10,
     },
     {
       name: "changes",
       type: FieldType.MESSAGE,
-      id: 10,
+      id: 11,
       messageType: "weewar.v1.WorldChange",
       repeated: true,
     },
@@ -3448,7 +3468,7 @@ export const ListIndexStatesRequestSchema: MessageSchema = {
       id: 6,
     },
   ],
-  oneofGroups: ["_updated_after", "_updated_before"],
+  oneofGroups: ["_updated_before", "_updated_after"],
 };
 
 

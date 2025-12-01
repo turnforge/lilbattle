@@ -162,7 +162,7 @@ export interface GameMoveGroupGORM {
  */
 export interface GameMoveGORM {
   gameId: string;
-  groupNumber: string;
+  groupNumber: number;
   moveNumber: number;
   /** Version number for optimistic locking */
   version: number;
