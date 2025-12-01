@@ -151,6 +151,9 @@ func (s *GameViewPresenter) InitializeGame(ctx context.Context, req *v1.Initiali
 		})
 	}
 
+	// Note: Visual updates like exhausted highlights are deferred to ClientReady
+	// which is called after the browser scene is fully initialized
+
 	// Response state
 	resp = &v1.InitializeGameResponse{
 		Success:       true,
@@ -159,6 +162,22 @@ func (s *GameViewPresenter) InitializeGame(ctx context.Context, req *v1.Initiali
 		GameName:      game.Name,
 	}
 	return
+}
+
+// ClientReady is called by the browser after the UI/scene is fully initialized.
+// This is when we can safely send visual updates like highlights.
+func (s *GameViewPresenter) ClientReady(ctx context.Context, req *v1.ClientReadyRequest) (resp *v1.ClientReadyResponse, err error) {
+	getGameResp, err := s.GamesService.GetGame(ctx, &v1.GetGameRequest{Id: req.GameId})
+	if err != nil {
+		return &v1.ClientReadyResponse{Success: false}, err
+	}
+	game := getGameResp.Game
+	gameState := getGameResp.State
+
+	// Now that the scene is ready, apply visual state
+	s.refreshExhaustedHighlights(ctx, game, gameState)
+
+	return &v1.ClientReadyResponse{Success: true}, nil
 }
 
 func (s *GameViewPresenter) GetGame(ctx context.Context, gameId string) (resp *v1.GetGameResponse, err error) {

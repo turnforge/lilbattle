@@ -65,6 +65,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     protected gameViewPresenterClient: GameViewPresenterClient;
     protected singletonInitializerClient: SingletonInitializerClient;
     protected currentGameId: string | null;
+    private clientReadySent: boolean = false;
 
     // Core game components
     protected gameScene: PhaserGameScene;
@@ -557,6 +558,15 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
 
         this.updateGameUIFromState(req.state!);
         this.gameLogPanel.logGameEvent(`Game loaded: ${req.state!.gameId}`, 'system');
+
+        // Notify presenter that client is ready for visual updates (only once on initial load)
+        if (!this.clientReadySent && this.currentGameId) {
+            this.clientReadySent = true;
+            // Fire and forget - don't block setGameState return
+            this.gameViewPresenterClient.clientReady({ gameId: this.currentGameId }).catch(err => {
+                console.error('[GameViewerPage] clientReady failed:', err);
+            });
+        }
         return {};
     }
 
