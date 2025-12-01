@@ -229,6 +229,16 @@ message AttackRecord {
 
 ///////// Rules Engine Definitions
 
+// Terrain type classification - used for gameplay logic
+enum TerrainType {
+  TERRAIN_TYPE_UNSPECIFIED = 0;
+  TERRAIN_TYPE_CITY = 1;      // Player-owned structures (bases, hospitals, etc.)
+  TERRAIN_TYPE_NATURE = 2;    // Neutral natural terrain (grass, mountains, etc.)
+  TERRAIN_TYPE_BRIDGE = 3;    // Bridge crossings
+  TERRAIN_TYPE_WATER = 4;     // Water tiles
+  TERRAIN_TYPE_ROAD = 5;      // Road tiles
+}
+
 // Rules engine terrain definition
 message TerrainDefinition {
   int32 id = 1;                  // Terrain type ID
@@ -330,13 +340,17 @@ message RulesEngine {
   // Core entity definitions
   map<int32, UnitDefinition> units = 1;
   map<int32, TerrainDefinition> terrains = 2;
-  
+
   // Centralized property definitions (source of truth)
   // Key format: "terrain_id:unit_id" (e.g., "1:3" for terrain 1, unit 3)
   map<string, TerrainUnitProperties> terrain_unit_properties = 3;
-  
+
   // Key format: "attacker_id:defender_id" (e.g., "1:2" for unit 1 attacking unit 2)
   map<string, UnitUnitProperties> unit_unit_properties = 4;
+
+  // Terrain type classifications (terrain_id -> TerrainType)
+  // Used to determine if a terrain is city, nature, bridge, water, or road
+  map<int32, TerrainType> terrain_types = 5;
 }
 
 ///////// Game related models

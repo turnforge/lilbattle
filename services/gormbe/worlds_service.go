@@ -13,6 +13,7 @@ import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	v1gorm "github.com/turnforge/weewar/gen/gorm"
 	v1dal "github.com/turnforge/weewar/gen/gorm/dal"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -109,7 +110,7 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	resp.World, err = v1gorm.WorldFromWorldGORM(nil, worldGorm, nil)
 
 	// Auto-migrate from old list-based format to new map-based format before saving
-	services.MigrateWorldData(req.WorldData)
+	lib.MigrateWorldData(req.WorldData)
 
 	// see if we have world data too
 	worldDataGorm, err := v1gorm.WorldDataToWorldDataGORM(req.WorldData, nil, nil)
@@ -203,7 +204,7 @@ func (s *WorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest) (
 
 	// Auto-migrate from old list-based format to new map-based format
 	// This does not persist the migration - subsequent writes will save the new format
-	services.MigrateWorldData(resp.WorldData)
+	lib.MigrateWorldData(resp.WorldData)
 
 	return
 }
@@ -250,7 +251,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		worldDataSaved = true
 	} else if req.WorldData != nil {
 		// Auto-migrate incoming request data from old list-based format
-		services.MigrateWorldData(req.WorldData)
+		lib.MigrateWorldData(req.WorldData)
 
 		worldDataSaved = true
 		protoWorldData, err := v1gorm.WorldDataFromWorldDataGORM(nil, worldData, nil)
@@ -259,7 +260,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 		}
 
 		// Also migrate existing data for proper comparison
-		services.MigrateWorldData(protoWorldData)
+		lib.MigrateWorldData(protoWorldData)
 
 		// Optimistic lock: verify client version matches server version
 		clientVersion := req.WorldData.Version

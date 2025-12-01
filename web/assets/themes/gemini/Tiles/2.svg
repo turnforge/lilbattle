@@ -1,0 +1,75 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feOffset in="blur" dx="2" dy="4" result="offsetBlur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.4"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="offsetBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Base Water Hexagon -->
+  <path d="M256 20 L470 140 L470 372 L256 492 L42 372 L42 140 Z" fill="#0ea5e9" stroke="#0369a1" stroke-width="8"/>
+  
+  <!-- Water Ripple Details -->
+  <path d="M100 350 Q150 380 200 350 T300 350 T400 350" fill="none" stroke="#e0f2fe" stroke-width="6" stroke-linecap="round" opacity="0.4"/>
+  <path d="M120 280 Q170 310 220 280 T320 280" fill="none" stroke="#e0f2fe" stroke-width="6" stroke-linecap="round" opacity="0.3"/>
+
+  <!-- Concrete Dock Structure (U-Shape) -->
+  <!-- Back and Side Walls (3D Extrusion) -->
+  <path d="M42 140 L42 320 L130 320 L130 190 L382 190 L382 320 L470 320 L470 140 L256 20 Z" fill="#4b5563"/>
+  <!-- Top Surface of Dock -->
+  <path d="M42 130 L130 180 L130 300 L200 300 L200 160 L312 160 L312 300 L382 300 L382 180 L470 130 L256 10 Z" fill="#9ca3af" stroke="#374151" stroke-width="4"/>
+
+  <!-- Slipway / Ramp in the center back -->
+  <path d="M200 160 L312 160 L280 250 L232 250 Z" fill="#6b7280"/>
+  <line x1="220" y1="160" x2="240" y2="240" stroke="#374151" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="292" y1="160" x2="272" y2="240" stroke="#374151" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- TEAM COLOR: Dock Markings / Safety Zones -->
+  <path d="M130 180 L130 300 L150 300 L150 190 Z" fill="#3b82f6"/>
+  <path d="M382 180 L382 300 L362 300 L362 190 Z" fill="#3b82f6"/>
+  
+  <!-- "Under Construction" Hull Frame (Visualizing the function) -->
+  <path d="M256 380 L220 300 L220 260 L292 260 L292 300 Z" fill="#374151" stroke="#1f2937" stroke-width="2"/>
+  <rect x="235" y="270" width="10" height="10" fill="#e5e7eb" opacity="0.5"/>
+  <rect x="267" y="270" width="10" height="10" fill="#e5e7eb" opacity="0.5"/>
+
+  <!-- TEAM COLOR: Heavy Crane Structure -->
+  <!-- Crane Base -->
+  <rect x="50" y="200" width="60" height="60" rx="4" fill="#374151" filter="url(#softShadow)"/>
+  <!-- Crane Turret -->
+  <circle cx="80" cy="230" r="20" fill="#1f2937"/>
+  
+  <!-- Crane Arm (Main Team Identifier) -->
+  <path d="M80 230 L260 160 L260 180 L80 250 Z" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+  
+  <!-- Crane Cab -->
+  <path d="M60 210 L90 200 L90 230 L60 240 Z" fill="#60a5fa" opacity="0.8"/>
+  
+  <!-- Crane Cable & Hook -->
+  <line x1="260" y1="180" x2="260" y2="240" stroke="#111827" stroke-width="3"/>
+  <!-- Hook -->
+  <path d="M260 240 Q245 250 255 260 Q265 250 260 240" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+  
+  <!-- Small Control Tower on Right Side -->
+  <rect x="400" y="220" width="40" height="50" fill="#6b7280" stroke="#374151" stroke-width="2"/>
+  <!-- TEAM COLOR: Tower Roof/Light -->
+  <path d="M390 220 L450 220 L420 190 Z" fill="#3b82f6"/>
+  <rect x="410" y="230" width="20" height="15" fill="#bae6fd"/> <!-- Window -->
+
+  <!-- Industrial Details -->
+  <!-- Bollards -->
+  <circle cx="160" cy="290" r="4" fill="#1f2937"/>
+  <circle cx="352" cy="290" r="4" fill="#1f2937"/>
+  
+  <!-- Highlights -->
+  <path d="M50 140 L256 25 L460 140" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  <circle cx="80" cy="230" r="8" fill="#ffffff" opacity="0.2"/>
+
+</svg>

@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	"encoding/json"
@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/turnforge/weewar/lib"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
@@ -17,8 +16,10 @@ import (
 // =============================================================================
 
 type WorldBounds struct {
-	MinX, MinY, MaxX, MaxY float64
+	MinX, MinY, MaxX, MaxY int
 	MinQ, MinR, MaxQ, MaxR int
+	Width                  int // MaxX - MinX
+	Height                 int // MaxY - MinY
 	MinXCoord, MinYCoord   AxialCoord
 	MaxXCoord, MaxYCoord   AxialCoord
 	StartingCoord          AxialCoord
@@ -235,7 +236,7 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 		// First iterate current layer (child overrides parent)
 		for key, tile := range w.data.TilesMap {
 			seen[key] = true
-			coord, _ := lib.ParseCoordKey(key)
+			coord, _ := ParseCoordKey(key)
 			if !yield(coord, tile) {
 				return
 			}
@@ -244,7 +245,7 @@ func (w *World) TilesByCoord() iter.Seq2[AxialCoord, *v1.Tile] {
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, tile := range w.parent.TilesByCoord() {
-				key := lib.CoordKeyFromAxial(coord)
+				key := CoordKeyFromAxial(coord)
 				// Skip if already seen in child or explicitly deleted in child
 				if seen[key] || w.tileDeleted[key] {
 					continue
@@ -336,7 +337,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 		// First iterate current layer (child overrides parent)
 		for key, unit := range w.data.UnitsMap {
 			seen[key] = true
-			coord, _ := lib.ParseCoordKey(key)
+			coord, _ := ParseCoordKey(key)
 			if !yield(coord, unit) {
 				return
 			}
@@ -345,7 +346,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 		// Then iterate parent layers for unseen coordinates
 		if w.parent != nil {
 			for coord, unit := range w.parent.UnitsByCoord() {
-				key := lib.CoordKeyFromAxial(coord)
+				key := CoordKeyFromAxial(coord)
 				// Skip if already seen in child or explicitly deleted in child
 				if seen[key] || w.unitDeleted[key] {
 					continue
@@ -360,7 +361,7 @@ func (w *World) UnitsByCoord() iter.Seq2[AxialCoord, *v1.Unit] {
 
 // UnitAt returns the unit at the specified coordinate, respecting transaction deletions
 func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	out = w.data.UnitsMap[key]
 	if out == nil && w.parent != nil && !w.unitDeleted[key] {
 		out = w.parent.UnitAt(coord)
@@ -370,7 +371,7 @@ func (w *World) UnitAt(coord AxialCoord) (out *v1.Unit) {
 
 // TileAt returns the tile at the specified cube coordinates
 func (w *World) TileAt(coord AxialCoord) (out *v1.Tile) {
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	out = w.data.TilesMap[key]
 	if out == nil && w.parent != nil && !w.tileDeleted[key] {
 		out = w.parent.TileAt(coord)
@@ -400,7 +401,7 @@ func (w *World) GetPlayerUnits(playerID int) []*v1.Unit {
 
 // CrossingAt returns the crossing at the specified coordinate
 func (w *World) CrossingAt(coord AxialCoord) *v1.Crossing {
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	if crossing, ok := w.data.Crossings[key]; ok {
 		return crossing
 	}
@@ -436,7 +437,7 @@ func (w *World) HasBridge(coord AxialCoord) bool {
 
 // SetCrossing sets or removes a crossing at the given coordinate
 func (w *World) SetCrossing(coord AxialCoord, crossing *v1.Crossing) {
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	if crossing == nil || crossing.Type == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
 		delete(w.data.Crossings, key)
 	} else {
@@ -476,7 +477,7 @@ func (w *World) SetTileType(coord AxialCoord, terrainType int) bool {
 // AddTileCube adds a tile at the specified cube coordinate (primary method)
 func (w *World) AddTile(tile *v1.Tile) {
 	coord := TileGetCoord(tile)
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	q, r := coord.Q, coord.R
 	if q < w.minQ || q > w.maxQ || r < w.minR || r > w.maxR {
 		w.boundsChanged = true
@@ -499,7 +500,7 @@ func (w *World) AddTile(tile *v1.Tile) {
 func (w *World) DeleteTile(coord AxialCoord) {
 	tile := w.TileAt(coord)
 	if tile != nil {
-		key := lib.CoordKeyFromAxial(coord)
+		key := CoordKeyFromAxial(coord)
 		w.tileDeleted[key] = true
 		delete(w.data.TilesMap, key)
 
@@ -525,7 +526,7 @@ func (w *World) AddUnit(unit *v1.Unit) (oldunit *v1.Unit, err error) {
 	}
 
 	coord := UnitGetCoord(unit)
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	oldunit = w.UnitAt(coord)
 
 	// Update transaction counters
@@ -581,7 +582,7 @@ func (w *World) RemoveUnit(unit *v1.Unit) error {
 	}
 
 	coord := UnitGetCoord(unit)
-	key := lib.CoordKeyFromAxial(coord)
+	key := CoordKeyFromAxial(coord)
 	p := int(unit.Player)
 
 	// Update transaction counters
@@ -628,7 +629,7 @@ func (w *World) MoveUnit(unit *v1.Unit, newCoord AxialCoord) error {
 	unitToMove := unit
 	if w.parent != nil {
 		currentCoord := UnitGetCoord(unit)
-		currentKey := lib.CoordKeyFromAxial(currentCoord)
+		currentKey := CoordKeyFromAxial(currentCoord)
 		// Check if unit exists in current layer or comes from parent
 		if _, existsInCurrentLayer := w.data.UnitsMap[currentKey]; !existsInCurrentLayer {
 			// Unit comes from parent layer - make a copy to avoid modifying parent objects
@@ -776,4 +777,26 @@ func (w *World) UnmarshalJSON(data []byte) error {
 	}
 	w.boundsChanged = true
 	return nil
+}
+
+// =============================================================================
+// Helper methods to convert row/col to and from Q/R
+// Note all game/map/world methods should be PURELY USING Q/R coords.
+// These helpers are only when showing debug info or info to UI to players
+// =============================================================================
+
+// NumRows returns the number of rows in the map (calculated from bounds)
+func (m *World) NumRows() int {
+	if m.minR > m.maxR {
+		return 0 // Empty map
+	}
+	return m.maxR - m.minR + 1
+}
+
+// NumCols returns the number of columns in the map (calculated from bounds)
+func (m *World) NumCols() int {
+	if m.minQ > m.maxQ {
+		return 0 // Empty map
+	}
+	return m.maxQ - m.minQ + 1
 }

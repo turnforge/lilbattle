@@ -7,6 +7,7 @@ import (
 	"time"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	lib "github.com/turnforge/weewar/lib"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -35,7 +36,7 @@ type GamesService interface {
 	// Simulates combat between two units to generate damage distributions
 	// This is a stateless utility method that doesn't require game state
 	SimulateAttack(context.Context, *v1.SimulateAttackRequest) (*v1.SimulateAttackResponse, error)
-	GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*Game, error)
+	GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error)
 }
 
 type BaseGamesService struct {
@@ -80,7 +81,7 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 	// success only if all moves succeeds etc.  Note that at this point the game
 	// state has not changed and neither has the Runtime Game object.  Both the
 	// GameState and the Runtime Game are checkpointed at before the moves started
-	var dmp MoveProcessor
+	var dmp lib.MoveProcessor
 	err = dmp.ProcessMoves(rtGame, req.Moves)
 	if err != nil {
 		return nil, err
@@ -223,7 +224,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 
 	if unit != nil {
 		// Our unit - get available options based on action progression
-		var dmp MoveProcessor
+		var dmp lib.MoveProcessor
 
 		// Get unit definition for progression rules
 		unitDef, err := rtGame.RulesEngine.GetUnitData(unit.UnitType)
@@ -324,7 +325,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 	}, nil
 }
 
-func (b *BaseGamesService) ApplyChangeResults(changes []*v1.GameMove, rtGame *Game, game *v1.Game, state *v1.GameState, history *v1.GameMoveHistory) error {
+func (b *BaseGamesService) ApplyChangeResults(changes []*v1.GameMove, rtGame *lib.Game, game *v1.Game, state *v1.GameState, history *v1.GameMoveHistory) error {
 
 	// TRANSACTIONAL FIX: Temporary rollback to original world for ordered application
 	if parent := rtGame.World.Pop(); parent != nil {
@@ -348,7 +349,7 @@ func (b *BaseGamesService) ApplyChangeResults(changes []*v1.GameMove, rtGame *Ga
 }
 
 // applyWorldChange applies a single WorldChange to both runtime game and protobuf state
-func (b *BaseGamesService) applyWorldChange(change *v1.WorldChange, rtGame *Game, state *v1.GameState) error {
+func (b *BaseGamesService) applyWorldChange(change *v1.WorldChange, rtGame *lib.Game, state *v1.GameState) error {
 	switch changeType := change.ChangeType.(type) {
 	case *v1.WorldChange_UnitMoved:
 		return b.applyUnitMoved(changeType.UnitMoved, rtGame)
@@ -368,7 +369,7 @@ func (b *BaseGamesService) applyWorldChange(change *v1.WorldChange, rtGame *Game
 }
 
 // applyUnitMoved moves a unit in the runtime game
-func (b *BaseGamesService) applyUnitMoved(change *v1.UnitMovedChange, rtGame *Game) error {
+func (b *BaseGamesService) applyUnitMoved(change *v1.UnitMovedChange, rtGame *lib.Game) error {
 	if change.PreviousUnit == nil || change.UpdatedUnit == nil {
 		return fmt.Errorf("missing unit data in UnitMovedChange")
 	}
@@ -393,7 +394,7 @@ func (b *BaseGamesService) applyUnitMoved(change *v1.UnitMovedChange, rtGame *Ga
 }
 
 // applyUnitDamaged updates unit health in the runtime game
-func (b *BaseGamesService) applyUnitDamaged(change *v1.UnitDamagedChange, rtGame *Game) error {
+func (b *BaseGamesService) applyUnitDamaged(change *v1.UnitDamagedChange, rtGame *lib.Game) error {
 	if change.UpdatedUnit == nil {
 		return fmt.Errorf("missing updated unit data in UnitDamagedChange")
 	}
@@ -414,7 +415,7 @@ func (b *BaseGamesService) applyUnitDamaged(change *v1.UnitDamagedChange, rtGame
 }
 
 // applyUnitKilled removes a unit from the runtime game
-func (b *BaseGamesService) applyUnitKilled(change *v1.UnitKilledChange, rtGame *Game) error {
+func (b *BaseGamesService) applyUnitKilled(change *v1.UnitKilledChange, rtGame *lib.Game) error {
 	if change.PreviousUnit == nil {
 		return fmt.Errorf("missing previous unit data in UnitKilledChange")
 	}
@@ -430,7 +431,7 @@ func (b *BaseGamesService) applyUnitKilled(change *v1.UnitKilledChange, rtGame *
 }
 
 // applyPlayerChanged updates game state for turn/player changes
-func (b *BaseGamesService) applyPlayerChanged(change *v1.PlayerChangedChange, rtGame *Game, state *v1.GameState) error {
+func (b *BaseGamesService) applyPlayerChanged(change *v1.PlayerChangedChange, rtGame *lib.Game, state *v1.GameState) error {
 	rtGame.CurrentPlayer = change.NewPlayer
 	rtGame.TurnCounter = change.NewTurn
 
@@ -442,7 +443,7 @@ func (b *BaseGamesService) applyPlayerChanged(change *v1.PlayerChangedChange, rt
 }
 
 // applyUnitBuilt adds a newly built unit to the runtime game
-func (b *BaseGamesService) applyUnitBuilt(change *v1.UnitBuiltChange, rtGame *Game) error {
+func (b *BaseGamesService) applyUnitBuilt(change *v1.UnitBuiltChange, rtGame *lib.Game) error {
 	if change.Unit == nil {
 		return fmt.Errorf("missing unit data in UnitBuiltChange")
 	}
@@ -461,7 +462,7 @@ func (b *BaseGamesService) applyUnitBuilt(change *v1.UnitBuiltChange, rtGame *Ga
 }
 
 // applyCoinsChanged updates a player's coin balance in the runtime game
-func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGame *Game) error {
+func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGame *lib.Game) error {
 	// Update player's coins in game config
 	for i, player := range rtGame.Config.Players {
 		if player.PlayerId == change.PlayerId {
@@ -474,7 +475,7 @@ func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGa
 
 // convertRuntimeWorldToProto converts runtime world state to protobuf WorldData
 // Since World now holds proto data directly, this just returns the underlying WorldData
-func (b *BaseGamesService) convertRuntimeWorldToProto(world *World) *v1.WorldData {
+func (b *BaseGamesService) convertRuntimeWorldToProto(world *lib.World) *v1.WorldData {
 	return world.WorldData()
 }
 
@@ -516,10 +517,10 @@ func (s *BaseGamesService) SimulateAttack(ctx context.Context, req *v1.SimulateA
 	}
 
 	// Get rules engine
-	rulesEngine := DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 
 	// Simulate attacker -> defender
-	attackerCtx := &CombatContext{
+	attackerCtx := &lib.CombatContext{
 		Attacker:       attackerUnit,
 		AttackerTile:   attackerTile,
 		AttackerHealth: req.AttackerHealth,
@@ -549,7 +550,7 @@ func (s *BaseGamesService) SimulateAttack(ctx context.Context, req *v1.SimulateA
 	}
 
 	// Simulate defender -> attacker (counter-attack)
-	defenderCtx := &CombatContext{
+	defenderCtx := &lib.CombatContext{
 		Attacker:       defenderUnit,
 		AttackerTile:   defenderTile,
 		AttackerHealth: req.DefenderHealth,

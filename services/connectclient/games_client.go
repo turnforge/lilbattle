@@ -7,10 +7,11 @@ import (
 	"connectrpc.com/connect"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/gen/go/weewar/v1/services/weewarv1connect"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 )
 
-// ConnectGamesClient wraps a Connect client and implements the services.GamesService interface
+// ConnectGamesClient wraps a Connect client and implements the lib.GamesService interface
 type ConnectGamesClient struct {
 	services.BaseGamesService
 	client weewarv1connect.GamesServiceClient
@@ -130,6 +131,6 @@ func (c *ConnectGamesClient) SimulateAttack(ctx context.Context, req *v1.Simulat
 
 // GetRuntimeGame converts proto game data to runtime game
 // This is a local operation that doesn't require the server
-func (c *ConnectGamesClient) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*services.Game, error) {
-	return services.ProtoToRuntimeGame(game, gameState), nil
+func (c *ConnectGamesClient) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error) {
+	return lib.ProtoToRuntimeGame(game, gameState), nil
 }

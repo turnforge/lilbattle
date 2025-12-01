@@ -781,6 +781,11 @@ export const RulesEngineSchema: MessageSchema = {
       type: FieldType.STRING,
       id: 4,
     },
+    {
+      name: "terrainTypes",
+      type: FieldType.STRING,
+      id: 5,
+    },
   ],
 };
 
@@ -3452,7 +3457,7 @@ export const ListIndexStatesRequestSchema: MessageSchema = {
       id: 6,
     },
   ],
-  oneofGroups: ["_updated_before", "_updated_after"],
+  oneofGroups: ["_updated_after", "_updated_before"],
 };
 
 
@@ -4198,6 +4203,11 @@ export const ThemeManifestSchema: MessageSchema = {
       type: FieldType.STRING,
       id: 3,
     },
+    {
+      name: "playerColors",
+      type: FieldType.STRING,
+      id: 4,
+    },
   ],
 };
 
@@ -4217,6 +4227,11 @@ export const PlayerColorSchema: MessageSchema = {
       name: "secondary",
       type: FieldType.STRING,
       id: 2,
+    },
+    {
+      name: "name",
+      type: FieldType.STRING,
+      id: 3,
     },
   ],
 };

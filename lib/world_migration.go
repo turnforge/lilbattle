@@ -1,7 +1,6 @@
-package services
+package lib
 
 import (
-	"github.com/turnforge/weewar/lib"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
@@ -39,7 +38,7 @@ func MigrateWorldData(wd *v1.WorldData) {
 	// Migrate tiles from deprecated list to map (if not already done)
 	if len(wd.Tiles) > 0 && len(wd.TilesMap) == 0 {
 		for _, tile := range wd.Tiles {
-			key := lib.CoordKey(tile.Q, tile.R)
+			key := CoordKey(tile.Q, tile.R)
 			wd.TilesMap[key] = tile
 		}
 	}
@@ -47,7 +46,7 @@ func MigrateWorldData(wd *v1.WorldData) {
 	// Migrate units from deprecated list to map (if not already done)
 	if len(wd.Units) > 0 && len(wd.UnitsMap) == 0 {
 		for _, unit := range wd.Units {
-			key := lib.CoordKey(unit.Q, unit.R)
+			key := CoordKey(unit.Q, unit.R)
 			wd.UnitsMap[key] = unit
 		}
 	}
@@ -95,7 +94,7 @@ func GetCrossingType(wd *v1.WorldData, q, r int32) v1.CrossingType {
 	if wd == nil || wd.Crossings == nil {
 		return v1.CrossingType_CROSSING_TYPE_UNSPECIFIED
 	}
-	key := lib.CoordKey(q, r)
+	key := CoordKey(q, r)
 	if crossing := wd.Crossings[key]; crossing != nil {
 		return crossing.Type
 	}
@@ -122,7 +121,7 @@ func GetTileFromMap(wd *v1.WorldData, q, r int32) *v1.Tile {
 	if wd == nil || wd.TilesMap == nil {
 		return nil
 	}
-	key := lib.CoordKey(q, r)
+	key := CoordKey(q, r)
 	return wd.TilesMap[key]
 }
 
@@ -131,7 +130,7 @@ func GetUnitFromMap(wd *v1.WorldData, q, r int32) *v1.Unit {
 	if wd == nil || wd.UnitsMap == nil {
 		return nil
 	}
-	key := lib.CoordKey(q, r)
+	key := CoordKey(q, r)
 	return wd.UnitsMap[key]
 }
 
@@ -143,7 +142,7 @@ func SetTileInMap(wd *v1.WorldData, tile *v1.Tile) {
 	if wd.TilesMap == nil {
 		wd.TilesMap = make(map[string]*v1.Tile)
 	}
-	key := lib.CoordKey(tile.Q, tile.R)
+	key := CoordKey(tile.Q, tile.R)
 	wd.TilesMap[key] = tile
 }
 
@@ -155,7 +154,7 @@ func SetUnitInMap(wd *v1.WorldData, unit *v1.Unit) {
 	if wd.UnitsMap == nil {
 		wd.UnitsMap = make(map[string]*v1.Unit)
 	}
-	key := lib.CoordKey(unit.Q, unit.R)
+	key := CoordKey(unit.Q, unit.R)
 	wd.UnitsMap[key] = unit
 }
 
@@ -164,7 +163,7 @@ func RemoveUnitFromMap(wd *v1.WorldData, q, r int32) {
 	if wd == nil || wd.UnitsMap == nil {
 		return
 	}
-	key := lib.CoordKey(q, r)
+	key := CoordKey(q, r)
 	delete(wd.UnitsMap, key)
 }
 
@@ -190,7 +189,7 @@ func SetCrossing(wd *v1.WorldData, q, r int32, crossing *v1.Crossing) {
 	if wd.Crossings == nil {
 		wd.Crossings = make(map[string]*v1.Crossing)
 	}
-	key := lib.CoordKey(q, r)
+	key := CoordKey(q, r)
 	if crossing == nil || crossing.Type == v1.CrossingType_CROSSING_TYPE_UNSPECIFIED {
 		delete(wd.Crossings, key)
 	} else {

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // moveCmd represents the move command
@@ -46,14 +46,14 @@ func runMove(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse from position
-	fromTarget, err := services.ParsePositionOrUnit(rtGame, fromPos)
+	fromTarget, err := lib.ParsePositionOrUnit(rtGame, fromPos)
 	if err != nil {
 		return fmt.Errorf("invalid from position: %w", err)
 	}
 	fromCoord := fromTarget.GetCoordinate()
 
 	// Parse to position with context (supports directions)
-	toTarget, err := services.ParsePositionOrUnitWithContext(rtGame, toPos, &fromCoord)
+	toTarget, err := lib.ParsePositionOrUnitWithContext(rtGame, toPos, &fromCoord)
 	if err != nil {
 		return fmt.Errorf("invalid to position: %w", err)
 	}

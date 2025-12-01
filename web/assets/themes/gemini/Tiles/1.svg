@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Defs for reuse and gradients -->
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="2" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.4"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 1. BASE HEXAGON PLATFORM -->
+  <!-- 3D Thickness (Side) -->
+  <path d="M256 490 L60 380 L60 160 L256 70 L452 160 L452 380 Z" fill="#374151" stroke="#1f2937" stroke-width="8" stroke-linejoin="round"/>
+  <!-- Top Surface -->
+  <path d="M256 460 L60 360 L60 152 L256 52 L452 152 L452 360 Z" fill="#9ca3af" stroke="#6b7280" stroke-width="4"/>
+  
+  <!-- 2. RECESSED INTERIOR (The "Dark Area") -->
+  <!-- This represents the compound yard -->
+  <path d="M256 430 L90 345 L90 167 L256 82 L422 167 L422 345 Z" fill="#1f2937" stroke="#111827" stroke-width="6"/>
+
+  <!-- Floor Details: Hazard Stripes / Landing Area -->
+  <path d="M150 200 L362 200" stroke="#374151" stroke-width="4" stroke-dasharray="10, 10"/>
+  <path d="M150 312 L362 312" stroke="#374151" stroke-width="4" stroke-dasharray="10, 10"/>
+  
+  <!-- 3. PERIMETER WALLS (Fortification) -->
+  <!-- Left Wall -->
+  <path d="M90 167 L60 152 L60 360 L90 345 Z" fill="#6b7280"/>
+  <path d="M90 345 L60 360 L256 460 L256 430 Z" fill="#4b5563"/>
+  <!-- Right Wall -->
+  <path d="M422 167 L452 152 L452 360 L422 345 Z" fill="#6b7280"/>
+  <path d="M422 345 L452 360 L256 460 L256 430 Z" fill="#4b5563"/>
+  <!-- Back Wall -->
+  <path d="M90 167 L60 152 L256 52 L452 152 L422 167 L256 82 Z" fill="#d1d5db"/>
+
+  <!-- 4. MILITARY STRUCTURES (Barracks) -->
+  <!-- We interpret the original center shape as a command bunker with a spire -->
+  
+  <!-- Structure A: Main Barracks (Left) -->
+  <g filter="url(#shadow)">
+    <!-- Building Base -->
+    <rect x="140" y="180" width="100" height="80" fill="#6b7280" rx="4"/>
+    <rect x="140" y="260" width="100" height="10" fill="#374151"/> <!-- Foundation -->
+    
+    <!-- Team Color Roof (Sloped) -->
+    <path d="M135 180 L245 180 L240 160 L140 160 Z" fill="#3b82f6"/>
+    <rect x="135" y="180" width="110" height="10" fill="#2563eb"/> <!-- Roof Trim -->
+
+    <!-- Door / Vents -->
+    <rect x="160" y="210" width="20" height="50" fill="#1f2937" rx="2"/> <!-- Door -->
+    <rect x="190" y="200" width="30" height="15" fill="#374151" rx="1"/> <!-- Window/Vent -->
+    <rect x="190" y="225" width="30" height="15" fill="#374151" rx="1"/>
+  </g>
+
+  <!-- Structure B: Command Center / Tower (Right/Center) -->
+  <!-- This preserves the vertical "needle" feel of the original icon -->
+  <g filter="url(#shadow)">
+    <!-- Base Block -->
+    <path d="M250 260 L370 260 L370 190 L250 190 Z" fill="#9ca3af"/>
+    <rect x="250" y="260" width="120" height="10" fill="#4b5563"/>
+    
+    <!-- Hangar Door -->
+    <path d="M270 260 L270 210 L350 210 L350 260" fill="#1f2937"/>
+    <path d="M270 210 L350 210" stroke="#fbbf24" stroke-width="4"/> <!-- Caution Stripe -->
+    
+    <!-- Team Color Roof / Tower -->
+    <path d="M245 190 L375 190 L360 150 L265 150 Z" fill="#3b82f6"/>
+    
+    <!-- The Spire (Visual callback to original asset) -->
+    <path d="M295 150 L310 80 L325 150 Z" fill="#3b82f6"/>
+    <path d="M310 80 L310 150" stroke="#2563eb" stroke-width="2"/>
+    
+    <!-- Antenna/Dish -->
+    <circle cx="310" cy="80" r="6" fill="#fbbf24"/>
+  </g>
+
+  <!-- 5. TEAM COLOR ACCENTS (Lighting/Tech) -->
+  <!-- Perimeter lights indicating ownership -->
+  <circle cx="60" cy="152" r="8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+  <circle cx="452" cy="152" r="8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+  <circle cx="256" cy="52" r="8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+  <circle cx="256" cy="460" r="8" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+
+  <!-- 6. HIGHLIGHTS & FINISHING TOUCHES -->
+  <!-- Specular highlights for cartoon style -->
+  <path d="M256 60 L440 155" stroke="white" stroke-width="4" stroke-opacity="0.4" stroke-linecap="round"/>
+  <path d="M140 162 L240 162" stroke="white" stroke-width="2" stroke-opacity="0.5"/>
+  <path d="M270 155 L350 155" stroke="white" stroke-width="2" stroke-opacity="0.5"/>
+  
+  <!-- Subtle gradient overlay on roofs to make them pop -->
+  <path d="M245 190 L375 190 L360 150 L265 150 Z" fill="white" fill-opacity="0.1"/>
+
+</svg>

@@ -1,4 +1,29 @@
 {
+  "terrainTypes": {
+    "1": "city",
+    "2": "city",
+    "3": "city",
+    "4": "nature",
+    "5": "nature",
+    "6": "city",
+    "7": "nature",
+    "8": "nature",
+    "9": "nature",
+    "10": "water",
+    "12": "nature",
+    "14": "water",
+    "15": "water",
+    "16": "city",
+    "17": "bridge",
+    "18": "bridge",
+    "19": "bridge",
+    "20": "city",
+    "21": "city",
+    "22": "road",
+    "23": "water",
+    "25": "city",
+    "26": "nature"
+  },
   "units": {
     "1": {
       "id": 1,

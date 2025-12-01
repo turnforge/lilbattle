@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	"fmt"
@@ -103,6 +103,55 @@ func (re *RulesEngine) GetTerrainData(terrainID int32) (*v1.TerrainDefinition, e
 	}
 
 	return terrain, nil
+}
+
+// =============================================================================
+// Terrain Type Classification Methods
+// =============================================================================
+
+// GetTerrainType returns the terrain type classification for a terrain ID
+func (re *RulesEngine) GetTerrainType(terrainID int32) v1.TerrainType {
+	if t, ok := re.TerrainTypes[terrainID]; ok {
+		return t
+	}
+	return v1.TerrainType_TERRAIN_TYPE_UNSPECIFIED
+}
+
+// IsCityTerrain checks if a terrain is a city/building tile (player-owned structures)
+func (re *RulesEngine) IsCityTerrain(terrainID int32) bool {
+	return re.GetTerrainType(terrainID) == v1.TerrainType_TERRAIN_TYPE_CITY
+}
+
+// IsNatureTerrain checks if a terrain is a natural tile (grass, mountains, etc.)
+func (re *RulesEngine) IsNatureTerrain(terrainID int32) bool {
+	return re.GetTerrainType(terrainID) == v1.TerrainType_TERRAIN_TYPE_NATURE
+}
+
+// IsBridgeTerrain checks if a terrain is a bridge
+func (re *RulesEngine) IsBridgeTerrain(terrainID int32) bool {
+	return re.GetTerrainType(terrainID) == v1.TerrainType_TERRAIN_TYPE_BRIDGE
+}
+
+// IsWaterTerrain checks if a terrain is water
+func (re *RulesEngine) IsWaterTerrain(terrainID int32) bool {
+	return re.GetTerrainType(terrainID) == v1.TerrainType_TERRAIN_TYPE_WATER
+}
+
+// IsRoadTerrain checks if a terrain is a road
+func (re *RulesEngine) IsRoadTerrain(terrainID int32) bool {
+	return re.GetTerrainType(terrainID) == v1.TerrainType_TERRAIN_TYPE_ROAD
+}
+
+// GetCityTerrains returns a map of terrain IDs that are city/building types.
+// This is useful for themes that need to know which terrains use player colors.
+func (re *RulesEngine) GetCityTerrains() map[int32]bool {
+	result := make(map[int32]bool)
+	for terrainID, terrainType := range re.TerrainTypes {
+		if terrainType == v1.TerrainType_TERRAIN_TYPE_CITY {
+			result[terrainID] = true
+		}
+	}
+	return result
 }
 
 // =============================================================================

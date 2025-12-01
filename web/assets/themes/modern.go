@@ -15,7 +15,7 @@ type ModernTheme struct {
 
 // NewModernTheme creates a new Modern theme instance
 // Loads the mapping.json from embedded files
-func NewModernTheme() (*ModernTheme, error) {
+func NewModernTheme(cityTerrains map[int32]bool) (*ModernTheme, error) {
 	manifest, err := assets.LoadThemeManifest("modern")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load modern theme: %w", err)
@@ -33,7 +33,7 @@ func NewModernTheme() (*ModernTheme, error) {
 	}
 
 	return &ModernTheme{
-		BaseTheme: NewBaseTheme(manifest),
+		BaseTheme: NewBaseTheme(manifest, cityTerrains),
 	}, nil
 }
 

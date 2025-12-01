@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services/fsbe"
 )
 
-func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *services.World {
+func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *lib.World {
 	// 1. Create test world with 3 units
-	world := services.NewWorld("test", nil)
+	world := lib.NewWorld("test", nil)
 	// Add some tiles for movement
 	for q := range nq {
 		for r := range nr {
-			coord := services.AxialCoord{Q: q, R: r}
-			tile := services.NewTile(coord, 1) // Grass terrain
+			coord := lib.AxialCoord{Q: q, R: r}
+			tile := lib.NewTile(coord, 1) // Grass terrain
 			world.AddTile(tile)
 		}
 	}
@@ -32,7 +32,7 @@ func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *services.World 
 
 // LoadTestWorldFromStorage loads world data from storage directory using FSWorldsService
 // This allows using real worlds created in the world editor UI
-func LoadTestWorldFromStorage(worldsStorageDir, worldId string) (*services.World, *v1.GameState, error) {
+func LoadTestWorldFromStorage(worldsStorageDir, worldId string) (*lib.World, *v1.GameState, error) {
 	// Create FSWorldsService to load real world data
 	worldsService := fsbe.NewFSWorldsService(worldsStorageDir)
 
@@ -60,7 +60,7 @@ func LoadTestWorldFromStorage(worldsStorageDir, worldId string) (*services.World
 	}
 
 	// Convert protobuf world data to runtime game
-	rtGame := services.ProtoToRuntimeGame(dummyGame, gameState)
+	rtGame := lib.ProtoToRuntimeGame(dummyGame, gameState)
 
 	// Extract the world from the runtime game
 	rtWorld := rtGame.World
@@ -82,7 +82,7 @@ func CreateTestUnit(q, r int, player, unitType int) *v1.Unit {
 
 // LoadTestWorld loads a real world from the weewar data directory
 // This allows tests to use actual world data created in the editor
-func LoadTestWorld(worldId string) (*services.World, error) {
+func LoadTestWorld(worldId string) (*lib.World, error) {
 	// Default to user's dev-app-data directory
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -117,5 +117,5 @@ func LoadTestWorld(worldId string) (*services.World, error) {
 	}
 
 	// Create runtime world from proto data
-	return services.NewWorld(protoWorld.Name, &protoWorldData), nil
+	return lib.NewWorld(protoWorld.Name, &protoWorldData), nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/turnforge/turnengine/engine/storage"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -120,7 +121,7 @@ func (s *FSWorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest)
 
 	// Auto-migrate from old list-based format to new map-based format
 	// This does not persist the migration - subsequent writes will save the new format
-	services.MigrateWorldData(worldData)
+	lib.MigrateWorldData(worldData)
 
 	resp = &v1.GetWorldResponse{
 		World:     world,
@@ -167,7 +168,7 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	}
 
 	// Auto-migrate from old list-based format to new map-based format
-	services.MigrateWorldData(worldData)
+	lib.MigrateWorldData(worldData)
 
 	// Update world data if provided
 	worldDataSaved := false
@@ -180,7 +181,7 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 		worldDataSaved = true
 	} else if req.WorldData != nil {
 		// Auto-migrate incoming request data from old list-based format
-		services.MigrateWorldData(req.WorldData)
+		lib.MigrateWorldData(req.WorldData)
 
 		worldDataSaved = true
 
@@ -263,7 +264,7 @@ func (s *FSWorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRe
 	}
 
 	// Auto-migrate from old list-based format to new map-based format before saving
-	services.MigrateWorldData(req.WorldData)
+	lib.MigrateWorldData(req.WorldData)
 
 	// Create world data with tiles and units from request
 	if err := s.storage.SaveArtifact(worldId, "data", req.WorldData); err != nil {

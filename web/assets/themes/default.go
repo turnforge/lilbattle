@@ -19,6 +19,13 @@ type ThemeMappingEntry struct {
 	Image string `json:"image"`
 }
 
+// PlayerColorJSON represents a player color entry in mapping.json
+type PlayerColorJSON struct {
+	Primary   string `json:"primary"`
+	Secondary string `json:"secondary"`
+	Name      string `json:"name"`
+}
+
 // ThemeInfo from mapping.json
 type ThemeInfoJSON struct {
 	Name                string `json:"name"`
@@ -30,23 +37,25 @@ type ThemeInfoJSON struct {
 
 // ThemeMapping represents the full mapping.json structure
 type ThemeMappingJSON struct {
-	ThemeInfo      ThemeInfoJSON                `json:"themeInfo"`
-	Units          map[string]ThemeMappingEntry `json:"units"`
-	Terrains       map[string]ThemeMappingEntry `json:"terrains"`
-	NatureTerrains []int32                      `json:"natureTerrains"`
+	ThemeInfo    ThemeInfoJSON                `json:"themeInfo"`
+	Units        map[string]ThemeMappingEntry `json:"units"`
+	Terrains     map[string]ThemeMappingEntry `json:"terrains"`
+	PlayerColors map[string]PlayerColorJSON   `json:"playerColors"`
 }
 
 // DefaultTheme implements the Theme interface for PNG-based default assets
 // Loads data from embedded mapping.json
 type DefaultTheme struct {
-	themeInfo      ThemeInfoJSON
-	units          map[int32]ThemeMappingEntry
-	terrains       map[int32]ThemeMappingEntry
-	natureTerrains map[int32]bool
+	themeInfo    ThemeInfoJSON
+	units        map[int32]ThemeMappingEntry
+	terrains     map[int32]ThemeMappingEntry
+	playerColors map[int32]*v1.PlayerColor
+	cityTerrains map[int32]bool // Terrains that use player colors (from RulesEngine)
 }
 
 // NewDefaultTheme creates a new default theme instance by parsing embedded mapping.json
-func NewDefaultTheme() *DefaultTheme {
+// cityTerrains is a map of terrain IDs that use player colors (from RulesEngine.TerrainTypes)
+func NewDefaultTheme(cityTerrains map[int32]bool) *DefaultTheme {
 	var mapping ThemeMappingJSON
 	if err := json.Unmarshal(defaultMappingJSON, &mapping); err != nil {
 		panic(fmt.Sprintf("failed to parse embedded default theme mapping: %v", err))
@@ -70,17 +79,24 @@ func NewDefaultTheme() *DefaultTheme {
 		}
 	}
 
-	// Build nature terrains lookup
-	natureTerrains := make(map[int32]bool)
-	for _, id := range mapping.NatureTerrains {
-		natureTerrains[id] = true
+	// Convert string keys to int32 for player colors
+	playerColors := make(map[int32]*v1.PlayerColor)
+	for key, entry := range mapping.PlayerColors {
+		id, err := strconv.ParseInt(key, 10, 32)
+		if err == nil {
+			playerColors[int32(id)] = &v1.PlayerColor{
+				Primary:   entry.Primary,
+				Secondary: entry.Secondary,
+			}
+		}
 	}
 
 	return &DefaultTheme{
-		themeInfo:      mapping.ThemeInfo,
-		units:          units,
-		terrains:       terrains,
-		natureTerrains: natureTerrains,
+		themeInfo:    mapping.ThemeInfo,
+		units:        units,
+		terrains:     terrains,
+		playerColors: playerColors,
+		cityTerrains: cityTerrains,
 	}
 }
 
@@ -136,26 +152,14 @@ func (d *DefaultTheme) GetUnitAssetPath(unitId, playerId int32) string {
 // GetTileAssetPath returns the full path to a specific terrain+player PNG file
 func (d *DefaultTheme) GetTileAssetPath(terrainId, playerId int32) string {
 	if entry, ok := d.terrains[terrainId]; ok {
-		// Nature terrains always use player 0 (neutral)
-		effectivePlayer := playerId
-		if d.natureTerrains[terrainId] {
-			effectivePlayer = 0
+		// Only city terrains use player colors; all others use player 0 (neutral)
+		effectivePlayer := int32(0)
+		if d.cityTerrains[terrainId] {
+			effectivePlayer = playerId
 		}
 		return fmt.Sprintf("%s/%s/%d.png", d.themeInfo.BasePath, entry.Image, effectivePlayer)
 	}
 	return ""
-}
-
-func (d *DefaultTheme) IsCityTile(terrainId int32) bool {
-	return IsCityTerrain(terrainId)
-}
-
-func (d *DefaultTheme) IsNatureTile(terrainId int32) bool {
-	return IsNatureTerrain(terrainId)
-}
-
-func (d *DefaultTheme) IsBridgeTile(terrainId int32) bool {
-	return IsBridgeTerrain(terrainId)
 }
 
 func (d *DefaultTheme) GetThemeInfo() *v1.ThemeInfo {
@@ -192,6 +196,24 @@ func (d *DefaultTheme) HasUnit(unitId int32) bool {
 func (d *DefaultTheme) HasTerrain(terrainId int32) bool {
 	_, ok := d.terrains[terrainId]
 	return ok
+}
+
+func (d *DefaultTheme) GetEffectivePlayer(terrainId, playerId int32) int32 {
+	if d.cityTerrains[terrainId] {
+		return playerId
+	}
+	return 0
+}
+
+func (d *DefaultTheme) GetPlayerColor(playerId int32) *v1.PlayerColor {
+	if color, ok := d.playerColors[playerId]; ok {
+		return color
+	}
+	// Fallback to neutral if not found
+	if color, ok := d.playerColors[0]; ok {
+		return color
+	}
+	return nil
 }
 
 // GetAssetPathForTemplate is a helper for templates to get either unit or tile paths

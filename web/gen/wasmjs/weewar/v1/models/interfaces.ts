@@ -14,6 +14,18 @@ export enum CrossingType {
 }
 
 /**
+ * Terrain type classification - used for gameplay logic
+ */
+export enum TerrainType {
+  TERRAIN_TYPE_UNSPECIFIED = 0,
+  TERRAIN_TYPE_CITY = 1,
+  TERRAIN_TYPE_NATURE = 2,
+  TERRAIN_TYPE_BRIDGE = 3,
+  TERRAIN_TYPE_WATER = 4,
+  TERRAIN_TYPE_ROAD = 5,
+}
+
+/**
  * /////// Game related models
  */
 export enum GameStatus {
@@ -365,6 +377,9 @@ export interface RulesEngine {
   terrainUnitProperties: Record<string, TerrainUnitProperties>;
   /** Key format: "attacker_id:defender_id" (e.g., "1:2" for unit 1 attacking unit 2) */
   unitUnitProperties: Record<string, UnitUnitProperties>;
+  /** Terrain type classifications (terrain_id -> TerrainType)
+ Used to determine if a terrain is city, nature, bridge, water, or road */
+  terrainTypes: Record<number, any>;
 }
 
 
@@ -1802,6 +1817,7 @@ export interface ThemeManifest {
   themeInfo?: ThemeInfo;
   units: Record<number, UnitMapping>;
   terrains: Record<number, TerrainMapping>;
+  playerColors: Record<number, PlayerColor>;
 }
 
 
@@ -1811,6 +1827,7 @@ export interface ThemeManifest {
 export interface PlayerColor {
   primary: string;
   secondary: string;
+  name: string;
 }
 
 

@@ -7,17 +7,18 @@
 - `ThemeManifest` - complete theme configuration (from mapping.json)
 - `UnitMapping` / `TerrainMapping` - unit/terrain display data
 - `AssetResult` - for future asset loading
-- `PlayerColor` - player color scheme
+- `PlayerColor` - player color scheme (primary, secondary, name)
 
 ### 2. Core Interfaces (`web/assets/themes/themes.go`)
-- **`Theme`** - Lightweight metadata interface (ready to use NOW)
+- **`Theme`** - Lightweight metadata interface
   - GetUnitName, GetTerrainName
   - GetUnitDescription, GetTerrainDescription
   - GetUnitPath, GetTilePath
-  - IsCityTile, IsNatureTile, IsBridgeTile
   - GetThemeInfo, HasUnit, HasTerrain
+  - GetEffectivePlayer (for terrain color rendering)
+  - GetPlayerColor (from mapping.json)
 
-- **`ThemeAssets`** - Heavy asset loading interface (for Phase 2)
+- **`ThemeAssets`** - Heavy asset loading interface
   - GetUnitAsset, GetTileAsset
   - LoadUnit, LoadTile
   - ApplyPlayerColors
@@ -25,15 +26,16 @@
 ### 3. Base Implementation (`web/assets/themes/base.go`)
 - `BaseTheme` - Common functionality for SVG themes
 - Loads from `ThemeManifest` proto
-- Provides all metadata accessors
+- Accepts `cityTerrains` map from RulesEngine
+- Provides all metadata accessors including GetPlayerColor
 
 ### 4. Concrete Themes
 
 **DefaultTheme** (`web/assets/themes/default.go` / `web/assets/themes/default.ts`)
 - PNG-based (original v1 assets)
-- Now uses `mapping.json` like other themes (consolidated approach)
+- Uses `mapping.json` with playerColors
 - Returns full paths: `/static/assets/themes/default/Units/1/2.png`
-- TypeScript version extends `BaseTheme` for shared functionality
+- Uses `cityTerrains` from RulesEngine for effective player calculation
 
 **FantasyTheme** (`web/assets/themes/fantasy.go`)
 - SVG-based (Medieval Fantasy)
@@ -54,15 +56,21 @@
 
 ### 6. Theme Registry (`web/assets/themes/registry.go`)
 - Factory pattern for creating themes by name
-- `CreateTheme("fantasy")` - easy theme creation
+- `CreateTheme("fantasy", cityTerrains)` - theme creation with cityTerrains
 - `GetAvailableThemes()` - lists all registered themes
 - Extensible for future themes
 
-### 7. Shared mapping.json Files
+### 7. Renderers
+- **PNGWorldRenderer** (`png_renderer.go`) - Renders worlds using PNG assets
+- **SVGWorldRenderer** (`svg_renderer.go`) - Renders worlds using SVG assets with player color application
+- Both use `theme.GetEffectivePlayer()` for terrain color handling
+- Both use `theme.GetPlayerColor()` for color lookup
+
+### 8. Shared mapping.json Files
 ```
-assets/themes/
+web/static/assets/themes/
 ├── default/
-│   └── mapping.json  ✅ Used by TS DefaultTheme (PNG paths, natureTerrains)
+│   └── mapping.json  ✅ Contains units, terrains, playerColors
 ├── fantasy/
 │   ├── mapping.json  ✅ Embedded in Go, read by TS
 │   ├── Units/*.svg
@@ -73,175 +81,118 @@ assets/themes/
     └── Tiles/*.svg
 ```
 
+## Data-Driven Configuration
+
+### Terrain Types (from RulesEngine)
+Terrain classification is now data-driven via `weewar-rules.json`:
+```json
+{
+  "terrainTypes": {
+    "1": "city", "2": "city", "3": "city",  // Bases
+    "5": "nature", "7": "nature",            // Grass, Mountains
+    "10": "water", "14": "water",            // Water types
+    "17": "bridge", "18": "bridge",          // Bridges
+    "22": "road"                              // Road
+  }
+}
+```
+
+### Player Colors (from mapping.json)
+Each theme can define its own player colors:
+```json
+{
+  "playerColors": {
+    "0": { "primary": "#888888", "secondary": "#666666", "name": "Neutral" },
+    "1": { "primary": "#f87171", "secondary": "#dc2626", "name": "Red" },
+    ...
+  }
+}
+```
+
 ## Usage
 
-### In Your Presenter
-
+### Creating Themes
 ```go
-import "github.com/turnforge/weewar/web/assets/themes"
+import (
+    "github.com/turnforge/weewar/lib"
+    "github.com/turnforge/weewar/web/assets/themes"
+)
 
-type SingletonGameViewPresenterImpl struct {
-    Theme themes.Theme
-    // ...
-}
+// Get city terrains from RulesEngine
+cityTerrains := lib.DefaultRulesEngine().GetCityTerrains()
 
-func NewSingletonGameViewPresenterImpl() *SingletonGameViewPresenterImpl {
-    return &SingletonGameViewPresenterImpl{
-        Theme: themes.NewDefaultTheme(),
-        // Or: Theme: themes.CreateTheme("fantasy")
-    }
-}
+// Create themes
+defaultTheme := themes.NewDefaultTheme(cityTerrains)
+fantasyTheme, _ := themes.NewFantasyTheme(cityTerrains)
+modernTheme, _ := themes.NewModernTheme(cityTerrains)
 
-func (s *SingletonGameViewPresenterImpl) SetUnitStats(ctx context.Context, unit *v1.Unit) {
-    content := s.renderPanelTemplate(ctx, "UnitStatsPanel.templar.html", map[string]any{
-        "Unit":  unit,
-        "Theme": s.Theme,  // ✅ Pass theme to template
-    })
-    // ...
-}
+// Or use registry
+theme, _ := themes.CreateTheme("fantasy", cityTerrains)
 ```
 
-### In Your Template
-
+### In Templates
 ```html
-{{ if .Unit }}
-  {{ $theme := .Theme }}
+{{ $theme := .Theme }}
 
-  <!-- Get unit display name from theme -->
-  <h5>{{ $theme.GetUnitName .Unit.UnitType }}</h5>
+<!-- Get unit display name from theme -->
+<h5>{{ $theme.GetUnitName .Unit.UnitType }}</h5>
 
-  <!-- Get unit description -->
-  <p>{{ $theme.GetUnitDescription .Unit.UnitType }}</p>
-
-  <!-- Get asset path (works for PNG themes) -->
-  {{ $assetPath := $theme.GetAssetPathForTemplate "unit" .Unit.UnitType .Unit.Player }}
-  <img src="{{ $assetPath }}" alt="{{ $theme.GetUnitName .Unit.UnitType }}" />
-{{ end }}
+<!-- Get asset path (works for PNG themes) -->
+{{ $assetPath := $theme.GetAssetPathForTemplate "unit" .Unit.UnitType .Unit.Player }}
+<img src="{{ $assetPath }}" alt="{{ $theme.GetUnitName .Unit.UnitType }}" />
 ```
 
-### Switching Themes
+## Key Design Wins
 
-```go
-// Simple
-presenter.Theme = themes.NewDefaultTheme()
-
-// Or using registry
-theme, err := themes.CreateTheme("fantasy")
-if err == nil {
-    presenter.Theme = theme
-}
-```
-
-## What This Gives You NOW
-
-✅ **Theme-specific names** in Go templates
-- Default: "Infantry", "Tank", "Grass"
-- Fantasy: "Peasant", "War Cart", "Meadow"
-- Modern: "Infantry", "Humvee", "Grassland"
-
-✅ **Theme-specific descriptions** (if theme provides them)
-
-✅ **Asset paths** for PNG themes (Default)
-- Full paths ready for `<img src="...">`
-
-✅ **Metadata queries**
-- Check if tile is city/nature/bridge
-- Get available units/terrains
-- Theme version info
-
-✅ **Shared data** between Go and TypeScript
-- Both read same `mapping.json` files
-- No duplication of unit names, terrain names
-
-✅ **Type safety** via proto definitions
-
-## What Comes Later (Optional - Phase 2)
-
-⏳ **ThemeAssets implementation**
-- Server-side SVG rendering
-- Apply player colors in Go
-- Return inline SVG in templates
-
-⏳ **SVG Processing**
-- Load SVG files
-- Replace gradient colors
-- Convert to data URLs or inline
-
-⏳ **Asset caching**
-- Cache processed SVGs
-- Pre-generate at build time
-
-**But you don't need Phase 2 yet!** The current implementation gives you theme metadata in Go templates while keeping asset loading in TypeScript where it works great.
+1. **Data-driven**: Terrain types from RulesEngine, player colors from mapping.json
+2. **No duplication**: Single source of truth for terrain classification
+3. **Dependency injection**: cityTerrains passed to theme constructors
+4. **Theme-specific colors**: Each theme can customize player colors
+5. **Separation**: RulesEngine (game logic) vs Theme (rendering)
+6. **Type safety**: Proto-generated structs
+7. **Tested**: All themes load and work correctly
 
 ## File Locations
 
 ```
 Root Level:
-├── protos/weewar/v1/themes.proto        # Proto definitions
+├── protos/weewar/v1/models/
+│   └── themes.proto              # Proto definitions
 ├── assets/
-│   ├── embed.go                          # Embeds mapping.json files
+│   ├── embed.go                  # Embeds mapping.json files
+│   ├── weewar-rules.json         # Contains terrainTypes
 │   └── themes/
-│       ├── fantasy/mapping.json          # ✅ Embedded at compile time
-│       └── modern/mapping.json           # ✅ Embedded at compile time
+│       ├── fantasy/mapping.json  # Embedded at compile time
+│       └── modern/mapping.json   # Embedded at compile time
+│
+├── lib/
+│   ├── rules_engine.go           # GetCityTerrains(), terrain type methods
+│   └── rules_loader.go           # Parses terrainTypes from JSON
 │
 └── web/
     ├── assets/themes/
-    │   ├── themes.go                     # Interfaces
-    │   ├── base.go                       # BaseTheme
-    │   ├── default.go                    # DefaultTheme
-    │   ├── fantasy.go                    # FantasyTheme
-    │   ├── modern.go                     # ModernTheme
-    │   ├── registry.go                   # Theme factory
-    │   ├── BaseTheme.ts                  # TS base class (unchanged)
-    │   ├── default.ts                    # TS default (unchanged)
-    │   ├── fantasy.ts                    # TS fantasy (unchanged)
-    │   └── modern.ts                     # TS modern (unchanged)
+    │   ├── themes.go             # Interfaces
+    │   ├── base.go               # BaseTheme
+    │   ├── default.go            # DefaultTheme
+    │   ├── fantasy.go            # FantasyTheme
+    │   ├── modern.go             # ModernTheme
+    │   ├── registry.go           # Theme factory
+    │   ├── png_renderer.go       # PNG world rendering
+    │   ├── svg_renderer.go       # SVG world rendering
+    │   ├── BaseTheme.ts          # TS base class
+    │   ├── default.ts            # TS default
+    │   ├── fantasy.ts            # TS fantasy
+    │   └── modern.ts             # TS modern
     │
     └── static/assets/themes/
+        ├── default/
+        │   └── mapping.json      # With playerColors
         ├── fantasy/
-        │   ├── mapping.json              # ✅ Read by TS, copied to assets/
+        │   ├── mapping.json      # With playerColors
         │   ├── Units/*.svg
         │   └── Tiles/*.svg
         └── modern/
-            ├── mapping.json              # ✅ Read by TS, copied to assets/
+            ├── mapping.json      # With playerColors
             ├── Units/*.svg
             └── Tiles/*.svg
 ```
-
-## Key Design Wins
-
-1. **Separation**: Theme (metadata) vs ThemeAssets (I/O)
-2. **Shared data**: Single `mapping.json` for Go + TS
-3. **Embedded**: mapping.json compiled into binary
-4. **Phased**: Use metadata NOW, add assets LATER
-5. **Co-located**: Go + TS files together
-6. **Type-safe**: Proto-generated structs
-7. **Tested**: All themes load and work correctly
-
-## Recent Session Work (2025-11-27)
-
-### DefaultTheme Refactoring
-Refactored `default.ts` to extend `BaseTheme` instead of implementing `ITheme` directly:
-
-**Changes:**
-- `DefaultTheme` now extends `BaseTheme` for shared functionality
-- Added `mapping.json` for default theme (like fantasy/modern themes)
-- Consolidated assets from `web/static/assets/v1/` to `web/static/assets/themes/default/`
-- Added `getCrossingDisplayTileType()` method to `ITheme` interface and `BaseTheme`
-- Updated `WorldStatsPanel` to use theme method instead of hardcoded tile type constants
-
-**Benefits:**
-- Consistent theme architecture across all themes
-- Shared methods from `BaseTheme` reduce code duplication
-- Single location for v1 assets (`web/static/assets/themes/default/`)
-- Theme can provide crossing display tile types for WorldStatsPanel
-
-**Files Changed:**
-- `web/assets/themes/default.ts` - Refactored to extend BaseTheme
-- `web/assets/themes/BaseTheme.ts` - Added `getCrossingDisplayTileType()` method
-- `web/assets/themes/default/mapping.json` - New mapping file for default theme
-- `web/pages/common/WorldStatsPanel.ts` - Uses theme method for crossing display
-
-## Next Steps
-
-Ready to integrate into your presenter! The theme system is complete and tested. TypeScript code continues working unchanged, and Go templates now have access to theme metadata.

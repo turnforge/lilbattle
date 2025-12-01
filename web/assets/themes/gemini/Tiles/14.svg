@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Main shape definition for reuse -->
+    <path id="hex-shape" d="M256 22 L468 142 L468 370 L256 490 L44 370 L44 142 Z" />
+    
+    <!-- Clipping mask to keep contents inside the tile -->
+    <clipPath id="hex-clip">
+      <use href="#hex-shape" />
+    </clipPath>
+
+    <!-- Vibrant Water Gradient: Light Cyan to Blue to suggest shallow depth -->
+    <linearGradient id="water-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7" />
+      <stop offset="100%" stop-color="#039BE5" />
+    </linearGradient>
+
+    <!-- Subtle gradient for fish shadows -->
+    <linearGradient id="fish-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#01579B" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#01579B" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Tile Fill -->
+  <use href="#hex-shape" fill="url(#water-gradient)" />
+
+  <!-- Content Group (Clipped) -->
+  <g clip-path="url(#hex-clip)">
+    
+    <!-- Very Subtle Marine Life (Fish Silhouettes) -->
+    <!-- Fish 1 -->
+    <path d="M150 350 Q170 340 190 350 L200 345 L200 355 L190 350 Q170 360 150 350 Z" fill="url(#fish-gradient)" transform="rotate(-15 175 350)" />
+    <!-- Fish 2 -->
+    <path d="M350 200 Q365 195 380 200 L388 196 L388 204 L380 200 Q365 205 350 200 Z" fill="url(#fish-gradient)" transform="rotate(10 369 200) scale(0.8)" />
+    <!-- Fish 3 (Tiny school) -->
+    <circle cx="300" cy="400" r="4" fill="#01579B" fill-opacity="0.2" />
+    <circle cx="315" cy="410" r="3" fill="#01579B" fill-opacity="0.2" />
+    <circle cx="290" cy="415" r="3" fill="#01579B" fill-opacity="0.2" />
+
+    <!-- Surface Waves/Glints -->
+    <!-- Using rounded rects for a cartoonish, soft, non-directional shimmer -->
+    <g fill="#E1F5FE" fill-opacity="0.7">
+      <rect x="220" y="100" width="30" height="8" rx="4" />
+      <rect x="260" y="120" width="15" height="6" rx="3" />
+      
+      <rect x="100" y="250" width="25" height="7" rx="3.5" />
+      <rect x="135" y="265" width="10" height="5" rx="2.5" />
+      
+      <rect x="350" y="300" width="35" height="8" rx="4" />
+      <rect x="330" y="315" width="15" height="6" rx="3" />
+      
+      <rect x="180" y="400" width="20" height="6" rx="3" />
+      <rect x="256" y="256" width="40" height="9" rx="4.5" opacity="0.8" />
+      
+      <rect x="400" y="150" width="18" height="6" rx="3" />
+    </g>
+    
+    <!-- Highlight Glints (Pure White for pop) -->
+    <g fill="#FFFFFF" fill-opacity="0.6">
+       <circle cx="225" cy="103" r="2" />
+       <circle cx="355" cy="303" r="2" />
+       <circle cx="260" cy="260" r="3" />
+    </g>
+
+  </g>
+
+  <!-- Outline Stroke to define the game tile -->
+  <use href="#hex-shape" fill="none" stroke="#0277BD" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Inner Highlight for semi-3D feel (Top edge) -->
+  <path d="M54 145 L256 28 L458 145" fill="none" stroke="#81D4FA" stroke-width="8" stroke-linecap="round" opacity="0.6" clip-path="url(#hex-clip)" />
+
+</svg>

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services/singleton"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -13,12 +13,12 @@ import (
 func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *singleton.SingletonGamesService {
 	// 1. Create test world with 3 units
 	protoWorld := &v1.WorldData{} // Empty world data for test
-	world := services.NewWorld("test", protoWorld)
+	world := lib.NewWorld("test", protoWorld)
 	// Add some tiles for movement
 	for q := range nq {
 		for r := range nr {
-			coord := services.AxialCoord{Q: q, R: r}
-			tile := services.NewTile(coord, 1) // Grass terrain
+			coord := lib.AxialCoord{Q: q, R: r}
+			tile := lib.NewTile(coord, 1) // Grass terrain
 			world.AddTile(tile)
 		}
 	}
@@ -28,7 +28,7 @@ func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *singleton.SingletonG
 	}
 
 	// Load rules engine
-	rulesEngine, err := services.LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	rulesEngine, err := lib.LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
 	if err != nil {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestProcessEndTurnIncome(t *testing.T) {
 		},
 	}
 
-	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
 	if err != nil {
 		t.Fatalf("ProcessEndTurn failed: %v", err)
 	}
@@ -365,7 +365,7 @@ func TestProcessEndTurnNoIncome(t *testing.T) {
 		},
 	}
 
-	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
 	if err != nil {
 		t.Fatalf("ProcessEndTurn failed: %v", err)
 	}
@@ -434,7 +434,7 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 		},
 	}
 
-	result, err := processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
 	if err != nil {
 		t.Fatalf("ProcessEndTurn failed: %v", err)
 	}

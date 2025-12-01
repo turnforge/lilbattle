@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // OutputFormatter handles formatting output in text or JSON
@@ -85,7 +85,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 	// Get unit info
 	if pc.TurnOptions.Unit != nil {
 		unit := pc.TurnOptions.Unit
-		coord := services.CoordFromInt32(unit.Q, unit.R)
+		coord := lib.CoordFromInt32(unit.Q, unit.R)
 		sb.WriteString(fmt.Sprintf("Unit %s at %s:\n", position, coord.String()))
 		sb.WriteString(fmt.Sprintf("  Type: %d, HP: %d, Moves: %f\n\n",
 			unit.UnitType, unit.AvailableHealth, unit.DistanceLeft))
@@ -103,19 +103,19 @@ func FormatOptions(pc *PresenterContext, position string) string {
 		switch opt := option.OptionType.(type) {
 		case *v1.GameOption_Move:
 			moveOpt := opt.Move
-			targetCoord := services.CoordFromInt32(moveOpt.ToQ, moveOpt.ToR)
+			targetCoord := lib.CoordFromInt32(moveOpt.ToQ, moveOpt.ToR)
 			sb.WriteString(fmt.Sprintf("%d. move to %s (cost: %f)\n",
 				i+1, targetCoord.String(), moveOpt.MovementCost))
 
 			// Add path if available
 			if moveOpt.ReconstructedPath != nil {
-				pathStr := services.FormatPathCompact(moveOpt.ReconstructedPath)
+				pathStr := lib.FormatPathCompact(moveOpt.ReconstructedPath)
 				sb.WriteString(fmt.Sprintf("   Path: %s\n", pathStr))
 			}
 
 		case *v1.GameOption_Attack:
 			attackOpt := opt.Attack
-			targetCoord := services.CoordFromInt32(attackOpt.DefenderQ, attackOpt.DefenderR)
+			targetCoord := lib.CoordFromInt32(attackOpt.DefenderQ, attackOpt.DefenderR)
 			sb.WriteString(fmt.Sprintf("%d. attack %s (damage est: %d)\n",
 				i+1, targetCoord.String(), attackOpt.DamageEstimate))
 
@@ -125,7 +125,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 
 			// Try to get the actual unit details from RulesEngine
 			if pc.Presenter != nil && pc.Presenter.RulesEngine != nil {
-				rulesEngine := &services.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
+				rulesEngine := &lib.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
 				if unitDef, err := rulesEngine.GetUnitData(buildOpt.UnitType); err == nil {
 					unitName = unitDef.Name
 
@@ -290,7 +290,7 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 		sb.WriteString(fmt.Sprintf("Player %d units%s:\n", playerID, turnIndicator))
 
 		for _, unit := range units {
-			coord := services.CoordFromInt32(unit.Q, unit.R)
+			coord := lib.CoordFromInt32(unit.Q, unit.R)
 			unitID := unit.Shortcut
 			if unitID == "" {
 				// Player 1 -> 'A', Player 2 -> 'B', etc.
@@ -352,7 +352,7 @@ func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
 		sb.WriteString(fmt.Sprintf("Player %d tiles%s:\n", playerID, turnIndicator))
 
 		for _, tile := range tiles {
-			coord := services.CoordFromInt32(tile.Q, tile.R)
+			coord := lib.CoordFromInt32(tile.Q, tile.R)
 			tileID := tile.Shortcut
 			if tileID == "" {
 				// Player 1 -> 'A', Player 2 -> 'B', etc.

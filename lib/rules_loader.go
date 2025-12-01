@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	"encoding/json"
@@ -63,7 +63,21 @@ func LoadRulesEngineFromJSON(rulesJSON []byte, damageJSON []byte) (*RulesEngine,
 			Terrains:              make(map[int32]*v1.TerrainDefinition),
 			TerrainUnitProperties: make(map[string]*v1.TerrainUnitProperties),
 			UnitUnitProperties:    make(map[string]*v1.UnitUnitProperties),
+			TerrainTypes:          make(map[int32]v1.TerrainType),
 		},
+	}
+
+	// Load terrain types (city, nature, bridge, water, road)
+	if terrainTypesData, ok := rawData["terrainTypes"].(map[string]any); ok {
+		for idStr, typeStr := range terrainTypesData {
+			id, err := strconv.ParseInt(idStr, 10, 32)
+			if err != nil {
+				continue
+			}
+			if typeName, ok := typeStr.(string); ok {
+				rulesEngine.TerrainTypes[int32(id)] = parseTerrainType(typeName)
+			}
+		}
 	}
 
 	// Load terrains using protojson for proper field handling
@@ -260,5 +274,23 @@ func SetDefaultIncomeValues(re *RulesEngine) {
 		if income, ok := DefaultIncomeMap[tileID]; ok {
 			terrain.IncomePerTurn = income
 		}
+	}
+}
+
+// parseTerrainType converts a string terrain type name to the proto enum
+func parseTerrainType(typeName string) v1.TerrainType {
+	switch typeName {
+	case "city":
+		return v1.TerrainType_TERRAIN_TYPE_CITY
+	case "nature":
+		return v1.TerrainType_TERRAIN_TYPE_NATURE
+	case "bridge":
+		return v1.TerrainType_TERRAIN_TYPE_BRIDGE
+	case "water":
+		return v1.TerrainType_TERRAIN_TYPE_WATER
+	case "road":
+		return v1.TerrainType_TERRAIN_TYPE_ROAD
+	default:
+		return v1.TerrainType_TERRAIN_TYPE_UNSPECIFIED
 	}
 }

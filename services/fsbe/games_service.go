@@ -13,6 +13,7 @@ import (
 
 	"github.com/turnforge/turnengine/engine/storage"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/protobuf/proto"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -29,7 +30,7 @@ type FSGamesService struct {
 	gameCache    map[string]*v1.Game
 	stateCache   map[string]*v1.GameState
 	historyCache map[string]*v1.GameMoveHistory
-	runtimeCache map[string]*services.Game
+	runtimeCache map[string]*lib.Game
 }
 
 // NewGamesService creates a new GamesService implementation for server mode
@@ -45,7 +46,7 @@ func NewFSGamesService(storageDir string, clientMgr *services.ClientMgr) *FSGame
 		gameCache:    make(map[string]*v1.Game),
 		stateCache:   make(map[string]*v1.GameState),
 		historyCache: make(map[string]*v1.GameMoveHistory),
-		runtimeCache: make(map[string]*services.Game),
+		runtimeCache: make(map[string]*lib.Game),
 	}
 	service.ClientMgr = clientMgr
 	service.Self = service
@@ -165,7 +166,7 @@ func (s *FSGamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (r
 	// Auto-migrate WorldData from old list-based format to new map-based format
 	// This does not persist the migration - subsequent writes will save the new format
 	if gameState.WorldData != nil {
-		services.MigrateWorldData(gameState.WorldData)
+		lib.MigrateWorldData(gameState.WorldData)
 	}
 
 	// Cache everything
@@ -217,7 +218,7 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 	}
 
 	// Auto-migrate WorldData from old list-based format to new map-based format
-	services.MigrateWorldData(gs.WorldData)
+	lib.MigrateWorldData(gs.WorldData)
 
 	// Units start with default zero values (current_turn=0, distance_left=0, available_health=0)
 	// They will be lazily topped-up when accessed if unit.current_turn < game.turn_counter
@@ -289,7 +290,7 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 
 		// Auto-migrate WorldData from old list-based format to new map-based format
 		if req.NewState.WorldData != nil {
-			services.MigrateWorldData(req.NewState.WorldData)
+			lib.MigrateWorldData(req.NewState.WorldData)
 		}
 
 		// Make sure to topup units
@@ -333,12 +334,12 @@ func (s *FSGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameReque
 }
 
 // GetRuntimeGame implements the interface method (for compatibility)
-func (s *FSGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*services.Game, error) {
-	return services.ProtoToRuntimeGame(game, gameState), nil
+func (s *FSGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error) {
+	return lib.ProtoToRuntimeGame(game, gameState), nil
 }
 
 // GetRuntimeGameByID returns a cached runtime game instance for the given game ID
-func (s *FSGamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*services.Game, error) {
+func (s *FSGamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*lib.Game, error) {
 	// Check runtime cache first
 	if rtGame, ok := s.runtimeCache[gameID]; ok {
 		return rtGame, nil
@@ -351,7 +352,7 @@ func (s *FSGamesService) GetRuntimeGameByID(ctx context.Context, gameID string) 
 	}
 
 	// Convert to runtime game
-	rtGame := services.ProtoToRuntimeGame(resp.Game, resp.State)
+	rtGame := lib.ProtoToRuntimeGame(resp.Game, resp.State)
 
 	// Cache it
 	s.runtimeCache[gameID] = rtGame

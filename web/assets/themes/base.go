@@ -7,13 +7,16 @@ import (
 // BaseTheme provides common functionality for all themes
 // Mirrors BaseTheme.ts but focused on metadata, not asset loading
 type BaseTheme struct {
-	manifest *v1.ThemeManifest
+	manifest     *v1.ThemeManifest
+	cityTerrains map[int32]bool // Terrains that use player colors (from RulesEngine)
 }
 
 // NewBaseTheme creates a new BaseTheme from a pre-loaded manifest
-func NewBaseTheme(manifest *v1.ThemeManifest) *BaseTheme {
+// cityTerrains is a map of terrain IDs that use player colors (from RulesEngine.TerrainTypes)
+func NewBaseTheme(manifest *v1.ThemeManifest, cityTerrains map[int32]bool) *BaseTheme {
 	return &BaseTheme{
-		manifest: manifest,
+		manifest:     manifest,
+		cityTerrains: cityTerrains,
 	}
 }
 
@@ -61,18 +64,6 @@ func (b *BaseTheme) GetTilePath(terrainId int32) string {
 	return ""
 }
 
-func (b *BaseTheme) IsCityTile(terrainId int32) bool {
-	return IsCityTerrain(terrainId)
-}
-
-func (b *BaseTheme) IsNatureTile(terrainId int32) bool {
-	return IsNatureTerrain(terrainId)
-}
-
-func (b *BaseTheme) IsBridgeTile(terrainId int32) bool {
-	return IsBridgeTerrain(terrainId)
-}
-
 func (b *BaseTheme) GetThemeInfo() *v1.ThemeInfo {
 	return b.manifest.ThemeInfo
 }
@@ -101,4 +92,22 @@ func (b *BaseTheme) HasUnit(unitId int32) bool {
 func (b *BaseTheme) HasTerrain(terrainId int32) bool {
 	_, ok := b.manifest.Terrains[terrainId]
 	return ok
+}
+
+func (b *BaseTheme) GetEffectivePlayer(terrainId, playerId int32) int32 {
+	if b.cityTerrains[terrainId] {
+		return playerId
+	}
+	return 0
+}
+
+func (b *BaseTheme) GetPlayerColor(playerId int32) *v1.PlayerColor {
+	if color, ok := b.manifest.PlayerColors[playerId]; ok {
+		return color
+	}
+	// Fallback to neutral if not found
+	if color, ok := b.manifest.PlayerColors[0]; ok {
+		return color
+	}
+	return nil
 }

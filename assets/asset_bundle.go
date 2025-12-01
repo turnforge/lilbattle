@@ -1,13 +1,6 @@
 package assets
 
-import (
-	"bytes"
-	"embed"
-	"fmt"
-	"image"
-	"image/png"
-	"sync"
-)
+import _ "embed"
 
 //go:embed weewar-rules.json
 var RulesDataJSON []byte
@@ -19,7 +12,8 @@ var RulesDamageDataJSON []byte
 // WASM Asset Bundle System - Embedded Assets for Browser
 // =============================================================================
 
-//go:embed v1/Tiles v1/Units
+// go:embed v1/Tiles v1/Units
+/*
 var embeddedAssets embed.FS
 
 // EmbeddedAssetManager is a WASM-specific AssetManager that uses embedded files
@@ -174,3 +168,4 @@ func (eam *EmbeddedAssetManager) ClearCache() {
 func (eam *EmbeddedAssetManager) IsLoaded() bool {
 	return eam.loaded
 }
+*/

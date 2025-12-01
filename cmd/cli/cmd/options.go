@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // optionsCmd represents the options command
@@ -39,7 +39,7 @@ func runOptions(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse position (could be coordinate or unit ID)
-	target, err := services.ParsePositionOrUnit(rtGame, position)
+	target, err := lib.ParsePositionOrUnit(rtGame, position)
 	if err != nil {
 		return fmt.Errorf("invalid position: %w", err)
 	}

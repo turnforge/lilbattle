@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // TestSplashDamageBasic tests that splash damage is calculated and applied correctly
 func TestSplashDamageBasic(t *testing.T) {
-	rulesEngine := services.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 	if rulesEngine == nil {
 		t.Fatal("Failed to load default rules engine")
 	}
@@ -33,7 +33,7 @@ func TestSplashDamageBasic(t *testing.T) {
 	}
 
 	// Defender at (2, 0)
-	defenderCoord := services.AxialCoord{Q: 2, R: 0}
+	defenderCoord := lib.AxialCoord{Q: 2, R: 0}
 
 	// Create adjacent units around defender
 	// Position (3, 0) - adjacent to defender on the right
@@ -57,7 +57,7 @@ func TestSplashDamageBasic(t *testing.T) {
 	adjacentUnits := []*v1.Unit{adjacentUnit1, adjacentUnit2}
 
 	// Create a simple world
-	world := services.NewWorld("test", nil)
+	world := lib.NewWorld("test", nil)
 	world.AddTile(&v1.Tile{Q: 0, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 2, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 3, R: 0, TileType: 5})
@@ -99,7 +99,7 @@ func TestSplashDamageBasic(t *testing.T) {
 
 // TestSplashDamageAirImmunity tests that air units are immune to splash damage
 func TestSplashDamageAirImmunity(t *testing.T) {
-	rulesEngine := services.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 	if rulesEngine == nil {
 		t.Fatal("Failed to load default rules engine")
 	}
@@ -120,7 +120,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 		TileType: 5, // Grass
 	}
 
-	defenderCoord := services.AxialCoord{Q: 2, R: 0}
+	defenderCoord := lib.AxialCoord{Q: 2, R: 0}
 
 	// Create ground unit adjacent to defender
 	groundUnit := &v1.Unit{
@@ -143,7 +143,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 	adjacentUnits := []*v1.Unit{groundUnit, airUnit}
 
 	// Create world
-	world := services.NewWorld("test", nil)
+	world := lib.NewWorld("test", nil)
 	world.AddTile(&v1.Tile{Q: 0, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 2, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 3, R: 0, TileType: 5})
@@ -179,7 +179,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 
 // TestNoSplashDamageUnit tests that units without splash_damage don't cause splash
 func TestNoSplashDamageUnit(t *testing.T) {
-	rulesEngine := services.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 	if rulesEngine == nil {
 		t.Fatal("Failed to load default rules engine")
 	}
@@ -199,7 +199,7 @@ func TestNoSplashDamageUnit(t *testing.T) {
 		TileType: 5,
 	}
 
-	defenderCoord := services.AxialCoord{Q: 1, R: 0}
+	defenderCoord := lib.AxialCoord{Q: 1, R: 0}
 
 	// Create adjacent unit
 	adjacentUnit := &v1.Unit{
@@ -212,7 +212,7 @@ func TestNoSplashDamageUnit(t *testing.T) {
 
 	adjacentUnits := []*v1.Unit{adjacentUnit}
 
-	world := services.NewWorld("test", nil)
+	world := lib.NewWorld("test", nil)
 	world.AddTile(&v1.Tile{Q: 0, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 1, R: 0, TileType: 5})
 	world.AddTile(&v1.Tile{Q: 2, R: 0, TileType: 5})

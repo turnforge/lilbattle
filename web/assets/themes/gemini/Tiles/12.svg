@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Definitions for Gradients and Filters -->
+  <defs>
+    <!-- Lava Gradient: Glowing hot center to darker edges -->
+    <radialGradient id="lavaGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:#FFF700;stop-opacity:1" /> <!-- Bright Yellow -->
+      <stop offset="40%" style="stop-color:#FF8C00;stop-opacity:1" /> <!-- Orange -->
+      <stop offset="100%" style="stop-color:#D50000;stop-opacity:1" /> <!-- Red -->
+    </radialGradient>
+    
+    <!-- Subtle texture for the rock surface -->
+    <linearGradient id="rockGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5D4037;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3E2723;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Clip path for the hexagon shape -->
+    <clipPath id="hexClip">
+      <path d="M256 16 L481 137 V375 L256 496 L31 375 V137 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Main Group with Hex Clip -->
+  <g clip-path="url(#hexClip)">
+    
+    <!-- 1. Background Lava Layer -->
+    <rect width="512" height="512" fill="url(#lavaGrad)" />
+    
+    <!-- Lava Bubbles/Flow Details (Underneath rocks) -->
+    <g fill="#FFEB3B" opacity="0.6">
+      <circle cx="150" cy="150" r="15" />
+      <circle cx="360" cy="380" r="10" />
+      <circle cx="256" cy="256" r="25" />
+      <circle cx="400" cy="200" r="12" />
+      <circle cx="100" cy="350" r="18" />
+    </g>
+    
+    <!-- Lava "Crust" or cooler spots (darker orange blobs floating) -->
+    <g fill="#BF360C" opacity="0.4">
+       <path d="M120 120 Q140 100 160 120 T200 140 T120 120" />
+       <path d="M380 400 Q360 420 340 400 T300 380 T380 400" />
+    </g>
+
+    <!-- 2. Broken Rock Islands -->
+    <!-- Creating a fragmented look with islands rather than a solid mass -->
+    
+    <!-- Group wrapper for rocks to apply slight shadow filter or common style -->
+    <g stroke="#281615" stroke-width="4" stroke-linejoin="round">
+
+      <!-- Rock Island: Top Center -->
+      <g>
+        <!-- Side/Shadow (Offset down) -->
+        <path d="M220 60 L290 60 L310 120 L270 160 L200 140 L190 90 Z" fill="#281615" transform="translate(0, 10)"/>
+        <!-- Top Surface -->
+        <path d="M220 60 L290 60 L310 120 L270 160 L200 140 L190 90 Z" fill="url(#rockGrad)"/>
+        <!-- Surface Crack -->
+        <path d="M240 90 L260 110" stroke="#3E2723" stroke-width="3" fill="none"/>
+      </g>
+
+      <!-- Rock Island: Top Right -->
+      <g>
+        <path d="M360 130 L450 150 L460 220 L400 250 L340 210 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M360 130 L450 150 L460 220 L400 250 L340 210 Z" fill="url(#rockGrad)"/>
+        <!-- Highlight/Rim -->
+        <path d="M360 130 L450 150 L460 220" fill="none" stroke="#8D6E63" stroke-width="4" opacity="0.5"/>
+      </g>
+
+      <!-- Rock Island: Bottom Right -->
+      <g>
+        <path d="M350 300 L440 320 L410 400 L320 420 L300 360 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M350 300 L440 320 L410 400 L320 420 L300 360 Z" fill="url(#rockGrad)"/>
+      </g>
+
+      <!-- Rock Island: Bottom Center -->
+      <g>
+        <path d="M180 380 L280 370 L260 450 L160 440 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M180 380 L280 370 L260 450 L160 440 Z" fill="url(#rockGrad)"/>
+      </g>
+
+      <!-- Rock Island: Bottom Left -->
+      <g>
+        <path d="M60 300 L140 280 L160 350 L100 400 L50 360 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M60 300 L140 280 L160 350 L100 400 L50 360 Z" fill="url(#rockGrad)"/>
+      </g>
+
+      <!-- Rock Island: Top Left -->
+      <g>
+        <path d="M70 140 L160 120 L180 200 L120 240 L60 200 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M70 140 L160 120 L180 200 L120 240 L60 200 Z" fill="url(#rockGrad)"/>
+      </g>
+
+      <!-- Rock Island: Center (Broken into 2 pieces) -->
+      <!-- Piece 1 -->
+      <g>
+        <path d="M200 200 L260 190 L280 240 L230 260 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M200 200 L260 190 L280 240 L230 260 Z" fill="url(#rockGrad)"/>
+      </g>
+      <!-- Piece 2 -->
+      <g>
+        <path d="M240 280 L300 270 L320 320 L270 340 Z" fill="#281615" transform="translate(0, 10)"/>
+        <path d="M240 280 L300 270 L320 320 L270 340 Z" fill="url(#rockGrad)"/>
+      </g>
+
+      <!-- Small Floating Pebbles -->
+      <path d="M300 180 L315 185 L310 200 L295 195 Z" fill="#4E342E" />
+      <path d="M160 260 L175 265 L170 280 L155 275 Z" fill="#4E342E" />
+      <path d="M380 280 L390 285 L385 295 L375 290 Z" fill="#4E342E" />
+
+    </g>
+
+    <!-- 3. Post-Rock Lava Glow Effects -->
+    <!-- Add some "heat" glow overlapping the edges of the rocks slightly to make them feel immersed -->
+    <path d="M256 16 L481 137 V375 L256 496 L31 375 V137 Z" fill="none" stroke="#FF4500" stroke-width="4" opacity="0.3" />
+
+  </g>
+  
+  <!-- Outer Hex Border (Clean finish) -->
+  <path d="M256 16 L481 137 V375 L256 496 L31 375 V137 Z" fill="none" stroke="#3E2723" stroke-width="6"/>
+
+</svg>

@@ -1,0 +1,79 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- The main hexagon shape definition -->
+    <path id="hexShape" d="M256 30 L452 143 L452 369 L256 482 L60 369 L60 143 Z" />
+    
+    <!-- Clip path to keep textures inside -->
+    <clipPath id="hexClip">
+      <use href="#hexShape" />
+    </clipPath>
+
+    <!-- Reusable Grass Tuft Asset -->
+    <g id="grassTuft">
+      <!-- Left blade -->
+      <path d="M0 0 Q-8 -15 -12 -5 Q-10 -25 0 0" fill="#4a8a21" />
+      <!-- Center blade -->
+      <path d="M0 0 Q0 -20 0 -8 Q2 -28 0 0" fill="#3e7516" />
+      <!-- Right blade -->
+      <path d="M0 0 Q8 -15 12 -5 Q10 -25 0 0" fill="#4a8a21" />
+    </g>
+  </defs>
+
+  <!-- 1. Base Earth Color -->
+  <use href="#hexShape" fill="#7acc29" />
+
+  <!-- 2. Textural Details (Clipped inside hex) -->
+  <g clip-path="url(#hexClip)">
+    
+    <!-- Darker "Rough" Patches (Simulating uneven terrain/dirtier grass) -->
+    <path d="M60 369 C100 320, 150 400, 256 380 C320 370, 350 450, 256 482 L60 369 Z" fill="#6bb324" />
+    <path d="M452 143 C400 180, 350 120, 300 160 C250 200, 350 250, 452 220 Z" fill="#6bb324" />
+    <path d="M60 143 C100 100, 180 160, 120 220 C80 260, 60 200, 60 143 Z" fill="#6bb324" />
+
+    <!-- Lighter Highlights (Sunlit patches, non-glossy) -->
+    <path d="M256 30 C200 60, 300 100, 256 150 C220 190, 150 100, 180 80 Z" fill="#8fd645" />
+
+    <!-- 3. Prominent "Plains" Features -->
+    
+    <!-- Scattered Grass Tufts -->
+    <use href="#grassTuft" x="150" y="180" transform="scale(1.5)" />
+    <use href="#grassTuft" x="350" y="300" transform="scale(1.8)" />
+    <use href="#grassTuft" x="200" y="350" transform="scale(1.2)" />
+    <use href="#grassTuft" x="380" y="180" transform="scale(1.3)" />
+    <use href="#grassTuft" x="120" y="300" transform="scale(1.4)" />
+    <use href="#grassTuft" x="256" y="256" transform="scale(2.0)" /> <!-- Center Hero Tuft -->
+
+    <!-- Small Rocks/Pebbles for texture variance -->
+    <ellipse cx="320" cy="380" rx="12" ry="8" fill="#5c8a4b" opacity="0.6" />
+    <ellipse cx="180" cy="140" rx="8" ry="6" fill="#5c8a4b" opacity="0.6" />
+    
+    <!-- A couple of tiny wildflowers to add "Fun" and vibrancy -->
+    <g transform="translate(180, 230)">
+       <circle cx="0" cy="0" r="4" fill="#FFEB3B" />
+       <circle cx="0" cy="-6" r="4" fill="#FFFFFF" />
+       <circle cx="5" cy="-3" r="4" fill="#FFFFFF" />
+       <circle cx="5" cy="3" r="4" fill="#FFFFFF" />
+       <circle cx="0" cy="6" r="4" fill="#FFFFFF" />
+       <circle cx="-5" cy="3" r="4" fill="#FFFFFF" />
+       <circle cx="-5" cy="-3" r="4" fill="#FFFFFF" />
+    </g>
+
+    <g transform="translate(390, 330) scale(0.8)">
+       <circle cx="0" cy="0" r="4" fill="#FF9800" />
+       <circle cx="0" cy="-6" r="4" fill="#FFF176" />
+       <circle cx="5" cy="-3" r="4" fill="#FFF176" />
+       <circle cx="5" cy="3" r="4" fill="#FFF176" />
+       <circle cx="0" cy="6" r="4" fill="#FFF176" />
+       <circle cx="-5" cy="3" r="4" fill="#FFF176" />
+       <circle cx="-5" cy="-3" r="4" fill="#FFF176" />
+    </g>
+
+  </g>
+
+  <!-- 4. Cartoon Outline -->
+  <use href="#hexShape" fill="none" stroke="#2e5710" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Subtle inner shadow for depth (Edge highlight) -->
+  <path d="M256 42 L440 148 L440 364" fill="none" stroke="#aee371" stroke-width="6" opacity="0.5" stroke-linecap="round"/>
+
+</svg>

@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // TestSetDefaultIncomeValues verifies that default income values are set correctly for terrain types
 func TestSetDefaultIncomeValues(t *testing.T) {
 	// Create a minimal RulesEngine with test terrains
-	re := &services.RulesEngine{
+	re := &lib.RulesEngine{
 		RulesEngine: &v1.RulesEngine{
 			Terrains: map[int32]*v1.TerrainDefinition{
 				1:  {Id: 1, Name: "Base", BuildableUnitIds: []int32{1, 2}},
@@ -25,7 +25,7 @@ func TestSetDefaultIncomeValues(t *testing.T) {
 	}
 
 	// Call setDefaultIncomeValues
-	services.SetDefaultIncomeValues(re)
+	lib.SetDefaultIncomeValues(re)
 
 	// Test cases
 	testCases := []struct {
@@ -51,13 +51,13 @@ func TestSetDefaultIncomeValues(t *testing.T) {
 
 // TestLoadRulesEngineIncomeValues verifies that loaded rules have income values set
 func TestLoadRulesEngineIncomeValues(t *testing.T) {
-	rulesEngine, err := services.LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	rulesEngine, err := lib.LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
 	if err != nil {
 		t.Fatalf("Failed to load rules engine: %v", err)
 	}
 
 	// Verify income values are set for terrains in DefaultIncomeMap
-	for tileID, expectedIncome := range services.DefaultIncomeMap {
+	for tileID, expectedIncome := range lib.DefaultIncomeMap {
 		terrain, err := rulesEngine.GetTerrainData(tileID)
 		if err != nil {
 			t.Errorf("Failed to get terrain %d: %v", tileID, err)

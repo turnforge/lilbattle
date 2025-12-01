@@ -35,12 +35,14 @@ message ThemeManifest {
   ThemeInfo theme_info = 1;
   map<int32, UnitMapping> units = 2;       // Unit ID -> mapping
   map<int32, TerrainMapping> terrains = 3; // Terrain ID -> mapping
+  map<int32, PlayerColor> player_colors = 4; // Player ID -> color scheme
 }
 
 // PlayerColor defines the color scheme for a player
 message PlayerColor {
   string primary = 1;
   string secondary = 2;
+  string name = 3;
 }
 
 // AssetResult represents a rendered asset

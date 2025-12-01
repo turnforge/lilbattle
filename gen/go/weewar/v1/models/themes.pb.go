@@ -294,8 +294,9 @@ func (x *TerrainMapping) GetDescription() string {
 type ThemeManifest struct {
 	state         protoimpl.MessageState    `protogen:"open.v1"`
 	ThemeInfo     *ThemeInfo                `protobuf:"bytes,1,opt,name=theme_info,json=themeInfo,proto3" json:"theme_info,omitempty"`
-	Units         map[int32]*UnitMapping    `protobuf:"bytes,2,rep,name=units,proto3" json:"units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`       // Unit ID -> mapping
-	Terrains      map[int32]*TerrainMapping `protobuf:"bytes,3,rep,name=terrains,proto3" json:"terrains,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // Terrain ID -> mapping
+	Units         map[int32]*UnitMapping    `protobuf:"bytes,2,rep,name=units,proto3" json:"units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`                                   // Unit ID -> mapping
+	Terrains      map[int32]*TerrainMapping `protobuf:"bytes,3,rep,name=terrains,proto3" json:"terrains,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`                             // Terrain ID -> mapping
+	PlayerColors  map[int32]*PlayerColor    `protobuf:"bytes,4,rep,name=player_colors,json=playerColors,proto3" json:"player_colors,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // Player ID -> color scheme
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -351,11 +352,19 @@ func (x *ThemeManifest) GetTerrains() map[int32]*TerrainMapping {
 	return nil
 }
 
+func (x *ThemeManifest) GetPlayerColors() map[int32]*PlayerColor {
+	if x != nil {
+		return x.PlayerColors
+	}
+	return nil
+}
+
 // PlayerColor defines the color scheme for a player
 type PlayerColor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Primary       string                 `protobuf:"bytes,1,opt,name=primary,proto3" json:"primary,omitempty"`
 	Secondary     string                 `protobuf:"bytes,2,opt,name=secondary,proto3" json:"secondary,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -400,6 +409,13 @@ func (x *PlayerColor) GetPrimary() string {
 func (x *PlayerColor) GetSecondary() string {
 	if x != nil {
 		return x.Secondary
+	}
+	return ""
+}
+
+func (x *PlayerColor) GetName() string {
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
@@ -478,22 +494,27 @@ const file_weewar_v1_models_themes_proto_rawDesc = "" +
 	"\x03old\x18\x01 \x01(\tR\x03old\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05image\x18\x03 \x01(\tR\x05image\x12 \n" +
-	"\vdescription\x18\x04 \x01(\tR\vdescription\"\xed\x02\n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\"\x97\x04\n" +
 	"\rThemeManifest\x123\n" +
 	"\n" +
 	"theme_info\x18\x01 \x01(\v2\x14.weewar.v1.ThemeInfoR\tthemeInfo\x129\n" +
 	"\x05units\x18\x02 \x03(\v2#.weewar.v1.ThemeManifest.UnitsEntryR\x05units\x12B\n" +
-	"\bterrains\x18\x03 \x03(\v2&.weewar.v1.ThemeManifest.TerrainsEntryR\bterrains\x1aP\n" +
+	"\bterrains\x18\x03 \x03(\v2&.weewar.v1.ThemeManifest.TerrainsEntryR\bterrains\x12O\n" +
+	"\rplayer_colors\x18\x04 \x03(\v2*.weewar.v1.ThemeManifest.PlayerColorsEntryR\fplayerColors\x1aP\n" +
 	"\n" +
 	"UnitsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.weewar.v1.UnitMappingR\x05value:\x028\x01\x1aV\n" +
 	"\rTerrainsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12/\n" +
-	"\x05value\x18\x02 \x01(\v2\x19.weewar.v1.TerrainMappingR\x05value:\x028\x01\"E\n" +
+	"\x05value\x18\x02 \x01(\v2\x19.weewar.v1.TerrainMappingR\x05value:\x028\x01\x1aW\n" +
+	"\x11PlayerColorsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12,\n" +
+	"\x05value\x18\x02 \x01(\v2\x16.weewar.v1.PlayerColorR\x05value:\x028\x01\"Y\n" +
 	"\vPlayerColor\x12\x18\n" +
 	"\aprimary\x18\x01 \x01(\tR\aprimary\x12\x1c\n" +
-	"\tsecondary\x18\x02 \x01(\tR\tsecondary\"\xa0\x01\n" +
+	"\tsecondary\x18\x02 \x01(\tR\tsecondary\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"\xa0\x01\n" +
 	"\vAssetResult\x12/\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x1b.weewar.v1.AssetResult.TypeR\x04type\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\tR\x04data\"L\n" +
@@ -518,7 +539,7 @@ func file_weewar_v1_models_themes_proto_rawDescGZIP() []byte {
 }
 
 var file_weewar_v1_models_themes_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_weewar_v1_models_themes_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_weewar_v1_models_themes_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_weewar_v1_models_themes_proto_goTypes = []any{
 	(AssetResult_Type)(0),  // 0: weewar.v1.AssetResult.Type
 	(*ThemeInfo)(nil),      // 1: weewar.v1.ThemeInfo
@@ -529,19 +550,22 @@ var file_weewar_v1_models_themes_proto_goTypes = []any{
 	(*AssetResult)(nil),    // 6: weewar.v1.AssetResult
 	nil,                    // 7: weewar.v1.ThemeManifest.UnitsEntry
 	nil,                    // 8: weewar.v1.ThemeManifest.TerrainsEntry
+	nil,                    // 9: weewar.v1.ThemeManifest.PlayerColorsEntry
 }
 var file_weewar_v1_models_themes_proto_depIdxs = []int32{
 	1, // 0: weewar.v1.ThemeManifest.theme_info:type_name -> weewar.v1.ThemeInfo
 	7, // 1: weewar.v1.ThemeManifest.units:type_name -> weewar.v1.ThemeManifest.UnitsEntry
 	8, // 2: weewar.v1.ThemeManifest.terrains:type_name -> weewar.v1.ThemeManifest.TerrainsEntry
-	0, // 3: weewar.v1.AssetResult.type:type_name -> weewar.v1.AssetResult.Type
-	2, // 4: weewar.v1.ThemeManifest.UnitsEntry.value:type_name -> weewar.v1.UnitMapping
-	3, // 5: weewar.v1.ThemeManifest.TerrainsEntry.value:type_name -> weewar.v1.TerrainMapping
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	9, // 3: weewar.v1.ThemeManifest.player_colors:type_name -> weewar.v1.ThemeManifest.PlayerColorsEntry
+	0, // 4: weewar.v1.AssetResult.type:type_name -> weewar.v1.AssetResult.Type
+	2, // 5: weewar.v1.ThemeManifest.UnitsEntry.value:type_name -> weewar.v1.UnitMapping
+	3, // 6: weewar.v1.ThemeManifest.TerrainsEntry.value:type_name -> weewar.v1.TerrainMapping
+	5, // 7: weewar.v1.ThemeManifest.PlayerColorsEntry.value:type_name -> weewar.v1.PlayerColor
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_themes_proto_init() }
@@ -555,7 +579,7 @@ func file_weewar_v1_models_themes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_weewar_v1_models_themes_proto_rawDesc), len(file_weewar_v1_models_themes_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

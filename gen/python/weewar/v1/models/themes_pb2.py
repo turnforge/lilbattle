@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dweewar/v1/models/themes.proto\x12\tweewar.v1\"\xa9\x01\n\tThemeInfo\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07version\x18\x02 \x01(\tR\x07version\x12\x1b\n\tbase_path\x18\x03 \x01(\tR\x08\x62\x61sePath\x12\x1d\n\nasset_type\x18\x04 \x01(\tR\tassetType\x12\x32\n\x15needs_post_processing\x18\x05 \x01(\x08R\x13needsPostProcessing\"k\n\x0bUnitMapping\x12\x10\n\x03old\x18\x01 \x01(\tR\x03old\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\"n\n\x0eTerrainMapping\x12\x10\n\x03old\x18\x01 \x01(\tR\x03old\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\"\xed\x02\n\rThemeManifest\x12\x33\n\ntheme_info\x18\x01 \x01(\x0b\x32\x14.weewar.v1.ThemeInfoR\tthemeInfo\x12\x39\n\x05units\x18\x02 \x03(\x0b\x32#.weewar.v1.ThemeManifest.UnitsEntryR\x05units\x12\x42\n\x08terrains\x18\x03 \x03(\x0b\x32&.weewar.v1.ThemeManifest.TerrainsEntryR\x08terrains\x1aP\n\nUnitsEntry\x12\x10\n\x03key\x18\x01 \x01(\x05R\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.weewar.v1.UnitMappingR\x05value:\x02\x38\x01\x1aV\n\rTerrainsEntry\x12\x10\n\x03key\x18\x01 \x01(\x05R\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.weewar.v1.TerrainMappingR\x05value:\x02\x38\x01\"E\n\x0bPlayerColor\x12\x18\n\x07primary\x18\x01 \x01(\tR\x07primary\x12\x1c\n\tsecondary\x18\x02 \x01(\tR\tsecondary\"\xa0\x01\n\x0b\x41ssetResult\x12/\n\x04type\x18\x01 \x01(\x0e\x32\x1b.weewar.v1.AssetResult.TypeR\x04type\x12\x12\n\x04\x64\x61ta\x18\x02 \x01(\tR\x04\x64\x61ta\"L\n\x04Type\x12\x14\n\x10TYPE_UNSPECIFIED\x10\x00\x12\r\n\tTYPE_PATH\x10\x01\x12\x0c\n\x08TYPE_SVG\x10\x02\x12\x11\n\rTYPE_DATA_URL\x10\x03\x42\x9f\x01\n\rcom.weewar.v1B\x0bThemesProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dweewar/v1/models/themes.proto\x12\tweewar.v1\"\xa9\x01\n\tThemeInfo\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n\x07version\x18\x02 \x01(\tR\x07version\x12\x1b\n\tbase_path\x18\x03 \x01(\tR\x08\x62\x61sePath\x12\x1d\n\nasset_type\x18\x04 \x01(\tR\tassetType\x12\x32\n\x15needs_post_processing\x18\x05 \x01(\x08R\x13needsPostProcessing\"k\n\x0bUnitMapping\x12\x10\n\x03old\x18\x01 \x01(\tR\x03old\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\"n\n\x0eTerrainMapping\x12\x10\n\x03old\x18\x01 \x01(\tR\x03old\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n\x05image\x18\x03 \x01(\tR\x05image\x12 \n\x0b\x64\x65scription\x18\x04 \x01(\tR\x0b\x64\x65scription\"\x97\x04\n\rThemeManifest\x12\x33\n\ntheme_info\x18\x01 \x01(\x0b\x32\x14.weewar.v1.ThemeInfoR\tthemeInfo\x12\x39\n\x05units\x18\x02 \x03(\x0b\x32#.weewar.v1.ThemeManifest.UnitsEntryR\x05units\x12\x42\n\x08terrains\x18\x03 \x03(\x0b\x32&.weewar.v1.ThemeManifest.TerrainsEntryR\x08terrains\x12O\n\rplayer_colors\x18\x04 \x03(\x0b\x32*.weewar.v1.ThemeManifest.PlayerColorsEntryR\x0cplayerColors\x1aP\n\nUnitsEntry\x12\x10\n\x03key\x18\x01 \x01(\x05R\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.weewar.v1.UnitMappingR\x05value:\x02\x38\x01\x1aV\n\rTerrainsEntry\x12\x10\n\x03key\x18\x01 \x01(\x05R\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.weewar.v1.TerrainMappingR\x05value:\x02\x38\x01\x1aW\n\x11PlayerColorsEntry\x12\x10\n\x03key\x18\x01 \x01(\x05R\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.weewar.v1.PlayerColorR\x05value:\x02\x38\x01\"Y\n\x0bPlayerColor\x12\x18\n\x07primary\x18\x01 \x01(\tR\x07primary\x12\x1c\n\tsecondary\x18\x02 \x01(\tR\tsecondary\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\"\xa0\x01\n\x0b\x41ssetResult\x12/\n\x04type\x18\x01 \x01(\x0e\x32\x1b.weewar.v1.AssetResult.TypeR\x04type\x12\x12\n\x04\x64\x61ta\x18\x02 \x01(\tR\x04\x64\x61ta\"L\n\x04Type\x12\x14\n\x10TYPE_UNSPECIFIED\x10\x00\x12\r\n\tTYPE_PATH\x10\x01\x12\x0c\n\x08TYPE_SVG\x10\x02\x12\x11\n\rTYPE_DATA_URL\x10\x03\x42\x9f\x01\n\rcom.weewar.v1B\x0bThemesProtoP\x01Z<github.com/turnforge/weewar/gen/go/weewar/v1/models;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\nWeewar::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +36,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_THEMEMANIFEST_UNITSENTRY']._serialized_options = b'8\001'
   _globals['_THEMEMANIFEST_TERRAINSENTRY']._loaded_options = None
   _globals['_THEMEMANIFEST_TERRAINSENTRY']._serialized_options = b'8\001'
+  _globals['_THEMEMANIFEST_PLAYERCOLORSENTRY']._loaded_options = None
+  _globals['_THEMEMANIFEST_PLAYERCOLORSENTRY']._serialized_options = b'8\001'
   _globals['_THEMEINFO']._serialized_start=45
   _globals['_THEMEINFO']._serialized_end=214
   _globals['_UNITMAPPING']._serialized_start=216
@@ -43,15 +45,17 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_TERRAINMAPPING']._serialized_start=325
   _globals['_TERRAINMAPPING']._serialized_end=435
   _globals['_THEMEMANIFEST']._serialized_start=438
-  _globals['_THEMEMANIFEST']._serialized_end=803
-  _globals['_THEMEMANIFEST_UNITSENTRY']._serialized_start=635
-  _globals['_THEMEMANIFEST_UNITSENTRY']._serialized_end=715
-  _globals['_THEMEMANIFEST_TERRAINSENTRY']._serialized_start=717
-  _globals['_THEMEMANIFEST_TERRAINSENTRY']._serialized_end=803
-  _globals['_PLAYERCOLOR']._serialized_start=805
-  _globals['_PLAYERCOLOR']._serialized_end=874
-  _globals['_ASSETRESULT']._serialized_start=877
-  _globals['_ASSETRESULT']._serialized_end=1037
-  _globals['_ASSETRESULT_TYPE']._serialized_start=961
-  _globals['_ASSETRESULT_TYPE']._serialized_end=1037
+  _globals['_THEMEMANIFEST']._serialized_end=973
+  _globals['_THEMEMANIFEST_UNITSENTRY']._serialized_start=716
+  _globals['_THEMEMANIFEST_UNITSENTRY']._serialized_end=796
+  _globals['_THEMEMANIFEST_TERRAINSENTRY']._serialized_start=798
+  _globals['_THEMEMANIFEST_TERRAINSENTRY']._serialized_end=884
+  _globals['_THEMEMANIFEST_PLAYERCOLORSENTRY']._serialized_start=886
+  _globals['_THEMEMANIFEST_PLAYERCOLORSENTRY']._serialized_end=973
+  _globals['_PLAYERCOLOR']._serialized_start=975
+  _globals['_PLAYERCOLOR']._serialized_end=1064
+  _globals['_ASSETRESULT']._serialized_start=1067
+  _globals['_ASSETRESULT']._serialized_end=1227
+  _globals['_ASSETRESULT_TYPE']._serialized_start=1151
+  _globals['_ASSETRESULT_TYPE']._serialized_end=1227
 # @@protoc_insertion_point(module_scope)

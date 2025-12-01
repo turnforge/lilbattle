@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/web/assets/themes"
 )
 
@@ -76,7 +77,8 @@ func (r *RootViewsHandler) handleGameScreenshotLive(w http.ResponseWriter, req *
 // renderScreenshot renders tiles and units using the specified theme
 func (r *RootViewsHandler) renderScreenshot(w http.ResponseWriter, tiles []*protos.Tile, units []*protos.Unit, themeName string) {
 	// Create theme
-	theme, err := themes.CreateTheme(themeName)
+	re := lib.DefaultRulesEngine()
+	theme, err := themes.CreateTheme(themeName, re.GetCityTerrains())
 	if err != nil {
 		log.Printf("Failed to create theme %s: %v", themeName, err)
 		http.Error(w, "Invalid theme", http.StatusBadRequest)

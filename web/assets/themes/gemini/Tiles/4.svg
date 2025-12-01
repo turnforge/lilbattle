@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Define the hexagonal shape -->
+    <path id="hex-shape" d="M256 26 L476 136 L476 376 L256 486 L36 376 L36 136 Z" />
+    <clipPath id="hex-clip">
+      <use href="#hex-shape" />
+    </clipPath>
+  </defs>
+
+  <!-- Base Sand Color: Warm, matte yellow for a desert feel -->
+  <use href="#hex-shape" fill="#E6C229" />
+
+  <!-- Group clipped to hexagon to ensure nothing protrudes -->
+  <g clip-path="url(#hex-clip)">
+    
+    <!-- Deep Dune Shadows (Wavy patterns for sand ripples) -->
+    <path d="M-20 300 Q150 250 256 320 T550 300 V600 H-20 Z" fill="#D4A017" />
+    <path d="M-20 420 Q150 380 256 440 T550 420 V600 H-20 Z" fill="#C18A0B" />
+    
+    <!-- Top Dune Highlight (Sun hitting the ridge) -->
+    <path d="M-20 180 Q150 130 256 200 T550 180 V-20 H-20 Z" fill="#F4D03F" />
+    
+    <!-- Texture: "Rough" Sand Grains -->
+    <!-- Creating noise with small scattered circles in slightly darker/lighter shades -->
+    <g fill="#B8860B" opacity="0.6">
+       <circle cx="100" cy="100" r="4" /> <circle cx="150" cy="120" r="3" />
+       <circle cx="300" cy="80" r="5" /> <circle cx="400" cy="150" r="4" />
+       <circle cx="80" cy="250" r="3" /> <circle cx="200" cy="280" r="5" />
+       <circle cx="350" cy="220" r="4" /> <circle cx="450" cy="300" r="3" />
+       <circle cx="120" cy="400" r="4" /> <circle cx="300" cy="420" r="5" />
+       <circle cx="50" cy="180" r="3" /> <circle cx="420" cy="50" r="4" />
+       <circle cx="256" cy="256" r="3" /> <circle cx="280" cy="350" r="4" />
+    </g>
+    
+    <!-- Lighter speckles for glinting sand (matte, not shiny) -->
+    <g fill="#FFF3A3" opacity="0.5">
+       <circle cx="120" cy="110" r="3" /> <circle cx="320" cy="90" r="3" />
+       <circle cx="180" cy="260" r="2" /> <circle cx="380" cy="240" r="3" />
+       <circle cx="250" cy="400" r="2" /> <circle cx="60" cy="350" r="3" />
+    </g>
+
+    <!-- Subtle dry cracks to emphasize roughness -->
+    <path d="M120 180 L130 195 L125 210" fill="none" stroke="#C18A0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+    <path d="M380 320 L370 335 L385 345" fill="none" stroke="#C18A0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+
+  </g>
+
+  <!-- Thick Outline for cartoon/game tile style -->
+  <use href="#hex-shape" fill="none" stroke="#997000" stroke-width="16" />
+  
+  <!-- Inner Highlight edge for subtle 3D volume (top left) -->
+  <path d="M36 136 L256 26 L476 136" fill="none" stroke="#FFF7C0" stroke-width="8" opacity="0.4" stroke-linecap="round" />
+</svg>

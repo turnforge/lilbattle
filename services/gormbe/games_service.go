@@ -14,6 +14,7 @@ import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	v1gorm "github.com/turnforge/weewar/gen/gorm"
 	v1dal "github.com/turnforge/weewar/gen/gorm/dal"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -151,7 +152,7 @@ func (s *GamesService) GetGame(ctx context.Context, req *v1.GetGameRequest) (res
 	// Auto-migrate WorldData from old list-based format to new map-based format
 	// This does not persist the migration - subsequent writes will save the new format
 	if resp.State != nil && resp.State.WorldData != nil {
-		services.MigrateWorldData(resp.State.WorldData)
+		lib.MigrateWorldData(resp.State.WorldData)
 	}
 
 	return resp, nil
@@ -210,7 +211,7 @@ func (s *GamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest
 	}
 
 	// Auto-migrate WorldData from old list-based format to new map-based format
-	services.MigrateWorldData(gs.WorldData)
+	lib.MigrateWorldData(gs.WorldData)
 
 	gameStateGorm, err := v1gorm.GameStateToGameStateGORM(gs, nil, nil)
 	if err != nil {
@@ -290,7 +291,7 @@ func (s *GamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest
 
 		// Auto-migrate WorldData from old list-based format to new map-based format
 		if req.NewState.WorldData != nil {
-			services.MigrateWorldData(req.NewState.WorldData)
+			lib.MigrateWorldData(req.NewState.WorldData)
 		}
 
 		// Make sure to topup units
@@ -345,12 +346,12 @@ func (s *GamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest
 }
 
 // GetRuntimeGame implements the interface method (for compatibility)
-func (s *GamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*services.Game, error) {
-	return services.ProtoToRuntimeGame(game, gameState), nil
+func (s *GamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error) {
+	return lib.ProtoToRuntimeGame(game, gameState), nil
 }
 
 // GetRuntimeGameByID returns a cached runtime game instance for the given game ID
-func (s *GamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*services.Game, error) {
+func (s *GamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*lib.Game, error) {
 	// Load proto data (will use cache if available)
 	resp, err := s.GetGame(ctx, &v1.GetGameRequest{Id: gameID})
 	if err != nil {
@@ -358,7 +359,7 @@ func (s *GamesService) GetRuntimeGameByID(ctx context.Context, gameID string) (*
 	}
 
 	// Convert to runtime game
-	rtGame := services.ProtoToRuntimeGame(resp.Game, resp.State)
+	rtGame := lib.ProtoToRuntimeGame(resp.Game, resp.State)
 
 	return rtGame, nil
 }

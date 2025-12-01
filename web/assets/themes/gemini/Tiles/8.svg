@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Define the hexagonal clipping path to keep everything contained -->
+    <path id="hex-shape" d="M256 20 L470 142 V370 L256 492 L42 370 V142 Z" />
+    <clipPath id="clip">
+      <use href="#hex-shape" />
+    </clipPath>
+  </defs>
+
+  <!-- Main Group Clipped to Hexagon -->
+  <g clip-path="url(#clip)">
+    
+    <!-- Base Ground: Vibrant Swampy Green -->
+    <rect width="512" height="512" fill="#7CB342" />
+    
+    <!-- Rough Texture: Mossy/Grassy Noise (Simplified for scalable vector) -->
+    <g fill="#558B2F" opacity="0.4">
+      <circle cx="100" cy="100" r="10" />
+      <circle cx="400" cy="400" r="15" />
+      <circle cx="150" cy="450" r="8" />
+      <circle cx="450" cy="150" r="12" />
+      <circle cx="256" cy="50" r="10" />
+      <circle cx="50" cy="256" r="10" />
+      <circle cx="460" cy="256" r="8" />
+      <path d="M120 180 l10 5 l-10 5 z" />
+      <path d="M380 300 l10 5 l-10 5 z" />
+      <path d="M256 400 l-10 -5 l10 -5 z" />
+    </g>
+
+    <!-- Mud/Bog Pits: Irregular shapes, Browner as requested -->
+    <!-- Large Central Pit -->
+    <path d="M200 256 C200 220 230 200 256 200 C290 200 320 230 320 260 C320 300 290 320 256 320 C220 320 200 290 200 256 Z" fill="#4E342E" />
+    <path d="M210 256 C210 230 235 210 256 210 C280 210 310 235 310 260 C310 290 280 310 256 310 C230 310 210 280 210 256 Z" fill="#5D4037" />
+    
+    <!-- Top Left Pit -->
+    <circle cx="140" cy="160" r="45" fill="#4E342E" />
+    <circle cx="140" cy="160" r="38" fill="#5D4037" />
+    
+    <!-- Top Right Pit -->
+    <circle cx="370" cy="180" r="40" fill="#4E342E" />
+    <circle cx="370" cy="180" r="33" fill="#5D4037" />
+
+    <!-- Bottom Pit -->
+    <path d="M280 380 C300 370 360 380 360 410 C360 440 320 450 290 440 C270 435 260 400 280 380 Z" fill="#4E342E" />
+    <path d="M290 388 C305 380 350 388 350 410 C350 430 320 440 295 432 C280 428 275 400 290 388 Z" fill="#5D4037" />
+
+    <!-- Mud Bubbles (Non-glossy, just lighter flat color) -->
+    <circle cx="270" cy="240" r="8" fill="#795548" />
+    <circle cx="150" cy="150" r="5" fill="#795548" />
+    <circle cx="330" cy="410" r="6" fill="#795548" />
+    
+    <!-- Dead Vegetation (The "Y" shapes) -->
+    <!-- Using thick strokes with rounded caps for a cartoon look -->
+    <g stroke="#8D6E63" stroke-width="8" stroke-linecap="round" fill="none">
+        <!-- Twig 1 Left -->
+        <path d="M100 300 L100 270 M100 270 L90 255 M100 270 L110 255" />
+        <!-- Twig 2 Top Right -->
+        <path d="M320 120 L320 100 M320 100 L310 85 M320 100 L335 85" />
+        <!-- Twig 3 Bottom Right -->
+        <path d="M400 300 L400 280 M400 280 L390 265 M400 280 L415 265" />
+        <!-- Twig 4 Center Low -->
+        <path d="M200 400 L200 370 M200 370 L190 355 M200 370 L215 355" />
+        <!-- Twig 5 Top Center (Small) -->
+        <path d="M256 100 L256 80 M256 80 L248 70 M256 80 L264 70" stroke-width="6" />
+    </g>
+
+    <!-- Moss/Algae patches on the mud edges for roughness -->
+    <path d="M170 150 Q180 160 175 170" stroke="#33691E" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M330 250 Q320 260 325 270" stroke="#33691E" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+    <!-- Inner Border for cleaner tile definition -->
+    <use href="#hex-shape" stroke="#33691E" stroke-width="12" fill="none" opacity="0.3" />
+    
+  </g>
+  
+  <!-- Outer Stroke to ensure the tile pops against different backgrounds -->
+  <use href="#hex-shape" stroke="#1B5E20" stroke-width="8" fill="none" />
+</svg>

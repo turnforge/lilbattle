@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 )
 
@@ -45,14 +46,14 @@ func runAttack(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse attacker position
-	attackerTarget, err := services.ParsePositionOrUnit(rtGame, attackerPos)
+	attackerTarget, err := lib.ParsePositionOrUnit(rtGame, attackerPos)
 	if err != nil {
 		return fmt.Errorf("invalid attacker position: %w", err)
 	}
 	attackerCoord := attackerTarget.GetCoordinate()
 
 	// Parse target position with context (supports directions)
-	targetTarget, err := services.ParsePositionOrUnitWithContext(rtGame, targetPos, &attackerCoord)
+	targetTarget, err := lib.ParsePositionOrUnitWithContext(rtGame, targetPos, &attackerCoord)
 	if err != nil {
 		return fmt.Errorf("invalid target position: %w", err)
 	}
@@ -148,7 +149,7 @@ func runAttack(cmd *cobra.Command, args []string) error {
 // generateCombatDiagnostics produces detailed combat calculation information
 // This is a static, testable function that allows testing with arbitrary health values
 func generateCombatDiagnostics(
-	rulesEngine *services.RulesEngine,
+	rulesEngine *lib.RulesEngine,
 	attacker *v1.Unit, attackerTile *v1.Tile, attackerHealth int32,
 	defender *v1.Unit, defenderTile *v1.Tile, defenderHealth int32) string {
 
@@ -243,7 +244,7 @@ func generateCombatDiagnostics(
 	woundBonus := rulesEngine.CalculateWoundBonus(defender, attackerCoord)
 
 	// Create combat context for attacker -> defender
-	attackerCtx := &services.CombatContext{
+	attackerCtx := &lib.CombatContext{
 		Attacker:       attacker,
 		AttackerTile:   attackerTile,
 		AttackerHealth: attackerHealth,
@@ -340,7 +341,7 @@ func generateCombatDiagnostics(
 	if canCounter && counterDist != nil {
 		canReach, _ := rulesEngine.CanUnitAttackTarget(defender, attacker)
 		if canReach {
-			counterCtx := &services.CombatContext{
+			counterCtx := &lib.CombatContext{
 				Attacker:       defender,
 				AttackerTile:   defenderTile,
 				AttackerHealth: defenderHealth,

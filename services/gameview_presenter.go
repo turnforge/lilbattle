@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	lib "github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/web/assets/themes"
 )
 
@@ -107,11 +108,12 @@ type GameViewPresenter struct {
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
 // GetGame needed - GetGame data is set when we create this
 func NewGameViewPresenter() *GameViewPresenter {
+	re := lib.DefaultRulesEngine()
 	w := &GameViewPresenter{
 		BaseGameViewPresenter: BaseGameViewPresenter{
 			// WorldsService: WorldsService
-			RulesEngine: DefaultRulesEngine().RulesEngine,
-			Theme:       themes.NewDefaultTheme(), // Start with default theme
+			RulesEngine: re.RulesEngine,
+			Theme:       themes.NewDefaultTheme(re.GetCityTerrains()), // Start with default theme
 		},
 	}
 	return w

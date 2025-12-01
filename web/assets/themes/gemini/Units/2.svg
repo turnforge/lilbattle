@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- rough texture filter for non-shiny look -->
+    <filter id="roughPaper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.1 0" in="noise" result="coloredNoise" />
+      <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="composite" />
+      <feBlend mode="multiply" in="composite" in2="SourceGraphic" />
+    </filter>
+  </defs>
+
+  <!-- Ground Shadow -->
+  <ellipse cx="256" cy="460" rx="140" ry="40" fill="#000000" opacity="0.3" />
+
+  <!-- Weapon (Back part of the Bazooka) -->
+  <path d="M120,200 L120,440 L180,440 L180,200 Z" fill="#7f8c8d" stroke="#1e272e" stroke-width="12" stroke-linejoin="round" />
+  <!-- Weapon Tint Band (Bottom) -->
+  <rect x="120" y="380" width="60" height="30" fill="#3b82f6" opacity="0.9" />
+
+  <!-- Boots -->
+  <path d="M200,450 L200,380 L250,380 L250,450 Z" fill="#1e272e" stroke="#1e272e" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M280,450 L280,380 L330,380 L330,450 Z" fill="#1e272e" stroke="#1e272e" stroke-width="12" stroke-linejoin="round"/>
+
+  <!-- Legs/Pants (Neutral Grey) -->
+  <rect x="200" y="300" width="50" height="90" fill="#57606f" stroke="#1e272e" stroke-width="12" />
+  <rect x="280" y="300" width="50" height="90" fill="#57606f" stroke="#1e272e" stroke-width="12" />
+  
+  <!-- Torso (Team Color - Highly Prominent) -->
+  <rect x="180" y="220" width="170" height="130" rx="20" ry="20" fill="#3b82f6" stroke="#1e272e" stroke-width="12" />
+  
+  <!-- Hard Shadow on Torso for Rough Look -->
+  <path d="M190,340 L340,340 L340,300 L190,300 Z" fill="#1d4ed8" opacity="0.3" />
+
+  <!-- Bandolier / Strap (Rugged look) -->
+  <path d="M320,220 L350,220 L210,350 L180,350 Z" fill="#3d2c29" stroke="#1e272e" stroke-width="8" stroke-linejoin="round" />
+  <!-- Buckle -->
+  <rect x="250" y="270" width="30" height="30" fill="#f1c40f" stroke="#1e272e" stroke-width="6" />
+
+  <!-- Head/Face -->
+  <rect x="210" y="140" width="110" height="90" rx="20" fill="#ffeaa7" stroke="#1e272e" stroke-width="12" />
+  <!-- Eyes -->
+  <rect x="240" y="175" width="12" height="12" fill="#1e272e" />
+  <rect x="280" y="175" width="12" height="12" fill="#1e272e" />
+  <!-- Mouth (Grimace) -->
+  <path d="M250,205 L280,205" stroke="#1e272e" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Helmet (Brodie Style - Rough) -->
+  <!-- Brim -->
+  <path d="M150,150 Q265,130 380,150 L380,160 Q265,180 150,160 Z" fill="#57606f" stroke="#1e272e" stroke-width="12" stroke-linejoin="round" />
+  <!-- Dome -->
+  <path d="M190,150 Q265,60 340,150 Z" fill="#57606f" stroke="#1e272e" stroke-width="12" stroke-linejoin="round" />
+  <!-- Helmet Tint Stripe -->
+  <path d="M250,105 L280,105 L285,150 L245,150 Z" fill="#3b82f6" />
+  <!-- Scuff marks -->
+  <path d="M210,120 L225,125" stroke="#2f3640" stroke-width="6" stroke-linecap="round" />
+  <path d="M310,130 L320,120" stroke="#2f3640" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Right Arm (Holding Weapon) -->
+  <path d="M180,250 L140,260 L140,300 L180,290 Z" fill="#57606f" stroke="#1e272e" stroke-width="12" stroke-linejoin="round"/>
+  <!-- Hand -->
+  <circle cx="150" cy="280" r="20" fill="#ffeaa7" stroke="#1e272e" stroke-width="10" />
+
+  <!-- Left Arm (At side) -->
+  <path d="M350,230 Q380,260 350,310" fill="none" stroke="#57606f" stroke-width="35" stroke-linecap="round" />
+  <path d="M350,230 Q380,260 350,310" fill="none" stroke="#1e272e" stroke-width="12" stroke-linecap="round" /> <!-- Outline fix -->
+  <circle cx="350" cy="310" r="20" fill="#ffeaa7" stroke="#1e272e" stroke-width="10" />
+
+  <!-- Weapon (Front part - Bazooka Muzzle) -->
+  <rect x="110" y="160" width="80" height="40" fill="#95a5a6" stroke="#1e272e" stroke-width="10" stroke-linejoin="round" />
+  <!-- Muzzle Tint Ring -->
+  <rect x="115" y="165" width="20" height="30" fill="#3b82f6" />
+  <!-- Muzzle Hole -->
+  <ellipse cx="150" cy="160" rx="30" ry="10" fill="#2d3436" stroke="#1e272e" stroke-width="6" />
+
+</svg>

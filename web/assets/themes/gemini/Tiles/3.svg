@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- The main hexagonal shape for the top surface -->
+    <path id="hexTop" d="M256 50 L450 150 L450 350 L256 450 L62 350 L62 150 Z" />
+    
+    <!-- Clipping path to keep ground details strictly inside -->
+    <clipPath id="groundClip">
+      <use href="#hexTop" />
+    </clipPath>
+    
+    <!-- Gradient for metallic look -->
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Structure (The Concrete Slab) -->
+  <!-- 3D Extrusion (Darker Sides) -->
+  <path d="M62 350 L62 390 L256 490 L450 390 L450 350 L256 450 Z" fill="#475569" />
+  <path d="M450 350 L450 390 L256 490 L256 450 Z" fill="#334155" /> 
+
+  <!-- Top Surface (Ground) -->
+  <use href="#hexTop" fill="#cbd5e1" stroke="#475569" stroke-width="4" />
+
+  <!-- Ground Details (Clipped to Hex) -->
+  <g clip-path="url(#groundClip)">
+    
+    <!-- The Runway (Asphalt) -->
+    <!-- Diagonally placed -->
+    <rect x="0" y="200" width="600" height="120" transform="rotate(-30 256 256)" fill="#334155" />
+    
+    <!-- Runway Shoulders -->
+    <rect x="0" y="200" width="600" height="5" transform="rotate(-30 256 256)" fill="#fbbf24" />
+    <rect x="0" y="315" width="600" height="5" transform="rotate(-30 256 256)" fill="#fbbf24" />
+
+    <!-- Runway Centerline (Team Color) -->
+    <line x1="-50" y1="260" x2="600" y2="260" transform="rotate(-30 256 256)" stroke="#3b82f6" stroke-width="12" stroke-dasharray="40 30" stroke-linecap="round" />
+
+    <!-- Ground Markings (Hatched area) -->
+    <path d="M50 150 L150 150 L100 250 Z" fill="#94a3b8" opacity="0.5" />
+  </g>
+
+  <!-- The Mini Hangar (Top Left Quadrant) -->
+  <g transform="translate(100, 160)">
+    <!-- Hangar Body -->
+    <path d="M0 60 L0 40 Q0 0 50 0 Q100 0 100 40 L100 60 Z" fill="url(#metalGrad)" stroke="#475569" stroke-width="3" />
+    <!-- Hangar Door (Team Color Accent) -->
+    <path d="M20 60 L20 40 Q20 15 50 15 Q80 15 80 40 L80 60 Z" fill="#1e293b" />
+    <path d="M20 60 L20 40 Q20 15 50 15 Q80 15 80 40 L80 60" fill="none" stroke="#3b82f6" stroke-width="4" />
+    <!-- Roof Details -->
+    <path d="M10 30 L90 30" stroke="#94a3b8" stroke-width="2" />
+    <path d="M5 45 L95 45" stroke="#94a3b8" stroke-width="2" />
+  </g>
+
+  <!-- The Control Tower (Bottom Right Quadrant - Inside bounds) -->
+  <g transform="translate(320, 250)">
+    <!-- Tower Shadow -->
+    <ellipse cx="25" cy="110" rx="30" ry="15" fill="#000" opacity="0.2" />
+    
+    <!-- Tower Pole -->
+    <rect x="15" y="40" width="20" height="70" rx="4" fill="#64748b" stroke="#334155" stroke-width="2" />
+    
+    <!-- Observation Deck Base -->
+    <path d="M5 45 L45 45 L40 60 L10 60 Z" fill="#475569" />
+    
+    <!-- Observation Glass (Team Color Core) -->
+    <path d="M0 25 L50 25 L45 45 L5 45 Z" fill="#3b82f6" stroke="#1e293b" stroke-width="2" />
+    
+    <!-- Glass Highlight -->
+    <path d="M10 30 L40 30" stroke="#fff" stroke-width="3" opacity="0.4" stroke-linecap="round"/>
+    
+    <!-- Roof -->
+    <path d="M0 25 L25 5 L50 25 Z" fill="#94a3b8" stroke="#475569" stroke-width="2" />
+    
+    <!-- Antenna -->
+    <line x1="25" y1="5" x2="25" y2="-15" stroke="#475569" stroke-width="2" />
+    <circle cx="25" cy="-15" r="3" fill="#ef4444" /> <!-- Red obstruction light -->
+  </g>
+
+  <!-- Runway Lights (Simple circles along the clipped runway edge path) -->
+  <g>
+     <!-- Approximate positions based on rotated runway visual -->
+     <circle cx="160" cy="350" r="4" fill="#facc15" stroke="#b45309" stroke-width="1"/>
+     <circle cx="210" cy="320" r="4" fill="#facc15" stroke="#b45309" stroke-width="1"/>
+     <circle cx="260" cy="290" r="4" fill="#facc15" stroke="#b45309" stroke-width="1"/>
+     <circle cx="310" cy="260" r="4" fill="#facc15" stroke="#b45309" stroke-width="1"/>
+     <circle cx="360" cy="230" r="4" fill="#facc15" stroke="#b45309" stroke-width="1"/>
+  </g>
+
+  <!-- Overall Highlight/Shine for the "Game Piece" feel -->
+  <path d="M256 60 L440 155 L256 165 L70 155 Z" fill="#fff" opacity="0.15" pointer-events="none"/>
+
+</svg>

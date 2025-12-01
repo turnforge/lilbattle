@@ -4,6 +4,7 @@ import (
 	"context"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	pj "google.golang.org/protobuf/encoding/protojson"
 )
@@ -14,7 +15,7 @@ type SingletonGamesService struct {
 	SingletonGameState       *v1.GameState
 	SingletonGameMoveHistory *v1.GameMoveHistory
 
-	RuntimeGame *services.Game
+	RuntimeGame *lib.Game
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -36,9 +37,9 @@ func (w *SingletonGamesService) WorldData() *v1.WorldData {
 	return w.SingletonGameState.WorldData
 }
 
-func (w *SingletonGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *services.Game, err error) {
+func (w *SingletonGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *lib.Game, err error) {
 	if w.RuntimeGame == nil {
-		w.RuntimeGame = services.ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
+		w.RuntimeGame = lib.ProtoToRuntimeGame(w.SingletonGame, w.SingletonGameState)
 	}
 	return w.RuntimeGame, err
 }

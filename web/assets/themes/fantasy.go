@@ -15,7 +15,7 @@ type FantasyTheme struct {
 
 // NewFantasyTheme creates a new Fantasy theme instance
 // Loads the mapping.json from embedded files
-func NewFantasyTheme() (*FantasyTheme, error) {
+func NewFantasyTheme(cityTerrains map[int32]bool) (*FantasyTheme, error) {
 	manifest, err := assets.LoadThemeManifest("fantasy")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load fantasy theme: %w", err)
@@ -33,7 +33,7 @@ func NewFantasyTheme() (*FantasyTheme, error) {
 	}
 
 	return &FantasyTheme{
-		BaseTheme: NewBaseTheme(manifest),
+		BaseTheme: NewBaseTheme(manifest, cityTerrains),
 	}, nil
 }
 

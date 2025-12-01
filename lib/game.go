@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	"encoding/json"

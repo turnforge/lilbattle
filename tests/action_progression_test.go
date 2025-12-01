@@ -162,7 +162,7 @@ func TestProgressionStepAdvancement(t *testing.T) {
 		ToR:   0,
 	}
 
-	_, err := mp.ProcessMoveUnit(game, &v1.GameMove{Player: 1}, moveAction)
+	err := mp.ProcessMoveUnit(game, &v1.GameMove{Player: 1}, moveAction)
 	if err != nil {
 		t.Fatalf("Failed to process move: %v", err)
 	}

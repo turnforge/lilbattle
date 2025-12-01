@@ -1,145 +1,189 @@
 # Theme System Usage Example
 
-## In Your Presenter
+## Creating Themes in Go
 
 ```go
 package services
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-
-	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/web/assets/themes"
-	tmpls "github.com/turnforge/weewar/web/templates"
+    "github.com/turnforge/weewar/lib"
+    "github.com/turnforge/weewar/web/assets/themes"
 )
 
 type SingletonGameViewPresenterImpl struct {
-	BaseGameViewPresenterImpl
-	GameViewerPage v1.GameViewerPageClient
-	GamesService   *SingletonGamesServiceImpl
-	RulesEngine    *v1.RulesEngine
-
-	// Add the theme
-	Theme          themes.Theme
+    BaseGameViewPresenterImpl
+    Theme themes.Theme
 }
 
 func NewSingletonGameViewPresenterImpl() *SingletonGameViewPresenterImpl {
-	w := &SingletonGameViewPresenterImpl{
-		BaseGameViewPresenterImpl: BaseGameViewPresenterImpl{},
-		// Initialize with default theme
-		Theme: themes.NewDefaultTheme(),
-	}
-	return w
+    // Get city terrains from RulesEngine (single source of truth)
+    cityTerrains := lib.DefaultRulesEngine().GetCityTerrains()
+
+    return &SingletonGameViewPresenterImpl{
+        Theme: themes.NewDefaultTheme(cityTerrains),
+    }
 }
 
-func (s *SingletonGameViewPresenterImpl) SetUnitStats(ctx context.Context, unit *v1.Unit) {
-	content := s.renderPanelTemplate(ctx, "UnitStatsPanel.templar.html", map[string]any{
-		"Unit":       unit,
-		"RulesTable": s.GamesService.RuntimeGame.rulesEngine,
-		"Theme":      s.Theme,  // Pass theme to template
-	})
-	s.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
-	})
+// Switch themes at runtime
+func (s *SingletonGameViewPresenterImpl) SetTheme(themeName string) error {
+    cityTerrains := lib.DefaultRulesEngine().GetCityTerrains()
+    theme, err := themes.CreateTheme(themeName, cityTerrains)
+    if err != nil {
+        return err
+    }
+    s.Theme = theme
+    return nil
 }
 ```
 
-## In Your Template
+## Using Theme in Templates
 
-### Option 1: Using Path (for PNG themes like Default)
-
-```html
-<!-- UnitStatsPanel.templar.html -->
-{{ if .Unit }}
-  <div id="unit-details">
-    <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-      <span id="unit-icon" class="text-2xl w-14">
-        {{ $theme := .Theme }}
-        {{ $assetPath := $theme.GetAssetPathForTemplate "unit" .Unit.UnitType .Unit.Player }}
-        <img src="{{ $assetPath }}"
-             alt="{{ $theme.GetUnitName .Unit.UnitType }}"
-             class="w-8 h-8 object-contain"
-             style="image-rendering: pixelated;"
-             onerror="this.style.display='none'; this.nextSibling.style.display='inline';"/>
-        <span style="display:none;">⚔️</span>
-      </span>
-      <h5 class="font-medium text-gray-900 dark:text-white">
-        {{ $theme.GetUnitName .Unit.UnitType }}
-      </h5>
-      <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-        {{ $theme.GetUnitDescription .Unit.UnitType }}
-      </p>
-    </div>
-  </div>
-{{ end }}
-```
-
-### Option 2: Using Inline SVG (future, when ThemeAssets is implemented)
+### PNG Theme (Default)
 
 ```html
-{{ if .Unit }}
-  {{ $themeAssets := .ThemeAssets }}
-  {{ $assetResult := $themeAssets.GetUnitAsset .Unit.UnitType .Unit.Player }}
+{{ $theme := .Theme }}
+{{ $unit := .Unit }}
 
-  {{ if eq $assetResult.Type "TYPE_SVG" }}
-    <!-- Inline SVG with player colors already applied -->
-    <div class="unit-icon">
-      {{ $assetResult.Data }}
-    </div>
-  {{ else if eq $assetResult.Type "TYPE_PATH" }}
-    <!-- PNG path -->
-    <img src="{{ $assetResult.Data }}" alt="Unit" />
-  {{ end }}
-{{ end }}
+<!-- Unit name from theme -->
+<h5>{{ $theme.GetUnitName $unit.UnitType }}</h5>
+
+<!-- Asset path for PNG themes -->
+{{ $assetPath := $theme.GetAssetPathForTemplate "unit" $unit.UnitType $unit.Player }}
+<img src="{{ $assetPath }}"
+     alt="{{ $theme.GetUnitName $unit.UnitType }}"
+     class="w-8 h-8 object-contain"
+     style="image-rendering: pixelated;" />
 ```
 
-## Switching Themes
+### Terrain with Player Colors
+
+```html
+{{ $theme := .Theme }}
+{{ $tile := .Tile }}
+
+<!-- Terrain name -->
+<h5>{{ $theme.GetTerrainName $tile.TileType }}</h5>
+
+<!-- Get effective player for terrain coloring -->
+{{ $effectivePlayer := $theme.GetEffectivePlayer $tile.TileType $tile.Player }}
+{{ $assetPath := $theme.GetAssetPathForTemplate "tile" $tile.TileType $effectivePlayer }}
+<img src="{{ $assetPath }}" alt="{{ $theme.GetTerrainName $tile.TileType }}" />
+```
+
+## Using Theme in Renderers
+
+### SVG Renderer
 
 ```go
-// In your presenter
-func (s *SingletonGameViewPresenterImpl) SetTheme(themeName string) error {
-	switch themeName {
-	case "default":
-		s.Theme = themes.NewDefaultTheme()
-	case "fantasy":
-		theme, err := themes.NewBaseTheme("web/static/assets/themes/fantasy/mapping.json")
-		if err != nil {
-			return err
-		}
-		s.Theme = theme
-	case "modern":
-		theme, err := themes.NewBaseTheme("web/static/assets/themes/modern/mapping.json")
-		if err != nil {
-			return err
-		}
-		s.Theme = theme
-	default:
-		return fmt.Errorf("unknown theme: %s", themeName)
-	}
-	return nil
+func (r *SVGWorldRenderer) RenderTile(terrainId, playerId int32) (string, error) {
+    // Get effective player (city = owner, nature = neutral)
+    effectivePlayer := r.theme.GetEffectivePlayer(terrainId, playerId)
+
+    // Get player colors from theme's mapping.json
+    colors := r.theme.GetPlayerColor(effectivePlayer)
+
+    // Load and process SVG
+    svgPath := r.theme.GetTilePath(terrainId)
+    svgContent, err := os.ReadFile(svgPath)
+    if err != nil {
+        return "", err
+    }
+
+    // Apply player colors to SVG gradients
+    if colors != nil {
+        svgContent = r.applyPlayerColors(svgContent, colors)
+    }
+
+    return string(svgContent), nil
 }
 ```
 
-## What You Get Now (Phase 1 - Metadata Only)
+## TypeScript Usage
 
-✅ Theme-specific unit names ("Infantry" vs "Peasant" vs "Knight")
-✅ Theme-specific terrain names ("Castle" vs "Military Base")
-✅ Descriptions (if theme provides them)
-✅ Asset paths for PNG themes
-✅ Template-friendly API
+### Creating Theme
 
-## What Comes Later (Phase 2 - Asset Loading)
+```typescript
+import DefaultTheme from './default';
+import FantasyTheme from './fantasy';
 
-⏳ Server-side SVG rendering with player colors
-⏳ Inline SVG in templates (no separate file requests)
-⏳ Go-based asset processing (optional, can keep TS)
+// Default theme (PNG)
+const defaultTheme = new DefaultTheme();
 
-## Benefits of This Approach
+// Fantasy theme (SVG)
+const fantasyTheme = new FantasyTheme();
+```
 
-1. **Minimal disruption**: Templates work now with PNG paths
-2. **Phased migration**: Add ThemeAssets later if needed
-3. **Clean separation**: Theme metadata ≠ asset loading
-4. **TypeScript still works**: No changes needed to existing TS asset system
-5. **Both can coexist**: Go templates use Go themes, TS code uses TS themes
+### Getting Player Colors
+
+```typescript
+const playerId = 1;
+const colors = theme.getPlayerColor(playerId);
+
+if (colors) {
+    console.log(`Player ${playerId}: ${colors.name}`);
+    console.log(`Primary: ${colors.primary}`);
+    console.log(`Secondary: ${colors.secondary}`);
+}
+```
+
+### Rendering with Theme
+
+```typescript
+// Get effective player for terrain
+const terrainId = 5; // grass
+const playerId = 2;
+
+// For city terrain (like base), returns playerId
+// For nature terrain (like grass), returns 0 (neutral)
+const effectivePlayer = theme.isCityTile(terrainId) ? playerId : 0;
+
+// Get asset path
+const path = theme.getTileAssetPath(terrainId, effectivePlayer);
+```
+
+## Available Themes
+
+| Theme | Asset Type | Description |
+|-------|------------|-------------|
+| default | PNG | Original v1 pre-colored assets |
+| fantasy | SVG | Medieval units (Peasant, Knight, Castle) |
+| modern | SVG | Military units (Infantry, Tank, Base) |
+
+## Theme Registry
+
+```go
+// List available themes
+themes := themes.GetAvailableThemes()
+// ["default", "fantasy", "modern"]
+
+// Create by name
+cityTerrains := lib.DefaultRulesEngine().GetCityTerrains()
+theme, err := themes.CreateTheme("fantasy", cityTerrains)
+```
+
+## Player Colors in mapping.json
+
+Each theme can customize player colors:
+
+```json
+{
+  "playerColors": {
+    "0": { "primary": "#888888", "secondary": "#666666", "name": "Neutral" },
+    "1": { "primary": "#f87171", "secondary": "#dc2626", "name": "Red" },
+    "2": { "primary": "#60a5fa", "secondary": "#2563eb", "name": "Blue" },
+    "3": { "primary": "#4ade80", "secondary": "#16a34a", "name": "Green" },
+    "4": { "primary": "#facc15", "secondary": "#ca8a04", "name": "Yellow" },
+    "5": { "primary": "#fb923c", "secondary": "#ea580c", "name": "Orange" },
+    "6": { "primary": "#c084fc", "secondary": "#9333ea", "name": "Purple" },
+    "7": { "primary": "#f472b6", "secondary": "#db2777", "name": "Pink" },
+    "8": { "primary": "#22d3ee", "secondary": "#0891b2", "name": "Cyan" }
+  }
+}
+```
+
+## Key Concepts
+
+1. **cityTerrains**: Map of terrain IDs that should show owner colors (bases, cities, etc.)
+2. **GetEffectivePlayer**: Returns owner for cities, 0 (neutral) for nature
+3. **GetPlayerColor**: Returns color scheme from theme's mapping.json
+4. **isCityTile**: TypeScript equivalent for checking if terrain uses player colors

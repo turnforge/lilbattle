@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strconv"
 
-	weewar "github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 type AttackSimulatorPage struct {
@@ -54,7 +54,7 @@ func (p *AttackSimulatorPage) loadTerrainAndUnitData() {
 	themeName := p.Theme
 	useTheme := themeName != "default"
 	tm := GetThemeManager()
-	rulesEngine := weewar.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 
 	// Load all terrains (nature + city)
 	p.AllTerrains = []TerrainType{}

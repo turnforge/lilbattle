@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Hexagon Shape Definition -->
+    <path id="hex-path" d="M256 20 L470 142 L470 370 L256 492 L42 370 L42 142 Z" />
+    <clipPath id="hex-clip">
+      <use href="#hex-path" />
+    </clipPath>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+      <feOffset dx="2" dy="4" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="offsetblur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Group with Clip -->
+  <g clip-path="url(#hex-clip)">
+    <!-- Base Water (Shallow Turquoise/Blue) -->
+    <rect width="512" height="512" fill="#29B6F6" />
+    
+    <!-- Water Gradient/Depth -->
+    <circle cx="256" cy="500" r="300" fill="#039BE5" opacity="0.3" />
+
+    <!-- Submerged Rocks (Darker shapes under water) -->
+    <path d="M100 200 C120 180 180 190 200 220 C220 250 150 280 110 260 Z" fill="#0277BD" opacity="0.4" />
+    <path d="M350 350 C380 330 420 340 430 380 C440 410 370 420 350 400 Z" fill="#0277BD" opacity="0.4" />
+    <path d="M200 80 C230 70 260 100 250 130 C240 150 180 140 200 80 Z" fill="#0277BD" opacity="0.3" />
+
+    <!-- Rock Cluster 1 (Main - Bottom Left) -->
+    <g transform="translate(100, 300)" filter="url(#shadow)">
+      <!-- Main Body -->
+      <path d="M0 50 L20 10 L50 30 L80 0 L110 40 L130 30 L150 80 L120 110 L30 100 Z" fill="#607D8B" />
+      <!-- Shadow Side -->
+      <path d="M0 50 L30 100 L120 110 L150 80 L80 60 Z" fill="#455A64" opacity="0.4" />
+      <!-- Highlights (Jagged) -->
+      <path d="M20 10 L50 30 L80 0 L110 40 L100 50 L70 20 L40 40 Z" fill="#CFD8DC" />
+    </g>
+
+    <!-- Rock Cluster 2 (Top Right) -->
+    <g transform="translate(320, 120) scale(0.8)" filter="url(#shadow)">
+      <path d="M10 40 L30 0 L70 20 L100 10 L120 50 L90 80 L20 70 Z" fill="#607D8B" />
+      <path d="M30 0 L70 20 L60 35 L20 25 Z" fill="#CFD8DC" />
+      <path d="M120 50 L90 80 L20 70 L10 40 L60 50 Z" fill="#455A64" opacity="0.4" />
+    </g>
+
+    <!-- Rock Cluster 3 (Small Center Right) -->
+    <g transform="translate(380, 280) scale(0.5)" filter="url(#shadow)">
+      <path d="M0 30 L30 0 L60 20 L50 50 L10 40 Z" fill="#607D8B" />
+      <path d="M30 0 L60 20 L50 30 L20 15 Z" fill="#CFD8DC" />
+    </g>
+
+    <!-- Foam/Waves crashing on rocks -->
+    <path d="M110 390 C90 410 160 420 230 390" stroke="#E1F5FE" stroke-width="4" fill="none" opacity="0.7" stroke-linecap="round" />
+    <path d="M320 180 C330 200 390 200 410 170" stroke="#E1F5FE" stroke-width="3" fill="none" opacity="0.7" stroke-linecap="round" />
+    <path d="M380 310 C380 320 410 320 410 310" stroke="#E1F5FE" stroke-width="3" fill="none" opacity="0.7" stroke-linecap="round" />
+
+    <!-- Subtle Marine Life: Tiny Starfish on the big rock -->
+    <g transform="translate(180, 360) rotate(15) scale(0.08)">
+      <path d="M100 10 L125 70 L190 70 L140 110 L160 170 L100 130 L40 170 L60 110 L10 70 L75 70 Z" fill="#FF8A65" stroke="#BF360C" stroke-width="10"/>
+    </g>
+
+    <!-- General Waves / Sparkles (Subtle, non-directional) -->
+    <g fill="#B3E5FC" opacity="0.6">
+      <circle cx="256" cy="256" r="3" />
+      <path d="M180 150 Q200 140 220 150 L215 155 Q200 150 185 155 Z" />
+      <path d="M300 400 Q320 390 340 400 L335 405 Q320 400 305 405 Z" />
+      <path d="M80 300 Q100 290 120 300 L115 305 Q100 300 85 305 Z" />
+      <path d="M400 250 Q420 240 440 250 L435 255 Q420 250 405 255 Z" />
+    </g>
+
+    <!-- Inner Highlight for Hex Definition -->
+    <path d="M256 25 L465 145 L465 367 L256 487 L47 367 L47 145 Z" fill="none" stroke="#81D4FA" stroke-width="4" opacity="0.3" />
+  </g>
+
+  <!-- Outer Border (Technical requirement for hex grid visibility) -->
+  <path d="M256 20 L470 142 L470 370 L256 492 L42 370 L42 142 Z" stroke="#0288D1" stroke-width="4" fill="none" />
+
+</svg>

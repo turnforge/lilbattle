@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
-func GetGame() (pc *PresenterContext, game *v1.Game, gameState *v1.GameState, gameHistory *v1.GameMoveHistory, rtGame *services.Game, err error) {
+func GetGame() (pc *PresenterContext, game *v1.Game, gameState *v1.GameState, gameHistory *v1.GameMoveHistory, rtGame *lib.Game, err error) {
 	// Get game ID
 	gameID, err = getGameID()
 	if err != nil {

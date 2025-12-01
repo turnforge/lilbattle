@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="hex-clip">
+      <path d="M256 0 L477.7 128 L477.7 384 L256 512 L34.3 384 L34.3 128 Z" />
+    </clipPath>
+    <pattern id="rough-texture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#000" opacity="0.1"/>
+      <circle cx="12" cy="12" r="1.5" fill="#000" opacity="0.1"/>
+      <path d="M15,5 l2,2" stroke="#000" stroke-width="1" opacity="0.1"/>
+    </pattern>
+  </defs>
+
+  <g clip-path="url(#hex-clip)">
+    <!-- Background: Sandy Ground with Texture -->
+    <rect width="512" height="512" fill="#dcbfa3" />
+    <rect width="512" height="512" fill="url(#rough-texture)" />
+    
+    <!-- Ground Detail: Dirt patches -->
+    <ellipse cx="150" cy="400" rx="60" ry="30" fill="#c4a484" />
+    <ellipse cx="360" cy="400" rx="70" ry="35" fill="#c4a484" />
+    <ellipse cx="256" cy="380" rx="120" ry="50" fill="#b08d6e" />
+
+    <!-- Tower Legs / Structure (Neutral Desaturated Brown/Grey) -->
+    <path d="M180,360 L210,240 L302,240 L332,360" fill="none" stroke="#5d4037" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M180,360 L332,360" fill="none" stroke="#5d4037" stroke-width="16" stroke-linecap="round"/>
+    <!-- Cross Bracing -->
+    <path d="M195,300 L317,300" fill="none" stroke="#4e342e" stroke-width="12"/>
+    <path d="M210,240 L332,360 M302,240 L180,360" fill="none" stroke="#4e342e" stroke-width="10"/>
+
+    <!-- Barricades/Spikes at Base (Neutral Iron) -->
+    <g transform="translate(0, 20)">
+      <!-- Left Spikes -->
+      <path d="M80,350 L140,290" stroke="#4a5568" stroke-width="12" stroke-linecap="round" />
+      <path d="M140,350 L80,290" stroke="#4a5568" stroke-width="12" stroke-linecap="round" />
+      <path d="M110,280 L110,360" stroke="#2d3748" stroke-width="10" stroke-linecap="round" />
+      
+      <!-- Right Spikes -->
+      <path d="M372,350 L432,290" stroke="#4a5568" stroke-width="12" stroke-linecap="round" />
+      <path d="M432,350 L372,290" stroke="#4a5568" stroke-width="12" stroke-linecap="round" />
+      <path d="M402,280 L402,360" stroke="#2d3748" stroke-width="10" stroke-linecap="round" />
+
+      <!-- Bottom Center Spikes -->
+      <path d="M160,420 L220,380" stroke="#4a5568" stroke-width="14" stroke-linecap="round" />
+      <path d="M292,380 L352,420" stroke="#4a5568" stroke-width="14" stroke-linecap="round" />
+    </g>
+
+    <!-- Main Cabin Base Platform -->
+    <rect x="186" y="230" width="140" height="20" fill="#3e2723" rx="4" />
+
+    <!-- TURRETS (The added refinement) -->
+    <!-- Left Turret -->
+    <g transform="translate(140, 210) rotate(-10)">
+        <path d="M10,10 L50,10" stroke="#2d3748" stroke-width="16" stroke-linecap="round" />
+        <!-- Team Color Barrel Tip -->
+        <rect x="40" y="2" width="12" height="16" fill="#3b82f6" />
+        <circle cx="10" cy="10" r="18" fill="#4a5568" />
+        <circle cx="10" cy="10" r="8" fill="#3b82f6" />
+    </g>
+    <!-- Right Turret -->
+    <g transform="translate(372, 210) rotate(10) scale(-1, 1)">
+        <path d="M10,10 L50,10" stroke="#2d3748" stroke-width="16" stroke-linecap="round" />
+        <!-- Team Color Barrel Tip -->
+        <rect x="40" y="2" width="12" height="16" fill="#3b82f6" />
+        <circle cx="10" cy="10" r="18" fill="#4a5568" />
+        <circle cx="10" cy="10" r="8" fill="#3b82f6" />
+    </g>
+
+    <!-- Tower Cabin (Main Structure) -->
+    <rect x="206" y="140" width="100" height="100" fill="#6d4c41" stroke="#3e2723" stroke-width="4" rx="2" />
+    <!-- Texture on Cabin -->
+    <path d="M206,165 H306 M206,190 H306 M206,215 H306" stroke="#4e342e" stroke-width="2" />
+    
+    <!-- Team Color Banner/Shield on Cabin -->
+    <path d="M236,150 h40 v30 l-20,15 l-20,-15 z" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+    <rect x="246" y="160" width="20" height="5" fill="#fff" opacity="0.4" rx="2"/>
+
+    <!-- Windows/Slits -->
+    <rect x="216" y="200" width="10" height="20" fill="#2d2d2d" rx="2" />
+    <rect x="286" y="200" width="10" height="20" fill="#2d2d2d" rx="2" />
+
+    <!-- Roof -->
+    <path d="M186,140 L256,90 L326,140 L316,150 H196 Z" fill="#5d4037" stroke="#3e2723" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Roof Texture -->
+    <path d="M256,90 L256,140" stroke="#3e2723" stroke-width="2" />
+    <path d="M221,115 L221,145" stroke="#3e2723" stroke-width="2" opacity="0.5"/>
+    <path d="M291,115 L291,145" stroke="#3e2723" stroke-width="2" opacity="0.5"/>
+
+    <!-- Flag Pole -->
+    <line x1="256" y1="90" x2="256" y2="50" stroke="#2d3748" stroke-width="4" />
+    <!-- Team Color Flag -->
+    <path d="M258,50 L310,65 L258,80 Z" fill="#3b82f6" stroke="#1e40af" stroke-width="2" stroke-linejoin="round"/>
+    
+    <!-- Highlights/Lighting -->
+    <path d="M196,144 L256,100 L316,144" fill="none" stroke="#8d6e63" stroke-width="3" opacity="0.5" />
+    <rect x="236" y="150" width="40" height="5" fill="#60a5fa" opacity="0.3" />
+
+    <!-- Border for visual pop (optional within hex) -->
+    <path d="M256 5 L472 128 L472 380 L256 507 L40 380 L40 128 Z" fill="none" stroke="#5d4037" stroke-width="4" opacity="0.3" />
+
+  </g>
+</svg>

@@ -1,0 +1,70 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Soft gradient for the snow surface to give it a pillowy, cold feel -->
+    <radialGradient id="snowGradient" cx="50%" cy="50%" r="60%" fx="50%" fy="40%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="85%" stop-color="#e3f2fd" />
+      <stop offset="100%" stop-color="#bbdefb" />
+    </radialGradient>
+    
+    <!-- Gradient for the rocks -->
+    <linearGradient id="rockGradient" x1="20%" y1="20%" x2="80%" y2="80%">
+      <stop offset="0%" stop-color="#90a4ae" />
+      <stop offset="100%" stop-color="#546e7a" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main Hexagon Base -->
+  <!-- Using a uniform stroke to create the "thin bevel" effect requested -->
+  <path d="M256 24 L457 140 L457 372 L256 488 L55 372 L55 140 Z" 
+        fill="url(#snowGradient)" 
+        stroke="#78909c" 
+        stroke-width="12" 
+        stroke-linejoin="round" />
+
+  <!-- Internal subtle highlight to make the bevel look raised -->
+  <path d="M256 36 L445 145 L445 363 L256 472 L67 363 L67 145 Z" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="6" 
+        stroke-opacity="0.6" 
+        stroke-linejoin="round" />
+
+  <!-- Rock Cluster 1: Left Side -->
+  <g transform="translate(110, 240)">
+    <!-- Shadow on snow -->
+    <ellipse cx="25" cy="30" rx="32" ry="18" fill="#aabdd4" opacity="0.6" />
+    <!-- Rock shape -->
+    <path d="M10 25 Q0 15 10 5 Q25 -5 40 5 Q55 15 45 30 Q35 40 20 35 Q10 35 10 25 Z" fill="url(#rockGradient)" />
+    <!-- Highlight -->
+    <path d="M15 10 Q25 5 35 10" fill="none" stroke="#cfd8dc" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Rock Cluster 2: Top Right -->
+  <g transform="translate(320, 120)">
+    <ellipse cx="40" cy="35" rx="35" ry="20" fill="#aabdd4" opacity="0.6" />
+    <path d="M20 30 Q10 20 20 10 Q35 -5 60 5 Q75 15 70 35 Q60 50 40 45 Q25 45 20 30 Z" fill="url(#rockGradient)" />
+    <path d="M25 15 Q40 5 55 12" fill="none" stroke="#cfd8dc" stroke-width="3" stroke-linecap="round" />
+    
+    <!-- Smaller rock next to it -->
+    <circle cx="80" cy="45" r="10" fill="#78909c" />
+  </g>
+
+  <!-- Rock Cluster 3: Bottom Right -->
+  <g transform="translate(350, 300)">
+    <ellipse cx="20" cy="25" rx="25" ry="15" fill="#aabdd4" opacity="0.6" />
+    <path d="M5 20 Q0 10 10 5 Q25 0 35 10 Q45 20 40 30 Q30 40 15 35 Q5 30 5 20 Z" fill="url(#rockGradient)" />
+    <path d="M10 12 Q20 5 30 12" fill="none" stroke="#cfd8dc" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <!-- Small scattered pebbles/texture -->
+  <circle cx="256" cy="200" r="4" fill="#90a4ae" opacity="0.8" />
+  <circle cx="270" cy="210" r="3" fill="#90a4ae" opacity="0.6" />
+  <circle cx="180" cy="350" r="5" fill="#90a4ae" opacity="0.7" />
+  <circle cx="300" cy="380" r="4" fill="#90a4ae" opacity="0.7" />
+
+  <!-- Subtle Snow Drift Accents (White patches) -->
+  <path d="M150 150 Q200 130 250 150" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.5" stroke-linecap="round" />
+  <path d="M300 400 Q350 420 400 400" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.5" stroke-linecap="round" />
+
+</svg>

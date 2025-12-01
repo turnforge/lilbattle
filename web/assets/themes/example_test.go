@@ -4,15 +4,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/web/assets/themes"
 )
 
+// Helper to get cityTerrains for tests
+func testCityTerrains() map[int32]bool {
+	return lib.DefaultRulesEngine().GetCityTerrains()
+}
+
 // Example showing how to create and use themes
 func ExampleCreateTheme() {
+	cityTerrains := testCityTerrains()
+
 	// Create themes using the registry
-	defaultTheme, _ := themes.CreateTheme("default")
-	fantasyTheme, _ := themes.CreateTheme("fantasy")
-	modernTheme, _ := themes.CreateTheme("modern")
+	defaultTheme, _ := themes.CreateTheme("default", cityTerrains)
+	fantasyTheme, _ := themes.CreateTheme("fantasy", cityTerrains)
+	modernTheme, _ := themes.CreateTheme("modern", cityTerrains)
 
 	// Use default theme (PNG-based)
 	fmt.Println(defaultTheme.GetUnitName(1))      // "Infantry"
@@ -37,28 +45,30 @@ func ExampleCreateTheme() {
 
 // Example showing how to get asset paths
 func Example_assetPaths() {
-	defaultTheme := themes.NewDefaultTheme()
-	fantasyTheme, _ := themes.NewFantasyTheme()
+	cityTerrains := testCityTerrains()
+	defaultTheme := themes.NewDefaultTheme(cityTerrains)
+	fantasyTheme, _ := themes.NewFantasyTheme(cityTerrains)
 
 	// Default theme returns full PNG paths
 	unitPath := defaultTheme.GetAssetPathForTemplate("unit", 1, 2)
-	fmt.Println(unitPath) // /static/assets/v1/Units/1/2.png
+	fmt.Println(unitPath) // /static/assets/themes/default/Units/1/2.png
 
 	// Fantasy theme returns SVG template paths
 	fantasyUnitPath := fantasyTheme.GetUnitAssetPath(1)
 	fmt.Println(fantasyUnitPath) // /static/assets/themes/fantasy/Units/Peasant.svg
 
 	// Output:
-	// /static/assets/v1/Units/1/2.png
+	// /static/assets/themes/default/Units/1/2.png
 	// /static/assets/themes/fantasy/Units/Peasant.svg
 }
 
 // Test that all themes can be created
 func TestAllThemes(t *testing.T) {
+	cityTerrains := testCityTerrains()
 	themeNames := []string{"default", "fantasy", "modern"}
 
 	for _, name := range themeNames {
-		theme, err := themes.CreateTheme(name)
+		theme, err := themes.CreateTheme(name, cityTerrains)
 		if err != nil {
 			t.Errorf("Failed to create theme %s: %v", name, err)
 			continue
@@ -87,22 +97,23 @@ func TestAllThemes(t *testing.T) {
 	}
 }
 
-// Test terrain classification
-func TestTerrainClassification(t *testing.T) {
-	theme := themes.NewDefaultTheme()
+// Test GetEffectivePlayer for terrain rendering
+func TestGetEffectivePlayer(t *testing.T) {
+	cityTerrains := testCityTerrains()
+	theme := themes.NewDefaultTheme(cityTerrains)
 
-	// Test city tiles
-	if !theme.IsCityTile(1) { // Land Base
-		t.Error("Land Base should be classified as city tile")
+	// City tiles should return the actual player ID
+	if theme.GetEffectivePlayer(1, 2) != 2 { // Land Base with player 2
+		t.Error("Land Base should return actual player ID for city terrain")
 	}
 
-	// Test nature tiles
-	if !theme.IsNatureTile(5) { // Grass
-		t.Error("Grass should be classified as nature tile")
+	// Nature tiles should always return 0 (neutral)
+	if theme.GetEffectivePlayer(5, 2) != 0 { // Grass with player 2
+		t.Error("Grass should return 0 (neutral) for nature terrain")
 	}
 
-	// Test bridge tiles
-	if !theme.IsBridgeTile(17) { // Bridge (Regular)
-		t.Error("Bridge should be classified as bridge tile")
+	// Water tiles should always return 0 (neutral)
+	if theme.GetEffectivePlayer(10, 1) != 0 { // Water with player 1
+		t.Error("Water should return 0 (neutral) for water terrain")
 	}
 }

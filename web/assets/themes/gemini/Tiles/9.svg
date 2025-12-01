@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Define the hexagonal clipping path to keep contents inside -->
+    <clipPath id="hex-clip">
+      <polygon points="256,20 480,140 480,372 256,492 32,372 32,140" />
+    </clipPath>
+    
+    <!-- Reusable Tree Definition to keep code clean but allow transform variations -->
+    <g id="pine-tree">
+      <!-- Shadow -->
+      <ellipse cx="0" cy="85" rx="35" ry="12" fill="#3e5926" opacity="0.4"/>
+      <!-- Trunk -->
+      <rect x="-8" y="60" width="16" height="25" fill="#5D4037" />
+      <!-- Foliage Bottom Tier -->
+      <path d="M0,20 L40,75 L-40,75 Z" fill="#2E7D32" />
+      <path d="M0,20 L0,75 L40,75 Z" fill="#1B5E20" opacity="0.3" /> <!-- Shading -->
+      <!-- Foliage Middle Tier -->
+      <path d="M0,-10 L32,40 L-32,40 Z" fill="#388E3C" />
+      <path d="M0,-10 L0,40 L32,40 Z" fill="#1B5E20" opacity="0.3" /> <!-- Shading -->
+      <!-- Foliage Top Tier -->
+      <path d="M0,-35 L22,10 L-22,10 Z" fill="#43A047" />
+      <path d="M0,-35 L0,10 L22,10 Z" fill="#1B5E20" opacity="0.3" /> <!-- Shading -->
+    </g>
+  </defs>
+
+  <!-- Background Hexagon (Ground) -->
+  <polygon points="256,20 480,140 480,372 256,492 32,372 32,140" fill="#7CB342" stroke="none"/>
+
+  <!-- Ground Texture (Roughness/Grass) -->
+  <g clip-path="url(#hex-clip)">
+    <!-- Darker patches for rough terrain feel -->
+    <path d="M100,100 Q150,150 200,120 T300,180" fill="none" stroke="#689F38" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+    <path d="M350,350 Q400,300 450,350" fill="none" stroke="#689F38" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="150" cy="350" r="40" fill="#689F38" opacity="0.3" />
+    <circle cx="380" cy="180" r="60" fill="#689F38" opacity="0.3" />
+    
+    <!-- Random grass tufts -->
+    <path d="M60,250 L70,230 L80,250 Z" fill="#558B2F" />
+    <path d="M420,280 L430,260 L440,280 Z" fill="#558B2F" />
+    <path d="M256,420 L266,400 L276,420 Z" fill="#558B2F" />
+  </g>
+
+  <!-- Forest Feature: Dense Tree Cluster -->
+  <!-- Arranged back to front for correct occlusion -->
+  <g transform="translate(256, 170) scale(1.1)">
+    <use href="#pine-tree" /> <!-- Center Top (Largest) -->
+  </g>
+
+  <g transform="translate(140, 240) scale(0.9)">
+    <use href="#pine-tree" /> <!-- Left Middle -->
+  </g>
+
+  <g transform="translate(372, 240) scale(0.9)">
+    <use href="#pine-tree" /> <!-- Right Middle -->
+  </g>
+  
+  <g transform="translate(190, 340) scale(0.85)">
+    <use href="#pine-tree" /> <!-- Bottom Left -->
+  </g>
+
+  <g transform="translate(320, 340) scale(0.85)">
+    <use href="#pine-tree" /> <!-- Bottom Right -->
+  </g>
+  
+  <!-- Add a tiny sapling for extra detail -->
+  <g transform="translate(256, 400) scale(0.5)">
+     <path d="M0,0 L15,40 L-15,40 Z" fill="#43A047" />
+     <rect x="-3" y="40" width="6" height="10" fill="#5D4037" />
+  </g>
+
+  <!-- Hexagon Border (Thick outline for game tile definition) -->
+  <polygon points="256,20 480,140 480,372 256,492 32,372 32,140" fill="none" stroke="#33691E" stroke-width="12" stroke-linejoin="round"/>
+  
+  <!-- Subtle Highlight on Hex Top edge for 3D feel -->
+  <polyline points="32,140 256,20 480,140" fill="none" stroke="#AED581" stroke-width="6" stroke-linecap="round" opacity="0.5" />
+
+</svg>

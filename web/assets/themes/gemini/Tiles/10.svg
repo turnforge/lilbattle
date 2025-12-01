@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <path id="hex-shape" d="M256,20 L465,140 L465,372 L256,492 L47,372 L47,140 Z" />
+    <clipPath id="hex-clip">
+      <use href="#hex-shape" />
+    </clipPath>
+    <!-- Vibrant, lighter gradient for medium depth -->
+    <linearGradient id="ocean-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7" /> <!-- Light vibrant blue -->
+      <stop offset="100%" stop-color="#0288D1" /> <!-- Medium blue -->
+    </linearGradient>
+    <!-- Subtle caustic reflection -->
+    <filter id="blur-filter">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <g clip-path="url(#hex-clip)">
+    <!-- Water Base -->
+    <rect width="512" height="512" fill="url(#ocean-grad)" />
+
+    <!-- Very Subtle Marine Life (Silhouette) -->
+    <path d="M150,350 Q160,340 170,350 L175,345 L175,355 L170,350 Q160,360 150,350 Z" fill="#01579B" opacity="0.15" transform="rotate(-15, 160, 350) scale(1.5)" />
+    <path d="M380,200 Q390,190 400,200 L405,195 L405,205 L400,200 Q390,210 380,200 Z" fill="#01579B" opacity="0.15" transform="rotate(10, 390, 200)" />
+    
+    <!-- Bubbles (Subtle) -->
+    <circle cx="180" cy="330" r="3" fill="rgba(255,255,255,0.2)" />
+    <circle cx="185" cy="315" r="2" fill="rgba(255,255,255,0.2)" />
+    <circle cx="370" cy="220" r="2" fill="rgba(255,255,255,0.2)" />
+
+    <!-- Non-Directional Caustics/Light Interaction (Blobby shapes for texture) -->
+    <path d="M100,100 Q150,50 200,100 T300,120 T150,180 Z" fill="#B3E5FC" opacity="0.1" filter="url(#blur-filter)" />
+    <path d="M300,300 Q350,250 400,300 T450,350 T300,400 Z" fill="#B3E5FC" opacity="0.1" filter="url(#blur-filter)" />
+    <path d="M200,400 Q250,350 300,400 T200,450 Z" fill="#B3E5FC" opacity="0.1" filter="url(#blur-filter)" />
+
+    <!-- Surface Ripples/Sparkles (Non-directional dashes) -->
+    <g fill="none" stroke="#E1F5FE" stroke-width="6" stroke-linecap="round" opacity="0.5">
+      <!-- Scattered small curves -->
+      <path d="M240,150 Q256,155 272,150" />
+      <path d="M100,250 Q116,255 132,250" />
+      <path d="M350,350 Q366,355 382,350" />
+      <path d="M400,120 Q410,125 420,120" />
+      <path d="M180,400 Q190,405 200,400" />
+      <path d="M300,220 Q310,215 320,220" />
+      
+      <!-- Smaller accents -->
+      <path d="M200,80 L205,80" stroke-width="5" />
+      <path d="M430,280 L435,280" stroke-width="5" />
+      <path d="M80,380 L85,380" stroke-width="5" />
+      <path d="M280,450 L285,450" stroke-width="5" />
+    </g>
+    
+    <!-- Top sheen for water surface feel -->
+    <path d="M47,140 Q256,250 465,140 L256,20 Z" fill="url(#ocean-grad)" opacity="0.3" />
+    <path d="M256,20 L465,140 L47,140 Z" fill="#E1F5FE" opacity="0.15" />
+  </g>
+
+  <!-- Border/Outline to define the tile -->
+  <use href="#hex-shape" fill="none" stroke="#0277BD" stroke-width="8" />
+  <!-- Inner Highlight for bevel effect -->
+  <path d="M256,28 L457,144 L457,368 L256,484 L55,368 L55,144 Z" fill="none" stroke="#81D4FA" stroke-width="4" opacity="0.5" />
+
+</svg>

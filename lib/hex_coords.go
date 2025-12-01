@@ -410,14 +410,6 @@ func HexToPixelInt32(q, r int32, opts *RenderOptions) (x, y int) {
 	return HexToPixel(AxialCoord{Q: int(q), R: int(r)}, opts)
 }
 
-// WorldBounds represents the pixel bounds of a hex world
-type WorldBounds struct {
-	MinX, MinY int // Top-left corner in pixels
-	MaxX, MaxY int // Bottom-right corner in pixels
-	Width      int // MaxX - MinX
-	Height     int // MaxY - MinY
-}
-
 // ComputeWorldBounds calculates the pixel bounding box for tiles and units
 // Returns bounds where (MinX, MinY) is the top-left corner of the top-left-most tile
 func ComputeWorldBounds(tiles []*v1.Tile, units []*v1.Unit, opts *RenderOptions) WorldBounds {
@@ -429,7 +421,7 @@ func ComputeWorldBounds(tiles []*v1.Tile, units []*v1.Unit, opts *RenderOptions)
 	}
 
 	minX, minY := int(^uint(0)>>1), int(^uint(0)>>1) // Max int
-	maxX, maxY := -minX-1, -minY-1                    // Min int
+	maxX, maxY := -minX-1, -minY-1                   // Min int
 
 	// Process tiles
 	for _, tile := range tiles {

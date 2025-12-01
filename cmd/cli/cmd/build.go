@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // buildCmd represents the build command
@@ -45,7 +45,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse tile position
-	target, err := services.ParsePositionOrUnit(rtGame, tilePos)
+	target, err := lib.ParsePositionOrUnit(rtGame, tilePos)
 	if err != nil {
 		return fmt.Errorf("invalid tile position: %w", err)
 	}
@@ -137,7 +137,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 // parseUnitType parses a unit type argument which can be:
 // - A numeric unit type ID (e.g., "5")
 // - A unit name (e.g., "trooper", "tank")
-func parseUnitType(rtGame *services.Game, unitTypeArg string) (int32, error) {
+func parseUnitType(rtGame *lib.Game, unitTypeArg string) (int32, error) {
 	// Try parsing as numeric ID first
 	if id, err := strconv.ParseInt(unitTypeArg, 10, 32); err == nil {
 		return int32(id), nil

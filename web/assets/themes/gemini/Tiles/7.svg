@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Hexagon Clipping Path -->
+    <clipPath id="hexClip">
+      <polygon points="256,20 470,140 470,372 256,492 42,372 42,140" />
+    </clipPath>
+
+    <!-- Gradients -->
+    <linearGradient id="grassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#76c043" />
+      <stop offset="100%" stop-color="#5fa036" />
+    </linearGradient>
+
+    <!-- Mountain Base Gradient (Grassy Slopes) -->
+    <linearGradient id="mountainBaseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8bc34a" />
+      <stop offset="50%" stop-color="#aed581" />
+      <stop offset="100%" stop-color="#7cb342" />
+    </linearGradient>
+
+    <!-- Gold Cap Gradient -->
+    <linearGradient id="goldGrad" x1="20%" y1="20%" x2="80%" y2="80%">
+      <stop offset="0%" stop-color="#fff59d" />
+      <stop offset="30%" stop-color="#fdd835" />
+      <stop offset="100%" stop-color="#fbc02d" />
+    </linearGradient>
+
+    <!-- Gold Shine -->
+    <radialGradient id="goldShine" cx="30%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="white" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Shadow for depth -->
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Hexagon Container -->
+  <g clip-path="url(#hexClip)">
+    <!-- Background Grass -->
+    <rect width="512" height="512" fill="url(#grassGradient)" />
+
+    <!-- Grass Texture Tufts -->
+    <g fill="#4a8a2a" opacity="0.4">
+      <path d="M100 200 l-5 -10 l5 -5 l5 15 z" transform="translate(20, 20) scale(0.8)" />
+      <path d="M400 400 l-5 -10 l5 -5 l5 15 z" transform="scale(1.2)" />
+      <path d="M150 420 l-6 -12 l6 -4 l6 16 z" />
+      <path d="M420 180 l-4 -8 l4 -4 l4 12 z" />
+      <path d="M300 100 l-5 -10 l5 -5 l5 15 z" />
+      <circle cx="120" cy="350" r="3" />
+      <circle cx="380" cy="150" r="2" />
+      <circle cx="256" cy="80" r="4" />
+    </g>
+
+    <!-- Mountain Group -->
+    <!-- Back Mountain (Top Center-ish) -->
+    <g transform="translate(256, 210)">
+      <!-- Shadow -->
+      <ellipse cx="0" cy="90" rx="90" ry="30" fill="url(#shadowGrad)" />
+      <!-- Mountain Body -->
+      <path d="M-80 90 Q-60 0 0 -90 Q60 0 80 90 Z" fill="url(#mountainBaseGrad)" stroke="#558b2f" stroke-width="2" />
+      <!-- Gold Cap -->
+      <path d="M0 -90 Q30 -45 40 -30 L25 -35 L10 -25 L-5 -35 L-25 -25 L-40 -30 Q-30 -45 0 -90 Z" fill="url(#goldGrad)" stroke="#f9a825" stroke-width="2" />
+      <path d="M0 -90 Q30 -45 40 -30 L25 -35 L10 -25 L-5 -35 L-25 -25 L-40 -30 Q-30 -45 0 -90 Z" fill="url(#goldShine)" />
+    </g>
+
+    <!-- Left Front Mountain -->
+    <g transform="translate(160, 310)">
+      <!-- Shadow -->
+      <ellipse cx="0" cy="80" rx="85" ry="25" fill="url(#shadowGrad)" />
+      <!-- Mountain Body -->
+      <path d="M-85 80 Q-50 -20 0 -80 Q50 -20 85 80 Z" fill="url(#mountainBaseGrad)" stroke="#558b2f" stroke-width="2" />
+      <!-- Gold Cap -->
+      <path d="M0 -80 Q25 -40 35 -25 L20 -30 L5 -20 L-10 -30 L-25 -20 L-35 -25 Q-25 -40 0 -80 Z" fill="url(#goldGrad)" stroke="#f9a825" stroke-width="2" />
+      <path d="M0 -80 Q25 -40 35 -25 L20 -30 L5 -20 L-10 -30 L-25 -20 L-35 -25 Q-25 -40 0 -80 Z" fill="url(#goldShine)" />
+    </g>
+
+    <!-- Right Front Mountain -->
+    <g transform="translate(352, 310)">
+      <!-- Shadow -->
+      <ellipse cx="0" cy="80" rx="85" ry="25" fill="url(#shadowGrad)" />
+      <!-- Mountain Body -->
+      <path d="M-85 80 Q-50 -20 0 -80 Q50 -20 85 80 Z" fill="url(#mountainBaseGrad)" stroke="#558b2f" stroke-width="2" />
+      <!-- Gold Cap -->
+      <path d="M0 -80 Q25 -40 35 -25 L20 -30 L5 -20 L-10 -30 L-25 -20 L-35 -25 Q-25 -40 0 -80 Z" fill="url(#goldGrad)" stroke="#f9a825" stroke-width="2" />
+      <path d="M0 -80 Q25 -40 35 -25 L20 -30 L5 -20 L-10 -30 L-25 -20 L-35 -25 Q-25 -40 0 -80 Z" fill="url(#goldShine)" />
+    </g>
+
+    <!-- Foreground Grass/Details to integrate mountains -->
+    <path d="M140 380 Q150 360 160 380" stroke="#4a8a2a" stroke-width="3" fill="none" />
+    <path d="M340 380 Q350 360 360 380" stroke="#4a8a2a" stroke-width="3" fill="none" />
+    <path d="M250 290 Q256 270 262 290" stroke="#4a8a2a" stroke-width="3" fill="none" />
+
+  </g>
+
+  <!-- Hexagon Border (Optional, helps visual clarity) -->
+  <polygon points="256,20 470,140 470,372 256,492 42,372 42,140" fill="none" stroke="#2e7d32" stroke-width="8" stroke-linejoin="round"/>
+
+</svg>

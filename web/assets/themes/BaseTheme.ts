@@ -74,6 +74,7 @@ export interface ITheme {
   setUnitImage(unitId: number, playerId: number, targetElement: HTMLElement): Promise<void>;
   setTileImage(tileId: number, playerId: number, targetElement: HTMLElement): Promise<void>;
   applyPlayerColors?(svgContent: string, playerId: number): string;
+  getPlayerColor?(playerId: number): PlayerColor | undefined;
   canPlaceCrossing(tileType: number, crossingType: number): boolean;
   defaultCrossingTerrain(crossingType: number): number;
   getCrossingDisplayTileType(crossingType: number, underlyingTileType: number): number;
@@ -87,6 +88,12 @@ export interface ThemeInfo {
   needsPostProcessing: boolean;
   assetType: 'svg' | 'png' | 'mixed';
   playerColors: typeof PLAYER_COLORS;
+}
+
+export interface PlayerColor {
+  primary: string;
+  secondary: string;
+  name?: string;
 }
 
 export interface ThemeMapping {
@@ -106,6 +113,9 @@ export interface ThemeMapping {
       description?: string;
     };
   };
+  playerColors?: {
+    [key: string]: PlayerColor;
+  };
 }
 
 /**
@@ -117,10 +127,22 @@ export abstract class BaseTheme implements ITheme {
   protected abstract themeVersion: string;
   protected unitMapping: ThemeMapping['units'];
   protected terrainMapping: ThemeMapping['terrains'];
+  protected playerColors: { [key: number]: PlayerColor };
 
   constructor(mapping: ThemeMapping) {
     this.unitMapping = mapping.units;
     this.terrainMapping = mapping.terrains;
+
+    // Load player colors from mapping, falling back to global PLAYER_COLORS
+    this.playerColors = {};
+    if (mapping.playerColors) {
+      for (const [key, value] of Object.entries(mapping.playerColors)) {
+        this.playerColors[parseInt(key)] = value;
+      }
+    } else {
+      // Fallback to global PLAYER_COLORS for backwards compatibility
+      this.playerColors = { ...PLAYER_COLORS };
+    }
   }
 
   /**
@@ -206,18 +228,20 @@ export abstract class BaseTheme implements ITheme {
   applyPlayerColors(svgContent: string, playerId: number): string {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-    
+
     // Find the playerColor gradient
     const gradient = svgDoc.querySelector('linearGradient#playerColor');
     if (gradient) {
-      const colors = PLAYER_COLORS[playerId] || PLAYER_COLORS[0]; // Fall back to neutral
-      const stops = gradient.querySelectorAll('stop');
-      if (stops.length >= 2) {
-        stops[0].setAttribute('stop-color', colors.secondary);
-        stops[1].setAttribute('stop-color', colors.primary);
+      const colors = this.playerColors[playerId] || this.playerColors[0]; // Fall back to neutral
+      if (colors) {
+        const stops = gradient.querySelectorAll('stop');
+        if (stops.length >= 2) {
+          stops[0].setAttribute('stop-color', colors.secondary);
+          stops[1].setAttribute('stop-color', colors.primary);
+        }
       }
     }
-    
+
     const serializer = new XMLSerializer();
     return serializer.serializeToString(svgDoc);
   }
@@ -258,8 +282,15 @@ export abstract class BaseTheme implements ITheme {
       supportsTinting: true,
       needsPostProcessing: true,
       assetType: 'svg',
-      playerColors: PLAYER_COLORS
+      playerColors: this.playerColors as typeof PLAYER_COLORS
     };
+  }
+
+  /**
+   * Gets player color for a specific player ID
+   */
+  getPlayerColor(playerId: number): PlayerColor | undefined {
+    return this.playerColors[playerId] || this.playerColors[0];
   }
 
   /**

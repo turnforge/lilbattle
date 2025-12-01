@@ -4,11 +4,11 @@
  * Uses pre-colored PNG assets that don't need post-processing
  */
 
-import { BaseTheme, ThemeInfo, PLAYER_COLORS } from './BaseTheme';
+import { BaseTheme, ThemeInfo, ThemeMapping, PlayerColor } from './BaseTheme';
 import mappingData from './default/mapping.json';
 
-// Type for the extended mapping with natureTerrains
-interface DefaultMappingData {
+// Type for the extended mapping with playerColors
+interface DefaultMappingData extends ThemeMapping {
     themeInfo: {
         name: string;
         version: string;
@@ -16,9 +16,7 @@ interface DefaultMappingData {
         asset_type: string;
         needs_post_processing: boolean;
     };
-    units: { [key: string]: { old: string; name: string; image: string } };
-    terrains: { [key: string]: { old: string; name: string; image: string } };
-    natureTerrains: number[];
+    playerColors: { [key: string]: PlayerColor };
 }
 
 const mapping = mappingData as DefaultMappingData;
@@ -32,12 +30,8 @@ export default class DefaultTheme extends BaseTheme {
     protected themeName = 'Default (PNG)';
     protected themeVersion = '1.0.0';
 
-    // Nature terrains that only have neutral colors (no player variants)
-    private natureTerrains: number[];
-
     constructor() {
         super(mapping);
-        this.natureTerrains = mapping.natureTerrains;
     }
 
     /**
@@ -51,7 +45,7 @@ export default class DefaultTheme extends BaseTheme {
             supportsTinting: false,
             needsPostProcessing: false,
             assetType: 'png',
-            playerColors: PLAYER_COLORS,
+            playerColors: this.playerColors as any,
         };
     }
 
@@ -93,8 +87,8 @@ export default class DefaultTheme extends BaseTheme {
             return undefined;
         }
 
-        // Nature terrains always use player 0 (neutral)
-        const effectivePlayer = this.natureTerrains.includes(terrainId) ? 0 : playerId;
+        // Only city terrains use player colors; all others use player 0 (neutral)
+        const effectivePlayer = this.isCityTile(terrainId) ? playerId : 0;
         // PNG assets are stored as: {basePath}/{image}/{playerId}.png
         // where image is a directory like "Tiles/5"
         return `${this.basePath}/${terrain.image}/${effectivePlayer}.png`;

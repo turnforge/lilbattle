@@ -2,6 +2,7 @@ package singleton
 
 import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
 	pj "google.golang.org/protobuf/encoding/protojson"
 )
@@ -11,7 +12,7 @@ type SingletonWorldsService struct {
 	SingletonWorld     *v1.World
 	SingletonWorldData *v1.WorldData
 
-	RuntimeWorld *services.World
+	RuntimeWorld *lib.World
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -28,7 +29,7 @@ func NewSingletonWorldsService() *SingletonWorldsService {
 	return w
 }
 
-func (w *SingletonWorldsService) GetRuntimeWorld(gameId string) (*services.World, error) {
+func (w *SingletonWorldsService) GetRuntimeWorld(gameId string) (*lib.World, error) {
 	return w.RuntimeWorld, nil
 }
 

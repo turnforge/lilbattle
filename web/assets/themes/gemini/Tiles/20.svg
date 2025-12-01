@@ -1,0 +1,107 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define the hexagonal clipping path to keep everything strictly inside -->
+    <clipPath id="hex-clip">
+      <path d="M256 20 L470 142.5 L470 369.5 L256 492 L42 369.5 L42 142.5 Z" />
+    </clipPath>
+    
+    <!-- Pattern for the conveyor belt -->
+    <pattern id="conveyor" x="0" y="0" width="20" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect x="0" y="0" width="20" height="5" fill="#222" />
+      <rect x="0" y="5" width="20" height="5" fill="#333" />
+    </pattern>
+  </defs>
+
+  <!-- Group applied with Hex Clip -->
+  <g clip-path="url(#hex-clip)">
+    
+    <!-- Background / Ground Surface: Metal/Concrete Base -->
+    <rect x="0" y="0" width="512" height="512" fill="#777e85" />
+    
+    <!-- Surface Texture: Industrial plates -->
+    <path d="M42 142.5 L256 20 L470 142.5" fill="none" stroke="#9aa3ab" stroke-width="10" />
+    <path d="M42 369.5 L256 492 L470 369.5" fill="none" stroke="#555d63" stroke-width="10" />
+    
+    <!-- The Mine Pit: Rough, irregular ovals to create depth -->
+    <!-- Level 1 (Top) -->
+    <path d="M80,200 Q150,150 256,150 Q362,150 432,200 Q460,240 432,280 Q362,330 256,330 Q150,330 80,280 Q50,240 80,200 Z" 
+          fill="#5a5e63" stroke="#464a4f" stroke-width="4" stroke-linejoin="round" />
+    
+    <!-- Level 2 (Middle) -->
+    <path d="M120,220 Q170,190 256,190 Q342,190 392,220 Q410,240 392,260 Q342,290 256,290 Q170,290 120,260 Q100,240 120,220 Z" 
+          fill="#3d4044" stroke="#2b2d30" stroke-width="4" stroke-linejoin="round" />
+          
+    <!-- Level 3 (Bottom - Deep Dark) -->
+    <path d="M170,235 Q200,220 256,220 Q312,220 342,235 Q355,245 342,255 Q312,270 256,270 Q200,270 170,255 Q155,245 170,235 Z" 
+          fill="#1a1b1d" />
+
+    <!-- Resources: Gold/Ore deposits embedded in the walls -->
+    <g fill="#ffcc00" stroke="#b38f00" stroke-width="2">
+      <!-- Outer Ring Ore -->
+      <circle cx="100" cy="240" r="6" />
+      <circle cx="410" cy="240" r="7" />
+      <circle cx="350" cy="170" r="5" />
+      <circle cx="180" cy="310" r="6" />
+      <!-- Middle Ring Ore -->
+      <circle cx="360" cy="240" r="4" />
+      <circle cx="150" cy="240" r="5" />
+    </g>
+
+    <!-- Fun Element 1: Conveyor Belt on the right -->
+    <!-- Ramps up from the pit -->
+    <path d="M380,240 L480,200 L500,230 L400,270 Z" fill="url(#conveyor)" stroke="#222" stroke-width="2" />
+    <!-- Ore on Conveyor -->
+    <rect x="400" y="235" width="15" height="15" fill="#ffcc00" stroke="#b38f00" stroke-width="1" transform="rotate(-20 400 235)" />
+    <rect x="440" y="220" width="15" height="15" fill="#ffcc00" stroke="#b38f00" stroke-width="1" transform="rotate(-20 440 220)" />
+
+    <!-- Fun Element 2: Large Mining Drill Rig (Team Colored) -->
+    <!-- Base structure sitting on the left rim -->
+    <path d="M40,200 L120,160 L140,280 L60,320 Z" fill="#2c3e50" stroke="#1a252f" stroke-width="2"/>
+    
+    <!-- Cabin/Engine House (TEAM COLOR #3b82f6) -->
+    <path d="M50,210 L110,180 L110,240 L50,270 Z" fill="#3b82f6" stroke="#1d4ed8" stroke-width="3"/>
+    <!-- Cabin Window -->
+    <path d="M60,220 L100,200 L100,230 L60,250 Z" fill="#bae6fd" opacity="0.8"/>
+    
+    <!-- The Crane Arm -->
+    <path d="M100,190 L300,100 L310,120 L110,210 Z" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+    <path d="M130,220 L310,140" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Hydraulic Piston -->
+    <path d="M180,180 L220,160" stroke="#94a3b8" stroke-width="8" />
+
+    <!-- The Drill Assembly hanging over the center -->
+    <!-- Cable/Rod -->
+    <rect x="295" y="110" width="10" height="100" fill="#555" />
+    
+    <!-- Drill Motor Box -->
+    <rect x="280" y="180" width="40" height="30" rx="5" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2" />
+    <circle cx="300" cy="195" r="8" fill="#fbbf24" /> <!-- Warning Light -->
+
+    <!-- The Drill Bit (Cone) -->
+    <path d="M285,210 L315,210 L300,280 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2" />
+    <!-- Spiral threads on drill -->
+    <path d="M290,220 L310,230 M292,240 L308,250 M296,260 L304,270" stroke="#64748b" stroke-width="2" />
+
+    <!-- Dust/Particle Effects (Subtle) near drill tip -->
+    <circle cx="290" cy="270" r="3" fill="#aaa" opacity="0.6"/>
+    <circle cx="310" cy="275" r="4" fill="#aaa" opacity="0.6"/>
+    <circle cx="300" cy="290" r="5" fill="#aaa" opacity="0.5"/>
+
+    <!-- Safety Barrier/Fence around the pit edge (Team Color Accents) -->
+    <g stroke="#3b82f6" stroke-width="4" stroke-linecap="round">
+        <line x1="150" y1="140" x2="150" y2="155" />
+        <line x1="200" y1="130" x2="200" y2="145" />
+        <line x1="256" y1="125" x2="256" y2="140" />
+        <line x1="310" y1="130" x2="310" y2="145" />
+        <line x1="360" y1="140" x2="360" y2="155" />
+        <!-- Rail -->
+        <path d="M150,140 Q256,115 360,140" fill="none" stroke="#eab308" stroke-width="2" stroke-dasharray="10,5"/>
+    </g>
+
+    <!-- Border Highlight for Hex Shape definition -->
+    <path d="M256 20 L470 142.5 L470 369.5 L256 492 L42 369.5 L42 142.5 Z" 
+          fill="none" stroke="#333" stroke-width="6" opacity="0.5" />
+          
+  </g>
+</svg>

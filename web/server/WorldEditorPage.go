@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	weewar "github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 // Toolbar buttons on the editor page
@@ -109,7 +109,7 @@ func (v *WorldEditorPage) SetupDefaults() {
 		22: true, // Road
 	}
 
-	rulesEngine := weewar.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 	for i := int32(0); i <= 30; i++ {
 		terrainData, err := rulesEngine.GetTerrainData(i)
 		if err == nil && terrainData != nil {

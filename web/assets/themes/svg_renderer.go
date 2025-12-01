@@ -156,10 +156,7 @@ func (r *SVGWorldRenderer) Render(tiles []*v1.Tile, units []*v1.Unit, options *l
 
 // tileSymbolId generates a unique symbol ID for a tile type+player
 func (r *SVGWorldRenderer) tileSymbolId(tileType, player int32) string {
-	effectivePlayer := player
-	if r.theme.IsNatureTile(tileType) {
-		effectivePlayer = 0
-	}
+	effectivePlayer := r.theme.GetEffectivePlayer(tileType, player)
 	return fmt.Sprintf("tile_%d_%d", tileType, effectivePlayer)
 }
 
@@ -170,12 +167,8 @@ func (r *SVGWorldRenderer) unitSymbolId(unitType, player int32) string {
 
 // getTileSymbol loads and processes a tile SVG, returning symbol ID and inner content
 func (r *SVGWorldRenderer) getTileSymbol(tileType, player int32, options *lib.RenderOptions) (string, string, error) {
-	effectivePlayer := player
-	if r.theme.IsNatureTile(tileType) {
-		effectivePlayer = 0
-	}
-
-	symbolId := r.tileSymbolId(tileType, effectivePlayer)
+	effectivePlayer := r.theme.GetEffectivePlayer(tileType, player)
+	symbolId := r.tileSymbolId(tileType, player) // tileSymbolId also calls GetEffectivePlayer
 
 	// Check cache
 	r.cacheMutex.RLock()
@@ -247,12 +240,10 @@ func (r *SVGWorldRenderer) loadAndProcessSVG(path string, player int32) (string,
 	svgStr := string(content)
 
 	// Apply player colors by replacing the playerColor gradient stops
-	colors, ok := PlayerColors[player]
-	if !ok {
-		colors = PlayerColors[0] // Default to neutral
+	colors := r.theme.GetPlayerColor(player)
+	if colors != nil {
+		svgStr = r.applyPlayerColors(svgStr, colors)
 	}
-
-	svgStr = r.applyPlayerColors(svgStr, colors)
 
 	// Extract inner content (remove outer <svg> tag)
 	svgStr = r.extractSVGContent(svgStr)

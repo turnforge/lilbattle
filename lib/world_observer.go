@@ -1,4 +1,4 @@
-package services
+package lib
 
 import v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 

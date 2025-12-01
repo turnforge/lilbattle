@@ -135,8 +135,8 @@ func (r *PNGWorldRenderer) drawImageAt(output *image.RGBA, src image.Image, x, y
 		scaleX := float64(srcBounds.Dx()) / float64(width)
 		scaleY := float64(srcBounds.Dy()) / float64(height)
 
-		for dy := 0; dy < height; dy++ {
-			for dx := 0; dx < width; dx++ {
+		for dy := range height {
+			for dx := range width {
 				srcX := int(float64(dx) * scaleX)
 				srcY := int(float64(dy) * scaleY)
 				if srcX < srcBounds.Dx() && srcY < srcBounds.Dy() {
@@ -153,13 +153,15 @@ func (r *PNGWorldRenderer) drawImageAt(output *image.RGBA, src image.Image, x, y
 
 // getTileImage loads and caches a tile image
 func (r *PNGWorldRenderer) getTileImage(tileType, playerId int32) (image.Image, error) {
-	// Nature terrains always use player 0
-	effectivePlayer := playerId
-	if r.theme.IsNatureTile(tileType) {
-		effectivePlayer = 0
+	// Get path from theme - theme handles player color logic internally
+	// Theme returns "/static/assets/themes/default/Tiles/1/0.png"
+	webPath := r.theme.GetTileAssetPath(tileType, playerId)
+	if webPath == "" {
+		return nil, fmt.Errorf("tile %d not found in theme", tileType)
 	}
 
-	cacheKey := fmt.Sprintf("tile_%d_%d", tileType, effectivePlayer)
+	// Use web path as cache key (already includes effective player)
+	cacheKey := webPath
 
 	// Check cache first
 	r.cacheMutex.RLock()
@@ -169,19 +171,12 @@ func (r *PNGWorldRenderer) getTileImage(tileType, playerId int32) (image.Image, 
 	}
 	r.cacheMutex.RUnlock()
 
-	// Get path from theme and convert web path to filesystem path
-	// Theme returns "/static/assets/themes/default/Tiles/1/0.png"
-	// We need "web/static/assets/themes/default/Tiles/1/0.png"
-	webPath := r.theme.GetTileAssetPath(tileType, effectivePlayer)
-	if webPath == "" {
-		return nil, fmt.Errorf("tile %d not found in theme", tileType)
-	}
 	// Convert web path to filesystem path (remove leading "/" and prepend "web")
 	path := "web" + webPath
 
 	img, err := r.loadPNG(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load tile %d for player %d from %s: %w", tileType, effectivePlayer, path, err)
+		return nil, fmt.Errorf("failed to load tile %d for player %d from %s: %w", tileType, playerId, path, err)
 	}
 
 	// Cache it

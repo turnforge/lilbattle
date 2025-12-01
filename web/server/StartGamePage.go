@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
-	weewar "github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/lib"
 )
 
 var AllowedUnitIDs = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 44}
@@ -70,7 +70,7 @@ func (p *StartGamePage) loadUnitTypes() {
 	p.UnitTypes = []UnitType{}
 
 	// Get all available unit types from the rules engine
-	rulesEngine := weewar.DefaultRulesEngine()
+	rulesEngine := lib.DefaultRulesEngine()
 
 	// Use units from rules engine
 	for _, unitID := range AllowedUnitIDs {
@@ -105,18 +105,18 @@ func (p *StartGamePage) initializeGameConfiguration() {
 			TeamId:        int32(i + 1),
 			Name:          fmt.Sprintf("Player %d", i+1),
 			IsActive:      true,
-			StartingCoins: weewar.DefaultStartingCoins,
-			Coins:         weewar.DefaultStartingCoins,
+			StartingCoins: lib.DefaultStartingCoins,
+			Coins:         lib.DefaultStartingCoins,
 		})
 	}
 
 	// Initialize default income configuration
 	incomeConfig := &protos.IncomeConfig{
-		LandbaseIncome:    weewar.DefaultLandbaseIncome,
-		NavalbaseIncome:   weewar.DefaultNavalbaseIncome,
-		AirportbaseIncome: weewar.DefaultAirportbaseIncome,
-		MissilesiloIncome: weewar.DefaultMissilesiloIncome,
-		MinesIncome:       weewar.DefaultMinesIncome,
+		LandbaseIncome:    lib.DefaultLandbaseIncome,
+		NavalbaseIncome:   lib.DefaultNavalbaseIncome,
+		AirportbaseIncome: lib.DefaultAirportbaseIncome,
+		MissilesiloIncome: lib.DefaultMissilesiloIncome,
+		MinesIncome:       lib.DefaultMinesIncome,
 	}
 
 	// Initialize default settings
