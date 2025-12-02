@@ -120,7 +120,7 @@ export class BuildOptionsModal extends BaseComponent implements LCMComponent {
      */
     public hide(): void {
         if (!this.modalOverlay) return;
-
+        this.setProcessingState(false)
         this.modalOverlay.classList.add('hidden');
         this.modalOverlay.classList.remove('flex');
         this.isProcessing = false;

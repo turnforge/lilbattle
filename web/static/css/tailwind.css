@@ -3177,16 +3177,16 @@ select {
   padding-bottom: 0.5rem;
 }
 
+.pb-3 {
+  padding-bottom: 0.75rem;
+}
+
 .pl-10 {
   padding-left: 2.5rem;
 }
 
 .pl-3 {
   padding-left: 0.75rem;
-}
-
-.pl-7 {
-  padding-left: 1.75rem;
 }
 
 .pr-10 {
