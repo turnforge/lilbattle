@@ -14,6 +14,7 @@ import (
 type PresenterContext struct {
 	Presenter          *services.GameViewPresenter
 	GameState          *services.BaseGameState
+	GameStatePanel     *services.BaseGameStatePanel
 	TurnOptions        *services.BaseTurnOptionsPanel
 	BuildOptions       *services.BaseBuildOptionsModal
 	UnitStats          *services.BaseUnitPanel
@@ -67,6 +68,7 @@ func createPresenter(gameID string) (*PresenterContext, error) {
 		Game:  gameResp.Game,
 		State: gameResp.State,
 	}
+	gameStatePanel := &services.BaseGameStatePanel{}
 	turnOptions := &services.BaseTurnOptionsPanel{}
 	buildOptions := &services.BaseBuildOptionsModal{}
 	unitStats := &services.BaseUnitPanel{}
@@ -77,6 +79,7 @@ func createPresenter(gameID string) (*PresenterContext, error) {
 
 	// Wire up presenter with base panels
 	presenter.GameState = gameState
+	presenter.GameStatePanel = gameStatePanel
 	presenter.TurnOptionsPanel = turnOptions
 	presenter.BuildOptionsModal = buildOptions
 	presenter.UnitStatsPanel = unitStats
@@ -88,6 +91,7 @@ func createPresenter(gameID string) (*PresenterContext, error) {
 	return &PresenterContext{
 		Presenter:          presenter,
 		GameState:          gameState,
+		GameStatePanel:     gameStatePanel,
 		TurnOptions:        turnOptions,
 		BuildOptions:       buildOptions,
 		UnitStats:          unitStats,

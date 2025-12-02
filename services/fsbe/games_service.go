@@ -549,3 +549,33 @@ func (s *FSGamesService) OnProposalFailed(gameID string, proposal *turnengine.Pr
 	return s.storage.SaveArtifact(gameID, "state", gameState)
 }
 */
+
+// ListMoves returns moves from game history, optionally filtered by group range
+func (s *FSGamesService) ListMoves(ctx context.Context, req *v1.ListMovesRequest) (*v1.ListMovesResponse, error) {
+	if req.GameId == "" {
+		return nil, fmt.Errorf("game ID is required")
+	}
+
+	// Load history
+	history, err := storage.LoadFSArtifact[*v1.GameMoveHistory](s.storage, req.GameId, "history")
+	if err != nil {
+		return nil, fmt.Errorf("failed to load history: %w", err)
+	}
+
+	var groups []*v1.GameMoveGroup
+	for _, group := range history.Groups {
+		// Filter by group range
+		if req.FromGroup > 0 && group.GroupNumber < req.FromGroup {
+			continue
+		}
+		if req.ToGroup > 0 && group.GroupNumber > req.ToGroup {
+			break
+		}
+		groups = append(groups, group)
+	}
+
+	return &v1.ListMovesResponse{
+		MoveGroups: groups,
+		HasMore:    req.FromGroup > 0 && len(history.Groups) > 0 && history.Groups[0].GroupNumber < req.FromGroup,
+	}, nil
+}

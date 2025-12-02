@@ -34,7 +34,7 @@ func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *lib.World {
 // This allows using real worlds created in the world editor UI
 func LoadTestWorldFromStorage(worldsStorageDir, worldId string) (*lib.World, *v1.GameState, error) {
 	// Create FSWorldsService to load real world data
-	worldsService := fsbe.NewFSWorldsService(worldsStorageDir)
+	worldsService := fsbe.NewFSWorldsService(worldsStorageDir, nil)
 
 	// Load the world using GetWorld RPC (same as production code)
 	worldResp, err := worldsService.GetWorld(context.Background(), &v1.GetWorldRequest{

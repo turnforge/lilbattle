@@ -237,7 +237,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		allowedActions := rtGame.RulesEngine.GetAllowedActionsForUnit(unit, unitDef)
 
 		// Check if "move" is allowed at current progression step
-		moveAllowed := containsAction(allowedActions, "move")
+		moveAllowed := lib.ContainsAction(allowedActions, "move")
 
 		// Get movement options if unit has movement left and move is allowed
 		if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 && moveAllowed {
@@ -271,7 +271,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		}
 
 		// Check if "attack" is allowed at current progression step
-		attackAllowed := containsAction(allowedActions, "attack")
+		attackAllowed := lib.ContainsAction(allowedActions, "attack")
 
 		// Get attack options if unit can attack and attack is allowed
 		if unit.AvailableHealth > 0 && attackAllowed {
@@ -312,7 +312,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 
 	// Sort it for convinience too
 	sort.Slice(options, func(i, j int) bool {
-		return GameOptionLess(options[i], options[j])
+		return lib.GameOptionLess(options[i], options[j])
 	})
 
 	return &v1.GetOptionsAtResponse{

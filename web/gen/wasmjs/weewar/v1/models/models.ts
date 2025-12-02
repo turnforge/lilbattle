@@ -1553,12 +1553,10 @@ export class ListMovesRequest implements ListMovesRequestInterface {
   /** *
  Game ID to add moves to */
   gameId: string = "";
-  /** Offset of the move to begin fetching from in reverse order from "latest".
- 0 => start from now */
-  offset: number = 0;
-  /** *
- Limit to last N moves (from offset).  if <= 0 return all moves */
-  lastN: number = 0;
+  /** Gets moves >= from_group */
+  fromGroup: number = 0;
+  /** Gets moves <= to_group */
+  toGroup: number = 0;
 
   
 }

@@ -77,6 +77,14 @@ func (c *GameViewerPageClient) SetCompactSummaryCard(ctx context.Context, req *v
 	)
 }
 
+// SetGameStatePanelContent calls the browser-provided SetGameStatePanelContent method
+func (c *GameViewerPageClient) SetGameStatePanelContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
+	// This is a synchronous browser method
+	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
+		c.channel, ctx, "GameViewerPage", "setGameStatePanelContent", req,
+	)
+}
+
 // SetGameState calls the browser-provided SetGameState method
 func (c *GameViewerPageClient) SetGameState(ctx context.Context, req *v1models.SetGameStateRequest) (*v1models.SetGameStateResponse, error) {
 	// This is a synchronous browser method

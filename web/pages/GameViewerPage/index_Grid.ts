@@ -5,6 +5,7 @@ import { UnitStatsPanel } from './UnitStatsPanel';
 import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
+import { GameStatePanel } from './GameStatePanel';
 import { PhaserGameScene } from './PhaserGameScene';
 
 /**
@@ -32,7 +33,8 @@ export class GameViewerPageGrid extends GameViewerPageBase {
             'grid-unit-stats-container',
             'grid-damage-distribution-container',
             'grid-turn-options-container',
-            'grid-game-log-container'
+            'grid-game-log-container',
+            'grid-game-state-container'
         ];
 
         for (const id of requiredIds) {
@@ -82,6 +84,13 @@ export class GameViewerPageGrid extends GameViewerPageBase {
         if (gameLogElement) {
             this.gameLogPanel = new GameLogPanel(gameLogElement, this.eventBus);
             panels.push(this.gameLogPanel);
+        }
+
+        // Game State Panel
+        const gameStateElement = document.getElementById('grid-game-state-container');
+        if (gameStateElement) {
+            this.gameStatePanel = new GameStatePanel(gameStateElement, this.eventBus, true);
+            panels.push(this.gameStatePanel);
         }
 
         return panels;
@@ -134,6 +143,7 @@ export class GameViewerPageGrid extends GameViewerPageBase {
             'damage-distribution': 'grid-damage-distribution-container',
             'turn-options': 'grid-turn-options-container',
             'game-log': 'grid-game-log-container',
+            'game-state': 'grid-game-state-container',
             'build-options': '' // Modal, not in grid
         };
 

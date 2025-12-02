@@ -103,3 +103,31 @@ func (w *SingletonGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGa
 		Game: w.SingletonGame,
 	}, nil
 }
+
+// ListMoves returns moves from game history, optionally filtered by group range
+func (w *SingletonGamesService) ListMoves(ctx context.Context, req *v1.ListMovesRequest) (*v1.ListMovesResponse, error) {
+	if w.SingletonGameMoveHistory == nil {
+		return &v1.ListMovesResponse{}, nil
+	}
+
+	var groups []*v1.GameMoveGroup
+	for _, group := range w.SingletonGameMoveHistory.Groups {
+		// Filter by group range
+		if req.FromGroup > 0 && group.GroupNumber < req.FromGroup {
+			continue
+		}
+		if req.ToGroup > 0 && group.GroupNumber > req.ToGroup {
+			break
+		}
+		groups = append(groups, group)
+	}
+
+	// Check if there are earlier moves
+	hasMore := req.FromGroup > 0 && len(w.SingletonGameMoveHistory.Groups) > 0 &&
+		w.SingletonGameMoveHistory.Groups[0].GroupNumber < req.FromGroup
+
+	return &v1.ListMovesResponse{
+		MoveGroups: groups,
+		HasMore:    hasMore,
+	}, nil
+}

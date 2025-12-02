@@ -6,6 +6,7 @@ import { UnitStatsPanel } from './UnitStatsPanel';
 import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
+import { GameStatePanel } from './GameStatePanel';
 import { PhaserGameScene } from './PhaserGameScene';
 
 /**
@@ -68,6 +69,8 @@ export class GameViewerPageDockView extends GameViewerPageBase {
                         return this.createTurnOptionsComponent();
                     case 'game-log':
                         return this.createGameLogComponent();
+                    case 'game-state':
+                        return this.createGameStateComponent();
                     default:
                         return {
                             element: document.createElement('div'),
@@ -114,6 +117,7 @@ export class GameViewerPageDockView extends GameViewerPageBase {
             this.damageDistributionPanel,
             this.gameLogPanel,
             this.turnOptionsPanel,
+            this.gameStatePanel,
         ].filter(p => p != null);
     }
 
@@ -175,6 +179,7 @@ export class GameViewerPageDockView extends GameViewerPageBase {
             'damage-distribution': 'damage-distribution-panel',
             'turn-options': 'turn-options-panel',
             'game-log': 'game-log-panel',
+            'game-state': 'game-state-panel',
             'build-options': '' // Not in DockView
         };
         return mapping[panelId] || '';
@@ -240,21 +245,32 @@ export class GameViewerPageDockView extends GameViewerPageBase {
             }
         });
 
-        // Add game log panel (left side)
+        // Add game state panel (left side)
         this.dockview.addPanel({
-            id: 'game-log-panel',
-            component: 'game-log',
-            title: 'Game Log',
+            id: 'game-state-panel',
+            component: 'game-state',
+            title: 'Players',
             position: {
                 direction: 'left',
                 referencePanel: 'main-game-panel'
             }
         });
 
+        // Add game log panel (below game state)
+        this.dockview.addPanel({
+            id: 'game-log-panel',
+            component: 'game-log',
+            title: 'Game Log',
+            position: {
+                direction: 'below',
+                referencePanel: 'game-state-panel'
+            }
+        });
+
         // Set panel sizes for optimal viewing
         setTimeout(() => {
             this.dockview.getPanel('terrain-stats-panel')?.api.setSize({ width: 320 });
-            this.dockview.getPanel('game-log-panel')?.api.setSize({ width: 280 });
+            this.dockview.getPanel('game-state-panel')?.api.setSize({ width: 280 });
         }, 100);
     }
 
@@ -420,6 +436,27 @@ export class GameViewerPageDockView extends GameViewerPageBase {
             element,
             init: () => {
                 this.gameLogPanel = new GameLogPanel(element, this.eventBus);
+            },
+            dispose: () => {}
+        };
+    }
+
+    /**
+     * Create game state panel component
+     */
+    private createGameStateComponent() {
+        const template = document.getElementById('game-state-panel-template');
+        if (!template) {
+            throw new Error('game-state-panel-template not found');
+        }
+
+        const element = template.cloneNode(true) as HTMLElement;
+        element.style.display = 'block';
+
+        return {
+            element,
+            init: () => {
+                this.gameStatePanel = new GameStatePanel(element, this.eventBus, true);
             },
             dispose: () => {}
         };

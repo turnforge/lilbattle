@@ -27,14 +27,15 @@ var File_weewar_v1_services_gameviewerpage_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_services_gameviewerpage_proto_rawDesc = "" +
 	"\n" +
-	"'weewar/v1/services/gameviewerpage.proto\x12\tweewar.v1\x1a\x1bwasmjs/v1/annotations.proto\x1a\x1dweewar/v1/models/models.proto\x1a%weewar/v1/models/gameviewerpage.proto2\xc9\x0e\n" +
+	"'weewar/v1/services/gameviewerpage.proto\x12\tweewar.v1\x1a\x1bwasmjs/v1/annotations.proto\x1a\x1dweewar/v1/models/models.proto\x1a%weewar/v1/models/gameviewerpage.proto2\xa2\x0f\n" +
 	"\x0eGameViewerPage\x12T\n" +
 	"\x15SetTurnOptionsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12[\n" +
 	"\x10ShowBuildOptions\x12\".weewar.v1.ShowBuildOptionsRequest\x1a#.weewar.v1.ShowBuildOptionsResponse\x12R\n" +
 	"\x13SetUnitStatsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12[\n" +
 	"\x1cSetDamageDistributionContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12U\n" +
 	"\x16SetTerrainStatsContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12T\n" +
-	"\x15SetCompactSummaryCard\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12O\n" +
+	"\x15SetCompactSummaryCard\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12W\n" +
+	"\x18SetGameStatePanelContent\x12\x1c.weewar.v1.SetContentRequest\x1a\x1d.weewar.v1.SetContentResponse\x12O\n" +
 	"\fSetGameState\x12\x1e.weewar.v1.SetGameStateRequest\x1a\x1f.weewar.v1.SetGameStateResponse\x12[\n" +
 	"\x10UpdateGameStatus\x12\".weewar.v1.UpdateGameStatusRequest\x1a#.weewar.v1.UpdateGameStatusResponse\x12F\n" +
 	"\tSetTileAt\x12\x1b.weewar.v1.SetTileAtRequest\x1a\x1c.weewar.v1.SetTileAtResponse\x12F\n" +
@@ -101,46 +102,48 @@ var file_weewar_v1_services_gameviewerpage_proto_depIdxs = []int32{
 	0,  // 3: weewar.v1.GameViewerPage.SetDamageDistributionContent:input_type -> weewar.v1.SetContentRequest
 	0,  // 4: weewar.v1.GameViewerPage.SetTerrainStatsContent:input_type -> weewar.v1.SetContentRequest
 	0,  // 5: weewar.v1.GameViewerPage.SetCompactSummaryCard:input_type -> weewar.v1.SetContentRequest
-	2,  // 6: weewar.v1.GameViewerPage.SetGameState:input_type -> weewar.v1.SetGameStateRequest
-	3,  // 7: weewar.v1.GameViewerPage.UpdateGameStatus:input_type -> weewar.v1.UpdateGameStatusRequest
-	4,  // 8: weewar.v1.GameViewerPage.SetTileAt:input_type -> weewar.v1.SetTileAtRequest
-	5,  // 9: weewar.v1.GameViewerPage.SetUnitAt:input_type -> weewar.v1.SetUnitAtRequest
-	6,  // 10: weewar.v1.GameViewerPage.RemoveTileAt:input_type -> weewar.v1.RemoveTileAtRequest
-	7,  // 11: weewar.v1.GameViewerPage.RemoveUnitAt:input_type -> weewar.v1.RemoveUnitAtRequest
-	8,  // 12: weewar.v1.GameViewerPage.ShowHighlights:input_type -> weewar.v1.ShowHighlightsRequest
-	9,  // 13: weewar.v1.GameViewerPage.ClearHighlights:input_type -> weewar.v1.ClearHighlightsRequest
-	10, // 14: weewar.v1.GameViewerPage.ShowPath:input_type -> weewar.v1.ShowPathRequest
-	11, // 15: weewar.v1.GameViewerPage.ClearPaths:input_type -> weewar.v1.ClearPathsRequest
-	12, // 16: weewar.v1.GameViewerPage.MoveUnit:input_type -> weewar.v1.MoveUnitRequest
-	13, // 17: weewar.v1.GameViewerPage.ShowAttackEffect:input_type -> weewar.v1.ShowAttackEffectRequest
-	14, // 18: weewar.v1.GameViewerPage.ShowHealEffect:input_type -> weewar.v1.ShowHealEffectRequest
-	15, // 19: weewar.v1.GameViewerPage.ShowCaptureEffect:input_type -> weewar.v1.ShowCaptureEffectRequest
-	16, // 20: weewar.v1.GameViewerPage.SetAllowedPanels:input_type -> weewar.v1.SetAllowedPanelsRequest
-	17, // 21: weewar.v1.GameViewerPage.LogMessage:input_type -> weewar.v1.LogMessageRequest
-	18, // 22: weewar.v1.GameViewerPage.SetTurnOptionsContent:output_type -> weewar.v1.SetContentResponse
-	19, // 23: weewar.v1.GameViewerPage.ShowBuildOptions:output_type -> weewar.v1.ShowBuildOptionsResponse
-	18, // 24: weewar.v1.GameViewerPage.SetUnitStatsContent:output_type -> weewar.v1.SetContentResponse
-	18, // 25: weewar.v1.GameViewerPage.SetDamageDistributionContent:output_type -> weewar.v1.SetContentResponse
-	18, // 26: weewar.v1.GameViewerPage.SetTerrainStatsContent:output_type -> weewar.v1.SetContentResponse
-	18, // 27: weewar.v1.GameViewerPage.SetCompactSummaryCard:output_type -> weewar.v1.SetContentResponse
-	20, // 28: weewar.v1.GameViewerPage.SetGameState:output_type -> weewar.v1.SetGameStateResponse
-	21, // 29: weewar.v1.GameViewerPage.UpdateGameStatus:output_type -> weewar.v1.UpdateGameStatusResponse
-	22, // 30: weewar.v1.GameViewerPage.SetTileAt:output_type -> weewar.v1.SetTileAtResponse
-	23, // 31: weewar.v1.GameViewerPage.SetUnitAt:output_type -> weewar.v1.SetUnitAtResponse
-	24, // 32: weewar.v1.GameViewerPage.RemoveTileAt:output_type -> weewar.v1.RemoveTileAtResponse
-	25, // 33: weewar.v1.GameViewerPage.RemoveUnitAt:output_type -> weewar.v1.RemoveUnitAtResponse
-	26, // 34: weewar.v1.GameViewerPage.ShowHighlights:output_type -> weewar.v1.ShowHighlightsResponse
-	27, // 35: weewar.v1.GameViewerPage.ClearHighlights:output_type -> weewar.v1.ClearHighlightsResponse
-	28, // 36: weewar.v1.GameViewerPage.ShowPath:output_type -> weewar.v1.ShowPathResponse
-	29, // 37: weewar.v1.GameViewerPage.ClearPaths:output_type -> weewar.v1.ClearPathsResponse
-	30, // 38: weewar.v1.GameViewerPage.MoveUnit:output_type -> weewar.v1.MoveUnitResponse
-	31, // 39: weewar.v1.GameViewerPage.ShowAttackEffect:output_type -> weewar.v1.ShowAttackEffectResponse
-	32, // 40: weewar.v1.GameViewerPage.ShowHealEffect:output_type -> weewar.v1.ShowHealEffectResponse
-	33, // 41: weewar.v1.GameViewerPage.ShowCaptureEffect:output_type -> weewar.v1.ShowCaptureEffectResponse
-	34, // 42: weewar.v1.GameViewerPage.SetAllowedPanels:output_type -> weewar.v1.SetAllowedPanelsResponse
-	35, // 43: weewar.v1.GameViewerPage.LogMessage:output_type -> weewar.v1.LogMessageResponse
-	22, // [22:44] is the sub-list for method output_type
-	0,  // [0:22] is the sub-list for method input_type
+	0,  // 6: weewar.v1.GameViewerPage.SetGameStatePanelContent:input_type -> weewar.v1.SetContentRequest
+	2,  // 7: weewar.v1.GameViewerPage.SetGameState:input_type -> weewar.v1.SetGameStateRequest
+	3,  // 8: weewar.v1.GameViewerPage.UpdateGameStatus:input_type -> weewar.v1.UpdateGameStatusRequest
+	4,  // 9: weewar.v1.GameViewerPage.SetTileAt:input_type -> weewar.v1.SetTileAtRequest
+	5,  // 10: weewar.v1.GameViewerPage.SetUnitAt:input_type -> weewar.v1.SetUnitAtRequest
+	6,  // 11: weewar.v1.GameViewerPage.RemoveTileAt:input_type -> weewar.v1.RemoveTileAtRequest
+	7,  // 12: weewar.v1.GameViewerPage.RemoveUnitAt:input_type -> weewar.v1.RemoveUnitAtRequest
+	8,  // 13: weewar.v1.GameViewerPage.ShowHighlights:input_type -> weewar.v1.ShowHighlightsRequest
+	9,  // 14: weewar.v1.GameViewerPage.ClearHighlights:input_type -> weewar.v1.ClearHighlightsRequest
+	10, // 15: weewar.v1.GameViewerPage.ShowPath:input_type -> weewar.v1.ShowPathRequest
+	11, // 16: weewar.v1.GameViewerPage.ClearPaths:input_type -> weewar.v1.ClearPathsRequest
+	12, // 17: weewar.v1.GameViewerPage.MoveUnit:input_type -> weewar.v1.MoveUnitRequest
+	13, // 18: weewar.v1.GameViewerPage.ShowAttackEffect:input_type -> weewar.v1.ShowAttackEffectRequest
+	14, // 19: weewar.v1.GameViewerPage.ShowHealEffect:input_type -> weewar.v1.ShowHealEffectRequest
+	15, // 20: weewar.v1.GameViewerPage.ShowCaptureEffect:input_type -> weewar.v1.ShowCaptureEffectRequest
+	16, // 21: weewar.v1.GameViewerPage.SetAllowedPanels:input_type -> weewar.v1.SetAllowedPanelsRequest
+	17, // 22: weewar.v1.GameViewerPage.LogMessage:input_type -> weewar.v1.LogMessageRequest
+	18, // 23: weewar.v1.GameViewerPage.SetTurnOptionsContent:output_type -> weewar.v1.SetContentResponse
+	19, // 24: weewar.v1.GameViewerPage.ShowBuildOptions:output_type -> weewar.v1.ShowBuildOptionsResponse
+	18, // 25: weewar.v1.GameViewerPage.SetUnitStatsContent:output_type -> weewar.v1.SetContentResponse
+	18, // 26: weewar.v1.GameViewerPage.SetDamageDistributionContent:output_type -> weewar.v1.SetContentResponse
+	18, // 27: weewar.v1.GameViewerPage.SetTerrainStatsContent:output_type -> weewar.v1.SetContentResponse
+	18, // 28: weewar.v1.GameViewerPage.SetCompactSummaryCard:output_type -> weewar.v1.SetContentResponse
+	18, // 29: weewar.v1.GameViewerPage.SetGameStatePanelContent:output_type -> weewar.v1.SetContentResponse
+	20, // 30: weewar.v1.GameViewerPage.SetGameState:output_type -> weewar.v1.SetGameStateResponse
+	21, // 31: weewar.v1.GameViewerPage.UpdateGameStatus:output_type -> weewar.v1.UpdateGameStatusResponse
+	22, // 32: weewar.v1.GameViewerPage.SetTileAt:output_type -> weewar.v1.SetTileAtResponse
+	23, // 33: weewar.v1.GameViewerPage.SetUnitAt:output_type -> weewar.v1.SetUnitAtResponse
+	24, // 34: weewar.v1.GameViewerPage.RemoveTileAt:output_type -> weewar.v1.RemoveTileAtResponse
+	25, // 35: weewar.v1.GameViewerPage.RemoveUnitAt:output_type -> weewar.v1.RemoveUnitAtResponse
+	26, // 36: weewar.v1.GameViewerPage.ShowHighlights:output_type -> weewar.v1.ShowHighlightsResponse
+	27, // 37: weewar.v1.GameViewerPage.ClearHighlights:output_type -> weewar.v1.ClearHighlightsResponse
+	28, // 38: weewar.v1.GameViewerPage.ShowPath:output_type -> weewar.v1.ShowPathResponse
+	29, // 39: weewar.v1.GameViewerPage.ClearPaths:output_type -> weewar.v1.ClearPathsResponse
+	30, // 40: weewar.v1.GameViewerPage.MoveUnit:output_type -> weewar.v1.MoveUnitResponse
+	31, // 41: weewar.v1.GameViewerPage.ShowAttackEffect:output_type -> weewar.v1.ShowAttackEffectResponse
+	32, // 42: weewar.v1.GameViewerPage.ShowHealEffect:output_type -> weewar.v1.ShowHealEffectResponse
+	33, // 43: weewar.v1.GameViewerPage.ShowCaptureEffect:output_type -> weewar.v1.ShowCaptureEffectResponse
+	34, // 44: weewar.v1.GameViewerPage.SetAllowedPanels:output_type -> weewar.v1.SetAllowedPanelsResponse
+	35, // 45: weewar.v1.GameViewerPage.LogMessage:output_type -> weewar.v1.LogMessageResponse
+	23, // [23:46] is the sub-list for method output_type
+	0,  // [0:23] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

@@ -172,26 +172,26 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 	if resp == nil {
 		t.Fatal("ProcessMoves response is nil")
 	}
-	if len(resp.MoveResults) == 0 {
+	if len(resp.Moves) == 0 {
 		t.Error("Expected move results in response")
 	}
 
-	t.Logf("ProcessMoves completed successfully with %d move results", len(resp.MoveResults))
+	t.Logf("ProcessMoves completed successfully with %d move results", len(resp.Moves))
 }
 
 // Helper function to convert runtime World to proto (simplified version)
 func convertRuntimeWorldToProto(world *World) *v1.WorldData {
 	worldData := &v1.WorldData{
-		Units: []*v1.Unit{},
-		Tiles: []*v1.Tile{},
+		UnitsMap: map[string]*v1.Unit{},
+		TilesMap: map[string]*v1.Tile{},
 	}
 
 	for _, unit := range world.UnitsByCoord() {
-		worldData.Units = append(worldData.Units, unit)
+		worldData.UnitsMap[lib.CoordKey(unit.Q, unit.R)] = unit
 	}
 
 	for _, tile := range world.TilesByCoord() {
-		worldData.Tiles = append(worldData.Tiles, tile)
+		worldData.TilesMap[lib.CoordKey(tile.Q, tile.R)] = tile
 	}
 
 	return worldData
@@ -289,7 +289,7 @@ func TestProcessEndTurnIncome(t *testing.T) {
 
 	// Verify CoinsChangedChange was recorded
 	hasCoinsChange := false
-	for _, change := range result.Changes {
+	for _, change := range move.Changes {
 		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
 			hasCoinsChange = true
 			if coinsChange.PlayerId != 1 {
@@ -377,7 +377,7 @@ func TestProcessEndTurnNoIncome(t *testing.T) {
 	}
 
 	// Verify no CoinsChangedChange was recorded (since income was 0)
-	for _, change := range result.Changes {
+	for _, change := range move.Changes {
 		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
 			t.Errorf("Expected no CoinsChangedChange when income is 0, but got change with %d income",
 				coinsChange.NewCoins-coinsChange.PreviousCoins)
@@ -398,7 +398,7 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 	world := NewWorld("test", protoWorld)
 
 	// Add 5 land bases for player 1 (each generates 100 income)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		baseTile := NewTile(AxialCoord{Q: i, R: 0}, 1)
 		baseTile.Player = 1
 		world.AddTile(baseTile)
@@ -451,7 +451,7 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 
 	// Verify CoinsChangedChange
 	hasCoinsChange := false
-	for _, change := range result.Changes {
+	for _, change := range move.Changes {
 		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
 			hasCoinsChange = true
 			actualIncome := coinsChange.NewCoins - coinsChange.PreviousCoins
@@ -463,5 +463,329 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 
 	if !hasCoinsChange {
 		t.Error("Expected CoinsChangedChange in result")
+	}
+}
+
+// TestProcessEndTurnCustomIncomeConfig tests income calculation using custom IncomeConfig values
+func TestProcessEndTurnCustomIncomeConfig(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	// Create a world with different income-generating tiles
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add tiles for player 1:
+	// Land Base (ID 1)
+	baseTile := NewTile(AxialCoord{Q: 0, R: 0}, 1)
+	baseTile.Player = 1
+	world.AddTile(baseTile)
+
+	// Naval Base (ID 2)
+	harborTile := NewTile(AxialCoord{Q: 1, R: 0}, 2)
+	harborTile.Player = 1
+	world.AddTile(harborTile)
+
+	// Airport (ID 3)
+	airportTile := NewTile(AxialCoord{Q: 2, R: 0}, 3)
+	airportTile.Player = 1
+	world.AddTile(airportTile)
+
+	// Create game configuration with CUSTOM income values (different from defaults)
+	customIncomeConfig := &v1.IncomeConfig{
+		StartingCoins:     1000,
+		GameIncome:        50,  // 50 coins just for being in game
+		LandbaseIncome:    200, // Custom: 200 instead of default 100
+		NavalbaseIncome:   300, // Custom: 300 instead of default 150
+		AirportbaseIncome: 400, // Custom: 400 instead of default 200
+	}
+
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 500, StartingCoins: 500},
+			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+		},
+		IncomeConfigs: customIncomeConfig,
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	// Process end turn for player 1
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Calculate expected income using CUSTOM config values:
+	// 200 (land base) + 300 (naval base) + 400 (airport) + 50 (game income) = 950
+	expectedIncome := int32(950)
+	expectedCoins := int32(500) + expectedIncome // 500 starting + 950 income = 1450
+
+	// Check player coins were updated
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != expectedCoins {
+		t.Errorf("Player 1 coins after end turn: got %d, want %d (initial 500 + custom income %d)",
+			player1.Coins, expectedCoins, expectedIncome)
+	}
+
+	// Verify CoinsChangedChange was recorded with correct values
+	hasCoinsChange := false
+	for _, change := range move.Changes {
+		if coinsChange := change.GetCoinsChanged(); coinsChange != nil {
+			hasCoinsChange = true
+			actualIncome := coinsChange.NewCoins - coinsChange.PreviousCoins
+			if actualIncome != expectedIncome {
+				t.Errorf("Income from CoinsChangedChange: got %d, want %d", actualIncome, expectedIncome)
+			}
+		}
+	}
+
+	if !hasCoinsChange {
+		t.Error("Expected CoinsChangedChange in result, but not found")
+	}
+}
+
+// TestProcessEndTurnMinesIncome tests income from mines using custom IncomeConfig
+func TestProcessEndTurnMinesIncome(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add 2 mines for player 1 (ID 20)
+	mine1 := NewTile(AxialCoord{Q: 0, R: 0}, lib.TileTypeMines)
+	mine1.Player = 1
+	world.AddTile(mine1)
+
+	mine2 := NewTile(AxialCoord{Q: 1, R: 0}, lib.TileTypeMines)
+	mine2.Player = 1
+	world.AddTile(mine2)
+
+	// Custom income config with mines income
+	customIncomeConfig := &v1.IncomeConfig{
+		MinesIncome: 1000, // 1000 per mine
+	}
+
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 100, StartingCoins: 100},
+			{PlayerId: 2, Coins: 100, StartingCoins: 100},
+		},
+		IncomeConfigs: customIncomeConfig,
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Expected: 2 mines * 1000 = 2000 income
+	expectedIncome := int32(2000)
+	expectedCoins := int32(100) + expectedIncome
+
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != expectedCoins {
+		t.Errorf("Player 1 coins: got %d, want %d (100 + %d mines income)",
+			player1.Coins, expectedCoins, expectedIncome)
+	}
+}
+
+// TestProcessEndTurnFallbackToDefaults tests that default income is used when IncomeConfig values are 0
+func TestProcessEndTurnFallbackToDefaults(t *testing.T) {
+	// Load rules engine
+	rulesEngine, err := LoadRulesEngineFromFile(RULES_DATA_FILE, DAMAGE_DATA_FILE)
+	if err != nil {
+		t.Fatalf("Failed to load rules engine: %v", err)
+	}
+
+	protoWorld := &v1.WorldData{}
+	world := NewWorld("test", protoWorld)
+
+	// Add a land base for player 1
+	baseTile := NewTile(AxialCoord{Q: 0, R: 0}, lib.TileTypeLandBase)
+	baseTile.Player = 1
+	world.AddTile(baseTile)
+
+	// IncomeConfig with LandbaseIncome = 0 (should fall back to default 100)
+	customIncomeConfig := &v1.IncomeConfig{
+		LandbaseIncome: 0, // Zero means use default
+	}
+
+	gameConfig := &v1.GameConfiguration{
+		Players: []*v1.GamePlayer{
+			{PlayerId: 1, Coins: 500, StartingCoins: 500},
+			{PlayerId: 2, Coins: 500, StartingCoins: 500},
+		},
+		IncomeConfigs: customIncomeConfig,
+	}
+
+	game := &v1.Game{
+		Id:     "test-game",
+		Name:   "Test Game",
+		Config: gameConfig,
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+	}
+
+	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
+
+	processor := &MoveProcessor{}
+	move := &v1.GameMove{
+		Player: 1,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	err = processor.ProcessEndTurn(rtGame, move, move.GetEndTurn())
+	if err != nil {
+		t.Fatalf("ProcessEndTurn failed: %v", err)
+	}
+
+	// Should use default land base income of 100
+	expectedIncome := int32(100)
+	expectedCoins := int32(500) + expectedIncome
+
+	player1 := rtGame.Config.Players[0]
+	if player1.Coins != expectedCoins {
+		t.Errorf("Player 1 coins: got %d, want %d (should use default income 100)",
+			player1.Coins, expectedCoins)
+	}
+}
+
+// TestGetTileIncomeFromConfig tests the GetTileIncomeFromConfig helper function directly
+func TestGetTileIncomeFromConfig(t *testing.T) {
+	testCases := []struct {
+		name         string
+		tileType     int32
+		incomeConfig *v1.IncomeConfig
+		expected     int32
+	}{
+		{
+			name:         "nil config uses default for land base",
+			tileType:     lib.TileTypeLandBase,
+			incomeConfig: nil,
+			expected:     lib.DefaultLandbaseIncome, // 100
+		},
+		{
+			name:         "nil config uses default for naval base",
+			tileType:     lib.TileTypeNavalBase,
+			incomeConfig: nil,
+			expected:     lib.DefaultNavalbaseIncome, // 150
+		},
+		{
+			name:         "nil config uses default for airport",
+			tileType:     lib.TileTypeAirport,
+			incomeConfig: nil,
+			expected:     lib.DefaultAirportbaseIncome, // 200
+		},
+		{
+			name:         "nil config uses default for missile silo",
+			tileType:     lib.TileTypeMissileSilo,
+			incomeConfig: nil,
+			expected:     lib.DefaultMissilesiloIncome, // 300
+		},
+		{
+			name:         "nil config uses default for mines",
+			tileType:     lib.TileTypeMines,
+			incomeConfig: nil,
+			expected:     lib.DefaultMinesIncome, // 500
+		},
+		{
+			name:     "custom land base income",
+			tileType: lib.TileTypeLandBase,
+			incomeConfig: &v1.IncomeConfig{
+				LandbaseIncome: 250,
+			},
+			expected: 250,
+		},
+		{
+			name:     "custom naval base income",
+			tileType: lib.TileTypeNavalBase,
+			incomeConfig: &v1.IncomeConfig{
+				NavalbaseIncome: 350,
+			},
+			expected: 350,
+		},
+		{
+			name:     "zero in config falls back to default",
+			tileType: lib.TileTypeLandBase,
+			incomeConfig: &v1.IncomeConfig{
+				LandbaseIncome: 0,
+			},
+			expected: lib.DefaultLandbaseIncome, // 100
+		},
+		{
+			name:         "unknown tile type returns 0",
+			tileType:     999, // Unknown type
+			incomeConfig: nil,
+			expected:     0,
+		},
+		{
+			name:         "grass tile (non-income) returns 0",
+			tileType:     4, // Grass
+			incomeConfig: nil,
+			expected:     0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := lib.GetTileIncomeFromConfig(tc.tileType, tc.incomeConfig)
+			if result != tc.expected {
+				t.Errorf("GetTileIncomeFromConfig(%d, %v) = %d, want %d",
+					tc.tileType, tc.incomeConfig, result, tc.expected)
+			}
+		})
 	}
 }

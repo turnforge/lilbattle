@@ -260,23 +260,23 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 			TestCases: []GetOptionsAtTestCase{
 				{
 					Name: "CheckOurUnit",
-					Q:    -1, // Player 1 unit from the logs above
-					R:    -2,
+					Q:    -2, // Player 1 unit at (-2,-1) per actual world data
+					R:    -1,
 					ExpectedResult: &GetOptionsAtExpectation{
 						// Our unit should have movement options (end turn is global)
-						// Soldier with 3 movement points can reach 23 tiles
-						MoveOptionCount:   23, // All reachable tiles within 3 movement
+						// Soldier with 3 movement points, limited by map terrain
+						MoveOptionCount:   14, // Reachable tiles within 3 movement on this map
 						AttackOptionCount: 0,  // Enemy units too far away
 						EndTurnCount:      0,
-						TotalOptionCount:  23, // Just the 23 moves
+						TotalOptionCount:  14, // Just the 14 moves
 						CurrentPlayer:     1,
 						GameInitialized:   true,
 					},
 				},
 				{
 					Name: "CheckEnemyUnit",
-					Q:    2, // Player 2 unit from the logs above
-					R:    3,
+					Q:    1, // Player 2 unit at (1,4) per actual world data
+					R:    4,
 					ExpectedResult: &GetOptionsAtExpectation{
 						// Enemy unit - no options (end turn is global)
 						MoveOptionCount:   0,

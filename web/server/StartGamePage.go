@@ -91,7 +91,17 @@ func (p *StartGamePage) loadUnitTypes() {
 func (p *StartGamePage) initializeGameConfiguration() {
 	playerColors := []string{"red", "blue", "green", "yellow", "purple", "orange"}
 
-	// Initialize players with defaults
+	// Initialize default income configuration first (so we can use StartingCoins for players)
+	incomeConfig := &protos.IncomeConfig{
+		StartingCoins:     lib.DefaultStartingCoins,
+		LandbaseIncome:    lib.DefaultLandbaseIncome,
+		NavalbaseIncome:   lib.DefaultNavalbaseIncome,
+		AirportbaseIncome: lib.DefaultAirportbaseIncome,
+		MissilesiloIncome: lib.DefaultMissilesiloIncome,
+		MinesIncome:       lib.DefaultMinesIncome,
+	}
+
+	// Initialize players with defaults using IncomeConfig.StartingCoins
 	players := []*protos.GamePlayer{}
 	for i := range 2 {
 		playerType := "ai"
@@ -105,18 +115,9 @@ func (p *StartGamePage) initializeGameConfiguration() {
 			TeamId:        int32(i + 1),
 			Name:          fmt.Sprintf("Player %d", i+1),
 			IsActive:      true,
-			StartingCoins: lib.DefaultStartingCoins,
-			Coins:         lib.DefaultStartingCoins,
+			StartingCoins: incomeConfig.StartingCoins,
+			Coins:         incomeConfig.StartingCoins,
 		})
-	}
-
-	// Initialize default income configuration
-	incomeConfig := &protos.IncomeConfig{
-		LandbaseIncome:    lib.DefaultLandbaseIncome,
-		NavalbaseIncome:   lib.DefaultNavalbaseIncome,
-		AirportbaseIncome: lib.DefaultAirportbaseIncome,
-		MissilesiloIncome: lib.DefaultMissilesiloIncome,
-		MinesIncome:       lib.DefaultMinesIncome,
 	}
 
 	// Initialize default settings

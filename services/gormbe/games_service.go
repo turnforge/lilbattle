@@ -437,3 +437,70 @@ func (s *GamesService) SaveMoveGroup(ctx context.Context, gameId string, state *
 
 	return nil
 }
+
+// ListMoves returns moves from game history, optionally filtered by group range
+func (s *GamesService) ListMoves(ctx context.Context, req *v1.ListMovesRequest) (*v1.ListMovesResponse, error) {
+	if req.GameId == "" {
+		return nil, fmt.Errorf("game ID is required")
+	}
+
+	ctx, span := Tracer.Start(ctx, "ListMoves")
+	defer span.End()
+
+	// Build query with optional group range filters
+	query := s.storage.Where("game_id = ?", req.GameId)
+	if req.FromGroup > 0 {
+		query = query.Where("group_number >= ?", req.FromGroup)
+	}
+	if req.ToGroup > 0 {
+		query = query.Where("group_number <= ?", req.ToGroup)
+	}
+	query = query.Order("group_number asc").Order("move_number asc")
+
+	moves, err := s.GameMoveDAL.List(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list moves: %w", err)
+	}
+
+	// Group moves by group_number
+	groupMap := make(map[int64]*v1.GameMoveGroup)
+	var groupNumbers []int64
+
+	for _, moveGorm := range moves {
+		move, err := v1gorm.GameMoveFromGameMoveGORM(nil, moveGorm, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert move: %w", err)
+		}
+
+		groupNum := move.GroupNumber
+		if _, exists := groupMap[groupNum]; !exists {
+			groupMap[groupNum] = &v1.GameMoveGroup{
+				GroupNumber: groupNum,
+				Moves:       []*v1.GameMove{},
+			}
+			groupNumbers = append(groupNumbers, groupNum)
+		}
+		groupMap[groupNum].Moves = append(groupMap[groupNum].Moves, move)
+	}
+
+	// Build ordered list of groups
+	var groups []*v1.GameMoveGroup
+	for _, num := range groupNumbers {
+		groups = append(groups, groupMap[num])
+	}
+
+	// Check if there are earlier moves
+	hasMore := false
+	if req.FromGroup > 0 {
+		var count int64
+		s.storage.Model(&v1gorm.GameMoveGORM{}).
+			Where("game_id = ? AND group_number < ?", req.GameId, req.FromGroup).
+			Count(&count)
+		hasMore = count > 0
+	}
+
+	return &v1.ListMovesResponse{
+		MoveGroups: groups,
+		HasMore:    hasMore,
+	}, nil
+}

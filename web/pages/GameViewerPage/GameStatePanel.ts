@@ -1,0 +1,83 @@
+import { BaseComponent } from '../../lib/Component';
+import { EventBus } from '../../lib/EventBus';
+import { LCMComponent } from '../../lib/LCMComponent';
+import { ITheme } from '../../assets/themes/BaseTheme';
+import { ThemeUtils } from '../common/ThemeUtils';
+
+/**
+ * GameStatePanel displays game state information including:
+ * - Players list with bases, units, and coins
+ * - Current player indicator
+ * - Round/turn information
+ * - Current player's income breakdown
+ *
+ * The panel content is rendered by the Go presenter using Templar templates
+ * and injected via the setGameStatePanelContent RPC call.
+ */
+export class GameStatePanel extends BaseComponent implements LCMComponent {
+    private isUIBound = false;
+    private isActivated = false;
+    private theme: ITheme | null = null;
+
+    constructor(rootElement: HTMLElement, eventBus: EventBus, debugMode: boolean = false) {
+        super('game-state-panel', rootElement, eventBus, debugMode);
+    }
+
+    // LCMComponent Phase 1: Initialize DOM structure
+    public performLocalInit(): LCMComponent[] {
+        if (this.isUIBound) {
+            this.log('Already bound to DOM, skipping');
+            return [];
+        }
+
+        this.log('Binding GameStatePanel to DOM');
+        this.isUIBound = true;
+        this.log('GameStatePanel bound to DOM successfully');
+
+        // This is a leaf component - no children
+        return [];
+    }
+
+    // Phase 2: No external dependencies needed
+    public setupDependencies(): void {
+        this.log('GameStatePanel: No dependencies required');
+    }
+
+    // Phase 3: Activate component
+    public activate(): void {
+        if (this.isActivated) {
+            this.log('Already activated, skipping');
+            return;
+        }
+
+        this.log('Activating GameStatePanel');
+        this.isActivated = true;
+        this.log('GameStatePanel activated successfully');
+    }
+
+    // Phase 4: Deactivate component
+    public deactivate(): void {
+        this.log('Deactivating GameStatePanel');
+        this.isActivated = false;
+        this.log('GameStatePanel deactivated');
+    }
+
+    /**
+     * Set the theme for styling
+     */
+    public setTheme(theme: ITheme): void {
+        this.theme = theme;
+    }
+
+    /**
+     * Hydrate theme images after Go template renders HTML
+     * Call this after the HTML content is injected by the Go backend
+     */
+    public async hydrateThemeImages(): Promise<void> {
+        await ThemeUtils.hydrateThemeImages(this.rootElement, this.theme, this.debugMode);
+    }
+
+    protected destroyComponent(): void {
+        this.deactivate();
+    }
+}

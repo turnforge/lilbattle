@@ -53,6 +53,7 @@ export interface GameViewerPageMethods {
 	setDamageDistributionContent(request: SetContentRequest): Promise<SetContentResponse>;
 	setTerrainStatsContent(request: SetContentRequest): Promise<SetContentResponse>;
 	setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse>;
+	setGameStatePanelContent(request: SetContentRequest): Promise<SetContentResponse>;
 	setGameState(request: SetGameStateRequest): Promise<SetGameStateResponse>;
 	updateGameStatus(request: UpdateGameStatusRequest): Promise<UpdateGameStatusResponse>;
 	setTileAt(request: SetTileAtRequest): Promise<SetTileAtResponse>;
@@ -92,6 +93,9 @@ export class GameViewerPageClient extends ServiceClient implements GameViewerPag
     }
     async setCompactSummaryCard(request: SetContentRequest): Promise<SetContentResponse> {
         return this.callMethod('gameViewerPage.setCompactSummaryCard', request);
+    }
+    async setGameStatePanelContent(request: SetContentRequest): Promise<SetContentResponse> {
+        return this.callMethod('gameViewerPage.setGameStatePanelContent', request);
     }
     async setGameState(request: SetGameStateRequest): Promise<SetGameStateResponse> {
         return this.callMethod('gameViewerPage.setGameState', request);

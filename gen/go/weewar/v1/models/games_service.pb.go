@@ -1018,12 +1018,10 @@ type ListMovesRequest struct {
 	// *
 	// Game ID to add moves to
 	GameId string `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	// Offset of the move to begin fetching from in reverse order from "latest".
-	// 0 => start from now
-	Offset int32 `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
-	// *
-	// Limit to last N moves (from offset).  if <= 0 return all moves
-	LastN         int32 `protobuf:"varint,3,opt,name=last_n,json=lastN,proto3" json:"last_n,omitempty"`
+	// Gets moves >= from_group
+	FromGroup int64 `protobuf:"varint,2,opt,name=from_group,json=fromGroup,proto3" json:"from_group,omitempty"`
+	// Gets moves <= to_group
+	ToGroup       int64 `protobuf:"varint,3,opt,name=to_group,json=toGroup,proto3" json:"to_group,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1065,16 +1063,16 @@ func (x *ListMovesRequest) GetGameId() string {
 	return ""
 }
 
-func (x *ListMovesRequest) GetOffset() int32 {
+func (x *ListMovesRequest) GetFromGroup() int64 {
 	if x != nil {
-		return x.Offset
+		return x.FromGroup
 	}
 	return 0
 }
 
-func (x *ListMovesRequest) GetLastN() int32 {
+func (x *ListMovesRequest) GetToGroup() int64 {
 	if x != nil {
-		return x.LastN
+		return x.ToGroup
 	}
 	return 0
 }
@@ -1661,11 +1659,12 @@ const file_weewar_v1_models_games_service_proto_rawDesc = "" +
 	"\x13GetGameStateRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\"B\n" +
 	"\x14GetGameStateResponse\x12*\n" +
-	"\x05state\x18\x01 \x01(\v2\x14.weewar.v1.GameStateR\x05state\"Z\n" +
+	"\x05state\x18\x01 \x01(\v2\x14.weewar.v1.GameStateR\x05state\"e\n" +
 	"\x10ListMovesRequest\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\x16\n" +
-	"\x06offset\x18\x02 \x01(\x05R\x06offset\x12\x15\n" +
-	"\x06last_n\x18\x03 \x01(\x05R\x05lastN\"i\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\x1d\n" +
+	"\n" +
+	"from_group\x18\x02 \x01(\x03R\tfromGroup\x12\x19\n" +
+	"\bto_group\x18\x03 \x01(\x03R\atoGroup\"i\n" +
 	"\x11ListMovesResponse\x12\x19\n" +
 	"\bhas_more\x18\x01 \x01(\bR\ahasMore\x129\n" +
 	"\vmove_groups\x18\x02 \x03(\v2\x18.weewar.v1.GameMoveGroupR\n" +

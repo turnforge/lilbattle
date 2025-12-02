@@ -130,12 +130,10 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <span id="game-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        Game Loading...
+                        Player 1's Turn
                     </span>
                     <div class="text-sm text-gray-600 dark:text-gray-300">
                         <span>{{ .Game.Name }}</span>
-                        <span class="mx-2">•</span>
-                        <span>{{ .PlayerCount }} Players</span>
                         {{ if ne .MaxTurns 0 }}
                         <span class="mx-2">•</span>
                         <span>{{ .MaxTurns }} Turn Limit</span>
@@ -190,6 +188,9 @@
             {{ template "TurnOptionsPanel" }}
             {{ template "DamageDistributionPanel" }}
             <div id="game-log-panel-template">{{ template "GameLogPanel" }}</div>
+            <div id="game-state-panel-template">
+                <!-- Content will be injected by presenter via SetGameStatePanelContent -->
+            </div>
         </div>
         
         <!-- Hidden World Data for Frontend -->

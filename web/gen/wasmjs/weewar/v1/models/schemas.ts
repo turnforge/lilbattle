@@ -2328,12 +2328,12 @@ export const ListMovesRequestSchema: MessageSchema = {
       id: 1,
     },
     {
-      name: "offset",
+      name: "fromGroup",
       type: FieldType.NUMBER,
       id: 2,
     },
     {
-      name: "lastN",
+      name: "toGroup",
       type: FieldType.NUMBER,
       id: 3,
     },

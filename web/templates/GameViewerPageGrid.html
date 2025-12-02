@@ -33,10 +33,18 @@
         min-height: 0; /* Allow flex children to shrink */
     }
 
-    /* Left column - Game Log */
+    /* Left column - Game State Panel (top) */
+    #grid-game-state-container {
+        grid-column: 1;
+        grid-row: 1;
+        @apply bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 overflow-y-auto;
+        max-height: 40vh;
+    }
+
+    /* Left column - Game Log (bottom) */
     #grid-game-log-container {
         grid-column: 1;
-        grid-row: 1 / 3;
+        grid-row: 2;
         @apply bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto;
     }
 
@@ -113,12 +121,10 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <span id="game-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        Game Loading...
+                        Player 1's Turn
                     </span>
                     <div class="text-sm text-gray-600 dark:text-gray-300">
                         <span>{{ .Game.Name }}</span>
-                        <span class="mx-2">•</span>
-                        <span>{{ .PlayerCount }} Players</span>
                         {{ if ne .MaxTurns 0 }}
                         <span class="mx-2">•</span>
                         <span>{{ .MaxTurns }} Turn Limit</span>
@@ -135,7 +141,12 @@
 
         <!-- Grid Container -->
         <div id="grid-container" class="flex-1 min-h-0">
-            <!-- Game Log Panel (Left) -->
+            <!-- Game State Panel (Left Top) -->
+            <div id="grid-game-state-container">
+                <!-- Content will be injected by presenter via SetGameStatePanelContent -->
+            </div>
+
+            <!-- Game Log Panel (Left Bottom) -->
             <div id="grid-game-log-container">
                 {{ template "GameLogPanel" }}
             </div>

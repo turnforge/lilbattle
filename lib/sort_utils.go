@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
@@ -95,7 +95,7 @@ func AttackUnitActionLess(a, b *v1.AttackUnitAction) bool {
 }
 
 // containsAction checks if an action is in the allowed actions list
-func containsAction(actions []string, action string) bool {
+func ContainsAction(actions []string, action string) bool {
 	for _, a := range actions {
 		if a == action {
 			return true

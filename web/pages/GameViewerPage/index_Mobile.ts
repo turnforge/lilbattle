@@ -7,6 +7,7 @@ import { UnitStatsPanel } from './UnitStatsPanel';
 import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
+import { GameStatePanel } from './GameStatePanel';
 import { PhaserGameScene } from './PhaserGameScene';
 import { SetContentRequest, SetContentResponse, SetAllowedPanelsRequest, SetAllowedPanelsResponse } from '../../gen/wasmjs/weewar/v1/models/interfaces';
 
@@ -24,13 +25,13 @@ interface ButtonOrderingConfig {
  */
 const DEFAULT_BUTTON_ORDERING: ButtonOrderingConfig = {
     // Unit selected: prioritize unit info, actions, combat
-    unitSelected: ['unit-stats', 'turn-options', 'damage-distribution', 'terrain-stats', 'game-log'],
+    unitSelected: ['unit-stats', 'turn-options', 'damage-distribution', 'terrain-stats', 'game-state', 'game-log'],
 
     // Tile selected: prioritize terrain info, then unit/actions
-    tileSelected: ['terrain-stats', 'turn-options', 'unit-stats', 'damage-distribution', 'game-log'],
+    tileSelected: ['terrain-stats', 'turn-options', 'unit-stats', 'damage-distribution', 'game-state', 'game-log'],
 
     // Nothing selected: prioritize game log and general info
-    nothingSelected: ['game-log', 'turn-options', 'terrain-stats', 'unit-stats', 'damage-distribution']
+    nothingSelected: ['game-state', 'game-log', 'turn-options', 'terrain-stats', 'unit-stats', 'damage-distribution']
 };
 
 /**
@@ -48,6 +49,7 @@ const BUTTON_METADATA: Record<PanelId, ButtonMetadata> = {
     'damage-distribution': { id: 'damage-distribution', icon: '⚔️', label: 'Damage' },
     'turn-options': { id: 'turn-options', icon: '🎯', label: 'Actions' },
     'game-log': { id: 'game-log', icon: '📜', label: 'Log' },
+    'game-state': { id: 'game-state', icon: '👥', label: 'Players' },
     'build-options': { id: 'build-options', icon: '🏗️', label: 'Build' }
 };
 
@@ -89,7 +91,8 @@ export class GameViewerPageMobile extends GameViewerPageBase {
             'mobile-drawer-terrain-stats',
             'mobile-drawer-damage-distribution',
             'mobile-drawer-turn-options',
-            'mobile-drawer-game-log'
+            'mobile-drawer-game-log',
+            'mobile-drawer-game-state'
         ];
 
         for (const id of requiredIds) {
@@ -124,7 +127,8 @@ export class GameViewerPageMobile extends GameViewerPageBase {
             'terrain-stats',
             'damage-distribution',
             'turn-options',
-            'game-log'
+            'game-log',
+            'game-state'
         ];
 
         for (const panelId of drawerIds) {
@@ -189,6 +193,13 @@ export class GameViewerPageMobile extends GameViewerPageBase {
         if (gameLogContainer) {
             this.gameLogPanel = new GameLogPanel(gameLogContainer, this.eventBus);
             panels.push(this.gameLogPanel);
+        }
+
+        // Game State Panel
+        const gameStateContainer = document.querySelector('#mobile-drawer-game-state .drawer-content') as HTMLElement;
+        if (gameStateContainer) {
+            this.gameStatePanel = new GameStatePanel(gameStateContainer, this.eventBus, true);
+            panels.push(this.gameStatePanel);
         }
 
         // Add drawers to lifecycle management

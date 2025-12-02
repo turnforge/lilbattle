@@ -117,13 +117,13 @@ func TestProgressionStepAdvancement(t *testing.T) {
 
 	// Create a simple world with tiles
 	worldData := &v1.WorldData{
-		Tiles: []*v1.Tile{
-			{Q: 0, R: 0, TileType: 5}, // Grass
-			{Q: 1, R: 0, TileType: 5}, // Grass
-			{Q: 2, R: 0, TileType: 5}, // Grass
+		TilesMap: map[string]*v1.Tile{
+			"0,0": {Q: 0, R: 0, TileType: 5}, // Grass
+			"1,0": {Q: 1, R: 0, TileType: 5}, // Grass
+			"2,0": {Q: 2, R: 0, TileType: 5}, // Grass
 		},
-		Units: []*v1.Unit{
-			{
+		UnitsMap: map[string]*v1.Unit{
+			"0,0": {
 				Q:                0,
 				R:                0,
 				Player:           1,
@@ -187,11 +187,11 @@ func TestTopUpResetsProgression(t *testing.T) {
 	rulesEngine := DefaultRulesEngine()
 
 	worldData := &v1.WorldData{
-		Tiles: []*v1.Tile{
-			{Q: 0, R: 0, TileType: 5},
+		TilesMap: map[string]*v1.Tile{
+			"0,0": {Q: 0, R: 0, TileType: 5},
 		},
-		Units: []*v1.Unit{
-			{
+		UnitsMap: map[string]*v1.Unit{
+			"0,0": {
 				Q:                 0,
 				R:                 0,
 				Player:            1,

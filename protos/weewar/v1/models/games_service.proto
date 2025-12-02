@@ -219,14 +219,11 @@ message ListMovesRequest {
    */
   string game_id = 1;
 
-  // Offset of the move to begin fetching from in reverse order from "latest".
-  // 0 => start from now
-  int32 offset = 2;
+  // Gets moves >= from_group
+  int64 from_group = 2;
 
-  /**
-   * Limit to last N moves (from offset).  if <= 0 return all moves
-   */
-  int32 last_n = 3;
+  // Gets moves <= to_group
+  int64 to_group = 3;
 }
 
 /**

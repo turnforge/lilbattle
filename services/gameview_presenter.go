@@ -57,6 +57,11 @@ type CompactSummaryCardPanel interface {
 	SetCurrentData(context.Context, *v1.Tile, *v1.Unit)
 }
 
+type GameStatePanel interface {
+	BasePanel
+	Update(context.Context, *v1.Game, *v1.GameState)
+}
+
 type GameScene interface {
 	BasePanel
 	ClearPaths(context.Context)
@@ -86,6 +91,7 @@ type BaseGameViewPresenter struct {
 
 	// All the "UI Elements" we will change state of
 	GameState               GameState
+	GameStatePanel          GameStatePanel
 	TurnOptionsPanel        TurnOptionsPanel
 	UnitStatsPanel          UnitStatsPanel
 	DamageDistributionPanel DamageDistributionPanel
@@ -140,6 +146,7 @@ func (s *GameViewPresenter) InitializeGame(ctx context.Context, req *v1.Initiali
 		Game:  game,
 		State: gameState,
 	})
+	s.GameStatePanel.Update(ctx, game, gameState)
 	s.TerrainStatsPanel.SetCurrentTile(ctx, nil)
 	s.UnitStatsPanel.SetCurrentUnit(ctx, nil)
 	s.DamageDistributionPanel.SetCurrentUnit(ctx, nil)
@@ -716,8 +723,9 @@ func (s *GameViewPresenter) applyIncrementalChanges(ctx context.Context, game *v
 		}
 	}
 
-	// After applying all changes, refresh exhausted highlights
+	// After applying all changes, refresh exhausted highlights and update game state panel
 	s.refreshExhaustedHighlights(ctx, game, gameState)
+	s.GameStatePanel.Update(ctx, game, gameState)
 }
 
 // refreshExhaustedHighlights updates the exhausted highlights for all units with no movement points

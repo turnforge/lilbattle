@@ -217,3 +217,17 @@ func (b *BrowserGameState) UpdateGameStatus(ctx context.Context, req *v1.UpdateG
 	go b.GameViewerPage.UpdateGameStatus(ctx, req)
 	return nil, nil
 }
+
+type BrowserGameStatePanel struct {
+	services.BaseGameStatePanel
+	GameViewerPage *wasmv1.GameViewerPageClient
+}
+
+func (b *BrowserGameStatePanel) Update(ctx context.Context, game *v1.Game, state *v1.GameState) {
+	b.BaseGameStatePanel.Update(ctx, game, state)
+	// Pass the panel itself to the template so it can access computed fields
+	content := renderPanelTemplate(ctx, "GameStatePanel.templar.html", b)
+	go b.GameViewerPage.SetGameStatePanelContent(ctx, &v1.SetContentRequest{
+		InnerHtml: content,
+	})
+}

@@ -44,6 +44,11 @@ class GameViewerPageStub(object):
                 request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.FromString,
                 _registered_method=True)
+        self.SetGameStatePanelContent = channel.unary_unary(
+                '/weewar.v1.GameViewerPage/SetGameStatePanelContent',
+                request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.FromString,
+                _registered_method=True)
         self.SetGameState = channel.unary_unary(
                 '/weewar.v1.GameViewerPage/SetGameState',
                 request_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetGameStateRequest.SerializeToString,
@@ -161,6 +166,12 @@ class GameViewerPageServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SetCompactSummaryCard(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetGameStatePanelContent(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -298,6 +309,11 @@ def add_GameViewerPageServicer_to_server(servicer, server):
             ),
             'SetCompactSummaryCard': grpc.unary_unary_rpc_method_handler(
                     servicer.SetCompactSummaryCard,
+                    request_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.SerializeToString,
+            ),
+            'SetGameStatePanelContent': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetGameStatePanelContent,
                     request_deserializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.SerializeToString,
             ),
@@ -542,6 +558,33 @@ class GameViewerPage(object):
             request,
             target,
             '/weewar.v1.GameViewerPage/SetCompactSummaryCard',
+            weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
+            weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetGameStatePanelContent(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.GameViewerPage/SetGameStatePanelContent',
             weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentRequest.SerializeToString,
             weewar_dot_v1_dot_models_dot_gameviewerpage__pb2.SetContentResponse.FromString,
             options,

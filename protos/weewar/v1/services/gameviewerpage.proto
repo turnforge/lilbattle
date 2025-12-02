@@ -25,6 +25,8 @@ service GameViewerPage {
 
     rpc SetCompactSummaryCard(SetContentRequest) returns (SetContentResponse);
 
+    rpc SetGameStatePanelContent(SetContentRequest) returns (SetContentResponse);
+
     rpc SetGameState(SetGameStateRequest) returns (SetGameStateResponse);
 
     // Update game UI metadata (current player, turn counter)

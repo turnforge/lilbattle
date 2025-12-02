@@ -17,14 +17,59 @@ const DefaultAirportbaseIncome = 200
 const DefaultMissilesiloIncome = 300
 const DefaultMinesIncome = 500
 
+// Tile type constants for income mapping
+const (
+	TileTypeLandBase    = 1
+	TileTypeNavalBase   = 2
+	TileTypeAirport     = 3
+	TileTypeMissileSilo = 16
+	TileTypeMines       = 20
+)
+
 // Default Income available from various tile types if this is not already in our rules data json
 // All other tiles do not generate income
 var DefaultIncomeMap = map[int32]int32{
-	1:  DefaultLandbaseIncome,
-	2:  DefaultNavalbaseIncome,
-	3:  DefaultAirportbaseIncome,
-	16: DefaultMissilesiloIncome,
-	20: DefaultMinesIncome,
+	TileTypeLandBase:    DefaultLandbaseIncome,
+	TileTypeNavalBase:   DefaultNavalbaseIncome,
+	TileTypeAirport:     DefaultAirportbaseIncome,
+	TileTypeMissileSilo: DefaultMissilesiloIncome,
+	TileTypeMines:       DefaultMinesIncome,
+}
+
+// GetTileIncomeFromConfig returns the income for a tile type using the provided IncomeConfig.
+// Falls back to DefaultIncomeMap if IncomeConfig is nil or doesn't have a value for this tile type.
+func GetTileIncomeFromConfig(tileType int32, incomeConfig *v1.IncomeConfig) int32 {
+	if incomeConfig != nil {
+		switch tileType {
+		case TileTypeLandBase:
+			if incomeConfig.LandbaseIncome > 0 {
+				return incomeConfig.LandbaseIncome
+			}
+		case TileTypeNavalBase:
+			if incomeConfig.NavalbaseIncome > 0 {
+				return incomeConfig.NavalbaseIncome
+			}
+		case TileTypeAirport:
+			if incomeConfig.AirportbaseIncome > 0 {
+				return incomeConfig.AirportbaseIncome
+			}
+		case TileTypeMissileSilo:
+			if incomeConfig.MissilesiloIncome > 0 {
+				return incomeConfig.MissilesiloIncome
+			}
+		case TileTypeMines:
+			if incomeConfig.MinesIncome > 0 {
+				return incomeConfig.MinesIncome
+			}
+		}
+	}
+
+	// Fall back to default income map
+	if income, ok := DefaultIncomeMap[tileType]; ok {
+		return income
+	}
+
+	return 0
 }
 
 // LoadRulesEngineFromFile loads a RulesEngine from separate rules and damage JSON files

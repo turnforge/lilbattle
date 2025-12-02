@@ -201,3 +201,129 @@ func (b *BaseCompactSummaryCardPanel) SetCurrentData(_ context.Context, tile *v1
 	b.Tile = tile
 	b.Unit = unit
 }
+
+// PlayerStats holds computed stats for a player (bases, units counts)
+type PlayerStats struct {
+	Bases int32
+	Units int32
+}
+
+// BaseGameStatePanel is a non-UI implementation of GameStatePanel
+type BaseGameStatePanel struct {
+	PanelBase
+	Game                *v1.Game
+	State               *v1.GameState
+	PlayerStats         map[int32]*PlayerStats
+	CurrentPlayerCoins  int32
+	CurrentPlayerIncome int32
+	IncomeBreakdown     string
+}
+
+// Update refreshes the panel with current game state
+func (b *BaseGameStatePanel) Update(_ context.Context, game *v1.Game, state *v1.GameState) {
+	b.Game = game
+	b.State = state
+	b.ComputePlayerStats()
+	b.ComputeCurrentPlayerIncome()
+}
+
+// ComputePlayerStats calculates bases and units count per player from world data
+func (b *BaseGameStatePanel) ComputePlayerStats() {
+	b.PlayerStats = make(map[int32]*PlayerStats)
+
+	if b.State == nil || b.State.WorldData == nil {
+		return
+	}
+
+	// Count tiles (bases) per player
+	for _, tile := range b.State.WorldData.TilesMap {
+		if tile.Player > 0 {
+			if b.PlayerStats[tile.Player] == nil {
+				b.PlayerStats[tile.Player] = &PlayerStats{}
+			}
+			b.PlayerStats[tile.Player].Bases++
+		}
+	}
+
+	// Count units per player
+	for _, unit := range b.State.WorldData.UnitsMap {
+		if unit.Player > 0 {
+			if b.PlayerStats[unit.Player] == nil {
+				b.PlayerStats[unit.Player] = &PlayerStats{}
+			}
+			b.PlayerStats[unit.Player].Units++
+		}
+	}
+}
+
+// ComputeCurrentPlayerIncome calculates income for the current player
+func (b *BaseGameStatePanel) ComputeCurrentPlayerIncome() {
+	b.CurrentPlayerCoins = 0
+	b.CurrentPlayerIncome = 0
+	b.IncomeBreakdown = ""
+
+	if b.Game == nil || b.Game.Config == nil || b.State == nil {
+		return
+	}
+
+	currentPlayer := b.State.CurrentPlayer
+
+	// Get current player's coins
+	for _, player := range b.Game.Config.Players {
+		if player.PlayerId == currentPlayer {
+			b.CurrentPlayerCoins = player.Coins
+			break
+		}
+	}
+
+	// Calculate income from owned tiles
+	if b.State.WorldData == nil {
+		return
+	}
+
+	incomeConfig := b.Game.Config.IncomeConfigs
+	baseCounts := make(map[int32]int32) // tileType -> count
+
+	for _, tile := range b.State.WorldData.TilesMap {
+		if tile.Player == currentPlayer {
+			tileIncome := lib.GetTileIncomeFromConfig(tile.TileType, incomeConfig)
+			if tileIncome > 0 {
+				b.CurrentPlayerIncome += tileIncome
+				baseCounts[tile.TileType]++
+			}
+		}
+	}
+
+	// Build income breakdown string
+	b.IncomeBreakdown = b.buildIncomeBreakdown(baseCounts, incomeConfig)
+}
+
+// buildIncomeBreakdown creates a human-readable income breakdown string
+func (b *BaseGameStatePanel) buildIncomeBreakdown(baseCounts map[int32]int32, incomeConfig *v1.IncomeConfig) string {
+	if len(baseCounts) == 0 {
+		return ""
+	}
+
+	parts := []string{}
+	for tileType, count := range baseCounts {
+		income := lib.GetTileIncomeFromConfig(tileType, incomeConfig)
+		if count == 1 {
+			parts = append(parts, fmt.Sprintf("%d", income))
+		} else {
+			parts = append(parts, fmt.Sprintf("%d x %d", count, income))
+		}
+	}
+
+	if len(parts) == 0 {
+		return ""
+	}
+
+	result := ""
+	for i, part := range parts {
+		if i > 0 {
+			result += " + "
+		}
+		result += part
+	}
+	return result
+}

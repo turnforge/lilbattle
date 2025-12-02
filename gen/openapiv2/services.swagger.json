@@ -459,20 +459,20 @@
             "type": "string"
           },
           {
-            "name": "offset",
-            "description": "Offset of the move to begin fetching from in reverse order from \"latest\".\n0 =\u003e start from now",
+            "name": "fromGroup",
+            "description": "Gets moves \u003e= from_group",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "format": "int64"
           },
           {
-            "name": "lastN",
-            "description": "*\nLimit to last N moves (from offset).  if \u003c= 0 return all moves",
+            "name": "toGroup",
+            "description": "Gets moves \u003c= to_group",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [

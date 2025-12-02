@@ -38,12 +38,13 @@ import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { BuildOptionsModal } from './BuildOptionsModal';
+import { GameStatePanel } from './GameStatePanel';
 import { RulesTable, TerrainStats } from '../common/RulesTable';
 
 /**
  * Panel type identifiers
  */
-export type PanelId = 'terrain-stats' | 'unit-stats' | 'damage-distribution' | 'turn-options' | 'game-log' | 'build-options';
+export type PanelId = 'terrain-stats' | 'unit-stats' | 'damage-distribution' | 'turn-options' | 'game-log' | 'game-state' | 'build-options';
 
 /**
  * Abstract base class for Game Viewer Page implementations.
@@ -79,6 +80,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     protected gameLogPanel: GameLogPanel;
     protected turnOptionsPanel: TurnOptionsPanel;
     protected buildOptionsModal: BuildOptionsModal;
+    protected gameStatePanel: GameStatePanel;
 
     // =========================================================================
     // Abstract Methods - Must be implemented by child classes
@@ -484,6 +486,13 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         console.log("setTerrainStatsContent called on the browser");
         this.terrainStatsPanel.innerHTML = request.innerHtml;
         await this.terrainStatsPanel.hydrateThemeImages();
+        return {};
+    }
+
+    async setGameStatePanelContent(request: SetContentRequest): Promise<SetContentResponse> {
+        console.log("setGameStatePanelContent called on the browser");
+        this.gameStatePanel.innerHTML = request.innerHtml;
+        await this.gameStatePanel.hydrateThemeImages();
         return {};
     }
 
