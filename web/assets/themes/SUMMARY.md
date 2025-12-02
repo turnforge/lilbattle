@@ -97,16 +97,16 @@ Terrain classification is now data-driven via `weewar-rules.json`:
 }
 ```
 
-### Player Colors (from mapping.json)
-Each theme can define its own player colors:
-```json
-{
-  "playerColors": {
-    "0": { "primary": "#888888", "secondary": "#666666", "name": "Neutral" },
-    "1": { "primary": "#f87171", "secondary": "#dc2626", "name": "Red" },
-    ...
-  }
-}
+### Player Colors (defaults in theme loaders)
+Player colors are now defined as defaults in the theme loaders (Go and TypeScript).
+Themes can optionally override by specifying `playerColors` in their mapping.json.
+
+Default colors (matching sprite sheet order):
+```
+0: Neutral (gray)
+1: Blue      2: Red       3: Yellow    4: White
+5: Pink      6: Orange    7: Black     8: Teal
+9: Navy Blue 10: Brown    11: Cyan     12: Purple
 ```
 
 ## Usage
@@ -186,13 +186,13 @@ Root Level:
     │
     └── static/assets/themes/
         ├── default/
-        │   └── mapping.json      # With playerColors
+        │   └── mapping.json      # Units/terrains only (playerColors from loader defaults)
         ├── fantasy/
-        │   ├── mapping.json      # With playerColors
+        │   ├── mapping.json      # Units/terrains only (playerColors from loader defaults)
         │   ├── Units/*.svg
         │   └── Tiles/*.svg
         └── modern/
-            ├── mapping.json      # With playerColors
+            ├── mapping.json      # Units/terrains only (playerColors from loader defaults)
             ├── Units/*.svg
             └── Tiles/*.svg
 ```
