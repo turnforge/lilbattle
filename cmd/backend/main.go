@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	goal "github.com/panyam/goapplib"
 	v1s "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	"github.com/turnforge/weewar/services"
 	"github.com/turnforge/weewar/services/fsbe"
@@ -158,7 +159,7 @@ func (b *Backend) SetupApp() *utils.App {
 
 	isDevMode := os.Getenv("WEEWAR_ENV") == "dev"
 	app.AddServer(&web.WebAppServer{
-		WebAppServer: utils.WebAppServer{
+		WebAppServer: goal.WebAppServer{
 			GrpcAddress:   b.GrpcAddress,
 			Address:       b.GatewayAddress,
 			AllowLocalDev: isDevMode,
