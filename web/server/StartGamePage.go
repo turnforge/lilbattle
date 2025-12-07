@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/lib"
 )
@@ -22,7 +23,7 @@ type StartGamePage struct {
 	GameConfiguration *protos.GameConfiguration
 }
 
-func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	// Get worldId from query parameter (optional)
 	p.WorldId = r.URL.Query().Get("worldId")
 
@@ -33,12 +34,13 @@ func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCon
 	}
 
 	p.Title = "New Game"
-	p.Header.Load(r, w, vc)
+	p.Header.Load(r, w, app)
 
 	// If a worldId is provided, fetch the world data
 	if p.WorldId != "" {
 		// Fetch the World using the client manager
-		client := vc.ClientMgr.GetWorldsSvcClient()
+		ctx := app.Context
+		client := ctx.ClientMgr.GetWorldsSvcClient()
 		req := &protos.GetWorldRequest{
 			Id: p.WorldId,
 		}
@@ -134,8 +136,4 @@ func (p *StartGamePage) initializeGameConfiguration() {
 		IncomeConfigs: incomeConfig,
 		Settings:      settings,
 	}
-}
-
-func (p *StartGamePage) Copy() View {
-	return &StartGamePage{}
 }

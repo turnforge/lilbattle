@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
@@ -15,7 +16,7 @@ type GameDetailPage struct {
 	GameId string
 }
 
-func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	p.GameId = r.PathValue("appItemId")
 	if p.GameId == "" {
 		http.Error(w, "Game ID is required", http.StatusBadRequest)
@@ -23,14 +24,11 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 	}
 
 	p.Title = "Game Details"
-	p.Header.Load(r, w, vc)
+	p.Header.Load(r, w, app)
 
-	// Fetch the Game using the client manager
-	client := vc.ClientMgr.GetGamesSvcClient()
-
-	req := &protos.GetGameRequest{
-		Id: p.GameId,
-	}
+	ctx := app.Context
+	client := ctx.ClientMgr.GetGamesSvcClient()
+	req := &protos.GetGameRequest{Id: p.GameId}
 
 	resp, err := client.GetGame(context.Background(), req)
 	if err != nil {
@@ -40,7 +38,6 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 	}
 
 	if resp.Game != nil {
-		// Convert from GameProject to Game (assuming we need the basic info)
 		p.Game = &protos.Game{
 			Id:          resp.Game.Id,
 			Name:        resp.Game.Name,
@@ -52,8 +49,4 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 	}
 
 	return nil, false
-}
-
-func (p *GameDetailPage) Copy() View {
-	return &GameDetailPage{}
 }

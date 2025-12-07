@@ -7,12 +7,12 @@ import (
 
 // UsersHandler handles user showcase pages
 type UsersHandler struct {
-	VC *ViewContext
+	App *WeewarApp
 }
 
 // NewUsersHandler creates a new users handler
-func NewUsersHandler(vc *ViewContext) *UsersHandler {
-	return &UsersHandler{VC: vc}
+func NewUsersHandler(app *WeewarApp) *UsersHandler {
+	return &UsersHandler{App: app}
 }
 
 // Handler returns an HTTP handler for users routes

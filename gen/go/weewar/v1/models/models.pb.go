@@ -2116,9 +2116,9 @@ func (x *GameConfiguration) GetSettings() *GameSettings {
 
 type IncomeConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// How much starting coins to give each player
+	// How much starting coins to give each player at the start of the agme
 	StartingCoins int32 `protobuf:"varint,1,opt,name=starting_coins,json=startingCoins,proto3" json:"starting_coins,omitempty"`
-	// Income each player just for being in the game
+	// Income each player just for being in the game each turn
 	GameIncome int32 `protobuf:"varint,2,opt,name=game_income,json=gameIncome,proto3" json:"game_income,omitempty"`
 	// Income from each landbase per turn
 	LandbaseIncome int32 `protobuf:"varint,3,opt,name=landbase_income,json=landbaseIncome,proto3" json:"landbase_income,omitempty"`

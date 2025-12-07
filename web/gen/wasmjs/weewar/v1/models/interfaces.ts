@@ -427,9 +427,9 @@ export interface GameConfiguration {
 
 
 export interface IncomeConfig {
-  /** How much starting coins to give each player */
+  /** How much starting coins to give each player at the start of the agme */
   startingCoins: number;
-  /** Income each player just for being in the game */
+  /** Income each player just for being in the game each turn */
   gameIncome: number;
   /** Income from each landbase per turn */
   landbaseIncome: number;

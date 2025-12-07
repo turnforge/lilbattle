@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/lib"
 )
@@ -75,8 +76,6 @@ type WorldEditorPage struct {
 	PlayerCount    int
 	Theme          string // Theme name from query parameter (default, fantasy, modern)
 }
-
-func (g *WorldEditorPage) Copy() View { return &WorldEditorPage{} }
 
 func (v *WorldEditorPage) SetupDefaults() {
 	v.Header.Width = "w-full"
@@ -244,8 +243,8 @@ func (v *WorldEditorPage) SetupDefaults() {
 	}
 }
 
-func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
-	v.Header.Load(r, w, vc)
+func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
+	v.Header.Load(r, w, app)
 
 	// Read query parameters first (before SetupDefaults)
 	queryParams := r.URL.Query()
@@ -254,7 +253,8 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewC
 	v.SetupDefaults()
 	v.WorldId = r.PathValue("worldId")
 	templateName := queryParams.Get("template")
-	loggedInUserId := vc.AuthMiddleware.GetLoggedInUserId(r)
+	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 
 	slog.Info("Loading composer for world with ID: ", "nid", v.WorldId)
 
@@ -276,7 +276,7 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewC
 		}
 		log.Println("Using template: ", templateName)
 	} else {
-		client := vc.ClientMgr.GetWorldsSvcClient()
+		client := ctx.ClientMgr.GetWorldsSvcClient()
 		resp, err := client.GetWorld(context.Background(), &protos.GetWorldRequest{
 			Id: v.WorldId,
 		})

@@ -413,10 +413,10 @@ message GameConfiguration {
 }
 
 message IncomeConfig {
-  // How much starting coins to give each player
+  // How much starting coins to give each player at the start of the agme
   int32 starting_coins = 1;
 
-  // Income each player just for being in the game
+  // Income each player just for being in the game each turn
   int32 game_income = 2;
 
   // Income from each landbase per turn

@@ -5,65 +5,56 @@ import (
 	"log"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 type WorldListView struct {
+	goal.WithPagination
+	goal.WithFiltering
+
 	Worlds     []*protos.World
-	Paginator  Paginator
-	ViewMode   string // "table" or "grid"
 	ActionMode string // "manage" or "select"
-	Query      string // search query
-	Sort       string // sort order
 }
 
-func (g *WorldListView) Copy() View { return &WorldListView{} }
+func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
+	// Load pagination and filtering using goal Load methods
+	p.WithPagination.Load(r, w, nil)
+	p.WithFiltering.Load(r, w, nil)
 
-func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
-	userId := vc.AuthMiddleware.GetLoggedInUserId(r)
-
-	// if we are an independent view then read its params from the query params
-	// otherwise those will be passed in
-	_, _ = p.Paginator.Load(r, w, vc)
-
-	// Load view mode (table or grid), default to grid for both select and manage modes
-	p.ViewMode = r.URL.Query().Get("view")
+	// Override defaults for this view
 	if p.ViewMode == "" {
-		p.ViewMode = "grid" // Default to grid view
+		p.ViewMode = "grid"
 	}
-
-	// Load search query and sort
-	p.Query = r.URL.Query().Get("q")
-	p.Sort = r.URL.Query().Get("sort")
 	if p.Sort == "" {
-		p.Sort = "modified_desc" // Default sort
+		p.Sort = "modified_desc"
 	}
-
-	// Default action mode to "manage" if not set
 	if p.ActionMode == "" {
 		p.ActionMode = "manage"
 	}
 
-	client := vc.ClientMgr.GetWorldsSvcClient()
+	ctx := app.Context
+	userId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	client := ctx.ClientMgr.GetWorldsSvcClient()
 
 	req := protos.ListWorldsRequest{
 		Pagination: &protos.Pagination{
-			PageOffset: int32(p.Paginator.CurrentPage * p.Paginator.PageSize),
-			PageSize:   int32(p.Paginator.PageSize),
+			PageOffset: int32(p.Offset()),
+			PageSize:   int32(p.PageSize),
 		},
 		OwnerId: userId,
-		// CollectionId: p.CollectionId,
 	}
 	resp, err := client.ListWorlds(context.Background(), &req)
 	if err != nil {
-		log.Println("error getting notations: ", err)
+		log.Println("error getting worlds: ", err)
 		return err, false
 	}
 	p.Worlds = resp.Items
-	p.Paginator.HasPrevPage = p.Paginator.CurrentPage > 0
+	p.HasPrevPage = p.CurrentPage > 0
 	if resp.Pagination != nil {
-		p.Paginator.HasNextPage = resp.Pagination.HasMore
-		p.Paginator.EvalPages(p.Paginator.CurrentPage*p.Paginator.PageSize + int(resp.Pagination.TotalResults))
+		p.HasNextPage = resp.Pagination.HasMore
+		p.TotalCount = int(resp.Pagination.TotalResults)
+		p.EvalPages()
 	}
 	return nil, false
 }

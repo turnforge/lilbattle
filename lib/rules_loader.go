@@ -11,6 +11,7 @@ import (
 )
 
 const DefaultStartingCoins = 300
+const DefaultPerTurnIncome = 300
 const DefaultLandbaseIncome = 100
 const DefaultNavalbaseIncome = 150
 const DefaultAirportbaseIncome = 200

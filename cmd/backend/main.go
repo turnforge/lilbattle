@@ -18,6 +18,7 @@ import (
 	"github.com/turnforge/weewar/utils"
 	web "github.com/turnforge/weewar/web/server"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
 const DEFAULT_DB_ENDPOINT = "postgres://postgres:password@localhost:5432/weewardb"
@@ -100,11 +101,17 @@ func (b *Backend) SetupApp() *utils.App {
 		var worldsService v1s.WorldsServiceServer
 		var filestore v1s.FileStoreServiceServer
 
-		db := gormbe.OpenWeewarDB(*db_endpoint, DEFAULT_DB_ENDPOINT)
+		var db *gorm.DB = nil
+		ensureDB := func() *gorm.DB {
+			if db == nil {
+				db = gormbe.OpenWeewarDB(*db_endpoint, DEFAULT_DB_ENDPOINT)
+			}
+			return db
+		}
 		// v1s.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
 		switch *worlds_service_be {
 		case "pg":
-			worldsService = gormbe.NewWorldsService(db, clientMgr)
+			worldsService = gormbe.NewWorldsService(ensureDB(), clientMgr)
 		case "local":
 			worldsService = fsbe.NewFSWorldsService("", clientMgr)
 		default:
@@ -115,7 +122,7 @@ func (b *Backend) SetupApp() *utils.App {
 		case "local":
 			gamesService = fsbe.NewFSGamesService("", clientMgr)
 		case "pg":
-			gamesService = gormbe.NewGamesService(db, clientMgr)
+			gamesService = gormbe.NewGamesService(ensureDB(), clientMgr)
 		default:
 			panic("Invalid game service be: " + *games_service_be)
 		}
@@ -144,7 +151,7 @@ func (b *Backend) SetupApp() *utils.App {
 		v1s.RegisterFileStoreServiceServer(server, filestore)
 
 		// TODO - use diferent kinds of db based on setup
-		v1s.RegisterIndexerServiceServer(server, gormbe.NewIndexerService(db))
+		// v1s.RegisterIndexerServiceServer(server, gormbe.NewIndexerService(ensureDB()))
 		return nil
 	}
 	app.AddServer(grpcServer)

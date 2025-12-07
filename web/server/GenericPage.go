@@ -1,13 +1,16 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	goal "github.com/panyam/goapplib"
+)
 
 type GenericPage struct {
+	BasePage
 	Header Header
 }
 
-func (g *GenericPage) Copy() View { return &GenericPage{} }
-
-func (v *GenericPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (v *GenericPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	return
 }

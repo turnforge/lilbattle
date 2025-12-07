@@ -520,9 +520,9 @@ export class IncomeConfig implements IncomeConfigInterface {
   static readonly MESSAGE_TYPE = "weewar.v1.IncomeConfig";
   readonly __MESSAGE_TYPE = IncomeConfig.MESSAGE_TYPE;
 
-  /** How much starting coins to give each player */
+  /** How much starting coins to give each player at the start of the agme */
   startingCoins: number = 0;
-  /** Income each player just for being in the game */
+  /** Income each player just for being in the game each turn */
   gameIncome: number = 0;
   /** Income from each landbase per turn */
   landbaseIncome: number = 0;

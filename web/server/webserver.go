@@ -14,8 +14,8 @@ type WebAppServer struct {
 // func (s *WebAppServer) Start(ctx context.Context, mux http.Handler, gw_addr string, srvErr chan error, stopChan chan bool) {
 func (s *WebAppServer) Start(ctx context.Context, srvErr chan error, stopChan chan bool) error {
 	cm := services.NewClientMgr(s.GrpcAddress)
-	app, _ := NewApp(cm)
-	return s.StartWithHandler(ctx, app.Handler(), srvErr, stopChan)
+	weewarApp, _, _ := NewWeewarApp(cm)
+	return s.StartWithHandler(ctx, weewarApp.Handler(), srvErr, stopChan)
 }
 
 type IndexerAppServer struct {

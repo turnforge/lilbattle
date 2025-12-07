@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 
+	goal "github.com/panyam/goapplib"
 	"github.com/turnforge/weewar/lib"
 )
 
@@ -28,10 +29,10 @@ type AttackSimulatorPage struct {
 	Theme       string
 }
 
-func (p *AttackSimulatorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *AttackSimulatorPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	p.DisableSplashScreen = true
 	p.Title = "Attack Simulator"
-	p.Header.Load(r, w, vc)
+	p.Header.Load(r, w, app)
 
 	// Read URL parameters for pre-populating form
 	query := r.URL.Query()
@@ -99,10 +100,6 @@ func (p *AttackSimulatorPage) loadTerrainAndUnitData() {
 			})
 		}
 	}
-}
-
-func (p *AttackSimulatorPage) Copy() View {
-	return &AttackSimulatorPage{}
 }
 
 // Helper to get query parameter or return default value (validates as number)

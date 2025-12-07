@@ -25,7 +25,7 @@ func (r *RootViewsHandler) handleWorldScreenshotLive(w http.ResponseWriter, req 
 	}
 
 	// Get world data from service
-	client := r.Context.ClientMgr.GetWorldsSvcClient()
+	client := r.WeewarApp.ClientMgr.GetWorldsSvcClient()
 	resp, err := client.GetWorld(context.Background(), &protos.GetWorldRequest{Id: worldId})
 	if err != nil {
 		log.Printf("Failed to get world %s: %v", worldId, err)
@@ -57,7 +57,7 @@ func (r *RootViewsHandler) handleGameScreenshotLive(w http.ResponseWriter, req *
 	}
 
 	// Get game data from service
-	client := r.Context.ClientMgr.GetGamesSvcClient()
+	client := r.WeewarApp.ClientMgr.GetGamesSvcClient()
 	resp, err := client.GetGame(context.Background(), &protos.GetGameRequest{Id: gameId})
 	if err != nil {
 		log.Printf("Failed to get game %s: %v", gameId, err)

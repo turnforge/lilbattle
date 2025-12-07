@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
@@ -32,7 +33,7 @@ type GameViewerPage struct {
 	WasmBundlePath string
 }
 
-func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	p.WasmExecJsPath = "/static/wasm/wasm_exec.js"
 	p.WasmBundlePath = "/static/wasm/weewar-cli.wasm"
 	useTinyGo := getQueryOrDefaultStr(r.URL.Query(), "tinygo", "")
@@ -48,7 +49,8 @@ func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewCo
 	}
 
 	// Load the world (same as WorldEditorPage)
-	client := vc.ClientMgr.GetGamesSvcClient()
+	ctx := app.Context
+	client := ctx.ClientMgr.GetGamesSvcClient()
 
 	req := &protos.GetGameRequest{Id: p.GameId}
 
@@ -192,8 +194,4 @@ func (p *GameViewerPage) GetUnitUnitPropertiesJSON() string {
 		return "{}"
 	}
 	return string(unitUnitData)
-}
-
-func (p *GameViewerPage) Copy() View {
-	return &GameViewerPage{}
 }

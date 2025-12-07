@@ -2731,12 +2731,12 @@
         "startingCoins": {
           "type": "integer",
           "format": "int32",
-          "title": "How much starting coins to give each player"
+          "title": "How much starting coins to give each player at the start of the agme"
         },
         "gameIncome": {
           "type": "integer",
           "format": "int32",
-          "title": "Income each player just for being in the game"
+          "title": "Income each player just for being in the game each turn"
         },
         "landbaseIncome": {
           "type": "integer",

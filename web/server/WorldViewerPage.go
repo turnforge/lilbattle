@@ -5,18 +5,19 @@ import (
 	"log"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 type WorldViewerPage struct {
 	BasePage
 	Header    Header
-	World     *protos.World     // Use the same type as WorldEditorPage for consistency
-	WorldData *protos.WorldData // Use the same type as WorldDataEditorPage for consistency
+	World     *protos.World
+	WorldData *protos.WorldData
 	WorldId   string
 }
 
-func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	p.WorldId = r.PathValue("worldId")
 	if p.WorldId == "" {
 		http.Error(w, "World ID is required", http.StatusBadRequest)
@@ -24,14 +25,11 @@ func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewC
 	}
 
 	p.Title = "World Details"
-	p.Header.Load(r, w, vc)
+	p.Header.Load(r, w, app)
 
-	// Fetch the World using the client manager
-	client := vc.ClientMgr.GetWorldsSvcClient()
-
-	req := &protos.GetWorldRequest{
-		Id: p.WorldId,
-	}
+	ctx := app.Context
+	client := ctx.ClientMgr.GetWorldsSvcClient()
+	req := &protos.GetWorldRequest{Id: p.WorldId}
 
 	resp, err := client.GetWorld(context.Background(), req)
 	if err != nil {
@@ -41,15 +39,10 @@ func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewC
 	}
 
 	if resp.World != nil {
-		// Use the World data for display
 		p.World = resp.World
 		p.WorldData = resp.WorldData
 		p.Title = p.World.Name
 	}
 
 	return nil, false
-}
-
-func (p *WorldViewerPage) Copy() View {
-	return &WorldViewerPage{}
 }

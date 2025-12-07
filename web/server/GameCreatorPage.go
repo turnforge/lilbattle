@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 type GameCreatorPage struct {
+	BasePage
 	Header        Header
 	Game          *protos.Game
 	Errors        map[string]string
 	AllowCustomId bool
 }
-
-func (g *GameCreatorPage) Copy() View { return &GameCreatorPage{} }
 
 func (v *GameCreatorPage) SetupDefaults() {
 	v.Header.Width = "w-full"
@@ -38,10 +38,11 @@ func (v *GameCreatorPage) SetupDefaults() {
 	}
 }
 
-func (v *GameCreatorPage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
-	v.Header.Load(r, w, vc)
+func (v *GameCreatorPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
+	v.Header.Load(r, w, app)
 	v.SetupDefaults()
-	loggedInUserId := vc.AuthMiddleware.GetLoggedInUserId(r)
+	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 
 	if loggedInUserId == "" {
 		// For now enforce login even on new

@@ -3,19 +3,9 @@ package server
 import (
 	"net/http"
 
+	goal "github.com/panyam/goapplib"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
-
-type BasePage struct {
-	Title               string
-	BodyClass           string
-	CustomHeader        bool
-	BodyDataAttributes  string
-	DisableSplashScreen bool
-	SplashTitle         string
-	SplashMessage       string
-	ActiveTab           string
-}
 
 type HomePage struct {
 	BasePage
@@ -28,12 +18,13 @@ type HomePage struct {
 	TotalWorlds  int32
 }
 
-func (p *HomePage) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *HomePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
+	ctx := app.Context
 	// Redirect to the first visible tab
-	if !vc.HideWorlds {
+	if !ctx.HideWorlds {
 		http.Redirect(w, r, "/worlds/", http.StatusFound)
 		return nil, true
-	} else if !vc.HideGames {
+	} else if !ctx.HideGames {
 		http.Redirect(w, r, "/games/", http.StatusFound)
 		return nil, true
 	} else {
@@ -47,9 +38,9 @@ type PrivacyPolicy struct {
 	Header Header
 }
 
-func (p *PrivacyPolicy) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (p *PrivacyPolicy) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	p.DisableSplashScreen = true
-	return p.Header.Load(r, w, vc)
+	return p.Header.Load(r, w, app)
 }
 
 type TermsOfService struct {
@@ -57,11 +48,7 @@ type TermsOfService struct {
 	Header Header
 }
 
-func (t *TermsOfService) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (t *TermsOfService) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	t.DisableSplashScreen = true
-	return t.Header.Load(r, w, vc)
+	return t.Header.Load(r, w, app)
 }
-
-func (g *TermsOfService) Copy() View { return &TermsOfService{} }
-func (g *PrivacyPolicy) Copy() View  { return &PrivacyPolicy{} }
-func (g *HomePage) Copy() View       { return &HomePage{} }

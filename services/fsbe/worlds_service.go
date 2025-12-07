@@ -159,6 +159,9 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	if req.World.Difficulty != "" {
 		world.Difficulty = req.World.Difficulty
 	}
+	if req.World.DefaultGameConfig != nil {
+		world.DefaultGameConfig = req.World.DefaultGameConfig
+	}
 	world.UpdatedAt = tspb.New(time.Now())
 
 	if err := s.storage.SaveArtifact(req.World.Id, "metadata", world); err != nil {

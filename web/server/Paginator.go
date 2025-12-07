@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	goal "github.com/panyam/goapplib"
 )
 
 type Paginator struct {
@@ -15,7 +17,7 @@ type Paginator struct {
 	Pages       []int
 }
 
-func (v *Paginator) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (v *Paginator) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	queryParams := r.URL.Query()
 	v.CurrentPage = 0
 	v.PageSize = 20

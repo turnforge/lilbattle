@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
+	goal "github.com/panyam/goapplib"
 )
 
 type HeaderMenuItem struct {
@@ -71,14 +73,15 @@ func (h *Header) SetupDefaults() {
 	}
 }
 
-func (v *Header) Load(r *http.Request, w http.ResponseWriter, vc *ViewContext) (err error, finished bool) {
+func (v *Header) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
 	v.SetupDefaults()
-	v.LoggedInUserId = vc.AuthMiddleware.GetLoggedInUserId(r)
+	ctx := app.Context
+	v.LoggedInUserId = ctx.AuthMiddleware.GetLoggedInUserId(r)
 	v.IsLoggedIn = v.LoggedInUserId != ""
 
 	// Load username if logged in
-	if v.IsLoggedIn && vc.AuthService != nil {
-		user, userErr := vc.AuthService.GetUserById(v.LoggedInUserId)
+	if v.IsLoggedIn && ctx.AuthService != nil {
+		user, userErr := ctx.AuthService.GetUserById(v.LoggedInUserId)
 		if userErr != nil {
 			log.Printf("Header: Error loading user %s: %v", v.LoggedInUserId, userErr)
 		} else if user != nil {

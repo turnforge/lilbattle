@@ -1191,14 +1191,14 @@ export const GameConfigurationSchema: GenMessage<GameConfiguration> = /*@__PURE_
  */
 export type IncomeConfig = Message<"weewar.v1.IncomeConfig"> & {
   /**
-   * How much starting coins to give each player
+   * How much starting coins to give each player at the start of the agme
    *
    * @generated from field: int32 starting_coins = 1;
    */
   startingCoins: number;
 
   /**
-   * Income each player just for being in the game
+   * Income each player just for being in the game each turn
    *
    * @generated from field: int32 game_income = 2;
    */

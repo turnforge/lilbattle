@@ -15,16 +15,7 @@ rules:
       - action: "include"
         patterns:
           - "web/server/*.go"
-      - action: "exclude"
-        patterns:
-          - "**/*.log"
-          - "**/*.log"
-          - "web/**/*"
-          - "web"
-      - action: "include"
-        patterns:
           - "lib/**/*.go"
-          - "cmd/**/*.go"
           - "services/**/*.go"
     commands:
       - "echo '🔧 Running WeeWar Tests...'"
@@ -37,6 +28,7 @@ rules:
         patterns:
           - "web/server/*.go"
           - "lib/**/*.go"
+          - "gen/**/*.go"
           - "cmd/**/*.go"
           - "services/**/*.go"
           - "go.mod"
@@ -48,12 +40,8 @@ rules:
           - "web/**/*"
           - "web"
     commands:
-      - "echo '🔧 Building WeeWar Binary...'"
-      - "make wasm"
-      - "make binlocal"
-      - "echo '✅ Backend build and tests complete'"
-      - "pkill weewar || true"
-      - "./bin/weewar serve"
+      - "echo '🔧 Building and Serving WeeWar...'"
+      - "make cli wasm servelocal"
 
   # Frontend Development & Testing
   - name: "frontend"
@@ -83,19 +71,3 @@ rules:
     commands:
       - "echo '⚡ Building frontend...'"
       - "npm run build"
-
-  # Protocol Buffers (affects both Go and Web)
-  - name: "protobuf"
-    color: "magenta"
-    skip_run_on_init: true
-    watch:
-      - action: "include"
-        patterns:
-          - "protos/**/*.proto"
-          - "buf.yaml"
-          - "buf.gen.yaml"
-    commands:
-      - "echo '📦 Regenerating Protocol Buffers...'"
-      - "rm -Rf gen"
-      - "buf generate"
-      - "echo '✅ Protobuf generation complete'"
