@@ -112,4 +112,4 @@ replace github.com/panyam/goutils v0.1.11 => ./locallinks/goutils
 
 replace github.com/panyam/goapplib v0.0.2 => ./locallinks/goapplib
 
-// replace github.com/panyam/templar v0.0.24 => ./locallinks/templar
+replace github.com/panyam/templar v0.0.24 => ./locallinks/templar

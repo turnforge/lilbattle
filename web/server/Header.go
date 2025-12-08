@@ -44,7 +44,8 @@ type Header struct {
 }
 
 func (h *Header) SetupDefaults() {
-	h.AppName = "Notations"
+	h.AppName = "WeeWar"
+	h.LogoTitle = h.AppName
 	h.HeaderStyleLink = "/static/css/Header.css"
 	h.MenuStyleLink = "/static/css/Menu.css"
 	h.Width = "max-w-7xl"
@@ -53,7 +54,6 @@ func (h *Header) SetupDefaults() {
 	h.ShowLoginButton = true
 	h.ShowLogoutButton = true
 	h.HomeButtonImage = "/static/icons/homebutton.jpg"
-	h.LogoTitle = "Notations"
 	h.HeaderStyleLink = "/static/css/Header.css"
 	h.MenuStyleLink = "/static/css/Menu.css"
 	h.HideCenterMenuItems = false
