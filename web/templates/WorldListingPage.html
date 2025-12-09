@@ -1,16 +1,76 @@
 <!-- templates/WorldListingPage.html -->
 {{# include "BasePage.html" #}}
-{{# include "WorldList.html" #}}
+{{# namespace "EL" "goapplib/components/EntityListing.html" #}}
+
+{{/* World-specific grid card placeholder - globe/map icon */}}
+{{ define "WorldGridCardPlaceholder" }}
+<svg class="w-16 h-16 text-green-200 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+</svg>
+{{ end }}
+
+{{/* World-specific table row icon */}}
+{{ define "WorldTableRowIcon" }}
+<svg class="w-6 h-6 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+</svg>
+{{ end }}
+
+{{/* World-specific empty state icon */}}
+{{ define "WorldEmptyStateIcon" }}
+<svg class="w-12 h-12 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+</svg>
+{{ end }}
+
+{{/* World grid card meta - empty for now */}}
+{{ define "WorldGridCardMeta" }}
+{{ end }}
+
+{{/* World grid card preview - handles PreviewUrls array */}}
+{{ define "WorldGridCardPreview" }}
+{{ if and .PreviewUrls (index .PreviewUrls 0) }}
+<img src="{{ index .PreviewUrls 0 }}"
+     alt="{{ .Name }}"
+     class="w-full h-full object-cover"
+     loading="lazy"
+     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+<div class="flex items-center justify-center h-full hidden">
+    {{ template "WorldGridCardPlaceholder" $ }}
+</div>
+{{ else }}
+<div class="flex items-center justify-center h-full">
+    {{ template "WorldGridCardPlaceholder" $ }}
+</div>
+{{ end }}
+{{ end }}
+
+{{/* World table row preview - handles PreviewUrls array */}}
+{{ define "WorldTableRowPreview" }}
+{{ if and .PreviewUrls (index .PreviewUrls 0) }}
+<img src="{{ index .PreviewUrls 0 }}" alt="{{ .Name }}" class="h-12 w-12 rounded-lg object-cover">
+{{ else }}
+{{ template "WorldTableRowIcon" $ }}
+{{ end }}
+{{ end }}
+
+{{/* Extend Grid and Table to use world-specific templates */}}
+{{# extend "EL:Grid" "WorldGrid"
+           "EL:GridCardPreview" "WorldGridCardPreview"
+           "EL:GridCardMeta" "WorldGridCardMeta" #}}
+
+{{# extend "EL:Table" "WorldTable"
+           "EL:TableRowPreview" "WorldTableRowPreview" #}}
+
+{{/* Extend EntityListing with world-specific overrides */}}
+{{# extend "EL:EntityListing" "WorldEntityListing"
+           "EL:Grid" "WorldGrid"
+           "EL:Table" "WorldTable"
+           "EL:EmptyStateIcon" "WorldEmptyStateIcon" #}}
 
 {{ define "BodySection" }}
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Worlds</h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Browse and manage your game worlds</p>
-    </div>
-    
-    <!-- Worlds List -->
-    {{ template "WorldList" .WorldListView }}
+    {{ template "WorldEntityListing" .ListingData }}
 </main>
 {{ end }}
 

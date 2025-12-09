@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	goal "github.com/panyam/goapplib"
+	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
 type WorldListingPage struct {
@@ -11,6 +12,7 @@ type WorldListingPage struct {
 	Header Header
 
 	WorldListView WorldListView
+	ListingData   *goal.EntityListingData[*protos.World]
 }
 
 func (m *WorldListingPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
@@ -18,5 +20,23 @@ func (m *WorldListingPage) Load(r *http.Request, w http.ResponseWriter, app *goa
 	m.Title = "Worlds"
 	m.ActiveTab = "worlds"
 	m.Header.Load(r, w, app)
-	return m.WorldListView.Load(r, w, app)
+
+	// Load worlds via the existing WorldListView
+	if err, finished := m.WorldListView.Load(r, w, app); err != nil || finished {
+		return err, finished
+	}
+
+	// Build listing data for EntityListing template
+	m.ListingData = goal.NewEntityListingData[*protos.World]("My Worlds", "/worlds").
+		WithCreate("/worlds/new", "Create New World").
+		WithEdit("/worlds").
+		WithDelete("/worlds")
+	m.ListingData.Items = m.WorldListView.Worlds
+	m.ListingData.ViewMode = m.WorldListView.ViewMode
+	m.ListingData.EnableViewToggle = true
+	m.ListingData.SearchPlaceholder = "Search worlds..."
+	m.ListingData.EmptyTitle = "No worlds found"
+	m.ListingData.EmptyMessage = "Get started by creating a new world."
+
+	return nil, false
 }

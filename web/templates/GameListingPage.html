@@ -1,16 +1,76 @@
 <!-- templates/GameListingPage.html -->
 {{# include "BasePage.html" #}}
-{{# include "GameList.html" #}}
+{{# namespace "EL" "goapplib/components/EntityListing.html" #}}
+
+{{/* Game-specific grid card placeholder - game controller icon */}}
+{{ define "GameGridCardPlaceholder" }}
+<svg class="w-16 h-16 text-blue-200 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+</svg>
+{{ end }}
+
+{{/* Game-specific table row icon */}}
+{{ define "GameTableRowIcon" }}
+<svg class="w-6 h-6 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+</svg>
+{{ end }}
+
+{{/* Game-specific empty state icon */}}
+{{ define "GameEmptyStateIcon" }}
+<svg class="w-12 h-12 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+</svg>
+{{ end }}
+
+{{/* Game grid card meta - empty for now, can show turn info later */}}
+{{ define "GameGridCardMeta" }}
+{{ end }}
+
+{{/* Game grid card preview - handles PreviewUrls array */}}
+{{ define "GameGridCardPreview" }}
+{{ if and .PreviewUrls (index .PreviewUrls 0) }}
+<img src="{{ index .PreviewUrls 0 }}"
+     alt="{{ .Name }}"
+     class="w-full h-full object-cover"
+     loading="lazy"
+     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+<div class="flex items-center justify-center h-full hidden">
+    {{ template "GameGridCardPlaceholder" $ }}
+</div>
+{{ else }}
+<div class="flex items-center justify-center h-full">
+    {{ template "GameGridCardPlaceholder" $ }}
+</div>
+{{ end }}
+{{ end }}
+
+{{/* Game table row preview - handles PreviewUrls array */}}
+{{ define "GameTableRowPreview" }}
+{{ if and .PreviewUrls (index .PreviewUrls 0) }}
+<img src="{{ index .PreviewUrls 0 }}" alt="{{ .Name }}" class="h-12 w-12 rounded-lg object-cover">
+{{ else }}
+{{ template "GameTableRowIcon" $ }}
+{{ end }}
+{{ end }}
+
+{{/* Extend Grid and Table to use game-specific templates */}}
+{{# extend "EL:Grid" "GameGrid"
+           "EL:GridCardPreview" "GameGridCardPreview"
+           "EL:GridCardMeta" "GameGridCardMeta" #}}
+
+{{# extend "EL:Table" "GameTable"
+           "EL:TableRowPreview" "GameTableRowPreview" #}}
+
+{{/* Extend EntityListing with game-specific overrides */}}
+{{# extend "EL:EntityListing" "GameEntityListing"
+           "EL:Grid" "GameGrid"
+           "EL:Table" "GameTable"
+           "EL:EmptyStateIcon" "GameEmptyStateIcon" #}}
 
 {{ define "BodySection" }}
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Games</h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Browse and manage your active games</p>
-    </div>
-    
-    <!-- Games List -->
-    {{ template "GameList" .GameListView }}
+    {{ template "GameEntityListing" .ListingData }}
 </main>
 {{ end }}
 
