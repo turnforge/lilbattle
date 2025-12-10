@@ -41,13 +41,36 @@ This folder contains all the Go HTML template files (`*.html`) used for server-s
 
 ### Templar Engine
 
-The template system uses a custom `templar` engine (imported from `github.com/panyam/goutils`) which extends Go's standard `html/template` with additional features:
+The template system uses a custom `templar` engine which extends Go's standard `html/template` with composition features:
 
-**Key Features:**
-- **Template Composition:** `{{# include "path/to/template.html" #}}` syntax for including other templates
-- **Block Definitions:** `{{ block "name" . }}...{{ end }}` for defining overridable sections
-- **Nested Includes:** Templates can include other templates recursively
-- **Path Resolution:** Automatic template discovery from configured root directories
+**Key Directives:**
+- **Namespace:** `{{# namespace "weewar" #}}` - Defines template namespace for isolation
+- **Include:** `{{# include "path/to/template.html" #}}` - Includes another template inline
+- **Extend:** `{{# extend "goapplib/BasePage.html" #}}` - Inherits from a parent template
+- **Block Definitions:** `{{ define "BlockName" }}...{{ end }}` - Define/override blocks
+
+**goapplib Integration:**
+Templates extend shared components from the `goapplib` package:
+- `goapplib/BasePage.html` - Base page layout with header, body, scripts blocks
+- Pages override blocks like `Header`, `Body`, `ExtraHeaderButtons`
+- Shared components reduce duplication across projects
+
+**Template Hierarchy Example:**
+```html
+{{# namespace "weewar" #}}
+{{# include "goapplib/BasePage.html" #}}
+{{# extend "goapplib/BasePage.html" #}}
+
+{{ define "Header" }}
+  {{# include "Header.html" #}}
+{{ end }}
+
+{{ define "Body" }}
+  <!-- Page-specific content -->
+{{ end }}
+```
+
+**Path Resolution:** Automatic template discovery from configured root directories
 
 **Template Processing Flow:**
 1. Backend loads templates from `web/templates/` directory

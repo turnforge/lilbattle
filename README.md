@@ -46,9 +46,10 @@ WeeWar follows a clean, modern architecture:
 
 - **Backend**: Go 1.24+, gRPC, Protocol Buffers
 - **Frontend**: TypeScript, Phaser.js 3, Tailwind CSS
-- **Templates**: Go html/template with Templar engine
+- **Templates**: Go html/template with Templar engine (namespace, include, extend directives)
 - **Build**: esbuild for TypeScript, buf for protos
 - **Live Reload**: devloop for continuous builds
+- **Template Library**: goapplib for shared page components
 
 ## Getting Started
 
@@ -228,10 +229,10 @@ buf generate
 
 - **[Architecture](./docs/ARCHITECTURE.md)** - Detailed technical architecture
 - **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Development workflows and patterns
-- **[Next Steps](./NEXTSTEPS.md)** - Roadmap and planned features
+- **[Roadmap](./docs/ROADMAP.md)** - Development phases and planned features
+- **[Project Summary](./PROJECT.md)** - Current status and recent achievements
 - **[Attack System](./docs/ATTACK.md)** - Combat mechanics documentation
 - **[Game Log](./docs/GAMELOG.md)** - Move history and replay system
-- **[Changelog](./docs/CHANGELOG.md)** - Version history
 
 ## Current Status
 
@@ -242,9 +243,9 @@ buf generate
 - Coordination protocol implemented, needs testing
 
 **Phase 3 (Polish & Production)**: 🚧 In Progress
-- UI improvements, animations, database migration planned
+- UI improvements, animations, templar template migration complete
 
-See [NEXTSTEPS.md](./NEXTSTEPS.md) for detailed roadmap.
+See [docs/ROADMAP.md](./docs/ROADMAP.md) for detailed development phases.
 
 ## Contributing
 

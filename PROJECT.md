@@ -7,6 +7,7 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 ### Core Technologies
 - **Backend**: Go with protobuf for game logic and coordination
 - **Frontend**: TypeScript with Phaser for 2D hex-based rendering
+- **Templates**: Templar engine with goapplib for shared components (namespace/include/extend)
 - **Communication**: WebAssembly bridge for client-server interaction
 - **Coordination**: TurnEngine framework for distributed validation
 - **Build System**: Continuous builds with devloop for hot reloading
@@ -72,6 +73,13 @@ WeeWar is a turn-based strategy game built with Go backend, TypeScript frontend,
 ---
 
 ## Recent Achievements
+
+### Templar Template Migration (2025-12-09)
+- Migrated to templar template engine with namespace/include/extend directives
+- Integrated goapplib for shared page components (BasePage, Header, etc.)
+- Template inheritance: pages extend `goapplib/BasePage.html` with custom blocks
+- Component templates use `.templar.html` extension for presenter-rendered panels
+- Cleaner template organization with reduced duplication
 
 ### Feature Flags and Navigation System (2025-11-07)
 - Environment-based flags (WEEWAR_HIDE_GAMES, WEEWAR_HIDE_WORLDS) for UI visibility control

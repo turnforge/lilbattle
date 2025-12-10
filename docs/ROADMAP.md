@@ -632,8 +632,11 @@ const response = await client.gamesService.createGame(request);
 - **User Experience**: Faster, more intuitive CLI with hex neighbor shortcuts
 - **Clean Architecture**: Presenter drives all UI updates through well-defined methods
 
-**Last Updated**: 2025-01-23
-**Current Focus**: Interactive gameplay with incremental updates and turn management complete
-**Next Milestone**: Attack implementation and full move execution
+**Last Updated**: 2025-12-09
+**Current Focus**: Template system modernization with templar and goapplib integration
+**Recent Milestone**: Templar template migration complete with namespace/include/extend patterns
 
-**Major Achievement**: Complete incremental update system replacing full-state refreshes. End turn functionality working with proper UI state management. CLI enhanced with direction shortcuts for rapid gameplay.
+**Recent Achievements**:
+- Templar template engine migration for better template reuse
+- goapplib integration for shared page components
+- Template inheritance via namespace/extend directives
