@@ -5,7 +5,7 @@ TINYGO_ROOT=$(shell tinygo env TINYGOROOT 2>/dev/null || echo "")
 # Try both common locations for wasm_exec.js (newer Go versions use lib/wasm, older use misc/wasm)
 WASM_EXEC_PATH=$(shell find $(GO_ROOT)/lib/wasm $(GO_ROOT)/misc/wasm -name "wasm_exec.js" 2>/dev/null | head -1)
 
-buildweb:
+ui:
 	cd web ; make build
 
 binlocal: 
