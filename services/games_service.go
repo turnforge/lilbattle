@@ -181,9 +181,14 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 			// Get terrain definition for tile-specific actions
 			terrainDef, err := rtGame.RulesEngine.GetTerrainData(tile.TileType)
 			if err == nil {
-				// Get current player's coins (default to 100 for now, will be from game config later)
-				// TODO: Get actual player coins from rtGame.Game.Config.Players[currentPlayer].Coins
-				playerCoins := int32(100)
+				// Get current player's coins
+				playerCoins := int32(0)
+				for _, player := range rtGame.Config.Players {
+					if player.PlayerId == rtGame.CurrentPlayer {
+						playerCoins = player.Coins
+						break
+					}
+				}
 
 				// Get allowed actions for this tile
 				tileActions := rtGame.RulesEngine.GetAllowedActionsForTile(tile, terrainDef, playerCoins)
@@ -192,8 +197,14 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 				for _, action := range tileActions {
 					switch action {
 					case "build":
-						// Generate build unit options from terrainDef.BuildableUnitIds
-						for _, unitTypeID := range terrainDef.BuildableUnitIds {
+						// Filter buildable units by game's allowed units setting
+						buildableUnits := FilterBuildOptionsByAllowedUnits(
+							terrainDef.BuildableUnitIds,
+							rtGame.Config.Settings.GetAllowedUnits(),
+						)
+
+						// Generate build unit options from filtered buildable units
+						for _, unitTypeID := range buildableUnits {
 							// Get unit definition to retrieve cost
 							unitDef, err := rtGame.RulesEngine.GetUnitData(unitTypeID)
 							if err != nil {
@@ -480,6 +491,34 @@ func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGa
 // Since World now holds proto data directly, this just returns the underlying WorldData
 func (b *BaseGamesService) convertRuntimeWorldToProto(world *lib.World) *v1.WorldData {
 	return world.WorldData()
+}
+
+// FilterBuildOptionsByAllowedUnits filters buildable units by allowed units.
+// If allowedUnits is nil, no filtering is applied (all units allowed).
+// If allowedUnits is empty slice, no units are allowed.
+func FilterBuildOptionsByAllowedUnits(buildableUnits, allowedUnits []int32) []int32 {
+	// If allowedUnits is nil, no restriction - return all buildable units
+	if allowedUnits == nil {
+		return buildableUnits
+	}
+
+	// If allowedUnits is empty, nothing is allowed
+	if len(allowedUnits) == 0 {
+		return []int32{}
+	}
+
+	allowedSet := make(map[int32]bool)
+	for _, u := range allowedUnits {
+		allowedSet[u] = true
+	}
+
+	var filtered []int32
+	for _, u := range buildableUnits {
+		if allowedSet[u] {
+			filtered = append(filtered, u)
+		}
+	}
+	return filtered
 }
 
 // SimulateAttack simulates combat between two units and returns damage distributions
