@@ -210,11 +210,6 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 	req.Game.CreatedAt = tspb.New(now)
 	req.Game.UpdatedAt = tspb.New(now)
 
-	// Save game metadata
-	if err := s.storage.SaveArtifact(req.Game.Id, "metadata", req.Game); err != nil {
-		return nil, fmt.Errorf("failed to create game: %w", err)
-	}
-
 	// Save a new empty game state and a new move list
 	gs := &v1.GameState{
 		GameId:        req.Game.Id,
