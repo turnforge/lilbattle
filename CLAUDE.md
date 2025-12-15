@@ -17,6 +17,10 @@
 - Proto files are automatically regenerated when changed - DO NOT run buf generate commands.
 - In general DONT be defensive by catching errors or null checking objects that when null would make the whole page fail anyway.    Dont just try/catch to log errors - let exceptions happen naturally so errors are NOT covered up and error locations are easier to identify.  We are still in experimenting/revising phase so we should harden as far as possible and identify failure modes rather than covering them up with try/catches (or even null checks when somethigns are really mandatory for the game to function).   Let us use preconditions more when possible.
 
+## Workflow
+
+* Use `gh` tools to create tickets and prs before starting a feature or new bit of work.
+
 ## Continuous Builds
 
 Builds for frontend, wasm, backend are all running continuously and can be queried using the `devloop` cli tool.   devloop is a command for watching and live reloading your projects.  It is like Air + Make on steroids.   You have the following devloop commands:
