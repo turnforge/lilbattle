@@ -29,7 +29,9 @@ func (m *GameListingPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	// Build listing data for EntityListing template
 	m.ListingData = goal.NewEntityListingData[*protos.Game]("My Games", "/games").
 		WithCreate("/games/new", "Start New Game").
-		WithDelete("/games")
+		WithView("/games/%s/view").
+		WithEdit("/games/%s/edit").
+		WithDelete("/games/%s/delete")
 	m.ListingData.Items = m.GameListView.Games
 	m.ListingData.ViewMode = m.GameListView.ViewMode
 	m.ListingData.EnableViewToggle = true

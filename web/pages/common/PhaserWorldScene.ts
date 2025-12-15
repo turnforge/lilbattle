@@ -1277,7 +1277,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         
         // Create combined label if enabled
         if (this.showUnitHealth) {
-            const health = unit.availableHealth || 100;
+            const health = unit.availableHealth || 10;
             const movementPoints = unit.distanceLeft || 0;
             
             // Format: "Movement/Health" (e.g., "3/85")
@@ -1349,7 +1349,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         const labels = this.unitLabels.get(key);
         
         if (labels && labels.healthText && this.showUnitHealth) {
-            const health = unit.availableHealth || 100;
+            const health = unit.availableHealth || 10;
             const movementPoints = unit.distanceLeft || 0;
             const labelText = `${movementPoints}/${health}`;
             

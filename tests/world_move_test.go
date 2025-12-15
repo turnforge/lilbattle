@@ -262,7 +262,7 @@ func TestMoveUnitExactProcessMovesScenario(t *testing.T) {
 		R:               2,
 		Player:          1,
 		UnitType:        1,
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 		DistanceLeft:    3,
 		// TurnCounter removed: Units will be lazily topped-up when accessed
 	}
@@ -320,7 +320,7 @@ func TestProcessMovesTransactionFlow(t *testing.T) {
 		R:               2,
 		Player:          1,
 		UnitType:        1,
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 		DistanceLeft:    3,
 		// TurnCounter removed: Units will be lazily topped-up when accessed
 	}

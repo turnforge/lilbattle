@@ -124,7 +124,7 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         const statusElement = this.findElement('#unit-status');
 
         if (healthElement) {
-            healthElement.textContent = unit.health?.toString() || '100';
+            healthElement.textContent = unit.health?.toString() || '10';
         }
 
         if (movementElement) {
@@ -177,7 +177,7 @@ export class UnitStatsPanel extends BaseComponent implements LCMComponent {
         if (unit.health !== undefined) {
             properties.push({
                 name: 'Health',
-                value: `${unit.health}/100`
+                value: `${unit.health}/10`
             });
         }
 

@@ -22,7 +22,7 @@ func TestSplashDamageBasic(t *testing.T) {
 		R:               0,
 		Player:          1,
 		UnitType:        attackerType,
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 		DistanceLeft:    3.0,
 	}
 
@@ -42,7 +42,7 @@ func TestSplashDamageBasic(t *testing.T) {
 		R:               0,
 		Player:          2, // Enemy
 		UnitType:        1, // Soldier
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	// Position (2, -1) - adjacent to defender on top-right
@@ -51,7 +51,7 @@ func TestSplashDamageBasic(t *testing.T) {
 		R:               -1,
 		Player:          1, // Friendly fire!
 		UnitType:        1, // Soldier
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	adjacentUnits := []*v1.Unit{adjacentUnit1, adjacentUnit2}
@@ -111,7 +111,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 		R:               0,
 		Player:          1,
 		UnitType:        attackerType,
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	attackerTile := &v1.Tile{
@@ -128,7 +128,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 		R:               0,
 		Player:          2,
 		UnitType:        1, // Soldier (Land unit)
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	// Create air unit adjacent to defender
@@ -137,7 +137,7 @@ func TestSplashDamageAirImmunity(t *testing.T) {
 		R:               -1,
 		Player:          2,
 		UnitType:        17, // Helicopter (Air unit)
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	adjacentUnits := []*v1.Unit{groundUnit, airUnit}
@@ -190,7 +190,7 @@ func TestNoSplashDamageUnit(t *testing.T) {
 		R:               0,
 		Player:          1,
 		UnitType:        1, // Soldier
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	attackerTile := &v1.Tile{
@@ -207,7 +207,7 @@ func TestNoSplashDamageUnit(t *testing.T) {
 		R:               0,
 		Player:          2,
 		UnitType:        1,
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 	}
 
 	adjacentUnits := []*v1.Unit{adjacentUnit}

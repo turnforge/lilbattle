@@ -97,7 +97,7 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 			R:               2,
 			Player:          1,
 			UnitType:        1,
-			AvailableHealth: 100,
+			AvailableHealth: 10,
 			DistanceLeft:    3,
 			// TurnCounter removed: Units will be lazily topped-up when accessed
 		},
@@ -106,7 +106,7 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 			R:               4,
 			Player:          1,
 			UnitType:        1,
-			AvailableHealth: 100,
+			AvailableHealth: 10,
 			DistanceLeft:    3,
 			// TurnCounter removed: Units will be lazily topped-up when accessed
 		},
@@ -115,7 +115,7 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 			R:               0,
 			Player:          2,
 			UnitType:        1,
-			AvailableHealth: 100,
+			AvailableHealth: 10,
 			DistanceLeft:    3,
 			// TurnCounter removed: Units will be lazily topped-up when accessed
 		}}

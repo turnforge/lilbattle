@@ -29,8 +29,9 @@ func (m *WorldListingPage) Load(r *http.Request, w http.ResponseWriter, app *goa
 	// Build listing data for EntityListing template
 	m.ListingData = goal.NewEntityListingData[*protos.World]("My Worlds", "/worlds").
 		WithCreate("/worlds/new", "Create New World").
-		WithEdit("/worlds").
-		WithDelete("/worlds")
+		WithView("/worlds/%s/view").
+		WithEdit("/worlds/%s/edit").
+		WithDelete("/worlds/%s/delete")
 	m.ListingData.Items = m.WorldListView.Worlds
 	m.ListingData.ViewMode = m.WorldListView.ViewMode
 	m.ListingData.EnableViewToggle = true

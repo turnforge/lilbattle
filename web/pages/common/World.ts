@@ -927,7 +927,7 @@ export class World {
                 player,
                 shortcut: (unitData as any).shortcut || "",
                 // Include runtime state
-                availableHealth: (unitData as any).availableHealth || (unitData as any).available_health || 100,
+                availableHealth: (unitData as any).availableHealth || (unitData as any).available_health || 10,
                 distanceLeft: ((unitData as any).distanceLeft && (unitData as any).distanceLeft > 0) ? (unitData as any).distanceLeft :
                              ((unitData as any).distance_left && (unitData as any).distance_left > 0) ? (unitData as any).distance_left : 3,
                 turnCounter: (unitData as any).turnCounter || (unitData as any).turn_counter || 1

@@ -75,7 +75,7 @@ func CreateTestUnit(q, r int, player, unitType int) *v1.Unit {
 		R:               int32(r),
 		Player:          int32(player),
 		UnitType:        int32(unitType),
-		AvailableHealth: 100,
+		AvailableHealth: 10,
 		DistanceLeft:    3,
 	}
 }

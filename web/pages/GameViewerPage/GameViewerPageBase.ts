@@ -421,7 +421,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
                         this.gameScene.resize(width, height);
                         this.gameScene.centerCameraOnWorld();
                     }
-                }, 100);
+                }, 50);
             }
         }
     }

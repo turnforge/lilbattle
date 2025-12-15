@@ -128,7 +128,7 @@ func TestProgressionStepAdvancement(t *testing.T) {
 				R:                0,
 				Player:           1,
 				UnitType:         1, // Soldier
-				AvailableHealth:  100,
+				AvailableHealth:  10,
 				DistanceLeft:     1.0, // Only 1 movement point
 				ProgressionStep:  0,
 				LastToppedupTurn: 1, // Already topped up this turn
@@ -196,7 +196,7 @@ func TestTopUpResetsProgression(t *testing.T) {
 				R:                 0,
 				Player:            1,
 				UnitType:          1, // Soldier
-				AvailableHealth:   100,
+				AvailableHealth:   10,
 				DistanceLeft:      0,
 				LastToppedupTurn:  1,
 				ProgressionStep:   2,        // At completion
