@@ -38,7 +38,13 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     // Visual sprite maps (for rendering only, not game data)
     protected tileSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
     protected unitSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
-    protected unitLabels: Map<string, { healthText: Phaser.GameObjects.Text, distanceText?: Phaser.GameObjects.Text }> = new Map();
+    protected unitLabels: Map<string, {
+        shortcutText?: Phaser.GameObjects.Text,
+        shortcutBg?: Phaser.GameObjects.Graphics,
+        healthText: Phaser.GameObjects.Text,
+        healthBg?: Phaser.GameObjects.Graphics,
+        distanceText?: Phaser.GameObjects.Text
+    }> = new Map();
     protected gridGraphics: Phaser.GameObjects.Graphics | null = null;
     protected coordinateTexts: Map<string, Phaser.GameObjects.Text> = new Map();
     
@@ -1271,57 +1277,109 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
      */
     private createUnitLabels(unit: Unit, position: { x: number, y: number }): void {
         const key = `${unit.q},${unit.r}`;
-        const labels: { healthText: Phaser.GameObjects.Text, distanceText?: Phaser.GameObjects.Text } = {
+        const labels: {
+            shortcutText?: Phaser.GameObjects.Text,
+            shortcutBg?: Phaser.GameObjects.Graphics,
+            healthText: Phaser.GameObjects.Text,
+            healthBg?: Phaser.GameObjects.Graphics,
+            distanceText?: Phaser.GameObjects.Text
+        } = {
             healthText: null as any
         };
-        
+
+        const displaySize = this.assetProvider.getDisplaySize();
+        const bgColor = 0x3d2817; // Dark brown
+        const bgAlpha = 0.7;
+        const padding = 3;
+
+        // Create shortcut label above the unit (if unit has a shortcut)
+        if (unit.shortcut) {
+            const shortcutY = position.y - (displaySize.height / 2) + 8; // Just inside top edge of tile
+
+            const shortcutText = this.add.text(position.x, shortcutY, unit.shortcut, {
+                fontSize: '11px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            });
+            shortcutText.setOrigin(0.5, 0.5);
+            shortcutText.setDepth(16); // Above background
+
+            // Create background for shortcut label
+            const shortcutBg = this.add.graphics();
+            shortcutBg.fillStyle(bgColor, bgAlpha);
+            const shortcutBounds = shortcutText.getBounds();
+            shortcutBg.fillRoundedRect(
+                shortcutBounds.x - padding,
+                shortcutBounds.y - padding,
+                shortcutBounds.width + padding * 2,
+                shortcutBounds.height + padding * 2,
+                4
+            );
+            shortcutBg.setDepth(15); // Below text
+
+            labels.shortcutText = shortcutText;
+            labels.shortcutBg = shortcutBg;
+        }
+
         // Create combined label if enabled
         if (this.showUnitHealth) {
             const health = unit.availableHealth || 10;
             const movementPoints = unit.distanceLeft || 0;
-            
+
             // Format: "Movement/Health" (e.g., "3/85")
             const labelText = `${movementPoints}/${health}`;
-            
+
             // Position label below the unit, aligned with bottom of tile
-            const displaySize = this.assetProvider.getDisplaySize();
-            const labelY = position.y + (displaySize.height / 2) - 5; // Just inside bottom edge of tile
-            
+            const labelY = position.y + (displaySize.height / 2) - 8; // Just inside bottom edge of tile
+
             const healthText = this.add.text(position.x, labelY, labelText, {
                 fontSize: '10px',
                 color: '#ffffff',
-                stroke: '#000000',
-                strokeThickness: 2,
-                fontFamily: 'Arial'
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
             });
             healthText.setOrigin(0.5, 0.5);
-            healthText.setDepth(15); // Above units
+            healthText.setDepth(16); // Above background
+
+            // Create background for health label
+            const healthBg = this.add.graphics();
+            healthBg.fillStyle(bgColor, bgAlpha);
+            const healthBounds = healthText.getBounds();
+            healthBg.fillRoundedRect(
+                healthBounds.x - padding,
+                healthBounds.y - padding,
+                healthBounds.width + padding * 2,
+                healthBounds.height + padding * 2,
+                4
+            );
+            healthBg.setDepth(15); // Below text
+
             labels.healthText = healthText;
+            labels.healthBg = healthBg;
         }
-        
+
         // Create distance label if enabled and there's a selected unit
         if (this.showUnitDistance && this.selectedUnitCoord) {
             const distance = this.calculateHexDistance(
                 unit.q, unit.r,
                 this.selectedUnitCoord.q, this.selectedUnitCoord.r
             );
-            
+
             // Position distance label below the unit, above the health label
-            const displaySize = this.assetProvider.getDisplaySize();
-            const labelY = position.y + (displaySize.height / 2) - 15; // Above health label
-            
+            const labelY = position.y + (displaySize.height / 2) - 20; // Above health label
+
             const distanceText = this.add.text(position.x, labelY, distance.toString(), {
                 fontSize: '9px',
                 color: '#00aaff',
-                stroke: '#000000',
-                strokeThickness: 2,
-                fontFamily: 'Arial'
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
             });
             distanceText.setOrigin(0.5, 0.5);
-            distanceText.setDepth(15); // Above units
+            distanceText.setDepth(16); // Above units
             labels.distanceText = distanceText;
         }
-        
+
         this.unitLabels.set(key, labels);
     }
     
@@ -1331,8 +1389,17 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     private removeUnitLabels(key: string): void {
         const labels = this.unitLabels.get(key);
         if (labels) {
+            if (labels.shortcutText) {
+                labels.shortcutText.destroy();
+            }
+            if (labels.shortcutBg) {
+                labels.shortcutBg.destroy();
+            }
             if (labels.healthText) {
                 labels.healthText.destroy();
+            }
+            if (labels.healthBg) {
+                labels.healthBg.destroy();
             }
             if (labels.distanceText) {
                 labels.distanceText.destroy();
@@ -1382,10 +1449,13 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     public clearAllUnits() {
         this.unitSprites.forEach(unit => unit.destroy());
         this.unitSprites.clear();
-        
+
         // Clear all unit labels
         this.unitLabels.forEach(labels => {
+            if (labels.shortcutText) labels.shortcutText.destroy();
+            if (labels.shortcutBg) labels.shortcutBg.destroy();
             if (labels.healthText) labels.healthText.destroy();
+            if (labels.healthBg) labels.healthBg.destroy();
             if (labels.distanceText) labels.distanceText.destroy();
         });
         this.unitLabels.clear();
