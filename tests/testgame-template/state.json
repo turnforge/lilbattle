@@ -1,0 +1,995 @@
+{
+  "game_id": "testgame",
+  "turn_counter": 1,
+  "current_player": 1,
+  "world_data": {
+    "tiles_map": {
+      "-1,10": {
+        "q": -1,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,11": {
+        "q": -1,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,12": {
+        "q": -1,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,13": {
+        "q": -1,
+        "r": 13,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,14": {
+        "q": -1,
+        "r": 14,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,15": {
+        "q": -1,
+        "r": 15,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,8": {
+        "q": -1,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-1,9": {
+        "q": -1,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,10": {
+        "q": -2,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,11": {
+        "q": -2,
+        "r": 11,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,12": {
+        "q": -2,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,13": {
+        "q": -2,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,14": {
+        "q": -2,
+        "r": 14,
+        "tile_type": 3,
+        "player": 1,
+        "shortcut": "A2",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,15": {
+        "q": -2,
+        "r": 15,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-2,16": {
+        "q": -2,
+        "r": 16,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,11": {
+        "q": -3,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,12": {
+        "q": -3,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,13": {
+        "q": -3,
+        "r": 13,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,14": {
+        "q": -3,
+        "r": 14,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,15": {
+        "q": -3,
+        "r": 15,
+        "tile_type": 1,
+        "player": 1,
+        "shortcut": "A1",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "-3,16": {
+        "q": -3,
+        "r": 16,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,10": {
+        "q": 0,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,11": {
+        "q": 0,
+        "r": 11,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,12": {
+        "q": 0,
+        "r": 12,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,13": {
+        "q": 0,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,14": {
+        "q": 0,
+        "r": 14,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,15": {
+        "q": 0,
+        "r": 15,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,16": {
+        "q": 0,
+        "r": 16,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,7": {
+        "q": 0,
+        "r": 7,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,8": {
+        "q": 0,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "0,9": {
+        "q": 0,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,10": {
+        "q": 1,
+        "r": 10,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,11": {
+        "q": 1,
+        "r": 11,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,12": {
+        "q": 1,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,13": {
+        "q": 1,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,14": {
+        "q": 1,
+        "r": 14,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,15": {
+        "q": 1,
+        "r": 15,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,16": {
+        "q": 1,
+        "r": 16,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,6": {
+        "q": 1,
+        "r": 6,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,7": {
+        "q": 1,
+        "r": 7,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,8": {
+        "q": 1,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "1,9": {
+        "q": 1,
+        "r": 9,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,10": {
+        "q": 2,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,11": {
+        "q": 2,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,12": {
+        "q": 2,
+        "r": 12,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,13": {
+        "q": 2,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,14": {
+        "q": 2,
+        "r": 14,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,15": {
+        "q": 2,
+        "r": 15,
+        "tile_type": 1,
+        "player": 1,
+        "shortcut": "A3",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,16": {
+        "q": 2,
+        "r": 16,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,5": {
+        "q": 2,
+        "r": 5,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,6": {
+        "q": 2,
+        "r": 6,
+        "tile_type": 1,
+        "player": 2,
+        "shortcut": "B2",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,7": {
+        "q": 2,
+        "r": 7,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,8": {
+        "q": 2,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "2,9": {
+        "q": 2,
+        "r": 9,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,10": {
+        "q": 3,
+        "r": 10,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,11": {
+        "q": 3,
+        "r": 11,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,12": {
+        "q": 3,
+        "r": 12,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,13": {
+        "q": 3,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,14": {
+        "q": 3,
+        "r": 14,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,15": {
+        "q": 3,
+        "r": 15,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,5": {
+        "q": 3,
+        "r": 5,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,6": {
+        "q": 3,
+        "r": 6,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,7": {
+        "q": 3,
+        "r": 7,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,8": {
+        "q": 3,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "3,9": {
+        "q": 3,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,10": {
+        "q": 4,
+        "r": 10,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,11": {
+        "q": 4,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,12": {
+        "q": 4,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,13": {
+        "q": 4,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,14": {
+        "q": 4,
+        "r": 14,
+        "tile_type": 7,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,5": {
+        "q": 4,
+        "r": 5,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,6": {
+        "q": 4,
+        "r": 6,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,7": {
+        "q": 4,
+        "r": 7,
+        "tile_type": 8,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,8": {
+        "q": 4,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "4,9": {
+        "q": 4,
+        "r": 9,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,10": {
+        "q": 5,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,11": {
+        "q": 5,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,12": {
+        "q": 5,
+        "r": 12,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,13": {
+        "q": 5,
+        "r": 13,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,6": {
+        "q": 5,
+        "r": 6,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,7": {
+        "q": 5,
+        "r": 7,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,8": {
+        "q": 5,
+        "r": 8,
+        "tile_type": 4,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "5,9": {
+        "q": 5,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,10": {
+        "q": 6,
+        "r": 10,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,11": {
+        "q": 6,
+        "r": 11,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,5": {
+        "q": 6,
+        "r": 5,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,6": {
+        "q": 6,
+        "r": 6,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,7": {
+        "q": 6,
+        "r": 7,
+        "tile_type": 3,
+        "player": 2,
+        "shortcut": "B3",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,8": {
+        "q": 6,
+        "r": 8,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "6,9": {
+        "q": 6,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,10": {
+        "q": 7,
+        "r": 10,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,5": {
+        "q": 7,
+        "r": 5,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,6": {
+        "q": 7,
+        "r": 6,
+        "tile_type": 1,
+        "player": 2,
+        "shortcut": "B1",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,7": {
+        "q": 7,
+        "r": 7,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,8": {
+        "q": 7,
+        "r": 8,
+        "tile_type": 9,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      },
+      "7,9": {
+        "q": 7,
+        "r": 9,
+        "tile_type": 5,
+        "player": 0,
+        "shortcut": "",
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0
+      }
+    },
+    "units_map": {
+      "-2,14": {
+        "q": -2,
+        "r": 14,
+        "player": 1,
+        "unit_type": 17,
+        "shortcut": "A1",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "-3,14": {
+        "q": -3,
+        "r": 14,
+        "player": 1,
+        "unit_type": 6,
+        "shortcut": "A2",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "-3,15": {
+        "q": -3,
+        "r": 15,
+        "player": 1,
+        "unit_type": 1,
+        "shortcut": "A3",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "2,6": {
+        "q": 2,
+        "r": 6,
+        "player": 2,
+        "unit_type": 2,
+        "shortcut": "B1",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "5,9": {
+        "q": 5,
+        "r": 9,
+        "player": 2,
+        "unit_type": 6,
+        "shortcut": "B2",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "6,7": {
+        "q": 6,
+        "r": 7,
+        "player": 2,
+        "unit_type": 17,
+        "shortcut": "B3",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      },
+      "6,9": {
+        "q": 6,
+        "r": 9,
+        "player": 2,
+        "unit_type": 1,
+        "shortcut": "B4",
+        "available_health": 10,
+        "distance_left": 3,
+        "last_acted_turn": 0,
+        "last_toppedup_turn": 0,
+        "attacks_received_this_turn": 0,
+        "attack_history": [],
+        "progression_step": 0,
+        "chosen_alternative": ""
+      }
+    },
+    "screenshot_index_info": {
+      "last_updated_at": "2025-12-03T00:24:51.920477Z",
+      "last_indexed_at": "2025-12-03T00:24:54.005644Z",
+      "needs_indexing": false
+    },
+    "content_hash": "",
+    "version": "7",
+    "crossings": {}
+  },
+  "state_hash": "",
+  "version": "0",
+  "status": "GAME_STATUS_UNSPECIFIED",
+  "finished": false,
+  "winning_player": 0,
+  "winning_team": 0,
+  "current_group_number": "0"
+}
