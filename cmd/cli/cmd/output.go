@@ -264,6 +264,9 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 		panic(err)
 	}
 
+	// Get rules engine for unit names
+	rulesEngine := &lib.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
+
 	// Group units by player
 	unitsByPlayer := make(map[int32][]*v1.Unit)
 	numPlayers := int32(0)
@@ -305,8 +308,15 @@ func FormatUnits(pc *PresenterContext, state *v1.GameState) string {
 				playerLetter := string(rune('A' + playerID - 1))
 				unitID = fmt.Sprintf("%s?", playerLetter)
 			}
-			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s (HP: %d, Moves: %f)\n",
-				unitID, unit.UnitType, coord.String(),
+
+			// Get unit name from rules engine
+			unitName := fmt.Sprintf("Type %d", unit.UnitType)
+			if unitDef, err := rulesEngine.GetUnitData(unit.UnitType); err == nil {
+				unitName = fmt.Sprintf("%3d: %s", unit.UnitType, unitDef.Name)
+			}
+
+			sb.WriteString(fmt.Sprintf("  %s: %s at %s (HP: %d, Moves: %.1f)\n",
+				unitID, unitName, coord.String(),
 				unit.AvailableHealth, unit.DistanceLeft))
 		}
 		sb.WriteString("\n")
@@ -325,6 +335,9 @@ func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
 	if err != nil {
 		panic(err)
 	}
+
+	// Get rules engine for terrain names
+	rulesEngine := &lib.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
 
 	// Group tiles by player
 	tilesByPlayer := make(map[int32][]*v1.Tile)
@@ -367,8 +380,15 @@ func FormatTiles(pc *PresenterContext, state *v1.GameState) string {
 				playerLetter := string(rune('A' + playerID - 1))
 				tileID = fmt.Sprintf("%s?", playerLetter)
 			}
-			sb.WriteString(fmt.Sprintf("  %s: Type %d at %s\n",
-				tileID, tile.TileType, coord.String()))
+
+			// Get terrain name from rules engine
+			terrainName := fmt.Sprintf("Type %d", tile.TileType)
+			if terrainDef, err := rulesEngine.GetTerrainData(tile.TileType); err == nil {
+				terrainName = fmt.Sprintf("%3d: %s", tile.TileType, terrainDef.Name)
+			}
+
+			sb.WriteString(fmt.Sprintf("  %s: %s at %s\n",
+				tileID, terrainName, coord.String()))
 		}
 		sb.WriteString("\n")
 	}

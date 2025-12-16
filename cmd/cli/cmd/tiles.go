@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/turnforge/weewar/lib"
 )
 
 // tilesCmd represents the tiles command
@@ -46,16 +47,22 @@ func runTiles(cmd *cobra.Command, args []string) error {
 
 	if formatter.JSON {
 		// JSON output
+		rulesEngine := &lib.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
 		tiles := []map[string]any{}
 		if pc.GameState.State.WorldData != nil {
 			for _, tile := range pc.GameState.State.WorldData.TilesMap {
 				if tile != nil {
+					tileName := ""
+					if terrainDef, err := rulesEngine.GetTerrainData(tile.TileType); err == nil {
+						tileName = terrainDef.Name
+					}
 					tiles = append(tiles, map[string]any{
 						"player":    tile.Player,
 						"shortcut":  tile.Shortcut,
 						"q":         tile.Q,
 						"r":         tile.R,
 						"tile_type": tile.TileType,
+						"tile_name": tileName,
 					})
 				}
 			}

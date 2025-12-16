@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/turnforge/weewar/lib"
 )
 
 // unitsCmd represents the units command
@@ -46,16 +47,22 @@ func runUnits(cmd *cobra.Command, args []string) error {
 
 	if formatter.JSON {
 		// JSON output
+		rulesEngine := &lib.RulesEngine{RulesEngine: pc.Presenter.RulesEngine}
 		units := []map[string]any{}
 		if pc.GameState.State.WorldData != nil {
 			for _, unit := range pc.GameState.State.WorldData.UnitsMap {
 				if unit != nil {
+					unitName := ""
+					if unitDef, err := rulesEngine.GetUnitData(unit.UnitType); err == nil {
+						unitName = unitDef.Name
+					}
 					units = append(units, map[string]any{
 						"player":           unit.Player,
 						"shortcut":         unit.Shortcut,
 						"q":                unit.Q,
 						"r":                unit.R,
 						"unit_type":        unit.UnitType,
+						"unit_name":        unitName,
 						"available_health": unit.AvailableHealth,
 						"distance_left":    unit.DistanceLeft,
 					})
