@@ -522,7 +522,7 @@ func WorldDataToWorldDataGORM(
 			var converted TileGORM
 			_, err = TileToTileGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting TilesMap[%v]: %w", key, err)
 			}
 			out.TilesMap[key] = converted
 		}
@@ -533,7 +533,7 @@ func WorldDataToWorldDataGORM(
 			var converted UnitGORM
 			_, err = UnitToUnitGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting UnitsMap[%v]: %w", key, err)
 			}
 			out.UnitsMap[key] = converted
 		}
@@ -544,7 +544,7 @@ func WorldDataToWorldDataGORM(
 			var converted CrossingGORM
 			_, err = CrossingToCrossingGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting Crossings[%v]: %w", key, err)
 			}
 			out.Crossings[key] = converted
 		}
@@ -591,7 +591,7 @@ func WorldDataFromWorldDataGORM(
 		for key, value := range src.TilesMap {
 			out.TilesMap[key], err = TileFromTileGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting TilesMap[%v]: %w", key, err)
 			}
 		}
 	}
@@ -600,7 +600,7 @@ func WorldDataFromWorldDataGORM(
 		for key, value := range src.UnitsMap {
 			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting UnitsMap[%v]: %w", key, err)
 			}
 		}
 	}
@@ -609,7 +609,7 @@ func WorldDataFromWorldDataGORM(
 		for key, value := range src.Crossings {
 			out.Crossings[key], err = CrossingFromCrossingGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting Crossings[%v]: %w", key, err)
 			}
 		}
 	}
@@ -1222,7 +1222,7 @@ func WorldDataToGameWorldDataGORM(
 			var converted TileGORM
 			_, err = TileToTileGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting TilesMap[%v]: %w", key, err)
 			}
 			out.TilesMap[key] = converted
 		}
@@ -1233,7 +1233,7 @@ func WorldDataToGameWorldDataGORM(
 			var converted UnitGORM
 			_, err = UnitToUnitGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting UnitsMap[%v]: %w", key, err)
 			}
 			out.UnitsMap[key] = converted
 		}
@@ -1244,7 +1244,7 @@ func WorldDataToGameWorldDataGORM(
 			var converted CrossingGORM
 			_, err = CrossingToCrossingGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting Crossings[%v]: %w", key, err)
 			}
 			out.Crossings[key] = converted
 		}
@@ -1291,7 +1291,7 @@ func WorldDataFromGameWorldDataGORM(
 		for key, value := range src.TilesMap {
 			out.TilesMap[key], err = TileFromTileGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting TilesMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting TilesMap[%v]: %w", key, err)
 			}
 		}
 	}
@@ -1300,7 +1300,7 @@ func WorldDataFromGameWorldDataGORM(
 		for key, value := range src.UnitsMap {
 			out.UnitsMap[key], err = UnitFromUnitGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting UnitsMap[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting UnitsMap[%v]: %w", key, err)
 			}
 		}
 	}
@@ -1309,7 +1309,7 @@ func WorldDataFromGameWorldDataGORM(
 		for key, value := range src.Crossings {
 			out.Crossings[key], err = CrossingFromCrossingGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting Crossings[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting Crossings[%v]: %w", key, err)
 			}
 		}
 	}
@@ -1370,7 +1370,7 @@ func GameStateToGameStateGORM(
 			var converted PlayerStateGORM
 			_, err = PlayerStateToPlayerStateGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%d]: %w", key, err)
+				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
 			}
 			out.PlayerStates[key] = converted
 		}
@@ -1426,7 +1426,7 @@ func GameStateFromGameStateGORM(
 		for key, value := range src.PlayerStates {
 			out.PlayerStates[key], err = PlayerStateFromPlayerStateGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%d]: %w", key, err)
+				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
 			}
 		}
 	}

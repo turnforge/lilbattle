@@ -1,6 +1,4 @@
 version: v2
-modules:
-  - path: protos
 deps:
   - buf.build/protocolbuffers/wellknowntypes
   - buf.build/googleapis/googleapis
