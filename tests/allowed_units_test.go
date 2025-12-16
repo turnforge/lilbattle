@@ -22,7 +22,7 @@ func createTestGameWithAllowedUnits(allowedUnits []int32) *lib.Game {
 		WorldId: "test-world",
 		Config: &v1.GameConfiguration{
 			Players: []*v1.GamePlayer{
-				{PlayerId: 1, Coins: 1000}, // Enough coins to build anything
+				{PlayerId: 1, StartingCoins: 1000}, // Enough coins to build anything
 			},
 			Settings: &v1.GameSettings{
 				AllowedUnits: allowedUnits,
@@ -35,6 +35,9 @@ func createTestGameWithAllowedUnits(allowedUnits []int32) *lib.Game {
 		CurrentPlayer: 1,
 		TurnCounter:   1,
 		WorldData:     worldData,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 1000, IsActive: true},
+		},
 	}
 
 	// Use default rules engine

@@ -234,7 +234,12 @@ func FormatGameStatus(game *v1.Game, state *v1.GameState) string {
 			if player.Name != "" {
 				sb.WriteString(fmt.Sprintf("    Name: %s\n", player.Name))
 			}
-			sb.WriteString(fmt.Sprintf("    Coins: %d\n", player.Coins))
+			// Get coins from GameState.PlayerStates
+			coins := int32(0)
+			if playerState := state.PlayerStates[player.PlayerId]; playerState != nil {
+				coins = playerState.Coins
+			}
+			sb.WriteString(fmt.Sprintf("    Coins: %d\n", coins))
 			sb.WriteString(fmt.Sprintf("    Units: %d\n", unitCounts[player.PlayerId]))
 			if tileCounts[player.PlayerId] > 0 {
 				sb.WriteString(fmt.Sprintf("    Tiles: %d\n", tileCounts[player.PlayerId]))

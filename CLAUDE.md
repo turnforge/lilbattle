@@ -21,6 +21,13 @@
 
 * Use `gh` tools to create tickets and prs before starting a feature or new bit of work.
 
+
+When asked to fix a big or create a new features I want you to:
+  * First diagnose and plan it out
+  * Create a ticket with the plan and/or debugging diagnosis
+  * Write failing tests
+  * Implement the fix and then create a PR with the fix.
+
 ## Continuous Builds
 
 Builds for frontend, wasm, backend are all running continuously and can be queried using the `devloop` cli tool.   devloop is a command for watching and live reloading your projects.  It is like Air + Make on steroids.   You have the following devloop commands:

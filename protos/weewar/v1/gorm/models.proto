@@ -135,6 +135,10 @@ message GameSettingsGORM {
   }];
 }
 
+message PlayerStateGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.PlayerState", implement_scanner: true };
+}
+
 // GameWorldDataGORM is same as WorldDataGORM but without the
 // primary key so it can be embedded
 message GameWorldDataGORM {
@@ -166,6 +170,11 @@ message GameStateGORM {
   // ScreenshotIndexInfo embedded
   GameWorldDataGORM world_data = 4 [(dal.v1.column) = {
     gorm_tags: ["embedded", "embeddedPrefix:world_data_"]
+  }];
+
+  // Per-player runtime state as JSON for cross-DB compatibility
+  map<int32, PlayerStateGORM> player_states = 5 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
   }];
 }
 

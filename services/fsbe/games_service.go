@@ -224,18 +224,8 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 	// Generate shortcuts for tiles and units
 	lib.EnsureShortcuts(gs.WorldData)
 
-	// Add initial base income to each player's starting coins
-	// This ensures players start with their configured coins PLUS income from their starting bases
-	if req.Game.Config != nil {
-		var incomeConfig *v1.IncomeConfig
-		if req.Game.Config.IncomeConfigs != nil {
-			incomeConfig = req.Game.Config.IncomeConfigs
-		}
-		for i, player := range req.Game.Config.Players {
-			baseIncome := lib.CalculatePlayerBaseIncome(player.PlayerId, gs.WorldData, incomeConfig)
-			req.Game.Config.Players[i].Coins += baseIncome
-		}
-	}
+	// Initialize player runtime state with starting coins + base income
+	s.InitializePlayerStates(gs, req.Game.Config)
 
 	// Save game metadata (after adding base income to player coins)
 	if err := s.storage.SaveArtifact(req.Game.Id, "metadata", req.Game); err != nil {

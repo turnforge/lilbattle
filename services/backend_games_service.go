@@ -10,6 +10,7 @@ import (
 	"time"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 )
 
 // GameStateUpdater is an interface for updating GameState with optimistic locking
@@ -85,6 +86,33 @@ func (s *BackendGamesService) ValidateCreateGameRequest(game *v1.Game, worldData
 	}
 
 	return nil
+}
+
+// InitializePlayerStates initializes the PlayerStates map in GameState from game config.
+// This sets up initial coins (starting_coins + base income) for each player.
+// Called during game creation by both fsbe and gormbe.
+func (s *BackendGamesService) InitializePlayerStates(gameState *v1.GameState, config *v1.GameConfiguration) {
+	if config == nil {
+		return
+	}
+
+	if gameState.PlayerStates == nil {
+		gameState.PlayerStates = make(map[int32]*v1.PlayerState)
+	}
+
+	var incomeConfig *v1.IncomeConfig
+	if config.IncomeConfigs != nil {
+		incomeConfig = config.IncomeConfigs
+	}
+
+	for _, player := range config.Players {
+		baseIncome := lib.CalculatePlayerBaseIncome(player.PlayerId, gameState.WorldData, incomeConfig)
+		initialCoins := player.StartingCoins + baseIncome
+		gameState.PlayerStates[player.PlayerId] = &v1.PlayerState{
+			Coins:    initialCoins,
+			IsActive: true,
+		}
+	}
 }
 
 // handleScreenshotCompletion updates IndexInfo after screenshots are generated

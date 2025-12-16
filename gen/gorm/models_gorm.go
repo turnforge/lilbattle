@@ -292,7 +292,6 @@ type GamePlayerGORM struct {
 	Name          string
 	IsActive      bool
 	StartingCoins int32
-	Coins         int32
 }
 
 // Value implements driver.Valuer for GamePlayerGORM
@@ -359,6 +358,36 @@ type GameSettingsGORM struct {
 	MaxTurns      int32
 }
 
+// PlayerStateGORM is the GORM model for weewar.v1.PlayerState
+type PlayerStateGORM struct {
+	Coins    int32
+	IsActive bool
+}
+
+// Value implements driver.Valuer for PlayerStateGORM
+func (m PlayerStateGORM) Value() (driver.Value, error) {
+	return json.Marshal(m)
+}
+
+// Scan implements sql.Scanner for PlayerStateGORM
+func (m *PlayerStateGORM) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to scan PlayerStateGORM: unsupported type %T", value)
+	}
+
+	return json.Unmarshal(bytes, m)
+}
+
 // GameWorldDataGORM is the GORM model for weewar.v1.WorldData
 type GameWorldDataGORM struct {
 	TilesMap            map[string]TileGORM `gorm:"serializer:json"`
@@ -383,6 +412,7 @@ type GameStateGORM struct {
 	WinningPlayer      int32
 	WinningTeam        int32
 	CurrentGroupNumber int64
+	PlayerStates       map[int32]PlayerStateGORM `gorm:"serializer:json"`
 }
 
 // TableName returns the table name for GameStateGORM
@@ -406,12 +436,12 @@ type GameMoveGroupGORM struct {
 
 // GameMoveGORM is the GORM model for weewar.v1.GameMove
 type GameMoveGORM struct {
-	GameId      string `gorm:"primaryKey"`
 	Player      int32
-	GroupNumber int64 `gorm:"primaryKey"`
-	MoveNumber  int64 `gorm:"primaryKey"`
-	Version     int64
+	GameId      string `gorm:"primaryKey"`
+	GroupNumber int64  `gorm:"primaryKey"`
+	MoveNumber  int64  `gorm:"primaryKey"`
 	Timestamp   time.Time
+	Version     int64
 	MoveType    []byte `gorm:"serializer:json"`
 	SequenceNum int64
 	IsPermanent bool

@@ -945,7 +945,6 @@ func GamePlayerToGamePlayerGORM(
 		Name:          src.Name,
 		IsActive:      src.IsActive,
 		StartingCoins: src.StartingCoins,
-		Coins:         src.Coins,
 	}
 	out = dest
 
@@ -982,7 +981,6 @@ func GamePlayerFromGamePlayerGORM(
 		Name:          src.Name,
 		IsActive:      src.IsActive,
 		StartingCoins: src.StartingCoins,
-		Coins:         src.Coins,
 	}
 	out = dest
 
@@ -1115,6 +1113,68 @@ func GameSettingsFromGameSettingsGORM(
 		TurnTimeLimit: src.TurnTimeLimit,
 		TeamMode:      src.TeamMode,
 		MaxTurns:      src.MaxTurns,
+	}
+	out = dest
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(dest, src); err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
+// PlayerStateToPlayerStateGORM converts a models.PlayerState to PlayerStateGORM.
+// The optional decorator function allows custom field transformations.
+func PlayerStateToPlayerStateGORM(
+	src *models.PlayerState,
+	dest *PlayerStateGORM,
+	decorator func(*models.PlayerState, *PlayerStateGORM) error,
+) (out *PlayerStateGORM, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &PlayerStateGORM{}
+	}
+
+	// Initialize struct with inline values
+	*dest = PlayerStateGORM{
+		Coins:    src.Coins,
+		IsActive: src.IsActive,
+	}
+	out = dest
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(src, dest); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
+// PlayerStateFromPlayerStateGORM converts a PlayerStateGORM back to models.PlayerState.
+// The optional decorator function allows custom field transformations.
+func PlayerStateFromPlayerStateGORM(
+	dest *models.PlayerState,
+	src *PlayerStateGORM,
+	decorator func(dest *models.PlayerState, src *PlayerStateGORM) error,
+) (out *models.PlayerState, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &models.PlayerState{}
+	}
+
+	// Initialize struct with inline values
+	*dest = models.PlayerState{
+		Coins:    src.Coins,
+		IsActive: src.IsActive,
 	}
 	out = dest
 
@@ -1304,6 +1364,18 @@ func GameStateToGameStateGORM(
 		}
 	}
 
+	if src.PlayerStates != nil {
+		out.PlayerStates = make(map[string]PlayerStateGORM, len(src.PlayerStates))
+		for key, value := range src.PlayerStates {
+			var converted PlayerStateGORM
+			_, err = PlayerStateToPlayerStateGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting PlayerStates[%s]: %w", key, err)
+			}
+			out.PlayerStates[key] = converted
+		}
+	}
+
 	// Apply decorator if provided
 	if decorator != nil {
 		if err := decorator(src, dest); err != nil {
@@ -1347,6 +1419,16 @@ func GameStateFromGameStateGORM(
 	out.WorldData, err = WorldDataFromGameWorldDataGORM(nil, &src.WorldData, nil)
 	if err != nil {
 		return nil, fmt.Errorf("converting WorldData: %w", err)
+	}
+
+	if src.PlayerStates != nil {
+		out.PlayerStates = make(map[string]*models.PlayerState, len(src.PlayerStates))
+		for key, value := range src.PlayerStates {
+			out.PlayerStates[key], err = PlayerStateFromPlayerStateGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting PlayerStates[%s]: %w", key, err)
+			}
+		}
 	}
 
 	// Apply decorator if provided

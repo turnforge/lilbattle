@@ -458,7 +458,7 @@ message GamePlayer {
   int32 starting_coins = 7;
 
   // Player's current money/coins balance for building units
-  int32 coins = 8;
+  // int32 coins = 8;
 }
 
 message GameTeam {
@@ -487,6 +487,17 @@ message GameSettings {
 
   // Maximum number of turns (0 = unlimited)
   int32 max_turns = 4;
+}
+
+// Runtime state for a player during the game
+// This is separate from GamePlayer (which is player configuration)
+// PlayerState is indexed by player_id in the player_states map
+message PlayerState {
+  // Current coin balance (changes during gameplay via building, income, etc.)
+  int32 coins = 1;
+
+  // Whether player is still active in the game (not eliminated)
+  bool is_active = 2;
 }
 
 // Holds the game's Active/Current state (eg world state)
@@ -520,6 +531,10 @@ message GameState {
   int32 winning_team = 13;
 
   int64 current_group_number = 14;
+
+  // Per-player runtime state, keyed by player_id (1-based)
+  // This holds mutable player state like coins that changes during gameplay
+  map<int32, PlayerState> player_states = 15;
 }
 
 // Holds the game's move history (can be used as a replay log)

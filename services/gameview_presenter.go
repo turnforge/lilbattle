@@ -280,7 +280,7 @@ func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClick
 
 			if hasOnlyBuildOptions {
 				// Show build modal for web UI
-				playerCoins := getPlayerCoins(game, gameState.CurrentPlayer)
+				playerCoins := getPlayerCoins(gameState, gameState.CurrentPlayer)
 				fmt.Printf("[SceneClicked] Showing build modal with %d options, playerCoins=%d\n",
 					len(buildOptions), playerCoins)
 				s.BuildOptionsModal.Show(ctx, tile, buildOptions, playerCoins)
@@ -343,15 +343,13 @@ func extractBuildOptions(optionsResp *v1.GetOptionsAtResponse) []*v1.BuildUnitAc
 	return buildOptions
 }
 
-// getPlayerCoins returns the current player's coin count from game configuration
-func getPlayerCoins(game *v1.Game, playerID int32) int32 {
-	if game == nil || game.Config == nil || game.Config.Players == nil {
+// getPlayerCoins returns the current player's coin count from game state
+func getPlayerCoins(state *v1.GameState, playerID int32) int32 {
+	if state == nil || state.PlayerStates == nil {
 		return 0
 	}
-	for _, player := range game.Config.Players {
-		if player.PlayerId == playerID {
-			return player.Coins
-		}
+	if playerState := state.PlayerStates[playerID]; playerState != nil {
+		return playerState.Coins
 	}
 	return 0
 }

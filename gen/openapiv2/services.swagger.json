@@ -2435,11 +2435,6 @@
           "type": "integer",
           "format": "int32",
           "title": "How many coins the player started off with"
-        },
-        "coins": {
-          "type": "integer",
-          "format": "int32",
-          "title": "Player's current money/coins balance for building units"
         }
       }
     },
@@ -2521,6 +2516,13 @@
         "currentGroupNumber": {
           "type": "string",
           "format": "int64"
+        },
+        "playerStates": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1PlayerState"
+          },
+          "title": "Per-player runtime state, keyed by player_id (1-based)\nThis holds mutable player state like coins that changes during gameplay"
         }
       },
       "title": "Holds the game's Active/Current state (eg world state)"
@@ -3165,6 +3167,21 @@
         }
       },
       "title": "*\nActive player changed"
+    },
+    "v1PlayerState": {
+      "type": "object",
+      "properties": {
+        "coins": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Current coin balance (changes during gameplay via building, income, etc.)"
+        },
+        "isActive": {
+          "type": "boolean",
+          "title": "Whether player is still active in the game (not eliminated)"
+        }
+      },
+      "title": "Runtime state for a player during the game\nThis is separate from GamePlayer (which is player configuration)\nPlayerState is indexed by player_id in the player_states map"
     },
     "v1ProcessMovesResponse": {
       "type": "object",

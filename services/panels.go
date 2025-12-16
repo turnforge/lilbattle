@@ -268,12 +268,9 @@ func (b *BaseGameStatePanel) ComputeCurrentPlayerIncome() {
 
 	currentPlayer := b.State.CurrentPlayer
 
-	// Get current player's coins
-	for _, player := range b.Game.Config.Players {
-		if player.PlayerId == currentPlayer {
-			b.CurrentPlayerCoins = player.Coins
-			break
-		}
+	// Get current player's coins (from GameState.PlayerStates)
+	if playerState := b.State.PlayerStates[currentPlayer]; playerState != nil {
+		b.CurrentPlayerCoins = playerState.Coins
 	}
 
 	// Calculate income from owned tiles
