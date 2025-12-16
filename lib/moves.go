@@ -164,26 +164,19 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 		return fmt.Errorf("unit data not found for unit type %d", action.UnitType)
 	}
 
-	// Check if player has enough coins
-	playerCoins := int32(0)
-	for _, player := range g.Config.Players {
-		if player.PlayerId == g.CurrentPlayer {
-			playerCoins = player.Coins
-			break
-		}
+	// Check if player has enough coins (from GameState.PlayerStates)
+	playerState := g.GameState.PlayerStates[g.CurrentPlayer]
+	if playerState == nil {
+		return fmt.Errorf("player state not found for player %d", g.CurrentPlayer)
 	}
+	playerCoins := playerState.Coins
 
 	if playerCoins < unitData.Coins {
 		return fmt.Errorf("insufficient coins: need %d, have %d", unitData.Coins, playerCoins)
 	}
 
-	// Deduct coins from player
-	for i, player := range g.Config.Players {
-		if player.PlayerId == g.CurrentPlayer {
-			g.Config.Players[i].Coins -= unitData.Coins
-			break
-		}
-	}
+	// Deduct coins from player (in GameState.PlayerStates)
+	playerState.Coins -= unitData.Coins
 
 	// Generate a shortcut for the new unit
 	newShortcut := g.World.GenerateUnitShortcut(g.CurrentPlayer)
@@ -271,26 +264,19 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 		totalIncome += incomeConfig.GameIncome
 	}
 
-	// Get player's current coins
-	var playerCoins int32
-	for _, player := range g.Config.Players {
-		if player.PlayerId == previousPlayer {
-			playerCoins = player.Coins
-			break
-		}
+	// Get player's current coins (from GameState.PlayerStates)
+	playerState := g.GameState.PlayerStates[previousPlayer]
+	if playerState == nil {
+		return fmt.Errorf("player state not found for player %d", previousPlayer)
 	}
+	playerCoins := playerState.Coins
 
 	// Calculate and add income
 	income := totalIncome
 	newCoins := playerCoins + income
 
-	// Update player's coins
-	for i, player := range g.Config.Players {
-		if player.PlayerId == previousPlayer {
-			g.Config.Players[i].Coins = newCoins
-			break
-		}
-	}
+	// Update player's coins (in GameState.PlayerStates)
+	playerState.Coins = newCoins
 
 	// Record the income change
 	if income > 0 {

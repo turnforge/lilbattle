@@ -181,13 +181,10 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 			// Get terrain definition for tile-specific actions
 			terrainDef, err := rtGame.RulesEngine.GetTerrainData(tile.TileType)
 			if err == nil {
-				// Get current player's coins
+				// Get current player's coins (from GameState.PlayerStates)
 				playerCoins := int32(0)
-				for _, player := range rtGame.Config.Players {
-					if player.PlayerId == rtGame.CurrentPlayer {
-						playerCoins = player.Coins
-						break
-					}
+				if playerState := rtGame.GameState.PlayerStates[rtGame.CurrentPlayer]; playerState != nil {
+					playerCoins = playerState.Coins
 				}
 
 				// Get allowed actions for this tile
@@ -477,14 +474,17 @@ func (b *BaseGamesService) applyUnitBuilt(change *v1.UnitBuiltChange, rtGame *li
 
 // applyCoinsChanged updates a player's coin balance in the runtime game
 func (b *BaseGamesService) applyCoinsChanged(change *v1.CoinsChangedChange, rtGame *lib.Game) error {
-	// Update player's coins in game config
-	for i, player := range rtGame.Config.Players {
-		if player.PlayerId == change.PlayerId {
-			rtGame.Config.Players[i].Coins = change.NewCoins
-			return nil
-		}
+	// Update player's coins in GameState.PlayerStates
+	if rtGame.GameState.PlayerStates == nil {
+		rtGame.GameState.PlayerStates = make(map[int32]*v1.PlayerState)
 	}
-	return fmt.Errorf("player %d not found", change.PlayerId)
+	playerState := rtGame.GameState.PlayerStates[change.PlayerId]
+	if playerState == nil {
+		playerState = &v1.PlayerState{}
+		rtGame.GameState.PlayerStates[change.PlayerId] = playerState
+	}
+	playerState.Coins = change.NewCoins
+	return nil
 }
 
 // convertRuntimeWorldToProto converts runtime world state to protobuf WorldData

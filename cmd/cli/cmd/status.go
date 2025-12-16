@@ -73,11 +73,16 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 		if pc.GameState.Game.Config != nil {
 			for _, player := range pc.GameState.Game.Config.Players {
+				// Get coins from GameState.PlayerStates
+				coins := int32(0)
+				if playerState := pc.GameState.State.PlayerStates[player.PlayerId]; playerState != nil {
+					coins = playerState.Coins
+				}
 				players = append(players, map[string]interface{}{
 					"player_id":   player.PlayerId,
 					"player_type": player.PlayerType,
 					"name":        player.Name,
-					"coins":       player.Coins,
+					"coins":       coins,
 					"units":       unitCounts[player.PlayerId],
 					"tiles":       tileCounts[player.PlayerId],
 					"team_id":     player.TeamId,

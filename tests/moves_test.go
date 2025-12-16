@@ -243,8 +243,8 @@ func TestProcessEndTurnIncome(t *testing.T) {
 	// Create game configuration with initial coins
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 500, StartingCoins: 500},
-			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+			{PlayerId: 1, StartingCoins: 500},
+			{PlayerId: 2, StartingCoins: 300},
 		},
 	}
 
@@ -257,6 +257,10 @@ func TestProcessEndTurnIncome(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 500, IsActive: true},
+			2: {Coins: 300, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -280,11 +284,11 @@ func TestProcessEndTurnIncome(t *testing.T) {
 	expectedIncome := int32(750)
 	expectedCoins := int32(500) + expectedIncome // 500 starting + 750 income = 1250
 
-	// Check player coins were updated
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != expectedCoins {
+	// Check player coins were updated (from GameState.PlayerStates)
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != expectedCoins {
 		t.Errorf("Player 1 coins after end turn: got %d, want %d (initial 500 + income %d)",
-			player1.Coins, expectedCoins, expectedIncome)
+			player1Coins, expectedCoins, expectedIncome)
 	}
 
 	// Verify CoinsChangedChange was recorded
@@ -338,8 +342,8 @@ func TestProcessEndTurnNoIncome(t *testing.T) {
 	// Create game configuration
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 200, StartingCoins: 200},
-			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+			{PlayerId: 1, StartingCoins: 200},
+			{PlayerId: 2, StartingCoins: 300},
 		},
 	}
 
@@ -352,6 +356,10 @@ func TestProcessEndTurnNoIncome(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 200, IsActive: true},
+			2: {Coins: 300, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -371,9 +379,9 @@ func TestProcessEndTurnNoIncome(t *testing.T) {
 	}
 
 	// Verify no income was added (coins stay the same)
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != 200 {
-		t.Errorf("Player 1 coins after end turn: got %d, want 200 (no income generated)", player1.Coins)
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != 200 {
+		t.Errorf("Player 1 coins after end turn: got %d, want 200 (no income generated)", player1Coins)
 	}
 
 	// Verify no CoinsChangedChange was recorded (since income was 0)
@@ -407,8 +415,8 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 	// Create game configuration
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 1000, StartingCoins: 1000},
-			{PlayerId: 2, Coins: 500, StartingCoins: 500},
+			{PlayerId: 1, StartingCoins: 1000},
+			{PlayerId: 2, StartingCoins: 500},
 		},
 	}
 
@@ -421,6 +429,10 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 1000, IsActive: true},
+			2: {Coins: 500, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -443,10 +455,10 @@ func TestProcessEndTurnMultipleSameType(t *testing.T) {
 	expectedIncome := int32(500)
 	expectedCoins := int32(1000) + expectedIncome
 
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != expectedCoins {
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != expectedCoins {
 		t.Errorf("Player 1 coins after end turn: got %d, want %d (1000 + 500 income)",
-			player1.Coins, expectedCoins)
+			player1Coins, expectedCoins)
 	}
 
 	// Verify CoinsChangedChange
@@ -505,8 +517,8 @@ func TestProcessEndTurnCustomIncomeConfig(t *testing.T) {
 
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 500, StartingCoins: 500},
-			{PlayerId: 2, Coins: 300, StartingCoins: 300},
+			{PlayerId: 1, StartingCoins: 500},
+			{PlayerId: 2, StartingCoins: 300},
 		},
 		IncomeConfigs: customIncomeConfig,
 	}
@@ -520,6 +532,10 @@ func TestProcessEndTurnCustomIncomeConfig(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 500, IsActive: true},
+			2: {Coins: 300, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -543,11 +559,11 @@ func TestProcessEndTurnCustomIncomeConfig(t *testing.T) {
 	expectedIncome := int32(950)
 	expectedCoins := int32(500) + expectedIncome // 500 starting + 950 income = 1450
 
-	// Check player coins were updated
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != expectedCoins {
+	// Check player coins were updated (from GameState.PlayerStates)
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != expectedCoins {
 		t.Errorf("Player 1 coins after end turn: got %d, want %d (initial 500 + custom income %d)",
-			player1.Coins, expectedCoins, expectedIncome)
+			player1Coins, expectedCoins, expectedIncome)
 	}
 
 	// Verify CoinsChangedChange was recorded with correct values
@@ -594,8 +610,8 @@ func TestProcessEndTurnMinesIncome(t *testing.T) {
 
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 100, StartingCoins: 100},
-			{PlayerId: 2, Coins: 100, StartingCoins: 100},
+			{PlayerId: 1, StartingCoins: 100},
+			{PlayerId: 2, StartingCoins: 100},
 		},
 		IncomeConfigs: customIncomeConfig,
 	}
@@ -609,6 +625,10 @@ func TestProcessEndTurnMinesIncome(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 100, IsActive: true},
+			2: {Coins: 100, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -630,10 +650,10 @@ func TestProcessEndTurnMinesIncome(t *testing.T) {
 	expectedIncome := int32(2000)
 	expectedCoins := int32(100) + expectedIncome
 
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != expectedCoins {
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != expectedCoins {
 		t.Errorf("Player 1 coins: got %d, want %d (100 + %d mines income)",
-			player1.Coins, expectedCoins, expectedIncome)
+			player1Coins, expectedCoins, expectedIncome)
 	}
 }
 
@@ -660,8 +680,8 @@ func TestProcessEndTurnFallbackToDefaults(t *testing.T) {
 
 	gameConfig := &v1.GameConfiguration{
 		Players: []*v1.GamePlayer{
-			{PlayerId: 1, Coins: 500, StartingCoins: 500},
-			{PlayerId: 2, Coins: 500, StartingCoins: 500},
+			{PlayerId: 1, StartingCoins: 500},
+			{PlayerId: 2, StartingCoins: 500},
 		},
 		IncomeConfigs: customIncomeConfig,
 	}
@@ -675,6 +695,10 @@ func TestProcessEndTurnFallbackToDefaults(t *testing.T) {
 	gameState := &v1.GameState{
 		CurrentPlayer: 1,
 		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 500, IsActive: true},
+			2: {Coins: 500, IsActive: true},
+		},
 	}
 
 	rtGame := NewGame(game, gameState, world, rulesEngine, 12345)
@@ -696,10 +720,10 @@ func TestProcessEndTurnFallbackToDefaults(t *testing.T) {
 	expectedIncome := int32(100)
 	expectedCoins := int32(500) + expectedIncome
 
-	player1 := rtGame.Config.Players[0]
-	if player1.Coins != expectedCoins {
+	player1Coins := rtGame.GameState.PlayerStates[1].Coins
+	if player1Coins != expectedCoins {
 		t.Errorf("Player 1 coins: got %d, want %d (should use default income 100)",
-			player1.Coins, expectedCoins)
+			player1Coins, expectedCoins)
 	}
 }
 

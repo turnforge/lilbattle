@@ -1,57 +1,79 @@
 {
-  "created_at": "2025-12-15T23:14:01.214890Z",
-  "updated_at": "2025-12-15T23:14:01.214890Z",
-  "version": "0",
-  "id": "testgame",
-  "creator_id": "default-user",
-  "world_id": "b1a84d4c",
-  "name": "New Game",
-  "description": "Game created from StartGamePage",
-  "tags": [],
-  "image_url": "",
-  "difficulty": "",
-  "config": {
-    "players": [
+  "created_at":  "2025-12-15T23:14:01.214890Z",
+  "updated_at":  "2025-12-16T01:35:37.664758Z",
+  "version":  "0",
+  "id":  "testgame",
+  "creator_id":  "default-user",
+  "world_id":  "b1a84d4c",
+  "name":  "New Game",
+  "description":  "Game created from StartGamePage",
+  "tags":  [],
+  "image_url":  "",
+  "difficulty":  "",
+  "config":  {
+    "players":  [
       {
-        "player_id": 1,
-        "player_type": "human",
-        "color": "",
-        "team_id": 0,
-        "name": "Player 1",
-        "is_active": true,
-        "starting_coins": 300,
-        "coins": 750
+        "player_id":  1,
+        "player_type":  "human",
+        "color":  "",
+        "team_id":  0,
+        "name":  "Player 1",
+        "is_active":  true,
+        "starting_coins":  300
       },
       {
-        "player_id": 2,
-        "player_type": "ai",
-        "color": "",
-        "team_id": 0,
-        "name": "Player 2",
-        "is_active": true,
-        "starting_coins": 300,
-        "coins": 750
+        "player_id":  2,
+        "player_type":  "ai",
+        "color":  "",
+        "team_id":  0,
+        "name":  "Player 2",
+        "is_active":  true,
+        "starting_coins":  300
       }
     ],
-    "teams": [],
-    "income_configs": {
-      "starting_coins": 300,
-      "game_income": 0,
-      "landbase_income": 150,
-      "navalbase_income": 150,
-      "airportbase_income": 150,
-      "missilesilo_income": 300,
-      "mines_income": 500
+    "teams":  [],
+    "income_configs":  {
+      "starting_coins":  300,
+      "game_income":  0,
+      "landbase_income":  150,
+      "navalbase_income":  150,
+      "airportbase_income":  150,
+      "missilesilo_income":  300,
+      "mines_income":  500
     },
-    "settings": {
-      "allowed_units": [
-        1, 2, 30, 27, 33, 29, 40, 8, 41, 3, 4, 5, 6, 7, 9, 14, 17, 19,
-        15, 26, 44, 41, 28, 18, 20, 25
+    "settings":  {
+      "allowed_units":  [
+        1,
+        2,
+        30,
+        27,
+        33,
+        29,
+        40,
+        8,
+        41,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        14,
+        17,
+        19,
+        15,
+        26,
+        44,
+        41,
+        28,
+        18,
+        20,
+        25
       ],
-      "turn_time_limit": 0,
-      "team_mode": "ffa",
-      "max_turns": 0
+      "turn_time_limit":  0,
+      "team_mode":  "ffa",
+      "max_turns":  0
     }
   },
-  "preview_urls": []
+  "preview_urls":  []
 }
