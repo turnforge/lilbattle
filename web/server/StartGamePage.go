@@ -118,7 +118,6 @@ func (p *StartGamePage) initializeGameConfiguration() {
 			Name:          fmt.Sprintf("Player %d", i+1),
 			IsActive:      true,
 			StartingCoins: incomeConfig.StartingCoins,
-			Coins:         incomeConfig.StartingCoins,
 		})
 	}
 

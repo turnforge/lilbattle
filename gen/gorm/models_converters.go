@@ -1365,12 +1365,12 @@ func GameStateToGameStateGORM(
 	}
 
 	if src.PlayerStates != nil {
-		out.PlayerStates = make(map[string]PlayerStateGORM, len(src.PlayerStates))
+		out.PlayerStates = make(map[int32]PlayerStateGORM, len(src.PlayerStates))
 		for key, value := range src.PlayerStates {
 			var converted PlayerStateGORM
 			_, err = PlayerStateToPlayerStateGORM(value, &converted, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting PlayerStates[%d]: %w", key, err)
 			}
 			out.PlayerStates[key] = converted
 		}
@@ -1422,11 +1422,11 @@ func GameStateFromGameStateGORM(
 	}
 
 	if src.PlayerStates != nil {
-		out.PlayerStates = make(map[string]*models.PlayerState, len(src.PlayerStates))
+		out.PlayerStates = make(map[int32]*models.PlayerState, len(src.PlayerStates))
 		for key, value := range src.PlayerStates {
 			out.PlayerStates[key], err = PlayerStateFromPlayerStateGORM(nil, &value, nil)
 			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%s]: %w", key, err)
+				return nil, fmt.Errorf("converting PlayerStates[%d]: %w", key, err)
 			}
 		}
 	}
