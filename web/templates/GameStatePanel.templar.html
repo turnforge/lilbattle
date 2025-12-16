@@ -32,6 +32,7 @@
     {{ range .Game.Config.Players }}
     {{ $isCurrentPlayer := eq .PlayerId $.State.CurrentPlayer }}
     {{ $stats := index $.PlayerStats .PlayerId }}
+    {{ $playerState := index $.State.PlayerStates .PlayerId }}
     {{ $playerColor := $.GetPlayerColorHex .PlayerId }}
     <div class="player-row flex items-center rounded-lg p-2 {{ if $isCurrentPlayer }}bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700{{ else }}bg-gray-50 dark:bg-gray-700/50{{ end }}">
       <!-- Player Color Square -->
@@ -60,7 +61,7 @@
           <!-- Coins -->
           <div class="flex items-center" title="Coins">
             <span class="text-yellow-500 mr-0.5">&#x26A1;</span>
-            <span>{{ .Coins }}</span>
+            <span>{{ if $playerState }}{{ $playerState.Coins }}{{ else }}0{{ end }}</span>
           </div>
         </div>
       </div>
