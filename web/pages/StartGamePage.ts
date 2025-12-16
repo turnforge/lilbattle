@@ -238,8 +238,7 @@ class StartGamePage extends BasePage implements LCMComponent {
                     teamId: parseInt(teamSelect.value),
                     name: `Player ${playerId}`,
                     isActive: true,
-                    startingCoins: parseInt(coinsInput.value),
-                    coins: parseInt(coinsInput.value)
+                    startingCoins: parseInt(coinsInput.value)
                 });
             }
         });
@@ -360,7 +359,6 @@ class StartGamePage extends BasePage implements LCMComponent {
             } else if (configType === 'coins') {
                 const coins = parseInt((target as HTMLInputElement).value) || 300;
                 player.startingCoins = coins;
-                player.coins = coins;
             }
         }
 
@@ -524,8 +522,7 @@ class StartGamePage extends BasePage implements LCMComponent {
                         team_id: p.teamId,
                         name: p.name,
                         is_active: p.isActive,
-                        starting_coins: p.startingCoins,
-                        coins: p.coins
+                        starting_coins: p.startingCoins
                     })),
                     income_configs: this.gameConfig.incomeConfigs,
                     settings: {
