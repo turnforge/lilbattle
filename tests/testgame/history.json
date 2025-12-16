@@ -2,95 +2,9 @@
   "game_id":  "testgame",
   "groups":  [
     {
-      "started_at":  "2025-12-16T01:34:00.372135Z",
-      "ended_at":  "2025-12-16T01:34:00.372136Z",
+      "started_at":  "2025-12-16T23:06:10.138004Z",
+      "ended_at":  "2025-12-16T23:06:10.138005Z",
       "group_number":  "1",
-      "moves":  [
-        {
-          "player":  1,
-          "group_number":  "0",
-          "move_number":  "0",
-          "move_unit":  {
-            "from_q":  -3,
-            "from_r":  14,
-            "to_q":  -1,
-            "to_r":  12,
-            "movement_cost":  2,
-            "reconstructed_path":  {
-              "edges":  [
-                {
-                  "from_q":  -3,
-                  "from_r":  14,
-                  "to_q":  -2,
-                  "to_r":  13,
-                  "movement_cost":  1,
-                  "total_cost":  1,
-                  "terrain_type":  "Grass",
-                  "explanation":  "Grass costs Anti-aircraft (Basic) 1 movement points",
-                  "is_occupied":  false
-                },
-                {
-                  "from_q":  -2,
-                  "from_r":  13,
-                  "to_q":  -1,
-                  "to_r":  12,
-                  "movement_cost":  1,
-                  "total_cost":  2,
-                  "terrain_type":  "Grass",
-                  "explanation":  "Grass costs Anti-aircraft (Basic) 1 movement points",
-                  "is_occupied":  false
-                }
-              ],
-              "directions":  [],
-              "total_cost":  1
-            }
-          },
-          "sequence_num":  "0",
-          "is_permanent":  false,
-          "changes":  [
-            {
-              "unit_moved":  {
-                "previous_unit":  {
-                  "q":  -3,
-                  "r":  14,
-                  "player":  1,
-                  "unit_type":  6,
-                  "shortcut":  "A2",
-                  "available_health":  10,
-                  "distance_left":  3,
-                  "last_acted_turn":  0,
-                  "last_toppedup_turn":  1,
-                  "attacks_received_this_turn":  0,
-                  "attack_history":  [],
-                  "progression_step":  0,
-                  "chosen_alternative":  ""
-                },
-                "updated_unit":  {
-                  "q":  -1,
-                  "r":  12,
-                  "player":  1,
-                  "unit_type":  6,
-                  "shortcut":  "A2",
-                  "available_health":  10,
-                  "distance_left":  1,
-                  "last_acted_turn":  0,
-                  "last_toppedup_turn":  1,
-                  "attacks_received_this_turn":  0,
-                  "attack_history":  [],
-                  "progression_step":  0,
-                  "chosen_alternative":  ""
-                }
-              }
-            }
-          ],
-          "description":  ""
-        }
-      ]
-    },
-    {
-      "started_at":  "2025-12-16T01:34:06.160286Z",
-      "ended_at":  "2025-12-16T01:34:06.160287Z",
-      "group_number":  "2",
       "moves":  [
         {
           "player":  1,
@@ -141,7 +55,7 @@
                   "r":  15,
                   "player":  1,
                   "unit_type":  1,
-                  "shortcut":  "A3",
+                  "shortcut":  "A2",
                   "available_health":  10,
                   "distance_left":  3,
                   "last_acted_turn":  0,
@@ -156,7 +70,7 @@
                   "r":  13,
                   "player":  1,
                   "unit_type":  1,
-                  "shortcut":  "A3",
+                  "shortcut":  "A2",
                   "available_health":  10,
                   "distance_left":  0.25,
                   "last_acted_turn":  0,
@@ -174,9 +88,9 @@
       ]
     },
     {
-      "started_at":  "2025-12-16T01:34:17.111087Z",
-      "ended_at":  "2025-12-16T01:34:17.111088Z",
-      "group_number":  "3",
+      "started_at":  "2025-12-16T23:06:28.673713Z",
+      "ended_at":  "2025-12-16T23:06:28.673714Z",
+      "group_number":  "2",
       "moves":  [
         {
           "player":  1,
@@ -227,7 +141,7 @@
                   "r":  14,
                   "player":  1,
                   "unit_type":  17,
-                  "shortcut":  "A1",
+                  "shortcut":  "A3",
                   "available_health":  10,
                   "distance_left":  5,
                   "last_acted_turn":  0,
@@ -242,9 +156,95 @@
                   "r":  13,
                   "player":  1,
                   "unit_type":  17,
+                  "shortcut":  "A3",
+                  "available_health":  10,
+                  "distance_left":  3,
+                  "last_acted_turn":  0,
+                  "last_toppedup_turn":  1,
+                  "attacks_received_this_turn":  0,
+                  "attack_history":  [],
+                  "progression_step":  0,
+                  "chosen_alternative":  ""
+                }
+              }
+            }
+          ],
+          "description":  ""
+        }
+      ]
+    },
+    {
+      "started_at":  "2025-12-16T23:06:37.652943Z",
+      "ended_at":  "2025-12-16T23:06:37.652944Z",
+      "group_number":  "3",
+      "moves":  [
+        {
+          "player":  1,
+          "group_number":  "0",
+          "move_number":  "0",
+          "move_unit":  {
+            "from_q":  -3,
+            "from_r":  14,
+            "to_q":  -1,
+            "to_r":  12,
+            "movement_cost":  2,
+            "reconstructed_path":  {
+              "edges":  [
+                {
+                  "from_q":  -3,
+                  "from_r":  14,
+                  "to_q":  -2,
+                  "to_r":  13,
+                  "movement_cost":  1,
+                  "total_cost":  1,
+                  "terrain_type":  "Grass",
+                  "explanation":  "Grass costs Anti-aircraft (Basic) 1 movement points",
+                  "is_occupied":  false
+                },
+                {
+                  "from_q":  -2,
+                  "from_r":  13,
+                  "to_q":  -1,
+                  "to_r":  12,
+                  "movement_cost":  1,
+                  "total_cost":  2,
+                  "terrain_type":  "Grass",
+                  "explanation":  "Grass costs Anti-aircraft (Basic) 1 movement points",
+                  "is_occupied":  false
+                }
+              ],
+              "directions":  [],
+              "total_cost":  1
+            }
+          },
+          "sequence_num":  "0",
+          "is_permanent":  false,
+          "changes":  [
+            {
+              "unit_moved":  {
+                "previous_unit":  {
+                  "q":  -3,
+                  "r":  14,
+                  "player":  1,
+                  "unit_type":  6,
                   "shortcut":  "A1",
                   "available_health":  10,
                   "distance_left":  3,
+                  "last_acted_turn":  0,
+                  "last_toppedup_turn":  1,
+                  "attacks_received_this_turn":  0,
+                  "attack_history":  [],
+                  "progression_step":  0,
+                  "chosen_alternative":  ""
+                },
+                "updated_unit":  {
+                  "q":  -1,
+                  "r":  12,
+                  "player":  1,
+                  "unit_type":  6,
+                  "shortcut":  "A1",
+                  "available_health":  10,
+                  "distance_left":  1,
                   "last_acted_turn":  0,
                   "last_toppedup_turn":  1,
                   "attacks_received_this_turn":  0,

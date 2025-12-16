@@ -1,5 +1,5 @@
 {
-  "updated_at":  "2025-12-16T01:34:17.111088Z",
+  "updated_at":  "2025-12-16T23:06:37.652944Z",
   "game_id":  "testgame",
   "turn_counter":  1,
   "current_player":  1,
@@ -118,7 +118,7 @@
         "r":  14,
         "tile_type":  3,
         "player":  1,
-        "shortcut":  "A2",
+        "shortcut":  "A1",
         "last_acted_turn":  0,
         "last_toppedup_turn":  0
       },
@@ -181,7 +181,7 @@
         "r":  15,
         "tile_type":  1,
         "player":  1,
-        "shortcut":  "A1",
+        "shortcut":  "A2",
         "last_acted_turn":  0,
         "last_toppedup_turn":  0
       },
@@ -460,7 +460,7 @@
         "r":  6,
         "tile_type":  1,
         "player":  2,
-        "shortcut":  "B2",
+        "shortcut":  "B1",
         "last_acted_turn":  0,
         "last_toppedup_turn":  0
       },
@@ -838,7 +838,7 @@
         "r":  6,
         "tile_type":  1,
         "player":  2,
-        "shortcut":  "B1",
+        "shortcut":  "B2",
         "last_acted_turn":  0,
         "last_toppedup_turn":  0
       },
@@ -876,7 +876,7 @@
         "r":  12,
         "player":  1,
         "unit_type":  6,
-        "shortcut":  "A2",
+        "shortcut":  "A1",
         "available_health":  10,
         "distance_left":  1,
         "last_acted_turn":  0,
@@ -891,7 +891,7 @@
         "r":  13,
         "player":  1,
         "unit_type":  1,
-        "shortcut":  "A3",
+        "shortcut":  "A2",
         "available_health":  10,
         "distance_left":  0.25,
         "last_acted_turn":  0,
@@ -906,7 +906,7 @@
         "r":  13,
         "player":  1,
         "unit_type":  17,
-        "shortcut":  "A1",
+        "shortcut":  "A3",
         "available_health":  10,
         "distance_left":  3,
         "last_acted_turn":  0,
@@ -978,8 +978,8 @@
       }
     },
     "screenshot_index_info":  {
-      "last_updated_at":  "2025-12-16T01:35:37.665175Z",
-      "last_indexed_at":  "2025-12-16T01:35:38.969933Z",
+      "last_updated_at":  "2025-12-16T23:06:37.658072Z",
+      "last_indexed_at":  "2025-12-16T23:06:37.907692Z",
       "needs_indexing":  false
     },
     "content_hash":  "",
@@ -987,14 +987,20 @@
     "crossings":  {}
   },
   "state_hash":  "",
-  "version":  "4",
+  "version":  "3",
   "status":  "GAME_STATUS_UNSPECIFIED",
   "finished":  false,
   "winning_player":  0,
   "winning_team":  0,
   "current_group_number":  "3",
-  "player_states": {
-    "1": {"coins": 750, "is_active": true},
-    "2": {"coins": 750, "is_active": true}
+  "player_states":  {
+    "1":  {
+      "coins":  750,
+      "is_active":  true
+    },
+    "2":  {
+      "coins":  750,
+      "is_active":  true
+    }
   }
 }
