@@ -127,7 +127,7 @@
                     <label for="attacker-unit" class="form-label">Unit Type</label>
                     <select id="attacker-unit" class="form-select">
                         {{range .AllUnits}}
-                        <option value="{{.Id}}" {{if eq .Id (Int $.AttackerUnit)}}selected{{end}} data-icon="{{.IconDataURL}}">{{.Name}}</option>
+                        <option value="{{.Id}}" {{if eq .Id (Int $.AttackerUnit)}}selected{{end}} data-icon="{{.IconDataURL}}">{{.Name}} - {{.Id}} </option>
                         {{end}}
                     </select>
                 </div>

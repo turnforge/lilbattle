@@ -80,10 +80,17 @@ func (p *AttackSimulatorPage) loadTerrainAndUnitData() {
 		}
 	}
 
-	// Sort terrains by ID
-	sort.Slice(p.AllTerrains, func(i, j int) bool {
-		return p.AllTerrains[i].ID < p.AllTerrains[j].ID
-	})
+	// Sort terrains alphabetically by name
+	sortAlphabetically := true
+	if sortAlphabetically {
+		sort.Slice(p.AllTerrains, func(i, j int) bool {
+			return p.AllTerrains[i].Name < p.AllTerrains[j].Name
+		})
+	} else {
+		sort.Slice(p.AllTerrains, func(i, j int) bool {
+			return p.AllTerrains[i].ID < p.AllTerrains[j].ID
+		})
+	}
 
 	// Load all units
 	p.AllUnits = []UnitType{}
@@ -99,6 +106,13 @@ func (p *AttackSimulatorPage) loadTerrainAndUnitData() {
 				IconDataURL:    iconDataURL,
 			})
 		}
+	}
+
+	// Sort units alphabetically by name
+	if sortAlphabetically {
+		sort.Slice(p.AllUnits, func(i, j int) bool { return p.AllUnits[i].Name < p.AllUnits[j].Name })
+	} else {
+		sort.Slice(p.AllUnits, func(i, j int) bool { return p.AllUnits[i].Id < p.AllUnits[j].Id })
 	}
 }
 
