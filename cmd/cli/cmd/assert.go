@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -237,7 +238,7 @@ func parseAndEvaluate(args []string, pc *PresenterContext) ([]AssertionResult, e
 
 	// Check for options assertions
 	if strings.HasPrefix(input, "options ") {
-		return parseOptionsAssertions(input, pc)
+		return parseOptionsAssertionsFromArgs(args, pc)
 	}
 
 	// Parse entity assertions: entity id [assertions]
@@ -816,35 +817,29 @@ func contains(slice []string, val string) bool {
 // Options Assertions
 // =============================================================================
 
-// parseOptionsAssertions parses "options unit A1 "attack B3" "move 0,5""
-func parseOptionsAssertions(input string, pc *PresenterContext) ([]AssertionResult, error) {
-	// Remove "options " prefix
-	input = strings.TrimPrefix(input, "options ")
-	input = strings.TrimSpace(input)
-
-	// Parse: (unit|tile) id "assertion1" "assertion2" ...
-	// First extract entity type and id
-	parts := strings.Fields(input)
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("options requires: unit/tile id \"assertion\" ...")
+// parseOptionsAssertionsFromArgs parses args like ["options", "unit", "A1", "attack B3", "move 0,5"]
+// Note: Shell removes quotes, so "attack B3" becomes a single arg without quotes
+func parseOptionsAssertionsFromArgs(args []string, pc *PresenterContext) ([]AssertionResult, error) {
+	// args[0] = "options"
+	// args[1] = entity type (unit/tile)
+	// args[2] = entity id
+	// args[3:] = option assertions (each was a quoted string on command line)
+	if len(args) < 4 {
+		return nil, fmt.Errorf("options requires: options unit/tile id \"assertion\" ...")
 	}
 
-	entityType := parts[0]
+	entityType := args[1]
 	if entityType != "unit" && entityType != "tile" {
 		return nil, fmt.Errorf("options requires 'unit' or 'tile', got %q", entityType)
 	}
-	entityID := parts[1]
+	entityID := args[2]
 
-	// Rejoin remaining parts and extract quoted assertions
-	remaining := strings.Join(parts[2:], " ")
-	assertionsStr := extractQuotedStrings(remaining)
-
-	// Parse option assertions
+	// Each remaining arg is an option assertion (shell already unquoted them)
 	var optionAssertions []OptionAssertion
-	for _, str := range assertionsStr {
-		oa, err := parseOptionAssertion(str)
+	for _, arg := range args[3:] {
+		oa, err := parseOptionAssertion(arg)
 		if err != nil {
-			return nil, fmt.Errorf("parsing option assertion: %w", err)
+			return nil, fmt.Errorf("parsing option assertion %q: %w", arg, err)
 		}
 		optionAssertions = append(optionAssertions, oa)
 	}
@@ -999,7 +994,8 @@ func getOptionsForEntity(entityType, entityID string, pc *PresenterContext) (*v1
 	}
 
 	// Simulate click to get options
-	_, err = pc.Presenter.SceneClicked(nil, &v1.SceneClickedRequest{
+	ctx := context.Background()
+	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: pc.GameID,
 		Q:      int32(coord.Q),
 		R:      int32(coord.R),
