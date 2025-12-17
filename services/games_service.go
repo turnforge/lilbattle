@@ -247,6 +247,9 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		// Check if "move" is allowed at current progression step
 		moveAllowed := lib.ContainsAction(allowedActions, "move")
 
+		// Track how many move options we actually found
+		moveOptionCount := 0
+
 		// Get movement options if unit has movement left and move is allowed
 		if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 && moveAllowed {
 			pathsResult, err := dmp.GetMovementOptions(rtGame, req.Q, req.R, false)
@@ -278,6 +281,7 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 					options = append(options, &v1.GameOption{
 						OptionType: &v1.GameOption_Move{Move: moveAction},
 					})
+					moveOptionCount++
 					_ = key // Using key just to avoid unused variable warning
 				}
 			}
@@ -285,6 +289,21 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 
 		// Check if "attack" is allowed at current progression step
 		attackAllowed := lib.ContainsAction(allowedActions, "attack")
+
+		// Auto-advance: If move was allowed but we got no move options (or no distance left),
+		// check if the next step allows attack. This handles cases where:
+		// 1. Unit has some DistanceLeft but no reachable tiles (surrounded)
+		// 2. Unit has no DistanceLeft but hasn't formally advanced progression yet
+		if !attackAllowed && moveAllowed && moveOptionCount == 0 {
+			// Temporarily check next progression step's allowed actions
+			nextStepUnit := &v1.Unit{
+				ProgressionStep:   unit.ProgressionStep + 1,
+				ChosenAlternative: "",
+				DistanceLeft:      0, // Doesn't matter for attack check
+			}
+			nextAllowedActions := rtGame.RulesEngine.GetAllowedActionsForUnit(nextStepUnit, unitDef)
+			attackAllowed = lib.ContainsAction(nextAllowedActions, "attack")
+		}
 
 		// Get attack options if unit can attack and attack is allowed
 		if unit.AvailableHealth > 0 && attackAllowed {
