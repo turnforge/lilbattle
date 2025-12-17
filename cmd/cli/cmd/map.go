@@ -35,7 +35,7 @@ var (
 func init() {
 	rootCmd.AddCommand(mapCmd)
 	mapCmd.Flags().BoolVar(&showLabels, "labels", true, "Show unit labels (Shortcut:MP/Health)")
-	mapCmd.Flags().BoolVar(&showTileLabels, "tile-labels", false, "Show tile labels (Shortcut)")
+	mapCmd.Flags().BoolVar(&showTileLabels, "tile-labels", true, "Show tile labels (Shortcut)")
 
 	// Default to environment variable if set
 	defaultOutput := os.Getenv("WEEWAR_MAP_OUTPUT")
