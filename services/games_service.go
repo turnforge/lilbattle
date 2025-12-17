@@ -176,8 +176,8 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 			}, fmt.Errorf("failed to top-up tile: %w", err)
 		}
 
-		// Only check tile actions if tile belongs to current player
-		if tile.Player == rtGame.CurrentPlayer {
+		// Only check tile actions if tile belongs to current player AND no unit is on the tile
+		if tile.Player == rtGame.CurrentPlayer && unit == nil {
 			// Get terrain definition for tile-specific actions
 			terrainDef, err := rtGame.RulesEngine.GetTerrainData(tile.TileType)
 			if err == nil {

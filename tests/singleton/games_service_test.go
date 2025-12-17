@@ -8,6 +8,8 @@ import (
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/singleton"
+	"github.com/turnforge/weewar/tests"
 )
 
 // Test that we can load a game and get options for units
@@ -16,7 +18,7 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 	homeDir, _ := os.UserHomeDir()
 	worldsDir := filepath.Join(homeDir, "dev-app-data", "weewar", "storage", "worlds")
 
-	world, gameState, err := LoadTestWorldFromStorage(worldsDir, "32112070")
+	world, gameState, err := tests.LoadTestWorldFromStorage(worldsDir, "32112070")
 	if err != nil {
 		t.Skipf("Skipping test - world data not available: %v", err)
 	}
@@ -28,7 +30,7 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 	}
 
 	// Create service
-	gamesService := NewSingletonGamesService()
+	gamesService := singleton.NewSingletonGamesService()
 	gamesService.SingletonGame = game
 	gamesService.SingletonGameState = gameState
 	gamesService.SingletonGameMoveHistory = &v1.GameMoveHistory{}
@@ -97,14 +99,14 @@ func TestSingletonGamesService_GetOptionsAt_EmptyTile(t *testing.T) {
 	homeDir, _ := os.UserHomeDir()
 	worldsDir := filepath.Join(homeDir, "dev-app-data", "weewar", "storage", "worlds")
 
-	_, gameState, err := services.LoadTestWorldFromStorage(worldsDir, "32112070")
+	_, gameState, err := tests.LoadTestWorldFromStorage(worldsDir, "32112070")
 	if err != nil {
 		t.Skipf("Skipping test - world data not available: %v", err)
 	}
 
 	game := &v1.Game{Id: "test-game"}
 
-	gamesService := NewSingletonGamesService()
+	gamesService := singleton.NewSingletonGamesService()
 	gamesService.SingletonGame = game
 	gamesService.SingletonGameState = gameState
 	gamesService.Self = gamesService
@@ -128,6 +130,147 @@ func TestSingletonGamesService_GetOptionsAt_EmptyTile(t *testing.T) {
 	}
 }
 
+// Test that build options are not returned when a unit is on a base tile
+func TestSingletonGamesService_GetOptionsAt_NoBuildWhenUnitOnTile(t *testing.T) {
+	// Create a minimal game state with a base tile and a unit on the same position
+	testQ, testR := int32(0), int32(0)
+
+	game := &v1.Game{
+		Id:   "test-game",
+		Name: "Test Game",
+		Config: &v1.GameConfiguration{
+			Settings: &v1.GameSettings{},
+		},
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 1000}, // Plenty of coins to afford any unit
+		},
+		WorldData: &v1.WorldData{
+			TilesMap: map[string]*v1.Tile{
+				"0,0": {
+					Q:        testQ,
+					R:        testR,
+					TileType: 1, // Base (buildable tile)
+					Player:   1, // Owned by current player
+				},
+			},
+			UnitsMap: map[string]*v1.Unit{
+				"0,0": {
+					Q:               testQ,
+					R:               testR,
+					Player:          1,
+					UnitType:        1, // Trooper
+					AvailableHealth: 10,
+					DistanceLeft:    3,
+				},
+			},
+		},
+	}
+
+	gamesService := singleton.NewSingletonGamesService()
+	gamesService.SingletonGame = game
+	gamesService.SingletonGameState = gameState
+	gamesService.SingletonGameMoveHistory = &v1.GameMoveHistory{}
+	gamesService.Self = gamesService
+
+	ctx := context.Background()
+
+	// Get options at the tile position (where unit is)
+	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+		GameId: "test-game",
+		Q:      testQ,
+		R:      testR,
+	})
+
+	if err != nil {
+		t.Fatalf("GetOptionsAt failed: %v", err)
+	}
+
+	// Count build options - there should be none since unit is on the tile
+	buildOptionCount := 0
+	for _, opt := range resp.Options {
+		if opt.GetBuild() != nil {
+			buildOptionCount++
+		}
+	}
+
+	if buildOptionCount > 0 {
+		t.Errorf("Expected 0 build options when unit is on tile, got %d", buildOptionCount)
+	}
+
+	t.Logf("Got %d total options, %d build options (expected 0 build options)", len(resp.Options), buildOptionCount)
+}
+
+// Test that build options ARE returned when no unit is on a base tile
+func TestSingletonGamesService_GetOptionsAt_BuildWhenNoUnitOnTile(t *testing.T) {
+	// Create a minimal game state with a base tile and NO unit on it
+	testQ, testR := int32(0), int32(0)
+
+	game := &v1.Game{
+		Id:   "test-game",
+		Name: "Test Game",
+		Config: &v1.GameConfiguration{
+			Settings: &v1.GameSettings{},
+		},
+	}
+
+	gameState := &v1.GameState{
+		CurrentPlayer: 1,
+		TurnCounter:   1,
+		PlayerStates: map[int32]*v1.PlayerState{
+			1: {Coins: 1000}, // Plenty of coins to afford any unit
+		},
+		WorldData: &v1.WorldData{
+			TilesMap: map[string]*v1.Tile{
+				"0,0": {
+					Q:        testQ,
+					R:        testR,
+					TileType: 1, // Base (buildable tile)
+					Player:   1, // Owned by current player
+				},
+			},
+			UnitsMap: map[string]*v1.Unit{}, // No units
+		},
+	}
+
+	gamesService := singleton.NewSingletonGamesService()
+	gamesService.SingletonGame = game
+	gamesService.SingletonGameState = gameState
+	gamesService.SingletonGameMoveHistory = &v1.GameMoveHistory{}
+	gamesService.Self = gamesService
+
+	ctx := context.Background()
+
+	// Get options at the tile position (no unit)
+	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+		GameId: "test-game",
+		Q:      testQ,
+		R:      testR,
+	})
+
+	if err != nil {
+		t.Fatalf("GetOptionsAt failed: %v", err)
+	}
+
+	// Count build options - there should be some since no unit is on the tile
+	buildOptionCount := 0
+	for _, opt := range resp.Options {
+		if opt.GetBuild() != nil {
+			buildOptionCount++
+		}
+	}
+
+	if buildOptionCount == 0 {
+		t.Errorf("Expected build options when no unit is on base tile, got 0")
+	}
+
+	t.Logf("Got %d total options, %d build options", len(resp.Options), buildOptionCount)
+}
+
 // Test GetRuntimeGame creates proper world
 func TestSingletonGamesService_GetRuntimeGame(t *testing.T) {
 	game := &v1.Game{
@@ -141,7 +284,7 @@ func TestSingletonGamesService_GetRuntimeGame(t *testing.T) {
 		WorldData:     &v1.WorldData{},
 	}
 
-	gamesService := NewSingletonGamesService()
+	gamesService := singleton.NewSingletonGamesService()
 	gamesService.SingletonGame = game
 	gamesService.SingletonGameState = gameState
 	gamesService.Self = gamesService
