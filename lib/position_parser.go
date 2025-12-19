@@ -8,6 +8,8 @@ import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
+const UseEvenRowOffsetCoords = false
+
 // ParseTarget represents either a unit ID or a coordinate position
 type ParseTarget struct {
 	IsShortcut  bool       // true if this represents a unit, false if coordinate
@@ -205,7 +207,7 @@ func parseRowColCoordinate(input string) (*ParseTarget, error) {
 	}
 
 	// Convert row/col to Q/R using the hex coordinate system
-	coord := RowColToHex(row, col)
+	coord := RowColToHex(row, col, UseEvenRowOffsetCoords)
 
 	return &ParseTarget{
 		IsShortcut: false,

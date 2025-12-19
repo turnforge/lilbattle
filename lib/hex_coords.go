@@ -335,9 +335,22 @@ func OddRToCube(row, col int) (x, y, z int) {
 	return
 }
 
-// HexToRowCol converts cube coordinates to display coordinates (row, col)
+func CubeToEvenR(x, y, z int) (row, col int) {
+	col = x + (z+(z&1))/2
+	row = z
+	return
+}
+
+func EvenRToCube(row, col int) (x, y, z int) {
+	x = col - (row+(row&1))/2
+	z = row
+	y = -x - z
+	return
+}
+
+// HexToRowCol converts Axial coordinates to display coordinates (row, col)
 // Uses a standard hex-to-array conversion (odd-row offset style)
-func HexToRowCol(coord AxialCoord) (row, col int) {
+func HexToRowCol(coord AxialCoord, evenrow bool) (row, col int) {
 	/*
 		row = coord.R
 		col = coord.Q + (coord.R+(coord.R&1))/2
@@ -346,16 +359,22 @@ func HexToRowCol(coord AxialCoord) (row, col int) {
 	// cube_to_oddr(cube):
 	x, _, z := AxialToCube(coord.Q, coord.R)
 	col = x + (z-(z&1))/2
+	if evenrow {
+		col = x + (z+(z&1))/2
+	}
 	row = z
 	return row, col
 }
 
 // RowColToHex converts display coordinates (row, col) to cube coordinates
 // Uses a standard array-to-hex conversion (odd-row offset style)
-func RowColToHex(row, col int) AxialCoord {
+func RowColToHex(row, col int, evenrow bool) AxialCoord {
 	// q := col - (row+(row&1))/2 return NewAxialCoord(q, row)
 	// oddr_to_cube(hex):
 	x := col - (row-(row&1))/2
+	if evenrow {
+		x = col - (row+(row&1))/2
+	}
 	z := row
 	y := -x - z
 	q, r := CubeToAxial(x, y, z)
@@ -375,11 +394,12 @@ const (
 
 // RenderOptions holds tile dimension parameters for pixel calculations
 type RenderOptions struct {
-	TileWidth      int  // Width of each hex tile in pixels
-	TileHeight     int  // Height of each hex tile in pixels
-	YIncrement     int  // Vertical spacing between rows (typically 3/4 of TileHeight for pointy-top)
-	ShowUnitLabels bool // Show unit labels (Shortcut:MP/Health) below units
-	ShowTileLabels bool // Show tile labels (Shortcut) below tile
+	TileWidth           int  // Width of each hex tile in pixels
+	TileHeight          int  // Height of each hex tile in pixels
+	YIncrement          int  // Vertical spacing between rows (typically 3/4 of TileHeight for pointy-top)
+	ShowUnitLabels      bool // Show unit labels (Shortcut:MP/Health) below units
+	ShowTileLabels      bool // Show tile labels (Shortcut) below tile
+	EvenRowOffsetCoords bool
 }
 
 // DefaultRenderOptions returns standard rendering options
@@ -397,12 +417,15 @@ func HexToPixel(coord AxialCoord, opts *RenderOptions) (x, y int) {
 	if opts == nil {
 		opts = DefaultRenderOptions()
 	}
-	row, col := HexToRowCol(coord)
+	row, col := HexToRowCol(coord, opts.EvenRowOffsetCoords)
 	y = opts.YIncrement * row
 	x = opts.TileWidth * col
 	// Odd rows are offset by half a tile width
 	if (row & 1) == 1 {
-		x += opts.TileWidth / 2
+		if opts.EvenRowOffsetCoords {
+		} else {
+			x += opts.TileWidth / 2
+		}
 	}
 	return x, y
 }

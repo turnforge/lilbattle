@@ -59,8 +59,9 @@ export function pixelToHex(x: number, y: number, tileWidth=TILE_WIDTH, tileHeigh
  * Convert row/col coordinates to hex coordinates
  * RowColToHex: oddr_to_cube conversion
  */
-export function rowColToHex(row: number, col: number): HexCoord {
-    const x = col - Math.floor((row - (row & 1)) / 2);
+export function rowColToHex(row: number, col: number, evenRow = false): HexCoord {
+    const parity = evenRow ? - (row & 1) : (row & 1)
+    const x = col - Math.floor((row - parity) / 2);
     const z = row;
     const q = x;
     const r = z;
@@ -71,9 +72,10 @@ export function rowColToHex(row: number, col: number): HexCoord {
  * Convert hex coordinates to row/col coordinates
  * HexToRowCol: cube_to_oddr conversion
  */
-export function hexToRowCol(q: number, r: number): { row: number; col: number } {
+export function hexToRowCol(q: number, r: number, evenRow = false): { row: number; col: number } {
+    const parity = evenRow ? - (r & 1) : (r & 1)
     const row = r;
-    const col = q + Math.floor((r - (r & 1)) / 2);
+    const col = q + Math.floor((r - parity) / 2);
     return { row, col };
 }
 

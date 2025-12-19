@@ -72,15 +72,15 @@ func init() {
 type Operator int
 
 const (
-	OpSet Operator = iota // = (set/capture value)
-	OpEq                     // ==
-	OpNe                     // !=
-	OpGt                     // >
-	OpGe                     // >=
-	OpLt                     // <
-	OpLe                     // <=
-	OpIn                     // in (a,b,c)
-	OpNotIn                  // notin (a,b,c)
+	OpSet   Operator = iota // = (set/capture value)
+	OpEq                    // ==
+	OpNe                    // !=
+	OpGt                    // >
+	OpGe                    // >=
+	OpLt                    // <
+	OpLe                    // <=
+	OpIn                    // in (a,b,c)
+	OpNotIn                 // notin (a,b,c)
 )
 
 func (o Operator) String() string {
@@ -141,8 +141,8 @@ type AssertionResult struct {
 	Operator   Operator
 	Expected   string
 	Actual     string
-	Passed bool
-	IsSet  bool
+	Passed     bool
+	IsSet      bool
 }
 
 func (r AssertionResult) String() string {
@@ -505,7 +505,7 @@ func parseCoordinate(input string) (lib.AxialCoord, error) {
 		if err != nil {
 			return lib.AxialCoord{}, fmt.Errorf("invalid col: %s", parts[1])
 		}
-		return lib.RowColToHex(row, col), nil
+		return lib.RowColToHex(row, col, lib.UseEvenRowOffsetCoords), nil
 	}
 
 	// Parse Q,R format

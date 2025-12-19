@@ -1,6 +1,6 @@
 import { BaseComponent, LCMComponent, EventBus } from '@panyam/tsappkit';
 import { EditorEventTypes } from '../common/events';
-import { PhaserEditorScene } from './PhaserEditorScene';
+import { PhaserEditorScene, HoverInfo } from './PhaserEditorScene';
 import { IWorldEditorPresenter } from './WorldEditorPresenter';
 import { Unit, Tile, World } from '../common/World';
 
@@ -249,7 +249,49 @@ export class PhaserEditorComponent extends BaseComponent implements LCMComponent
             this.presenter?.onReferencePositionUpdatedFromScene(x, y);
         });
 
+        // Handle hover events for status bar
+        this.editorScene.onHover((info: HoverInfo | null) => {
+            this.updateStatusBar(info);
+        });
+
         this.log('Phaser event handlers setup complete');
+    }
+
+    /**
+     * Update the status bar with hover information
+     */
+    private updateStatusBar(info: HoverInfo | null): void {
+        const statusBar = this.findElement('#editor-status-bar');
+        if (!statusBar) return;
+
+        if (!info) {
+            statusBar.textContent = 'Move mouse over map to see coordinates';
+            return;
+        }
+
+        const parts: string[] = [];
+
+        // Add coordinates
+        parts.push(`Q/R: ${info.q},${info.r}`);
+        parts.push(`Col/Row: ${info.col},${info.row}`);
+
+        // Add tile info if present
+        if (info.tileType !== undefined) {
+            parts.push(`Tile: ${info.tileType}`);
+            if (info.tilePlayer !== undefined) {
+                parts.push(`TilePlayer: ${info.tilePlayer}`);
+            }
+        }
+
+        // Add unit info if present
+        if (info.unitType !== undefined) {
+            parts.push(`Unit: ${info.unitType}`);
+            if (info.unitPlayer !== undefined) {
+                parts.push(`UnitPlayer: ${info.unitPlayer}`);
+            }
+        }
+
+        statusBar.textContent = parts.join(' | ');
     }
     
     

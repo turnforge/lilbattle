@@ -4,13 +4,27 @@ import { EventBus } from '@panyam/tsappkit';
 import { PhaserWorldScene } from '../common/PhaserWorldScene';
 import { Unit, Tile, World } from '../common/World';
 import { ShapeHighlightLayer } from '../common/HexHighlightLayer';
-import { TILE_WIDTH, hexToPixel, pixelToHex } from '../common/hexUtils';
+import { TILE_WIDTH, hexToPixel, pixelToHex, hexToRowCol } from '../common/hexUtils';
 import { ReferenceImageLayer } from './ReferenceImageLayer';
 import { ShapeTool } from './tools/ShapeTool';
 import { RectangleTool } from './tools/RectangleTool';
 import { CircleTool } from './tools/CircleTool';
 import { OvalTool } from './tools/OvalTool';
 import { LineTool } from './tools/LineTool';
+
+/**
+ * Information about the tile/unit under the mouse cursor
+ */
+export interface HoverInfo {
+    q: number;
+    r: number;
+    row: number;
+    col: number;
+    tileType?: number;
+    tilePlayer?: number;
+    unitType?: number;
+    unitPlayer?: number;
+}
 
 /**
  * PhaserEditorScene extends PhaserWorldScene with editor-specific functionality.
@@ -61,6 +75,56 @@ export class PhaserEditorScene extends PhaserWorldScene {
         super.create();
         // Setup shape tool input handling after parent's input setup
         this.setupShapeToolInputHandling();
+        // Setup hover tracking for status bar
+        this.setupHoverTracking();
+    }
+
+    /**
+     * Setup hover tracking for status bar display
+     */
+    private setupHoverTracking(): void {
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+            if (!this.onHoverCallback) return;
+
+            // Convert pointer to world coordinates then to hex
+            const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            const hexCoord = pixelToHex(worldPoint.x, worldPoint.y);
+            const { row, col } = hexToRowCol(hexCoord.q, hexCoord.r);
+
+            // Look up tile and unit at this position
+            const tile = this.world?.getTileAt(hexCoord.q, hexCoord.r);
+            const unit = this.world?.getUnitAt(hexCoord.q, hexCoord.r);
+
+            const info: HoverInfo = {
+                q: hexCoord.q,
+                r: hexCoord.r,
+                row,
+                col,
+            };
+
+            if (tile) {
+                info.tileType = tile.tileType;
+                if (tile.player !== undefined && tile.player !== 0) {
+                    info.tilePlayer = tile.player;
+                }
+            }
+
+            if (unit) {
+                info.unitType = unit.unitType;
+                if (unit.player !== undefined) {
+                    info.unitPlayer = unit.player;
+                }
+            }
+
+            this.onHoverCallback(info);
+        });
+
+        // Clear hover info when pointer leaves the canvas
+        this.input.on('pointerout', () => {
+            if (this.onHoverCallback) {
+                this.onHoverCallback(null);
+            }
+        });
     }
 
     /**
@@ -361,6 +425,7 @@ export class PhaserEditorScene extends PhaserWorldScene {
     private onWorldChangeCallback: (() => void) | null = null;
     private onReferenceScaleChangeCallback: ((x: number, y: number) => void) | null = null;
     private onReferencePositionChangeCallback: ((x: number, y: number) => void) | null = null;
+    private onHoverCallback: ((info: HoverInfo | null) => void) | null = null;
 
     /**
      * Set terrain type for painting (compatibility with PhaserEditorComponent)
@@ -430,6 +495,13 @@ export class PhaserEditorScene extends PhaserWorldScene {
                 this.onReferencePositionChangeCallback(data.x, data.y);
             }
         });
+    }
+
+    /**
+     * Set callback for mouse hover events over the map
+     */
+    public onHover(callback: (info: HoverInfo | null) => void): void {
+        this.onHoverCallback = callback;
     }
 
     /**

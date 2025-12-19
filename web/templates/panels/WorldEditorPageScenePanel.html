@@ -14,6 +14,16 @@
 </div>
 {{ end }}
 
+{{/* Define South region (status bar) */}}
+{{ define "PhaserSceneView_South" }}
+<div
+  id="phaser-scene-view-south"
+  class="flex-shrink-0 px-2 py-1 bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 text-xs font-mono text-gray-600 dark:text-gray-400"
+>
+  <span id="editor-status-bar">Move mouse over map to see coordinates</span>
+</div>
+{{ end }}
+
 {{/* Use PhaserSceneView - toolbar is defined above via block extension */}}
 {{ define "WorldEditorPageScenePanel" }}
 
