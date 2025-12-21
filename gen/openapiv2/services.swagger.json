@@ -2742,7 +2742,7 @@
         },
         "type": {
           "type": "string",
-          "title": "\"selection\", \"movement\", \"attack\", \"build\", \"exhausted\""
+          "title": "\"selection\", \"movement\", \"attack\", \"build\", \"exhausted\", \"capturing\""
         },
         "move": {
           "$ref": "#/definitions/v1MoveUnitAction"
@@ -2755,6 +2755,11 @@
         },
         "capture": {
           "$ref": "#/definitions/v1CaptureBuildingAction"
+        },
+        "player": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Player ID for player-colored highlights (e.g., capturing flag)"
         }
       },
       "title": "Specification for a single highlight"

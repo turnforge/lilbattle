@@ -34,13 +34,13 @@ func GameOptionLess(a, b *v1.GameOption) bool {
 // getOptionTypePriority returns sort priority for option types
 func getOptionTypePriority(opt *v1.GameOption) int {
 	switch opt.OptionType.(type) {
-	case *v1.GameOption_Move:
-		return 0
-	case *v1.GameOption_Attack:
-		return 1
-	case *v1.GameOption_Build:
-		return 2
 	case *v1.GameOption_Capture:
+		return 0
+	case *v1.GameOption_Move:
+		return 1
+	case *v1.GameOption_Attack:
+		return 2
+	case *v1.GameOption_Build:
 		return 3
 	case *v1.GameOption_EndTurn:
 		return 4
