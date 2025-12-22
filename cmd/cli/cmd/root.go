@@ -21,8 +21,9 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ww",
-	Short: "WeeWar CLI - Command-line interface for WeeWar games",
+	Use:          "ww",
+	Short:        "WeeWar CLI - Command-line interface for WeeWar games",
+	SilenceUsage: true,
 	Long: `WeeWar CLI provides a command-line interface for playing WeeWar games.
 
 Examples:
