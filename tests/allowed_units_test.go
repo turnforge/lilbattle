@@ -5,7 +5,6 @@ import (
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/lib"
-	"github.com/turnforge/weewar/services"
 )
 
 // createTestGameWithAllowedUnits creates a minimal game for testing allowed units
@@ -87,7 +86,7 @@ func TestFilterBuildOptionsByAllowedUnits(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			buildOptions := services.FilterBuildOptionsByAllowedUnits(
+			buildOptions := lib.FilterBuildOptionsByAllowedUnits(
 				tt.buildableUnits,
 				tt.allowedUnits,
 			)
