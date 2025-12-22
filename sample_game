@@ -1,0 +1,2 @@
+export WEEWAR_GAME_ID=testgame
+export WEEWAR_SERVER=http://localhost:8080/api

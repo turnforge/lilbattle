@@ -127,10 +127,8 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_MoveUnit{
 			MoveUnit: &v1.MoveUnitAction{
-				FromQ: 1,
-				FromR: 2,
-				ToQ:   1,
-				ToR:   1,
+				From: &v1.Position{Q: 1, R: 2},
+				To:   &v1.Position{Q: 1, R: 1},
 			},
 		},
 	}

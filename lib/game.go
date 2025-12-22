@@ -83,6 +83,15 @@ func (g *Game) GetPlayersOnTeam(teamID int32) []*v1.GamePlayer {
 	return teamPlayers
 }
 
+// NumPlayers returns the number of players configured for this game.
+// Uses the game configuration as the source of truth.
+func (g *Game) NumPlayers() int32 {
+	if g.Config == nil || g.Config.Players == nil {
+		return 0
+	}
+	return int32(len(g.Config.Players))
+}
+
 // ArePlayersOnSameTeam checks if two players are on the same team
 func (g *Game) ArePlayersOnSameTeam(playerID1, playerID2 int) bool {
 	if playerID1 < 0 || playerID1 >= len(g.Game.Config.Players) ||
@@ -309,6 +318,64 @@ func (g *Game) GetTurnNumber() int32 {
 }
 
 // =============================================================================
+// Position Parsing Methods
+// =============================================================================
+
+// FromPos converts a Position proto to an AxialCoord.
+// If pos.Label is set, it parses the label (supports "A1", "3,4", "r4,5", etc.)
+// Otherwise, it uses pos.Q and pos.R directly.
+func (g *Game) FromPos(pos *v1.Position) (AxialCoord, error) {
+	return g.FromPosWithBase(pos, nil)
+}
+
+// FromPosWithBase converts a Position proto to an AxialCoord with an optional base coordinate.
+// The base coordinate enables relative directions like "L", "TR", "TL,TL,R".
+// When parsing from a label, the Q/R fields on the Position are populated with the resolved coordinates.
+func (g *Game) FromPosWithBase(pos *v1.Position, base *AxialCoord) (AxialCoord, error) {
+	if pos == nil {
+		return AxialCoord{}, fmt.Errorf("position is nil")
+	}
+
+	// If label is empty, use Q/R directly (this is the expected case for pre-resolved positions)
+	if pos.Label == "" {
+		return AxialCoord{Q: int(pos.Q), R: int(pos.R)}, nil
+	}
+
+	// If Q/R are already set to non-origin values, use them directly
+	// This handles positions that were already resolved by ParseTarget.Position()
+	if pos.Q != 0 || pos.R != 0 {
+		return AxialCoord{Q: int(pos.Q), R: int(pos.R)}, nil
+	}
+
+	// Label is set and Q/R are both 0 - need to parse the label
+	// This handles both origin (0,0) positions and positions that need parsing
+	target, err := ParsePositionOrUnitWithContext(g, pos.Label, base)
+	if err != nil {
+		return AxialCoord{}, fmt.Errorf("failed to parse position label %q: %w", pos.Label, err)
+	}
+	// Populate Q/R on the Position proto for later use
+	pos.Q = int32(target.Coordinate.Q)
+	pos.R = int32(target.Coordinate.R)
+	return target.Coordinate, nil
+}
+
+// Pos parses a position string and returns a ParseTarget.
+// Supports: "A1" (unit), "3,4" (Q,R), "r4,5" (row,col), "L"/"TR" (direction), "t:A1" (tile)
+// Optional second argument provides base coordinate for relative directions.
+func (g *Game) Pos(input string, from ...string) (*ParseTarget, error) {
+	var baseCoord *AxialCoord
+	if len(from) > 0 {
+		baseTarget, err := ParsePositionOrUnit(g, from[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid base position %q: %w", from[0], err)
+		}
+		coord := baseTarget.Coordinate
+		baseCoord = &coord
+	}
+	return ParsePositionOrUnitWithContext(g, input, baseCoord)
+}
+
+// =============================================================================
 // UnitInterface Interface Implementation
 // =============================================================================
 
@@ -322,4 +389,424 @@ func (g *Game) GetUnitsForPlayer(playerID int) []*v1.Unit {
 	units := make([]*v1.Unit, len(g.World.unitsByPlayer[playerID]))
 	copy(units, g.World.unitsByPlayer[playerID])
 	return units
+}
+
+// =============================================================================
+// Controller Methods - High-level game actions
+// =============================================================================
+
+// Move moves a unit to target position.
+// unit: position string for the unit ("A1", "3,4", etc.)
+// target: target string (can be relative like "R", "TL,TR", or absolute)
+// Returns world changes from the move.
+func (g *Game) Move(unit, target string) ([]*v1.WorldChange, error) {
+	// Parse unit position
+	src, err := g.Pos(unit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid unit position %q: %w", unit, err)
+	}
+	if src.Unit == nil {
+		return nil, fmt.Errorf("no unit at position %q", unit)
+	}
+
+	// Parse target position relative to unit
+	dest, err := g.Pos(target, unit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid target position %q: %w", target, err)
+	}
+
+	// Create move action
+	action := &v1.MoveUnitAction{
+		From: src.Position(),
+		To:   dest.Position(),
+	}
+
+	move := &v1.GameMove{
+		Player:   g.CurrentPlayer,
+		MoveType: &v1.GameMove_MoveUnit{MoveUnit: action},
+	}
+
+	// Process move
+	var mp MoveProcessor
+	if err := mp.ProcessMoveUnit(g, move, action, false); err != nil {
+		return nil, err
+	}
+
+	return move.Changes, nil
+}
+
+// Attack attacks target from attacker position.
+// attacker: position string for the attacking unit
+// defender: position string for the target (can be relative like "R", "TL")
+// Returns world changes from the attack.
+func (g *Game) Attack(attacker, defender string) ([]*v1.WorldChange, error) {
+	// Parse attacker position
+	src, err := g.Pos(attacker)
+	if err != nil {
+		return nil, fmt.Errorf("invalid attacker position %q: %w", attacker, err)
+	}
+	if src.Unit == nil {
+		return nil, fmt.Errorf("no unit at attacker position %q", attacker)
+	}
+
+	// Parse defender position relative to attacker
+	dest, err := g.Pos(defender, attacker)
+	if err != nil {
+		return nil, fmt.Errorf("invalid defender position %q: %w", defender, err)
+	}
+
+	// Create attack action
+	action := &v1.AttackUnitAction{
+		Attacker: src.Position(),
+		Defender: dest.Position(),
+	}
+
+	move := &v1.GameMove{
+		Player:   g.CurrentPlayer,
+		MoveType: &v1.GameMove_AttackUnit{AttackUnit: action},
+	}
+
+	// Process attack
+	var mp MoveProcessor
+	if err := mp.ProcessAttackUnit(g, move, action); err != nil {
+		return nil, err
+	}
+
+	return move.Changes, nil
+}
+
+// Build creates a unit at tile position.
+// tile: position string for the building tile ("t:A1", "3,4", etc.)
+// unitType: the type of unit to build
+// Returns world changes from the build.
+func (g *Game) Build(tile string, unitType int32) ([]*v1.WorldChange, error) {
+	// Parse tile position
+	target, err := g.Pos(tile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid tile position %q: %w", tile, err)
+	}
+	if target.Tile == nil {
+		return nil, fmt.Errorf("no tile at position %q", tile)
+	}
+
+	// Create build action
+	action := &v1.BuildUnitAction{
+		Pos:      target.Position(),
+		UnitType: unitType,
+	}
+
+	move := &v1.GameMove{
+		Player:   g.CurrentPlayer,
+		MoveType: &v1.GameMove_BuildUnit{BuildUnit: action},
+	}
+
+	// Process build
+	var mp MoveProcessor
+	if err := mp.ProcessBuildUnit(g, move, action); err != nil {
+		return nil, err
+	}
+
+	return move.Changes, nil
+}
+
+// Capture starts capturing building with unit at position.
+// unit: position string for the capturing unit
+// Returns world changes from the capture action.
+func (g *Game) Capture(unit string) ([]*v1.WorldChange, error) {
+	// Parse unit position
+	target, err := g.Pos(unit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid unit position %q: %w", unit, err)
+	}
+	if target.Unit == nil {
+		return nil, fmt.Errorf("no unit at position %q", unit)
+	}
+
+	// Create capture action
+	action := &v1.CaptureBuildingAction{
+		Pos: target.Position(),
+	}
+
+	move := &v1.GameMove{
+		Player:   g.CurrentPlayer,
+		MoveType: &v1.GameMove_CaptureBuilding{CaptureBuilding: action},
+	}
+
+	// Process capture
+	var mp MoveProcessor
+	if err := mp.ProcessCaptureBuilding(g, move, action); err != nil {
+		return nil, err
+	}
+
+	return move.Changes, nil
+}
+
+// EndTurn advances to next player.
+// Returns world changes from ending the turn.
+func (g *Game) EndTurn() ([]*v1.WorldChange, error) {
+	action := &v1.EndTurnAction{}
+
+	move := &v1.GameMove{
+		Player:   g.CurrentPlayer,
+		MoveType: &v1.GameMove_EndTurn{EndTurn: action},
+	}
+
+	// Process end turn
+	var mp MoveProcessor
+	if err := mp.ProcessEndTurn(g, move, action); err != nil {
+		return nil, err
+	}
+
+	return move.Changes, nil
+}
+
+// =============================================================================
+// Options Methods - Query available actions
+// =============================================================================
+
+// GetOptionsAt returns available options at a position.
+// position: position string ("A1", "3,4", "t:A1", etc.)
+// Returns the options response with available actions.
+func (g *Game) GetOptionsAt(position string) (*v1.GetOptionsAtResponse, error) {
+	// Parse the position
+	target, err := g.Pos(position)
+	if err != nil {
+		return &v1.GetOptionsAtResponse{
+			Options:         []*v1.GameOption{},
+			CurrentPlayer:   g.CurrentPlayer,
+			GameInitialized: true,
+		}, fmt.Errorf("invalid position: %w", err)
+	}
+
+	coord := target.Coordinate
+	unit := g.World.UnitAt(coord)
+	tile := g.World.TileAt(coord)
+
+	// Lazy top-up if there's a unit
+	if unit != nil {
+		if err := g.TopUpUnitIfNeeded(unit); err != nil {
+			return nil, fmt.Errorf("failed to top-up unit: %w", err)
+		}
+	}
+
+	var options []*v1.GameOption
+	var allPaths *v1.AllPaths
+
+	if unit == nil {
+		options, err = g.GetTileOptions(tile)
+	} else {
+		options, allPaths, err = g.GetUnitOptions(unit)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetOptionsAtResponse{
+		Options:         options,
+		CurrentPlayer:   g.CurrentPlayer,
+		GameInitialized: g.World != nil,
+		AllPaths:        allPaths,
+	}, nil
+}
+
+// GetUnitOptions returns available options for a unit (move, attack, capture).
+func (g *Game) GetUnitOptions(unit *v1.Unit) (options []*v1.GameOption, allPaths *v1.AllPaths, err error) {
+	var mp MoveProcessor
+
+	// Get unit definition for progression rules
+	unitDef, err := g.RulesEngine.GetUnitData(unit.UnitType)
+	if err != nil {
+		unitDef = &v1.UnitDefinition{
+			ActionOrder: []string{"move", "attack|capture"},
+		}
+	}
+
+	// Get allowed actions based on progression state
+	allowedActions := g.RulesEngine.GetAllowedActionsForUnit(unit, unitDef)
+
+	moveAllowed := ContainsAction(allowedActions, "move")
+	retreatAllowed := ContainsAction(allowedActions, "retreat")
+
+	// Get movement options
+	if unit.AvailableHealth > 0 && unit.DistanceLeft > 0 && (moveAllowed || retreatAllowed) {
+		pathsResult, err := mp.GetMovementOptions(g, unit.Q, unit.R, false)
+		if err == nil {
+			allPaths = pathsResult
+
+			for _, edge := range allPaths.Edges {
+				if edge.IsOccupied {
+					continue
+				}
+
+				path, err := ReconstructPath(allPaths, edge.ToQ, edge.ToR)
+				if err != nil {
+					continue
+				}
+
+				moveAction := &v1.MoveUnitAction{
+					From:              &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+					To:                &v1.Position{Q: edge.ToQ, R: edge.ToR},
+					MovementCost:      edge.TotalCost,
+					ReconstructedPath: path,
+				}
+
+				options = append(options, &v1.GameOption{
+					OptionType: &v1.GameOption_Move{Move: moveAction},
+				})
+			}
+		}
+	}
+
+	// Check if attack is allowed (including look-ahead for point-based steps)
+	attackAllowed := ContainsAction(allowedActions, "attack")
+	isPointBasedStep := moveAllowed || retreatAllowed
+	if isPointBasedStep && !attackAllowed {
+		nextStepUnit := &v1.Unit{
+			ProgressionStep:   unit.ProgressionStep + 1,
+			ChosenAlternative: "",
+			DistanceLeft:      0,
+		}
+		nextAllowedActions := g.RulesEngine.GetAllowedActionsForUnit(nextStepUnit, unitDef)
+		attackAllowed = ContainsAction(nextAllowedActions, "attack")
+	}
+
+	// Get attack options
+	if unit.AvailableHealth > 0 && attackAllowed {
+		attackCoords, err := mp.GetAttackOptions(g, unit.Q, unit.R)
+		if err == nil {
+			for _, coord := range attackCoords {
+				targetUnit := g.World.UnitAt(coord)
+				if targetUnit != nil {
+					damageEstimate := int32(50) // TODO: Use proper damage calculation
+
+					attackAction := &v1.AttackUnitAction{
+						Attacker:         &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+						Defender:         &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
+						TargetUnitType:   targetUnit.UnitType,
+						TargetUnitHealth: targetUnit.AvailableHealth,
+						CanAttack:        true,
+						DamageEstimate:   damageEstimate,
+					}
+
+					options = append(options, &v1.GameOption{
+						OptionType: &v1.GameOption_Attack{Attack: attackAction},
+					})
+				}
+			}
+		}
+	}
+
+	// Check if capture is allowed (including look-ahead)
+	captureAllowed := ContainsAction(allowedActions, "capture")
+	if isPointBasedStep && !captureAllowed {
+		nextStepUnit := &v1.Unit{
+			ProgressionStep:   unit.ProgressionStep + 1,
+			ChosenAlternative: "",
+			DistanceLeft:      0,
+		}
+		nextAllowedActions := g.RulesEngine.GetAllowedActionsForUnit(nextStepUnit, unitDef)
+		captureAllowed = ContainsAction(nextAllowedActions, "capture")
+	}
+
+	// Get capture option
+	if unit.AvailableHealth > 0 && captureAllowed && unit.CaptureStartedTurn == 0 {
+		coord := CoordFromInt32(unit.Q, unit.R)
+		tile := g.World.TileAt(coord)
+		if tile != nil && tile.Player != unit.Player {
+			terrainProps := g.RulesEngine.GetTerrainUnitPropertiesForUnit(tile.TileType, unit.UnitType)
+			if terrainProps != nil && terrainProps.CanCapture {
+				captureAction := &v1.CaptureBuildingAction{
+					Pos:      &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+					TileType: tile.TileType,
+				}
+				options = append(options, &v1.GameOption{
+					OptionType: &v1.GameOption_Capture{Capture: captureAction},
+				})
+			}
+		}
+	}
+
+	return
+}
+
+// GetTileOptions returns available options for a tile (build units).
+func (g *Game) GetTileOptions(tile *v1.Tile) (options []*v1.GameOption, err error) {
+	if tile == nil {
+		return nil, nil
+	}
+
+	// Lazy top-up
+	if err := g.TopUpTileIfNeeded(tile); err != nil {
+		return nil, fmt.Errorf("failed to top-up tile: %w", err)
+	}
+
+	// Only check tile actions if tile belongs to current player
+	if tile.Player != g.CurrentPlayer {
+		return nil, nil
+	}
+
+	terrainDef, err := g.RulesEngine.GetTerrainData(tile.TileType)
+	if err != nil {
+		return nil, nil
+	}
+
+	// Get current player's coins
+	playerCoins := int32(0)
+	if playerState := g.GameState.PlayerStates[g.CurrentPlayer]; playerState != nil {
+		playerCoins = playerState.Coins
+	}
+
+	// Get allowed actions for this tile
+	tileActions := g.RulesEngine.GetAllowedActionsForTile(tile, terrainDef, playerCoins)
+
+	for _, action := range tileActions {
+		if action == "build" {
+			// Filter buildable units by game's allowed units setting
+			buildableUnits := FilterBuildOptionsByAllowedUnits(
+				terrainDef.BuildableUnitIds,
+				g.Config.Settings.GetAllowedUnits(),
+			)
+
+			for _, unitTypeID := range buildableUnits {
+				unitDef, err := g.RulesEngine.GetUnitData(unitTypeID)
+				if err != nil {
+					continue
+				}
+
+				if unitDef.Coins <= playerCoins {
+					options = append(options, &v1.GameOption{
+						OptionType: &v1.GameOption_Build{
+							Build: &v1.BuildUnitAction{
+								Pos:      &v1.Position{Label: tile.Shortcut, Q: tile.Q, R: tile.R},
+								UnitType: unitTypeID,
+								Cost:     unitDef.Coins,
+							},
+						},
+					})
+				}
+			}
+		}
+	}
+
+	return
+}
+
+// FilterBuildOptionsByAllowedUnits filters buildable units by the game's allowed units setting.
+func FilterBuildOptionsByAllowedUnits(buildableUnits, allowedUnits []int32) []int32 {
+	if allowedUnits == nil {
+		return buildableUnits
+	}
+
+	allowedSet := make(map[int32]bool)
+	for _, unitID := range allowedUnits {
+		allowedSet[unitID] = true
+	}
+
+	var filtered []int32
+	for _, unitID := range buildableUnits {
+		if allowedSet[unitID] {
+			filtered = append(filtered, unitID)
+		}
+	}
+	return filtered
 }

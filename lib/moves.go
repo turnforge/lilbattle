@@ -101,7 +101,10 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 	// Initialize the result object
 	move.IsPermanent = true // Builds are permanent
 
-	coord := CoordFromInt32(action.Q, action.R)
+	coord, err := g.FromPos(action.Pos)
+	if err != nil {
+		return fmt.Errorf("invalid build position: %w", err)
+	}
 	tile := g.World.TileAt(coord)
 	if tile == nil {
 		return fmt.Errorf("no tile at position %v", coord)
@@ -241,7 +244,10 @@ func (m *MoveProcessor) ProcessBuildUnit(g *Game, move *v1.GameMove, action *v1.
 // The capture completes at the start of the capturing player's next turn
 // if the unit survives until then
 func (m *MoveProcessor) ProcessCaptureBuilding(g *Game, move *v1.GameMove, action *v1.CaptureBuildingAction) (err error) {
-	coord := CoordFromInt32(action.Q, action.R)
+	coord, err := g.FromPos(action.Pos)
+	if err != nil {
+		return fmt.Errorf("invalid capture position: %w", err)
+	}
 
 	// Get the unit at the position
 	unit := g.World.UnitAt(coord)
@@ -414,7 +420,8 @@ func (m *MoveProcessor) ProcessEndTurn(g *Game, move *v1.GameMove, action *v1.En
 
 	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
 	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
-	numPlayers := g.World.PlayerCount()
+	// Use configured player count from game config, not from World (which counts units)
+	numPlayers := g.NumPlayers()
 
 	if g.CurrentPlayer == numPlayers {
 		// Last player completes their turn, go back to player 1 and increment turn counter
@@ -481,9 +488,15 @@ func (g *Game) IsValidMove(from, to AxialCoord) bool {
 func (m *MoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, action *v1.MoveUnitAction, preventPassThrough bool) (err error) {
 	// Initialize the result object
 
-	// TODO - use a pushed world at ProcessMoves level instead of g.World each time
-	from := CoordFromInt32(action.FromQ, action.FromR)
-	to := CoordFromInt32(action.ToQ, action.ToR)
+	from, err := g.FromPos(action.From)
+	if err != nil {
+		return fmt.Errorf("invalid from position: %w", err)
+	}
+	// Parse 'to' relative to 'from' to support directions like "L", "TR"
+	to, err := g.FromPosWithBase(action.To, &from)
+	if err != nil {
+		return fmt.Errorf("invalid to position: %w", err)
+	}
 	unit := g.World.UnitAt(from)
 	if unit == nil {
 		return fmt.Errorf("unit is nil")
@@ -565,9 +578,16 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	// Initialize the result object
 	move.IsPermanent = true // Attacks are permanent (cannot be undone)
 
-	// TODO - use a pushed world at ProcessMoves level instead of g.World each time
-	attacker := g.World.UnitAt(CoordFromInt32(action.AttackerQ, action.AttackerR))
-	defender := g.World.UnitAt(CoordFromInt32(action.DefenderQ, action.DefenderR))
+	attackerCoord, err := g.FromPos(action.Attacker)
+	if err != nil {
+		return fmt.Errorf("invalid attacker position: %w", err)
+	}
+	defenderCoord, err := g.FromPos(action.Defender)
+	if err != nil {
+		return fmt.Errorf("invalid defender position: %w", err)
+	}
+	attacker := g.World.UnitAt(attackerCoord)
+	defender := g.World.UnitAt(defenderCoord)
 	if attacker == nil || defender == nil {
 		return fmt.Errorf("attacker or defender is nil")
 	}
@@ -593,10 +613,6 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	// Store original health for world changes
 	attackerOriginalHealth := attacker.AvailableHealth
 	defenderOriginalHealth := defender.AvailableHealth
-
-	// Get coordinates for wound bonus calculation
-	attackerCoord := CoordFromInt32(action.AttackerQ, action.AttackerR)
-	defenderCoord := CoordFromInt32(action.DefenderQ, action.DefenderR)
 
 	// Calculate wound bonus from defender's attack history
 	woundBonus := g.RulesEngine.CalculateWoundBonus(defender, attackerCoord)
@@ -674,8 +690,8 @@ func (m *MoveProcessor) ProcessAttackUnit(g *Game, move *v1.GameMove, action *v1
 	// Record attack in defender's history for future wound bonus calculations
 	distance := CubeDistance(attackerCoord, defenderCoord)
 	defender.AttackHistory = append(defender.AttackHistory, &v1.AttackRecord{
-		Q:          action.AttackerQ,
-		R:          action.AttackerR,
+		Q:          int32(attackerCoord.Q),
+		R:          int32(attackerCoord.R),
 		IsRanged:   distance >= 2,
 		TurnNumber: g.TurnCounter,
 	})

@@ -28,8 +28,7 @@ message TurnOptionClickedRequest {
   string game_id = 1;
   int32 option_index = 2;  // Index of the option in the options array
   string option_type = 3;   // Type of option: "move", "attack", "endTurn", etc.
-  int32 q = 4;              // Target Q coordinate
-  int32 r = 5;              // Target R coordinate
+  Position pos = 4;
 }
 
 // Response of a turn option click
@@ -40,9 +39,8 @@ message TurnOptionClickedResponse {
 // Called when the scene was clicked
 message SceneClickedRequest {
   string game_id = 1;
-  int32 q = 2;
-  int32 r = 3;
-  string layer = 4;
+  Position pos = 2;
+  string layer = 3;
 }
 
 // Response of a turn option click
@@ -63,9 +61,8 @@ message EndTurnButtonClickedResponse {
 // Called when a build option is clicked in BuildOptionsModal
 message BuildOptionClickedRequest {
   string game_id = 1;
-  int32 q = 2;              // Q coordinate of the tile where unit is being built
-  int32 r = 3;              // R coordinate of the tile where unit is being built
-  int32 unit_type = 4;     // Type of unit being built (e.g., "soldier_basic")
+  Position pos = 2;
+  int32 unit_type = 3;     // Type of unit being built (e.g., "soldier_basic")
 }
 
 // Response of a build option click

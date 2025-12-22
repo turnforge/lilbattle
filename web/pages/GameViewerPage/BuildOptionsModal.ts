@@ -157,8 +157,7 @@ export class BuildOptionsModal extends BaseComponent implements LCMComponent {
                 try {
                     await this.gameViewPresenterClient.buildOptionClicked({
                         gameId: "",
-                        q: this.currentQ,
-                        r: this.currentR,
+                        pos: { label: "", q: this.currentQ, r: this.currentR, },
                         unitType: unitType,
                     });
                 } catch (error) {

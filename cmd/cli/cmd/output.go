@@ -106,7 +106,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 		switch opt := option.OptionType.(type) {
 		case *v1.GameOption_Move:
 			moveOpt := opt.Move
-			targetCoord := lib.CoordFromInt32(moveOpt.ToQ, moveOpt.ToR)
+			targetCoord := lib.CoordFromInt32(moveOpt.To.Q, moveOpt.To.R)
 			sb.WriteString(fmt.Sprintf("%d. move to %s (cost: %f)\n",
 				i+1, targetCoord.String(), moveOpt.MovementCost))
 
@@ -118,7 +118,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 
 		case *v1.GameOption_Attack:
 			attackOpt := opt.Attack
-			targetCoord := lib.CoordFromInt32(attackOpt.DefenderQ, attackOpt.DefenderR)
+			targetCoord := lib.CoordFromInt32(attackOpt.Defender.Q, attackOpt.Defender.R)
 			sb.WriteString(fmt.Sprintf("%d. attack %s (damage est: %d)\n",
 				i+1, targetCoord.String(), attackOpt.DamageEstimate))
 
@@ -179,7 +179,7 @@ func FormatOptions(pc *PresenterContext, position string) string {
 
 		case *v1.GameOption_Capture:
 			captureOpt := opt.Capture
-			coord := lib.CoordFromInt32(captureOpt.Q, captureOpt.R)
+			coord := lib.CoordFromInt32(captureOpt.Pos.Q, captureOpt.Pos.R)
 			terrainName := fmt.Sprintf("type %d", captureOpt.TileType)
 
 			// Try to get the actual terrain name from RulesEngine

@@ -46,16 +46,16 @@ func TestGetOptionsAt_AttackAfterMove(t *testing.T) {
 					Player:           1,
 					UnitType:         6, // Anti-aircraft - action_order: ["move", "attack"]
 					AvailableHealth:  10,
-					DistanceLeft:     0.5,            // Some movement left, but not enough to move anywhere useful
-					ProgressionStep:  0,              // Still at move step
+					DistanceLeft:     0.5, // Some movement left, but not enough to move anywhere useful
+					ProgressionStep:  0,   // Still at move step
 					LastToppedupTurn: 1,
 					Shortcut:         "A1",
 				},
 				"2,0": {
 					Q:                2,
 					R:                0,
-					Player:           2,  // Enemy
-					UnitType:         1,  // Trooper
+					Player:           2, // Enemy
+					UnitType:         1, // Trooper
 					AvailableHealth:  10,
 					DistanceLeft:     3,
 					LastToppedupTurn: 1,
@@ -76,8 +76,10 @@ func TestGetOptionsAt_AttackAfterMove(t *testing.T) {
 	// Get options for our unit at 1,0
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {
@@ -89,10 +91,10 @@ func TestGetOptionsAt_AttackAfterMove(t *testing.T) {
 	for _, opt := range resp.Options {
 		if opt.GetAttack() != nil {
 			attackOptionCount++
-			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().DefenderQ, opt.GetAttack().DefenderR)
+			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().Defender.Q, opt.GetAttack().Defender.R)
 		}
 		if opt.GetMove() != nil {
-			t.Logf("Found move option: move to (%d,%d)", opt.GetMove().ToQ, opt.GetMove().ToR)
+			t.Logf("Found move option: move to (%d,%d)", opt.GetMove().To.Q, opt.GetMove().To.R)
 		}
 	}
 
@@ -133,8 +135,8 @@ func TestGetOptionsAt_AfterFullMove(t *testing.T) {
 					Player:           1,
 					UnitType:         6, // Anti-aircraft - action_order: ["move", "attack"]
 					AvailableHealth:  10,
-					DistanceLeft:     0,               // No movement left
-					ProgressionStep:  1,               // Advanced to attack step
+					DistanceLeft:     0, // No movement left
+					ProgressionStep:  1, // Advanced to attack step
 					LastToppedupTurn: 1,
 					Shortcut:         "A1",
 				},
@@ -162,8 +164,10 @@ func TestGetOptionsAt_AfterFullMove(t *testing.T) {
 
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {
@@ -209,9 +213,9 @@ func TestGetOptionsAt_PartialMoveShowsBothMoveAndAttack(t *testing.T) {
 		},
 		WorldData: &v1.WorldData{
 			TilesMap: map[string]*v1.Tile{
-				"0,0": {Q: 0, R: 0, TileType: 5},   // Grass
-				"1,0": {Q: 1, R: 0, TileType: 5},   // Grass - our helicopter here after partial move
-				"2,0": {Q: 2, R: 0, TileType: 5},   // Grass - enemy helicopter here
+				"0,0":  {Q: 0, R: 0, TileType: 5},  // Grass
+				"1,0":  {Q: 1, R: 0, TileType: 5},  // Grass - our helicopter here after partial move
+				"2,0":  {Q: 2, R: 0, TileType: 5},  // Grass - enemy helicopter here
 				"-1,0": {Q: -1, R: 0, TileType: 5}, // Grass - can still move here
 				"0,-1": {Q: 0, R: -1, TileType: 5}, // Grass - can still move here
 			},
@@ -222,15 +226,15 @@ func TestGetOptionsAt_PartialMoveShowsBothMoveAndAttack(t *testing.T) {
 					Player:           1,
 					UnitType:         17, // Helicopter - action_order: ["move", "attack", "retreat"]
 					AvailableHealth:  10,
-					DistanceLeft:     2,  // Still has movement left after partial move
-					ProgressionStep:  0,  // Still at move step
+					DistanceLeft:     2, // Still has movement left after partial move
+					ProgressionStep:  0, // Still at move step
 					LastToppedupTurn: 1,
 					Shortcut:         "A5",
 				},
 				"2,0": {
 					Q:                2,
 					R:                0,
-					Player:           2,  // Enemy helicopter
+					Player:           2, // Enemy helicopter
 					UnitType:         17,
 					AvailableHealth:  10,
 					DistanceLeft:     5,
@@ -251,8 +255,10 @@ func TestGetOptionsAt_PartialMoveShowsBothMoveAndAttack(t *testing.T) {
 
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {
@@ -267,7 +273,7 @@ func TestGetOptionsAt_PartialMoveShowsBothMoveAndAttack(t *testing.T) {
 		}
 		if opt.GetAttack() != nil {
 			attackOptionCount++
-			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().DefenderQ, opt.GetAttack().DefenderR)
+			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().Defender.Q, opt.GetAttack().Defender.R)
 		}
 	}
 
@@ -308,8 +314,8 @@ func TestGetOptionsAt_NoMoveOptionsAutoAdvance(t *testing.T) {
 		},
 		WorldData: &v1.WorldData{
 			TilesMap: map[string]*v1.Tile{
-				"0,0": {Q: 0, R: 0, TileType: 5},   // Grass - friendly unit
-				"1,0": {Q: 1, R: 0, TileType: 5},   // Grass - our test unit
+				"0,0":  {Q: 0, R: 0, TileType: 5},  // Grass - friendly unit
+				"1,0":  {Q: 1, R: 0, TileType: 5},  // Grass - our test unit
 				"-1,0": {Q: -1, R: 0, TileType: 5}, // Grass - friendly unit blocking
 				"0,-1": {Q: 0, R: -1, TileType: 5}, // Grass - friendly unit blocking
 				"1,-1": {Q: 1, R: -1, TileType: 5}, // Grass - friendly unit blocking
@@ -370,8 +376,10 @@ func TestGetOptionsAt_NoMoveOptionsAutoAdvance(t *testing.T) {
 
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {
@@ -433,8 +441,8 @@ func TestGetOptionsAt_AfterAttackOnlyRetreat(t *testing.T) {
 					Player:           1,
 					UnitType:         17, // Helicopter - action_order: ["move", "attack", "retreat"]
 					AvailableHealth:  10,
-					DistanceLeft:     2,               // Has retreat points left
-					ProgressionStep:  2,               // At retreat step (after move=0, attack=1)
+					DistanceLeft:     2, // Has retreat points left
+					ProgressionStep:  2, // At retreat step (after move=0, attack=1)
 					LastToppedupTurn: 1,
 					Shortcut:         "A5",
 				},
@@ -461,8 +469,10 @@ func TestGetOptionsAt_AfterAttackOnlyRetreat(t *testing.T) {
 
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {
@@ -474,11 +484,11 @@ func TestGetOptionsAt_AfterAttackOnlyRetreat(t *testing.T) {
 	for _, opt := range resp.Options {
 		if opt.GetMove() != nil {
 			moveOptionCount++
-			t.Logf("Found move/retreat option: move to (%d,%d)", opt.GetMove().ToQ, opt.GetMove().ToR)
+			t.Logf("Found move/retreat option: move to (%d,%d)", opt.GetMove().To.Q, opt.GetMove().To.R)
 		}
 		if opt.GetAttack() != nil {
 			attackOptionCount++
-			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().DefenderQ, opt.GetAttack().DefenderR)
+			t.Logf("Found attack option: attack at (%d,%d)", opt.GetAttack().Defender.Q, opt.GetAttack().Defender.R)
 		}
 	}
 
@@ -571,10 +581,14 @@ func TestApplyUnitDamaged_ProgressionStepPersisted(t *testing.T) {
 			{
 				MoveType: &v1.GameMove_AttackUnit{
 					AttackUnit: &v1.AttackUnitAction{
-						AttackerQ: 1,
-						AttackerR: 0,
-						DefenderQ: 2,
-						DefenderR: 0,
+						Attacker: &v1.Position{
+							Q: 1,
+							R: 0,
+						},
+						Defender: &v1.Position{
+							Q: 2,
+							R: 0,
+						},
 					},
 				},
 			},
@@ -593,8 +607,10 @@ func TestApplyUnitDamaged_ProgressionStepPersisted(t *testing.T) {
 	// Now check the unit's progression step - it should have advanced to 2
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      1,
-		R:      0,
+		Pos: &v1.Position{
+			Q: 1,
+			R: 0,
+		},
 	})
 
 	if err != nil {

@@ -288,15 +288,15 @@ export class MovementHighlightLayer extends HexHighlightLayer {
         // Add highlights for each valid movement position and store the MoveUnitAction data
         moveOptions.forEach(moveOption => {
             // Green highlight with subtle border
-            this.addHighlight(moveOption.toQ, moveOption.toR, 0x00FF00, 0.2, 0x00FF00, 2);
+            this.addHighlight(moveOption.to!.q, moveOption.to!.r, 0x00FF00, 0.2, 0x00FF00, 2);
             
             // Store the move option for click handling
-            const coordKey = `${moveOption.toQ},${moveOption.toR}`;
+            const coordKey = `${moveOption.to!.q},${moveOption.to!.r}`;
             this.movementOptions.set(coordKey, moveOption);
             
             // Add debug coordinate text if enabled
             if (this.showDebugCoordinates) {
-                this.addCoordinateText(moveOption.toQ, moveOption.toR, moveOption);
+                this.addCoordinateText(moveOption.to!.q, moveOption.to!.r, moveOption);
             }
         });
     }
@@ -420,7 +420,7 @@ export class AttackHighlightLayer extends HexHighlightLayer {
         // Add highlights for each valid attack target
         coords.forEach(coord => {
             // Red highlight with border
-            this.addHighlight(coord.defenderQ, coord.defenderR, 0xFF0000, 0.2, 0xFF0000, 2);
+            this.addHighlight(coord.defender!.q, coord.defender!.r, 0xFF0000, 0.2, 0xFF0000, 2);
         });
     }
     

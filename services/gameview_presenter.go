@@ -206,8 +206,14 @@ func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClick
 	game := getGameResp.Game
 	gameState := getGameResp.State
 	rg, err := s.GamesService.GetRuntimeGame(game, gameState)
-	q, r := req.Q, req.R
-	coord := CoordFromInt32(q, r)
+	if err != nil {
+		return resp, err
+	}
+	coord, err := rg.FromPos(req.Pos)
+	if err != nil {
+		return resp, err
+	}
+	q, r := int32(coord.Q), int32(coord.R)
 
 	// Get tile and unit data from World using coordinates
 	switch req.Layer {
@@ -266,8 +272,7 @@ func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClick
 		// Get options at this position (handles both unit and tile actions)
 		optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 			GameId: req.GameId,
-			Q:      q,
-			R:      r,
+			Pos:    &v1.Position{Q: q, R: r},
 		})
 		if err == nil && optionsResp != nil && len(optionsResp.Options) > 0 {
 			// Check if there are ONLY build options (no movement/attack options)
@@ -377,31 +382,31 @@ func buildHighlightSpecs(optionsResp *v1.GetOptionsAtResponse, selectedQ, select
 			// Add movement highlight
 			highlights = append(highlights, &v1.HighlightSpec{
 				Type:   "movement",
-				Q:      moveOpt.ToQ,
-				R:      moveOpt.ToR,
+				Q:      moveOpt.To.Q,
+				R:      moveOpt.To.R,
 				Action: &v1.HighlightSpec_Move{Move: moveOpt},
 			})
 		} else if attackOpt := option.GetAttack(); attackOpt != nil {
 			// Add attack highlight
 			highlights = append(highlights, &v1.HighlightSpec{
-				Q:      attackOpt.DefenderQ,
-				R:      attackOpt.DefenderR,
+				Q:      attackOpt.Defender.Q,
+				R:      attackOpt.Defender.R,
 				Type:   "attack",
 				Action: &v1.HighlightSpec_Attack{Attack: attackOpt},
 			})
 		} else if buildOpt := option.GetBuild(); buildOpt != nil {
 			// Add build highlight
 			highlights = append(highlights, &v1.HighlightSpec{
-				Q:      buildOpt.Q,
-				R:      buildOpt.R,
+				Q:      buildOpt.Pos.Q,
+				R:      buildOpt.Pos.R,
 				Type:   "build",
 				Action: &v1.HighlightSpec_Build{Build: buildOpt},
 			})
 		} else if captureOpt := option.GetCapture(); captureOpt != nil {
 			// Add capture highlight (same tile as unit)
 			highlights = append(highlights, &v1.HighlightSpec{
-				Q:      captureOpt.Q,
-				R:      captureOpt.R,
+				Q:      captureOpt.Pos.Q,
+				R:      captureOpt.Pos.R,
 				Type:   "capture",
 				Action: &v1.HighlightSpec_Capture{Capture: captureOpt},
 			})
@@ -424,8 +429,7 @@ func (s *GameViewPresenter) TurnOptionClicked(ctx context.Context, req *v1.TurnO
 		if s.selectedQ != nil && s.selectedR != nil {
 			optionsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 				GameId: req.GameId,
-				Q:      *s.selectedQ,
-				R:      *s.selectedR,
+				Pos:    &v1.Position{Q: *s.selectedQ, R: *s.selectedR},
 			})
 
 			if err == nil && optionsResp != nil && int(req.OptionIndex) < len(optionsResp.Options) {
@@ -496,7 +500,7 @@ func (s *GameViewPresenter) executeCaptureFromOption(ctx context.Context, req *v
 		return err
 	}
 
-	fmt.Printf("[Presenter] Capture executed at (%d,%d)\n", captureOpt.Q, captureOpt.R)
+	fmt.Printf("[Presenter] Capture executed at (%d,%d)\n", captureOpt.Pos.Q, captureOpt.Pos.R)
 
 	// Apply incremental updates (uses original gameState, changes come from resp.Moves)
 	s.applyIncrementalChanges(ctx, game, gameState, resp.Moves, gameMove)
@@ -514,20 +518,29 @@ func (s *GameViewPresenter) BuildOptionClicked(ctx context.Context, req *v1.Buil
 		return
 	}
 
+	// Parse position
+	rg, err := s.GamesService.GetRuntimeGame(getGameResp.Game, getGameResp.State)
+	if err != nil {
+		return resp, err
+	}
+	coord, err := rg.FromPos(req.Pos)
+	if err != nil {
+		return resp, err
+	}
+
 	// Create the build move
 	gameMove := &v1.GameMove{
 		Player: getGameResp.State.CurrentPlayer,
 		MoveType: &v1.GameMove_BuildUnit{
 			BuildUnit: &v1.BuildUnitAction{
-				Q:        req.Q,
-				R:        req.R,
+				Pos:      &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 				UnitType: req.UnitType,
 			},
 		},
 	}
 
 	fmt.Printf("[Presenter] Executing build of unit type %d at (%d,%d) for player %d\n",
-		req.UnitType, req.Q, req.R, getGameResp.State.CurrentPlayer)
+		req.UnitType, coord.Q, coord.R, getGameResp.State.CurrentPlayer)
 
 	// Execute the build move
 	err = s.executeBuildAction(ctx, getGameResp.Game, getGameResp.State, gameMove)
@@ -560,37 +573,37 @@ func (s *GameViewPresenter) executeMovementAction(ctx context.Context, game *v1.
 	var gameMove *v1.GameMove
 	for _, option := range currentOptions.Options {
 		if opt := option.GetMove(); opt != nil {
-			if opt.ToQ == targetQ && opt.ToR == targetR {
+			if opt.To.Q == targetQ && opt.To.R == targetR {
 				gameMove = &v1.GameMove{
 					Player:   gameState.CurrentPlayer,
 					MoveType: &v1.GameMove_MoveUnit{MoveUnit: opt},
 				}
 				fmt.Printf("[Presenter] Executing move from (%d,%d) to (%d,%d) for player %d\n",
-					opt.FromQ, opt.FromR,
-					opt.ToQ, opt.ToR,
+					opt.From.Q, opt.From.R,
+					opt.To.Q, opt.To.R,
 					gameState.CurrentPlayer)
 				break
 			}
 		} else if opt := option.GetAttack(); opt != nil {
-			if opt.DefenderQ == targetQ && opt.DefenderR == targetR {
+			if opt.Defender.Q == targetQ && opt.Defender.R == targetR {
 				gameMove = &v1.GameMove{
 					Player:   gameState.CurrentPlayer,
 					MoveType: &v1.GameMove_AttackUnit{AttackUnit: opt},
 				}
 				fmt.Printf("[Presenter] Executing attack from (%d,%d) to (%d,%d) for player %d\n",
-					opt.AttackerQ, opt.AttackerR,
-					opt.DefenderQ, opt.DefenderR,
+					opt.Attacker.Q, opt.Attacker.R,
+					opt.Defender.Q, opt.Defender.R,
 					gameState.CurrentPlayer)
 				break
 			}
 		} else if opt := option.GetCapture(); opt != nil {
-			if opt.Q == targetQ && opt.R == targetR {
+			if opt.Pos.Q == targetQ && opt.Pos.R == targetR {
 				gameMove = &v1.GameMove{
 					Player:   gameState.CurrentPlayer,
 					MoveType: &v1.GameMove_CaptureBuilding{CaptureBuilding: opt},
 				}
 				fmt.Printf("[Presenter] Executing capture at (%d,%d) for player %d\n",
-					opt.Q, opt.R,
+					opt.Pos.Q, opt.Pos.R,
 					gameState.CurrentPlayer)
 				break
 			}

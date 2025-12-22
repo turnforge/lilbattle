@@ -58,12 +58,12 @@ func MoveUnitActionLess(a, b *v1.MoveUnitAction) bool {
 	}
 
 	// Same cost, compare by direction
-	fromA := CoordFromInt32(a.FromQ, a.FromR)
-	toA := CoordFromInt32(a.ToQ, a.ToR)
+	fromA := CoordFromInt32(a.From.Q, a.From.R)
+	toA := CoordFromInt32(a.To.Q, a.To.R)
 	dirA := GetDirection(fromA, toA)
 
-	fromB := CoordFromInt32(b.FromQ, b.FromR)
-	toB := CoordFromInt32(b.ToQ, b.ToR)
+	fromB := CoordFromInt32(b.From.Q, b.From.R)
+	toB := CoordFromInt32(b.To.Q, b.To.R)
 	dirB := GetDirection(fromB, toB)
 
 	return dirA < dirB
@@ -73,12 +73,12 @@ func MoveUnitActionLess(a, b *v1.MoveUnitAction) bool {
 // First by distance, then by target health (lowest first), then by unit type
 func AttackUnitActionLess(a, b *v1.AttackUnitAction) bool {
 	// Calculate distances
-	attackerA := CoordFromInt32(a.AttackerQ, a.AttackerR)
-	targetA := CoordFromInt32(a.DefenderQ, a.DefenderR)
+	attackerA := CoordFromInt32(a.Attacker.Q, a.Attacker.R)
+	targetA := CoordFromInt32(a.Defender.Q, a.Defender.R)
 	distA := attackerA.Distance(targetA)
 
-	attackerB := CoordFromInt32(b.AttackerQ, b.AttackerR)
-	targetB := CoordFromInt32(b.DefenderQ, b.DefenderR)
+	attackerB := CoordFromInt32(b.Attacker.Q, b.Attacker.R)
+	targetB := CoordFromInt32(b.Defender.Q, b.Defender.R)
 	distB := attackerB.Distance(targetB)
 
 	if distA != distB {

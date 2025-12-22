@@ -245,8 +245,7 @@ message ListMovesResponse {
  */
 message GetOptionsAtRequest {
   string game_id = 1;
-  int32 q = 2;
-  int32 r = 3;
+  Position pos = 2;
 }
 
 /**

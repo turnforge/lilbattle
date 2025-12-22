@@ -18,13 +18,19 @@ const DefaultAirportbaseIncome = 200
 const DefaultMissilesiloIncome = 300
 const DefaultMinesIncome = 500
 
-// Tile type constants for income mapping
+// Tile type constants
 const (
 	TileTypeLandBase    = 1
 	TileTypeNavalBase   = 2
 	TileTypeAirport     = 3
+	TileTypeGrass       = 4  // Basic traversable terrain
 	TileTypeMissileSilo = 16
 	TileTypeMines       = 20
+)
+
+// Unit type constants
+const (
+	UnitTypeSoldier = 1 // Infantry/Trooper - can capture bases
 )
 
 // Default Income available from various tile types if this is not already in our rules data json

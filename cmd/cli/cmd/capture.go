@@ -59,8 +59,7 @@ func runCapture(cmd *cobra.Command, args []string) error {
 	// Click 1: Select unit on base-map layer
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
-		Q:      int32(coord.Q),
-		R:      int32(coord.R),
+		Pos:    &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 		Layer:  "base-map",
 	})
 	if err != nil {
@@ -74,8 +73,7 @@ func runCapture(cmd *cobra.Command, args []string) error {
 	// Click 2: Click same position on capture-highlight layer to execute capture
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
-		Q:      int32(coord.Q),
-		R:      int32(coord.R),
+		Pos:    &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 		Layer:  "capture-highlight",
 	})
 	if err != nil {

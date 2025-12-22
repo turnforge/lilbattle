@@ -2,13 +2,13 @@ package main
 
 import (
 	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/singleton"
 )
 
-func newPresenter() *services.SingletonGameViewPresenterImpl {
-	// Create WASM singleton services (data will be loaded via Load() calls from JS)
-	// wasmWorldsService := services.NewSingletonWorldsServiceImpl()
-	wasmGamesService := services.NewSingletonGamesServiceImpl()
-	wasmGameViewPresenter := services.NewSingletonGameViewPresenterImpl()
+func newPresenter() *services.GameViewPresenter {
+	// Create singleton services (data will be loaded via Load() calls)
+	wasmGamesService := singleton.NewSingletonGamesService()
+	wasmGameViewPresenter := services.NewGameViewPresenter()
 	wasmGameViewPresenter.GamesService = wasmGamesService
 
 	// Wire service implementations to generated WASM exports

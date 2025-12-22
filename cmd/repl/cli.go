@@ -11,8 +11,8 @@ import (
 
 	"github.com/chzyer/readline"
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
+	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
-	weewar "github.com/turnforge/weewar/services"
 	"github.com/turnforge/weewar/services/fsbe"
 )
 
@@ -25,7 +25,7 @@ type CLI struct {
 
 // NewCLI creates a new CLI instance
 func NewCLI(gameID string) (*CLI, error) {
-	service := fsbe.NewFSGamesService("")
+	service := fsbe.NewFSGamesService("", nil)
 
 	// Verify game exists by trying to load it
 	ctx := context.Background()

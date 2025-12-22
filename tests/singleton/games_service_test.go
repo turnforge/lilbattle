@@ -63,8 +63,10 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 
 	// Get options for this unit
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-		Q: int32(testCoord.Q),
-		R: int32(testCoord.R),
+		Pos: &v1.Position{
+			Q: int32(testCoord.Q),
+			R: int32(testCoord.R),
+		},
 	})
 
 	if err != nil {
@@ -82,14 +84,14 @@ func TestSingletonGamesService_GetOptionsAt(t *testing.T) {
 	// Verify option types
 	for i, opt := range resp.Options {
 		if moveOpt := opt.GetMove(); moveOpt != nil {
-			t.Logf("  Option %d: Move to (%d,%d)", i, moveOpt.ToQ, moveOpt.ToR)
+			t.Logf("  Option %d: Move to (%d,%d)", i, moveOpt.To.Q, moveOpt.To.R)
 			if moveOpt.ReconstructedPath != nil {
 				t.Logf("    Path has %d edges", len(moveOpt.ReconstructedPath.Edges))
 			}
 		} else if attackOpt := opt.GetAttack(); attackOpt != nil {
-			t.Logf("  Option %d: Attack at (%d,%d)", i, attackOpt.DefenderQ, attackOpt.DefenderR)
+			t.Logf("  Option %d: Attack at (%d,%d)", i, attackOpt.Defender.Q, attackOpt.Defender.R)
 		} else if captureOpt := opt.GetCapture(); captureOpt != nil {
-			t.Logf("  Option %d: Capture at (%d,%d)", i, captureOpt.Q, captureOpt.R)
+			t.Logf("  Option %d: Capture at (%d,%d)", i, captureOpt.Pos.Q, captureOpt.Pos.R)
 		}
 	}
 }
@@ -116,8 +118,10 @@ func TestSingletonGamesService_GetOptionsAt_EmptyTile(t *testing.T) {
 
 	ctx := context.Background()
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
-		Q: emptyQ,
-		R: emptyR,
+		Pos: &v1.Position{
+			Q: int32(emptyQ),
+			R: int32(emptyR),
+		},
 	})
 
 	if err != nil {
@@ -182,8 +186,10 @@ func TestSingletonGamesService_GetOptionsAt_NoBuildWhenUnitOnTile(t *testing.T) 
 	// Get options at the tile position (where unit is)
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      testQ,
-		R:      testR,
+		Pos: &v1.Position{
+			Q: int32(testQ),
+			R: int32(testR),
+		},
 	})
 
 	if err != nil {
@@ -248,8 +254,10 @@ func TestSingletonGamesService_GetOptionsAt_BuildWhenNoUnitOnTile(t *testing.T) 
 	// Get options at the tile position (no unit)
 	resp, err := gamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
 		GameId: "test-game",
-		Q:      testQ,
-		R:      testR,
+		Pos: &v1.Position{
+			Q: int32(testQ),
+			R: int32(testR),
+		},
 	})
 
 	if err != nil {

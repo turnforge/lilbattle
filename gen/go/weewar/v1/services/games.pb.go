@@ -29,7 +29,7 @@ var File_weewar_v1_services_games_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_services_games_proto_rawDesc = "" +
 	"\n" +
-	"\x1eweewar/v1/services/games.proto\x12\tweewar.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a$weewar/v1/models/games_service.proto2\xa8\t\n" +
+	"\x1eweewar/v1/services/games.proto\x12\tweewar.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a$weewar/v1/models/games_service.proto2\xdc\t\n" +
 	"\fGamesService\x12_\n" +
 	"\n" +
 	"CreateGame\x12\x1c.weewar.v1.CreateGameRequest\x1a\x1d.weewar.v1.CreateGameResponse\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/v1/games\x12_\n" +
@@ -42,8 +42,8 @@ const file_weewar_v1_services_games_proto_rawDesc = "" +
 	"UpdateGame\x12\x1c.weewar.v1.UpdateGameRequest\x1a\x1d.weewar.v1.UpdateGameResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/games/{game_id=*}\x12r\n" +
 	"\fGetGameState\x12\x1e.weewar.v1.GetGameStateRequest\x1a\x1f.weewar.v1.GetGameStateResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/games/{game_id}/state\x12i\n" +
 	"\tListMoves\x12\x1b.weewar.v1.ListMovesRequest\x1a\x1c.weewar.v1.ListMovesResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/games/{game_id}/moves\x12u\n" +
-	"\fProcessMoves\x12\x1e.weewar.v1.ProcessMovesRequest\x1a\x1f.weewar.v1.ProcessMovesResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/{game_id}/moves\x12|\n" +
-	"\fGetOptionsAt\x12\x1e.weewar.v1.GetOptionsAtRequest\x1a\x1f.weewar.v1.GetOptionsAtResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/games/{game_id}/options/{q}/{r}\x12{\n" +
+	"\fProcessMoves\x12\x1e.weewar.v1.ProcessMovesRequest\x1a\x1f.weewar.v1.ProcessMovesResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/{game_id}/moves\x12\xaf\x01\n" +
+	"\fGetOptionsAt\x12\x1e.weewar.v1.GetOptionsAtRequest\x1a\x1f.weewar.v1.GetOptionsAtResponse\"^\x82\xd3\xe4\x93\x02XZ)\x12'/v1/games/{game_id}/options/{pos.label}\x12+/v1/games/{game_id}/options/{pos.q}/{pos.r}\x12{\n" +
 	"\x0eSimulateAttack\x12 .weewar.v1.SimulateAttackRequest\x1a!.weewar.v1.SimulateAttackResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/games/simulate_attackB\xa0\x01\n" +
 	"\rcom.weewar.v1B\n" +
 	"GamesProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +

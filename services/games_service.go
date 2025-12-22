@@ -147,47 +147,26 @@ func (s *BaseGamesService) GetOptionsAt(ctx context.Context, req *v1.GetOptionsA
 		}, nil
 	}
 
-	var options []*v1.GameOption
-	var allPaths *v1.AllPaths
-
-	// Check what's at this position
-	unit := rtGame.World.UnitAt(AxialCoord{Q: int(req.Q), R: int(req.R)})
-
-	out = &v1.GetOptionsAtResponse{
-		Options:         []*v1.GameOption{},
-		CurrentPlayer:   gameresp.State.CurrentPlayer,
-		GameInitialized: false,
-	}
-
-	// Lazy top-up: If this is a unit, ensure it's refreshed for the current turn
-	if unit != nil {
-		if err := rtGame.TopUpUnitIfNeeded(unit); err != nil {
-			return out, fmt.Errorf("failed to top-up unit: %w", err)
+	// Delegate to lib.Game.GetOptionsAt
+	posLabel := ""
+	if req.Pos != nil {
+		if req.Pos.Label != "" {
+			posLabel = req.Pos.Label
+		} else {
+			posLabel = fmt.Sprintf("%d,%d", req.Pos.Q, req.Pos.R)
 		}
 	}
 
-	// Check if there's a tile at this position and get its actions
-	tile := rtGame.World.TileAt(AxialCoord{Q: int(req.Q), R: int(req.R)})
-	if unit == nil {
-		options, err = s.GetTileOptions(ctx, rtGame, tile)
-	} else {
-		options, allPaths, err = s.GetUnitOptions(ctx, rtGame, unit)
-	}
+	out, err = rtGame.GetOptionsAt(posLabel)
 	if err != nil {
 		return out, err
 	}
 
-	// Sort it for convinience too
-	sort.Slice(options, func(i, j int) bool {
-		return lib.GameOptionLess(options[i], options[j])
+	// Sort options for convenience
+	sort.Slice(out.Options, func(i, j int) bool {
+		return lib.GameOptionLess(out.Options[i], out.Options[j])
 	})
 
-	out = &v1.GetOptionsAtResponse{
-		Options:         options,
-		CurrentPlayer:   rtGame.CurrentPlayer,
-		GameInitialized: rtGame != nil && rtGame.World != nil,
-		AllPaths:        allPaths,
-	}
 	return
 }
 
@@ -533,10 +512,8 @@ func (s *BaseGamesService) GetUnitOptions(ctx context.Context, rtGame *lib.Game,
 
 				// Create ready-to-use MoveUnitAction
 				moveAction := &v1.MoveUnitAction{
-					FromQ:             unit.Q,
-					FromR:             unit.R,
-					ToQ:               edge.ToQ,
-					ToR:               edge.ToR,
+					From:              &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+					To:                &v1.Position{Q: edge.ToQ, R: edge.ToR},
 					MovementCost:      edge.TotalCost,
 					ReconstructedPath: path,
 				}
@@ -582,10 +559,8 @@ func (s *BaseGamesService) GetUnitOptions(ctx context.Context, rtGame *lib.Game,
 
 					// Create ready-to-use AttackUnitAction
 					attackAction := &v1.AttackUnitAction{
-						AttackerQ:        unit.Q,
-						AttackerR:        unit.R,
-						DefenderQ:        int32(coord.Q),
-						DefenderR:        int32(coord.R),
+						Attacker:         &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+						Defender:         &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 						TargetUnitType:   targetUnit.UnitType,
 						TargetUnitHealth: targetUnit.AvailableHealth,
 						CanAttack:        true,
@@ -623,8 +598,7 @@ func (s *BaseGamesService) GetUnitOptions(ctx context.Context, rtGame *lib.Game,
 			terrainProps := rtGame.RulesEngine.GetTerrainUnitPropertiesForUnit(tile.TileType, unit.UnitType)
 			if terrainProps != nil && terrainProps.CanCapture {
 				captureAction := &v1.CaptureBuildingAction{
-					Q:        unit.Q,
-					R:        unit.R,
+					Pos:      &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
 					TileType: tile.TileType,
 				}
 				options = append(options, &v1.GameOption{
@@ -691,8 +665,7 @@ func (s *BaseGamesService) GetTileOptions(ctx context.Context, rtGame *lib.Game,
 							options = append(options, &v1.GameOption{
 								OptionType: &v1.GameOption_Build{
 									Build: &v1.BuildUnitAction{
-										Q:        tile.Q,
-										R:        tile.R,
+										Pos:      &v1.Position{Label: tile.Shortcut, Q: tile.Q, R: tile.R},
 										UnitType: unitTypeID,
 										Cost:     unitDef.Coins,
 									},

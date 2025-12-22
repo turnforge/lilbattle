@@ -83,8 +83,7 @@ func TestProcessBuildUnit_DeductsCoins(t *testing.T) {
 			mp := &lib.MoveProcessor{}
 			move := &v1.GameMove{}
 			action := &v1.BuildUnitAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				UnitType: tt.unitType,
 			}
 
@@ -151,8 +150,7 @@ func TestProcessBuildUnit_InsufficientCoins(t *testing.T) {
 			mp := &lib.MoveProcessor{}
 			move := &v1.GameMove{}
 			action := &v1.BuildUnitAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				UnitType: tt.unitType,
 			}
 
@@ -286,8 +284,7 @@ func TestBuildUnit_CoinsPersistence(t *testing.T) {
 			{
 				MoveType: &v1.GameMove_BuildUnit{
 					BuildUnit: &v1.BuildUnitAction{
-						Q:        buildQ,
-						R:        buildR,
+						Pos:      &v1.Position{Q: buildQ, R: buildR},
 						UnitType: 1, // Soldier Basic = 75 coins
 					},
 				},

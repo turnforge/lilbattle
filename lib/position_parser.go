@@ -21,6 +21,14 @@ type ParseTarget struct {
 	RawNoPrefix string     // input string without the "t:" prefix
 }
 
+func (p *ParseTarget) Position() *v1.Position {
+	return &v1.Position{
+		Q:     int32(p.Coordinate.Q),
+		R:     int32(p.Coordinate.R),
+		Label: p.Raw,
+	}
+}
+
 // ParsePositionOrUnit parses a string that can be either:
 // - Unit ID: A1, B12, C2 (PlayerLetter + UnitNumber)
 // - Q/R Coordinate: 3,4 or 5,-2

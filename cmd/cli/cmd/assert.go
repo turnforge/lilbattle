@@ -1022,8 +1022,7 @@ func getOptionsForEntity(entityType, entityID string, pc *PresenterContext) (*v1
 	ctx := context.Background()
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: pc.GameID,
-		Q:      int32(coord.Q),
-		R:      int32(coord.R),
+		Pos:    &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 		Layer:  "base-map",
 	})
 	if err != nil {
@@ -1074,7 +1073,7 @@ func checkAttackOptions(oa OptionAssertion, options *v1.GetOptionsAtResponse, pc
 	var attackTargets []string
 	for _, opt := range options.Options {
 		if attack, ok := opt.OptionType.(*v1.GameOption_Attack); ok {
-			key := lib.CoordKey(attack.Attack.DefenderQ, attack.Attack.DefenderR)
+			key := lib.CoordKey(attack.Attack.Defender.Q, attack.Attack.Defender.R)
 			attackTargets = append(attackTargets, key)
 
 			// Also check by unit shortcut if there's a unit there
@@ -1092,7 +1091,7 @@ func checkMoveOptions(oa OptionAssertion, options *v1.GetOptionsAtResponse, pc *
 	var moveTargets []string
 	for _, opt := range options.Options {
 		if move, ok := opt.OptionType.(*v1.GameOption_Move); ok {
-			key := lib.CoordKey(move.Move.ToQ, move.Move.ToR)
+			key := lib.CoordKey(move.Move.To.Q, move.Move.To.R)
 			moveTargets = append(moveTargets, key)
 		}
 	}
@@ -1124,7 +1123,7 @@ func checkCaptureOptions(oa OptionAssertion, options *v1.GetOptionsAtResponse, p
 	var captureTargets []string
 	for _, opt := range options.Options {
 		if capture, ok := opt.OptionType.(*v1.GameOption_Capture); ok {
-			key := lib.CoordKey(capture.Capture.Q, capture.Capture.R)
+			key := lib.CoordKey(capture.Capture.Pos.Q, capture.Capture.Pos.R)
 			captureTargets = append(captureTargets, key)
 		}
 	}

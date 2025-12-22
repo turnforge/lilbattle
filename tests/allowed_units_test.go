@@ -152,8 +152,7 @@ func TestProcessBuildUnit_RejectsDisallowedUnits(t *testing.T) {
 			mp := &lib.MoveProcessor{}
 			move := &v1.GameMove{}
 			action := &v1.BuildUnitAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				UnitType: tt.buildUnit,
 			}
 

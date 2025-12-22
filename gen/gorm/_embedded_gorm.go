@@ -7,16 +7,10 @@ type TilesMapEntry struct {
 	Value TileGORM
 }
 
-// Any
-type Any struct {
-	TypeUrl string
-	Value   []byte
-}
-
-// CrossingsEntry
-type CrossingsEntry struct {
-	Key   string
-	Value CrossingGORM
+// PlayerStatesEntry
+type PlayerStatesEntry struct {
+	Key   int32
+	Value PlayerStateGORM
 }
 
 // TilesMapEntry
@@ -31,16 +25,22 @@ type UnitsMapEntry struct {
 	Value UnitGORM
 }
 
-// PlayerStatesEntry
-type PlayerStatesEntry struct {
-	Key   int32
-	Value PlayerStateGORM
+// CrossingsEntry
+type CrossingsEntry struct {
+	Key   string
+	Value CrossingGORM
 }
 
 // UnitsMapEntry
 type UnitsMapEntry struct {
 	Key   string
 	Value UnitGORM
+}
+
+// Any
+type Any struct {
+	TypeUrl string
+	Value   []byte
 }
 
 // CrossingsEntry

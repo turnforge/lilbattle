@@ -407,6 +407,8 @@ func local_request_GamesService_ProcessMoves_0(ctx context.Context, marshaler ru
 	return msg, metadata, err
 }
 
+var filter_GamesService_GetOptionsAt_0 = &utilities.DoubleArray{Encoding: map[string]int{"game_id": 0, "pos": 1, "q": 2, "r": 3}, Base: []int{1, 1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 3, 3, 2, 4, 5}}
+
 func request_GamesService_GetOptionsAt_0(ctx context.Context, marshaler runtime.Marshaler, client GamesServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq weewarv1.GetOptionsAtRequest
@@ -424,21 +426,27 @@ func request_GamesService_GetOptionsAt_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "game_id", err)
 	}
-	val, ok = pathParams["q"]
+	val, ok = pathParams["pos.q"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "q")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.q")
 	}
-	protoReq.Q, err = runtime.Int32(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.q", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "q", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.q", err)
 	}
-	val, ok = pathParams["r"]
+	val, ok = pathParams["pos.r"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "r")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.r")
 	}
-	protoReq.R, err = runtime.Int32(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.r", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "r", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.r", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_GamesService_GetOptionsAt_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.GetOptionsAt(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -458,21 +466,96 @@ func local_request_GamesService_GetOptionsAt_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "game_id", err)
 	}
-	val, ok = pathParams["q"]
+	val, ok = pathParams["pos.q"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "q")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.q")
 	}
-	protoReq.Q, err = runtime.Int32(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.q", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "q", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.q", err)
 	}
-	val, ok = pathParams["r"]
+	val, ok = pathParams["pos.r"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "r")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.r")
 	}
-	protoReq.R, err = runtime.Int32(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.r", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "r", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.r", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_GamesService_GetOptionsAt_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.GetOptionsAt(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_GamesService_GetOptionsAt_1 = &utilities.DoubleArray{Encoding: map[string]int{"game_id": 0, "pos": 1, "label": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 3, 2, 4}}
+
+func request_GamesService_GetOptionsAt_1(ctx context.Context, marshaler runtime.Marshaler, client GamesServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq weewarv1.GetOptionsAtRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["game_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "game_id")
+	}
+	protoReq.GameId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "game_id", err)
+	}
+	val, ok = pathParams["pos.label"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.label")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.label", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.label", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_GamesService_GetOptionsAt_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.GetOptionsAt(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_GamesService_GetOptionsAt_1(ctx context.Context, marshaler runtime.Marshaler, server GamesServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq weewarv1.GetOptionsAtRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["game_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "game_id")
+	}
+	protoReq.GameId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "game_id", err)
+	}
+	val, ok = pathParams["pos.label"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pos.label")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "pos.label", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pos.label", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_GamesService_GetOptionsAt_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.GetOptionsAt(ctx, &protoReq)
 	return msg, metadata, err
@@ -697,7 +780,7 @@ func RegisterGamesServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{q}/{r}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{pos.q}/{pos.r}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -710,6 +793,26 @@ func RegisterGamesServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_GamesService_GetOptionsAt_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_GamesService_GetOptionsAt_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{pos.label}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_GamesService_GetOptionsAt_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_GamesService_GetOptionsAt_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_GamesService_SimulateAttack_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -928,7 +1031,7 @@ func RegisterGamesServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{q}/{r}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{pos.q}/{pos.r}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -940,6 +1043,23 @@ func RegisterGamesServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_GamesService_GetOptionsAt_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_GamesService_GetOptionsAt_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GamesService/GetOptionsAt", runtime.WithHTTPPathPattern("/v1/games/{game_id}/options/{pos.label}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_GamesService_GetOptionsAt_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_GamesService_GetOptionsAt_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_GamesService_SimulateAttack_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -971,7 +1091,8 @@ var (
 	pattern_GamesService_GetGameState_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "games", "game_id", "state"}, ""))
 	pattern_GamesService_ListMoves_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "games", "game_id", "moves"}, ""))
 	pattern_GamesService_ProcessMoves_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "games", "game_id", "moves"}, ""))
-	pattern_GamesService_GetOptionsAt_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"v1", "games", "game_id", "options", "q", "r"}, ""))
+	pattern_GamesService_GetOptionsAt_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"v1", "games", "game_id", "options", "pos.q", "pos.r"}, ""))
+	pattern_GamesService_GetOptionsAt_1   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "games", "game_id", "options", "pos.label"}, ""))
 	pattern_GamesService_SimulateAttack_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "games", "simulate_attack"}, ""))
 )
 
@@ -986,5 +1107,6 @@ var (
 	forward_GamesService_ListMoves_0      = runtime.ForwardResponseMessage
 	forward_GamesService_ProcessMoves_0   = runtime.ForwardResponseMessage
 	forward_GamesService_GetOptionsAt_0   = runtime.ForwardResponseMessage
+	forward_GamesService_GetOptionsAt_1   = runtime.ForwardResponseMessage
 	forward_GamesService_SimulateAttack_0 = runtime.ForwardResponseMessage
 )

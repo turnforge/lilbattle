@@ -86,7 +86,10 @@ service GamesService {
 
   rpc GetOptionsAt(GetOptionsAtRequest) returns (GetOptionsAtResponse) {
     option (google.api.http) = {
-      get: "/v1/games/{game_id}/options/{q}/{r}"
+      get: "/v1/games/{game_id}/options/{pos.q}/{pos.r}"
+      additional_bindings {
+        get: "/v1/games/{game_id}/options/{pos.label}"
+      }
     };
   }
 

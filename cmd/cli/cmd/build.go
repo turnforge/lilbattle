@@ -80,8 +80,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	// Call BuildOptionClicked through the presenter
 	_, err = pc.Presenter.BuildOptionClicked(ctx, &v1.BuildOptionClickedRequest{
 		GameId:   gameID,
-		Q:        int32(coord.Q),
-		R:        int32(coord.R),
+		Pos:      &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 		UnitType: unitType,
 	})
 	if err != nil {

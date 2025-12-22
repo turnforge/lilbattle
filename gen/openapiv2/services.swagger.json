@@ -536,7 +536,57 @@
         ]
       }
     },
-    "/v1/games/{gameId}/options/{q}/{r}": {
+    "/v1/games/{gameId}/options/{pos.label}": {
+      "get": {
+        "operationId": "GamesService_GetOptionsAt2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetOptionsAtResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gameId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pos.label",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pos.q",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pos.r",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "GamesService"
+        ]
+      }
+    },
+    "/v1/games/{gameId}/options/{pos.q}/{pos.r}": {
       "get": {
         "operationId": "GamesService_GetOptionsAt",
         "responses": {
@@ -561,18 +611,24 @@
             "type": "string"
           },
           {
-            "name": "q",
+            "name": "pos.q",
             "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32"
           },
           {
-            "name": "r",
+            "name": "pos.r",
             "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "pos.label",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1013,15 +1069,8 @@
             "schema": {
               "type": "object",
               "properties": {
-                "q": {
-                  "type": "integer",
-                  "format": "int32",
-                  "title": "Q coordinate of the tile where unit is being built"
-                },
-                "r": {
-                  "type": "integer",
-                  "format": "int32",
-                  "title": "R coordinate of the tile where unit is being built"
+                "pos": {
+                  "$ref": "#/definitions/v1Position"
                 },
                 "unitType": {
                   "type": "integer",
@@ -1110,13 +1159,8 @@
             "schema": {
               "type": "object",
               "properties": {
-                "q": {
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "r": {
-                  "type": "integer",
-                  "format": "int32"
+                "pos": {
+                  "$ref": "#/definitions/v1Position"
                 },
                 "layer": {
                   "type": "string"
@@ -1172,15 +1216,8 @@
                   "type": "string",
                   "description": "Type of option: \"move\", \"attack\", \"endTurn\", etc."
                 },
-                "q": {
-                  "type": "integer",
-                  "format": "int32",
-                  "title": "Target Q coordinate"
-                },
-                "r": {
-                  "type": "integer",
-                  "format": "int32",
-                  "title": "Target R coordinate"
+                "pos": {
+                  "$ref": "#/definitions/v1Position"
                 }
               },
               "title": "Called when a turn option is clicked in TurnOptionsPanel"
@@ -1854,21 +1891,11 @@
     "v1AttackUnitAction": {
       "type": "object",
       "properties": {
-        "attackerQ": {
-          "type": "integer",
-          "format": "int32"
+        "attacker": {
+          "$ref": "#/definitions/v1Position"
         },
-        "attackerR": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "defenderQ": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "defenderR": {
-          "type": "integer",
-          "format": "int32"
+        "defender": {
+          "$ref": "#/definitions/v1Position"
         },
         "targetUnitType": {
           "type": "integer",
@@ -1897,13 +1924,8 @@
     "v1BuildUnitAction": {
       "type": "object",
       "properties": {
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
+        "pos": {
+          "$ref": "#/definitions/v1Position"
         },
         "unitType": {
           "type": "integer",
@@ -1919,13 +1941,8 @@
     "v1CaptureBuildingAction": {
       "type": "object",
       "properties": {
-        "q": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "r": {
-          "type": "integer",
-          "format": "int32"
+        "pos": {
+          "$ref": "#/definitions/v1Position"
         },
         "tileType": {
           "type": "integer",
@@ -3015,21 +3032,11 @@
     "v1MoveUnitAction": {
       "type": "object",
       "properties": {
-        "fromQ": {
-          "type": "integer",
-          "format": "int32"
+        "from": {
+          "$ref": "#/definitions/v1Position"
         },
-        "fromR": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "toQ": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "toR": {
-          "type": "integer",
-          "format": "int32"
+        "to": {
+          "$ref": "#/definitions/v1Position"
         },
         "movementCost": {
           "type": "number",
@@ -3219,6 +3226,23 @@
         }
       },
       "title": "Runtime state for a player during the game\nThis is separate from GamePlayer (which is player configuration)\nPlayerState is indexed by player_id in the player_states map"
+    },
+    "v1Position": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "q": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "r": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "A unified \"Position\" type that can be used to \nspecify locations via \"string shortcuts\" like A1, \"3,2\", \"r2,4\" (for row/col)\nor even \"relative\" positions like \"L,TL,TR,R\"  in the shortcut field.\nOr string q/r coordinates in the q and r fields.  This can also be used \nin the \"response\" to resolve a shortcut -\u003e q,r"
     },
     "v1ProcessMovesResponse": {
       "type": "object",

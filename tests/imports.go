@@ -24,3 +24,18 @@ var NewSingletonGamesService = singleton.NewSingletonGamesService
 var DefaultRulesEngine = lib.DefaultRulesEngine
 var ParseActionAlternatives = lib.ParseActionAlternatives
 var LoadRulesEngineFromFile = lib.LoadRulesEngineFromFile
+
+// Tile type constants
+const (
+	TileTypeLandBase    = lib.TileTypeLandBase
+	TileTypeNavalBase   = lib.TileTypeNavalBase
+	TileTypeAirport     = lib.TileTypeAirport
+	TileTypeGrass       = lib.TileTypeGrass
+	TileTypeMissileSilo = lib.TileTypeMissileSilo
+	TileTypeMines       = lib.TileTypeMines
+)
+
+// Unit type constants
+const (
+	UnitTypeSoldier = lib.UnitTypeSoldier
+)

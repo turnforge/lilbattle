@@ -59,8 +59,7 @@ func runOptions(cmd *cobra.Command, args []string) error {
 	// Simulate click on base-map layer to show options
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
-		Q:      int32(coord.Q),
-		R:      int32(coord.R),
+		Pos:    &v1.Position{Q: int32(coord.Q), R: int32(coord.R)},
 		Layer:  "base-map",
 	})
 	if err != nil {
@@ -79,15 +78,15 @@ func runOptions(cmd *cobra.Command, args []string) error {
 				case *v1.GameOption_Move:
 					options = append(options, map[string]any{
 						"type":          "move",
-						"q":             opt.Move.ToQ,
-						"r":             opt.Move.ToR,
+						"q":             opt.Move.To.Q,
+						"r":             opt.Move.To.R,
 						"movement_cost": opt.Move.MovementCost,
 					})
 				case *v1.GameOption_Attack:
 					options = append(options, map[string]any{
 						"type":            "attack",
-						"q":               opt.Attack.DefenderQ,
-						"r":               opt.Attack.DefenderR,
+						"q":               opt.Attack.Defender.Q,
+						"r":               opt.Attack.Defender.R,
 						"damage_estimate": opt.Attack.DamageEstimate,
 					})
 				case *v1.GameOption_Build:
@@ -116,8 +115,8 @@ func runOptions(cmd *cobra.Command, args []string) error {
 
 					options = append(options, map[string]any{
 						"type":         "capture",
-						"q":            captureOpt.Q,
-						"r":            captureOpt.R,
+						"q":            captureOpt.Pos.Q,
+						"r":            captureOpt.Pos.R,
 						"tile_type":    captureOpt.TileType,
 						"terrain_name": terrainName,
 					})

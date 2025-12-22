@@ -607,55 +607,60 @@ message GameMove {
   string description = 12;
 }
 
+// A unified "Position" type that can be used to 
+// specify locations via "string shortcuts" like A1, "3,2", "r2,4" (for row/col)
+// or even "relative" positions like "L,TL,TR,R"  in the shortcut field.
+// Or string q/r coordinates in the q and r fields.  This can also be used 
+// in the "response" to resolve a shortcut -> q,r
+message Position {
+  string label = 1;
+  int32 q = 2;
+  int32 r = 3;
+}
+
 /**
  * Move unit from one position to another
  */
 message MoveUnitAction {
-  int32 from_q = 1;
-  int32 from_r = 2;
-  int32 to_q = 3;
-  int32 to_r = 4;
+  Position from = 1;
+  Position to = 2;
 
   // Optional fields that can be used for showing move options as well as debugging
-  double movement_cost = 5;
+  double movement_cost = 3;
 
   // Debug fields
-  Path reconstructed_path = 6;
+  Path reconstructed_path = 4;
 }
 
 /**
  * Attack with one unit against another
  */
 message AttackUnitAction {
-  int32 attacker_q = 1;
-  int32 attacker_r = 2;
-  int32 defender_q = 3;
-  int32 defender_r = 4;
+  Position attacker = 1;
+  Position defender = 2;
 
 
   // Optional fields for presenting during "options" and debugging
-  int32 target_unit_type = 5;
-  int32 target_unit_health = 6;
-  bool can_attack = 7;
-  int32 damage_estimate = 8; // Estimated damage this attack would deal
+  int32 target_unit_type = 7;
+  int32 target_unit_health = 8;
+  bool can_attack = 9;
+  int32 damage_estimate = 10; // Estimated damage this attack would deal
 }
 
 /**
  * An action to build a unit (at a city tile)
  */
 message BuildUnitAction {
-  int32 q = 1;
-  int32 r = 2;
-  int32 unit_type = 3;
-  int32 cost = 4;
+  Position pos = 1;
+  int32 unit_type = 2;
+  int32 cost = 3;
 }
 
 /**
  * A move where a unit can capture a building
  */
 message CaptureBuildingAction {
-  int32 q = 1;
-  int32 r = 2;
+  Position pos = 1;
   int32 tile_type = 3;
 }
 

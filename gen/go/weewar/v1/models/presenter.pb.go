@@ -145,8 +145,7 @@ type TurnOptionClickedRequest struct {
 	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
 	OptionIndex   int32                  `protobuf:"varint,2,opt,name=option_index,json=optionIndex,proto3" json:"option_index,omitempty"` // Index of the option in the options array
 	OptionType    string                 `protobuf:"bytes,3,opt,name=option_type,json=optionType,proto3" json:"option_type,omitempty"`     // Type of option: "move", "attack", "endTurn", etc.
-	Q             int32                  `protobuf:"varint,4,opt,name=q,proto3" json:"q,omitempty"`                                        // Target Q coordinate
-	R             int32                  `protobuf:"varint,5,opt,name=r,proto3" json:"r,omitempty"`                                        // Target R coordinate
+	Pos           *Position              `protobuf:"bytes,4,opt,name=pos,proto3" json:"pos,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,18 +201,11 @@ func (x *TurnOptionClickedRequest) GetOptionType() string {
 	return ""
 }
 
-func (x *TurnOptionClickedRequest) GetQ() int32 {
+func (x *TurnOptionClickedRequest) GetPos() *Position {
 	if x != nil {
-		return x.Q
+		return x.Pos
 	}
-	return 0
-}
-
-func (x *TurnOptionClickedRequest) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
+	return nil
 }
 
 // Response of a turn option click
@@ -265,9 +257,8 @@ func (x *TurnOptionClickedResponse) GetGameId() string {
 type SceneClickedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	Q             int32                  `protobuf:"varint,2,opt,name=q,proto3" json:"q,omitempty"`
-	R             int32                  `protobuf:"varint,3,opt,name=r,proto3" json:"r,omitempty"`
-	Layer         string                 `protobuf:"bytes,4,opt,name=layer,proto3" json:"layer,omitempty"`
+	Pos           *Position              `protobuf:"bytes,2,opt,name=pos,proto3" json:"pos,omitempty"`
+	Layer         string                 `protobuf:"bytes,3,opt,name=layer,proto3" json:"layer,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -309,18 +300,11 @@ func (x *SceneClickedRequest) GetGameId() string {
 	return ""
 }
 
-func (x *SceneClickedRequest) GetQ() int32 {
+func (x *SceneClickedRequest) GetPos() *Position {
 	if x != nil {
-		return x.Q
+		return x.Pos
 	}
-	return 0
-}
-
-func (x *SceneClickedRequest) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
+	return nil
 }
 
 func (x *SceneClickedRequest) GetLayer() string {
@@ -469,9 +453,8 @@ func (x *EndTurnButtonClickedResponse) GetGameId() string {
 type BuildOptionClickedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	Q             int32                  `protobuf:"varint,2,opt,name=q,proto3" json:"q,omitempty"`                               // Q coordinate of the tile where unit is being built
-	R             int32                  `protobuf:"varint,3,opt,name=r,proto3" json:"r,omitempty"`                               // R coordinate of the tile where unit is being built
-	UnitType      int32                  `protobuf:"varint,4,opt,name=unit_type,json=unitType,proto3" json:"unit_type,omitempty"` // Type of unit being built (e.g., "soldier_basic")
+	Pos           *Position              `protobuf:"bytes,2,opt,name=pos,proto3" json:"pos,omitempty"`
+	UnitType      int32                  `protobuf:"varint,3,opt,name=unit_type,json=unitType,proto3" json:"unit_type,omitempty"` // Type of unit being built (e.g., "soldier_basic")
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -513,18 +496,11 @@ func (x *BuildOptionClickedRequest) GetGameId() string {
 	return ""
 }
 
-func (x *BuildOptionClickedRequest) GetQ() int32 {
+func (x *BuildOptionClickedRequest) GetPos() *Position {
 	if x != nil {
-		return x.Q
+		return x.Pos
 	}
-	return 0
-}
-
-func (x *BuildOptionClickedRequest) GetR() int32 {
-	if x != nil {
-		return x.R
-	}
-	return 0
+	return nil
 }
 
 func (x *BuildOptionClickedRequest) GetUnitType() int32 {
@@ -796,32 +772,29 @@ const file_weewar_v1_models_presenter_proto_rawDesc = "" +
 	"game_state\x18\x03 \x01(\tR\tgameState\x12!\n" +
 	"\fmove_history\x18\x04 \x01(\tR\vmoveHistory\"\\\n" +
 	"\x1bInitializeSingletonResponse\x12=\n" +
-	"\bresponse\x18\x01 \x01(\v2!.weewar.v1.InitializeGameResponseR\bresponse\"\x93\x01\n" +
+	"\bresponse\x18\x01 \x01(\v2!.weewar.v1.InitializeGameResponseR\bresponse\"\x9e\x01\n" +
 	"\x18TurnOptionClickedRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12!\n" +
 	"\foption_index\x18\x02 \x01(\x05R\voptionIndex\x12\x1f\n" +
 	"\voption_type\x18\x03 \x01(\tR\n" +
-	"optionType\x12\f\n" +
-	"\x01q\x18\x04 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x05 \x01(\x05R\x01r\"4\n" +
+	"optionType\x12%\n" +
+	"\x03pos\x18\x04 \x01(\v2\x13.weewar.v1.PositionR\x03pos\"4\n" +
 	"\x19TurnOptionClickedResponse\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\"`\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\"k\n" +
 	"\x13SceneClickedRequest\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
-	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x03 \x01(\x05R\x01r\x12\x14\n" +
-	"\x05layer\x18\x04 \x01(\tR\x05layer\"/\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12%\n" +
+	"\x03pos\x18\x02 \x01(\v2\x13.weewar.v1.PositionR\x03pos\x12\x14\n" +
+	"\x05layer\x18\x03 \x01(\tR\x05layer\"/\n" +
 	"\x14SceneClickedResponse\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\"6\n" +
 	"\x1bEndTurnButtonClickedRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\"7\n" +
 	"\x1cEndTurnButtonClickedResponse\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\"m\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\"x\n" +
 	"\x19BuildOptionClickedRequest\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\f\n" +
-	"\x01q\x18\x02 \x01(\x05R\x01q\x12\f\n" +
-	"\x01r\x18\x03 \x01(\x05R\x01r\x12\x1b\n" +
-	"\tunit_type\x18\x04 \x01(\x05R\bunitType\"\x1c\n" +
+	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12%\n" +
+	"\x03pos\x18\x02 \x01(\v2\x13.weewar.v1.PositionR\x03pos\x12\x1b\n" +
+	"\tunit_type\x18\x03 \x01(\x05R\bunitType\"\x1c\n" +
 	"\x1aBuildOptionClickedResponse\"0\n" +
 	"\x15InitializeGameRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\"\xaf\x01\n" +
@@ -866,14 +839,18 @@ var file_weewar_v1_models_presenter_proto_goTypes = []any{
 	(*InitializeGameResponse)(nil),       // 11: weewar.v1.InitializeGameResponse
 	(*ClientReadyRequest)(nil),           // 12: weewar.v1.ClientReadyRequest
 	(*ClientReadyResponse)(nil),          // 13: weewar.v1.ClientReadyResponse
+	(*Position)(nil),                     // 14: weewar.v1.Position
 }
 var file_weewar_v1_models_presenter_proto_depIdxs = []int32{
 	11, // 0: weewar.v1.InitializeSingletonResponse.response:type_name -> weewar.v1.InitializeGameResponse
-	1,  // [1:1] is the sub-list for method output_type
-	1,  // [1:1] is the sub-list for method input_type
-	1,  // [1:1] is the sub-list for extension type_name
-	1,  // [1:1] is the sub-list for extension extendee
-	0,  // [0:1] is the sub-list for field type_name
+	14, // 1: weewar.v1.TurnOptionClickedRequest.pos:type_name -> weewar.v1.Position
+	14, // 2: weewar.v1.SceneClickedRequest.pos:type_name -> weewar.v1.Position
+	14, // 3: weewar.v1.BuildOptionClickedRequest.pos:type_name -> weewar.v1.Position
+	4,  // [4:4] is the sub-list for method output_type
+	4,  // [4:4] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_presenter_proto_init() }

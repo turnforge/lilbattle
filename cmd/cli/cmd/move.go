@@ -67,8 +67,7 @@ func runMove(cmd *cobra.Command, args []string) error {
 	// Click 1: Select unit on base-map layer
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
-		Q:      int32(fromCoord.Q),
-		R:      int32(fromCoord.R),
+		Pos:    &v1.Position{Q: int32(fromCoord.Q), R: int32(fromCoord.R)},
 		Layer:  "base-map",
 	})
 	if err != nil {
@@ -82,8 +81,7 @@ func runMove(cmd *cobra.Command, args []string) error {
 	// Click 2: Click destination on movement-highlight layer to execute move
 	_, err = pc.Presenter.SceneClicked(ctx, &v1.SceneClickedRequest{
 		GameId: gameID,
-		Q:      int32(toCoord.Q),
-		R:      int32(toCoord.R),
+		Pos:    &v1.Position{Q: int32(toCoord.Q), R: int32(toCoord.R)},
 		Layer:  "movement-highlight",
 	})
 	if err != nil {

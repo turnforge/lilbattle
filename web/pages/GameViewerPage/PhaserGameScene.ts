@@ -350,8 +350,7 @@ export class PhaserGameScene extends PhaserWorldScene {
                 // Call presenter directly
                 this.gameViewPresenterClient.sceneClicked({
                     gameId: "", // Will be filled by presenter
-                    q: clickContext.hexQ,
-                    r: clickContext.hexR,
+                    pos: {q: clickContext.hexQ, r: clickContext.hexR, label: ""},
                     layer: clickContext.layer || 'unknown',
                 });
             }

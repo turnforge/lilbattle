@@ -117,8 +117,7 @@ func runGetOptionsAtTest(t *testing.T, svc *SingletonGamesService, testCase GetO
 		// Call GetOptionsAt
 		req := &v1.GetOptionsAtRequest{
 			GameId: svc.SingletonGame.Id,
-			Q:      testCase.Q,
-			R:      testCase.R,
+			Pos:    &v1.Position{Q: testCase.Q, R: testCase.R},
 		}
 
 		resp, err := svc.GetOptionsAt(context.Background(), req)
@@ -150,14 +149,14 @@ func runGetOptionsAtTest(t *testing.T, svc *SingletonGamesService, testCase GetO
 			case *v1.GameOption_Move:
 				moveCount++
 				moveCoords = append(moveCoords, AxialCoord{
-					Q: int(optionType.Move.ToQ),
-					R: int(optionType.Move.ToR),
+					Q: int(optionType.Move.To.Q),
+					R: int(optionType.Move.To.R),
 				})
 			case *v1.GameOption_Attack:
 				attackCount++
 				attackCoords = append(attackCoords, AxialCoord{
-					Q: int(optionType.Attack.DefenderQ),
-					R: int(optionType.Attack.DefenderR),
+					Q: int(optionType.Attack.Defender.Q),
+					R: int(optionType.Attack.Defender.R),
 				})
 			case *v1.GameOption_EndTurn:
 				endTurnCount++
@@ -260,8 +259,8 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 			TestCases: []GetOptionsAtTestCase{
 				{
 					Name: "CheckOurUnit",
-					Q:    -2, // Player 1 unit at (-2,-1) per actual world data
-					R:    -1,
+					Q:    1, // Player 1 unit at (1,1) per actual world data
+					R:    1,
 					ExpectedResult: &GetOptionsAtExpectation{
 						// Our unit should have movement options (end turn is global)
 						// Soldier with 3 movement points, limited by map terrain
@@ -275,8 +274,8 @@ func TestGetOptionsAtWithRealWorlds(t *testing.T) {
 				},
 				{
 					Name: "CheckEnemyUnit",
-					Q:    1, // Player 2 unit at (1,4) per actual world data
-					R:    4,
+					Q:    4, // Player 2 unit at (4,6) per actual world data
+					R:    6,
 					ExpectedResult: &GetOptionsAtExpectation{
 						// Enemy unit - no options (end turn is global)
 						MoveOptionCount:   0,

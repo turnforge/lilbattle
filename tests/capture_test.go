@@ -57,8 +57,7 @@ func TestProcessCaptureBuilding(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_CaptureBuilding{
 			CaptureBuilding: &v1.CaptureBuildingAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				TileType: lib.TileTypeLandBase,
 			},
 		},
@@ -209,8 +208,7 @@ func TestCaptureFailsWhenAlreadyOwned(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_CaptureBuilding{
 			CaptureBuilding: &v1.CaptureBuildingAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				TileType: lib.TileTypeLandBase,
 			},
 		},
@@ -262,8 +260,7 @@ func TestCaptureFailsWhenUnitCantCapture(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_CaptureBuilding{
 			CaptureBuilding: &v1.CaptureBuildingAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				TileType: lib.TileTypeLandBase,
 			},
 		},
@@ -315,8 +312,7 @@ func TestCaptureFailsWhenAlreadyCapturing(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_CaptureBuilding{
 			CaptureBuilding: &v1.CaptureBuildingAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				TileType: lib.TileTypeLandBase,
 			},
 		},
@@ -369,8 +365,7 @@ func TestCaptureEnemyBase(t *testing.T) {
 		Player: 1,
 		MoveType: &v1.GameMove_CaptureBuilding{
 			CaptureBuilding: &v1.CaptureBuildingAction{
-				Q:        0,
-				R:        0,
+				Pos:      &v1.Position{Q: 0, R: 0},
 				TileType: lib.TileTypeLandBase,
 			},
 		},

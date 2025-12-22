@@ -69,8 +69,7 @@ export class TurnOptionsPanel extends BaseComponent implements LCMComponent {
                     gameId: "",
                     optionIndex: optionIndex,
                     optionType: optionType || "",
-                    q: q,
-                    r: r,
+                    pos: { label: "", q: q, r: r, }
                 });
             });
         });
