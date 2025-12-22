@@ -93,7 +93,41 @@ The controller methods (`g.Move()`, `g.Attack()`, etc.) are primarily useful for
 
 ### Phase 7: Write Go Tests (COMPLETED)
 
-Created comprehensive controller tests in `tests/controller_test.go`:
+Created comprehensive controller tests in `tests/controller_test.go`.
+
+### Phase 8: Remove MoveProcessor Struct (COMPLETED)
+
+The `MoveProcessor` struct was removed since it was only used as a method namespace
+with no state. All `Process*` methods are now directly on the `Game` struct.
+
+**Before:**
+```go
+type MoveProcessor struct {}
+
+func (m *MoveProcessor) ProcessMoves(game *Game, moves []*v1.GameMove) error
+func (m *MoveProcessor) ProcessMoveUnit(g *Game, move *v1.GameMove, action *v1.MoveUnitAction, preventPassThrough bool) error
+// etc.
+```
+
+**After:**
+```go
+func (g *Game) ProcessMoves(moves []*v1.GameMove) error
+func (g *Game) ProcessMoveUnit(move *v1.GameMove, action *v1.MoveUnitAction, preventPassThrough bool) error
+// etc.
+```
+
+This simplifies the API - callers now use `game.ProcessMoves(moves)` instead of
+`(&MoveProcessor{}).ProcessMoves(game, moves)`.
+
+**Files updated:**
+- `lib/moves.go` - Removed MoveProcessor struct, changed method receivers
+- `lib/game.go` - Updated controller methods to call `g.ProcessX()` directly
+- `services/games_service.go` - Updated to call `rtGame.ProcessMoves()`
+- `tests/*.go` - All test files updated to use Game methods
+
+### Test Infrastructure (COMPLETED)
+
+Test files in `tests/` created:
 - `TestMoveController` - Move with relative direction ("R")
 - `TestMoveControllerWithCoordinates` - Move using Q,R coordinates ("1,0")
 - `TestMoveControllerMultipleDirections` - Move with chained directions ("R,R")
@@ -125,14 +159,15 @@ Key fixes during testing:
 
 ### Go Files
 - `lib/game.go` - Added FromPos, FromPosWithBase, Pos, NumPlayers, controller methods (Move, Attack, Build, Capture, EndTurn, GetOptionsAt)
-- `lib/moves.go` - Updated to use Position fields, fixed ProcessEndTurn to use NumPlayers()
+- `lib/moves.go` - Removed MoveProcessor struct, methods now on Game; uses Position fields
 - `lib/sort_utils.go` - Updated to use Position fields
 - `lib/rules_loader.go` - Added TileTypeGrass and UnitTypeSoldier constants
-- `services/games_service.go` - Updated to use Position
+- `services/games_service.go` - Updated to use Position, calls `rtGame.ProcessMoves()` directly
 - `services/gameview_presenter.go` - Updated to use Position
 - `services/options_formatter.go` - Updated to use Position
 - `tests/controller_test.go` - New comprehensive controller tests
-- `tests/imports.go` - Added exports for test constants
+- `tests/imports.go` - Removed MoveProcessor export, added test constants
+- `tests/*.go` - All test files updated to use Game methods directly
 
 ### Remaining Files to Fix
 All files have been updated for the Position migration. The `cmd/repl` package is deprecated and not maintained.

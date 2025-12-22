@@ -199,10 +199,7 @@ func (s *GameViewPresenter) GetGame(ctx context.Context, gameId string) (resp *v
 
 func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClickedRequest) (resp *v1.SceneClickedResponse, err error) {
 	resp = &v1.SceneClickedResponse{}
-	getGameResp, err := s.GetGame(ctx, req.GameId)
-	if err != nil {
-		return
-	}
+	getGameResp, _ := s.GetGame(ctx, req.GameId)
 	game := getGameResp.Game
 	gameState := getGameResp.State
 	rg, err := s.GamesService.GetRuntimeGame(game, gameState)
@@ -231,9 +228,6 @@ func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClick
 		}
 
 		wd := rg.World
-		if err != nil {
-			panic(err)
-		}
 		unit := wd.UnitAt(coord)
 		tile := wd.TileAt(coord)
 
@@ -461,9 +455,6 @@ func (s *GameViewPresenter) TurnOptionClicked(ctx context.Context, req *v1.TurnO
 func (s *GameViewPresenter) executeCaptureFromOption(ctx context.Context, req *v1.TurnOptionClickedRequest) error {
 	// Get current game state
 	getGameResp, err := s.GetGame(ctx, req.GameId)
-	if err != nil {
-		return err
-	}
 	game := getGameResp.Game
 	gameState := getGameResp.State
 
@@ -514,9 +505,6 @@ func (s *GameViewPresenter) BuildOptionClicked(ctx context.Context, req *v1.Buil
 
 	// Get current game state
 	getGameResp, err := s.GetGame(ctx, req.GameId)
-	if err != nil {
-		return
-	}
 
 	// Parse position
 	rg, err := s.GamesService.GetRuntimeGame(getGameResp.Game, getGameResp.State)
@@ -543,7 +531,22 @@ func (s *GameViewPresenter) BuildOptionClicked(ctx context.Context, req *v1.Buil
 		req.UnitType, coord.Q, coord.R, getGameResp.State.CurrentPlayer)
 
 	// Execute the build move
-	err = s.executeBuildAction(ctx, getGameResp.Game, getGameResp.State, gameMove)
+	game, gameState := getGameResp.Game, getGameResp.State
+
+	// Call ProcessMoves to execute the build
+	procesMovesResp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{GameId: game.Id, Moves: []*v1.GameMove{gameMove}})
+	if err != nil {
+		fmt.Printf("[Presenter] Build action failed: %v\n", err)
+		return nil, err
+	}
+
+	fmt.Printf("[Presenter] Build action completed successfully\n")
+
+	// Hide the build modal
+	s.BuildOptionsModal.Hide(ctx)
+
+	// Apply incremental updates from the move results
+	s.applyIncrementalChanges(ctx, game, gameState, procesMovesResp.Moves, gameMove)
 	return
 }
 
@@ -553,11 +556,33 @@ func (s *GameViewPresenter) EndTurnButtonClicked(ctx context.Context, req *v1.En
 
 	// Get current game state
 	getGameResp, err := s.GetGame(ctx, req.GameId)
+	game, gameState := getGameResp.Game, getGameResp.State
+
+	fmt.Printf("[Presenter] Ending turn for player %d\n", gameState.CurrentPlayer)
+
+	// Create end turn move
+	gameMove := &v1.GameMove{
+		Player: gameState.CurrentPlayer,
+		MoveType: &v1.GameMove_EndTurn{
+			EndTurn: &v1.EndTurnAction{},
+		},
+	}
+
+	// Call ProcessMoves to execute end turn
+	processMovesResp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
+		GameId: game.Id,
+		Moves:  []*v1.GameMove{gameMove},
+	})
+
 	if err != nil {
+		fmt.Printf("[Presenter] End turn failed: %v\n", err)
 		return
 	}
 
-	s.executeEndTurnAction(ctx, getGameResp.Game, getGameResp.State)
+	fmt.Printf("[Presenter] Turn ended, new current player: %d\n", gameState.CurrentPlayer)
+
+	// Apply incremental updates from the move results
+	s.applyIncrementalChanges(ctx, game, gameState, processMovesResp.Moves, gameMove)
 	return
 }
 
@@ -628,54 +653,6 @@ func (s *GameViewPresenter) executeMovementAction(ctx context.Context, game *v1.
 	return nil
 }
 
-// executeEndTurnAction executes the end turn action
-// executeBuildAction processes a build unit action
-func (s *GameViewPresenter) executeBuildAction(ctx context.Context, game *v1.Game, gameState *v1.GameState, gameMove *v1.GameMove) error {
-	// Call ProcessMoves to execute the build
-	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{GameId: game.Id, Moves: []*v1.GameMove{gameMove}})
-	if err != nil {
-		fmt.Printf("[Presenter] Build action failed: %v\n", err)
-		return err
-	}
-
-	fmt.Printf("[Presenter] Build action completed successfully\n")
-
-	// Hide the build modal
-	s.BuildOptionsModal.Hide(ctx)
-
-	// Apply incremental updates from the move results
-	s.applyIncrementalChanges(ctx, game, gameState, resp.Moves, gameMove)
-	return nil
-}
-
-func (s *GameViewPresenter) executeEndTurnAction(ctx context.Context, game *v1.Game, gameState *v1.GameState) {
-	fmt.Printf("[Presenter] Ending turn for player %d\n", gameState.CurrentPlayer)
-
-	// Create end turn move
-	gameMove := &v1.GameMove{
-		Player: gameState.CurrentPlayer,
-		MoveType: &v1.GameMove_EndTurn{
-			EndTurn: &v1.EndTurnAction{},
-		},
-	}
-
-	// Call ProcessMoves to execute end turn
-	resp, err := s.GamesService.ProcessMoves(ctx, &v1.ProcessMovesRequest{
-		GameId: game.Id,
-		Moves:  []*v1.GameMove{gameMove},
-	})
-
-	if err != nil {
-		fmt.Printf("[Presenter] End turn failed: %v\n", err)
-		return
-	}
-
-	fmt.Printf("[Presenter] Turn ended, new current player: %d\n", gameState.CurrentPlayer)
-
-	// Apply incremental updates from the move results
-	s.applyIncrementalChanges(ctx, game, gameState, resp.Moves, gameMove)
-}
-
 // applyIncrementalChanges processes WorldChange objects and calls incremental browser update methods
 func (s *GameViewPresenter) applyIncrementalChanges(ctx context.Context, game *v1.Game, gameState *v1.GameState, moveResults []*v1.GameMove, gameMove *v1.GameMove) {
 	// Clear selection and highlights
@@ -701,32 +678,6 @@ func (s *GameViewPresenter) applyIncrementalChanges(ctx context.Context, game *v
 						for i := 0; i < len(coords); i += 2 {
 							path = append(path, &v1.HexCoord{Q: coords[i], R: coords[i+1]})
 						}
-						/*
-							// If this was a move action with a reconstructed path, animate it with the full path
-							// Build full path from reconstructed_path if available
-							if moveAction.ReconstructedPath != nil && len(moveAction.ReconstructedPath.Edges) > 0 {
-								// Extract coordinates from path edges
-								path = make([]*v1.HexCoord, 0, len(moveAction.ReconstructedPath.Edges)+1)
-								// Add starting point
-								path = append(path, &v1.HexCoord{
-									Q: moveAction.ReconstructedPath.Edges[0].FromQ,
-									R: moveAction.ReconstructedPath.Edges[0].FromR,
-								})
-								// Add each destination along the path
-								for _, edge := range moveAction.ReconstructedPath.Edges {
-									path = append(path, &v1.HexCoord{
-										Q: edge.ToQ,
-										R: edge.ToR,
-									})
-								}
-							} else {
-								// Fallback to simple 2-point path
-								path = []*v1.HexCoord{
-									{Q: moveAction.FromQ, R: moveAction.FromR},
-									{Q: moveAction.ToQ, R: moveAction.ToR},
-								}
-							}
-						*/
 					}
 
 					// Animate the movement with full path
@@ -734,14 +685,6 @@ func (s *GameViewPresenter) applyIncrementalChanges(ctx context.Context, game *v
 						Unit: unitMoved.UpdatedUnit,
 						Path: path,
 					})
-
-					/*
-						// Animate unit movement
-						s.GameScene.MoveUnit(ctx, &v1.MoveUnitRequest{
-							Unit: updatedUnit,
-							Path: path,
-						})
-					*/
 				}
 
 			case *v1.WorldChange_UnitDamaged:
