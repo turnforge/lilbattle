@@ -1143,6 +1143,56 @@
         ]
       }
     },
+    "/v1/presenters/gameview/action:applyRemoteChanges/{game_id}": {
+      "post": {
+        "summary": "*\nApply changes from remote players (received via SyncService subscription).\nThis updates local game state and triggers UI updates for the received WorldChanges.\nUsed by viewers to apply moves made by other players.",
+        "operationId": "GameViewPresenter_ApplyRemoteChanges",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ApplyRemoteChangesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gameId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "moves": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/definitions/v1GameMove"
+                  },
+                  "title": "The moves containing WorldChanges to apply"
+                }
+              },
+              "title": "Request to apply changes from remote players\nCalled when SyncService streams moves made by other players"
+            }
+          }
+        ],
+        "tags": [
+          "GameViewPresenter"
+        ]
+      }
+    },
     "/v1/presenters/gameview/action:clicked:buildOption/{game_id}": {
       "post": {
         "summary": "*\nCalled when a build option is clicked in the BuildOptionsModal",
@@ -1969,6 +2019,24 @@
         }
       },
       "title": "Compact representation of all reachable paths from a source"
+    },
+    "v1ApplyRemoteChangesResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "Whether the changes were successfully applied"
+        },
+        "error": {
+          "type": "string",
+          "title": "Error message if application failed (e.g., state desync)"
+        },
+        "requiresReload": {
+          "type": "boolean",
+          "title": "If state desync detected, client should reload game"
+        }
+      },
+      "title": "Response after applying remote changes"
     },
     "v1AttackRecord": {
       "type": "object",

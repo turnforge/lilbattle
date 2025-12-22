@@ -103,6 +103,11 @@ type GameViewPresenterServer interface {
 	/** *
 	Called when a build option is clicked in the BuildOptionsModal */
 	BuildOptionClicked(context.Context, *v1models.BuildOptionClickedRequest) (*v1models.BuildOptionClickedResponse, error)
+	/** *
+	Apply changes from remote players (received via SyncService subscription).
+	This updates local game state and triggers UI updates for the received WorldChanges.
+	Used by viewers to apply moves made by other players. */
+	ApplyRemoteChanges(context.Context, *v1models.ApplyRemoteChangesRequest) (*v1models.ApplyRemoteChangesResponse, error)
 }
 
 // GameSyncServiceServer is the server API for GameSyncService service (WASM version without gRPC embedding).
