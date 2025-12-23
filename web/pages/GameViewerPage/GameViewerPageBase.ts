@@ -64,7 +64,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     protected gameViewPresenterClient: GameViewPresenterClient;
     protected singletonInitializerClient: SingletonInitializerClient;
     protected currentGameId: string | null;
-    protected currentPlayerId: string = '1'; // TODO: Get from auth context
     private clientReadySent: boolean = false;
 
     // Multiplayer sync
@@ -248,10 +247,8 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
 
         console.log('[GameViewerPage] Initializing multiplayer sync');
         this.syncManager = new GameSyncManager(
-            this.wasmBundle,
             this.gameViewPresenterClient,
             this.currentGameId,
-            this.currentPlayerId,
             {
                 onStateChange: (state, error) => this.onSyncStateChange(state, error),
                 onRemoteUpdate: (update) => this.onRemoteUpdate(update),

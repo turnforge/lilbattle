@@ -136,7 +136,7 @@ func RegisterGameSyncServiceHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.GameSyncService/Broadcast", runtime.WithHTTPPathPattern("/v1/games/{game_id}/sync/broadcast"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/weewar.v1.GameSyncService/Broadcast", runtime.WithHTTPPathPattern("/v1/sync/games/{game_id}/broadcast"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -194,7 +194,7 @@ func RegisterGameSyncServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GameSyncService/Subscribe", runtime.WithHTTPPathPattern("/v1/games/{game_id}/sync/subscribe"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GameSyncService/Subscribe", runtime.WithHTTPPathPattern("/v1/sync/games/{game_id}/subscribe"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -211,7 +211,7 @@ func RegisterGameSyncServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GameSyncService/Broadcast", runtime.WithHTTPPathPattern("/v1/games/{game_id}/sync/broadcast"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/weewar.v1.GameSyncService/Broadcast", runtime.WithHTTPPathPattern("/v1/sync/games/{game_id}/broadcast"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -228,8 +228,8 @@ func RegisterGameSyncServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_GameSyncService_Subscribe_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 2, 4}, []string{"v1", "games", "game_id", "sync", "subscribe"}, ""))
-	pattern_GameSyncService_Broadcast_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 2, 4}, []string{"v1", "games", "game_id", "sync", "broadcast"}, ""))
+	pattern_GameSyncService_Subscribe_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "sync", "games", "game_id", "subscribe"}, ""))
+	pattern_GameSyncService_Broadcast_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "sync", "games", "game_id", "broadcast"}, ""))
 )
 
 var (

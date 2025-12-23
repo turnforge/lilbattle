@@ -30,7 +30,7 @@ service GameSyncService {
   // as other players make moves. Supports reconnection via from_sequence.
   rpc Subscribe(SubscribeRequest) returns (stream GameUpdate) {
     option (google.api.http) = {
-      get: "/v1/games/{game_id}/sync/subscribe"
+      get: "/v1/sync/games/{game_id}/subscribe"
     };
   }
 
@@ -39,7 +39,7 @@ service GameSyncService {
   // Not intended for direct client use.
   rpc Broadcast(BroadcastRequest) returns (BroadcastResponse) {
     option (google.api.http) = {
-      post: "/v1/games/{game_id}/sync/broadcast",
+      post: "/v1/sync/games/{game_id}/broadcast",
       body: "*",
     };
   }

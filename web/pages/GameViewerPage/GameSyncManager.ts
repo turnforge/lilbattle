@@ -2,8 +2,8 @@
  * GameSyncManager handles real-time synchronization of game state for multiplayer.
  *
  * Architecture:
- * - Subscribes to GameSyncService for game updates via streaming
- * - When MovesPublished updates arrive from other players, calls presenter's ApplyRemoteChanges
+ * - Subscribes to GameSyncService via HTTP/Connect streaming (direct to server)
+ * - When MovesPublished updates arrive from other players, calls WASM presenter's ApplyRemoteChanges
  * - Handles reconnection with sequence tracking
  *
  * Usage:
@@ -13,10 +13,8 @@
  * 4. Call disconnect() when leaving game
  */
 
-import WeewarBundle from '../../gen/wasmjs';
-import { GameSyncServiceClient } from '../../gen/wasmjs/weewar/v1/services/gameSyncServiceClient';
 import { GameViewPresenterClient } from '../../gen/wasmjs/weewar/v1/services/gameViewPresenterClient';
-import { GameUpdate, SubscribeRequest } from '../../gen/wasmjs/weewar/v1/models/interfaces';
+import { GameUpdate } from '../../gen/wasmjs/weewar/v1/models/interfaces';
 
 export type SyncState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
@@ -29,35 +27,32 @@ export interface GameSyncManagerOptions {
     autoReconnect?: boolean;
     /** Reconnection delay in ms (default: 2000) */
     reconnectDelayMs?: number;
+    /** Base URL for the sync service (default: current origin) */
+    baseUrl?: string;
 }
 
 export class GameSyncManager {
-    private syncClient: GameSyncServiceClient;
     private presenterClient: GameViewPresenterClient;
     private gameId: string;
-    private playerId: string;
     private lastSequence: number = 0;
     private state: SyncState = 'disconnected';
     private options: Required<GameSyncManagerOptions>;
     private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    private isSubscribing: boolean = false;
+    private abortController: AbortController | null = null;
 
     constructor(
-        wasmBundle: WeewarBundle,
         presenterClient: GameViewPresenterClient,
         gameId: string,
-        playerId: string,
         options: GameSyncManagerOptions = {}
     ) {
-        this.syncClient = new GameSyncServiceClient(wasmBundle);
         this.presenterClient = presenterClient;
         this.gameId = gameId;
-        this.playerId = playerId;
         this.options = {
             onStateChange: options.onStateChange || (() => {}),
             onRemoteUpdate: options.onRemoteUpdate || (() => {}),
             autoReconnect: options.autoReconnect ?? true,
             reconnectDelayMs: options.reconnectDelayMs ?? 2000,
+            baseUrl: options.baseUrl || (window.location.origin + "/api"),
         };
     }
 
@@ -76,10 +71,10 @@ export class GameSyncManager {
     }
 
     /**
-     * Connect and start receiving game updates
+     * Connect and start receiving game updates via HTTP streaming
      */
     connect(): void {
-        if (this.state === 'connected' || this.isSubscribing) {
+        if (this.state === 'connected' || this.state === 'connecting') {
             console.log('[GameSyncManager] Already connected or connecting');
             return;
         }
@@ -94,68 +89,130 @@ export class GameSyncManager {
     disconnect(): void {
         console.log('[GameSyncManager] Disconnecting');
         this.clearReconnectTimeout();
-        this.isSubscribing = false;
+        if (this.abortController) {
+            this.abortController.abort();
+            this.abortController = null;
+        }
         this.setState('disconnected');
     }
 
-    private subscribe(): void {
-        if (this.isSubscribing) {
-            return;
-        }
-
-        this.isSubscribing = true;
-        console.log(`[GameSyncManager] Subscribing to game ${this.gameId} from sequence ${this.lastSequence}`);
-
-        const request: SubscribeRequest = {
-            gameId: this.gameId,
-            playerId: this.playerId,
-            fromSequence: this.lastSequence,
-        };
-
-        this.syncClient.subscribe(request, (update, error, done) => {
-            return this.handleStreamMessage(update, error, done);
+    /**
+     * Subscribe to game updates via gRPC-gateway REST endpoint
+     * Uses GET with query params, returns newline-delimited JSON stream
+     */
+    private async subscribe(): Promise<void> {
+        // gRPC-gateway REST endpoint: /v1/games/{game_id}/sync/subscribe
+        const params = new URLSearchParams({
+            from_sequence: this.lastSequence.toString(),
         });
+        const url = `${this.options.baseUrl}/v1/sync/games/${this.gameId}/subscribe?${params}`;
+
+        console.log(`[GameSyncManager] Subscribing to ${url}`);
+
+        // Create abort controller for this subscription
+        this.abortController = new AbortController();
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                signal: this.abortController.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            if (!response.body) {
+                throw new Error('Response body is null');
+            }
+
+            this.setState('connected');
+            await this.readStream(response.body);
+
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('[GameSyncManager] Subscription aborted');
+                return;
+            }
+
+            console.error('[GameSyncManager] Subscription error:', error);
+            this.setState('error', error.message);
+            this.scheduleReconnect();
+        }
     }
 
     /**
-     * Handle streaming message callback
-     * @returns false to stop the stream, true to continue
+     * Read and process the streaming response
+     * Connect streaming uses newline-delimited JSON messages
      */
-    private handleStreamMessage(
-        update: GameUpdate | null,
-        error: string | null,
-        done: boolean
-    ): boolean {
-        // Handle errors
-        if (error) {
-            console.error('[GameSyncManager] Stream error:', error);
-            this.isSubscribing = false;
-            this.setState('error', error);
+    private async readStream(body: ReadableStream<Uint8Array>): Promise<void> {
+        const reader = body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    console.log('[GameSyncManager] Stream ended');
+                    break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Process complete messages (Connect uses newline-delimited JSON or envelope format)
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                for (const line of lines) {
+                    if (line.trim()) {
+                        await this.processMessage(line);
+                    }
+                }
+            }
+        } catch (error: any) {
+            if (error.name !== 'AbortError') {
+                console.error('[GameSyncManager] Stream read error:', error);
+                this.setState('error', error.message);
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        // Stream ended - schedule reconnect if not intentionally disconnected
+        if (this.state !== 'disconnected') {
             this.scheduleReconnect();
-            return false; // Stop stream
         }
+    }
 
-        // Handle stream completion
-        if (done) {
-            console.log('[GameSyncManager] Stream completed');
-            this.isSubscribing = false;
-            if (this.state !== 'disconnected') {
-                this.scheduleReconnect();
+    /**
+     * Process a single message from the stream
+     */
+    private async processMessage(data: string): Promise<void> {
+        try {
+            // Connect streaming wraps messages in an envelope
+            const envelope = JSON.parse(data);
+
+            // Handle Connect envelope format: { "result": { ... } } or { "error": { ... } }
+            let update: GameUpdate;
+            if (envelope.result) {
+                update = envelope.result;
+            } else if (envelope.error) {
+                console.error('[GameSyncManager] Server error:', envelope.error);
+                return;
+            } else {
+                // Direct message format
+                update = envelope;
             }
-            return false; // Stream is done
+
+            await this.handleUpdate(update);
+        } catch (error) {
+            console.error('[GameSyncManager] Failed to parse message:', data, error);
         }
-
-        // Handle update
-        if (update) {
-            // Update to connected state on first message
-            if (this.state !== 'connected') {
-                this.setState('connected');
-            }
-
-            this.handleUpdate(update);
-        }
-
-        return true; // Continue receiving
     }
 
     private async handleUpdate(update: GameUpdate): Promise<void> {
@@ -169,17 +226,12 @@ export class GameSyncManager {
         // Notify callback
         this.options.onRemoteUpdate(update);
 
-        // Handle MovesPublished - apply to local presenter
+        // Handle MovesPublished - apply to local WASM presenter
+        // The presenter will decide whether to apply based on group number
         if (update.movesPublished) {
             const movesPublished = update.movesPublished;
 
-            // Skip our own moves (we already applied them locally)
-            if (movesPublished.player.toString() === this.playerId) {
-                console.log('[GameSyncManager] Skipping own moves');
-                return;
-            }
-
-            console.log(`[GameSyncManager] Applying remote moves from player ${movesPublished.player}`);
+            console.log(`[GameSyncManager] Received moves from player ${movesPublished.player}, group ${movesPublished.groupNumber}`);
 
             try {
                 const response = await this.presenterClient.applyRemoteChanges({
@@ -191,7 +243,6 @@ export class GameSyncManager {
                     console.error('[GameSyncManager] Failed to apply remote changes:', response.error);
                     if (response.requiresReload) {
                         console.warn('[GameSyncManager] State desync detected - reload required');
-                        // Notify the page that a reload is needed
                         this.setState('error', 'State desync - reload required');
                     }
                 }

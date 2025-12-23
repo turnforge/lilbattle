@@ -170,5 +170,13 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 			return nil, err
 		}
 	}
+
+	// Register GameSyncService for multiplayer streaming (uses SSE for browser compatibility)
+	err = v1s.RegisterGameSyncServiceHandlerFromEndpoint(ctx, svcMux, grpc_addr, opts)
+	if err != nil {
+		log.Fatal("Unable to register game sync service: ", err)
+		return nil, err
+	}
+
 	return svcMux, nil // Return nil error on success
 }

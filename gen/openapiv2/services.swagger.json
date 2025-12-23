@@ -671,109 +671,6 @@
         ]
       }
     },
-    "/v1/games/{gameId}/sync/broadcast": {
-      "post": {
-        "summary": "Broadcast sends a GameUpdate to all subscribers of a game.\nCalled internally by GamesService after ProcessMoves succeeds.\nNot intended for direct client use.",
-        "operationId": "GameSyncService_Broadcast",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1BroadcastResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "gameId",
-            "description": "Game ID to broadcast to",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "update": {
-                  "$ref": "#/definitions/v1GameUpdate",
-                  "title": "The update to broadcast"
-                }
-              },
-              "title": "BroadcastRequest to send a GameUpdate to all subscribers\nCalled internally by GamesService after ProcessMoves succeeds"
-            }
-          }
-        ],
-        "tags": [
-          "GameSyncService"
-        ]
-      }
-    },
-    "/v1/games/{gameId}/sync/subscribe": {
-      "get": {
-        "summary": "Subscribe to game changes. Server streams GameUpdate messages to clients\nas other players make moves. Supports reconnection via from_sequence.",
-        "operationId": "GameSyncService_Subscribe",
-        "responses": {
-          "200": {
-            "description": "A successful response.(streaming responses)",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/v1GameUpdate"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of v1GameUpdate"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "gameId",
-            "description": "Game ID to subscribe to",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "playerId",
-            "description": "Player ID this client represents (for filtering own moves)",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "fromSequence",
-            "description": "Resume from this sequence number (for reconnection).\nServer will send any missed updates since this sequence.\nUse 0 to start from current state.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "GameSyncService"
-        ]
-      }
-    },
     "/v1/games/{id}": {
       "get": {
         "summary": "GetGame returns a specific game with metadata",
@@ -1382,6 +1279,109 @@
         ],
         "tags": [
           "GameViewPresenter"
+        ]
+      }
+    },
+    "/v1/sync/games/{gameId}/broadcast": {
+      "post": {
+        "summary": "Broadcast sends a GameUpdate to all subscribers of a game.\nCalled internally by GamesService after ProcessMoves succeeds.\nNot intended for direct client use.",
+        "operationId": "GameSyncService_Broadcast",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BroadcastResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gameId",
+            "description": "Game ID to broadcast to",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "update": {
+                  "$ref": "#/definitions/v1GameUpdate",
+                  "title": "The update to broadcast"
+                }
+              },
+              "title": "BroadcastRequest to send a GameUpdate to all subscribers\nCalled internally by GamesService after ProcessMoves succeeds"
+            }
+          }
+        ],
+        "tags": [
+          "GameSyncService"
+        ]
+      }
+    },
+    "/v1/sync/games/{gameId}/subscribe": {
+      "get": {
+        "summary": "Subscribe to game changes. Server streams GameUpdate messages to clients\nas other players make moves. Supports reconnection via from_sequence.",
+        "operationId": "GameSyncService_Subscribe",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/v1GameUpdate"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of v1GameUpdate"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "gameId",
+            "description": "Game ID to subscribe to",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "playerId",
+            "description": "Player ID this client represents (for filtering own moves)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fromSequence",
+            "description": "Resume from this sequence number (for reconnection).\nServer will send any missed updates since this sequence.\nUse 0 to start from current state.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "GameSyncService"
         ]
       }
     },
