@@ -86,6 +86,8 @@ func (g *Game) ProcessMove(move *v1.GameMove) (err error) {
 		return g.ProcessBuildUnit(move, a.BuildUnit)
 	case *v1.GameMove_CaptureBuilding:
 		return g.ProcessCaptureBuilding(move, a.CaptureBuilding)
+	case *v1.GameMove_HealUnit:
+		return g.ProcessHealUnit(move, a.HealUnit)
 	case *v1.GameMove_EndTurn:
 		return g.ProcessEndTurn(move, a.EndTurn)
 	default:
@@ -345,6 +347,80 @@ func (g *Game) ProcessCaptureBuilding(move *v1.GameMove, action *v1.CaptureBuild
 	return nil
 }
 
+// ProcessHealUnit executes manual healing for a unit
+func (g *Game) ProcessHealUnit(move *v1.GameMove, action *v1.HealUnitAction) (err error) {
+	// Parse position
+	coord, err := g.FromPos(action.Pos)
+	if err != nil {
+		return fmt.Errorf("invalid position: %w", err)
+	}
+
+	// Get unit at position
+	unit := g.World.UnitAt(coord)
+	if unit == nil {
+		return fmt.Errorf("no unit at position %v", coord)
+	}
+
+	// Verify unit belongs to current player
+	if unit.Player != g.CurrentPlayer {
+		return fmt.Errorf("unit belongs to player %d, not current player %d", unit.Player, g.CurrentPlayer)
+	}
+
+	// Get unit definition
+	unitData, err := g.RulesEngine.GetUnitData(unit.UnitType)
+	if err != nil {
+		return fmt.Errorf("failed to get unit data: %w", err)
+	}
+
+	// Check if unit is already at max health
+	if unit.AvailableHealth >= unitData.Health {
+		return fmt.Errorf("unit already at max health")
+	}
+
+	// Calculate heal amount (use the value from action, or calculate if not provided)
+	healAmount := action.HealAmount
+	if healAmount <= 0 {
+		healAmount = g.calculateHealAmount(unit, unitData)
+		if healAmount <= 0 {
+			return fmt.Errorf("unit cannot heal on this terrain")
+		}
+	}
+
+	// Capture previous state
+	previousUnit := copyUnit(unit)
+
+	// Apply healing
+	newHealth := unit.AvailableHealth + healAmount
+	if newHealth > unitData.Health {
+		newHealth = unitData.Health
+	}
+	unit.AvailableHealth = newHealth
+
+	// Mark unit as having acted this turn (so it doesn't auto-heal next turn)
+	unit.LastActedTurn = g.TurnCounter
+
+	// Advance progression (healing counts as an action)
+	unit.ProgressionStep++
+	unit.ChosenAlternative = ""
+
+	// Capture updated state
+	updatedUnit := copyUnit(unit)
+
+	// Record the change
+	healChange := &v1.WorldChange{
+		ChangeType: &v1.WorldChange_UnitHealed{
+			UnitHealed: &v1.UnitHealedChange{
+				PreviousUnit: previousUnit,
+				UpdatedUnit:  updatedUnit,
+				HealAmount:   healAmount,
+			},
+		},
+	}
+	move.Changes = append(move.Changes, healChange)
+
+	return nil
+}
+
 // ProcessEndTurn advances to next player's turn.
 // For now a player can just end turn but in other games there may be some mandatory
 // moves left.
@@ -404,17 +480,6 @@ func (g *Game) ProcessEndTurn(move *v1.GameMove, action *v1.EndTurnAction) (err 
 		move.Changes = append(move.Changes, coinsChange)
 	}
 
-	// Capture the reset units AFTER reset (with refreshed movement points)
-	var resetUnits []*v1.Unit
-	playerUnits := g.World.GetPlayerUnits(int(previousPlayer))
-
-	for _, unit := range playerUnits {
-		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%f\n",
-			unit.Q, unit.R, unit.Player, unit.DistanceLeft)
-		resetUnit := copyUnit(unit)
-		resetUnits = append(resetUnits, resetUnit)
-	}
-
 	// Advance to next player (1-based player system: Player 1, Player 2, etc.)
 	// Player 0 is reserved for neutral, so we cycle between 1, 2, ..., PlayerCount
 	// Use configured player count from game config, not from World (which counts units)
@@ -427,6 +492,23 @@ func (g *Game) ProcessEndTurn(move *v1.GameMove, action *v1.EndTurnAction) (err 
 	} else {
 		// Move to next player
 		g.CurrentPlayer++
+	}
+
+	// Top-up the INCOMING player's units and capture them as ResetUnits
+	// This ensures remote clients receive the refreshed values
+	var resetUnits []*v1.Unit
+	incomingPlayerUnits := g.World.GetPlayerUnits(int(g.CurrentPlayer))
+
+	for _, unit := range incomingPlayerUnits {
+		// Top-up the unit (restores movement, applies healing, resets progression)
+		if err := g.TopUpUnitIfNeeded(unit); err != nil {
+			fmt.Printf("ProcessEndTurn: Warning - failed to top-up unit at (%d,%d): %v\n",
+				unit.Q, unit.R, err)
+		}
+		fmt.Printf("ProcessEndTurn: Adding resetUnit at (%d, %d) player=%d, distanceLeft=%f\n",
+			unit.Q, unit.R, unit.Player, unit.DistanceLeft)
+		resetUnit := copyUnit(unit)
+		resetUnits = append(resetUnits, resetUnit)
 	}
 
 	// Check for victory conditions

@@ -2564,6 +2564,9 @@
         "captureBuilding": {
           "$ref": "#/definitions/v1CaptureBuildingAction"
         },
+        "healUnit": {
+          "$ref": "#/definitions/v1HealUnitAction"
+        },
         "sequenceNum": {
           "type": "string",
           "format": "int64",
@@ -2651,6 +2654,9 @@
         },
         "endTurn": {
           "$ref": "#/definitions/v1EndTurnAction"
+        },
+        "heal": {
+          "$ref": "#/definitions/v1HealUnitAction"
         }
       },
       "title": "*\nA single game option available at a position"
@@ -2967,6 +2973,21 @@
         }
       },
       "title": "*\nWorld batch-get response"
+    },
+    "v1HealUnitAction": {
+      "type": "object",
+      "properties": {
+        "pos": {
+          "$ref": "#/definitions/v1Position",
+          "title": "Position of unit to heal"
+        },
+        "healAmount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Amount of health to restore"
+        }
+      },
+      "title": "*\nHeal a unit - player manually chooses to heal instead of attacking/moving\nAuto-healing at turn start is handled separately in TopUpUnitIfNeeded"
     },
     "v1HexCoord": {
       "type": "object",
@@ -3916,6 +3937,25 @@
       },
       "title": "*\nA unit took damage"
     },
+    "v1UnitHealedChange": {
+      "type": "object",
+      "properties": {
+        "previousUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Unit state before healing"
+        },
+        "updatedUnit": {
+          "$ref": "#/definitions/v1Unit",
+          "title": "Unit state after healing"
+        },
+        "healAmount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Amount healed"
+        }
+      },
+      "title": "*\nA unit was healed"
+    },
     "v1UnitKilledChange": {
       "type": "object",
       "properties": {
@@ -4108,6 +4148,9 @@
         },
         "captureStarted": {
           "$ref": "#/definitions/v1CaptureStartedChange"
+        },
+        "unitHealed": {
+          "$ref": "#/definitions/v1UnitHealedChange"
         }
       },
       "title": "*\nRepresents a change to the game world"

@@ -270,6 +270,7 @@ message GameOption {
     BuildUnitAction build = 3;
     CaptureBuildingAction capture = 4;
     EndTurnAction end_turn = 5;
+    HealUnitAction heal = 6;
   }
 }
 

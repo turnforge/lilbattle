@@ -36,14 +36,16 @@ func getOptionTypePriority(opt *v1.GameOption) int {
 	switch opt.OptionType.(type) {
 	case *v1.GameOption_Capture:
 		return 0
-	case *v1.GameOption_Move:
+	case *v1.GameOption_Heal:
 		return 1
-	case *v1.GameOption_Attack:
+	case *v1.GameOption_Move:
 		return 2
-	case *v1.GameOption_Build:
+	case *v1.GameOption_Attack:
 		return 3
-	case *v1.GameOption_EndTurn:
+	case *v1.GameOption_Build:
 		return 4
+	case *v1.GameOption_EndTurn:
+		return 5
 	default:
 		return 99
 	}

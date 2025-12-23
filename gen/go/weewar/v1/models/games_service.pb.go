@@ -1268,6 +1268,7 @@ type GameOption struct {
 	//	*GameOption_Build
 	//	*GameOption_Capture
 	//	*GameOption_EndTurn
+	//	*GameOption_Heal
 	OptionType    isGameOption_OptionType `protobuf_oneof:"option_type"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1355,6 +1356,15 @@ func (x *GameOption) GetEndTurn() *EndTurnAction {
 	return nil
 }
 
+func (x *GameOption) GetHeal() *HealUnitAction {
+	if x != nil {
+		if x, ok := x.OptionType.(*GameOption_Heal); ok {
+			return x.Heal
+		}
+	}
+	return nil
+}
+
 type isGameOption_OptionType interface {
 	isGameOption_OptionType()
 }
@@ -1379,6 +1389,10 @@ type GameOption_EndTurn struct {
 	EndTurn *EndTurnAction `protobuf:"bytes,5,opt,name=end_turn,json=endTurn,proto3,oneof"`
 }
 
+type GameOption_Heal struct {
+	Heal *HealUnitAction `protobuf:"bytes,6,opt,name=heal,proto3,oneof"`
+}
+
 func (*GameOption_Move) isGameOption_OptionType() {}
 
 func (*GameOption_Attack) isGameOption_OptionType() {}
@@ -1388,6 +1402,8 @@ func (*GameOption_Build) isGameOption_OptionType() {}
 func (*GameOption_Capture) isGameOption_OptionType() {}
 
 func (*GameOption_EndTurn) isGameOption_OptionType() {}
+
+func (*GameOption_Heal) isGameOption_OptionType() {}
 
 // *
 // Request for simulating combat between two units
@@ -1668,14 +1684,15 @@ const file_weewar_v1_models_games_service_proto_rawDesc = "" +
 	"\aoptions\x18\x01 \x03(\v2\x15.weewar.v1.GameOptionR\aoptions\x12%\n" +
 	"\x0ecurrent_player\x18\x02 \x01(\x05R\rcurrentPlayer\x12)\n" +
 	"\x10game_initialized\x18\x03 \x01(\bR\x0fgameInitialized\x120\n" +
-	"\tall_paths\x18\x05 \x01(\v2\x13.weewar.v1.AllPathsR\ballPaths\"\xac\x02\n" +
+	"\tall_paths\x18\x05 \x01(\v2\x13.weewar.v1.AllPathsR\ballPaths\"\xdd\x02\n" +
 	"\n" +
 	"GameOption\x12/\n" +
 	"\x04move\x18\x01 \x01(\v2\x19.weewar.v1.MoveUnitActionH\x00R\x04move\x125\n" +
 	"\x06attack\x18\x02 \x01(\v2\x1b.weewar.v1.AttackUnitActionH\x00R\x06attack\x122\n" +
 	"\x05build\x18\x03 \x01(\v2\x1a.weewar.v1.BuildUnitActionH\x00R\x05build\x12<\n" +
 	"\acapture\x18\x04 \x01(\v2 .weewar.v1.CaptureBuildingActionH\x00R\acapture\x125\n" +
-	"\bend_turn\x18\x05 \x01(\v2\x18.weewar.v1.EndTurnActionH\x00R\aendTurnB\r\n" +
+	"\bend_turn\x18\x05 \x01(\v2\x18.weewar.v1.EndTurnActionH\x00R\aendTurn\x12/\n" +
+	"\x04heal\x18\x06 \x01(\v2\x19.weewar.v1.HealUnitActionH\x00R\x04healB\r\n" +
 	"\voption_type\"\xe5\x02\n" +
 	"\x15SimulateAttackRequest\x12,\n" +
 	"\x12attacker_unit_type\x18\x01 \x01(\x05R\x10attackerUnitType\x12)\n" +
@@ -1761,6 +1778,7 @@ var file_weewar_v1_models_games_service_proto_goTypes = []any{
 	(*BuildUnitAction)(nil),        // 41: weewar.v1.BuildUnitAction
 	(*CaptureBuildingAction)(nil),  // 42: weewar.v1.CaptureBuildingAction
 	(*EndTurnAction)(nil),          // 43: weewar.v1.EndTurnAction
+	(*HealUnitAction)(nil),         // 44: weewar.v1.HealUnitAction
 }
 var file_weewar_v1_models_games_service_proto_depIdxs = []int32{
 	29, // 0: weewar.v1.ListGamesRequest.pagination:type_name -> weewar.v1.Pagination
@@ -1792,14 +1810,15 @@ var file_weewar_v1_models_games_service_proto_depIdxs = []int32{
 	41, // 26: weewar.v1.GameOption.build:type_name -> weewar.v1.BuildUnitAction
 	42, // 27: weewar.v1.GameOption.capture:type_name -> weewar.v1.CaptureBuildingAction
 	43, // 28: weewar.v1.GameOption.end_turn:type_name -> weewar.v1.EndTurnAction
-	27, // 29: weewar.v1.SimulateAttackResponse.attacker_damage_distribution:type_name -> weewar.v1.SimulateAttackResponse.AttackerDamageDistributionEntry
-	28, // 30: weewar.v1.SimulateAttackResponse.defender_damage_distribution:type_name -> weewar.v1.SimulateAttackResponse.DefenderDamageDistributionEntry
-	30, // 31: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
-	32, // [32:32] is the sub-list for method output_type
-	32, // [32:32] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	44, // 29: weewar.v1.GameOption.heal:type_name -> weewar.v1.HealUnitAction
+	27, // 30: weewar.v1.SimulateAttackResponse.attacker_damage_distribution:type_name -> weewar.v1.SimulateAttackResponse.AttackerDamageDistributionEntry
+	28, // 31: weewar.v1.SimulateAttackResponse.defender_damage_distribution:type_name -> weewar.v1.SimulateAttackResponse.DefenderDamageDistributionEntry
+	30, // 32: weewar.v1.GetGamesResponse.GamesEntry.value:type_name -> weewar.v1.Game
+	33, // [33:33] is the sub-list for method output_type
+	33, // [33:33] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_weewar_v1_models_games_service_proto_init() }
@@ -1814,6 +1833,7 @@ func file_weewar_v1_models_games_service_proto_init() {
 		(*GameOption_Build)(nil),
 		(*GameOption_Capture)(nil),
 		(*GameOption_EndTurn)(nil),
+		(*GameOption_Heal)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
