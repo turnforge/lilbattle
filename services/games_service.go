@@ -113,6 +113,11 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 	// Update the end time after processing is complete
 	moveGroup.EndedAt = timestamppb.New(time.Now())
 
+	// Skip persistence in dry run mode
+	if req.DryRun {
+		return resp, nil
+	}
+
 	// Delegate persistence to SaveMoveGroup - backend handles atomicity
 	err = s.Self.SaveMoveGroup(ctx, req.GameId, gameresp.State, moveGroup)
 	if err != nil {
