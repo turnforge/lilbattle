@@ -140,6 +140,9 @@ func formatChange(change *v1.WorldChange) string {
 		return fmt.Sprintf("Capture started at (%d,%d)", c.CaptureStarted.TileQ, c.CaptureStarted.TileR)
 	case *v1.WorldChange_TileCaptured:
 		return fmt.Sprintf("Tile captured at (%d,%d) by player %d", c.TileCaptured.TileQ, c.TileCaptured.TileR, c.TileCaptured.NewOwner)
+	case *v1.WorldChange_UnitHealed:
+		u := c.UnitHealed.UpdatedUnit
+		return fmt.Sprintf("Unit %s healed (+%d health, now %d)", u.Shortcut, c.UnitHealed.HealAmount, u.AvailableHealth)
 	default:
 		return fmt.Sprintf("%T", change.ChangeType)
 	}

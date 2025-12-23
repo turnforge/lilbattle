@@ -586,6 +586,7 @@ message GameMove {
     EndTurnAction end_turn = 7;
     BuildUnitAction build_unit = 8;
     CaptureBuildingAction capture_building = 13;
+    HealUnitAction heal_unit = 14;
   }
 
   // A monotonically increasing and unique (within the game) sequence number for the move
@@ -672,6 +673,15 @@ message EndTurnAction {
 }
 
 /**
+ * Heal a unit - player manually chooses to heal instead of attacking/moving
+ * Auto-healing at turn start is handled separately in TopUpUnitIfNeeded
+ */
+message HealUnitAction {
+  Position pos = 1;           // Position of unit to heal
+  int32 heal_amount = 2;      // Amount of health to restore
+}
+
+/**
  * Represents a change to the game world
  */
 message WorldChange {
@@ -685,7 +695,17 @@ message WorldChange {
     CoinsChangedChange coins_changed = 6;
     TileCapturedChange tile_captured = 7;
     CaptureStartedChange capture_started = 8;
+    UnitHealedChange unit_healed = 9;
   }
+}
+
+/**
+ * A unit was healed
+ */
+message UnitHealedChange {
+  Unit previous_unit = 1;   // Unit state before healing
+  Unit updated_unit = 2;    // Unit state after healing
+  int32 heal_amount = 3;    // Amount healed
 }
 
 /**

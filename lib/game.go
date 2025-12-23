@@ -165,8 +165,19 @@ func (g *Game) TopUpUnitIfNeeded(unit *v1.Unit) error {
 		// New unit - set to max health
 		unit.AvailableHealth = unitData.Health
 	} else {
-		// Existing unit - apply healing from terrain (TODO: implement terrain healing)
-		// For now, keep current health
+		// Existing unit - apply healing from terrain if eligible
+		// Healing rules:
+		// 1. Unit must not have acted last turn (unused units heal)
+		// 2. Unit cannot heal on enemy-owned bases
+		// 3. Air units can only heal on Airport Bases
+		healAmount := g.calculateHealAmount(unit, unitData)
+		if healAmount > 0 {
+			newHealth := unit.AvailableHealth + healAmount
+			if newHealth > unitData.Health {
+				newHealth = unitData.Health // Cap at max health
+			}
+			unit.AvailableHealth = newHealth
+		}
 	}
 
 	// Clear attack history and attacks received counter for new turn
@@ -197,6 +208,56 @@ func (g *Game) TopUpUnitIfNeeded(unit *v1.Unit) error {
 	unit.LastToppedupTurn = g.TurnCounter
 
 	return nil
+}
+
+// calculateHealAmount determines how much healing a unit receives based on terrain and restrictions.
+// Returns 0 if the unit is not eligible for healing.
+func (g *Game) calculateHealAmount(unit *v1.Unit, unitData *v1.UnitDefinition) int32 {
+	// Rule 1: Unit must not have acted last turn (only unused units heal)
+	// LastActedTurn tracks when the unit last moved/attacked
+	// If it acted in the previous turn (TurnCounter-1), it doesn't heal
+	previousTurn := g.TurnCounter - 1
+	if previousTurn < 1 {
+		previousTurn = 1 // First turn edge case
+	}
+	if unit.LastActedTurn >= previousTurn {
+		return 0 // Unit was used last turn, no healing
+	}
+
+	// Get the tile the unit is standing on
+	coord := AxialCoord{Q: int(unit.Q), R: int(unit.R)}
+	tile := g.World.TileAt(coord)
+	if tile == nil {
+		return 0 // No tile, no healing
+	}
+
+	// Rule 2: Cannot heal on enemy-owned bases
+	// If tile is owned by another player (not neutral and not the unit's player)
+	if tile.Player != 0 && tile.Player != unit.Player {
+		return 0 // Enemy base, no healing
+	}
+
+	// Rule 3: Air units can only heal on Airport Bases
+	// Check unit terrain type (Air, Land, Water)
+	if unitData.UnitTerrain == "Air" {
+		// Get terrain definition to check if it's an airport
+		terrainData, err := g.RulesEngine.GetTerrainData(tile.TileType)
+		if err != nil || terrainData == nil {
+			return 0
+		}
+		// Check if terrain name contains "Airport" (Airport Base, etc.)
+		if terrainData.Name != "Airport Base" {
+			return 0 // Air units can only heal on Airport Base
+		}
+	}
+
+	// Look up healing bonus from TerrainUnitProperties
+	terrainProps := g.RulesEngine.GetTerrainUnitPropertiesForUnit(tile.TileType, unit.UnitType)
+	if terrainProps == nil || terrainProps.HealingBonus <= 0 {
+		return 0 // No healing available on this terrain for this unit
+	}
+
+	return terrainProps.HealingBonus
 }
 
 // checkVictoryConditions checks if any player has won
@@ -736,6 +797,38 @@ func (g *Game) GetUnitOptions(unit *v1.Unit) (options []*v1.GameOption, allPaths
 				options = append(options, &v1.GameOption{
 					OptionType: &v1.GameOption_Capture{Capture: captureAction},
 				})
+			}
+		}
+	}
+
+	// Get heal option if unit is below max health and can heal on current terrain
+	// Heal is available if unit hasn't acted this turn yet
+	if unit.AvailableHealth > 0 && unit.AvailableHealth < unitDef.Health && unit.LastActedTurn < g.TurnCounter {
+		coord := CoordFromInt32(unit.Q, unit.R)
+		tile := g.World.TileAt(coord)
+		if tile != nil {
+			// Can't heal on enemy-owned tiles
+			if tile.Player == 0 || tile.Player == unit.Player {
+				canHeal := true
+				// Air units can only heal on Airport Base
+				if unitDef.UnitTerrain == "Air" {
+					terrainData, _ := g.RulesEngine.GetTerrainData(tile.TileType)
+					if terrainData == nil || terrainData.Name != "Airport Base" {
+						canHeal = false
+					}
+				}
+				if canHeal {
+					terrainProps := g.RulesEngine.GetTerrainUnitPropertiesForUnit(tile.TileType, unit.UnitType)
+					if terrainProps != nil && terrainProps.HealingBonus > 0 {
+						healAction := &v1.HealUnitAction{
+							Pos:        &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},
+							HealAmount: terrainProps.HealingBonus,
+						}
+						options = append(options, &v1.GameOption{
+							OptionType: &v1.GameOption_Heal{Heal: healAction},
+						})
+					}
+				}
 			}
 		}
 	}
