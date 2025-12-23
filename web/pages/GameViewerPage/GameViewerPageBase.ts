@@ -510,14 +510,12 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     // =========================================================================
 
     async setTurnOptionsContent(request: SetContentRequest) {
-        console.log("setTurnOptionsContent called on the browser: ", request);
         this.turnOptionsPanel.innerHTML = request.innerHtml;
         await this.turnOptionsPanel.hydrateThemeImages();
         return {};
     }
 
     async showBuildOptions(request: ShowBuildOptionsRequest): Promise<ShowBuildOptionsResponse> {
-        console.log("showBuildOptions called on the browser:", request);
 
         if (request.hide) {
             this.buildOptionsModal.hide();
@@ -529,28 +527,24 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async setUnitStatsContent(request: SetContentRequest) {
-        console.log("setUnitStatsContent called on the browser");
         this.unitStatsPanel.innerHTML = request.innerHtml;
         await this.unitStatsPanel.hydrateThemeImages();
         return {};
     }
 
     async setDamageDistributionContent(request: SetContentRequest) {
-        console.log("setDamageDistributionContent called on the browser");
         this.damageDistributionPanel.innerHTML = request.innerHtml;
         await this.damageDistributionPanel.hydrateThemeImages();
         return {};
     }
 
     async setTerrainStatsContent(request: SetContentRequest) {
-        console.log("setTerrainStatsContent called on the browser");
         this.terrainStatsPanel.innerHTML = request.innerHtml;
         await this.terrainStatsPanel.hydrateThemeImages();
         return {};
     }
 
     async setGameStatePanelContent(request: SetContentRequest): Promise<SetContentResponse> {
-        console.log("setGameStatePanelContent called on the browser");
         this.gameStatePanel.innerHTML = request.innerHtml;
         await this.gameStatePanel.hydrateThemeImages();
         return {};
@@ -569,7 +563,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
      * Set allowed panels and their order (mobile-specific, no-op for desktop/grid)
      */
     async setAllowedPanels(request: SetAllowedPanelsRequest): Promise<SetAllowedPanelsResponse> {
-        console.log("setAllowedPanels called on the browser:", request.panelIds);
         // Default implementation: no-op for desktop and grid layouts
         // Mobile layout overrides this to update bottom bar buttons
         return {};
@@ -604,12 +597,10 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async logMessage(request: LogMessageRequest) {
-        console.log("logMessage called on the browser");
         return {};
     }
 
     async setGameState(req: SetGameStateRequest) {
-        console.log("setGameState called on the browser");
         const worldData = req.state!.worldData!;
         const game = req.game!;
 
@@ -640,13 +631,11 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async setTileAt(request: { q: number, r: number, tile: Tile }) {
-        console.log("setTileAt called on the browser:", request);
         this.world.setTileDirect(request.tile);
         return {};
     }
 
     async setUnitAt(request: SetUnitAtRequest): Promise<SetUnitAtResponse> {
-        console.log("setUnitAt called on the browser:", request);
         if (request.unit) {
             await this.gameScene.setUnit(request.unit, { flash: request.flash, appear: request.appear });
             this.world.setUnitDirect(request.unit);
@@ -655,20 +644,17 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async removeTileAt(request: { q: number, r: number }) {
-        console.log("removeTileAt called on the browser:", request);
         this.world.removeTileAt(request.q, request.r);
         return {};
     }
 
     async removeUnitAt(request: RemoveUnitAtRequest): Promise<RemoveUnitAtResponse> {
-        console.log("removeUnitAt called on the browser:", request);
         await this.gameScene.removeUnit(request.q, request.r, { animate: request.animate });
         this.world.removeUnitAt(request.q, request.r);
         return {};
     }
 
     async moveUnit(request: MoveUnitRequest): Promise<MoveUnitResponse> {
-        console.log("moveUnit called on the browser:", request);
         if (request.unit && request.path) {
             await this.gameScene.moveUnit(request.unit, request.path);
             this.world.setUnitDirect(request.unit);
@@ -677,7 +663,6 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async showAttackEffect(request: ShowAttackEffectRequest): Promise<ShowAttackEffectResponse> {
-        console.log("showAttackEffect called on the browser:", request);
         await this.gameScene.showAttackEffect(
             { q: request.fromQ, r: request.fromR },
             { q: request.toQ, r: request.toR },
@@ -688,19 +673,16 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     async showHealEffect(request: ShowHealEffectRequest): Promise<ShowHealEffectResponse> {
-        console.log("showHealEffect called on the browser:", request);
         await this.gameScene.showHealEffect(request.q, request.r, request.amount);
         return {};
     }
 
     async showCaptureEffect(request: ShowCaptureEffectRequest): Promise<ShowCaptureEffectResponse> {
-        console.log("showCaptureEffect called on the browser:", request);
         await this.gameScene.showCaptureEffect(request.q, request.r);
         return {};
     }
 
     async updateGameStatus(request: { currentPlayer: number, turnCounter: number }) {
-        console.log("updateGameStatus called on the browser:", request);
         this.updateTurnCounter(request.turnCounter);
         this.updateEndTurnButtonState(request.currentPlayer);
         return {};

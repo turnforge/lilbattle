@@ -21,8 +21,8 @@ importers:
         specifier: '*'
         version: 0.0.71
       '@protoc-gen-go-wasmjs/runtime':
-        specifier: '*'
-        version: 0.0.28
+        specifier: link:../../protoc-gen-go-wasmjs/runtime
+        version: link:../../protoc-gen-go-wasmjs/runtime
       '@toast-ui/editor':
         specifier: ^3.2.2
         version: 3.2.2
@@ -797,10 +797,6 @@ packages:
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
-
-  '@protoc-gen-go-wasmjs/runtime@0.0.28':
-    resolution: {integrity: sha512-78i+nG9fXnRhxRq6ANGpEaiO4+dI7eyYaa1SZ+kpOim2RHc6sL0eIzp9WtPgIkdG//TJDRtu3vMPOO09gJl5ZA==}
-    engines: {node: '>=16'}
 
   '@shikijs/engine-oniguruma@1.29.2':
     resolution: {integrity: sha512-7iiOx3SG8+g1MnlzZVDYiaeHe7Ez2Kf2HrJzdmGwkRisT7r4rak0e655AcM/tF9JG/kg5fMNYlLLKglbN7gBqA==}
@@ -6054,8 +6050,6 @@ snapshots:
       playwright: 1.57.0
 
   '@polka/url@1.0.0-next.29': {}
-
-  '@protoc-gen-go-wasmjs/runtime@0.0.28': {}
 
   '@shikijs/engine-oniguruma@1.29.2':
     dependencies:
