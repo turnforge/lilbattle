@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	wasmv1 "github.com/turnforge/weewar/gen/wasm/go/weewar/v1/services"
@@ -19,6 +20,16 @@ type BrowserTurnOptionsPanel struct {
 	GameViewerPage *wasmv1.GameViewerPageClient
 }
 
+func dispatch(label string, action func(), disableGo ...bool) {
+	if len(disableGo) > 0 && disableGo[0] {
+		log.Println("Dispatching Sync: ", label)
+		action()
+	} else {
+		log.Println("Dispatching With Go: ", label)
+		go action()
+	}
+}
+
 func (b *BrowserTurnOptionsPanel) SetCurrentUnit(ctx context.Context, unit *v1.Unit, options *v1.GetOptionsAtResponse) {
 	b.BaseTurnOptionsPanel.SetCurrentUnit(ctx, unit, options)
 	content := renderPanelTemplate(ctx, "TurnOptionsPanel.templar.html", map[string]any{
@@ -26,9 +37,11 @@ func (b *BrowserTurnOptionsPanel) SetCurrentUnit(ctx context.Context, unit *v1.U
 		"Unit":    unit,
 		"Theme":   b.Theme,
 	})
-	go b.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
-	})
+	dispatch("SetTurnOptionsContent", func() {
+		b.GameViewerPage.SetTurnOptionsContent(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
+	}, true)
 }
 
 type BrowserUnitStatsPanel struct {
@@ -42,8 +55,10 @@ func (b *BrowserUnitStatsPanel) SetCurrentUnit(ctx context.Context, unit *v1.Uni
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	go b.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
+	dispatch("SetUnitStatsContent", func() {
+		b.GameViewerPage.SetUnitStatsContent(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
 	})
 }
 
@@ -60,8 +75,10 @@ func (b *BrowserDamageDistributionPanel) SetCurrentUnit(ctx context.Context, uni
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	go b.GameViewerPage.SetDamageDistributionContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
+	dispatch("SetDamageDistributionContent", func() {
+		b.GameViewerPage.SetDamageDistributionContent(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
 	})
 	fmt.Println("After DDP Set")
 }
@@ -79,8 +96,10 @@ func (b *BrowserTerrainStatsPanel) SetCurrentTile(ctx context.Context, tile *v1.
 		"RulesTable": b.RulesEngine,
 		"Theme":      b.Theme, // Pass theme to template
 	})
-	go b.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
+	dispatch("SetTerrainStatsContent", func() {
+		b.GameViewerPage.SetTerrainStatsContent(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
 	})
 	fmt.Println("After TSP Set")
 }
@@ -96,8 +115,10 @@ func (b *BrowserCompactSummaryCardPanel) SetCurrentData(ctx context.Context, til
 		"Unit":  unit,
 		"Theme": b.Theme,
 	})
-	go b.GameViewerPage.SetCompactSummaryCard(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
+	dispatch("SetCompactSummaryCard", func() {
+		b.GameViewerPage.SetCompactSummaryCard(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
 	})
 }
 
@@ -125,19 +146,19 @@ func (b *BrowserBuildOptionsModal) Show(ctx context.Context, tile *v1.Tile, buil
 		"RulesTable":   b.RulesEngine,
 	})
 	fmt.Printf("[BrowserBuildOptionsModal] Template rendered successfully, content length=%d\n", len(content))
-	go b.GameViewerPage.ShowBuildOptions(ctx, &v1.ShowBuildOptionsRequest{
-		InnerHtml: content,
-		Hide:      false,
-		Q:         tile.Q,
-		R:         tile.R,
+	dispatch("ShowBuildOptions", func() {
+		b.GameViewerPage.ShowBuildOptions(ctx, &v1.ShowBuildOptionsRequest{
+			InnerHtml: content,
+			Hide:      false,
+			Q:         tile.Q,
+			R:         tile.R,
+		})
 	})
 }
 
 func (b *BrowserBuildOptionsModal) Hide(ctx context.Context) {
 	b.BaseBuildOptionsModal.Hide(ctx)
-	go b.GameViewerPage.ShowBuildOptions(ctx, &v1.ShowBuildOptionsRequest{
-		Hide: true,
-	})
+	dispatch("ShowBuildOptions", func() { b.GameViewerPage.ShowBuildOptions(ctx, &v1.ShowBuildOptionsRequest{Hide: true}) })
 }
 
 type BrowserGameScene struct {
@@ -147,7 +168,9 @@ type BrowserGameScene struct {
 
 func (b *BrowserGameScene) ClearPaths(ctx context.Context) {
 	b.BaseGameScene.ClearPaths(ctx)
-	go b.GameViewerPage.ClearPaths(ctx, &v1.ClearPathsRequest{})
+	dispatch("ClearPaths", func() {
+		b.GameViewerPage.ClearPaths(ctx, &v1.ClearPathsRequest{})
+	})
 }
 
 func (b *BrowserGameScene) ClearHighlights(ctx context.Context, req *v1.ClearHighlightsRequest) {
@@ -155,35 +178,47 @@ func (b *BrowserGameScene) ClearHighlights(ctx context.Context, req *v1.ClearHig
 	if req == nil {
 		req = &v1.ClearHighlightsRequest{} // Clear all if no request provided
 	}
-	go b.GameViewerPage.ClearHighlights(ctx, req)
+	dispatch("ClearHighlights", func() {
+		b.GameViewerPage.ClearHighlights(ctx, req)
+	})
 }
 
 func (b *BrowserGameScene) ShowPath(ctx context.Context, p *v1.ShowPathRequest) {
 	b.BaseGameScene.ShowPath(ctx, p)
-	go b.GameViewerPage.ShowPath(ctx, p)
+	dispatch("ShowPath", func() {
+		b.GameViewerPage.ShowPath(ctx, p)
+	})
 }
 
 func (b *BrowserGameScene) ShowHighlights(ctx context.Context, h *v1.ShowHighlightsRequest) {
 	b.BaseGameScene.ShowHighlights(ctx, h)
-	go b.GameViewerPage.ShowHighlights(ctx, h)
+	dispatch("ShowHighlights", func() {
+		b.GameViewerPage.ShowHighlights(ctx, h)
+	})
 }
 
 // Animation methods - forward to browser
 func (b *BrowserGameScene) MoveUnit(ctx context.Context, req *v1.MoveUnitRequest) (*v1.MoveUnitResponse, error) {
 	b.BaseGameScene.MoveUnit(ctx, req)
-	go b.GameViewerPage.MoveUnit(ctx, req)
+	dispatch("MoveUnit", func() {
+		b.GameViewerPage.MoveUnit(ctx, req)
+	})
 	return &v1.MoveUnitResponse{}, nil
 }
 
 func (b *BrowserGameScene) SetUnitAt(ctx context.Context, req *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
 	b.BaseGameScene.SetUnitAt(ctx, req)
-	go b.GameViewerPage.SetUnitAt(ctx, req)
+	dispatch("SetUnitAt", func() {
+		b.GameViewerPage.SetUnitAt(ctx, req)
+	})
 	return &v1.SetUnitAtResponse{}, nil
 }
 
 func (b *BrowserGameScene) RemoveUnitAt(ctx context.Context, req *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
 	b.BaseGameScene.RemoveUnitAt(ctx, req)
-	go b.GameViewerPage.RemoveUnitAt(ctx, req)
+	dispatch("RemoveUnitAt", func() {
+		b.GameViewerPage.RemoveUnitAt(ctx, req)
+	})
 	return &v1.RemoveUnitAtResponse{}, nil
 }
 
@@ -196,25 +231,33 @@ type BrowserGameState struct {
 
 func (b *BrowserGameState) SetGameState(ctx context.Context, req *v1.SetGameStateRequest) (*v1.SetGameStateResponse, error) {
 	b.BaseGameState.SetGameState(ctx, req)
-	go b.GameViewerPage.SetGameState(ctx, req)
+	dispatch("SetGameState", func() {
+		b.GameViewerPage.SetGameState(ctx, req)
+	})
 	return nil, nil
 }
 
 func (b *BrowserGameState) SetUnitAt(ctx context.Context, req *v1.SetUnitAtRequest) (*v1.SetUnitAtResponse, error) {
 	b.BaseGameState.SetUnitAt(ctx, req)
-	go b.GameViewerPage.SetUnitAt(ctx, req)
+	dispatch("SetUnitAt", func() {
+		b.GameViewerPage.SetUnitAt(ctx, req)
+	})
 	return nil, nil
 }
 
 func (b *BrowserGameState) RemoveUnitAt(ctx context.Context, req *v1.RemoveUnitAtRequest) (*v1.RemoveUnitAtResponse, error) {
 	b.BaseGameState.RemoveUnitAt(ctx, req)
-	go b.GameViewerPage.RemoveUnitAt(ctx, req)
+	dispatch("RemoveUnitAt", func() {
+		b.GameViewerPage.RemoveUnitAt(ctx, req)
+	})
 	return nil, nil
 }
 
 func (b *BrowserGameState) UpdateGameStatus(ctx context.Context, req *v1.UpdateGameStatusRequest) (*v1.UpdateGameStatusResponse, error) {
 	b.BaseGameState.UpdateGameStatus(ctx, req)
-	go b.GameViewerPage.UpdateGameStatus(ctx, req)
+	dispatch("UpdateGameStatus", func() {
+		b.GameViewerPage.UpdateGameStatus(ctx, req)
+	})
 	return nil, nil
 }
 
@@ -227,7 +270,9 @@ func (b *BrowserGameStatePanel) Update(ctx context.Context, game *v1.Game, state
 	b.BaseGameStatePanel.Update(ctx, game, state)
 	// Pass the panel itself to the template so it can access computed fields
 	content := renderPanelTemplate(ctx, "GameStatePanel.templar.html", b)
-	go b.GameViewerPage.SetGameStatePanelContent(ctx, &v1.SetContentRequest{
-		InnerHtml: content,
+	dispatch("SetGameStatePanelContent", func() {
+		b.GameViewerPage.SetGameStatePanelContent(ctx, &v1.SetContentRequest{
+			InnerHtml: content,
+		})
 	})
 }
