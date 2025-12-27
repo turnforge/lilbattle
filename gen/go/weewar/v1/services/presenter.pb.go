@@ -11,6 +11,7 @@ import (
 	unsafe "unsafe"
 
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
+	_ "github.com/panyam/protoc-gen-go-wasmjs/proto/gen/go/wasmjs/v1"
 	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -29,17 +30,17 @@ var File_weewar_v1_services_presenter_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_services_presenter_proto_rawDesc = "" +
 	"\n" +
-	"\"weewar/v1/services/presenter.proto\x12\tweewar.v1\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a weewar/v1/models/presenter.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\x85\x01\n" +
+	"\"weewar/v1/services/presenter.proto\x12\tweewar.v1\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a weewar/v1/models/presenter.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bwasmjs/v1/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\x85\x01\n" +
 	"\x1bSingletonInitializerService\x12f\n" +
-	"\x13InitializeSingleton\x12%.weewar.v1.InitializeSingletonRequest\x1a&.weewar.v1.InitializeSingletonResponse\"\x002\x88\b\n" +
+	"\x13InitializeSingleton\x12%.weewar.v1.InitializeSingletonRequest\x1a&.weewar.v1.InitializeSingletonResponse\"\x002\x90\b\n" +
 	"\x11GameViewPresenter\x12W\n" +
-	"\x0eInitializeGame\x12 .weewar.v1.InitializeGameRequest\x1a!.weewar.v1.InitializeGameResponse\"\x00\x12N\n" +
-	"\vClientReady\x12\x1d.weewar.v1.ClientReadyRequest\x1a\x1e.weewar.v1.ClientReadyResponse\"\x00\x12\x92\x01\n" +
+	"\x0eInitializeGame\x12 .weewar.v1.InitializeGameRequest\x1a!.weewar.v1.InitializeGameResponse\"\x00\x12R\n" +
+	"\vClientReady\x12\x1d.weewar.v1.ClientReadyRequest\x1a\x1e.weewar.v1.ClientReadyResponse\"\x04е\x18\x01\x12\x92\x01\n" +
 	"\fSceneClicked\x12\x1e.weewar.v1.SceneClickedRequest\x1a\x1f.weewar.v1.SceneClickedResponse\"A\x82\xd3\xe4\x93\x02;:\x01*\"6/v1/presenters/gameview/action:clicked:scene/{game_id}\x12\xa6\x01\n" +
 	"\x11TurnOptionClicked\x12#.weewar.v1.TurnOptionClickedRequest\x1a$.weewar.v1.TurnOptionClickedResponse\"F\x82\xd3\xe4\x93\x02@:\x01*\";/v1/presenters/gameview/action:clicked:turnOption/{game_id}\x12\xb2\x01\n" +
 	"\x14EndTurnButtonClicked\x12&.weewar.v1.EndTurnButtonClickedRequest\x1a'.weewar.v1.EndTurnButtonClickedResponse\"I\x82\xd3\xe4\x93\x02C:\x01*\">/v1/presenters/gameview/action:clicked:endTurnButton/{game_id}\x12\xaa\x01\n" +
-	"\x12BuildOptionClicked\x12$.weewar.v1.BuildOptionClickedRequest\x1a%.weewar.v1.BuildOptionClickedResponse\"G\x82\xd3\xe4\x93\x02A:\x01*\"</v1/presenters/gameview/action:clicked:buildOption/{game_id}\x12\xa9\x01\n" +
-	"\x12ApplyRemoteChanges\x12$.weewar.v1.ApplyRemoteChangesRequest\x1a%.weewar.v1.ApplyRemoteChangesResponse\"F\x82\xd3\xe4\x93\x02@:\x01*\";/v1/presenters/gameview/action:applyRemoteChanges/{game_id}B\xa4\x01\n" +
+	"\x12BuildOptionClicked\x12$.weewar.v1.BuildOptionClickedRequest\x1a%.weewar.v1.BuildOptionClickedResponse\"G\x82\xd3\xe4\x93\x02A:\x01*\"</v1/presenters/gameview/action:clicked:buildOption/{game_id}\x12\xad\x01\n" +
+	"\x12ApplyRemoteChanges\x12$.weewar.v1.ApplyRemoteChangesRequest\x1a%.weewar.v1.ApplyRemoteChangesResponse\"Jе\x18\x01\x82\xd3\xe4\x93\x02@:\x01*\";/v1/presenters/gameview/action:applyRemoteChanges/{game_id}B\xa4\x01\n" +
 	"\rcom.weewar.v1B\x0ePresenterProtoP\x01Z>github.com/turnforge/weewar/gen/go/weewar/v1/services;weewarv1\xa2\x02\x03WXX\xaa\x02\tWeewar.V1\xca\x02\tWeewar\\V1\xe2\x02\x15Weewar\\V1\\GPBMetadata\xea\x02\n" +
 	"Weewar::V1b\x06proto3"
 

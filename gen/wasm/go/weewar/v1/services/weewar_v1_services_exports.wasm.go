@@ -1202,14 +1202,14 @@ func (exports *Weewar_v1ServicesExports) gameViewPresenterClientReady(this js.Va
 	if exports.GameViewPresenter == nil {
 		return wasm.CreateJSResponse(false, "GameViewPresenter not initialized", nil)
 	}
-	// Synchronous method
+	// Promise method: returns JS Promise, executes in goroutine
 	if len(args) < 1 {
-		return wasm.CreateJSResponse(false, "Request JSON required", nil)
+		return wasm.CreateRejectedPromise("Request JSON required")
 	}
 
 	requestJSON := args[0].String()
 	if requestJSON == "" {
-		return wasm.CreateJSResponse(false, "Request JSON is empty", nil)
+		return wasm.CreateRejectedPromise("Request JSON is empty")
 	}
 
 	// Parse request
@@ -1217,32 +1217,44 @@ func (exports *Weewar_v1ServicesExports) gameViewPresenterClientReady(this js.Va
 	marshaller := wasm.GetGlobalMarshaller()
 	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
 		DiscardUnknown: true,
-		AllowPartial:   true, // Allow partial messages for better compatibility
+		AllowPartial:   true,
 	}); err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+		return wasm.CreateRejectedPromise(fmt.Sprintf("Failed to parse request: %v", err))
 	}
 
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	// Return Promise immediately, work happens in goroutine
+	return wasm.CreateJSPromise(func(resolve, reject func(any)) {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 
-	// Call service method
-	resp, err := exports.GameViewPresenter.ClientReady(ctx, req)
-	if err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
-	}
+			// Call service method
+			resp, err := exports.GameViewPresenter.ClientReady(ctx, req)
+			if err != nil {
+				reject(err.Error())
+				return
+			}
 
-	// Marshal response with options for better TypeScript compatibility
-	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
-		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
-		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
-		UseEnumNumbers:  false, // Use enum string values
+			// Marshal response
+			responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+				UseProtoNames:   false,
+				EmitUnpopulated: true,
+				UseEnumNumbers:  false,
+			})
+			if err != nil {
+				reject(fmt.Sprintf("Failed to marshal response: %v", err))
+				return
+			}
+
+			// Convert JSON to JavaScript object and resolve
+			var jsObject interface{}
+			if err := json.Unmarshal(responseJSON, &jsObject); err != nil {
+				reject(fmt.Sprintf("Failed to convert response to JS object: %v", err))
+				return
+			}
+			resolve(js.ValueOf(jsObject))
+		}()
 	})
-	if err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
-	}
-
-	return wasm.CreateJSResponse(true, "Success", json.RawMessage(responseJSON))
 }
 
 // gameViewPresenterSceneClicked handles the SceneClicked method for GameViewPresenter
@@ -1442,14 +1454,14 @@ func (exports *Weewar_v1ServicesExports) gameViewPresenterApplyRemoteChanges(thi
 	if exports.GameViewPresenter == nil {
 		return wasm.CreateJSResponse(false, "GameViewPresenter not initialized", nil)
 	}
-	// Synchronous method
+	// Promise method: returns JS Promise, executes in goroutine
 	if len(args) < 1 {
-		return wasm.CreateJSResponse(false, "Request JSON required", nil)
+		return wasm.CreateRejectedPromise("Request JSON required")
 	}
 
 	requestJSON := args[0].String()
 	if requestJSON == "" {
-		return wasm.CreateJSResponse(false, "Request JSON is empty", nil)
+		return wasm.CreateRejectedPromise("Request JSON is empty")
 	}
 
 	// Parse request
@@ -1457,32 +1469,44 @@ func (exports *Weewar_v1ServicesExports) gameViewPresenterApplyRemoteChanges(thi
 	marshaller := wasm.GetGlobalMarshaller()
 	if err := marshaller.Unmarshal([]byte(requestJSON), req, wasm.UnmarshalOptions{
 		DiscardUnknown: true,
-		AllowPartial:   true, // Allow partial messages for better compatibility
+		AllowPartial:   true,
 	}); err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Failed to parse request: %v", err), nil)
+		return wasm.CreateRejectedPromise(fmt.Sprintf("Failed to parse request: %v", err))
 	}
 
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	// Return Promise immediately, work happens in goroutine
+	return wasm.CreateJSPromise(func(resolve, reject func(any)) {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
 
-	// Call service method
-	resp, err := exports.GameViewPresenter.ApplyRemoteChanges(ctx, req)
-	if err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Service call failed: %v", err), nil)
-	}
+			// Call service method
+			resp, err := exports.GameViewPresenter.ApplyRemoteChanges(ctx, req)
+			if err != nil {
+				reject(err.Error())
+				return
+			}
 
-	// Marshal response with options for better TypeScript compatibility
-	responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
-		UseProtoNames:   false, // Use JSON names (camelCase) instead of proto names
-		EmitUnpopulated: true,  // Emit zero values to avoid undefined in JavaScript
-		UseEnumNumbers:  false, // Use enum string values
+			// Marshal response
+			responseJSON, err := marshaller.Marshal(resp, wasm.MarshalOptions{
+				UseProtoNames:   false,
+				EmitUnpopulated: true,
+				UseEnumNumbers:  false,
+			})
+			if err != nil {
+				reject(fmt.Sprintf("Failed to marshal response: %v", err))
+				return
+			}
+
+			// Convert JSON to JavaScript object and resolve
+			var jsObject interface{}
+			if err := json.Unmarshal(responseJSON, &jsObject); err != nil {
+				reject(fmt.Sprintf("Failed to convert response to JS object: %v", err))
+				return
+			}
+			resolve(js.ValueOf(jsObject))
+		}()
 	})
-	if err != nil {
-		return wasm.CreateJSResponse(false, fmt.Sprintf("Failed to marshal response: %v", err), nil)
-	}
-
-	return wasm.CreateJSResponse(true, "Success", json.RawMessage(responseJSON))
 }
 
 // gameSyncServiceSubscribe handles the Subscribe method for GameSyncService

@@ -29,185 +29,208 @@ func NewGameViewerPageClient() *GameViewerPageClient {
 	}
 }
 
-// SetTurnOptionsContent calls the browser-provided SetTurnOptionsContent method
+// SetTurnOptionsContent calls the browser-provided SetTurnOptionsContent method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetTurnOptionsContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setTurnOptionsContent", req,
 	)
 }
 
-// ShowBuildOptions calls the browser-provided ShowBuildOptions method
+// ShowBuildOptions calls the browser-provided ShowBuildOptions method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowBuildOptions(ctx context.Context, req *v1models.ShowBuildOptionsRequest) (*v1models.ShowBuildOptionsResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowBuildOptionsRequest, *v1models.ShowBuildOptionsResponse](
 		c.channel, ctx, "GameViewerPage", "showBuildOptions", req,
 	)
 }
 
-// SetUnitStatsContent calls the browser-provided SetUnitStatsContent method
+// SetUnitStatsContent calls the browser-provided SetUnitStatsContent method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetUnitStatsContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setUnitStatsContent", req,
 	)
 }
 
-// SetDamageDistributionContent calls the browser-provided SetDamageDistributionContent method
+// SetDamageDistributionContent calls the browser-provided SetDamageDistributionContent method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetDamageDistributionContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setDamageDistributionContent", req,
 	)
 }
 
-// SetTerrainStatsContent calls the browser-provided SetTerrainStatsContent method
+// SetTerrainStatsContent calls the browser-provided SetTerrainStatsContent method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetTerrainStatsContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setTerrainStatsContent", req,
 	)
 }
 
-// SetCompactSummaryCard calls the browser-provided SetCompactSummaryCard method
+// SetCompactSummaryCard calls the browser-provided SetCompactSummaryCard method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetCompactSummaryCard(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setCompactSummaryCard", req,
 	)
 }
 
-// SetGameStatePanelContent calls the browser-provided SetGameStatePanelContent method
+// SetGameStatePanelContent calls the browser-provided SetGameStatePanelContent method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetGameStatePanelContent(ctx context.Context, req *v1models.SetContentRequest) (*v1models.SetContentResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetContentRequest, *v1models.SetContentResponse](
 		c.channel, ctx, "GameViewerPage", "setGameStatePanelContent", req,
 	)
 }
 
-// SetGameState calls the browser-provided SetGameState method
+// SetGameState calls the browser-provided SetGameState method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetGameState(ctx context.Context, req *v1models.SetGameStateRequest) (*v1models.SetGameStateResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetGameStateRequest, *v1models.SetGameStateResponse](
 		c.channel, ctx, "GameViewerPage", "setGameState", req,
 	)
 }
 
-// UpdateGameStatus calls the browser-provided UpdateGameStatus method
+// UpdateGameStatus calls the browser-provided UpdateGameStatus method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) UpdateGameStatus(ctx context.Context, req *v1models.UpdateGameStatusRequest) (*v1models.UpdateGameStatusResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.UpdateGameStatusRequest, *v1models.UpdateGameStatusResponse](
 		c.channel, ctx, "GameViewerPage", "updateGameStatus", req,
 	)
 }
 
-// SetTileAt calls the browser-provided SetTileAt method
+// SetTileAt calls the browser-provided SetTileAt method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetTileAt(ctx context.Context, req *v1models.SetTileAtRequest) (*v1models.SetTileAtResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetTileAtRequest, *v1models.SetTileAtResponse](
 		c.channel, ctx, "GameViewerPage", "setTileAt", req,
 	)
 }
 
-// SetUnitAt calls the browser-provided SetUnitAt method
+// SetUnitAt calls the browser-provided SetUnitAt method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetUnitAt(ctx context.Context, req *v1models.SetUnitAtRequest) (*v1models.SetUnitAtResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetUnitAtRequest, *v1models.SetUnitAtResponse](
 		c.channel, ctx, "GameViewerPage", "setUnitAt", req,
 	)
 }
 
-// RemoveTileAt calls the browser-provided RemoveTileAt method
+// RemoveTileAt calls the browser-provided RemoveTileAt method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) RemoveTileAt(ctx context.Context, req *v1models.RemoveTileAtRequest) (*v1models.RemoveTileAtResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.RemoveTileAtRequest, *v1models.RemoveTileAtResponse](
 		c.channel, ctx, "GameViewerPage", "removeTileAt", req,
 	)
 }
 
-// RemoveUnitAt calls the browser-provided RemoveUnitAt method
+// RemoveUnitAt calls the browser-provided RemoveUnitAt method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) RemoveUnitAt(ctx context.Context, req *v1models.RemoveUnitAtRequest) (*v1models.RemoveUnitAtResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.RemoveUnitAtRequest, *v1models.RemoveUnitAtResponse](
 		c.channel, ctx, "GameViewerPage", "removeUnitAt", req,
 	)
 }
 
-// ShowHighlights calls the browser-provided ShowHighlights method
+// ShowHighlights calls the browser-provided ShowHighlights method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowHighlights(ctx context.Context, req *v1models.ShowHighlightsRequest) (*v1models.ShowHighlightsResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowHighlightsRequest, *v1models.ShowHighlightsResponse](
 		c.channel, ctx, "GameViewerPage", "showHighlights", req,
 	)
 }
 
-// ClearHighlights calls the browser-provided ClearHighlights method
+// ClearHighlights calls the browser-provided ClearHighlights method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ClearHighlights(ctx context.Context, req *v1models.ClearHighlightsRequest) (*v1models.ClearHighlightsResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ClearHighlightsRequest, *v1models.ClearHighlightsResponse](
 		c.channel, ctx, "GameViewerPage", "clearHighlights", req,
 	)
 }
 
-// ShowPath calls the browser-provided ShowPath method
+// ShowPath calls the browser-provided ShowPath method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowPath(ctx context.Context, req *v1models.ShowPathRequest) (*v1models.ShowPathResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowPathRequest, *v1models.ShowPathResponse](
 		c.channel, ctx, "GameViewerPage", "showPath", req,
 	)
 }
 
-// ClearPaths calls the browser-provided ClearPaths method
+// ClearPaths calls the browser-provided ClearPaths method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ClearPaths(ctx context.Context, req *v1models.ClearPathsRequest) (*v1models.ClearPathsResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ClearPathsRequest, *v1models.ClearPathsResponse](
 		c.channel, ctx, "GameViewerPage", "clearPaths", req,
 	)
 }
 
-// MoveUnit calls the browser-provided MoveUnit method
+// MoveUnit calls the browser-provided MoveUnit method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) MoveUnit(ctx context.Context, req *v1models.MoveUnitRequest) (*v1models.MoveUnitResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.MoveUnitRequest, *v1models.MoveUnitResponse](
 		c.channel, ctx, "GameViewerPage", "moveUnit", req,
 	)
 }
 
-// ShowAttackEffect calls the browser-provided ShowAttackEffect method
+// ShowAttackEffect calls the browser-provided ShowAttackEffect method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowAttackEffect(ctx context.Context, req *v1models.ShowAttackEffectRequest) (*v1models.ShowAttackEffectResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowAttackEffectRequest, *v1models.ShowAttackEffectResponse](
 		c.channel, ctx, "GameViewerPage", "showAttackEffect", req,
 	)
 }
 
-// ShowHealEffect calls the browser-provided ShowHealEffect method
+// ShowHealEffect calls the browser-provided ShowHealEffect method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowHealEffect(ctx context.Context, req *v1models.ShowHealEffectRequest) (*v1models.ShowHealEffectResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowHealEffectRequest, *v1models.ShowHealEffectResponse](
 		c.channel, ctx, "GameViewerPage", "showHealEffect", req,
 	)
 }
 
-// ShowCaptureEffect calls the browser-provided ShowCaptureEffect method
+// ShowCaptureEffect calls the browser-provided ShowCaptureEffect method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) ShowCaptureEffect(ctx context.Context, req *v1models.ShowCaptureEffectRequest) (*v1models.ShowCaptureEffectResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.ShowCaptureEffectRequest, *v1models.ShowCaptureEffectResponse](
 		c.channel, ctx, "GameViewerPage", "showCaptureEffect", req,
 	)
 }
 
-// SetAllowedPanels calls the browser-provided SetAllowedPanels method
+// SetAllowedPanels calls the browser-provided SetAllowedPanels method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) SetAllowedPanels(ctx context.Context, req *v1models.SetAllowedPanelsRequest) (*v1models.SetAllowedPanelsResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.SetAllowedPanelsRequest, *v1models.SetAllowedPanelsResponse](
 		c.channel, ctx, "GameViewerPage", "setAllowedPanels", req,
 	)
 }
 
-// LogMessage calls the browser-provided LogMessage method
+// LogMessage calls the browser-provided LogMessage method synchronously.
+// The JavaScript implementation returns the result directly (SYNC invocation style).
 func (c *GameViewerPageClient) LogMessage(ctx context.Context, req *v1models.LogMessageRequest) (*v1models.LogMessageResponse, error) {
-	// This is a synchronous browser method
+	// SYNC invocation style: browser method returns immediately
 	return wasm.CallBrowserService[*v1models.LogMessageRequest, *v1models.LogMessageResponse](
 		c.channel, ctx, "GameViewerPage", "logMessage", req,
 	)

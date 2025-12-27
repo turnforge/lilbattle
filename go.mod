@@ -20,7 +20,7 @@ require (
 	github.com/panyam/goutils v0.1.11
 	github.com/panyam/oneauth v0.0.15
 	github.com/panyam/protoc-gen-dal v0.0.2
-	github.com/panyam/protoc-gen-go-wasmjs v0.0.32
+	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/templar v0.0.27
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0

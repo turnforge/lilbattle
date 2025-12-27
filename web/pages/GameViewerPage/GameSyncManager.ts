@@ -233,20 +233,18 @@ export class GameSyncManager {
 
             console.log(`[GameSyncManager] Received moves from player ${movesPublished.player}, group ${movesPublished.groupNumber}`);
 
-            setTimeout(() => {
-                this.presenterClient.applyRemoteChanges({
-                    gameId: this.gameId,
-                    moves: movesPublished.moves,
-                }).then((response) => {
-                    if (!response.success) {
-                        console.error('[GameSyncManager] Failed to apply remote changes:', response.error);
-                        if (response.requiresReload) {
-                            console.warn('[GameSyncManager] State desync detected - reload required');
-                            this.setState('error', 'State desync - reload required');
-                        }
-                    }
-                })
-            }, 0)
+            const response = await this.presenterClient.applyRemoteChanges({
+                gameId: this.gameId,
+                moves: movesPublished.moves,
+            })
+
+            if (!response.success) {
+                console.error('[GameSyncManager] Failed to apply remote changes:', response.error);
+                if (response.requiresReload) {
+                    console.warn('[GameSyncManager] State desync detected - reload required');
+                    this.setState('error', 'State desync - reload required');
+                }
+            }
         }
 
         // Handle PlayerJoined
