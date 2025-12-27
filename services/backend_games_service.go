@@ -48,6 +48,7 @@ func (s *BackendGamesService) InitializeSyncBroadcast() {
 		}
 		syncClient := s.ClientMgr.GetGameSyncSvcClient()
 		if syncClient == nil {
+			log.Println("Sync Client not found...")
 			return
 		}
 

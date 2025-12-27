@@ -73,7 +73,7 @@ func (s *ScreenShotIndexer) start() {
 		case newItems := <-s.reducer.OutputChan():
 			s.startBatchProcessing(newItems)
 		case <-checkerTicker.C:
-			log.Println("Time to proactively find items that need to be re-indexed")
+			// log.Println("Time to proactively find items that need to be re-indexed")
 		}
 	}
 }

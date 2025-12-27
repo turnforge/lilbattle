@@ -134,7 +134,7 @@ func (b *BaseIndexerService) StartIndexer() {
 			itemkey := fmt.Sprintf("%s:%s:%s", newItem.EntityType, newItem.EntityId, newItem.IndexType)
 			pickedInWindow[itemkey] = newItem
 		case <-checkerTimer.C:
-			log.Println("Time to proactively find items that need to be re-indexed")
+			// log.Println("Time to proactively find items that need to be re-indexed")
 		}
 	}
 }

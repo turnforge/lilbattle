@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/panyam/gocurrent"
@@ -166,6 +167,7 @@ func (s *GameSyncService) broadcastInternal(gameId string, update *v1.GameUpdate
 	}
 
 	count := fo.Count()
+	log.Println("Broadcasting to: ", count, update)
 	if count > 0 {
 		fo.Send(update)
 	}
