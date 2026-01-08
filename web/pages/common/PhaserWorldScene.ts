@@ -15,6 +15,7 @@ import { ExplosionEffect } from './animations/effects/ExplosionEffect';
 import { HealBubblesEffect } from './animations/effects/HealBubblesEffect';
 import { CaptureEffect } from './animations/effects/CaptureEffect';
 import { ExhaustedUnitsHighlightLayer, CapturingFlagLayer } from './HexHighlightLayer';
+import { perfMon } from './PerformanceMonitor';
 
 const UNIT_TILE_RATIO = 0.9
 
@@ -830,6 +831,8 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     }
     
     update() {
+        perfMon.frameStart();
+
         // Capture camera state before potential changes
         const camera = this.cameras.main;
         const oldScrollX = camera.scrollX;
@@ -874,8 +877,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         }
         
         // Update grid and coordinates when camera moves or zooms
-        this.updateGridDisplay();
-        this.updateCoordinatesDisplay();
+        perfMon.time('updateGridDisplay', () => this.updateGridDisplay());
+        perfMon.time('updateCoordinatesDisplay', () => this.updateCoordinatesDisplay());
+
+        perfMon.frameEnd();
     }
     
     /**
@@ -1528,8 +1533,10 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
     
     private updateCoordinatesDisplay() {
         // Clear existing coordinate texts
+        const destroyCount = this.coordinateTexts.size;
         this.coordinateTexts.forEach(text => text.destroy());
         this.coordinateTexts.clear();
+        perfMon.trackDestroy('coordinateText', destroyCount);
         
         if (!this.showCoordinates) return;
         
@@ -1680,6 +1687,7 @@ export class PhaserWorldScene extends Phaser.Scene implements LCMComponent {
         
         text.setOrigin(0.5, 0.5);
         this.coordinateTexts.set(key, text);
+        perfMon.trackCreate('coordinateText');
     }
 
     /**
