@@ -521,8 +521,7 @@ func (g *Game) ProcessFixUnit(move *v1.GameMove, action *v1.FixUnitAction) (err 
 		fixAmount = maxHeal
 	}
 
-	// Capture previous states
-	previousFixer := copyUnit(fixer)
+	// Capture previous target state (fixer state captured after progression update)
 	previousTarget := copyUnit(target)
 
 	// Apply the fix
