@@ -229,13 +229,24 @@ export class PhaserGameScene extends PhaserWorldScene {
             return;
         }
 
-        // Group highlights by type
-        const selections = highlights.filter(h => h.type === 'selection');
-        const movements: MoveUnitAction[] = highlights.filter(h => h.type === 'movement').map(h => h.move!);
-        const attacks = highlights.filter(h => h.type === 'attack').map(h => h.attack!);
-        const captures = highlights.filter(h => h.type === 'capture'); // Interactive capture highlight
-        const exhausted = highlights.filter(h => h.type === 'exhausted');
-        const capturing = highlights.filter(h => h.type === 'capturing'); // Persistent flag indicator
+        // Group highlights by type in single pass (instead of 6 separate filter operations)
+        const selections: HighlightSpec[] = [];
+        const movements: MoveUnitAction[] = [];
+        const attacks: AttackUnitAction[] = [];
+        const captures: HighlightSpec[] = [];
+        const exhausted: HighlightSpec[] = [];
+        const capturing: HighlightSpec[] = [];
+
+        for (const h of highlights) {
+            switch (h.type) {
+                case 'selection': selections.push(h); break;
+                case 'movement': if (h.move) movements.push(h.move); break;
+                case 'attack': if (h.attack) attacks.push(h.attack); break;
+                case 'capture': captures.push(h); break;
+                case 'exhausted': exhausted.push(h); break;
+                case 'capturing': capturing.push(h); break;
+            }
+        }
 
         // Apply selection highlights (typically just one)
         if (this._selectionHighlightLayer && selections.length > 0) {
