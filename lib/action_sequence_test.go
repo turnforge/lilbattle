@@ -162,8 +162,8 @@ func newActionSequenceTestRunner(t *testing.T, tc ActionSequenceTestCase) *actio
 	// If pattern contains "fix", enable fix capability on the unit
 	for _, step := range tc.ActionOrder {
 		if strings.Contains(step, "fix") {
-			unitDef.FixValue = 10         // Enable fix ability
-			unitDef.UnitTerrain = "Land"  // Set terrain type for compatibility
+			unitDef.FixValue = 10        // Enable fix ability
+			unitDef.UnitTerrain = "Land" // Set terrain type for compatibility
 			break
 		}
 	}
@@ -199,7 +199,7 @@ func newActionSequenceTestRunner(t *testing.T, tc ActionSequenceTestCase) *actio
 	// For tests without move, it's also adjacent to (0, 0) where unit starts
 	if setup.DamagedFriendly {
 		friendly := &v1.Unit{
-			Q: 1, R: 0, Player: 1, UnitType: testUnitTypeSoldier,
+			Q: -1, R: 0, Player: 1, UnitType: testUnitTypeSoldier,
 			Shortcut: "A2", AvailableHealth: setup.FriendlyHealth, DistanceLeft: 3,
 		}
 		game.World.AddUnit(friendly)
