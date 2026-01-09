@@ -568,11 +568,26 @@ class StartGamePage extends BasePage implements LCMComponent {
         }
 
         const result = await response.json();
-        
+
+        // Check for field_errors (ID conflict)
+        if (result.field_errors && Object.keys(result.field_errors).length > 0) {
+            const suggestedId = result.field_errors['id'] || '';
+            const gameNameInput = document.getElementById('game-name-title') as HTMLInputElement;
+            const gameName = gameNameInput?.value?.trim() || 'New Game';
+
+            // Redirect back to StartGamePage with error and suggested ID
+            const redirectUrl = `/games/new?worldId=${encodeURIComponent(this.currentWorldId || '')}` +
+                `&gameId=${encodeURIComponent(suggestedId)}` +
+                `&gameName=${encodeURIComponent(gameName)}` +
+                `&error=${encodeURIComponent('ID already exists. Suggested: ' + suggestedId)}`;
+            window.location.href = redirectUrl;
+            throw new Error('ID conflict - redirecting');
+        }
+
         if (!result.game || !result.game.id) {
             throw new Error('No game ID returned from server');
         }
-        
+
         return { gameId: result.game.id };
     }
 

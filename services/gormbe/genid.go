@@ -30,6 +30,46 @@ func GetID(storage *gorm.DB, cls string, id string) *GenId {
 	return nil
 }
 
+// shortRandSuffix generates a 4-character random suffix for ID suggestions
+func shortRandSuffix() string {
+	max_id := int64(math.Pow(36, 4))
+	randval := rand.Int63() % max_id
+	return strconv.FormatInt(randval, 36)
+}
+
+// NewIDWithSuggestion attempts to use customId, or generates one.
+// Returns (assignedId, suggestedId, error):
+// - If customId is empty: generates random ID, suggestedId is empty
+// - If customId succeeds: assignedId = customId, suggestedId is empty
+// - If customId conflicts: assignedId is empty, suggestedId = customId + "-" + random suffix
+func NewIDWithSuggestion(storage *gorm.DB, cls string, customId string) (assignedId string, suggestedId string, err error) {
+	customId = strings.ToLower(customId)
+
+	if customId == "" {
+		// No custom ID provided, generate one
+		for i := range 5 {
+			gid := GenId{Id: randid(), Class: cls, CreatedAt: time.Now()}
+			err := storage.Create(gid).Error
+			if err == nil {
+				return gid.Id, "", nil
+			}
+			log.Printf("Trial: %d, ID Create Error: %v", i, err)
+		}
+		return "", "", errors.New("failed to generate unique ID after 5 attempts")
+	}
+
+	// Custom ID provided, try to register it
+	gid := &GenId{Id: customId, Class: cls, CreatedAt: time.Now()}
+	err = storage.Create(gid).Error
+	if err == nil {
+		return customId, "", nil
+	}
+
+	// Conflict - generate suggestion with suffix
+	suggestion := customId + "-" + shortRandSuffix()
+	return "", suggestion, nil
+}
+
 // Generate 1 New ID
 func NewID(storage *gorm.DB, cls string, existingId string) string {
 	// if an existing Id was provided then see if it exists

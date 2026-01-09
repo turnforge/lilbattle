@@ -21,6 +21,11 @@ type StartGamePage struct {
 	WorldId           string
 	UnitTypes         []UnitType
 	GameConfiguration *protos.GameConfiguration
+
+	// Form fields (can be pre-filled or from error retry)
+	GameId       string
+	GameName     string
+	ErrorMessage string // Error message for ID conflicts etc.
 }
 
 func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
@@ -33,7 +38,15 @@ func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.A
 		return nil, true
 	}
 
-	p.Title = "New Game"
+	// Read optional gameId, gameName, and error from query params
+	p.GameId = r.URL.Query().Get("gameId")
+	p.GameName = r.URL.Query().Get("gameName")
+	p.ErrorMessage = r.URL.Query().Get("error")
+	if p.GameName == "" {
+		p.GameName = "New Game"
+	}
+
+	p.Title = p.GameName
 	p.Header.Load(r, w, app)
 
 	// If a worldId is provided, fetch the world data

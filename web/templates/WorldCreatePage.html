@@ -1,0 +1,85 @@
+<!-- templates/WorldCreatePage.html -->
+{{# include "BasePage.html" #}}
+
+{{ define "ExtraHeaderButtons" }}
+<!-- Back to Worlds Button -->
+<a href="/worlds/" class="header-action-btn inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+    <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    <span class="header-btn-text">Back to Worlds</span>
+</a>
+{{ end }}
+
+{{ define "BodySection" }}
+<main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Create New World</h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Set up your new world with a custom name and optional ID</p>
+    </div>
+
+    {{ if .ErrorMessage }}
+    <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700 dark:text-red-300">{{ .ErrorMessage }}</p>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <form method="POST" action="/worlds/create" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6 space-y-6">
+            <!-- World Name -->
+            <div>
+                <label for="worldName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    World Name
+                </label>
+                <input type="text" name="worldName" id="worldName"
+                       value="{{ .WorldName }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                       placeholder="Enter world name">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Give your world a descriptive name</p>
+            </div>
+
+            <!-- World ID -->
+            <div>
+                <label for="worldId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    World ID <span class="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input type="text" name="worldId" id="worldId"
+                       value="{{ .SuggestedId }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm font-mono"
+                       placeholder="Leave empty for auto-generated ID"
+                       pattern="[a-z0-9\-]+"
+                       title="Only lowercase letters, numbers, and hyphens allowed">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Custom ID for easy sharing. Leave blank to auto-generate.
+                    <span class="text-gray-400">(lowercase letters, numbers, hyphens only)</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 rounded-b-lg flex justify-end space-x-3">
+            <a href="/worlds/" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Create World
+            </button>
+        </div>
+    </form>
+</main>
+{{ end }}
+
+{{ define "PostBodySection" }}
+{{ end }}
+
+{{ define "WorldCreatePage" }}
+{{ template "BasePage" . }}
+{{ end }}

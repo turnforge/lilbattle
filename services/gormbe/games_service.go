@@ -287,11 +287,20 @@ func (s *GamesService) CreateGame(ctx context.Context, req *v1.CreateGameRequest
 	if err != nil {
 		return
 	}
-	existingId := gameGorm.Id
-	gameGorm.Id = NewID(s.storage, "games", gameGorm.Id)
-	if gameGorm.Id == "" {
-		return nil, fmt.Errorf("game with ID %q already exists", existingId)
+
+	// Try to assign ID (custom or generated)
+	assignedId, suggestedId, err := NewIDWithSuggestion(s.storage, "games", gameGorm.Id)
+	if err != nil {
+		return nil, err
 	}
+	if assignedId == "" {
+		// ID conflict - return suggested ID in field_errors
+		resp.FieldErrors = map[string]string{
+			"id": suggestedId,
+		}
+		return resp, nil
+	}
+	gameGorm.Id = assignedId
 	if err = s.GameDAL.Save(ctx, s.storage, gameGorm); err != nil {
 		return
 	}

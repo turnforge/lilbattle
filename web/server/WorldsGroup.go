@@ -10,6 +10,8 @@ import (
 	protos "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 )
 
+// Note: context is still used by deleteWorldHandler
+
 // WorldsGroup implements goal.PageGroup for /worlds routes.
 type WorldsGroup struct {
 	weewarApp *WeewarApp
@@ -23,11 +25,13 @@ func (g *WorldsGroup) RegisterRoutes(app *goal.App[*WeewarApp]) *http.ServeMux {
 	// Register pages using goal's generic registration
 	goal.Register[*WorldListingPage](app, mux, "/")
 	goal.Register[*SelectWorldPage](app, mux, "/select")
+	goal.Register[*WorldCreatePage](app, mux, "/create")
 	goal.Register[*WorldViewerPage](app, mux, "/{worldId}/view")
 	goal.Register[*WorldEditorPage](app, mux, "/{worldId}/edit")
 
 	// Custom handlers that don't fit the View pattern
-	mux.HandleFunc("/new", createNewWorldHandler(app))
+	// /new redirects to /create for backward compatibility
+	mux.HandleFunc("/new", redirectToCreateHandler)
 	mux.HandleFunc("/{worldId}/start", worldStartHandler)
 	mux.HandleFunc("/{worldId}/copy", worldCopyHandler)
 	// Screenshot handler delegates to WeewarApp's ViewsRoot method
@@ -37,34 +41,11 @@ func (g *WorldsGroup) RegisterRoutes(app *goal.App[*WeewarApp]) *http.ServeMux {
 	return mux
 }
 
-// Custom handlers - these use closures to access the App
+// Custom handlers
 
-func createNewWorldHandler(app *goal.App[*WeewarApp]) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		ctx := app.Context
-		loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(req)
-		client := ctx.ClientMgr.GetWorldsSvcClient()
-
-		createReq := &protos.CreateWorldRequest{
-			World: &protos.World{
-				Name:        "Untitled World",
-				Description: "",
-				CreatorId:   loggedInUserId,
-				Tags:        []string{},
-				Difficulty:  "",
-			},
-		}
-
-		resp, err := client.CreateWorld(context.Background(), createReq)
-		if err != nil {
-			log.Printf("Failed to create world: %v", err)
-			http.Error(w, "Failed to create world", http.StatusInternalServerError)
-			return
-		}
-
-		editURL := fmt.Sprintf("/worlds/%s/edit", resp.World.Id)
-		http.Redirect(w, req, editURL, http.StatusFound)
-	}
+// redirectToCreateHandler redirects /worlds/new to /worlds/create for backward compatibility
+func redirectToCreateHandler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/worlds/create", http.StatusFound)
 }
 
 func worldStartHandler(w http.ResponseWriter, r *http.Request) {

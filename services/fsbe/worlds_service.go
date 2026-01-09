@@ -254,13 +254,23 @@ func (s *FSWorldsService) DeleteWorld(ctx context.Context, req *v1.DeleteWorldRe
 
 // CreateWorld creates a new world
 func (s *FSWorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequest) (resp *v1.CreateWorldResponse, err error) {
+	resp = &v1.CreateWorldResponse{}
 	if req.World == nil {
 		return nil, fmt.Errorf("world data is required")
 	}
 
 	worldId, err := s.storage.CreateEntity(req.World.Id)
 	if err != nil {
-		return resp, err
+		// Check if this is an ID conflict (custom ID already exists)
+		if req.World.Id != "" {
+			// Generate a suggested ID by adding a random suffix
+			suggestedId := req.World.Id + "-" + shortRandSuffix()
+			resp.FieldErrors = map[string]string{
+				"id": suggestedId,
+			}
+			return resp, nil
+		}
+		return nil, err
 	}
 	req.World.Id = worldId
 

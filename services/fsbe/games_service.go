@@ -192,9 +192,21 @@ func (s *FSGamesService) CreateGame(ctx context.Context, req *v1.CreateGameReque
 	}
 
 	// Create game entity directory
+	customId := req.Game.Id
 	req.Game.Id, err = s.storage.CreateEntity(req.Game.Id)
 	if err != nil {
-		return resp, err
+		// Check if this is an ID conflict (custom ID already exists)
+		if customId != "" {
+			// Generate a suggested ID by adding a random suffix
+			suggestedId := customId + "-" + shortRandSuffix()
+			resp = &v1.CreateGameResponse{
+				FieldErrors: map[string]string{
+					"id": suggestedId,
+				},
+			}
+			return resp, nil
+		}
+		return nil, err
 	}
 
 	now := time.Now()

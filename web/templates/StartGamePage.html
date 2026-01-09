@@ -16,7 +16,7 @@
 
 {{ define "BodySection" }}
     <input id="worldIdInput" value="{{ .WorldId }}" type="hidden" />
-    
+
     <!-- Start Game Container -->
     <main class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 min-h-0 lg:overflow-hidden">
         <!-- Game Info Section -->
@@ -24,10 +24,33 @@
             <div class="max-w-9xl mx-auto">
                 <div class="flex items-center justify-between">
                     <div>
-                        <input id="game-name-title" type="text" value="New Game" 
-                               class="text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none p-0 focus:ring-0 focus:ring-offset-0 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 rounded px-2 py-1 transition-colors duration-200"
-                               placeholder="Enter game name..."
-                               maxlength="100">
+                        <!-- Game Name -->
+                        <div class="flex items-center gap-2 group">
+                            <input id="game-name-title" type="text" value="{{ .GameName }}"
+                                   class="text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 focus:border-blue-500 dark:focus:border-blue-400 focus:border-solid p-0 focus:ring-0 focus:ring-offset-0 focus:outline-none rounded-none px-1 py-0.5 transition-colors duration-200"
+                                   placeholder="Enter game name..."
+                                   maxlength="100">
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </div>
+                        <!-- Custom Game ID -->
+                        <div class="mt-2 flex items-center gap-2 group">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">ID:</span>
+                            <input id="custom-game-id" type="text" value="{{ .GameId }}"
+                                   class="text-sm font-mono text-gray-700 dark:text-gray-300 bg-transparent border-b border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 focus:border-blue-500 dark:focus:border-blue-400 focus:border-solid p-0 focus:ring-0 focus:ring-offset-0 focus:outline-none rounded-none px-1 py-0.5 transition-colors duration-200 w-48"
+                                   placeholder="auto-generated"
+                                   pattern="[a-z0-9\-]+"
+                                   title="Only lowercase letters, numbers, and hyphens allowed"
+                                   maxlength="50">
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </div>
+                        <!-- Error message for ID conflicts -->
+                        {{ if .ErrorMessage }}
+                        <p id="game-id-error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ .ErrorMessage }}</p>
+                        {{ end }}
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                             {{ if and .World .World.Name }}Configure your game on {{ .World.Name }}{{ else }}Select a world and configure your game{{ end }}
                         </p>

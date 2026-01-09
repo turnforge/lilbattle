@@ -99,11 +99,20 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	if err != nil {
 		return
 	}
-	existingId := worldGorm.Id
-	worldGorm.Id = NewID(s.storage, "worlds", worldGorm.Id)
-	if worldGorm.Id == "" {
-		return nil, fmt.Errorf("world with ID %q already exists", existingId)
+
+	// Try to assign ID (custom or generated)
+	assignedId, suggestedId, err := NewIDWithSuggestion(s.storage, "worlds", worldGorm.Id)
+	if err != nil {
+		return nil, err
 	}
+	if assignedId == "" {
+		// ID conflict - return suggested ID in field_errors
+		resp.FieldErrors = map[string]string{
+			"id": suggestedId,
+		}
+		return resp, nil
+	}
+	worldGorm.Id = assignedId
 	if err = s.WorldDAL.Save(ctx, s.storage, worldGorm); err != nil {
 		return
 	}
