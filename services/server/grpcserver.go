@@ -13,7 +13,9 @@ import (
 	"log"
 	"log/slog"
 	"net"
+	"os"
 
+	"github.com/turnforge/weewar/services/authctx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -24,10 +26,24 @@ type Server struct {
 }
 
 func (s *Server) Start(ctx context.Context, srvErr chan error, srvChan chan bool) error {
-	// Use provided CanvasService or create a new one
+	// Configure auth interceptor
+	// Use DISABLE_API_AUTH=true to skip authentication (for local development)
+	var authConfig *authctx.AuthInterceptorConfig
+	if os.Getenv("DISABLE_API_AUTH") == "true" {
+		// Optional auth: extract user if present, but don't reject unauthenticated requests
+		authConfig = authctx.OptionalAuthConfig()
+	} else {
+		// Default: require authentication on all API calls
+		authConfig = authctx.DefaultAuthInterceptorConfig()
+	}
 
 	server := grpc.NewServer(
-	// grpc.UnaryInterceptor(EnsureAccessToken), // Add interceptors if needed
+		grpc.ChainUnaryInterceptor(
+			authctx.UnaryAuthInterceptor(authConfig),
+		),
+		grpc.ChainStreamInterceptor(
+			authctx.StreamAuthInterceptor(authConfig),
+		),
 	)
 
 	// Create coordination storage

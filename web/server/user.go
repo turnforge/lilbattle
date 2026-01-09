@@ -1,23 +1,36 @@
 package server
 
 import (
+	"os"
+
 	oa "github.com/panyam/oneauth"
 	svc "github.com/turnforge/weewar/services"
 	"golang.org/x/oauth2"
 )
 
+// testAuthEnabled returns true if test authentication is enabled via env var.
+// This should only be enabled in development/testing environments.
+func testAuthEnabled() bool {
+	return os.Getenv("ENABLE_TEST_AUTH") == "true"
+}
+
+// testUser returns the mock test user for development/testing.
+func testUser() *svc.User {
+	return &svc.User{
+		ID: "test1",
+		ProfileInfo: svc.StringMapField{
+			Properties: map[string]any{
+				"Name": "Test User",
+			},
+		},
+	}
+}
+
 func (n *WeewarApp) GetUserByID(userId string) (oa.User, error) {
 	var err error
-	if userId == "test1" {
-		// Mocking user login
-		return &svc.User{
-			ID: "test1",
-			ProfileInfo: svc.StringMapField{
-				Properties: map[string]any{
-					"Name": "Test User",
-				},
-			},
-		}, nil
+	// Test user bypass - only if ENABLE_TEST_AUTH is set
+	if testAuthEnabled() && userId == "test1" {
+		return testUser(), nil
 	}
 	u, err := n.ClientMgr.GetAuthService().GetUserById(userId)
 	return u.(*svc.User), err
@@ -25,32 +38,28 @@ func (n *WeewarApp) GetUserByID(userId string) (oa.User, error) {
 
 func (n *WeewarApp) EnsureAuthUser(authtype string, provider string, token *oauth2.Token, userInfo map[string]any) (oa.User, error) {
 	var err error
-	// Mocking user login
-	email := userInfo["email"].(string)
-	if email == "test@gmail.com" {
-		return &svc.User{
-			ID: "test1",
-			ProfileInfo: svc.StringMapField{
-				Properties: map[string]any{
-					"Name": "Test User",
-				},
-			},
-		}, nil
+	// Test user bypass - only if ENABLE_TEST_AUTH is set
+	if testAuthEnabled() {
+		if email, ok := userInfo["email"].(string); ok && email == "test@gmail.com" {
+			return testUser(), nil
+		}
 	}
 	user, err := n.ClientMgr.GetAuthService().EnsureAuthUser(authtype, provider, token, userInfo)
 	return user.(*svc.User), err
 }
 
 func (n *WeewarApp) ValidateUsernamePassword(username string, password string) (out oa.User, err error) {
-	if username == "test@gmail.com" {
-		out = &svc.User{
-			ID: "test1",
-			ProfileInfo: svc.StringMapField{
-				Properties: map[string]any{
-					"Name": "Test User",
-				},
-			},
-		}
+	// Test user bypass - only if ENABLE_TEST_AUTH is set
+	if testAuthEnabled() && username == "test@gmail.com" {
+		out = testUser()
+		return
 	}
+	// For production, delegate to auth service
+	usernameType := oa.DetectUsernameType(username)
+	user, err := n.ClientMgr.GetAuthService().ValidateLocalCredentials(username, password, usernameType)
+	if err != nil {
+		return nil, err
+	}
+	out = user
 	return
 }
