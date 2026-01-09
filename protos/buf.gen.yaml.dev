@@ -57,7 +57,12 @@ plugins:
   # Datastore DAL generator
   - local: protoc-gen-dal-datastore
     out: ../gen/datastore
-    opt: paths=source_relative
+    opt:
+      - paths=source_relative
+      - generate_dal=true
+      - dal_filename_suffix=_dal
+      - dal_output_dir=dal
+      - entity_import_path=github.com/turnforge/weewar/gen/datastore
 
   # This will invoke protoc-gen-es and write output to web/gen
   - local: protoc-gen-es

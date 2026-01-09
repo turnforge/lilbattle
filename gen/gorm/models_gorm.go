@@ -180,8 +180,8 @@ func (*WorldGORM) TableName() string {
 
 // WorldDataGORM is the GORM model for weewar.v1.WorldData
 type WorldDataGORM struct {
-	WorldId             string              `gorm:"primaryKey"`
 	TilesMap            map[string]TileGORM `gorm:"serializer:json"`
+	WorldId             string              `gorm:"primaryKey"`
 	UnitsMap            map[string]UnitGORM `gorm:"serializer:json"`
 	ScreenshotIndexInfo IndexInfoGORM       `gorm:"embedded;embeddedPrefix:screenshot_index_"`
 	ContentHash         string
@@ -241,6 +241,28 @@ func (*GameGORM) TableName() string {
 	return "games"
 }
 
+// GameStateGORM is the GORM model for weewar.v1.GameState
+type GameStateGORM struct {
+	UpdatedAt          time.Time
+	GameId             string `gorm:"primaryKey"`
+	TurnCounter        int32
+	CurrentPlayer      int32
+	WorldData          GameWorldDataGORM `gorm:"embedded;embeddedPrefix:world_data_"`
+	StateHash          string
+	Version            int64
+	Status             models.GameStatus
+	Finished           bool
+	WinningPlayer      int32
+	WinningTeam        int32
+	CurrentGroupNumber int64
+	PlayerStates       map[int32]PlayerStateGORM `gorm:"serializer:json"`
+}
+
+// TableName returns the table name for GameStateGORM
+func (*GameStateGORM) TableName() string {
+	return "game_state"
+}
+
 // GameConfigurationGORM is the GORM model for weewar.v1.GameConfiguration
 type GameConfigurationGORM struct {
 	Players       []GamePlayerGORM
@@ -282,6 +304,30 @@ type IncomeConfigGORM struct {
 	AirportbaseIncome int32
 	MissilesiloIncome int32
 	MinesIncome       int32
+}
+
+// Value implements driver.Valuer for IncomeConfigGORM
+func (m IncomeConfigGORM) Value() (driver.Value, error) {
+	return json.Marshal(m)
+}
+
+// Scan implements sql.Scanner for IncomeConfigGORM
+func (m *IncomeConfigGORM) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to scan IncomeConfigGORM: unsupported type %T", value)
+	}
+
+	return json.Unmarshal(bytes, m)
 }
 
 // GamePlayerGORM is the GORM model for weewar.v1.GamePlayer
@@ -399,28 +445,6 @@ type GameWorldDataGORM struct {
 	Crossings           map[string]CrossingGORM `gorm:"serializer:json"`
 }
 
-// GameStateGORM is the GORM model for weewar.v1.GameState
-type GameStateGORM struct {
-	UpdatedAt          time.Time
-	GameId             string `gorm:"primaryKey"`
-	TurnCounter        int32
-	CurrentPlayer      int32
-	WorldData          GameWorldDataGORM `gorm:"embedded;embeddedPrefix:world_data_"`
-	StateHash          string
-	Version            int64
-	Status             models.GameStatus
-	Finished           bool
-	WinningPlayer      int32
-	WinningTeam        int32
-	CurrentGroupNumber int64
-	PlayerStates       map[int32]PlayerStateGORM `gorm:"serializer:json"`
-}
-
-// TableName returns the table name for GameStateGORM
-func (*GameStateGORM) TableName() string {
-	return "game_state"
-}
-
 // GameMoveHistoryGORM is the GORM model for weewar.v1.GameMoveHistory
 type GameMoveHistoryGORM struct {
 	GameId string
@@ -437,10 +461,10 @@ type GameMoveGroupGORM struct {
 
 // GameMoveGORM is the GORM model for weewar.v1.GameMove
 type GameMoveGORM struct {
-	Player      int32
 	GameId      string `gorm:"primaryKey;index:idx_game_moves_game_id;index:idx_game_moves_lookup,priority:1"`
-	GroupNumber int64  `gorm:"primaryKey;index:idx_game_moves_lookup,priority:2"`
-	MoveNumber  int64  `gorm:"primaryKey"`
+	Player      int32
+	GroupNumber int64 `gorm:"primaryKey;index:idx_game_moves_lookup,priority:2"`
+	MoveNumber  int64 `gorm:"primaryKey"`
 	Version     int64
 	Timestamp   time.Time
 	MoveType    []byte `gorm:"serializer:json"`

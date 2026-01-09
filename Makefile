@@ -12,7 +12,7 @@ ui:
 binlocal: 
 	go build -ldflags "$(LDFLAGS)" -o ./bin/weewar ./cmd/backend/*.go
 
-deploy: checklinks
+deploy: checklinks ui cli wasm 
 	gcloud app deploy --project weewar --verbosity=info
 
 serve:

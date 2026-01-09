@@ -736,6 +736,123 @@ func GameFromGameGORM(
 	return out, nil
 }
 
+// GameStateToGameStateGORM converts a models.GameState to GameStateGORM.
+// The optional decorator function allows custom field transformations.
+func GameStateToGameStateGORM(
+	src *models.GameState,
+	dest *GameStateGORM,
+	decorator func(*models.GameState, *GameStateGORM) error,
+) (out *GameStateGORM, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &GameStateGORM{}
+	}
+
+	// Initialize struct with inline values
+	*dest = GameStateGORM{
+		GameId:             src.GameId,
+		TurnCounter:        src.TurnCounter,
+		CurrentPlayer:      src.CurrentPlayer,
+		StateHash:          src.StateHash,
+		Version:            src.Version,
+		Status:             src.Status,
+		Finished:           src.Finished,
+		WinningPlayer:      src.WinningPlayer,
+		WinningTeam:        src.WinningTeam,
+		CurrentGroupNumber: src.CurrentGroupNumber,
+	}
+	out = dest
+
+	if src.UpdatedAt != nil {
+		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
+	}
+
+	if src.WorldData != nil {
+		_, err = WorldDataToGameWorldDataGORM(src.WorldData, &out.WorldData, nil)
+		if err != nil {
+			return nil, fmt.Errorf("converting WorldData: %w", err)
+		}
+	}
+
+	if src.PlayerStates != nil {
+		out.PlayerStates = make(map[int32]PlayerStateGORM, len(src.PlayerStates))
+		for key, value := range src.PlayerStates {
+			var converted PlayerStateGORM
+			_, err = PlayerStateToPlayerStateGORM(value, &converted, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
+			}
+			out.PlayerStates[key] = converted
+		}
+	}
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(src, dest); err != nil {
+			return nil, err
+		}
+	}
+
+	return dest, nil
+}
+
+// GameStateFromGameStateGORM converts a GameStateGORM back to models.GameState.
+// The optional decorator function allows custom field transformations.
+func GameStateFromGameStateGORM(
+	dest *models.GameState,
+	src *GameStateGORM,
+	decorator func(dest *models.GameState, src *GameStateGORM) error,
+) (out *models.GameState, err error) {
+	if src == nil {
+		return nil, nil
+	}
+	if dest == nil {
+		dest = &models.GameState{}
+	}
+
+	// Initialize struct with inline values
+	*dest = models.GameState{
+		UpdatedAt:          converters.TimeToTimestamp(src.UpdatedAt),
+		GameId:             src.GameId,
+		TurnCounter:        src.TurnCounter,
+		CurrentPlayer:      src.CurrentPlayer,
+		StateHash:          src.StateHash,
+		Version:            src.Version,
+		Status:             src.Status,
+		Finished:           src.Finished,
+		WinningPlayer:      src.WinningPlayer,
+		WinningTeam:        src.WinningTeam,
+		CurrentGroupNumber: src.CurrentGroupNumber,
+	}
+	out = dest
+
+	out.WorldData, err = WorldDataFromGameWorldDataGORM(nil, &src.WorldData, nil)
+	if err != nil {
+		return nil, fmt.Errorf("converting WorldData: %w", err)
+	}
+
+	if src.PlayerStates != nil {
+		out.PlayerStates = make(map[int32]*models.PlayerState, len(src.PlayerStates))
+		for key, value := range src.PlayerStates {
+			out.PlayerStates[key], err = PlayerStateFromPlayerStateGORM(nil, &value, nil)
+			if err != nil {
+				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
+			}
+		}
+	}
+
+	// Apply decorator if provided
+	if decorator != nil {
+		if err := decorator(dest, src); err != nil {
+			return nil, err
+		}
+	}
+
+	return out, nil
+}
+
 // GameConfigurationToGameConfigurationGORM converts a models.GameConfiguration to GameConfigurationGORM.
 // The optional decorator function allows custom field transformations.
 func GameConfigurationToGameConfigurationGORM(
@@ -1312,123 +1429,6 @@ func WorldDataFromGameWorldDataGORM(
 			out.Crossings[key], err = CrossingFromCrossingGORM(nil, &value, nil)
 			if err != nil {
 				return nil, fmt.Errorf("converting Crossings[%v]: %w", key, err)
-			}
-		}
-	}
-
-	// Apply decorator if provided
-	if decorator != nil {
-		if err := decorator(dest, src); err != nil {
-			return nil, err
-		}
-	}
-
-	return out, nil
-}
-
-// GameStateToGameStateGORM converts a models.GameState to GameStateGORM.
-// The optional decorator function allows custom field transformations.
-func GameStateToGameStateGORM(
-	src *models.GameState,
-	dest *GameStateGORM,
-	decorator func(*models.GameState, *GameStateGORM) error,
-) (out *GameStateGORM, err error) {
-	if src == nil {
-		return nil, nil
-	}
-	if dest == nil {
-		dest = &GameStateGORM{}
-	}
-
-	// Initialize struct with inline values
-	*dest = GameStateGORM{
-		GameId:             src.GameId,
-		TurnCounter:        src.TurnCounter,
-		CurrentPlayer:      src.CurrentPlayer,
-		StateHash:          src.StateHash,
-		Version:            src.Version,
-		Status:             src.Status,
-		Finished:           src.Finished,
-		WinningPlayer:      src.WinningPlayer,
-		WinningTeam:        src.WinningTeam,
-		CurrentGroupNumber: src.CurrentGroupNumber,
-	}
-	out = dest
-
-	if src.UpdatedAt != nil {
-		out.UpdatedAt = converters.TimestampToTime(src.UpdatedAt)
-	}
-
-	if src.WorldData != nil {
-		_, err = WorldDataToGameWorldDataGORM(src.WorldData, &out.WorldData, nil)
-		if err != nil {
-			return nil, fmt.Errorf("converting WorldData: %w", err)
-		}
-	}
-
-	if src.PlayerStates != nil {
-		out.PlayerStates = make(map[int32]PlayerStateGORM, len(src.PlayerStates))
-		for key, value := range src.PlayerStates {
-			var converted PlayerStateGORM
-			_, err = PlayerStateToPlayerStateGORM(value, &converted, nil)
-			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
-			}
-			out.PlayerStates[key] = converted
-		}
-	}
-
-	// Apply decorator if provided
-	if decorator != nil {
-		if err := decorator(src, dest); err != nil {
-			return nil, err
-		}
-	}
-
-	return dest, nil
-}
-
-// GameStateFromGameStateGORM converts a GameStateGORM back to models.GameState.
-// The optional decorator function allows custom field transformations.
-func GameStateFromGameStateGORM(
-	dest *models.GameState,
-	src *GameStateGORM,
-	decorator func(dest *models.GameState, src *GameStateGORM) error,
-) (out *models.GameState, err error) {
-	if src == nil {
-		return nil, nil
-	}
-	if dest == nil {
-		dest = &models.GameState{}
-	}
-
-	// Initialize struct with inline values
-	*dest = models.GameState{
-		UpdatedAt:          converters.TimeToTimestamp(src.UpdatedAt),
-		GameId:             src.GameId,
-		TurnCounter:        src.TurnCounter,
-		CurrentPlayer:      src.CurrentPlayer,
-		StateHash:          src.StateHash,
-		Version:            src.Version,
-		Status:             src.Status,
-		Finished:           src.Finished,
-		WinningPlayer:      src.WinningPlayer,
-		WinningTeam:        src.WinningTeam,
-		CurrentGroupNumber: src.CurrentGroupNumber,
-	}
-	out = dest
-
-	out.WorldData, err = WorldDataFromGameWorldDataGORM(nil, &src.WorldData, nil)
-	if err != nil {
-		return nil, fmt.Errorf("converting WorldData: %w", err)
-	}
-
-	if src.PlayerStates != nil {
-		out.PlayerStates = make(map[int32]*models.PlayerState, len(src.PlayerStates))
-		for key, value := range src.PlayerStates {
-			out.PlayerStates[key], err = PlayerStateFromPlayerStateGORM(nil, &value, nil)
-			if err != nil {
-				return nil, fmt.Errorf("converting PlayerStates[%v]: %w", key, err)
 			}
 		}
 	}

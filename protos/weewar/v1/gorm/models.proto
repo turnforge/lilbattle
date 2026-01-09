@@ -23,11 +23,6 @@ message CrossingGORM {
 
 message UnitGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.Unit", implement_scanner: true };
-  /*
-  repeated AttackRecordGORM attack_history = 10 [(dal.v1.column) = {
-    gorm_tags: ["serializer:json"]
-  }];
-  */
 }
 
 message AttackRecordGORM {
@@ -44,8 +39,6 @@ message WorldGORM {
   repeated string tags = 7 [(dal.v1.column) = {
     gorm_tags: ["serializer:json"]
   }];
-  // WorldData has-one relationship via foreign key
-  // WorldDataGORM world_data = 9 [(dal.v1.column) = { gorm_tags: ["foreignKey:WorldId"] }];
 
   // PreviewUrls as JSON for cross-DB compatibility
   repeated string preview_urls = 11 [(dal.v1.column) = {
@@ -110,6 +103,24 @@ message GameGORM {
   }];
 }
 
+// Holds the game's Active/Current state (eg world state)
+message GameStateGORM {
+  option (dal.v1.gorm) = { source: "weewar.v1.GameState", table: "game_state"};
+  string game_id = 1 [(dal.v1.column) = {
+    gorm_tags: ["primaryKey"]
+  }];
+
+  // ScreenshotIndexInfo embedded
+  GameWorldDataGORM world_data = 4 [(dal.v1.column) = {
+    gorm_tags: ["embedded", "embeddedPrefix:world_data_"]
+  }];
+
+  // Per-player runtime state as JSON for cross-DB compatibility
+  map<int32, PlayerStateGORM> player_states = 5 [(dal.v1.column) = {
+    gorm_tags: ["serializer:json"]
+  }];
+}
+
 message GameConfigurationGORM {
   option (dal.v1.gorm) = { source: "weewar.v1.GameConfiguration", implement_scanner: true };
   // IncomeConfigs embedded
@@ -121,7 +132,7 @@ message GameConfigurationGORM {
 }
 
 message IncomeConfigGORM {
-  option (dal.v1.gorm) = { source: "weewar.v1.IncomeConfig" };
+  option (dal.v1.gorm) = { source: "weewar.v1.IncomeConfig", implement_scanner: true };
 }
 
 message GamePlayerGORM {
@@ -161,24 +172,6 @@ message GameWorldDataGORM {
   }];
   // Units as JSON for cross-DB compatibility
   map<string, UnitGORM> units_map = 7 [(dal.v1.column) = {
-    gorm_tags: ["serializer:json"]
-  }];
-}
-
-// Holds the game's Active/Current state (eg world state)
-message GameStateGORM {
-  option (dal.v1.gorm) = { source: "weewar.v1.GameState", table: "game_state"};
-  string game_id = 1 [(dal.v1.column) = {
-    gorm_tags: ["primaryKey"]
-  }];
-
-  // ScreenshotIndexInfo embedded
-  GameWorldDataGORM world_data = 4 [(dal.v1.column) = {
-    gorm_tags: ["embedded", "embeddedPrefix:world_data_"]
-  }];
-
-  // Per-player runtime state as JSON for cross-DB compatibility
-  map<int32, PlayerStateGORM> player_states = 5 [(dal.v1.column) = {
     gorm_tags: ["serializer:json"]
   }];
 }
