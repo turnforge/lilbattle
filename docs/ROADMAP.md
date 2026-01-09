@@ -660,6 +660,7 @@ const response = await client.gamesService.createGame(request);
 - [x] **GCP Service Account**: weewar-cli-admin with App Engine and Datastore roles
 - [x] **OAuth2 Configuration**: Google OAuth with proper callback URLs
 - [x] **Multi-environment OAuth**: Support for localhost and production callback URLs
+- [x] **X/Twitter OAuth 2.0**: Custom Twitter OAuth handler with PKCE support (required by Twitter API)
 
 ### Legal Pages ✅
 - [x] **Privacy Policy Template**: Proper page structure with sections and styling

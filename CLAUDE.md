@@ -316,3 +316,36 @@ previousUnit := &v1.Unit{Q: unit.Q, R: unit.R, ...} // May forget Shortcut!
 - Persists across user interactions (selection, movement, attack)
 - Automatically refreshes after any unit action or state change
 
+### Authentication Configuration
+
+**OAuth Providers**: The app supports multiple social login providers configured via environment variables.
+
+**Environment Variables** (in `configs/.env`):
+```env
+# Google OAuth
+OAUTH2_GOOGLE_CLIENT_ID=your-client-id
+OAUTH2_GOOGLE_CLIENT_SECRET=your-secret
+OAUTH2_GOOGLE_CALLBACK_URL=http://localhost:8080/auth/google/callback/
+
+# GitHub OAuth
+OAUTH2_GITHUB_CLIENT_ID=your-client-id
+OAUTH2_GITHUB_CLIENT_SECRET=your-secret
+OAUTH2_GITHUB_CALLBACK_URL=http://localhost:8080/auth/github/callback/
+
+# X/Twitter OAuth (requires PKCE)
+OAUTH2_TWITTER_CLIENT_ID=your-client-id
+OAUTH2_TWITTER_CLIENT_SECRET=your-secret
+OAUTH2_TWITTER_CALLBACK_URL=http://localhost:8080/auth/twitter/callback/
+```
+
+**Key Files**:
+- `web/server/auth.go`: OAuth provider registration
+- `web/server/twitter_oauth2.go`: Custom Twitter OAuth2 handler with PKCE support
+- `web/server/LoginPage.go`: Controls which login buttons are shown
+- `web/templates/LoginPage.html`: Login page template with social buttons
+
+**Twitter OAuth Notes**:
+- Twitter requires PKCE (Proof Key for Code Exchange) for all OAuth 2.0 flows
+- Uses golang.org/x/oauth2 built-in PKCE support
+- Twitter doesn't provide email in basic scope, uses `@twitter.local` suffix for identity
+
