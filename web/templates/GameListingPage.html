@@ -1,5 +1,6 @@
 <!-- templates/GameListingPage.html -->
 {{# include "BasePage.html" #}}
+{{# include "Footer.html" #}}
 {{# namespace "EL" "goapplib/components/EntityListing.html" #}}
 
 {{/* Game-specific grid card placeholder - game controller icon */}}
@@ -69,9 +70,12 @@
            "EL:EmptyStateIcon" "GameEmptyStateIcon" #}}
 
 {{ define "BodySection" }}
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    {{ template "GameEntityListing" .ListingData }}
-</main>
+<div class="min-h-screen flex flex-col">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        {{ template "GameEntityListing" .ListingData }}
+    </main>
+    {{ template "Footer" . }}
+</div>
 {{ end }}
 
 {{ define "PostBodySection" }}

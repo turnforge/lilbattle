@@ -1,0 +1,16 @@
+<!-- templates/Footer.html -->
+{{ define "Footer" }}
+<footer class="border-t border-gray-200 dark:border-gray-700 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <div>
+                {{ .Header.AppName }}
+            </div>
+            <div class="flex gap-6">
+                <a href="/privacy/" class="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+                <a href="/terms/" class="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</footer>
+{{ end }}

@@ -632,11 +632,40 @@ const response = await client.gamesService.createGame(request);
 - **User Experience**: Faster, more intuitive CLI with hex neighbor shortcuts
 - **Clean Architecture**: Presenter drives all UI updates through well-defined methods
 
-**Last Updated**: 2025-12-09
-**Current Focus**: Template system modernization with templar and goapplib integration
-**Recent Milestone**: Templar template migration complete with namespace/include/extend patterns
+**Last Updated**: 2025-01-09
+**Current Focus**: Google App Engine deployment and production readiness
+**Recent Milestone**: GAE deployment configuration complete
 
 **Recent Achievements**:
-- Templar template engine migration for better template reuse
-- goapplib integration for shared page components
-- Template inheritance via namespace/extend directives
+- Google App Engine deployment configuration (app.yaml, .gcloudignore)
+- Environment-based backend selection (CLI flag → env var → default)
+- GCP service account setup with proper IAM roles
+- OAuth2 configuration for Google authentication
+- Privacy Policy and Terms of Service pages with proper templates
+- Reusable Footer component for listing pages
+- Template system modernization with templar and goapplib integration
+
+## ✅ Phase 14: Google App Engine Deployment (Completed)
+**Status**: Production-ready
+**Timeline**: Completed January 2025
+
+### Deployment Infrastructure ✅
+- [x] **app.yaml Configuration**: Go 1.24 runtime with static file handlers
+- [x] **.gcloudignore Setup**: Proper exclusions for dev files, node_modules, tests
+- [x] **Environment Configuration**: WEEWAR_ENV-based config loading (dev/production)
+- [x] **Backend Selection**: Priority-based config resolution (CLI flag → env var → default)
+- [x] **Secrets Management**: Symlinked configs folder to external secrets directory
+
+### Authentication Setup ✅
+- [x] **GCP Service Account**: weewar-cli-admin with App Engine and Datastore roles
+- [x] **OAuth2 Configuration**: Google OAuth with proper callback URLs
+- [x] **Multi-environment OAuth**: Support for localhost and production callback URLs
+
+### Legal Pages ✅
+- [x] **Privacy Policy Template**: Proper page structure with sections and styling
+- [x] **Terms of Service Template**: Fixed template inheritance and section numbering
+- [x] **Footer Component**: Reusable footer with Privacy/Terms links for listing pages
+
+### Production Considerations
+- [ ] **GAE/Datastore Backend**: Implement datastore backend for persistent storage (future)
+- [x] **Local Backend Deployment**: Initial deployment uses local/file-based storage
