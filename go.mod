@@ -25,7 +25,7 @@ require (
 	github.com/panyam/templar v0.0.27
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/turnforge/turnengine v0.0.1
+	github.com/turnforge/turnengine v0.0.2
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0
 	go.opentelemetry.io/otel v1.38.0
 	golang.org/x/image v0.34.0
@@ -101,7 +101,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/turnforge/turnengine v0.0.1 => ./locallinks/turnengine/
+// replace github.com/turnforge/turnengine v0.0.2 => ./locallinks/turnengine/
 
 // replace github.com/panyam/protoc-gen-dal v0.0.2 => ./locallinks/protoc-gen-dal
 
