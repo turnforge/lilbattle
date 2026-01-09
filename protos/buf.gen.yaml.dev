@@ -17,10 +17,12 @@ plugins:
   - remote: buf.build/protocolbuffers/go
     out: ../gen/go
     opt: paths=source_relative
+    # Generate imported dependencies (dal/v1/annotations.proto)
+    include_imports: true
 
   # vtprotobuf for TinyGo WASM compatibility (generates reflection-free code)
   # - local: protoc-gen-go-vtproto
-    # out: gen/go
+    # out: ../gen/go
     # opt:
       # - paths=source_relative
       # - features=marshal+unmarshal+size

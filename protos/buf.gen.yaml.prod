@@ -8,7 +8,9 @@ managed:
     - module: buf.build/grpc-ecosystem/grpc-gateway
     - module: buf.build/panyam/protoc-gen-go-wasmjs
     - module: buf.build/turnforge/turnengine
-    - module: buf.build/prototools/protoc-gen-dal
+    # NOTE: buf.build/prototools/protoc-gen-dal is NOT disabled because the upstream
+    # module declares go_package pointing to a non-existent path. We let buf's managed
+    # mode apply our go_package_prefix to generate it locally.
     # - module: connectrpc.com/connect
   override:
     - file_option: go_package_prefix
@@ -17,6 +19,8 @@ plugins:
   - remote: buf.build/protocolbuffers/go
     out: ../gen/go
     opt: paths=source_relative
+    # Generate imported dependencies (dal/v1/annotations.proto)
+    include_imports: true
 
   # vtprotobuf for TinyGo WASM compatibility (generates reflection-free code)
   # - local: protoc-gen-go-vtproto
@@ -50,6 +54,7 @@ plugins:
       - generate_dal=true
       - dal_filename_suffix=_dal
       - dal_output_dir=dal
+      - entity_import_path=github.com/turnforge/weewar/gen/gorm
 
   # Datastore DAL generator
   - local: protoc-gen-dal-datastore
