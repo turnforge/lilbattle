@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 
 	goal "github.com/panyam/goapplib"
 )
@@ -9,7 +10,8 @@ import (
 // LoginPage extends goapplib.SampleLoginPage with app-specific features.
 type LoginPage struct {
 	goal.SampleLoginPage[*WeewarApp]
-	Header Header
+	Header             Header
+	EnableTwitterLogin bool
 }
 
 // RegisterPage extends goapplib.SampleRegisterPage with app-specific features.
@@ -31,6 +33,8 @@ func (p *LoginPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*
 		EnableMicrosoftLogin: false,
 		EnableAppleLogin:     false,
 	}
+	// Enable Twitter login if credentials are configured
+	p.EnableTwitterLogin = os.Getenv("OAUTH2_TWITTER_CLIENT_ID") != ""
 	return
 }
 
