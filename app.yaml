@@ -1,0 +1,22 @@
+runtime: go124
+
+env_variables:
+  # Production environment (triggers loading configs/.env)
+  WEEWAR_ENV: production
+  WEEWAR_BASE_URL: https://weewar.appspot.com
+  # Backend storage configuration
+  # Options: local, pg, gae (gae not yet implemented)
+  # Using local for initial deployment - data won't persist across deployments
+  # TODO: Implement GAE/Datastore backend for persistence
+  WORLDS_SERVICE_BE: local
+  GAMES_SERVICE_BE: local
+  FILESTORE_BE: local
+
+handlers:
+# Static files (JS, CSS, images, WASM)
+- url: /static
+  static_dir: web/static
+
+# All other routes handled by Go app
+- url: /.*
+  script: auto

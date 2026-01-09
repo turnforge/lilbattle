@@ -4,6 +4,7 @@ GO_ROOT=$(shell go env GOROOT)
 TINYGO_ROOT=$(shell tinygo env TINYGOROOT 2>/dev/null || echo "")
 # Try both common locations for wasm_exec.js (newer Go versions use lib/wasm, older use misc/wasm)
 WASM_EXEC_PATH=$(shell find $(GO_ROOT)/lib/wasm $(GO_ROOT)/misc/wasm -name "wasm_exec.js" 2>/dev/null | head -1)
+NUM_LINKED_GOMODS=`cat go.mod | grep -v "^\/\/" | grep replace | wc -l | sed -e "s/ *//g"`
 
 ui:
 	cd web ; make build
@@ -11,11 +12,14 @@ ui:
 binlocal: 
 	go build -ldflags "$(LDFLAGS)" -o ./bin/weewar ./cmd/backend/*.go
 
+deploy: checklinks
+	gcloud app deploy --project weewar --verbosity=info
+
 serve:
-	WEEWAR_ENV=dev go run cmd/backend/*.go
+	go run cmd/backend/*.go
 
 servelocal:
-	WEEWAR_ENV=dev go run cmd/backend/*.go -games_service_be=local -worlds_service_be=local # -gatewayAddress=:6060 -grpcAddress=:7070
+	go run cmd/backend/*.go -games_service_be=local -worlds_service_be=local
 
 vars:
 	@echo "GO_ROOT=$(GO_ROOT)"
@@ -116,6 +120,11 @@ copylinks:
 	cp -r ../protoc-gen-dal locallinks/
 	cp -r ../oneauth locallinks/
 	cp -r ../turnengine locallinks/
+
+checklinks:
+	@if [ x"${NUM_LINKED_GOMODS}" != "x0" ]; then	\
+		echo "You are trying to deploying with symlinks.  Remove them first and make sure versions exist" && false ;	\
+	fi
 
 resymlink:
 	mkdir -p locallinks

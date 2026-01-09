@@ -28,10 +28,25 @@ var (
 	grpcAddress       = flag.String("grpcAddress", DefaultServiceAddress(), "Address where the gRPC endpoint is running")
 	gatewayAddress    = flag.String("gatewayAddress", DefaultGatewayAddress(), "Address where the http grpc gateway endpoint is running")
 	db_endpoint       = flag.String("db_endpoint", "", fmt.Sprintf("Endpoint of DB where all data is persisted.  Default value: WEEWAR_DB_ENDPOINT environment variable or %s", DEFAULT_DB_ENDPOINT))
-	worlds_service_be = flag.String("worlds_service_be", "pg", "Storage for worlds service - 'local', 'pg', 'datastore'.  ")
-	games_service_be  = flag.String("games_service_be", "pg", "Storage for games service - 'local', 'pg', 'datastore'.  ")
-	filestore_be      = flag.String("filestore_be", "local", "Storage for filestore - 'r2' or 'local', 'pg', 'datastore'.  ")
+	worlds_service_be = flag.String("worlds_service_be", "", "Storage for worlds service - 'local', 'pg', 'gae'. Env: WORLDS_SERVICE_BE. Default: pg")
+	games_service_be  = flag.String("games_service_be", "", "Storage for games service - 'local', 'pg', 'gae'. Env: GAMES_SERVICE_BE. Default: pg")
+	filestore_be      = flag.String("filestore_be", "", "Storage for filestore - 'local', 'r2', 'gae'. Env: FILESTORE_BE. Default: local")
 )
+
+// getBackendConfig returns the backend configuration value with priority:
+// command line flag -> environment variable -> default value
+func getBackendConfig(flagValue *string, envVar string, defaultValue string) string {
+	// If flag was explicitly set (non-empty), use it
+	if flagValue != nil && *flagValue != "" {
+		return *flagValue
+	}
+	// Check environment variable
+	if envValue := os.Getenv(envVar); envValue != "" {
+		return envValue
+	}
+	// Return default
+	return defaultValue
+}
 
 type Backend struct {
 	GrpcAddress    string
@@ -66,10 +81,14 @@ func DefaultServiceAddress() string {
 }
 
 func parseFlags() {
-	envfile := ".env"
-	log.Println("Environment: ", os.Getenv("WEEWAR_ENV"))
-	if os.Getenv("WEEWAR_ENV") == "dev" {
-		envfile = ".env.dev"
+	// Default to dev mode, use WEEWAR_ENV=production for production
+	envfile := "configs/.env.dev"
+	weewarEnv := os.Getenv("WEEWAR_ENV")
+	log.Println("Environment: ", weewarEnv)
+	if weewarEnv == "production" {
+		envfile = "configs/.env"
+	} else {
+		// Dev mode - enable debug logging
 		logger := slog.New(utils.NewPrettyHandler(os.Stdout, utils.PrettyHandlerOptions{
 			SlogOpts: slog.HandlerOptions{
 				Level: slog.LevelDebug,
@@ -102,6 +121,13 @@ func (b *Backend) SetupApp() *utils.App {
 		var worldsService v1s.WorldsServiceServer
 		var filestore v1s.FileStoreServiceServer
 
+		// Get backend configurations with priority: flag -> env var -> default
+		worldsBE := getBackendConfig(worlds_service_be, "WORLDS_SERVICE_BE", "pg")
+		gamesBE := getBackendConfig(games_service_be, "GAMES_SERVICE_BE", "pg")
+		filestoreBE := getBackendConfig(filestore_be, "FILESTORE_BE", "local")
+
+		log.Printf("Backend configuration: worlds=%s, games=%s, filestore=%s", worldsBE, gamesBE, filestoreBE)
+
 		var db *gorm.DB = nil
 		ensureDB := func() *gorm.DB {
 			if db == nil {
@@ -110,25 +136,29 @@ func (b *Backend) SetupApp() *utils.App {
 			return db
 		}
 		// v1s.RegisterWorldsServiceServer(server, fsbe.NewFSWorldsService(""))
-		switch *worlds_service_be {
+		switch worldsBE {
 		case "pg":
 			worldsService = gormbe.NewWorldsService(ensureDB(), clientMgr)
 		case "local":
 			worldsService = fsbe.NewFSWorldsService("", clientMgr)
+		case "gae":
+			panic("GAE/Datastore backend not yet implemented for worlds service")
 		default:
-			panic("Invalid world service be: " + *worlds_service_be)
+			panic("Invalid worlds_service_be: " + worldsBE + ". Valid options: local, pg, gae")
 		}
 
-		switch *games_service_be {
+		switch gamesBE {
 		case "local":
 			gamesService = fsbe.NewFSGamesService("", clientMgr)
 		case "pg":
 			gamesService = gormbe.NewGamesService(ensureDB(), clientMgr)
+		case "gae":
+			panic("GAE/Datastore backend not yet implemented for games service")
 		default:
-			panic("Invalid game service be: " + *games_service_be)
+			panic("Invalid games_service_be: " + gamesBE + ". Valid options: local, pg, gae")
 		}
 
-		switch *filestore_be {
+		switch filestoreBE {
 		case "local":
 			filestore = fsbe.NewFileStoreService("", clientMgr)
 		case "r2":
@@ -143,8 +173,10 @@ func (b *Backend) SetupApp() *utils.App {
 				panic(fmt.Sprintf("Could not instantiate r2 client: %v", err))
 			}
 			filestore = r2.NewR2FileStoreService(r2Client)
+		case "gae":
+			panic("GAE/Datastore backend not yet implemented for filestore")
 		default:
-			panic("Invalid filestore be: " + *filestore_be)
+			panic("Invalid filestore_be: " + filestoreBE + ". Valid options: local, r2, gae")
 		}
 
 		// Create sync service for multiplayer real-time updates
