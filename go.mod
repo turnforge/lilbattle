@@ -15,11 +15,11 @@ require (
 	github.com/felixge/httpsnoop v1.0.4
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3
 	github.com/joho/godotenv v1.5.1
-	github.com/panyam/goapplib v0.0.4
-	github.com/panyam/gocurrent v0.0.9
+	github.com/panyam/goapplib v0.0.5
+	github.com/panyam/gocurrent v0.0.10
 	github.com/panyam/goutils v0.1.11
 	github.com/panyam/oneauth v0.0.15
-	github.com/panyam/protoc-gen-dal v0.0.2
+	github.com/panyam/protoc-gen-dal v0.0.8
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/servicekit v0.0.4
 	github.com/panyam/templar v0.0.27
@@ -101,16 +101,16 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/turnforge/turnengine v0.0.1 => ./locallinks/turnengine/
+// replace github.com/turnforge/turnengine v0.0.1 => ./locallinks/turnengine/
 
-replace github.com/panyam/protoc-gen-dal v0.0.2 => ./locallinks/protoc-gen-dal
+// replace github.com/panyam/protoc-gen-dal v0.0.2 => ./locallinks/protoc-gen-dal
 
-replace github.com/panyam/gocurrent v0.0.9 => ./locallinks/gocurrent
+// replace github.com/panyam/gocurrent v0.0.10 => ./locallinks/gocurrent
 
-replace github.com/panyam/goutils v0.1.11 => ./locallinks/goutils
+// replace github.com/panyam/goutils v0.1.11 => ./locallinks/goutils
 
-replace github.com/panyam/goapplib v0.0.4 => ./locallinks/goapplib
+// replace github.com/panyam/goapplib v0.0.5 => ./locallinks/goapplib
 
-replace github.com/panyam/templar v0.0.27 => ./locallinks/templar
+// replace github.com/panyam/templar v0.0.27 => ./locallinks/templar
 
-replace github.com/panyam/servicekit v0.0.4 => ./locallinks/servicekit
+// replace github.com/panyam/servicekit v0.0.4 => ./locallinks/servicekit
