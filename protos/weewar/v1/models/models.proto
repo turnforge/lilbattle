@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package weewar.v1;
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 
 option go_package = "github.com/turnforge/weewar/gen/go/weewar/v1/models";
 
@@ -19,23 +20,27 @@ message User {
   google.protobuf.Timestamp created_at = 1;
   google.protobuf.Timestamp updated_at = 2;
 
-  // Unique ID for the user
+  // Unique ID for the user (links to AuthService user)
   string id = 3;
 
-  // Name if items have names
+  // Display name
   string name = 4;
 
-  // Description if user has a description
+  // User bio/description
   string description = 5;
 
-  // Some tags
+  // User tags/interests
   repeated string tags = 6;
 
-  // A possible image url
+  // Avatar/profile image URL
   string image_url = 7;
 
-  // Difficulty - example attribute
-  string difficulty = 8;
+  // Primary email (from identity, for display)
+  string email = 8;
+
+  // App-specific extra data - use this for custom fields
+  // Apps can store any structured data here without modifying the proto
+  google.protobuf.Struct extras = 20;
 }
 
 message Pagination {
