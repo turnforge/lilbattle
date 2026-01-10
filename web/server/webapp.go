@@ -108,11 +108,14 @@ func NewWeewarApp(clientMgr *services.ClientMgr) (weewarApp *WeewarApp, goalApp 
 func (a *WeewarApp) Handler() http.Handler {
 	r := http.NewServeMux()
 
-	// Auth routes
-	r.Handle("/auth/", http.StripPrefix("/auth", a.Auth.Handler()))
+	// Rate limiting middleware (from goapplib)
+	rateLimiter := goal.NewRateLimitMiddleware(goal.DefaultRateLimitConfig())
 
-	// API routes
-	r.Handle("/api/", http.StripPrefix("/api", a.Api.Handler()))
+	// Auth routes (with stricter rate limiting)
+	r.Handle("/auth/", rateLimiter.WrapAuth(http.StripPrefix("/auth", a.Auth.Handler())))
+
+	// API routes (with API rate limiting)
+	r.Handle("/api/", rateLimiter.WrapAPI(http.StripPrefix("/api", a.Api.Handler())))
 
 	// Serve examples directory for WASM demos
 	r.Handle("/examples/", http.StripPrefix("/examples", http.FileServer(http.Dir("./examples/"))))

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -14,6 +15,7 @@ import (
 	models "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	v1s "github.com/turnforge/weewar/gen/go/weewar/v1/services"
 	v1connect "github.com/turnforge/weewar/gen/go/weewar/v1/services/weewarv1connect"
+	oagrpc "github.com/panyam/oneauth/grpc"
 	"github.com/turnforge/weewar/services"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -120,8 +122,23 @@ func (out *ApiHandler) setupConnectHandlers() error {
 func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error) {
 	svcMux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
-			// metadata.AppendToOutgoingContext(ctx)
 			md := metadata.Pairs()
+
+			// Inject authenticated user ID into gRPC metadata
+			if web.AuthMiddleware != nil {
+				userID := web.AuthMiddleware.GetLoggedInUserId(request)
+				if userID != "" {
+					md.Set(oagrpc.DefaultMetadataKeyUserID, userID)
+				}
+			}
+
+			// Support user switching for testing (only if ENABLE_SWITCH_AUTH is set)
+			if os.Getenv("ENABLE_SWITCH_AUTH") == "true" {
+				if switchUser := request.Header.Get("X-Switch-User"); switchUser != "" {
+					md.Set(oagrpc.DefaultMetadataKeySwitchUser, switchUser)
+				}
+			}
+
 			return md
 		}),
 		runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, writer http.ResponseWriter, request *http.Request, err error) {
