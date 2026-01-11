@@ -2,13 +2,16 @@
 
 {{ define "BodySection" }}
 <main class="min-h-[60vh] flex items-center justify-center px-4 relative overflow-hidden">
-    <!-- Hex Grid Background -->
+    <!-- Hex Grid Background (honeycomb pattern with offset rows) -->
     <div class="absolute inset-0 opacity-10 dark:opacity-5 pointer-events-none">
         <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <pattern id="hexPattern" width="56" height="100" patternUnits="userSpaceOnUse">
-                    <path d="M28 2 L50 15 L50 41 L28 54 L6 41 L6 15 Z" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-500"/>
-                    <path d="M28 48 L50 61 L50 87 L28 100 L6 87 L6 61 Z" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-500"/>
+                <pattern id="hexPattern" width="88" height="78" patternUnits="userSpaceOnUse">
+                    <!-- Row 1: two hexes -->
+                    <path d="M22 0 L44 13 L44 39 L22 52 L0 39 L0 13 Z" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-500"/>
+                    <path d="M66 0 L88 13 L88 39 L66 52 L44 39 L44 13 Z" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-500"/>
+                    <!-- Row 2: offset hex (creates honeycomb interlocking) -->
+                    <path d="M44 39 L66 52 L66 78 L44 91 L22 78 L22 52 Z" fill="none" stroke="currentColor" stroke-width="1" class="text-gray-500"/>
                 </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hexPattern)" />
