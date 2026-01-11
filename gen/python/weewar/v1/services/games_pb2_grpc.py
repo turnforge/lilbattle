@@ -70,6 +70,11 @@ class GamesServiceStub(object):
                 request_serializer=weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackRequest.SerializeToString,
                 response_deserializer=weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackResponse.FromString,
                 _registered_method=True)
+        self.JoinGame = channel.unary_unary(
+                '/weewar.v1.GamesService/JoinGame',
+                request_serializer=weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameRequest.SerializeToString,
+                response_deserializer=weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameResponse.FromString,
+                _registered_method=True)
 
 
 class GamesServiceServicer(object):
@@ -156,6 +161,15 @@ class GamesServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def JoinGame(self, request, context):
+        """*
+        Join a game as an open player slot
+        User must be authenticated. The player slot must be "open" to be joinable.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GamesServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -213,6 +227,11 @@ def add_GamesServiceServicer_to_server(servicer, server):
                     servicer.SimulateAttack,
                     request_deserializer=weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackRequest.FromString,
                     response_serializer=weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackResponse.SerializeToString,
+            ),
+            'JoinGame': grpc.unary_unary_rpc_method_handler(
+                    servicer.JoinGame,
+                    request_deserializer=weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameRequest.FromString,
+                    response_serializer=weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -513,6 +532,33 @@ class GamesService(object):
             '/weewar.v1.GamesService/SimulateAttack',
             weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackRequest.SerializeToString,
             weewar_dot_v1_dot_models_dot_games__service__pb2.SimulateAttackResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def JoinGame(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/weewar.v1.GamesService/JoinGame',
+            weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameRequest.SerializeToString,
+            weewar_dot_v1_dot_models_dot_games__service__pb2.JoinGameResponse.FromString,
             options,
             channel_credentials,
             insecure,

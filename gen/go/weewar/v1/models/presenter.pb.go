@@ -27,11 +27,13 @@ const (
 
 // Called when the end turn button was clicked
 type InitializeSingletonRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	GameData      string                 `protobuf:"bytes,2,opt,name=game_data,json=gameData,proto3" json:"game_data,omitempty"`
-	GameState     string                 `protobuf:"bytes,3,opt,name=game_state,json=gameState,proto3" json:"game_state,omitempty"`
-	MoveHistory   string                 `protobuf:"bytes,4,opt,name=move_history,json=moveHistory,proto3" json:"move_history,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	GameId      string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
+	GameData    string                 `protobuf:"bytes,2,opt,name=game_data,json=gameData,proto3" json:"game_data,omitempty"`
+	GameState   string                 `protobuf:"bytes,3,opt,name=game_state,json=gameState,proto3" json:"game_state,omitempty"`
+	MoveHistory string                 `protobuf:"bytes,4,opt,name=move_history,json=moveHistory,proto3" json:"move_history,omitempty"`
+	// The ID of the viewing user (for determining if Join buttons should be shown)
+	ViewerUserId  string `protobuf:"bytes,5,opt,name=viewer_user_id,json=viewerUserId,proto3" json:"viewer_user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -90,6 +92,13 @@ func (x *InitializeSingletonRequest) GetGameState() string {
 func (x *InitializeSingletonRequest) GetMoveHistory() string {
 	if x != nil {
 		return x.MoveHistory
+	}
+	return ""
+}
+
+func (x *InitializeSingletonRequest) GetViewerUserId() string {
+	if x != nil {
+		return x.ViewerUserId
 	}
 	return ""
 }
@@ -883,13 +892,14 @@ var File_weewar_v1_models_presenter_proto protoreflect.FileDescriptor
 
 const file_weewar_v1_models_presenter_proto_rawDesc = "" +
 	"\n" +
-	" weewar/v1/models/presenter.proto\x12\tweewar.v1\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\x94\x01\n" +
+	" weewar/v1/models/presenter.proto\x12\tweewar.v1\x1a google/protobuf/field_mask.proto\x1a\x1dweewar/v1/models/models.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\xba\x01\n" +
 	"\x1aInitializeSingletonRequest\x12\x17\n" +
 	"\agame_id\x18\x01 \x01(\tR\x06gameId\x12\x1b\n" +
 	"\tgame_data\x18\x02 \x01(\tR\bgameData\x12\x1d\n" +
 	"\n" +
 	"game_state\x18\x03 \x01(\tR\tgameState\x12!\n" +
-	"\fmove_history\x18\x04 \x01(\tR\vmoveHistory\"\\\n" +
+	"\fmove_history\x18\x04 \x01(\tR\vmoveHistory\x12$\n" +
+	"\x0eviewer_user_id\x18\x05 \x01(\tR\fviewerUserId\"\\\n" +
 	"\x1bInitializeSingletonResponse\x12=\n" +
 	"\bresponse\x18\x01 \x01(\v2!.weewar.v1.InitializeGameResponseR\bresponse\"\x9e\x01\n" +
 	"\x18TurnOptionClickedRequest\x12\x17\n" +
