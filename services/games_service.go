@@ -37,6 +37,8 @@ type GamesService interface {
 	// Simulates combat between two units to generate damage distributions
 	// This is a stateless utility method that doesn't require game state
 	SimulateAttack(context.Context, *v1.SimulateAttackRequest) (*v1.SimulateAttackResponse, error)
+	// Join a game as an open player slot
+	JoinGame(context.Context, *v1.JoinGameRequest) (*v1.JoinGameResponse, error)
 	GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (*lib.Game, error)
 
 	// SaveMoveGroup saves a move group atomically with the game state.

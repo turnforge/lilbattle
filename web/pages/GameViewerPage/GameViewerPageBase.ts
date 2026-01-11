@@ -357,6 +357,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         const gameElement = document.getElementById('game.data-json')!;
         const gameStateElement = document.getElementById('game-state-data-json')!;
         const historyElement = document.getElementById('game-history-data-json')!;
+        const viewerUserIdElement = document.getElementById('viewerUserIdInput') as HTMLInputElement;
 
         if (!gameElement?.textContent || gameElement.textContent.trim() === 'null') {
             throw new Error('No game data found in page elements');
@@ -368,6 +369,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
             gameData: gameElement!.textContent,
             gameState: gameStateElement?.textContent || '{}',
             moveHistory: historyElement?.textContent || '{"gameId":"","groups":[]}',
+            viewerUserId: viewerUserIdElement?.value || "",
         });
 
         if (!response.response!.success) {
@@ -393,6 +395,40 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         const screenshotBtn = document.getElementById('capture-screenshot-btn');
         if (screenshotBtn) {
             screenshotBtn.addEventListener('click', () => this.handleScreenshotClick());
+        }
+
+        // Set up JoinGame callback on GameStatePanel
+        if (this.gameStatePanel) {
+            this.gameStatePanel.setJoinGameCallback((playerId: number) => {
+                this.handleJoinGame(playerId);
+            });
+        }
+    }
+
+    /**
+     * Handle Join Game button click
+     */
+    protected async handleJoinGame(playerId: number): Promise<void> {
+        if (!this.currentGameId) {
+            this.showToast('Error', 'No game ID available', 'error');
+            return;
+        }
+
+        try {
+            const response = await this.gamesClient.joinGame({
+                gameId: this.currentGameId,
+                playerId: playerId,
+            });
+
+            if (response.response && response.response.game) {
+                this.showToast('Success', `You joined as Player ${playerId}`, 'success');
+                // Reload the page to refresh game state with new player assignment
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('JoinGame error:', error);
+            const errorMsg = error instanceof Error ? error.message : 'Failed to join game';
+            this.showToast('Error', errorMsg, 'error');
         }
     }
 

@@ -302,3 +302,28 @@ message SimulateAttackResponse {
   double attacker_kill_probability = 5;
   double defender_kill_probability = 6;
 }
+
+/**
+ * Request to join a game as a player
+ * User must be authenticated to join a game.
+ * The player slot must be "open" (player_type = "open") to be joinable.
+ */
+message JoinGameRequest {
+  // ID of the game to join
+  string game_id = 1;
+
+  // The player ID (slot) to join as (1-based)
+  // Must be an open slot (player_type = "open")
+  int32 player_id = 2;
+}
+
+/**
+ * Response after joining a game
+ */
+message JoinGameResponse {
+  // The updated game with the user assigned to the player slot
+  Game game = 1;
+
+  // The player ID that was joined
+  int32 player_id = 2;
+}

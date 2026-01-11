@@ -16,6 +16,8 @@ message InitializeSingletonRequest {
   string game_data = 2;
   string game_state = 3;
   string move_history = 4;
+  // The ID of the viewing user (for determining if Join buttons should be shown)
+  string viewer_user_id = 5;
 }
 
 // Response of a turn option click
