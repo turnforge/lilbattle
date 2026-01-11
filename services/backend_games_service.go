@@ -12,6 +12,7 @@ import (
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/lib"
+	"github.com/turnforge/weewar/services/authz"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -178,6 +179,7 @@ func (s *BackendGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameSt
 
 // UpdateGame updates an existing game with transparent caching.
 // It loads current data, merges changes, saves via StorageProvider, and updates cache.
+// Authorization: Only the game creator can update game metadata.
 func (s *BackendGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGameRequest) (*v1.UpdateGameResponse, error) {
 	if req.GameId == "" {
 		return nil, fmt.Errorf("game ID is required")
@@ -193,6 +195,11 @@ func (s *BackendGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGame
 		game, err := s.StorageProvider.LoadGame(ctx, req.GameId)
 		if err != nil {
 			return nil, fmt.Errorf("game not found: %w", err)
+		}
+
+		// Authorization: only the game creator can update game metadata
+		if err := authz.CanModifyGame(ctx, game); err != nil {
+			return nil, err
 		}
 
 		// Merge update fields
@@ -282,12 +289,24 @@ func (s *BackendGamesService) UpdateGame(ctx context.Context, req *v1.UpdateGame
 }
 
 // DeleteGame deletes a game with transparent cache invalidation.
+// Authorization: Only the game creator can delete a game.
 func (s *BackendGamesService) DeleteGame(ctx context.Context, req *v1.DeleteGameRequest) (*v1.DeleteGameResponse, error) {
 	if s.StorageProvider == nil {
 		return nil, fmt.Errorf("storage provider not configured")
 	}
 
-	err := s.StorageProvider.DeleteFromStorage(ctx, req.Id)
+	// Load game to check ownership
+	game, err := s.StorageProvider.LoadGame(ctx, req.Id)
+	if err != nil {
+		return nil, fmt.Errorf("game not found: %w", err)
+	}
+
+	// Authorization: only the game creator can delete
+	if err := authz.CanModifyGame(ctx, game); err != nil {
+		return nil, err
+	}
+
+	err = s.StorageProvider.DeleteFromStorage(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
