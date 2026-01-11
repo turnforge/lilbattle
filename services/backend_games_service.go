@@ -575,7 +575,10 @@ func (s *BackendGamesService) JoinGame(ctx context.Context, req *v1.JoinGameRequ
 	// Load current game
 	game, err := s.StorageProvider.LoadGame(ctx, req.GameId)
 	if err != nil {
-		return nil, fmt.Errorf("game not found: %w", err)
+		return nil, fmt.Errorf("failed to load game: %w", err)
+	}
+	if game == nil {
+		return nil, fmt.Errorf("game not found: %s", req.GameId)
 	}
 
 	if game.Config == nil || len(game.Config.Players) == 0 {

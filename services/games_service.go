@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -11,6 +12,9 @@ import (
 	"github.com/turnforge/weewar/services/authz"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// ErrNotImplemented is returned when an operation is not supported in the current context
+var ErrNotImplemented = errors.New("operation not implemented")
 
 type GamesService interface {
 	// Create a new game
