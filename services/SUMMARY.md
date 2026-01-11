@@ -118,6 +118,24 @@ Units don't automatically reset movement at turn start. Instead, they're "topped
 ### Presenter Architecture
 CLI → FSGamesService.GetGame() → SingletonGamesService (in-memory) → SingletonGameViewPresenterImpl
 
+### Authentication Flow
+
+**gRPC Authentication** (`services/server/grpcserver.go`):
+- Uses oneauth gRPC interceptors for authentication enforcement
+- `PublicMethods []string` field configures methods that don't require authentication
+- Environment controls:
+  - `DISABLE_API_AUTH=true`: Skip all authentication (development mode)
+  - `ENABLE_SWITCH_AUTH=true`: Allow X-Switch-User header for testing
+
+**Public Methods** (no auth required):
+- `WorldsService`: ListWorlds, GetWorld, GetWorlds
+- `GamesService`: ListGames, GetGame, GetGames, SimulateAttack
+- `GameSyncService`: Subscribe (for spectating)
+
+**Private Methods** (auth required):
+- All Create, Update, Delete operations
+- ProcessMoves, GetOptionsAt, Broadcast
+
 ## File Organization
 
 - `services/` - Core service implementations

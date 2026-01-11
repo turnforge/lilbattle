@@ -47,7 +47,7 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, app *goal.A
 	resp, err := client.ListWorlds(context.Background(), &req)
 	if err != nil {
 		log.Println("error getting worlds: ", err)
-		return err, false
+		return HandleGRPCError(err, w, r, app)
 	}
 	p.Worlds = resp.Items
 	p.HasPrevPage = p.CurrentPage > 0

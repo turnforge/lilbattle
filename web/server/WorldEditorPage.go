@@ -282,7 +282,7 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 		})
 		if err != nil {
 			log.Println("Error getting world: ", err)
-			return err, false
+			return HandleGRPCError(err, w, r, app)
 		}
 
 		v.IsOwner = loggedInUserId == resp.World.CreatorId

@@ -33,8 +33,7 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 	resp, err := client.GetGame(context.Background(), req)
 	if err != nil {
 		log.Printf("Error fetching Game %s: %v", p.GameId, err)
-		http.Error(w, "Game not found", http.StatusNotFound)
-		return nil, true
+		return HandleGRPCError(err, w, r, app)
 	}
 
 	if resp.Game != nil {

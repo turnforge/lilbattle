@@ -1,0 +1,45 @@
+{{# include "./BasePage.html" #}}
+
+{{ define "BodySection" }}
+<main class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="text-center">
+        <div class="relative inline-block mb-8">
+            <div class="text-9xl font-bold text-gray-300 dark:text-gray-700" style="animation: float 3s ease-in-out infinite;">404</div>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Lost in the Fog of War</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-2">Your recon unit couldn't locate:</p>
+        <code class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded text-yellow-600 dark:text-yellow-400 text-sm">{{ .Path }}</code>
+
+        <p class="text-gray-500 dark:text-gray-500 mt-6 mb-8">
+            The territory you're looking for has either been captured, never existed, or is shrouded in fog.
+        </p>
+
+        <div class="space-x-4">
+            <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                Return to HQ
+            </a>
+            <a href="/games/" class="inline-block bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-lg transition-colors">
+                View Battles
+            </a>
+        </div>
+
+        <p class="text-gray-400 dark:text-gray-600 text-sm mt-12 italic">
+            "In war, the way is to avoid what is strong and to strike at what is weak." - Sun Tzu
+        </p>
+    </div>
+</main>
+
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+</style>
+{{ end }}
+
+{{ define "PostBodySection" }}{{ end }}
+
+{{ define "NotFoundPage" }}
+{{ template "BasePage" . }}
+{{ end }}

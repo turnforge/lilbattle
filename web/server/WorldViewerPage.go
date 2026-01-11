@@ -34,8 +34,7 @@ func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	resp, err := client.GetWorld(context.Background(), req)
 	if err != nil {
 		log.Printf("Error fetching World %s: %v", p.WorldId, err)
-		http.Error(w, "World not found", http.StatusNotFound)
-		return nil, true
+		return HandleGRPCError(err, w, r, app)
 	}
 
 	if resp.World != nil {

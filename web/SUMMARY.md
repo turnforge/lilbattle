@@ -399,9 +399,27 @@ The web module provides a modern web interface for the WeeWar turn-based strateg
 - Components receive presenter via setPresenter() for dependency injection
 - Simpler debugging with direct method calls instead of pub/sub events
 
+### Recent Achievements (Session 2025-01-10)
+
+#### gRPC Error Handling for Web Pages (Complete)
+- **HandleGRPCError Helper**: Created centralized error handler in `web/server/utils.go`
+  - `codes.Unauthenticated` → Redirects to `/login?callbackURL=<current-url>`
+  - `codes.NotFound` → Renders fun 404 "Lost in the Fog of War" page
+  - `codes.PermissionDenied` → Renders 403 "Enemy Territory" page
+- **Error Page Templates**: Created themed error pages
+  - `web/templates/NotFoundPage.html`: War-themed 404 with navigation
+  - `web/templates/ForbiddenPage.html`: Access denied page with login prompt
+- **Updated Views**: All views calling gRPC services now use HandleGRPCError
+  - WorldListView, WorldViewerPage, WorldEditorPage
+  - GameListView, GameViewerPage, GameDetailPage
+- **API Error Handling**: API requests use grpc-gateway default behavior
+  - `codes.Unauthenticated` → HTTP 401 with JSON error body
+  - `codes.NotFound` → HTTP 404 with JSON error body
+  - `codes.PermissionDenied` → HTTP 403 with JSON error body
+
 ## Status
-**Current Version**: 8.14 (Reference Image Event Migration)
-**Status**: Production-ready - All UI events migrated to presenter pattern
+**Current Version**: 8.15 (gRPC Error Handling)
+**Status**: Production-ready - Web pages properly handle authentication and error states
 **Build Status**: Clean compilation with all TypeScript errors resolved
 **Testing**: Jest (unit) + Playwright (e2e) with command interface and persistent test worlds
 **Architecture**: Flexible AssetProvider system with presenter-driven animation framework, layer-based interaction system, and presenter-based UI state management

@@ -23,6 +23,9 @@ import (
 type Server struct {
 	Address          string
 	RegisterCallback func(server *grpc.Server) error
+	// PublicMethods is a list of gRPC method paths that don't require authentication.
+	// Format: "/package.Service/Method" e.g. "/weewar.v1.WorldsService/ListWorlds"
+	PublicMethods []string
 }
 
 func (s *Server) Start(ctx context.Context, srvErr chan error, srvChan chan bool) error {
@@ -32,6 +35,9 @@ func (s *Server) Start(ctx context.Context, srvErr chan error, srvChan chan bool
 	if os.Getenv("DISABLE_API_AUTH") == "true" {
 		// Optional auth: extract user if present, but don't reject unauthenticated requests
 		authConfig = oagrpc.OptionalAuthConfig()
+	} else if len(s.PublicMethods) > 0 {
+		// Use provided public methods list
+		authConfig = oagrpc.NewPublicMethodsConfig(s.PublicMethods...)
 	} else {
 		// Default: require authentication on all API calls
 		authConfig = oagrpc.DefaultInterceptorConfig()

@@ -118,7 +118,24 @@ func (b *Backend) SetupApp() *utils.App {
 	app := &utils.App{Ctx: context.Background()}
 	log.Println("Grpc, Address: ", grpcAddress)
 	log.Println("gateway, Address: ", gatewayAddress)
-	grpcServer := &server.Server{Address: b.GrpcAddress}
+	grpcServer := &server.Server{
+		Address: b.GrpcAddress,
+		// Public methods that don't require authentication
+		// All other methods require a logged-in user
+		PublicMethods: []string{
+			// Worlds - allow browsing without login
+			"/weewar.v1.WorldsService/ListWorlds",
+			"/weewar.v1.WorldsService/GetWorld",
+			"/weewar.v1.WorldsService/GetWorlds",
+			// Games - allow browsing without login
+			"/weewar.v1.GamesService/ListGames",
+			"/weewar.v1.GamesService/GetGame",
+			"/weewar.v1.GamesService/GetGames",
+			"/weewar.v1.GamesService/SimulateAttack",
+			// GameSync - allow spectating without login
+			"/weewar.v1.GameSyncService/Subscribe",
+		},
+	}
 	clientMgr := services.NewClientMgr(b.GrpcAddress)
 	grpcServer.RegisterCallback = func(server *grpc.Server) error {
 		var gamesService v1s.GamesServiceServer

@@ -35,7 +35,7 @@ func (p *GameListView) Load(r *http.Request, w http.ResponseWriter, app *goal.Ap
 	resp, err := client.ListGames(context.Background(), &req)
 	if err != nil {
 		log.Println("error getting games: ", err)
-		return err, false
+		return HandleGRPCError(err, w, r, app)
 	}
 	log.Println("Found Games: ", resp.Items)
 	p.Games = resp.Items
