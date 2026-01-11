@@ -112,6 +112,9 @@ func (a *WeewarApp) Handler() http.Handler {
 	// Rate limiting middleware (from goapplib)
 	rateLimiter := goal.NewRateLimitMiddleware(goal.DefaultRateLimitConfig())
 
+	// Security headers middleware
+	securityHeaders := NewSecurityHeadersMiddleware()
+
 	// Auth routes (with stricter rate limiting)
 	r.Handle("/auth/", rateLimiter.WrapAuth(http.StripPrefix("/auth", a.Auth.Handler())))
 
@@ -126,7 +129,9 @@ func (a *WeewarApp) Handler() http.Handler {
 	}))
 
 	sessionHandler := a.Session.LoadAndSave(r)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	// Wrap with security headers (outermost middleware)
+	return securityHeaders.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionHandler.ServeHTTP(w, r)
-	})
+	}))
 }

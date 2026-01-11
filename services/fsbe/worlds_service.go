@@ -15,6 +15,7 @@ import (
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	"github.com/turnforge/weewar/lib"
 	"github.com/turnforge/weewar/services"
+	"github.com/turnforge/weewar/services/authz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
@@ -145,6 +146,7 @@ func (s *FSWorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest)
 }
 
 // UpdateWorld updates an existing world
+// Authorization: Only the world creator can update a world.
 func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequest) (resp *v1.UpdateWorldResponse, err error) {
 	if req.World == nil || req.World.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
@@ -154,6 +156,11 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	world, err := storage.LoadFSArtifact[*v1.World](s.storage, req.World.Id, "metadata")
 	if err != nil {
 		return nil, fmt.Errorf("world not found: %w", err)
+	}
+
+	// Authorization: only the world creator can update
+	if err := authz.CanModifyWorld(ctx, world); err != nil {
+		return nil, err
 	}
 
 	// Update metadata fields
@@ -252,10 +259,23 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 }
 
 // DeleteWorld deletes a world
+// Authorization: Only the world creator can delete a world.
 func (s *FSWorldsService) DeleteWorld(ctx context.Context, req *v1.DeleteWorldRequest) (resp *v1.DeleteWorldResponse, err error) {
 	if req.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+
+	// Load world to check ownership
+	world, err := storage.LoadFSArtifact[*v1.World](s.storage, req.Id, "metadata")
+	if err != nil {
+		return nil, fmt.Errorf("world not found: %w", err)
+	}
+
+	// Authorization: only the world creator can delete
+	if err := authz.CanModifyWorld(ctx, world); err != nil {
+		return nil, err
+	}
+
 	err = s.storage.DeleteEntity(req.Id)
 
 	resp = &v1.DeleteWorldResponse{}

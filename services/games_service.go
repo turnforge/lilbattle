@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
 	lib "github.com/turnforge/weewar/lib"
+	"github.com/turnforge/weewar/services/authz"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -61,6 +62,7 @@ func (s *BaseGamesService) ListMoves(ctx context.Context, req *v1.ListMovesReque
 
 // ProcessMoves processes moves for an existing game.
 // It validates and applies moves, then delegates persistence to SaveMoveGroup.
+// Authorization: User must be a player in the game AND it must be their turn.
 func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMovesRequest) (resp *v1.ProcessMovesResponse, err error) {
 	if len(req.Moves) == 0 {
 		return nil, fmt.Errorf("at least one move is required")
@@ -72,6 +74,11 @@ func (s *BaseGamesService) ProcessMoves(ctx context.Context, req *v1.ProcessMove
 	}
 	if gameresp.State == nil {
 		return nil, fmt.Errorf("game state cannot be nil")
+	}
+
+	// Authorization: user must be a player in the game AND it must be their turn
+	if err := authz.CanSubmitMoves(ctx, gameresp.Game, gameresp.State.CurrentPlayer); err != nil {
+		return nil, err
 	}
 
 	// Get the runtime game corresponding to this game Id
