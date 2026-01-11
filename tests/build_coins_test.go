@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -205,7 +204,7 @@ func createTestGameForBuildCoins(initialCoins int32, tileType int32) *lib.Game {
 // TestBuildUnit_CoinsPersistence tests that coin deduction is persisted after ProcessMoves
 // This is an integration test that uses the full GamesService flow
 func TestBuildUnit_CoinsPersistence(t *testing.T) {
-	ctx := context.Background()
+	ctx := AuthenticatedContext()
 
 	// Create a temp directory for the test
 	tempDir, err := os.MkdirTemp("", "weewar-test-*")

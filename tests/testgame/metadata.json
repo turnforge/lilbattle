@@ -15,6 +15,7 @@
       {
         "player_id":  1,
         "player_type":  "human",
+        "user_id": "test-user-1",
         "color":  "",
         "team_id":  0,
         "name":  "Player 1",
@@ -24,6 +25,7 @@
       {
         "player_id":  2,
         "player_type":  "ai",
+        "user_id": "test-user-2",
         "color":  "",
         "team_id":  0,
         "name":  "Player 2",

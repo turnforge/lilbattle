@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	v1 "github.com/turnforge/weewar/gen/go/weewar/v1/models"
@@ -34,9 +33,16 @@ func setupTest(t *testing.T, nq, nr int, units []*v1.Unit) *singleton.SingletonG
 	}
 
 	// Create game and state objects for NewGame
+	// Include player config with user_id for authorization
 	game := &v1.Game{
 		Id:   "test-game",
 		Name: "Test Game",
+		Config: &v1.GameConfiguration{
+			Players: []*v1.GamePlayer{
+				{PlayerId: 1, UserId: TestUserID},
+				{PlayerId: 2, UserId: "player-2"},
+			},
+		},
 	}
 
 	gameState := &v1.GameState{
@@ -138,8 +144,8 @@ func TestProcessMovesNoDuplication(t *testing.T) {
 		Moves:  []*v1.GameMove{move},
 	}
 
-	// Call the REAL ProcessMoves method
-	resp, err := svc.ProcessMoves(context.Background(), req)
+	// Call the REAL ProcessMoves method with authenticated context
+	resp, err := svc.ProcessMoves(AuthenticatedContext(), req)
 	if err != nil {
 		t.Fatalf("ProcessMoves failed: %v", err)
 	}
