@@ -515,6 +515,10 @@ func TestApplyUnitDamaged_ProgressionStepPersisted(t *testing.T) {
 		Name: "Test Game",
 		Config: &v1.GameConfiguration{
 			Settings: &v1.GameSettings{},
+			Players: []*v1.GamePlayer{
+				{PlayerId: 1, UserId: TestUserID},
+				{PlayerId: 2, UserId: "player-2"},
+			},
 		},
 	}
 
@@ -565,7 +569,7 @@ func TestApplyUnitDamaged_ProgressionStepPersisted(t *testing.T) {
 	gamesService.SingletonGameMoveHistory = &v1.GameMoveHistory{}
 	gamesService.Self = gamesService
 
-	ctx := context.Background()
+	ctx := AuthenticatedContext()
 
 	// Verify we start at progression step 1
 	unit := gameState.WorldData.UnitsMap["1,0"]
