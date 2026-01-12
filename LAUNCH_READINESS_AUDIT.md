@@ -101,10 +101,10 @@ WeeWar has a solid technical foundation with production-ready core gameplay, mul
 | P0 | Add authorization checks on game/world operations | ✅ DONE (#72) |
 | P0 | Remove hardcoded test credentials | ✅ DONE (#70) |
 | P0 | Implement rate limiting middleware | ✅ DONE (#70) |
-| P0 | Add R2 FileStore authorization (if using R2 backend) | 🔴 BLOCKING for R2 |
+| P0 | Add R2 FileStore authorization (if using R2 backend) | ✅ DONE |
 | P1 | Add security headers middleware | ✅ DONE (#72) |
-| P1 | Restrict FileStore content types to images only | 🟡 TODO |
-| P1 | Implement file size limits for uploads | 🟡 TODO |
+| P1 | Restrict FileStore content types to images only | ✅ DONE |
+| P1 | Implement file size limits for uploads | ✅ DONE |
 | P1 | Fix insecure gRPC connections | 🟡 TODO |
 | P1 | Add input validation framework | 🟡 TODO |
 | P2 | Add CSRF tokens to all forms | TODO |
@@ -210,7 +210,7 @@ damageEstimate := int32(50) // TODO: Use proper damage calculation
 |----------|------|--------|
 | P0 | Implement automated backup strategy | 🟡 DEFERRED (using cloud storage) |
 | P0 | Document disaster recovery procedures | 🟡 DEFERRED (cloud provider handles) |
-| P0 | Add R2 FileStore authorization checks | 🔴 BLOCKING for R2 backend |
+| P0 | Add R2 FileStore authorization checks | ✅ DONE |
 | P1 | Enable encryption at rest (PostgreSQL, Datastore) | 🟡 TODO |
 | P1 | Implement user profile storage | ✅ DONE (#71) |
 | P1 | Enable R2 object versioning | 🟡 TODO |
@@ -385,11 +385,9 @@ damageEstimate := int32(50) // TODO: Use proper damage calculation
 
 ## Conclusion
 
-WeeWar is **READY for public launch** using local filesystem or PostgreSQL backends.
+WeeWar is **READY for public launch** using all storage backends (local filesystem, PostgreSQL, and Cloudflare R2).
 
-**R2 Backend Note**: If using Cloudflare R2 for file storage, authorization checks MUST be implemented first. See `docs/R2_SECURITY_AUDIT.md` for details.
-
-**Current Status**: 95% complete (local/PG), 85% complete (R2)
+**Current Status**: 95% complete
 
 **Completed Critical Items**:
 1. ✅ API authentication implemented (PR #70)
@@ -401,18 +399,16 @@ WeeWar is **READY for public launch** using local filesystem or PostgreSQL backe
 7. ✅ Authorization checks on game/world operations (PR #72)
 8. ✅ Security headers middleware (PR #72)
 9. ✅ Authorization unit tests (PR #72)
+10. ✅ R2 FileStore authorization (path-based ownership)
+11. ✅ Content-type restrictions (image/png, image/svg+xml only)
+12. ✅ File size limits (5MB max)
 
 **Optional Post-Launch Improvements**:
 1. 🟡 API documentation for developers
 2. 🟡 FAQ/Help page for users
 3. 🟡 AI integration with web UI
 4. 🟡 Browser-based game tutorial
-
-**Required Before R2 Backend Use**:
-1. 🔴 FileStore authorization (path-based ownership)
-2. 🔴 Content-type restrictions (image/png, image/svg+xml only)
-3. 🔴 File size limits (5MB max)
-4. 🟡 R2 object versioning
-5. 🟡 R2 access logging
+5. 🟡 R2 object versioning
+6. 🟡 R2 access logging
 
 The core game mechanics are production-ready and well-tested. All critical security, legal, and infrastructure requirements have been met. The remaining items (tutorials, AI integration, API docs) can be addressed incrementally post-launch based on user feedback.
