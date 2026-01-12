@@ -2067,6 +2067,11 @@ input:where([type='file']):focus {
   margin-bottom: 1.5rem;
 }
 
+.my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
 .-mb-px {
   margin-bottom: -1px;
 }
@@ -4039,6 +4044,150 @@ html, body {
 
 /* === Add Fullscreen Styles INSIDE @layer components === */
 
+/* ==========================================================================
+   Ad Container Styles
+   ========================================================================== */
+
+/* Base ad container */
+
+.ad-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Size variants - Desktop */
+
+.ad-leaderboard {
+  width: 728px;
+  max-width: 100%;
+  height: 90px;
+}
+
+.ad-mrec {
+  width: 300px;
+  height: 250px;
+}
+
+.ad-skyscraper {
+  width: 160px;
+  height: 600px;
+}
+
+/* Size variants - Mobile */
+
+.ad-mobile-banner {
+  width: 320px;
+  max-width: 100%;
+  height: 50px;
+}
+
+/* Placeholder styling (dev mode - when no ad network ID configured) */
+
+.ad-placeholder {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+  --tw-gradient-from: #f3f4f6 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(243 244 246 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-to: #e5e7eb var(--tw-gradient-to-position);
+}
+
+.ad-placeholder:is(.dark *) {
+  --tw-gradient-from: #1f2937 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(31 41 55 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-to: #111827 var(--tw-gradient-to-position);
+}
+
+.ad-placeholder {
+  border-width: 1px;
+  border-style: dashed;
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+}
+
+.ad-placeholder:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
+}
+
+.ad-placeholder {
+  border-radius: 0.25rem;
+}
+
+.ad-placeholder-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  --tw-text-opacity: 1;
+  color: rgb(156 163 175 / var(--tw-text-opacity, 1));
+}
+
+.ad-placeholder-text:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+}
+
+/* Wrapper styling for footer ads */
+
+.ad-footer-wrapper {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.ad-footer-wrapper:is(.dark *) {
+  background-color: rgb(17 24 39 / 0.5);
+}
+
+.ad-footer-wrapper {
+  border-top-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
+}
+
+.ad-footer-wrapper:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(55 65 81 / var(--tw-border-opacity, 1));
+}
+
+/* Responsive: Hide desktop ads on mobile, show mobile ads */
+
+@media (max-width: 767px) {
+  .ad-leaderboard {
+    display: none;
+  }
+
+  .ad-skyscraper {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .ad-mobile-banner {
+    display: none;
+  }
+}
+
+/* Listing page native ads - match card styling */
+
+.ad-listing-card {
+  overflow: hidden;
+  border-radius: 0.5rem;
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.ad-listing-card:is(.dark *) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:border-blue-300:hover {
   --tw-border-opacity: 1;
   border-color: rgb(147 197 253 / var(--tw-border-opacity, 1));
@@ -4984,6 +5133,10 @@ html, body {
 
   .md\:mr-auto {
     margin-right: auto;
+  }
+
+  .md\:block {
+    display: block;
   }
 
   .md\:flex {
