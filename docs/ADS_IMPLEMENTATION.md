@@ -12,12 +12,12 @@ This document provides the detailed technical implementation plan for Phase 1 ad
 
 ## 1. Feature Flags
 
-### 1.1 New Flags in WeewarApp
+### 1.1 New Flags in LilBattleApp
 
 Add to `web/server/webapp.go`:
 
 ```go
-type WeewarApp struct {
+type LilBattleApp struct {
     // ... existing fields ...
 
     // App config
@@ -36,8 +36,8 @@ type WeewarApp struct {
 ### 1.2 Initialization
 
 ```go
-// In NewWeewarApp()
-weewarApp = &WeewarApp{
+// In NewLilBattleApp()
+lilbattleApp = &LilBattleApp{
     // ... existing ...
 
     // Ads default to enabled, can be disabled per-placement
@@ -337,14 +337,14 @@ func (m *SecurityHeadersMiddleware) buildCSP() string {
 ### Step 1: Add Feature Flags (webapp.go)
 
 ```go
-// Add to WeewarApp struct
+// Add to LilBattleApp struct
 AdsEnabled        bool
 AdsFooterEnabled  bool
 AdsHomeEnabled    bool
 AdsListingEnabled bool
 AdNetworkId       string
 
-// Add to NewWeewarApp initialization
+// Add to NewLilBattleApp initialization
 AdsEnabled:        os.Getenv("WEEWAR_ADS_ENABLED") != "false",
 AdsFooterEnabled:  os.Getenv("WEEWAR_ADS_FOOTER") != "false",
 AdsHomeEnabled:    os.Getenv("WEEWAR_ADS_HOME") != "false",

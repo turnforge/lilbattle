@@ -15,7 +15,7 @@ binlocal:
 	go build -ldflags "$(LDFLAGS)" -o ./bin/lilbattle ./cmd/backend/*.go
 
 deploy: checklinks ui cli wasm 
-	gcloud app deploy --project lilbattle --verbosity=info
+	gcloud app deploy --project weewar --verbosity=info
 
 servepg:
 	go run main.go -games_service_be=pg-worlds_service_be=pg
