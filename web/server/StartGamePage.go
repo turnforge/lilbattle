@@ -29,6 +29,18 @@ type StartGamePage struct {
 }
 
 func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*WeewarApp]) (err error, finished bool) {
+	// Require login to start a game
+	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	if loggedInUserId == "" {
+		qs := r.URL.RawQuery
+		if len(qs) > 0 {
+			qs = "?" + qs
+		}
+		http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/games/start%s", qs)), http.StatusSeeOther)
+		return nil, true
+	}
+
 	// Get worldId from query parameter (optional)
 	p.WorldId = r.URL.Query().Get("worldId")
 
