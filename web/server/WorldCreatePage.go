@@ -27,6 +27,16 @@ func (p *WorldCreatePage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	ctx := app.Context
 	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 
+	// Require login to access the create world page
+	if loggedInUserId == "" {
+		qs := r.URL.RawQuery
+		if len(qs) > 0 {
+			qs = "?" + qs
+		}
+		http.Redirect(w, r, fmt.Sprintf("/login?callbackURL=%s", fmt.Sprintf("/worlds/create%s", qs)), http.StatusSeeOther)
+		return nil, true
+	}
+
 	if r.Method == http.MethodPost {
 		// Handle form submission
 		if err := r.ParseForm(); err != nil {

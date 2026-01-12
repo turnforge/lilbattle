@@ -46,7 +46,7 @@ func (m *SecurityHeadersMiddleware) Wrap(next http.Handler) http.Handler {
 			// Development: Allow inline scripts/styles for hot reloading
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self' 'unsafe-inline' 'unsafe-eval'; "+
+					"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; "+
 					"style-src 'self' 'unsafe-inline'; "+
 					"img-src 'self' data: blob:; "+
 					"font-src 'self'; "+
@@ -56,7 +56,7 @@ func (m *SecurityHeadersMiddleware) Wrap(next http.Handler) http.Handler {
 			// Production: Stricter CSP
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self'; "+
+					"script-src 'self' https://unpkg.com; "+
 					"style-src 'self' 'unsafe-inline'; "+ // inline styles needed for Tailwind
 					"img-src 'self' data: blob:; "+
 					"font-src 'self'; "+
