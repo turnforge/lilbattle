@@ -35,7 +35,7 @@
     "url": "https://github.com/turnforge/lilbattle/issues"
   },
   "dependencies": {
-    "@panyam/tsappkit": "link:~/newstack/goapplib/tsappkit",
+    "@panyam/tsappkit": "*",
     "@bufbuild/protobuf": "^2.6.2",
     "@excalidraw/excalidraw": "^0.17.6",
     "@panyam/tsutils": "*",

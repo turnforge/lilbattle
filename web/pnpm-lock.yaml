@@ -15,14 +15,14 @@ importers:
         specifier: ^0.17.6
         version: 0.17.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@panyam/tsappkit':
-        specifier: link:~/newstack/goapplib/tsappkit
-        version: link:../../../../newstack/goapplib/tsappkit
+        specifier: '*'
+        version: 0.0.5
       '@panyam/tsutils':
         specifier: '*'
         version: 1.0.0
       '@protoc-gen-go-wasmjs/runtime':
         specifier: link:~/newstack/protoc-gen-go-wasmjs/runtime
-        version: link:../../../../newstack/protoc-gen-go-wasmjs/runtime
+        version: link:../../../newstack/protoc-gen-go-wasmjs/runtime
       '@toast-ui/editor':
         specifier: ^3.2.2
         version: 3.2.2
@@ -701,6 +701,14 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@panyam/tsappkit@0.0.5':
+    resolution: {integrity: sha512-bKBRgbxzE5ifnrpevcXcMsWkmMlQslvpeIDQ+aCB3zzu4DAjP0gYd8bs+u/DmHhiHKYVO7Ez22Rbtbchs7WiEw==}
+    peerDependencies:
+      ace-builds: ^1.0.0
+    peerDependenciesMeta:
+      ace-builds:
+        optional: true
 
   '@panyam/tsutils@1.0.0':
     resolution: {integrity: sha512-Be5+95He4toostuwjv43Qh2+YAMaPhCXq4ANGqgf15IWtBOquxjPHaRi3Xw2b8x5RV5DU4LDFYVFjNa7TlcPbQ==}
@@ -6015,6 +6023,8 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@panyam/tsappkit@0.0.5': {}
 
   '@panyam/tsutils@1.0.0': {}
 
