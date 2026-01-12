@@ -298,6 +298,18 @@ func shouldShowAd(user *User) bool {
 
 ## Technical Implementation
 
+**Detailed Implementation Plan**: See [docs/ADS_IMPLEMENTATION.md](./docs/ADS_IMPLEMENTATION.md)
+
+### Feature Flags
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WEEWAR_ADS_ENABLED` | `true` | Master switch for all ads |
+| `WEEWAR_ADS_FOOTER` | `true` | Footer banner ads |
+| `WEEWAR_ADS_HOME` | `true` | Homepage mid-section ads |
+| `WEEWAR_ADS_LISTING` | `true` | Game/World listing page ads |
+| `WEEWAR_AD_NETWORK_ID` | (empty) | Google AdSense publisher ID (ca-pub-XXXXX) |
+
 ### Ad Container Component
 
 ```typescript
