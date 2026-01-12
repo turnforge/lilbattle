@@ -29,10 +29,12 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, *
 
 	// OAuth providers - explicitly trim whitespace from callback URLs to prevent
 	// redirect_uri_mismatch errors caused by trailing spaces in env vars
+	googleCallbackURL := strings.TrimSpace(os.Getenv("OAUTH2_GOOGLE_CALLBACK_URL"))
+	log.Printf("Google OAuth callback URL: %q (len=%d)", googleCallbackURL, len(googleCallbackURL))
 	oneauth.AddAuth("/google", oa2.NewGoogleOAuth2(
 		strings.TrimSpace(os.Getenv("OAUTH2_GOOGLE_CLIENT_ID")),
 		strings.TrimSpace(os.Getenv("OAUTH2_GOOGLE_CLIENT_SECRET")),
-		strings.TrimSpace(os.Getenv("OAUTH2_GOOGLE_CALLBACK_URL")),
+		googleCallbackURL,
 		oneauth.SaveUserAndRedirect,
 	).Handler())
 	oneauth.AddAuth("/github", oa2.NewGithubOAuth2(
