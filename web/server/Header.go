@@ -41,6 +41,7 @@ type Header struct {
 	IsLoggedIn          bool
 	LoggedInUserId      string
 	Username            string
+	DisplayName         string // Shown in header: Nickname -> Name -> UserID
 }
 
 func (h *Header) SetupDefaults() {
@@ -79,27 +80,42 @@ func (v *Header) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*Wee
 	v.LoggedInUserId = ctx.AuthMiddleware.GetLoggedInUserId(r)
 	v.IsLoggedIn = v.LoggedInUserId != ""
 
-	// Load username if logged in
+	// Load user profile if logged in
 	if v.IsLoggedIn && ctx.AuthService != nil {
 		user, userErr := ctx.AuthService.GetUserById(v.LoggedInUserId)
 		if userErr != nil {
 			log.Printf("Header: Error loading user %s: %v", v.LoggedInUserId, userErr)
 		} else if user != nil {
 			profile := user.Profile()
-			log.Printf("Header: User profile for %s: %+v", v.LoggedInUserId, profile)
 			if username, ok := profile["username"].(string); ok {
 				v.Username = username
-				log.Printf("Header: Set username to: %s", v.Username)
+			}
+
+			// Set display name with fallback: Nickname -> Name -> UserID
+			if nickname, ok := profile["nickname"].(string); ok && nickname != "" {
+				v.DisplayName = nickname
+			} else if name, ok := profile["name"].(string); ok && name != "" {
+				v.DisplayName = name
 			} else {
-				log.Printf("Header: No username in profile or wrong type")
+				v.DisplayName = v.LoggedInUserId
 			}
 
 			// Check if user needs to set nickname (redirect to profile page)
-			// Exclude profile page and auth/logout routes to avoid redirect loops
+			// Exclude profile page, login, and auth routes to avoid redirect loops
 			path := r.URL.Path
-			if path != "/profile" && path != "/logout" && !hasPrefix(path, "/auth/") {
-				if _, hasNickname := profile["nickname"].(string); !hasNickname {
-					log.Printf("Header: User %s has no nickname, redirecting to profile", v.LoggedInUserId)
+			// Handle trailing slashes
+			if len(path) > 1 && path[len(path)-1] == '/' {
+				path = path[:len(path)-1]
+			}
+			skipNicknameCheck := path == "/profile" ||
+				path == "/logout" ||
+				path == "/login" ||
+				hasPrefix(path, "/auth/") ||
+				hasPrefix(path, "/static/") ||
+				hasPrefix(path, "/api/")
+			if !skipNicknameCheck {
+				nickname, hasNickname := profile["nickname"].(string)
+				if !hasNickname || nickname == "" {
 					http.Redirect(w, r, "/profile?nickname_required=true", http.StatusFound)
 					return nil, true
 				}
