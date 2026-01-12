@@ -99,34 +99,8 @@ func (v *Header) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*Wee
 			} else {
 				v.DisplayName = v.LoggedInUserId
 			}
-
-			// Check if user needs to set nickname (redirect to profile page)
-			// Exclude profile page, login, and auth routes to avoid redirect loops
-			path := r.URL.Path
-			// Handle trailing slashes
-			if len(path) > 1 && path[len(path)-1] == '/' {
-				path = path[:len(path)-1]
-			}
-			skipNicknameCheck := path == "/profile" ||
-				path == "/logout" ||
-				path == "/login" ||
-				hasPrefix(path, "/auth/") ||
-				hasPrefix(path, "/static/") ||
-				hasPrefix(path, "/api/")
-			if !skipNicknameCheck {
-				nickname, hasNickname := profile["nickname"].(string)
-				if !hasNickname || nickname == "" {
-					http.Redirect(w, r, "/profile?nickname_required=true", http.StatusFound)
-					return nil, true
-				}
-			}
 		}
 	}
 
 	return
-}
-
-// hasPrefix checks if path starts with prefix (helper to avoid importing strings)
-func hasPrefix(path, prefix string) bool {
-	return len(path) >= len(prefix) && path[:len(prefix)] == prefix
 }

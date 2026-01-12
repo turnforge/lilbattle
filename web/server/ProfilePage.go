@@ -20,7 +20,6 @@ type ProfilePage struct {
 
 	// Nickname fields (Nickname is in SampleProfilePage base)
 	NicknameNeeded    bool   // True if user needs to set their nickname
-	NicknameRequired  bool   // True if user was redirected here to set nickname
 	SuggestedNickname string // Random suggestion for nickname
 }
 
@@ -61,10 +60,8 @@ func (p *ProfilePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App
 			p.Nickname = nickname
 		}
 
-		// Check if nickname needs to be set
+		// Check if nickname needs to be set (for highlighting)
 		p.NicknameNeeded = p.Nickname == ""
-		// Check if user was redirected here because nickname is required
-		p.NicknameRequired = r.URL.Query().Get("nickname_required") == "true"
 		// Always provide a suggested nickname for the placeholder
 		p.SuggestedNickname = GenerateRandomNickname()
 
