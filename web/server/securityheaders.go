@@ -6,15 +6,17 @@ import (
 )
 
 // Google AdSense CSP domains (shared between dev and prod)
+// Google Ads ecosystem uses many domains - using wildcards to be comprehensive
 const (
-	// Scripts: ad serving, tag management, ad service, traffic quality
-	cspScriptSrc = "https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google"
-	// Images: ad images, Google services, traffic quality
-	cspImgSrc = "https://pagead2.googlesyndication.com https://www.google.com https://*.googleusercontent.com https://*.adtrafficquality.google"
-	// Connections: ad syndication, traffic quality
-	cspConnectSrc = "https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://*.google.com"
-	// Frames: ad delivery iframes, traffic quality
-	cspFrameSrc = "https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://*.adtrafficquality.google"
+	cspGoogleDomains = "https://*.google.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.gstatic.com https://*.googleapis.com https://*.googletagmanager.com https://*.google-analytics.com https://*.2mdn.net https://*.ggpht.com"
+	// Scripts: app dependencies + Google ads
+	cspScriptSrc = "https://unpkg.com " + cspGoogleDomains
+	// Images: Google ads and services
+	cspImgSrc = cspGoogleDomains + " https://*.googleusercontent.com"
+	// Connections: Google ads and services
+	cspConnectSrc = cspGoogleDomains
+	// Frames: ad delivery iframes
+	cspFrameSrc = cspGoogleDomains
 )
 
 // SecurityHeadersMiddleware adds security headers to all responses.
