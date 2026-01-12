@@ -93,8 +93,24 @@ func (v *Header) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*Wee
 			} else {
 				log.Printf("Header: No username in profile or wrong type")
 			}
+
+			// Check if user needs to set nickname (redirect to profile page)
+			// Exclude profile page and auth/logout routes to avoid redirect loops
+			path := r.URL.Path
+			if path != "/profile" && path != "/logout" && !hasPrefix(path, "/auth/") {
+				if _, hasNickname := profile["nickname"].(string); !hasNickname {
+					log.Printf("Header: User %s has no nickname, redirecting to profile", v.LoggedInUserId)
+					http.Redirect(w, r, "/profile?nickname_required=true", http.StatusFound)
+					return nil, true
+				}
+			}
 		}
 	}
 
 	return
+}
+
+// hasPrefix checks if path starts with prefix (helper to avoid importing strings)
+func hasPrefix(path, prefix string) bool {
+	return len(path) >= len(prefix) && path[:len(prefix)] == prefix
 }
