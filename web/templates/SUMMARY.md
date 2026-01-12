@@ -44,7 +44,7 @@ This folder contains all the Go HTML template files (`*.html`) used for server-s
 The template system uses a custom `templar` engine which extends Go's standard `html/template` with composition features:
 
 **Key Directives:**
-- **Namespace:** `{{# namespace "weewar" #}}` - Defines template namespace for isolation
+- **Namespace:** `{{# namespace "lilbattle" #}}` - Defines template namespace for isolation
 - **Include:** `{{# include "path/to/template.html" #}}` - Includes another template inline
 - **Extend:** `{{# extend "goapplib/BasePage.html" #}}` - Inherits from a parent template
 - **Block Definitions:** `{{ define "BlockName" }}...{{ end }}` - Define/override blocks
@@ -57,7 +57,7 @@ Templates extend shared components from the `goapplib` package:
 
 **Template Hierarchy Example:**
 ```html
-{{# namespace "weewar" #}}
+{{# namespace "lilbattle" #}}
 {{# include "goapplib/BasePage.html" #}}
 {{# extend "goapplib/BasePage.html" #}}
 
@@ -526,7 +526,7 @@ Template for mobile compact card showing terrain and unit selection info.
 // services/gameview_presenter.go
 s.CompactSummaryCardPanel.SetCurrentData(ctx, tile, unit)
 
-// cmd/weewar-wasm/browser.go
+// cmd/lilbattle-wasm/browser.go
 content := renderPanelTemplate(ctx, "CompactSummaryCard.templar.html", map[string]any{
     "Tile":  tile,
     "Unit":  unit,

@@ -1,4 +1,4 @@
-module github.com/turnforge/weewar
+module github.com/turnforge/lilbattle
 
 go 1.24.6
 
