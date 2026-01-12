@@ -44,6 +44,12 @@ func (n *WeewarApp) EnsureAuthUser(authtype string, provider string, token *oaut
 			return testUser(), nil
 		}
 	}
+
+	// Assign a random nickname if not already set
+	if _, hasNickname := userInfo["nickname"]; !hasNickname {
+		userInfo["nickname"] = GenerateRandomNickname()
+	}
+
 	user, err := n.ClientMgr.GetAuthService().EnsureAuthUser(authtype, provider, token, userInfo)
 	return user.(*svc.User), err
 }

@@ -25,12 +25,10 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, *
 		return session.GetString(r.Context(), key)
 	}
 	oneauth.UserStore = authService
-
 	// OAuth providers
 	oneauth.AddAuth("/google", oa2.NewGoogleOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
 	oneauth.AddAuth("/github", oa2.NewGithubOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
 	oneauth.AddAuth("/twitter", NewTwitterOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
-
 	// Get base URL for verification/reset links
 	baseURL := os.Getenv("WEEWAR_BASE_URL")
 	if baseURL == "" {
