@@ -55,7 +55,7 @@ func (m *SecurityHeadersMiddleware) Wrap(next http.Handler) http.Handler {
 			// Development: Allow inline scripts/styles for hot reloading
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://*.google.com; "+
+					"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google; "+
 					"style-src 'self' 'unsafe-inline'; "+
 					"img-src 'self' data: blob: https://pagead2.googlesyndication.com https://www.google.com https://*.googleusercontent.com; "+
 					"font-src 'self'; "+
@@ -67,7 +67,7 @@ func (m *SecurityHeadersMiddleware) Wrap(next http.Handler) http.Handler {
 			// Note: 'unsafe-inline' required because Google Ads dynamically injects inline scripts
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
-					"script-src 'self' 'unsafe-inline' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://*.google.com; "+
+					"script-src 'self' 'unsafe-inline' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com https://*.google.com https://*.adtrafficquality.google; "+
 					"style-src 'self' 'unsafe-inline'; "+
 					"img-src 'self' data: blob: https://pagead2.googlesyndication.com https://www.google.com https://*.googleusercontent.com; "+
 					"font-src 'self'; "+
