@@ -18,7 +18,7 @@ require (
 	github.com/panyam/goapplib v0.0.9
 	github.com/panyam/gocurrent v0.0.10
 	github.com/panyam/goutils v0.1.13
-	github.com/panyam/oneauth v0.0.18
+	github.com/panyam/oneauth v0.0.19
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/servicekit v0.0.4
@@ -112,6 +112,6 @@ require (
 
 // replace github.com/panyam/servicekit v0.0.4 => ./locallinks/servicekit
 
-// replace github.com/panyam/oneauth v0.0.18 => ./locallinks/oneauth
+// replace github.com/panyam/oneauth v0.0.19 => ./locallinks/oneauth
 
 // replace github.com/panyam/goapplib v0.0.9 => ./locallinks/goapplib
