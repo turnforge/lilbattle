@@ -1,7 +1,8 @@
 # Ads Implementation Plan
 
 **Created**: January 12, 2026
-**Status**: Ready for Implementation
+**Updated**: January 12, 2026
+**Status**: Implemented
 **Reference**: [MONETIZATION.md](../MONETIZATION.md)
 
 ---
@@ -10,14 +11,49 @@
 
 This document provides the detailed technical implementation plan for Phase 1 ads with feature flags.
 
+## Key Learnings from Implementation
+
+### CSP (Content Security Policy)
+Google Ads uses many domains. Use wildcards for comprehensive coverage:
+```go
+cspGoogleDomains = "https://*.google.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.gstatic.com https://*.googleapis.com https://*.googletagmanager.com https://*.google-analytics.com https://*.2mdn.net https://*.ggpht.com"
+```
+
+### ads.txt Required
+AdSense requires an `ads.txt` file at the site root for ad inventory authorization:
+```
+google.com, pub-XXXXXXXX, DIRECT, f08c47fec0942fa0
+```
+The meta tag for site verification is separate - you need both.
+
+### Ad Container Sizing
+- **Don't use `data-ad-format="auto"`** - it ignores your container's dimensions and can create huge ad blocks
+- The `<ins class="adsbygoogle">` element needs explicit dimensions or CSS to inherit from parent:
+  ```css
+  .ad-container .adsbygoogle {
+    width: 100%;
+    height: 100%;
+  }
+  ```
+
+### Single Responsive Ad
+- Don't render separate mobile/desktop ad slots with CSS hiding (causes "availableWidth=0" errors)
+- Use one ad slot per location - Google's responsive format handles sizing
+- Hidden elements (via `display:none`) cause `adsbygoogle.push()` to fail
+
+### Slot IDs
+- `data-ad-slot` must be a **numeric ID from AdSense**, not a text string
+- Create ad units in AdSense dashboard to get proper slot IDs
+- Without a valid slot ID, use `AdSlotId` from context (if configured)
+
 ## 1. Feature Flags
 
-### 1.1 New Flags in WeewarApp
+### 1.1 New Flags in LilBattleApp
 
 Add to `web/server/webapp.go`:
 
 ```go
-type WeewarApp struct {
+type LilBattleApp struct {
     // ... existing fields ...
 
     // App config
@@ -25,10 +61,10 @@ type WeewarApp struct {
     HideWorlds bool
 
     // Ad config (NEW)
-    AdsEnabled        bool   // Master switch: WEEWAR_ADS_ENABLED (default: true)
-    AdsFooterEnabled  bool   // Footer banner: WEEWAR_ADS_FOOTER (default: true)
-    AdsHomeEnabled    bool   // Homepage mid-section: WEEWAR_ADS_HOME (default: true)
-    AdsListingEnabled bool   // Listing pages: WEEWAR_ADS_LISTING (default: true)
+    AdsEnabled        bool   // Master switch: LILBATTLE_ADS_ENABLED (default: true)
+    AdsFooterEnabled  bool   // Footer banner: LILBATTLE_ADS_FOOTER (default: true)
+    AdsHomeEnabled    bool   // Homepage mid-section: LILBATTLE_ADS_HOME (default: true)
+    AdsListingEnabled bool   // Listing pages: LILBATTLE_ADS_LISTING (default: true)
     AdNetworkId       string // Google AdSense publisher ID
 }
 ```
@@ -36,16 +72,16 @@ type WeewarApp struct {
 ### 1.2 Initialization
 
 ```go
-// In NewWeewarApp()
-weewarApp = &WeewarApp{
+// In NewLilBattleApp()
+lilbattleApp = &LilBattleApp{
     // ... existing ...
 
     // Ads default to enabled, can be disabled per-placement
-    AdsEnabled:        os.Getenv("WEEWAR_ADS_ENABLED") != "false",
-    AdsFooterEnabled:  os.Getenv("WEEWAR_ADS_FOOTER") != "false",
-    AdsHomeEnabled:    os.Getenv("WEEWAR_ADS_HOME") != "false",
-    AdsListingEnabled: os.Getenv("WEEWAR_ADS_LISTING") != "false",
-    AdNetworkId:       os.Getenv("WEEWAR_AD_NETWORK_ID"),
+    AdsEnabled:        os.Getenv("LILBATTLE_ADS_ENABLED") != "false",
+    AdsFooterEnabled:  os.Getenv("LILBATTLE_ADS_FOOTER") != "false",
+    AdsHomeEnabled:    os.Getenv("LILBATTLE_ADS_HOME") != "false",
+    AdsListingEnabled: os.Getenv("LILBATTLE_ADS_LISTING") != "false",
+    AdNetworkId:       os.Getenv("LILBATTLE_AD_NETWORK_ID"),
 }
 ```
 
@@ -53,11 +89,11 @@ weewarApp = &WeewarApp{
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WEEWAR_ADS_ENABLED` | `true` | Master switch for all ads |
-| `WEEWAR_ADS_FOOTER` | `true` | Footer banner ads |
-| `WEEWAR_ADS_HOME` | `true` | Homepage mid-section ads |
-| `WEEWAR_ADS_LISTING` | `true` | Game/World listing page ads |
-| `WEEWAR_AD_NETWORK_ID` | (empty) | Google AdSense publisher ID (ca-pub-XXXXX) |
+| `LILBATTLE_ADS_ENABLED` | `true` | Master switch for all ads |
+| `LILBATTLE_ADS_FOOTER` | `true` | Footer banner ads |
+| `LILBATTLE_ADS_HOME` | `true` | Homepage mid-section ads |
+| `LILBATTLE_ADS_LISTING` | `true` | Game/World listing page ads |
+| `LILBATTLE_AD_NETWORK_ID` | (empty) | Google AdSense publisher ID (ca-pub-XXXXX) |
 
 ---
 
@@ -337,19 +373,19 @@ func (m *SecurityHeadersMiddleware) buildCSP() string {
 ### Step 1: Add Feature Flags (webapp.go)
 
 ```go
-// Add to WeewarApp struct
+// Add to LilBattleApp struct
 AdsEnabled        bool
 AdsFooterEnabled  bool
 AdsHomeEnabled    bool
 AdsListingEnabled bool
 AdNetworkId       string
 
-// Add to NewWeewarApp initialization
-AdsEnabled:        os.Getenv("WEEWAR_ADS_ENABLED") != "false",
-AdsFooterEnabled:  os.Getenv("WEEWAR_ADS_FOOTER") != "false",
-AdsHomeEnabled:    os.Getenv("WEEWAR_ADS_HOME") != "false",
-AdsListingEnabled: os.Getenv("WEEWAR_ADS_LISTING") != "false",
-AdNetworkId:       os.Getenv("WEEWAR_AD_NETWORK_ID"),
+// Add to NewLilBattleApp initialization
+AdsEnabled:        os.Getenv("LILBATTLE_ADS_ENABLED") != "false",
+AdsFooterEnabled:  os.Getenv("LILBATTLE_ADS_FOOTER") != "false",
+AdsHomeEnabled:    os.Getenv("LILBATTLE_ADS_HOME") != "false",
+AdsListingEnabled: os.Getenv("LILBATTLE_ADS_LISTING") != "false",
+AdNetworkId:       os.Getenv("LILBATTLE_AD_NETWORK_ID"),
 ```
 
 ### Step 2: Create Ad Component Templates
@@ -374,8 +410,8 @@ AdNetworkId:       os.Getenv("WEEWAR_AD_NETWORK_ID"),
 
 ### Step 6: Test
 
-1. Test with `WEEWAR_ADS_ENABLED=false` (ads hidden)
-2. Test with no `WEEWAR_AD_NETWORK_ID` (placeholder shown)
+1. Test with `LILBATTLE_ADS_ENABLED=false` (ads hidden)
+2. Test with no `LILBATTLE_AD_NETWORK_ID` (placeholder shown)
 3. Test with valid network ID (ads load)
 4. Test dark mode compatibility
 5. Test mobile responsiveness
@@ -386,10 +422,10 @@ AdNetworkId:       os.Getenv("WEEWAR_AD_NETWORK_ID"),
 
 ### Feature Flag Tests
 
-- [ ] `WEEWAR_ADS_ENABLED=false` hides all ads
-- [ ] `WEEWAR_ADS_FOOTER=false` hides only footer ads
-- [ ] `WEEWAR_ADS_HOME=false` hides only homepage ads
-- [ ] `WEEWAR_ADS_LISTING=false` hides only listing page ads
+- [ ] `LILBATTLE_ADS_ENABLED=false` hides all ads
+- [ ] `LILBATTLE_ADS_FOOTER=false` hides only footer ads
+- [ ] `LILBATTLE_ADS_HOME=false` hides only homepage ads
+- [ ] `LILBATTLE_ADS_LISTING=false` hides only listing page ads
 - [ ] Default (no env vars) shows all ads
 
 ### Visual Tests
@@ -466,25 +502,25 @@ Requires:
 
 ```bash
 # Ads disabled in development by default
-WEEWAR_ADS_ENABLED=false
-WEEWAR_AD_NETWORK_ID=
+LILBATTLE_ADS_ENABLED=false
+LILBATTLE_AD_NETWORK_ID=
 ```
 
 ### Staging (.env.staging)
 
 ```bash
 # Ads enabled with test network ID
-WEEWAR_ADS_ENABLED=true
-WEEWAR_AD_NETWORK_ID=ca-pub-0000000000000000  # Test ID
+LILBATTLE_ADS_ENABLED=true
+LILBATTLE_AD_NETWORK_ID=ca-pub-0000000000000000  # Test ID
 ```
 
 ### Production (.env.prod)
 
 ```bash
 # Full ad configuration
-WEEWAR_ADS_ENABLED=true
-WEEWAR_ADS_FOOTER=true
-WEEWAR_ADS_HOME=true
-WEEWAR_ADS_LISTING=true
-WEEWAR_AD_NETWORK_ID=ca-pub-XXXXXXXXXXXXXXXX  # Real AdSense ID
+LILBATTLE_ADS_ENABLED=true
+LILBATTLE_ADS_FOOTER=true
+LILBATTLE_ADS_HOME=true
+LILBATTLE_ADS_LISTING=true
+LILBATTLE_AD_NETWORK_ID=ca-pub-XXXXXXXXXXXXXXXX  # Real AdSense ID
 ```

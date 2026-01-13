@@ -5,6 +5,20 @@ import (
 	"os"
 )
 
+// Google AdSense CSP domains (shared between dev and prod)
+// Google Ads ecosystem uses many domains - using wildcards to be comprehensive
+const (
+	cspGoogleDomains = "https://*.google.com https://*.googlesyndication.com https://*.googleadservices.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.gstatic.com https://*.googleapis.com https://*.googletagmanager.com https://*.google-analytics.com https://*.2mdn.net https://*.ggpht.com"
+	// Scripts: app dependencies + Google ads
+	cspScriptSrc = "https://unpkg.com " + cspGoogleDomains
+	// Images: Google ads and services
+	cspImgSrc = cspGoogleDomains + " https://*.googleusercontent.com"
+	// Connections: Google ads and services
+	cspConnectSrc = cspGoogleDomains
+	// Frames: ad delivery iframes
+	cspFrameSrc = cspGoogleDomains
+)
+
 // SecurityHeadersMiddleware adds security headers to all responses.
 // These headers help protect against common web vulnerabilities.
 type SecurityHeadersMiddleware struct {
@@ -15,7 +29,7 @@ type SecurityHeadersMiddleware struct {
 // NewSecurityHeadersMiddleware creates a new security headers middleware.
 // Set isDevelopment=true to relax some policies for local development.
 func NewSecurityHeadersMiddleware() *SecurityHeadersMiddleware {
-	isDev := os.Getenv("WEEWAR_ENV") == "development" || os.Getenv("WEEWAR_ENV") == ""
+	isDev := os.Getenv("LILBATTLE_ENV") == "development" || os.Getenv("LILBATTLE_ENV") == ""
 	return &SecurityHeadersMiddleware{
 		IsDevelopment: isDev,
 	}
@@ -40,39 +54,21 @@ func (m *SecurityHeadersMiddleware) Wrap(next http.Handler) http.Handler {
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 
 		// Content-Security-Policy: Controls which resources can be loaded
-		// In development, we allow unsafe-inline for easier debugging
-		// In production, we use stricter policies
-		//
-		// Google AdSense domains:
-		// - pagead2.googlesyndication.com: Ad serving scripts
-		// - www.googletagservices.com: Tag management
-		// - adservice.google.com: Ad service
-		// - googleads.g.doubleclick.net: Ad delivery iframes
-		// - tpc.googlesyndication.com: Syndication iframes
-		// - www.google.com: Various Google services
+		// Dev adds 'unsafe-eval' for hot reloading and ws: for plain websockets
+		var scriptExtra, connectExtra string
 		if m.IsDevelopment {
-			// Development: Allow inline scripts/styles for hot reloading
-			w.Header().Set("Content-Security-Policy",
-				"default-src 'self'; "+
-					"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com; "+
-					"style-src 'self' 'unsafe-inline'; "+
-					"img-src 'self' data: blob: https://pagead2.googlesyndication.com https://www.google.com; "+
-					"font-src 'self'; "+
-					"connect-src 'self' ws: wss: https://pagead2.googlesyndication.com; "+
-					"frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com; "+
-					"frame-ancestors 'none'")
-		} else {
-			// Production: Stricter CSP
-			w.Header().Set("Content-Security-Policy",
-				"default-src 'self'; "+
-					"script-src 'self' https://unpkg.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://adservice.google.com; "+
-					"style-src 'self' 'unsafe-inline'; "+ // inline styles needed for Tailwind
-					"img-src 'self' data: blob: https://pagead2.googlesyndication.com https://www.google.com; "+
-					"font-src 'self'; "+
-					"connect-src 'self' wss: https://pagead2.googlesyndication.com; "+
-					"frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com; "+
-					"frame-ancestors 'none'")
+			scriptExtra = "'unsafe-eval' "
+			connectExtra = "ws: "
 		}
+		w.Header().Set("Content-Security-Policy",
+			"default-src 'self'; "+
+				"script-src 'self' 'unsafe-inline' "+scriptExtra+cspScriptSrc+"; "+
+				"style-src 'self' 'unsafe-inline'; "+
+				"img-src 'self' data: blob: "+cspImgSrc+"; "+
+				"font-src 'self'; "+
+				"connect-src 'self' "+connectExtra+"wss: "+cspConnectSrc+"; "+
+				"frame-src "+cspFrameSrc+"; "+
+				"frame-ancestors 'none'")
 
 		// Strict-Transport-Security: Force HTTPS (only in production)
 		if !m.IsDevelopment {

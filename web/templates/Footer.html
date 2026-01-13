@@ -33,5 +33,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer Ad Slot (respects AdsEnabled and AdsFooterEnabled flags) -->
+    {{ if and (Ctx).AdsEnabled (Ctx).AdsFooterEnabled }}
+    <div class="ad-footer-wrapper">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
+            {{ template "AdSlot" (dict "SlotId" "footer-ad" "Size" "leaderboard" "Position" "footer") }}
+        </div>
+    </div>
+    {{ end }}
 </footer>
 {{ end }}

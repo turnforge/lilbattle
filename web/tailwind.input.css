@@ -5,6 +5,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enable dark color scheme for native form elements (select dropdowns, etc.) */
+html.dark {
+  color-scheme: dark;
+}
+
 /* Ensure full height for dockview */
 html, body {
   margin: 0;
@@ -100,6 +105,11 @@ html, body {
   @apply flex justify-center items-center overflow-hidden;
 }
 
+.ad-container .adsbygoogle {
+  width: 100%;
+  height: 100%;
+}
+
 /* Size variants - Desktop */
 .ad-leaderboard {
   width: 728px;
@@ -155,22 +165,6 @@ body:has(.ad-footer-wrapper) {
 @media (max-width: 767px) {
   body:has(.ad-footer-wrapper) {
     padding-bottom: 70px; /* 50px mobile ad + 20px padding */
-  }
-}
-
-/* Responsive: Hide desktop ads on mobile, show mobile ads */
-@media (max-width: 767px) {
-  .ad-leaderboard {
-    display: none;
-  }
-  .ad-skyscraper {
-    display: none;
-  }
-}
-
-@media (min-width: 768px) {
-  .ad-mobile-banner {
-    display: none;
   }
 }
 
