@@ -423,7 +423,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
                 playerId: playerId,
             });
 
-            if (response.response && response.response.game) {
+            if (response.game) {
                 this.showToast('Success', `You joined as Player ${playerId}`, 'success');
                 // Reload the page to refresh game state with new player assignment
                 window.location.reload();
