@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	"github.com/turnforge/lilbattle/lib"
@@ -38,7 +39,12 @@ func GetGameContext() (*GameContext, error) {
 	if serverURL != "" {
 		// Get auth token from profile
 		token := GetTokenForProfile(getProfileName())
-		svc = connectclient.NewConnectGamesClientWithAuth(serverURL, token)
+		// Connect API is mounted at /api on the server
+		apiURL := serverURL
+		if !strings.HasSuffix(apiURL, "/api") && !strings.HasSuffix(apiURL, "/api/") {
+			apiURL = strings.TrimSuffix(apiURL, "/") + "/api"
+		}
+		svc = connectclient.NewConnectGamesClientWithAuth(apiURL, token)
 		isRemote = true
 		if isVerbose() {
 			profileName := getProfileName()
@@ -48,7 +54,7 @@ func GetGameContext() (*GameContext, error) {
 					profileName, _ = store.GetCurrentProfile()
 				}
 			}
-			fmt.Printf("[VERBOSE] Connecting to server: %s (profile: %s, auth: %v)\n", serverURL, profileName, token != "")
+			fmt.Printf("[VERBOSE] Connecting to server: %s (profile: %s, auth: %v)\n", apiURL, profileName, token != "")
 		}
 	} else {
 		svc = fsbe.NewFSGamesService("", nil)
