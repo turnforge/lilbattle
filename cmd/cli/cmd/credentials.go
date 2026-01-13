@@ -36,7 +36,24 @@ func LoadCredentialStore() (client.CredentialStore, error) {
 }
 
 // GetTokenForServer returns the token for a server, or empty string if not found/expired
+// First checks profiles for a matching host, then falls back to legacy credentials
 func GetTokenForServer(serverURL string) string {
+	// First, check profiles for a matching host
+	profileStore, err := getProfileStore()
+	if err == nil {
+		profiles, _ := profileStore.ListProfiles()
+		for _, name := range profiles {
+			profile, _ := profileStore.LoadProfile(name)
+			if profile != nil && profile.Host == serverURL {
+				creds, _ := profileStore.LoadCredentials(name)
+				if creds != nil && !creds.IsExpired() {
+					return creds.AccessToken
+				}
+			}
+		}
+	}
+
+	// Fall back to legacy credential store
 	store, err := getCredentialStore()
 	if err != nil {
 		return ""

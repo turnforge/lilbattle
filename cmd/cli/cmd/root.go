@@ -10,13 +10,14 @@ import (
 )
 
 var (
-	cfgFile   string
-	gameID    string
-	serverURL string
-	jsonOut   bool
-	verbose   bool
-	dryrun    bool
-	confirm   bool
+	cfgFile     string
+	gameID      string
+	serverURL   string
+	profileName string
+	jsonOut     bool
+	verbose     bool
+	dryrun      bool
+	confirm     bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,6 +38,7 @@ Examples:
 Global Flags:
   --game-id string       Game ID to operate on (or set LILBATTLE_GAME_ID env var)
   --server string        Server URL to connect to (or set LILBATTLE_SERVER env var)
+  --profile string       Profile to use for authentication
   --json                 Output in JSON format
   --verbose              Show detailed debug information
   --dryrun               Preview changes without saving to disk`,
@@ -54,6 +56,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.lilbattle.yaml)")
 	rootCmd.PersistentFlags().StringVar(&gameID, "game-id", "", "game ID to operate on (env: LILBATTLE_GAME_ID)")
 	rootCmd.PersistentFlags().StringVar(&serverURL, "server", "", "server URL to connect to (env: LILBATTLE_SERVER)")
+	rootCmd.PersistentFlags().StringVar(&profileName, "profile", "", "profile to use for authentication")
 	rootCmd.PersistentFlags().BoolVar(&jsonOut, "json", false, "output in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "show detailed debug information")
 	rootCmd.PersistentFlags().BoolVar(&dryrun, "dryrun", false, "preview changes without saving to disk")
@@ -62,6 +65,7 @@ func init() {
 	// Bind flags to viper
 	viper.BindPFlag("game-id", rootCmd.PersistentFlags().Lookup("game-id"))
 	viper.BindPFlag("server", rootCmd.PersistentFlags().Lookup("server"))
+	viper.BindPFlag("profile", rootCmd.PersistentFlags().Lookup("profile"))
 	viper.BindPFlag("json", rootCmd.PersistentFlags().Lookup("json"))
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("dryrun", rootCmd.PersistentFlags().Lookup("dryrun"))
@@ -138,9 +142,31 @@ func shouldConfirm() bool {
 }
 
 // getServerURL returns the server URL if configured, empty string for local mode
+// Precedence: --server flag > LILBATTLE_SERVER env > profile host
 func getServerURL() string {
+	// 1. Check --server flag
 	if rootCmd.PersistentFlags().Changed("server") {
 		return serverURL
 	}
-	return viper.GetString("server")
+
+	// 2. Check LILBATTLE_SERVER env var
+	if envServer := viper.GetString("server"); envServer != "" {
+		return envServer
+	}
+
+	// 3. Check profile (--profile flag or current profile)
+	profile, err := GetActiveProfile(getProfileName())
+	if err == nil && profile != nil {
+		return profile.Host
+	}
+
+	return ""
+}
+
+// getProfileName returns the profile name from flag or empty string
+func getProfileName() string {
+	if rootCmd.PersistentFlags().Changed("profile") {
+		return profileName
+	}
+	return viper.GetString("profile")
 }
