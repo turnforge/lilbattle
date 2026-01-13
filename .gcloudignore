@@ -1,5 +1,4 @@
 # Ignore files for gcloud app deploy
-#!include:.gitignore
 .gcloudignore
 .git
 .github

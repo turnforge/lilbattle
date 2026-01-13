@@ -16,7 +16,9 @@ binlocal:
 
 deploy: checklinks ui cli wasm 
 	rm -Rf locallinks ; mkdir locallinks
+	rm -Rf web/node_modules web/pnpm-lock.yaml
 	gcloud app deploy --project weewar --verbosity=info
+	cd web ; pnpm i
 
 servepg:
 	go run main.go -games_service_be=pg-worlds_service_be=pg
