@@ -9,15 +9,16 @@ import (
 
 // whoamiCmd represents the whoami command
 var whoamiCmd = &cobra.Command{
-	Use:   "whoami [server]",
+	Use:   "whoami [profile]",
 	Short: "Show current authentication status",
-	Long: `Show the currently authenticated user for a server.
+	Long: `Show the current profile and authentication status.
 
-If no server is specified, shows authentication status for all configured servers.
+If no profile is specified, shows the current active profile.
+Use --profile flag or specify a profile name to see status of a specific profile.
 
 Examples:
-  ww whoami http://localhost:8080
-  ww whoami                              # Show all servers`,
+  ww whoami              # Show current profile status
+  ww whoami prod         # Show status of 'prod' profile`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runWhoami,
 }
@@ -27,118 +28,105 @@ func init() {
 }
 
 func runWhoami(cmd *cobra.Command, args []string) error {
-	store, err := LoadCredentialStore()
+	store, err := getProfileStore()
 	if err != nil {
-		return fmt.Errorf("failed to load credentials: %w", err)
+		return fmt.Errorf("failed to initialize profile store: %w", err)
 	}
 
 	formatter := NewOutputFormatter()
 
-	// If no server specified, show all servers
-	if len(args) == 0 {
-		servers, err := store.ListServers()
-		if err != nil {
-			return fmt.Errorf("failed to list servers: %w", err)
-		}
-
-		if len(servers) == 0 {
-			if formatter.JSON {
-				return formatter.PrintJSON(map[string]any{
-					"authenticated": false,
-					"servers":       []any{},
-				})
+	var profileNameArg string
+	if len(args) > 0 {
+		profileNameArg = args[0]
+	} else {
+		// Check --profile flag first
+		profileNameArg = getProfileName()
+		if profileNameArg == "" {
+			// Then check current profile
+			profileNameArg, err = store.GetCurrentProfile()
+			if err != nil {
+				return fmt.Errorf("failed to get current profile: %w", err)
 			}
-			fmt.Println("Not logged in to any servers.")
-			fmt.Println("Use 'ww login <server>' to authenticate.")
-			return nil
 		}
+	}
 
+	if profileNameArg == "" {
 		if formatter.JSON {
-			serverList := make([]map[string]any, 0, len(servers))
-			for _, serverURL := range servers {
-				cred, _ := store.GetCredential(serverURL)
-				if cred != nil {
-					serverList = append(serverList, map[string]any{
-						"server":     serverURL,
-						"user_id":    cred.UserID,
-						"user_email": cred.UserEmail,
-						"expires_at": cred.ExpiresAt,
-						"expired":    cred.IsExpired(),
-					})
-				}
-			}
 			return formatter.PrintJSON(map[string]any{
-				"authenticated": true,
-				"servers":       serverList,
+				"authenticated":   false,
+				"current_profile": "",
+				"message":         "no profile selected",
 			})
 		}
+		fmt.Println("No profile selected.")
+		fmt.Println("\nUse 'ww login <profile> --host <url>' to create a profile.")
+		fmt.Println("Use 'ww select <profile>' to set an active profile.")
 
-		fmt.Println("Authentication status:")
-		for _, serverURL := range servers {
-			cred, _ := store.GetCredential(serverURL)
-			if cred == nil {
-				continue
+		// Show available profiles
+		profiles, _ := store.ListProfiles()
+		if len(profiles) > 0 {
+			fmt.Println("\nAvailable profiles:")
+			for _, name := range profiles {
+				fmt.Printf("  %s\n", name)
 			}
-			status := "valid"
-			if cred.IsExpired() {
-				status = "EXPIRED"
-			} else {
-				remaining := time.Until(cred.ExpiresAt)
-				if remaining < 24*time.Hour {
-					status = fmt.Sprintf("expires in %s", remaining.Round(time.Minute))
-				}
-			}
-			fmt.Printf("  %s\n", serverURL)
-			fmt.Printf("    User: %s (%s)\n", cred.UserEmail, cred.UserID)
-			fmt.Printf("    Status: %s\n", status)
 		}
 		return nil
 	}
 
-	serverURL := args[0]
-
-	// Normalize server URL
-	baseURL, err := extractServerBase(serverURL)
+	profile, err := store.LoadProfile(profileNameArg)
 	if err != nil {
-		return fmt.Errorf("invalid server URL: %w", err)
+		return fmt.Errorf("profile '%s' does not exist", profileNameArg)
 	}
 
-	cred, err := store.GetCredential(baseURL)
-	if err != nil {
-		return fmt.Errorf("failed to get credential: %w", err)
-	}
-
-	if cred == nil {
-		if formatter.JSON {
-			return formatter.PrintJSON(map[string]any{
-				"server":        baseURL,
-				"authenticated": false,
-			})
-		}
-		fmt.Printf("Not logged in to %s\n", baseURL)
-		fmt.Println("Use 'ww login <server>' to authenticate.")
-		return nil
-	}
+	creds, _ := store.LoadCredentials(profileNameArg)
+	currentProfile, _ := store.GetCurrentProfile()
 
 	if formatter.JSON {
-		return formatter.PrintJSON(map[string]any{
-			"server":        baseURL,
-			"authenticated": true,
-			"user_id":       cred.UserID,
-			"user_email":    cred.UserEmail,
-			"expires_at":    cred.ExpiresAt,
-			"expired":       cred.IsExpired(),
-		})
+		result := map[string]any{
+			"profile": profileNameArg,
+			"host":    profile.Host,
+			"email":   profile.Email,
+			"current": profileNameArg == currentProfile,
+		}
+
+		if creds != nil {
+			result["authenticated"] = !creds.IsExpired()
+			result["user_id"] = creds.UserID
+			result["user_email"] = creds.UserEmail
+			result["expires_at"] = creds.ExpiresAt
+		} else {
+			result["authenticated"] = false
+		}
+
+		return formatter.PrintJSON(result)
 	}
 
-	fmt.Printf("Server: %s\n", baseURL)
-	fmt.Printf("User: %s (%s)\n", cred.UserEmail, cred.UserID)
-	if cred.IsExpired() {
-		fmt.Printf("Status: EXPIRED (expired %s)\n", time.Since(cred.ExpiresAt).Round(time.Minute))
-		fmt.Println("Use 'ww login <server>' to re-authenticate.")
+	fmt.Printf("Profile: %s", profileNameArg)
+	if profileNameArg == currentProfile {
+		fmt.Printf(" (current)")
+	}
+	fmt.Println()
+
+	fmt.Printf("  Host: %s\n", profile.Host)
+	if profile.Email != "" {
+		fmt.Printf("  Email: %s\n", profile.Email)
+	}
+
+	if creds != nil {
+		if creds.UserEmail != "" && creds.UserEmail != profile.Email {
+			fmt.Printf("  User: %s\n", creds.UserEmail)
+		}
+
+		if creds.IsExpired() {
+			fmt.Printf("  Status: EXPIRED (expired %s ago)\n", time.Since(creds.ExpiresAt).Round(time.Minute))
+			fmt.Printf("\nUse 'ww login %s' to re-authenticate.\n", profileNameArg)
+		} else {
+			remaining := time.Until(creds.ExpiresAt)
+			fmt.Printf("  Status: Authenticated (expires in %s)\n", remaining.Round(time.Minute))
+		}
 	} else {
-		remaining := time.Until(cred.ExpiresAt)
-		fmt.Printf("Status: Valid (expires in %s)\n", remaining.Round(time.Minute))
+		fmt.Printf("  Status: Not authenticated\n")
+		fmt.Printf("\nUse 'ww login %s' to authenticate.\n", profileNameArg)
 	}
 
 	return nil

@@ -1,23 +1,27 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 // logoutCmd represents the logout command
 var logoutCmd = &cobra.Command{
-	Use:   "logout <server>",
-	Short: "Remove stored credentials for a server",
-	Long: `Remove stored credentials for a LilBattle server.
+	Use:   "logout [profile]",
+	Short: "Remove a profile and its stored credentials",
+	Long: `Remove a profile and all its stored credentials.
 
-If no server is specified, lists all servers with stored credentials.
+If no profile is specified, removes the current active profile.
+This will prompt for confirmation unless --confirm=false is set.
 
 Examples:
-  ww logout http://localhost:8080
-  ww logout https://lilbattle.example.com
-  ww logout                              # List all logged-in servers`,
+  ww logout                        # Remove current profile (prompts)
+  ww logout prod                   # Remove 'prod' profile
+  ww logout --confirm=false        # Remove without prompting`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runLogout,
 }
@@ -27,106 +31,73 @@ func init() {
 }
 
 func runLogout(cmd *cobra.Command, args []string) error {
-	store, err := LoadCredentialStore()
+	store, err := getProfileStore()
 	if err != nil {
-		return fmt.Errorf("failed to load credentials: %w", err)
+		return fmt.Errorf("failed to initialize profile store: %w", err)
 	}
 
 	formatter := NewOutputFormatter()
 
-	// If no server specified, list all servers
-	if len(args) == 0 {
-		servers, err := store.ListServers()
+	var profileNameArg string
+	if len(args) > 0 {
+		profileNameArg = args[0]
+	} else {
+		// Use current profile
+		profileNameArg, err = store.GetCurrentProfile()
 		if err != nil {
-			return fmt.Errorf("failed to list servers: %w", err)
+			return fmt.Errorf("failed to get current profile: %w", err)
 		}
-
-		if len(servers) == 0 {
+		if profileNameArg == "" {
 			if formatter.JSON {
 				return formatter.PrintJSON(map[string]any{
-					"servers": []any{},
+					"error": "no profile selected",
 				})
 			}
-			fmt.Println("No servers configured. Use 'ww login <server>' to authenticate.")
-			return nil
-		}
+			fmt.Println("No profile selected.")
+			fmt.Println("Use 'ww logout <profile>' to specify a profile, or 'ww select <profile>' first.")
+			fmt.Println("\nAvailable profiles:")
 
-		if formatter.JSON {
-			serverList := make([]map[string]any, 0, len(servers))
-			for _, serverURL := range servers {
-				cred, _ := store.GetCredential(serverURL)
-				if cred != nil {
-					serverList = append(serverList, map[string]any{
-						"server":     serverURL,
-						"user_email": cred.UserEmail,
-						"expires_at": cred.ExpiresAt,
-						"expired":    cred.IsExpired(),
-					})
+			profiles, _ := store.ListProfiles()
+			if len(profiles) == 0 {
+				fmt.Println("  (none)")
+			} else {
+				for _, name := range profiles {
+					fmt.Printf("  %s\n", name)
 				}
 			}
-			return formatter.PrintJSON(map[string]any{
-				"servers": serverList,
-			})
+			return nil
 		}
-
-		fmt.Println("Logged in servers:")
-		for _, serverURL := range servers {
-			cred, _ := store.GetCredential(serverURL)
-			if cred == nil {
-				continue
-			}
-			status := ""
-			if cred.IsExpired() {
-				status = " (expired)"
-			}
-			fmt.Printf("  %s - %s%s\n", serverURL, cred.UserEmail, status)
-		}
-		fmt.Println("\nUse 'ww logout <server>' to remove credentials.")
-		return nil
 	}
 
-	serverURL := args[0]
-
-	// Normalize server URL
-	baseURL, err := extractServerBase(serverURL)
+	// Verify profile exists
+	profile, err := store.LoadProfile(profileNameArg)
 	if err != nil {
-		return fmt.Errorf("invalid server URL: %w", err)
+		return fmt.Errorf("profile '%s' does not exist", profileNameArg)
 	}
 
-	// Check if credential exists
-	cred, err := store.GetCredential(baseURL)
-	if err != nil {
-		return fmt.Errorf("failed to get credential: %w", err)
-	}
-
-	if cred == nil {
-		if formatter.JSON {
-			return formatter.PrintJSON(map[string]any{
-				"server":  baseURL,
-				"removed": false,
-				"message": "not logged in",
-			})
+	// Confirm deletion
+	if shouldConfirm() && !formatter.JSON {
+		fmt.Printf("Remove profile '%s' (%s) and all its credentials? [y/N]: ", profileNameArg, profile.Host)
+		reader := bufio.NewReader(os.Stdin)
+		response, _ := reader.ReadString('\n')
+		response = strings.TrimSpace(strings.ToLower(response))
+		if response != "y" && response != "yes" {
+			fmt.Println("Cancelled.")
+			return nil
 		}
-		fmt.Printf("Not logged in to %s\n", baseURL)
-		return nil
 	}
 
-	// Remove the credential
-	if err := store.RemoveCredential(baseURL); err != nil {
-		return fmt.Errorf("failed to remove credential: %w", err)
-	}
-
-	if err := store.Save(); err != nil {
-		return fmt.Errorf("failed to save credentials: %w", err)
+	if err := store.DeleteProfile(profileNameArg); err != nil {
+		return fmt.Errorf("failed to delete profile: %w", err)
 	}
 
 	if formatter.JSON {
 		return formatter.PrintJSON(map[string]any{
-			"server":  baseURL,
+			"profile": profileNameArg,
 			"removed": true,
 		})
 	}
 
-	fmt.Printf("Logged out from %s\n", baseURL)
+	fmt.Printf("Logged out and removed profile '%s'.\n", profileNameArg)
 	return nil
 }
