@@ -120,6 +120,9 @@ func (n *RootViewsHandler) setupRoutes() {
 		http.Redirect(w, r, "/worlds/", http.StatusMovedPermanently)
 	})
 
+	// SEO: robots.txt and sitemaps
+	n.RegisterSEORoutes()
+
 	// ads.txt for Google AdSense verification
 	n.mux.HandleFunc("/ads.txt", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
