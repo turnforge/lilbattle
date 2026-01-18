@@ -22,7 +22,7 @@ require (
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/servicekit v0.0.4
-	github.com/panyam/templar v0.0.28
+	github.com/panyam/templar v0.0.29
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0
@@ -113,6 +113,6 @@ require (
 
 // replace github.com/panyam/servicekit v0.0.4 => ./locallinks/newstack/servicekit
 
-// replace github.com/panyam/oneauth v0.0.24 => ./locallinks/newstack/oneauth
+replace github.com/panyam/oneauth v0.0.24 => ./locallinks/newstack/oneauth
 
-// replace github.com/panyam/goapplib v0.0.13 => ./locallinks/newstack/goapplib
+replace github.com/panyam/goapplib v0.0.13 => ./locallinks/newstack/goapplib

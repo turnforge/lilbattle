@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -110,7 +109,7 @@ func deleteGameHandler(app *goal.App[*LilBattleApp], w http.ResponseWriter, req 
 	client := ctx.ClientMgr.GetGamesSvcClient()
 	deleteReq := &protos.DeleteGameRequest{Id: gameId}
 
-	_, err := client.DeleteGame(context.Background(), deleteReq)
+	_, err := client.DeleteGame(GrpcAuthContext(loggedInUserId), deleteReq)
 	if err != nil {
 		log.Printf("Failed to delete game %s: %v", gameId, err)
 		http.Error(w, "Failed to delete game", http.StatusInternalServerError)

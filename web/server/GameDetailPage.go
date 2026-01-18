@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -27,10 +26,11 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 	p.Header.Load(r, w, app)
 
 	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 	client := ctx.ClientMgr.GetGamesSvcClient()
 	req := &protos.GetGameRequest{Id: p.GameId}
 
-	resp, err := client.GetGame(context.Background(), req)
+	resp, err := client.GetGame(GrpcAuthContext(loggedInUserId), req)
 	if err != nil {
 		log.Printf("Error fetching Game %s: %v", p.GameId, err)
 		return HandleGRPCError(err, w, r, app)
@@ -45,6 +45,13 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 			UpdatedAt:   resp.Game.UpdatedAt,
 		}
 		p.Title = p.Game.Name
+		p.SetCanonicalFromRequest(app, r)
+		p.MetaTitle = p.Game.Name + " - LilBattle Game"
+		if p.Game.Description != "" {
+			p.MetaDescription = p.Game.Description
+		} else {
+			p.MetaDescription = "View " + p.Game.Name + " - a LilBattle game."
+		}
 	}
 
 	return nil, false

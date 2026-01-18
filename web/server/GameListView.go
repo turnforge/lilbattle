@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -32,7 +31,7 @@ func (p *GameListView) Load(r *http.Request, w http.ResponseWriter, app *goal.Ap
 		},
 		OwnerId: userId,
 	}
-	resp, err := client.ListGames(context.Background(), &req)
+	resp, err := client.ListGames(GrpcAuthContext(userId), &req)
 	if err != nil {
 		log.Println("error getting games: ", err)
 		return HandleGRPCError(err, w, r, app)

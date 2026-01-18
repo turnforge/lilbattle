@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,7 +14,7 @@ import (
 // WorldsGroup implements goal.PageGroup for /worlds routes.
 type WorldsGroup struct {
 	lilbattleApp *LilBattleApp
-	goalApp   *goal.App[*LilBattleApp]
+	goalApp      *goal.App[*LilBattleApp]
 }
 
 // RegisterRoutes registers all world-related routes using goal.Register.
@@ -84,7 +83,7 @@ func deleteWorldHandler(app *goal.App[*LilBattleApp], w http.ResponseWriter, req
 	client := ctx.ClientMgr.GetWorldsSvcClient()
 	deleteReq := &protos.DeleteWorldRequest{Id: worldId}
 
-	_, err := client.DeleteWorld(context.Background(), deleteReq)
+	_, err := client.DeleteWorld(GrpcAuthContext(loggedInUserId), deleteReq)
 	if err != nil {
 		log.Printf("Failed to delete world %s: %v", worldId, err)
 		http.Error(w, "Failed to delete world", http.StatusInternalServerError)

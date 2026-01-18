@@ -19,6 +19,9 @@ func (m *WorldListingPage) Load(r *http.Request, w http.ResponseWriter, app *goa
 	m.DisableSplashScreen = true
 	m.Title = "Worlds"
 	m.ActiveTab = "worlds"
+	m.SetCanonicalFromRequest(app, r)
+	m.MetaTitle = "Browse Worlds - LilBattle"
+	m.MetaDescription = "Browse and create custom worlds for LilBattle. Design unique maps with terrain, cities, and starting positions."
 	m.Header.Load(r, w, app)
 
 	// Load worlds via the existing WorldListView

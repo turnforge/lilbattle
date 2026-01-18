@@ -49,6 +49,10 @@ type PrivacyPolicy struct {
 
 func (p *PrivacyPolicy) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	p.DisableSplashScreen = true
+	p.Title = "Privacy Policy"
+	p.SetCanonicalFromRequest(app, r)
+	p.MetaTitle = "Privacy Policy - LilBattle"
+	p.MetaDescription = "LilBattle privacy policy - how we collect, use, and protect your data."
 	return p.Header.Load(r, w, app)
 }
 
@@ -59,5 +63,9 @@ type TermsOfService struct {
 
 func (t *TermsOfService) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	t.DisableSplashScreen = true
+	t.Title = "Terms of Service"
+	t.SetCanonicalFromRequest(app, r)
+	t.MetaTitle = "Terms of Service - LilBattle"
+	t.MetaDescription = "LilBattle terms of service - rules and guidelines for using our platform."
 	return t.Header.Load(r, w, app)
 }

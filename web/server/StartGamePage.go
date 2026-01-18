@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -70,7 +69,7 @@ func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.A
 			Id: p.WorldId,
 		}
 
-		resp, err := client.GetWorld(context.Background(), req)
+		resp, err := client.GetWorld(GrpcAuthContext(loggedInUserId), req)
 		if err != nil {
 			log.Printf("Error fetching World %s: %v", p.WorldId, err)
 			// Don't fail the page, just clear the worldId

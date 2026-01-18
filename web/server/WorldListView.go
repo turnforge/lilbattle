@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -44,7 +43,7 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, app *goal.A
 		},
 		OwnerId: userId,
 	}
-	resp, err := client.ListWorlds(context.Background(), &req)
+	resp, err := client.ListWorlds(GrpcAuthContext(userId), &req)
 	if err != nil {
 		log.Println("error getting worlds: ", err)
 		return HandleGRPCError(err, w, r, app)

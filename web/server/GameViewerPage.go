@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -53,11 +52,12 @@ func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 
 	// Load the world (same as WorldEditorPage)
 	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 	client := ctx.ClientMgr.GetGamesSvcClient()
 
 	req := &protos.GetGameRequest{Id: p.GameId}
 
-	resp, err := client.GetGame(context.Background(), req)
+	resp, err := client.GetGame(GrpcAuthContext(loggedInUserId), req)
 	if err != nil {
 		log.Printf("Error fetching Game %s: %v", p.GameId, err)
 		return HandleGRPCError(err, w, r, app)

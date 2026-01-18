@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -62,7 +61,7 @@ func (p *WorldCreatePage) Load(r *http.Request, w http.ResponseWriter, app *goal
 			},
 		}
 
-		resp, err := client.CreateWorld(context.Background(), createReq)
+		resp, err := client.CreateWorld(GrpcAuthContext(loggedInUserId), createReq)
 		if err != nil {
 			p.ErrorMessage = "Failed to create world: " + err.Error()
 			p.WorldName = worldName

@@ -19,6 +19,9 @@ func (m *GameListingPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	m.Title = "Games"
 	m.ActiveTab = "games"
 	m.DisableSplashScreen = true
+	m.SetCanonicalFromRequest(app, r)
+	m.MetaTitle = "My Games - LilBattle"
+	m.MetaDescription = "Play and manage your LilBattle games. Start new battles on custom worlds and track your progress."
 	m.Header.Load(r, w, app)
 
 	// Load games via the existing GameListView

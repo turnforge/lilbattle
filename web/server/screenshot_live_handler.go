@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -25,8 +24,9 @@ func (r *RootViewsHandler) handleWorldScreenshotLive(w http.ResponseWriter, req 
 	}
 
 	// Get world data from service
+	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInUserId(req)
 	client := r.LilBattleApp.ClientMgr.GetWorldsSvcClient()
-	resp, err := client.GetWorld(context.Background(), &protos.GetWorldRequest{Id: worldId})
+	resp, err := client.GetWorld(GrpcAuthContext(loggedInUserId), &protos.GetWorldRequest{Id: worldId})
 	if err != nil {
 		log.Printf("Failed to get world %s: %v", worldId, err)
 		http.Error(w, "World not found", http.StatusNotFound)
@@ -57,8 +57,9 @@ func (r *RootViewsHandler) handleGameScreenshotLive(w http.ResponseWriter, req *
 	}
 
 	// Get game data from service
+	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInUserId(req)
 	client := r.LilBattleApp.ClientMgr.GetGamesSvcClient()
-	resp, err := client.GetGame(context.Background(), &protos.GetGameRequest{Id: gameId})
+	resp, err := client.GetGame(GrpcAuthContext(loggedInUserId), &protos.GetGameRequest{Id: gameId})
 	if err != nil {
 		log.Printf("Failed to get game %s: %v", gameId, err)
 		http.Error(w, "Game not found", http.StatusNotFound)

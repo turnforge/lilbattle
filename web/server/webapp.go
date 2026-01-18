@@ -22,6 +22,14 @@ type BasePage struct {
 	goal.BasePage
 }
 
+// SetCanonicalFromRequest sets the canonical URL from the app's BaseUrl and request path.
+// Call this in page Load() methods to enable SEO canonical tags.
+func (p *BasePage) SetCanonicalFromRequest(app *goal.App[*LilBattleApp], r *http.Request) {
+	if app.Context.BaseUrl != "" {
+		p.CanonicalUrl = app.Context.BaseUrl + r.URL.Path
+	}
+}
+
 // LilBattleApp is the pure application context.
 // It holds all app-specific state without knowing about goapplib.
 // Views access this via app.Context in goal.App[*LilBattleApp].
@@ -77,6 +85,7 @@ func NewLilBattleApp(clientMgr *services.ClientMgr) (lilbattleApp *LilBattleApp,
 		AdsListingEnabled: os.Getenv("LILBATTLE_ADS_LISTING") != "false",
 		AdNetworkId:       os.Getenv("LILBATTLE_AD_NETWORK_ID"),
 		AdSlotId:          os.Getenv("LILBATTLE_AD_SLOT_ID"),
+		BaseUrl:           os.Getenv("LILBATTLE_BASE_URL"),
 	}
 
 	// Setup templates with SourceLoader for @goapplib/ vendored dependencies

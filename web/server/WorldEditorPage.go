@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -10,6 +9,8 @@ import (
 	"strings"
 
 	goal "github.com/panyam/goapplib"
+	"google.golang.org/protobuf/proto"
+
 	protos "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	"github.com/turnforge/lilbattle/lib"
 )
@@ -198,11 +199,11 @@ func (v *WorldEditorPage) SetupDefaults() {
 			iconDataURL := tm.GetUnitIconURL(unitID, useTheme, themeName)
 
 			// Create a copy of unitData with themed name
-			themedUnitData := *unitData
+			themedUnitData := proto.Clone(unitData).(*protos.UnitDefinition)
 			themedUnitData.Name = tm.GetUnitName(unitID, unitData.Name, useTheme, themeName)
 
 			v.UnitTypes = append(v.UnitTypes, UnitType{
-				UnitDefinition: &themedUnitData,
+				UnitDefinition: themedUnitData,
 				IconDataURL:    iconDataURL,
 			})
 		}
@@ -277,7 +278,7 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 		log.Println("Using template: ", templateName)
 	} else {
 		client := ctx.ClientMgr.GetWorldsSvcClient()
-		resp, err := client.GetWorld(context.Background(), &protos.GetWorldRequest{
+		resp, err := client.GetWorld(GrpcAuthContext(loggedInUserId), &protos.GetWorldRequest{
 			Id: v.WorldId,
 		})
 		if err != nil {

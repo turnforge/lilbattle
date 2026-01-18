@@ -1,14 +1,26 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"net/url"
 
 	goal "github.com/panyam/goapplib"
+	oagrpc "github.com/panyam/oneauth/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+// GrpcAuthContext creates a gRPC context with user authentication metadata.
+// Use this when calling gRPC services from page handlers to pass the user ID.
+func GrpcAuthContext(userID string) context.Context {
+	if userID == "" {
+		return context.Background()
+	}
+	return metadata.AppendToOutgoingContext(context.Background(), oagrpc.DefaultMetadataKeyUserID, userID)
+}
 
 // NotFoundPage is the view data for 404 pages
 type NotFoundPage struct {

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -28,10 +27,11 @@ func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	p.Header.Load(r, w, app)
 
 	ctx := app.Context
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
 	client := ctx.ClientMgr.GetWorldsSvcClient()
 	req := &protos.GetWorldRequest{Id: p.WorldId}
 
-	resp, err := client.GetWorld(context.Background(), req)
+	resp, err := client.GetWorld(GrpcAuthContext(loggedInUserId), req)
 	if err != nil {
 		log.Printf("Error fetching World %s: %v", p.WorldId, err)
 		return HandleGRPCError(err, w, r, app)
@@ -41,6 +41,13 @@ func (p *WorldViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 		p.World = resp.World
 		p.WorldData = resp.WorldData
 		p.Title = p.World.Name
+		p.SetCanonicalFromRequest(app, r)
+		p.MetaTitle = p.World.Name + " - LilBattle World"
+		if p.World.Description != "" {
+			p.MetaDescription = p.World.Description
+		} else {
+			p.MetaDescription = "View " + p.World.Name + " - a custom world for LilBattle."
+		}
 	}
 
 	return nil, false
