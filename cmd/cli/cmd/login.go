@@ -140,6 +140,18 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		// Interactive login - need email and password
+		// When --reset is used, prompt even if profile has saved values
+		if loginReset && loginEmail == "" && profile.Email != "" {
+			fmt.Printf("Email [%s]: ", profile.Email)
+			email, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read email: %w", err)
+			}
+			email = strings.TrimSpace(email)
+			if email != "" {
+				profile.Email = email
+			}
+		}
 		if profile.Email == "" {
 			fmt.Print("Email: ")
 			email, err := reader.ReadString('\n')
@@ -150,7 +162,11 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		}
 
 		// Get password - check profile first, then prompt
+		// When --reset is used, ignore saved password to force fresh prompt
 		password := profile.Password
+		if loginReset {
+			password = ""
+		}
 		if password == "" {
 			fmt.Print("Password: ")
 			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))

@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 	"os"
 	"path/filepath"
 
@@ -148,7 +149,12 @@ func (a *LilBattleApp) Handler() http.Handler {
 	r := http.NewServeMux()
 
 	// Rate limiting middleware (from goapplib)
-	rateLimiter := goal.NewRateLimitMiddleware(goal.DefaultRateLimitConfig())
+	rateLimiter := goal.NewRateLimitMiddleware(&goal.RateLimitConfig{
+		AuthLimit:  10,
+		AuthWindow: time.Minute,
+		APILimit:   100,
+		APIWindow:  time.Minute,
+	})
 
 	// Security headers middleware
 	securityHeaders := NewSecurityHeadersMiddleware()
