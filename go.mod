@@ -113,6 +113,6 @@ require (
 
 // replace github.com/panyam/servicekit v0.0.4 => ./locallinks/newstack/servicekit
 
-replace github.com/panyam/oneauth v0.0.27 => ./locallinks/newstack/oneauth
+replace github.com/panyam/oneauth v0.0.27 => ./locallinks/newstack/oneauth/main
 
 // replace github.com/panyam/goapplib v0.0.31 => ./locallinks/newstack/goapplib
