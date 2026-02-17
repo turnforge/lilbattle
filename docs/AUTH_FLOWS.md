@@ -62,8 +62,10 @@ Users can set their username later from the profile page.
 | `/auth/logout` | GET | `OneAuth.HandleLogout` | Logout and redirect |
 | `/auth/verify-email` | GET | `LocalAuth.HandleVerifyEmail` | Verify email token |
 | `/auth/resend-verification` | POST | Custom handler | Resend verification email |
-| `/auth/forgot-password` | GET/POST | `LocalAuth.HandleForgotPassword` | Password reset request |
-| `/auth/reset-password` | GET/POST | `LocalAuth.HandleResetPassword` | Password reset form |
+| `/forgot-password` | GET | `ForgotPasswordPage` (view) | Themed forgot password page |
+| `/auth/forgot-password` | POST | Custom handler in `auth.go` | Creates token, sends email, redirects |
+| `/reset-password` | GET | `ResetPasswordPage` (view) | Themed reset password page |
+| `/auth/reset-password` | POST | Custom handler in `auth.go` | Validates token, updates password, redirects |
 | `/auth/change-password` | POST | Custom handler | Change existing password |
 | `/auth/set-password` | POST | Custom handler | Set password (OAuth users) |
 | `/auth/cli/token` | POST | `APIAuth` | CLI/API token authentication |
@@ -150,6 +152,10 @@ LILBATTLE_BASE_URL=http://localhost:8080
 # JWT secret for CLI tokens
 JWT_CLI_SECRET=your-secret-here
 
+# Email (Resend)
+RESEND_API_KEY=re_xxx                    # Required for production email delivery
+RESEND_FROM_EMAIL=LilBattle <noreply@lilbattle.com>  # Optional, has default
+
 # OAuth2 Providers
 OAUTH2_GOOGLE_CLIENT_ID=xxx
 OAUTH2_GOOGLE_CLIENT_SECRET=xxx
@@ -166,9 +172,34 @@ OAUTH2_TWITTER_CALLBACK_URL=http://localhost:8080/auth/twitter/callback
 
 ## Email Sender
 
-Currently using `ConsoleEmailSender` for development (prints emails to console).
+Uses Resend API for transactional emails (verification, password reset). Falls back to `ConsoleEmailSender` when `RESEND_API_KEY` is not set.
 
-For production, replace with a real email service in `web/server/auth.go`.
+Implementation: `web/server/resend_email.go` (`ResendEmailSender` struct).
+
+Selection logic in `web/server/auth.go`:
+```go
+func newEmailSender() oa.SendEmail {
+    if os.Getenv("RESEND_API_KEY") != "" {
+        return NewResendEmailSender(apiKey, fromAddr)
+    }
+    return &oa.ConsoleEmailSender{}
+}
+```
+
+## Password Reset Pages
+
+Themed forgot/reset password pages are rendered as standalone view pages:
+
+| Page | URL | Template | Struct |
+|------|-----|----------|--------|
+| Forgot Password | `/forgot-password` | `ForgotPasswordPage.html` | `ForgotPasswordPage` |
+| Reset Password | `/reset-password` | `ResetPasswordPage.html` | `ResetPasswordPage` |
+
+Both are registered in `web/server/views.go` via `goal.Register`.
+
+The auth handlers in `auth.go` redirect GET requests to these view pages and handle POST submissions with redirect-based responses (query params for state: `?sent=true`, `?success=true`, `?error=...`).
+
+The Reset Password page uses plain HTML form POST. The Forgot Password page uses AJAX with `URLSearchParams`.
 
 ## Error Handling
 

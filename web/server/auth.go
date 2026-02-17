@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +14,20 @@ import (
 	oa2 "github.com/panyam/oneauth/oauth2"
 	oafs "github.com/panyam/oneauth/stores/fs"
 )
+
+func newEmailSender() oa.SendEmail {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		log.Println("RESEND_API_KEY not set, using console email sender")
+		return &oa.ConsoleEmailSender{}
+	}
+	fromAddr := os.Getenv("RESEND_FROM_EMAIL")
+	if fromAddr == "" {
+		fromAddr = "LilBattle <noreply@lilbattle.com>"
+	}
+	log.Printf("Using Resend email sender (from: %s)", fromAddr)
+	return NewResendEmailSender(apiKey, fromAddr)
+}
 
 func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, oa.UsernameStore, *oa.OneAuth) {
 	// Initialize authentication
@@ -58,7 +73,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		ValidateCredentials:      validateCredentials,
 		CreateUser:               authService.CreateLocalUser,
 		ValidateSignup:           nil, // Policy handles validation now
-		EmailSender:              &oa.ConsoleEmailSender{},
+		EmailSender:              newEmailSender(),
 		TokenStore:               authService.TokenStore,
 		BaseURL:                  baseURL,
 		RequireEmailVerification: false,   // Optional verification
@@ -126,17 +141,59 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 	oneauth.AddAuth("/verify-email", http.HandlerFunc(localAuth.HandleVerifyEmail))
 	oneauth.AddAuth("/forgot-password", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			localAuth.HandleForgotPasswordForm(w, r)
-		} else {
-			localAuth.HandleForgotPassword(w, r)
+			http.Redirect(w, r, "/forgot-password", http.StatusFound)
+			return
 		}
+		// POST: create token and send email, then redirect
+		email := r.FormValue("email")
+		if email == "" {
+			http.Redirect(w, r, "/forgot-password", http.StatusSeeOther)
+			return
+		}
+		token, err := authService.TokenStore.CreateToken("", email, oa.TokenTypePasswordReset, oa.TokenExpiryPasswordReset)
+		if err != nil {
+			log.Printf("Error creating reset token: %v", err)
+		} else {
+			resetLink := fmt.Sprintf("%s/auth/reset-password?token=%s", baseURL, token.Token)
+			if err := localAuth.EmailSender.SendPasswordResetEmail(email, resetLink); err != nil {
+				log.Printf("Error sending reset email: %v", err)
+			}
+		}
+		// Always redirect with sent=true (don't reveal if email exists)
+		http.Redirect(w, r, "/forgot-password?sent=true", http.StatusSeeOther)
 	}))
 	oneauth.AddAuth("/reset-password", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			localAuth.HandleResetPasswordForm(w, r)
-		} else {
-			localAuth.HandleResetPassword(w, r)
+			target := "/reset-password"
+			if token := r.URL.Query().Get("token"); token != "" {
+				target += "?token=" + token
+			}
+			http.Redirect(w, r, target, http.StatusFound)
+			return
 		}
+		// POST: validate token and update password, then redirect
+		token := r.FormValue("token")
+		password := r.FormValue("password")
+		if token == "" || password == "" {
+			http.Redirect(w, r, "/reset-password?error=Token+and+password+required&token="+token, http.StatusSeeOther)
+			return
+		}
+		authToken, err := authService.TokenStore.GetToken(token)
+		if err != nil || authToken.Type != oa.TokenTypePasswordReset {
+			http.Redirect(w, r, "/reset-password?error=Invalid+or+expired+reset+link", http.StatusSeeOther)
+			return
+		}
+		if len(password) < 8 {
+			http.Redirect(w, r, "/reset-password?error=Password+must+be+at+least+8+characters&token="+token, http.StatusSeeOther)
+			return
+		}
+		if err := authService.UpdatePassword(authToken.Email, password); err != nil {
+			log.Printf("Error resetting password: %v", err)
+			http.Redirect(w, r, "/reset-password?error=Failed+to+reset+password&token="+token, http.StatusSeeOther)
+			return
+		}
+		_ = authService.TokenStore.DeleteToken(token)
+		http.Redirect(w, r, "/reset-password?success=true", http.StatusSeeOther)
 	}))
 
 	// Resend verification email

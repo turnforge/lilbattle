@@ -100,7 +100,8 @@ class ProfilePage extends BasePage {
                 try {
                     const response = await fetch('/auth/change-password', {
                         method: 'POST',
-                        body: formData
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: new URLSearchParams(formData as any)
                     });
 
                     if (response.ok) {
