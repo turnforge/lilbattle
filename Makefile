@@ -5,6 +5,7 @@ TINYGO_ROOT=$(shell tinygo env TINYGOROOT 2>/dev/null || echo "")
 # Try both common locations for wasm_exec.js (newer Go versions use lib/wasm, older use misc/wasm)
 WASM_EXEC_PATH=$(shell find $(GO_ROOT)/lib/wasm $(GO_ROOT)/misc/wasm -name "wasm_exec.js" 2>/dev/null | head -1)
 NUM_LINKED_GOMODS=`cat go.mod | grep -v "^\/\/" | grep replace | wc -l | sed -e "s/ *//g"`
+NUM_LINKED_PNPM=`grep -c '"link:' web/package.json 2>/dev/null || echo 0`
 
 all: ui cli wasm server
 
@@ -138,6 +139,15 @@ checklinks:
 	@if [ x"${NUM_LINKED_GOMODS}" != "x0" ]; then	\
 		echo "You are trying to deploying with symlinks.  Remove them first and make sure versions exist" && false ;	\
 	fi
+	@if [ x"${NUM_LINKED_PNPM}" != "x0" ]; then	\
+		echo "web/package.json has link: dependencies. Run 'make pnpmunlink' first" && false ;	\
+	fi
+
+pnpmlink:
+	cd web && pnpm link ~/newstack/protoc-gen-go-wasmjs/main/runtime
+
+pnpmunlink:
+	cd web && pnpm unlink @protoc-gen-go-wasmjs/runtime && pnpm install
 
 resymlink:
 	mkdir -p locallinks

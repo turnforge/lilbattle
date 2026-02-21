@@ -1,7 +1,5 @@
-pnpm-lock.yaml
 static/js/gen
 templates/gen
-gen
 playwright-report
 test-results
 coverage

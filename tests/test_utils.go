@@ -12,6 +12,18 @@ import (
 	"github.com/turnforge/lilbattle/services/fsbe"
 )
 
+// TestWorldsDir returns the path to test world fixtures checked into the repo.
+// Falls back to ~/dev-app-data/lilbattle/storage/worlds if testdata is missing.
+func TestWorldsDir() string {
+	// Try in-repo testdata first (works in CI)
+	repoDir := filepath.Join("testdata", "worlds")
+	if info, err := os.Stat(repoDir); err == nil && info.IsDir() {
+		return repoDir
+	}
+	// Fall back to dev-app-data (local dev)
+	return fsbe.DevDataPath("storage/worlds")
+}
+
 func CreateTestWorld(name string, nq, nr int, units []*v1.Unit) *lib.World {
 	// 1. Create test world with 3 units
 	world := lib.NewWorld("test", nil)
