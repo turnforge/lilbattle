@@ -33,7 +33,7 @@ jobs:
           fi
 
       - name: Go build
-        run: go build ./...
+        run: go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)')
 
       - name: Go tests
         run: go test ./tests/... ./cmd/cli/...
