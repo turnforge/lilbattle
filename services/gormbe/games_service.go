@@ -12,8 +12,8 @@ import (
 
 	gfn "github.com/panyam/goutils/fn"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
-	v1gorm "github.com/turnforge/lilbattle/gen/gorm"
-	v1dal "github.com/turnforge/lilbattle/gen/gorm/dal"
+	v1gorm "github.com/turnforge/lilbattle/gen/gorm/lilbattle/v1/gorm"
+	v1dal "github.com/turnforge/lilbattle/gen/gorm/dal/lilbattle/v1/gorm"
 	"github.com/turnforge/lilbattle/lib"
 	"github.com/turnforge/lilbattle/services"
 	"google.golang.org/protobuf/encoding/protojson"

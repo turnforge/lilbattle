@@ -697,9 +697,14 @@ type DatastoreOptions struct {
 	// Generate DAL (Data Access Layer) helpers (optional)
 	// Reserved for future Datastore DAL implementation.
 	// If not set: defaults to true when kind is specified, false otherwise
-	Dal           *bool `protobuf:"varint,6,opt,name=dal,proto3,oneof" json:"dal,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Dal *bool `protobuf:"varint,6,opt,name=dal,proto3,oneof" json:"dal,omitempty"`
+	// Generate PropertyLoadSaver interface (Save/Load methods) for custom property handling
+	// When true, generates methods that serialize unsupported types (maps, complex structs)
+	// to JSON properties. Required for map fields since Datastore doesn't natively support Go maps.
+	// Example: map[string]int64 will be stored as a JSON-encoded []byte property.
+	ImplementPropertyLoader bool `protobuf:"varint,7,opt,name=implement_property_loader,json=implementPropertyLoader,proto3" json:"implement_property_loader,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *DatastoreOptions) Reset() {
@@ -770,6 +775,13 @@ func (x *DatastoreOptions) GetSource() string {
 func (x *DatastoreOptions) GetDal() bool {
 	if x != nil && x.Dal != nil {
 		return *x.Dal
+	}
+	return false
+}
+
+func (x *DatastoreOptions) GetImplementPropertyLoader() bool {
+	if x != nil {
+		return x.ImplementPropertyLoader
 	}
 	return false
 }
@@ -1071,14 +1083,15 @@ const file_dal_v1_annotations_proto_rawDesc = "" +
 	"\x0fPostgresOptions\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12\x14\n" +
 	"\x05table\x18\x02 \x01(\tR\x05table\x12\x16\n" +
-	"\x06schema\x18\x03 \x01(\tR\x06schema\"\xbe\x01\n" +
+	"\x06schema\x18\x03 \x01(\tR\x06schema\"\xfa\x01\n" +
 	"\x10DatastoreOptions\x12\x12\n" +
 	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12%\n" +
 	"\x0eincomplete_key\x18\x03 \x01(\bR\rincompleteKey\x12\x1a\n" +
 	"\bancestor\x18\x04 \x01(\tR\bancestor\x12\x16\n" +
 	"\x06source\x18\x05 \x01(\tR\x06source\x12\x15\n" +
-	"\x03dal\x18\x06 \x01(\bH\x00R\x03dal\x88\x01\x01B\x06\n" +
+	"\x03dal\x18\x06 \x01(\bH\x00R\x03dal\x88\x01\x01\x12:\n" +
+	"\x19implement_property_loader\x18\a \x01(\bR\x17implementPropertyLoaderB\x06\n" +
 	"\x04_dal\"J\n" +
 	"\x10FirestoreOptions\x12\x16\n" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12\x1e\n" +

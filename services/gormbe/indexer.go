@@ -9,7 +9,7 @@ import (
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	v1services "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/services"
-	v1gorm "github.com/turnforge/lilbattle/gen/gorm"
+	v1gorm "github.com/turnforge/lilbattle/gen/gorm/lilbattle/v1/gorm"
 	"github.com/turnforge/lilbattle/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

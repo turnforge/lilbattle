@@ -5,7 +5,7 @@ import (
 	"context"
 
 	dslib "cloud.google.com/go/datastore"
-	datastore "github.com/turnforge/lilbattle/gen/datastore"
+	datastore "github.com/turnforge/lilbattle/gen/datastore/lilbattle/v1/datastore"
 )
 
 // IndexStateDatastoreDAL provides database access helper methods for datastore.IndexStateDatastore.

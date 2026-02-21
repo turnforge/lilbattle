@@ -132,75 +132,114 @@ func runMigrate(cmd *cobra.Command, args []string) error {
 		fmt.Printf("World: %s\n", world.Name)
 		fmt.Printf("  Description: %s\n", world.Description)
 		fmt.Printf("  Tiles: %d, Units: %d\n", tileCount, unitCount)
-		fmt.Printf("Migrating to %s as '%s'...\n", dest.Host, dest.WorldID)
+		fmt.Printf("Migrating to %s...\n", dest.Host)
 	}
 
-	// Prepare the world for destination (update ID)
-	world.Id = dest.WorldID
+	// Normalize dest world ID (backends lowercase IDs)
+	destWorldID := strings.ToLower(dest.WorldID)
 
-	// Try to create the world first
-	createReq := &v1.CreateWorldRequest{
-		World:     world,
-		WorldData: worldData,
-	}
+	// Check if world already exists on destination:
+	// 1. Try direct GetWorld with the dest ID
+	// 2. If not found, search by name in the world listing
+	existingID, existingVersion := findExistingWorld(ctx, destClient, destWorldID, world.Name, formatter)
 
-	_, err = destClient.CreateWorld(ctx, createReq)
-	if err != nil {
-		// Check if it's an "already exists" error
-		errStr := err.Error()
-		if containsIgnoreCase(errStr, "already exists") || containsIgnoreCase(errStr, "AlreadyExists") {
-			if !formatter.JSON {
-				fmt.Println("World already exists, updating instead...")
+	action := ""
+	if existingID != "" {
+		// Update existing world
+		if !formatter.JSON {
+			fmt.Printf("Found existing world (id: %s), updating...\n", existingID)
+		}
+
+		world.Id = existingID
+		// Match the destination's version to satisfy optimistic lock
+		if worldData != nil {
+			worldData.Version = existingVersion
+		}
+
+		updateReq := &v1.UpdateWorldRequest{
+			World:     world,
+			WorldData: worldData,
+		}
+
+		_, err = destClient.UpdateWorld(ctx, updateReq)
+		if err != nil {
+			return fmt.Errorf("failed to update destination world: %w", err)
+		}
+		action = "updated"
+	} else {
+		// Create new world
+		world.Id = destWorldID
+		createReq := &v1.CreateWorldRequest{
+			World:     world,
+			WorldData: worldData,
+		}
+
+		createResp, err := destClient.CreateWorld(ctx, createReq)
+		if err != nil {
+			if containsIgnoreCase(err.Error(), "already exists") {
+				return fmt.Errorf("world ID '%s' is already taken on %s - try a different ID", destWorldID, dest.Host)
 			}
-
-			// Update instead
-			updateReq := &v1.UpdateWorldRequest{
-				World:     world,
-				WorldData: worldData,
-			}
-
-			_, err = destClient.UpdateWorld(ctx, updateReq)
-			if err != nil {
-				return fmt.Errorf("failed to update destination world: %w", err)
-			}
-
-			if formatter.JSON {
-				return formatter.PrintJSON(map[string]any{
-					"source_server": source.Host,
-					"source_world":  source.WorldID,
-					"dest_server":   dest.Host,
-					"dest_world":    dest.WorldID,
-					"action":        "updated",
-					"tiles":         tileCount,
-					"units":         unitCount,
-				})
-			}
-
-			fmt.Println("World updated successfully!")
-		} else {
 			return fmt.Errorf("failed to create destination world: %w", err)
 		}
-	} else {
-		if formatter.JSON {
-			return formatter.PrintJSON(map[string]any{
-				"source_server": source.Host,
-				"source_world":  source.WorldID,
-				"dest_server":   dest.Host,
-				"dest_world":    dest.WorldID,
-				"action":        "created",
-				"tiles":         tileCount,
-				"units":         unitCount,
-			})
+
+		if createResp != nil && createResp.World != nil {
+			destWorldID = createResp.World.Id
 		}
-
-		fmt.Println("World created successfully!")
+		action = "created"
 	}
 
-	if !formatter.JSON {
-		fmt.Println("Migration complete!")
+	if formatter.JSON {
+		return formatter.PrintJSON(map[string]any{
+			"source_server": source.Host,
+			"source_world":  source.WorldID,
+			"dest_server":   dest.Host,
+			"dest_world":    destWorldID,
+			"action":        action,
+			"tiles":         tileCount,
+			"units":         unitCount,
+		})
 	}
 
+	fmt.Printf("World %s successfully! (dest id: %s)\n", action, destWorldID)
+	fmt.Println("Migration complete!")
 	return nil
+}
+
+// findExistingWorld checks if a world already exists on the destination.
+// First tries GetWorld by ID, then falls back to searching by name.
+// Returns the existing world's ID and WorldData version, or empty string if not found.
+func findExistingWorld(ctx context.Context, client *connectclient.ConnectWorldsClient, destID string, worldName string, formatter *OutputFormatter) (string, int64) {
+	// Try direct lookup by ID
+	resp, err := client.GetWorld(ctx, &v1.GetWorldRequest{Id: destID})
+	if err == nil && resp.World != nil {
+		var version int64
+		if resp.WorldData != nil {
+			version = resp.WorldData.Version
+		}
+		return resp.World.Id, version
+	}
+
+	// Search by name in the world listing
+	listResp, err := client.ListWorlds(ctx, &v1.ListWorldsRequest{})
+	if err != nil {
+		return "", 0
+	}
+
+	for _, w := range listResp.Items {
+		if strings.EqualFold(w.Name, worldName) {
+			if !formatter.JSON {
+				fmt.Printf("Found world by name '%s' (id: %s)\n", worldName, w.Id)
+			}
+			// Get the full world data to retrieve the version
+			fullResp, err := client.GetWorld(ctx, &v1.GetWorldRequest{Id: w.Id})
+			if err == nil && fullResp.WorldData != nil {
+				return w.Id, fullResp.WorldData.Version
+			}
+			return w.Id, 0
+		}
+	}
+
+	return "", 0
 }
 
 // containsIgnoreCase checks if a string contains a substring (case-insensitive)

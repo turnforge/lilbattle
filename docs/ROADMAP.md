@@ -632,18 +632,18 @@ const response = await client.gamesService.createGame(request);
 - **User Experience**: Faster, more intuitive CLI with hex neighbor shortcuts
 - **Clean Architecture**: Presenter drives all UI updates through well-defined methods
 
-**Last Updated**: 2026-01-12
-**Current Focus**: Monetization strategy and ad integration
-**Recent Milestone**: Monetization strategy document complete
+**Last Updated**: 2026-02-20
+**Current Focus**: Production hardening and CLI tooling
+**Recent Milestone**: World migration to production, Resend email integration
 
 **Recent Achievements**:
-- Google App Engine deployment configuration (app.yaml, .gcloudignore)
-- Environment-based backend selection (CLI flag → env var → default)
-- GCP service account setup with proper IAM roles
-- OAuth2 configuration for Google authentication
-- Privacy Policy and Terms of Service pages with proper templates
-- Reusable Footer component for listing pages
-- Template system modernization with templar and goapplib integration
+- Resend email integration for password reset and email verification
+- Consistent world ID normalization (lowercase) across all three backends
+- PropertyLoadSaver support for Datastore entities with map fields
+- Fixed empty world IDs in Datastore listings (Id populated from key name)
+- `ww migrate` command rewrite with findExistingWorld and optimistic lock handling
+- Regenerated protoc-gen-dal output with updated directory structure
+- Themed password reset/forgot-password pages
 
 ## ✅ Phase 14: Google App Engine Deployment (Completed)
 **Status**: Production-ready

@@ -12,8 +12,8 @@ import (
 
 	"cloud.google.com/go/datastore"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
-	v1ds "github.com/turnforge/lilbattle/gen/datastore"
-	v1dal "github.com/turnforge/lilbattle/gen/datastore/dal"
+	v1ds "github.com/turnforge/lilbattle/gen/datastore/lilbattle/v1/datastore"
+	v1dal "github.com/turnforge/lilbattle/gen/datastore/dal/lilbattle/v1/datastore"
 	"github.com/turnforge/lilbattle/lib"
 	"github.com/turnforge/lilbattle/services"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"

@@ -2,9 +2,16 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 )
+
+// NormalizeWorldID lowercases world IDs for consistent lookup.
+// All backends should call this at the entry of methods that accept a world ID.
+func NormalizeWorldID(id string) string {
+	return strings.ToLower(id)
+}
 
 type WorldsService interface {
 	// *

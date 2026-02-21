@@ -11,8 +11,8 @@ import (
 
 	"cloud.google.com/go/datastore"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
-	v1ds "github.com/turnforge/lilbattle/gen/datastore"
-	v1dal "github.com/turnforge/lilbattle/gen/datastore/dal"
+	v1ds "github.com/turnforge/lilbattle/gen/datastore/lilbattle/v1/datastore"
+	v1dal "github.com/turnforge/lilbattle/gen/datastore/dal/lilbattle/v1/datastore"
 	"github.com/turnforge/lilbattle/lib"
 	"github.com/turnforge/lilbattle/services"
 	"google.golang.org/grpc/codes"
@@ -173,9 +173,10 @@ func (s *WorldsService) ListWorlds(ctx context.Context, req *v1.ListWorldsReques
 		return nil, err
 	}
 
-	// Set keys on entities
+	// Set keys and IDs on entities (Id has datastore:"-" so must be populated from key)
 	for i, key := range keys {
 		entities[i].Key = key
+		entities[i].Id = key.Name
 	}
 
 	// Convert to proto
@@ -202,6 +203,7 @@ func (s *WorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest) (
 	if req.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.Id = services.NormalizeWorldID(req.Id)
 
 	ctx, span := Tracer.Start(ctx, "GetWorld")
 	defer span.End()
@@ -235,6 +237,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 	if req.World == nil || req.World.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.World.Id = services.NormalizeWorldID(req.World.Id)
 
 	ctx, span := Tracer.Start(ctx, "UpdateWorld")
 	defer span.End()
@@ -254,6 +257,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 			return err
 		}
 		worldDs.Key = worldKey
+		worldDs.Id = req.World.Id // Id has datastore:"-", populate from key
 
 		// Load existing world data
 		var worldDataDs v1ds.WorldDataDatastore
@@ -365,6 +369,8 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 
 // DeleteWorld deletes a world
 func (s *WorldsService) DeleteWorld(ctx context.Context, req *v1.DeleteWorldRequest) (resp *v1.DeleteWorldResponse, err error) {
+	req.Id = services.NormalizeWorldID(req.Id)
+
 	ctx, span := Tracer.Start(ctx, "DeleteWorld")
 	defer span.End()
 
@@ -400,6 +406,7 @@ func (s *WorldsService) getWorldAndData(ctx context.Context, worldId string) (*v
 	if worldDs == nil {
 		return nil, nil, nil
 	}
+	worldDs.Id = worldId // Id has datastore:"-", populate from key
 
 	worldDataDs, err := s.WorldDataDAL.Get(ctx, s.client, worldDataKey)
 	if err != nil {

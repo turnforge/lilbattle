@@ -73,6 +73,7 @@ message WorldDataDatastore {
   option (dal.v1.datastore_options) = {
     source: "lilbattle.v1.WorldData"
     kind: "WorldData"
+    implement_property_loader: true
   };
 
   // Primary key - matches World.id (excluded from properties, used for key)
@@ -142,6 +143,7 @@ message GameStateDatastore {
   option (dal.v1.datastore_options) = {
     source: "lilbattle.v1.GameState"
     kind: "GameState"
+    implement_property_loader: true
   };
 
   // GameId - used for key, not stored as property

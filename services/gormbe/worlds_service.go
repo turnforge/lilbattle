@@ -11,8 +11,8 @@ import (
 	"time"
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
-	v1gorm "github.com/turnforge/lilbattle/gen/gorm"
-	v1dal "github.com/turnforge/lilbattle/gen/gorm/dal"
+	v1gorm "github.com/turnforge/lilbattle/gen/gorm/lilbattle/v1/gorm"
+	v1dal "github.com/turnforge/lilbattle/gen/gorm/dal/lilbattle/v1/gorm"
 	"github.com/turnforge/lilbattle/lib"
 	"github.com/turnforge/lilbattle/services"
 	"google.golang.org/grpc/codes"
@@ -94,6 +94,7 @@ func (s *WorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRequ
 	if req.World == nil {
 		return nil, fmt.Errorf("world data is required")
 	}
+	req.World.Id = services.NormalizeWorldID(req.World.Id)
 
 	worldGorm, err := v1gorm.WorldToWorldGORM(req.World, nil, nil)
 	if err != nil {
@@ -181,6 +182,7 @@ func (s *WorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest) (
 	if req.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.Id = services.NormalizeWorldID(req.Id)
 
 	// Step 0: Preamble + Auth + Validate request
 	resp = &v1.GetWorldResponse{}
@@ -223,6 +225,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 	if req.World == nil || req.World.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.World.Id = services.NormalizeWorldID(req.World.Id)
 	resp = &v1.UpdateWorldResponse{}
 	ctx, span := Tracer.Start(ctx, "UpdateWorld")
 	defer span.End()
@@ -327,6 +330,7 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 
 // DeleteWorld deletes a world
 func (s *WorldsService) DeleteWorld(ctx context.Context, req *v1.DeleteWorldRequest) (resp *v1.DeleteWorldResponse, err error) {
+	req.Id = services.NormalizeWorldID(req.Id)
 	err = s.WorldDAL.Delete(ctx, s.storage, req.Id)
 	err = errors.Join(err, s.WorldDataDAL.Delete(ctx, s.storage, req.Id))
 	resp = &v1.DeleteWorldResponse{}

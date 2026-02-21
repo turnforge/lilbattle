@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	gorm "github.com/turnforge/lilbattle/gen/gorm"
+	gorm "github.com/turnforge/lilbattle/gen/gorm/lilbattle/v1/gorm"
 	gormlib "gorm.io/gorm"
 )
 

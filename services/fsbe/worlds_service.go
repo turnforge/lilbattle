@@ -111,6 +111,7 @@ func (s *FSWorldsService) GetWorld(ctx context.Context, req *v1.GetWorldRequest)
 	if req.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.Id = services.NormalizeWorldID(req.Id)
 
 	world, err := storage.LoadFSArtifact[*v1.World](s.storage, req.Id, "metadata")
 	if err != nil {
@@ -151,6 +152,7 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	if req.World == nil || req.World.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.World.Id = services.NormalizeWorldID(req.World.Id)
 
 	// Load existing metadata
 	world, err := storage.LoadFSArtifact[*v1.World](s.storage, req.World.Id, "metadata")
@@ -264,6 +266,7 @@ func (s *FSWorldsService) DeleteWorld(ctx context.Context, req *v1.DeleteWorldRe
 	if req.Id == "" {
 		return nil, fmt.Errorf("world ID is required")
 	}
+	req.Id = services.NormalizeWorldID(req.Id)
 
 	// Load world to check ownership
 	world, err := storage.LoadFSArtifact[*v1.World](s.storage, req.Id, "metadata")
@@ -288,6 +291,7 @@ func (s *FSWorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRe
 	if req.World == nil {
 		return nil, fmt.Errorf("world data is required")
 	}
+	req.World.Id = services.NormalizeWorldID(req.World.Id)
 
 	worldId, err := s.storage.CreateEntity(req.World.Id)
 	if err != nil {

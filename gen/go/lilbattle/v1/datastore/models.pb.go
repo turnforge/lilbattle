@@ -895,7 +895,7 @@ const file_lilbattle_v1_datastore_models_proto_rawDesc = "" +
 	"\fpreview_urls\x18\x03 \x03(\tB\r\x92\xa6\x1d\tr\anoindexR\vpreviewUrls\x12g\n" +
 	"\x13default_game_config\x18\x04 \x01(\v2(.lilbattle.v1.GameConfigurationDatastoreB\r\x92\xa6\x1d\tr\anoindexR\x11defaultGameConfig\x12[\n" +
 	"\x11search_index_info\x18\x05 \x01(\v2 .lilbattle.v1.IndexInfoDatastoreB\r\x92\xa6\x1d\tr\aflattenR\x0fsearchIndexInfo:\x1fҦ\x1d\x1b\n" +
-	"\x05World*\x12lilbattle.v1.World\"\xef\x05\n" +
+	"\x05World*\x12lilbattle.v1.World\"\xf1\x05\n" +
 	"\x12WorldDataDatastore\x12\"\n" +
 	"\bworld_id\x18\x01 \x01(\tB\a\x92\xa6\x1d\x03r\x01-R\aworldId\x12Z\n" +
 	"\ttiles_map\x18\x02 \x03(\v2..lilbattle.v1.WorldDataDatastore.TilesMapEntryB\r\x92\xa6\x1d\tr\anoindexR\btilesMap\x12Z\n" +
@@ -910,8 +910,8 @@ const file_lilbattle_v1_datastore_models_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\v2\x1b.lilbattle.v1.UnitDatastoreR\x05value:\x028\x01\x1a]\n" +
 	"\x0eCrossingsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x125\n" +
-	"\x05value\x18\x02 \x01(\v2\x1f.lilbattle.v1.CrossingDatastoreR\x05value:\x028\x01:'Ҧ\x1d#\n" +
-	"\tWorldData*\x16lilbattle.v1.WorldData\"\xe5\x02\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.lilbattle.v1.CrossingDatastoreR\x05value:\x028\x01:)Ҧ\x1d%\n" +
+	"\tWorldData*\x16lilbattle.v1.WorldData8\x01\"\xe5\x02\n" +
 	"\rGameDatastore\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\tB\a\x92\xa6\x1d\x03r\x01-R\x02id\x12\x19\n" +
 	"\bworld_id\x18\x02 \x01(\tR\aworldId\x12!\n" +
@@ -919,7 +919,7 @@ const file_lilbattle_v1_datastore_models_proto_rawDesc = "" +
 	"\fpreview_urls\x18\x04 \x03(\tB\r\x92\xa6\x1d\tr\anoindexR\vpreviewUrls\x12O\n" +
 	"\x06config\x18\x05 \x01(\v2(.lilbattle.v1.GameConfigurationDatastoreB\r\x92\xa6\x1d\tr\anoindexR\x06config\x12[\n" +
 	"\x11search_index_info\x18\x06 \x01(\v2 .lilbattle.v1.IndexInfoDatastoreB\r\x92\xa6\x1d\tr\aflattenR\x0fsearchIndexInfo:\x1dҦ\x1d\x19\n" +
-	"\x04Game*\x11lilbattle.v1.Game\"\xfc\x02\n" +
+	"\x04Game*\x11lilbattle.v1.Game\"\xfe\x02\n" +
 	"\x12GameStateDatastore\x12 \n" +
 	"\agame_id\x18\x01 \x01(\tB\a\x92\xa6\x1d\x03r\x01-R\x06gameId\x12N\n" +
 	"\n" +
@@ -927,8 +927,8 @@ const file_lilbattle_v1_datastore_models_proto_rawDesc = "" +
 	"\rplayer_states\x18\x03 \x03(\v22.lilbattle.v1.GameStateDatastore.PlayerStatesEntryB\r\x92\xa6\x1d\tr\anoindexR\fplayerStates\x1ac\n" +
 	"\x11PlayerStatesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x128\n" +
-	"\x05value\x18\x02 \x01(\v2\".lilbattle.v1.PlayerStateDatastoreR\x05value:\x028\x01:'Ҧ\x1d#\n" +
-	"\tGameState*\x16lilbattle.v1.GameState\"\xe1\x02\n" +
+	"\x05value\x18\x02 \x01(\v2\".lilbattle.v1.PlayerStateDatastoreR\x05value:\x028\x01:)Ҧ\x1d%\n" +
+	"\tGameState*\x16lilbattle.v1.GameState8\x01\"\xe1\x02\n" +
 	"\x1aGameConfigurationDatastore\x12J\n" +
 	"\aplayers\x18\x01 \x03(\v2!.lilbattle.v1.GamePlayerDatastoreB\r\x92\xa6\x1d\tr\anoindexR\aplayers\x12D\n" +
 	"\x05teams\x18\x02 \x03(\v2\x1f.lilbattle.v1.GameTeamDatastoreB\r\x92\xa6\x1d\tr\anoindexR\x05teams\x12J\n" +
