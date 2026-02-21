@@ -35,7 +35,7 @@ func ExampleCreateTheme() {
 	fmt.Println(modernTheme.GetThemeInfo().Name) // "Modern Military"
 
 	// Output:
-	// Infantry
+	// Soldier (Basic)
 	// Default (PNG)
 	// Peasant
 	// Medieval Fantasy
