@@ -36,7 +36,7 @@ jobs:
         run: go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
 
       - name: Go tests
-        run: go test ./tests/... ./cmd/cli/...
+        run: go test ./tests/... ./cmd/cli/... ./services/r2/... ./web/assets/themes/...
 
       - name: Frontend build
         run: cd web && pnpm install --frozen-lockfile && pnpm run buildprod
