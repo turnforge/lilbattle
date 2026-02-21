@@ -2,6 +2,7 @@ static/js/gen
 templates/gen
 gen
 !gen/wasmjs
+!gen/lilbattle
 playwright-report
 test-results
 coverage
