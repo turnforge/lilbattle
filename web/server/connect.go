@@ -5,7 +5,6 @@ package server
 
 import (
 	"context"
-	"os"
 
 	"connectrpc.com/connect"
 	oa "github.com/panyam/oneauth"
@@ -16,18 +15,15 @@ import (
 )
 
 // injectAuthMetadata reads the user ID from the HTTP context (set by auth middleware)
-// and adds it to the gRPC outgoing metadata so the gRPC server can authenticate the request.
+// and adds it to the gRPC incoming metadata so the service can read it via
+// metadata.FromIncomingContext. We use incoming (not outgoing) because the Connect
+// adapter calls the service in-process — there's no gRPC transport layer to convert
+// outgoing metadata to incoming.
 func injectAuthMetadata(ctx context.Context) context.Context {
 	userID := oa.GetUserIDFromContext(ctx)
 	if userID != "" {
-		ctx = metadata.AppendToOutgoingContext(ctx, oagrpc.DefaultMetadataKeyUserID, userID)
-	}
-
-	// Support user switching for testing (only if ENABLE_SWITCH_AUTH is set)
-	// Note: This would need to be extracted from HTTP headers in a real implementation
-	if os.Getenv("ENABLE_SWITCH_AUTH") == "true" {
-		// The switch user header would need to be passed through Connect's request headers
-		// For now, we just support what's already in the metadata
+		md := metadata.Pairs(oagrpc.DefaultMetadataKeyUserID, userID)
+		ctx = metadata.NewIncomingContext(ctx, md)
 	}
 
 	return ctx
