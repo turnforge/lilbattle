@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Check no local replace directives
+        run: |
+          if grep -q "^replace " go.mod; then
+            echo "ERROR: Active replace directives in go.mod"
+            exit 1
+          fi
+          if grep -q '"link:' web/package.json; then
+            echo "ERROR: link: dependencies in web/package.json"
+            exit 1
+          fi
+
+      - name: Go build
+        run: go build ./...
+
+      - name: Go tests
+        run: go test ./tests/... ./cmd/cli/...
+
+      - name: Frontend build
+        run: cd web && pnpm install --frozen-lockfile && pnpm run buildprod
+
+      - name: WASM compile check
+        run: GOOS=js GOARCH=wasm go build -o /dev/null ./cmd/wasm
