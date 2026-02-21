@@ -1,6 +1,7 @@
 static/js/gen
 templates/gen
 gen
+!gen/wasmjs
 playwright-report
 test-results
 coverage
