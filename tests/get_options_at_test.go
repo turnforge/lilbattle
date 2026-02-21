@@ -208,7 +208,7 @@ func runGetOptionsAtTest(t *testing.T, svc *SingletonGamesService, testCase GetO
 
 // TestGetOptionsAtWithRealWorlds runs GetOptionsAt tests using real world data from storage
 func TestGetOptionsAtWithRealWorlds(t *testing.T) {
-	worldsStorageDir := DevDataPath("storage/worlds")
+	worldsStorageDir := TestWorldsDir()
 
 	scenarios := []GetOptionsAtTestScenario{
 		{
