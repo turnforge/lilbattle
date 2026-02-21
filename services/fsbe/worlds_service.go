@@ -181,6 +181,9 @@ func (s *FSWorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRe
 	if req.World.DefaultGameConfig != nil {
 		world.DefaultGameConfig = req.World.DefaultGameConfig
 	}
+	if req.World.CreatorId != "" {
+		world.CreatorId = req.World.CreatorId
+	}
 	world.UpdatedAt = tspb.New(time.Now())
 
 	if err := s.storage.SaveArtifact(req.World.Id, "metadata", world); err != nil {
@@ -307,6 +310,11 @@ func (s *FSWorldsService) CreateWorld(ctx context.Context, req *v1.CreateWorldRe
 		return nil, err
 	}
 	req.World.Id = worldId
+
+	// Set creator from auth context if not provided
+	if req.World.CreatorId == "" {
+		req.World.CreatorId = authz.GetUserIDFromContext(ctx)
+	}
 
 	now := time.Now()
 	req.World.CreatedAt = tspb.New(now)
