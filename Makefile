@@ -15,7 +15,12 @@ ui:
 binlocal: 
 	go build -ldflags "$(LDFLAGS)" -o ./bin/lilbattle ./cmd/backend/*.go
 
-deploy: checklinks ui cli wasm 
+pushsecrets:
+	gh secret set GCP_SA_KEY < configs/weewar-cli-admin.json
+	gh secret set PROD_ENV_FILE < configs/.env
+	@echo "Secrets pushed to GitHub"
+
+deploy: checklinks ui cli wasm
 	rm -Rf locallinks ; mkdir locallinks
 	rm -Rf /tmp/lbdeployments && mkdir /tmp/lbdeployments
 	mv web/node_modules /tmp/lbdeployments
