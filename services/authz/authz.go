@@ -39,12 +39,19 @@ func RequireAuthenticated(ctx context.Context) (string, error) {
 
 // RequireOwnership checks if the authenticated user owns the resource.
 // creatorID is the ID of the user who created/owns the resource.
+// If creatorID is empty (orphaned resource), any authenticated user is allowed.
 func RequireOwnership(ctx context.Context, creatorID string) error {
-	userID, err := RequireAuthenticated(ctx)
+	_, err := RequireAuthenticated(ctx)
 	if err != nil {
 		return err
 	}
 
+	if creatorID == "" {
+		// Orphaned resource — allow any authenticated user
+		return nil
+	}
+
+	userID := GetUserIDFromContext(ctx)
 	if userID != creatorID {
 		return ErrNotOwner
 	}

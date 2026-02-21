@@ -250,6 +250,9 @@ func (s *WorldsService) UpdateWorld(ctx context.Context, req *v1.UpdateWorldRequ
 	if req.World.Difficulty != "" {
 		world.Difficulty = req.World.Difficulty
 	}
+	if req.World.CreatorId != "" {
+		world.CreatorId = req.World.CreatorId
+	}
 	world.UpdatedAt = time.Now()
 
 	// Update world data if provided

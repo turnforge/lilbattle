@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -77,10 +78,29 @@ Examples:
 	RunE: runWorldsShow,
 }
 
+// worldsUpdateCmd updates world metadata
+var worldsUpdateCmd = &cobra.Command{
+	Use:   "update <id>",
+	Short: "Update world metadata",
+	Long: `Update metadata fields on a world (name, description, difficulty, creator).
+
+Examples:
+  ww worlds update aruba --name "Aruba Revised"
+  ww worlds update aruba --creator-id me          # claim ownership (sets to your user ID)
+  ww worlds update prod:aruba --creator-id me
+  ww worlds update aruba --difficulty hard`,
+	Args: cobra.ExactArgs(1),
+	RunE: runWorldsUpdate,
+}
+
 var (
 	worldShowLabels     bool
 	worldShowTileLabels bool
 	worldShowOutput     string
+	worldUpdateName       string
+	worldUpdateDesc       string
+	worldUpdateDifficulty string
+	worldUpdateCreatorID  string
 )
 
 func init() {
@@ -88,6 +108,12 @@ func init() {
 	worldsCmd.AddCommand(worldsListCmd)
 	worldsCmd.AddCommand(worldsGetCmd)
 	worldsCmd.AddCommand(worldsShowCmd)
+	worldsCmd.AddCommand(worldsUpdateCmd)
+
+	worldsUpdateCmd.Flags().StringVar(&worldUpdateName, "name", "", "New world name")
+	worldsUpdateCmd.Flags().StringVar(&worldUpdateDesc, "description", "", "New description")
+	worldsUpdateCmd.Flags().StringVar(&worldUpdateDifficulty, "difficulty", "", "New difficulty (easy/medium/hard)")
+	worldsUpdateCmd.Flags().StringVar(&worldUpdateCreatorID, "creator-id", "", "Set creator ID (use 'me' for your own user ID)")
 
 	worldsShowCmd.Flags().BoolVar(&worldShowLabels, "labels", true, "Show unit labels")
 	worldsShowCmd.Flags().BoolVar(&worldShowTileLabels, "tile-labels", true, "Show tile labels")
@@ -264,6 +290,64 @@ func runWorldsGet(cmd *cobra.Command, args []string) error {
 	return formatter.PrintText(sb.String())
 }
 
+func runWorldsUpdate(cmd *cobra.Command, args []string) error {
+	client, worldID, err := getWorldsClient(args[0])
+	if err != nil {
+		return err
+	}
+
+	world := &v1.World{Id: worldID}
+	hasUpdate := false
+
+	if worldUpdateName != "" {
+		world.Name = worldUpdateName
+		hasUpdate = true
+	}
+	if worldUpdateDesc != "" {
+		world.Description = worldUpdateDesc
+		hasUpdate = true
+	}
+	if worldUpdateDifficulty != "" {
+		world.Difficulty = worldUpdateDifficulty
+		hasUpdate = true
+	}
+	if worldUpdateCreatorID != "" {
+		if worldUpdateCreatorID == "me" {
+			worldUpdateCreatorID = resolveMyUserID()
+			if worldUpdateCreatorID == "" {
+				return fmt.Errorf("could not determine your user ID — are you logged in? (ww login)")
+			}
+		}
+		world.CreatorId = worldUpdateCreatorID
+		hasUpdate = true
+	}
+
+	if !hasUpdate {
+		return fmt.Errorf("no updates specified (use --name, --description, --difficulty, or --creator-id)")
+	}
+
+	ctx := context.Background()
+	_, err = client.UpdateWorld(ctx, &v1.UpdateWorldRequest{World: world})
+	if err != nil {
+		return fmt.Errorf("failed to update world: %w", err)
+	}
+
+	// Fetch and display updated world
+	resp, err := client.GetWorld(ctx, &v1.GetWorldRequest{Id: worldID})
+	if err != nil {
+		return fmt.Errorf("world updated but failed to fetch result: %w", err)
+	}
+
+	fmt.Printf("Updated world: %s (%s)\n", resp.World.Name, resp.World.Id)
+	if resp.World.CreatorId != "" {
+		fmt.Printf("  Creator: %s\n", resp.World.CreatorId)
+	}
+	if resp.World.Difficulty != "" {
+		fmt.Printf("  Difficulty: %s\n", resp.World.Difficulty)
+	}
+	return nil
+}
+
 func runWorldsShow(cmd *cobra.Command, args []string) error {
 	client, worldID, err := getWorldsClient(args[0])
 	if err != nil {
@@ -317,6 +401,33 @@ func runWorldsShow(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	return nil
+}
+
+// resolveMyUserID returns the current user's ID from stored credentials or JWT token.
+func resolveMyUserID() string {
+	creds, err := GetActiveCredentials(getProfileName())
+	if err != nil || creds == nil {
+		return ""
+	}
+	if creds.UserID != "" {
+		return creds.UserID
+	}
+	// Fallback: decode JWT "sub" claim
+	parts := strings.SplitN(creds.AccessToken, ".", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return ""
+	}
+	var claims struct {
+		Sub string `json:"sub"`
+	}
+	if json.Unmarshal(payload, &claims) != nil {
+		return ""
+	}
+	return claims.Sub
 }
 
 // worldSummaryMap converts a World proto to a summary map for JSON output
