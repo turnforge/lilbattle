@@ -5,10 +5,10 @@ env_variables:
   LILBATTLE_ENV: production
   LILBATTLE_BASE_URL: https://lilbattle.com
   # Backend storage configuration
-  # Options: local, pg, gae
+  # Options: local, pg, gae (worlds/games), local, r2 (filestore)
   WORLDS_SERVICE_BE: gae
   GAMES_SERVICE_BE: gae
-  FILESTORE_BE: local
+  FILESTORE_BE: r2
   # GAE_PROJECT is automatically set by App Engine (GOOGLE_CLOUD_PROJECT)
   # GAE_NAMESPACE can be set for multi-tenancy (optional)
 

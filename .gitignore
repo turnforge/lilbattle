@@ -21,3 +21,4 @@ storage
 
 # Templar lock file (machine-specific)
 web/templates/templar.lock
+.wrangler/
