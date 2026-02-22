@@ -1,17 +1,32 @@
 # LilBattle Launch Readiness Audit
 
 **Audit Date**: January 9, 2026
-**Last Updated**: January 11, 2026
-**Overall Status**: READY for public launch
-**Estimated Completion**: 95%
+**Last Updated**: February 22, 2026
+**Overall Status**: READY for public launch (core), test gaps remain
+**Estimated Completion**: 95% (features), ~60% (test coverage)
 
 ---
 
 ## Executive Summary
 
-LilBattle has a solid technical foundation with production-ready core gameplay, multi-backend persistence, and clean architecture. Major security and legal blockers have been addressed. A few remaining items need attention before public announcement.
+LilBattle has a solid technical foundation with production-ready core gameplay, multi-backend persistence, and clean architecture. All critical security and legal blockers have been addressed. The February 2026 audit adds a detailed analysis of test coverage across every flow and game logic path, identifying where combinatorial/variable testing is needed.
 
-### Critical Blockers Status
+### Test Inventory (Feb 2026)
+
+| Package | Tests | Status |
+|---------|-------|--------|
+| `tests/` (game logic) | ~320 | All passing |
+| `lib/` (action sequences, rules) | ~40 | 4 failing (fix adjacency) |
+| `cmd/cli/` | ~10 | All passing |
+| `services/r2/` | 2 files | Not in default CI |
+| `services/authz/` | 1 file | Not in CI |
+| `web/server/` | 2 files | Not in CI |
+| `web/tests/` (TS) | 2 files | Not in CI |
+| Playwright e2e | 0 files | Configured but empty |
+
+**Total**: 379 test runs, 368 passing, 4 failing (all fix-adjacency in `lib/action_sequence_test.go`).
+
+### Critical Blockers Status (Jan 2026 — all resolved)
 
 | Area | Issue | Status |
 |------|-------|--------|
@@ -29,88 +44,59 @@ LilBattle has a solid technical foundation with production-ready core gameplay, 
 
 ---
 
-## Detailed Audit Results
+## 1. Security & Authentication
 
-### 1. Authentication & Security
+### Completed ✅
 
-#### What's Implemented ✅
-- **OAuth 2.0 Providers**: Google, GitHub, Twitter/X (with PKCE)
-- **Session Management**: SCS library with middleware
-- **Cookie Security**: HttpOnly, Secure, SameSite=Lax on OAuth cookies
-- **SQL Injection Protection**: Uses GORM ORM, no raw SQL
-- **Basic CSRF**: State parameter for OAuth flows
-
-#### Completed Security Items ✅
-
-**1. API Layer Authentication** (PR #70)
-- gRPC/Connect endpoints now have authentication via metadata
+**API Authentication** (PR #70)
+- gRPC/Connect endpoints have authentication via metadata
 - User ID passed from HTTP session to gRPC context
 - Auth interceptors enabled in grpcserver.go
 - Uses oneauth library for standardized auth handling
 
-**2. Rate Limiting Implemented** (PR #70)
-- Sliding window rate limiter middleware
+**Rate Limiting** (PR #70)
 - Auth endpoints: 10 requests per 15 minutes
 - API endpoints: 100 requests per minute
 - IP-based limiting with proper headers
 
-**3. Test Credentials Secured** (PR #70)
-- Test authentication now conditional on `ENABLE_TEST_AUTH=true`
+**Test Credentials Secured** (PR #70)
+- Test auth conditional on `ENABLE_TEST_AUTH=true`
 - User switching requires `ENABLE_SWITCH_AUTH=true`
 - Auth disabled only with explicit `DISABLE_API_AUTH=true`
 
-#### Completed Security Items ✅ (PR #72)
-
-**1. Authorization Checks on Game/World Operations**
-- Owner validation on UpdateGame/DeleteGame (game creator only)
-- Owner validation on UpdateWorld/DeleteWorld (world creator only)
+**Authorization Checks** (PR #72)
+- Owner validation on UpdateGame/DeleteGame, UpdateWorld/DeleteWorld
 - Player validation on ProcessMoves (must be game player AND current turn)
-- Uses oneauth library for user ID extraction from gRPC context
-- Services: `services/authz/authz.go` with helper functions
+- Services: `services/authz/authz.go` with 17 unit test cases
 
-**2. Security Headers Middleware**
-- Content-Security-Policy (strict in prod, relaxed in dev)
-- X-Content-Type-Options: nosniff
-- X-Frame-Options: DENY
-- X-XSS-Protection: 1; mode=block
-- Referrer-Policy: strict-origin-when-cross-origin
+**Security Headers** (PR #72)
+- CSP, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
 - Middleware: `web/server/securityheaders.go`
 
-**3. Authorization Unit Tests**
-- 17 test cases covering all authorization scenarios
-- Tests: `services/authz/authz_test.go`
+**OAuth Providers**
+- Google, GitHub, Twitter/X (with PKCE)
+- Session management via SCS library
 
-#### Remaining Security Items 🟡
-
-**1. Input Validation Weak**
-- Query parameters rendered without sanitization
-- No password strength requirements visible
-- Form validation minimal
-
-#### Security Recommendations Priority
+### Remaining Security Items
 
 | Priority | Task | Status |
 |----------|------|--------|
-| P0 | Implement API authentication (JWT/session) | ✅ DONE (#70) |
-| P0 | Add authorization checks on game/world operations | ✅ DONE (#72) |
-| P0 | Remove hardcoded test credentials | ✅ DONE (#70) |
-| P0 | Implement rate limiting middleware | ✅ DONE (#70) |
-| P1 | Add security headers middleware | ✅ DONE (#72) |
-| P1 | Fix insecure gRPC connections | 🟡 TODO |
-| P1 | Add input validation framework | 🟡 TODO |
-| P2 | Add CSRF tokens to all forms | TODO |
-| P2 | Implement audit logging | TODO |
+| P1 | Fix insecure gRPC connections (TLS) | 🟡 TODO |
+| P1 | Input validation framework | 🟡 TODO |
+| P2 | CSRF tokens on all forms | TODO |
+| P2 | Audit logging | TODO |
 
 ---
 
-### 2. Gameplay Features
+## 2. Gameplay Features
 
-#### Complete ✅ (Production Ready)
+### Complete ✅ (Production Ready)
 - **Movement System**: Dijkstra pathfinding, 44 unit types, terrain costs
-- **Combat System**: Probabilistic damage, 1.2MB authentic matrices, wound bonus
+- **Combat System**: Probabilistic damage, 1.2MB authentic matrices, wound bonus, splash
 - **Building Units**: Cost validation, terrain checks, shortcut generation
 - **Capture System**: Multi-turn mechanic, ownership transfer
 - **Healing System**: Terrain-based, unit-type restrictions
+- **Fix/Repair System**: Adjacent friendly unit repair (4 test failures — see below)
 - **Turn Management**: Player rotation, income generation, lazy top-up
 - **Persistence**: File, PostgreSQL, Datastore backends
 - **Replay/History**: Move groups, world changes, save/load
@@ -118,321 +104,482 @@ LilBattle has a solid technical foundation with production-ready core gameplay, 
 - **Maps/Worlds**: Hex coords, 26 terrains, dynamic sizing
 - **Multiplayer Infrastructure**: Sync broadcasting, transactions
 
-#### Partial/Incomplete ⚠️
+### Known Issues
 
-**1. AI Opponents** - NOT INTEGRATED
-- Complete AI library exists in `.attic/lib/ai/`
-- 4 difficulty levels (Easy/Medium/Hard/Expert)
-- Needs WASM bindings and web UI integration
-- **Impact**: Single-player mode requires manual hotseat
+**Fix/Repair Tests Broken** — 4 tests fail in `lib/action_sequence_test.go`:
+- `engineer_move_then_fix`, `support_move_then_fix`, `medic_move_then_fix`, `carrier_move_then_fix`
+- Root cause: After moving from (0,0) to an adjacent tile, the friendly unit at (-1,0) is distance 2 from the new position, but fix requires adjacency.
 
-**2. Victory Conditions** - SIMPLISTIC
-```go
-// Current: last player with units wins
-playersWithUnits > 1 → no winner
-playersWithUnits == 1 → that player wins
-```
-- No alternate win conditions (territory, economic, time)
-- No elimination conditions
-- No scoring system
+**Victory Conditions** — Simplistic (last player with units wins). No alternate win conditions, elimination detection, or scoring.
 
-**3. Action Progression** - 95% Complete
-- 10 action patterns work correctly
-- TODO: Attack counting and limits enforcement
-- TODO: canCapture/canBuild flags per unit type
+**Damage Estimate** — Hardcoded at 50 in `game.go:755`. UI previews show incorrect values.
 
-**4. Damage Estimate** - Hardcoded
-```go
-// game.go:755
-damageEstimate := int32(50) // TODO: Use proper damage calculation
-```
-- UI previews show incorrect damage estimates
-
-#### Gameplay Recommendations
-
-| Priority | Task | Effort |
-|----------|------|--------|
-| P1 | Fix damage estimate calculation | 4 hours |
-| P1 | Integrate AI with web UI | 3-5 days |
-| P2 | Enhance victory conditions | 1-2 days |
-| P2 | Complete action limits enforcement | 1 day |
-| P3 | Add replay playback controls | 2-3 days |
+**AI Opponents** — Library exists in `.attic/lib/ai/` but not integrated with web UI.
 
 ---
 
-### 3. Data Persistence
+## 3. Flow-by-Flow Test Coverage
 
-#### Complete ✅
-- **Multi-Backend Support**: GORM (PostgreSQL), Datastore, Filesystem, R2
-- **Game State Structure**: metadata.json, state.json, history.json
-- **Optimistic Locking**: Version fields on GameState, WorldData
-- **Transactions**: GORM and Datastore transactions work correctly
-- **WorldData Migration**: List→Map conversion works
+### 3.1 Authentication Flow
 
-#### Critical Gaps 🔴
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| Email sign-up | `web/server/auth.go`, oneauth | `connect_auth_integration_test.go` | Partial |
+| Email sign-in | oneauth `UsernameStore` | Integration test covers token pipeline | Partial |
+| OAuth (Google/GitHub/Twitter) | `web/server/auth.go` | None | **Gap** |
+| Session management | scs SessionManager | None | **Gap** |
+| Password reset | `web/server/password_pages.go` | None | **Gap** |
+| Auth middleware (gRPC) | `injectAuthMetadata` | Unit test exists | OK |
+| Rate limiting | goapplib middleware | None | **Gap** |
 
-**1. No Backup/Disaster Recovery Strategy**
-- No automated backups for any backend
-- No recovery procedures documented
-- Filesystem backend has zero redundancy
-- **Risk**: Complete data loss possible
+### 3.2 World Management Flow
 
-**2. No Encryption at Rest**
-- PostgreSQL encryption not configured
-- Datastore encryption not enabled
-- R2 versioning not set up
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| Create world | `services/worlds_service.go` | `worlds_service_test.go` | OK |
+| List worlds | WorldsService | `worlds_service_test.go` | OK |
+| Edit world (editor) | WorldEditorPage + backend | None (frontend-only) | **Gap** |
+| Delete world | Backend handler | None | **Gap** |
+| World viewer (readonly) | WorldViewerPage | None | **Gap** |
 
-**3. User Data Storage** ✅ COMPLETED (PR #71)
-- UsersService with full CRUD operations
-- Multi-backend support: Filesystem, GORM, Datastore
-- Extensible extras field for app-specific data
-- Proper caching layer
+### 3.3 Game Creation Flow
 
-#### Persistence Recommendations
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| StartGamePage config | Frontend + CreateGame RPC | None | **Gap** |
+| CreateGame RPC | GamesService | `singleton/games_service_test.go` | Partial |
+| Join game | JoinGame RPC | `join_game_test.go` | OK |
+| Game initialization | `lib.NewGame()` | Used in every test via GameBuilder | OK |
+| Player config (teams, colors) | GameConfiguration proto | Partial (builder sets players) | Partial |
+
+### 3.4 Gameplay Flow (Core Loop)
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| Select unit / get options | `GetOptionsAt()` | `get_options_at_test.go`, `action_options_test.go` | OK |
+| Movement | `ProcessMoveUnit()` | `moves_test.go` (9 cases) | OK |
+| Attack | `ProcessAttackUnit()` | `lib/attack_test.go`, `tests/combat_formula_test.go` | OK |
+| Build | `ProcessBuildUnit()` | `build_coins_test.go` (11 cases) | OK |
+| Capture | `ProcessCaptureBuilding()` | `capture_test.go`, `capture_highlights_test.go` | OK |
+| Heal | `ProcessHealUnit()` | `heal_test.go` | OK |
+| Fix/Repair | `ProcessFixUnit()` | **4 failing tests** — adjacency issue | **Broken** |
+| End turn | `ProcessEndTurn()` | `controller_test.go` | OK |
+| Victory check | `checkVictoryConditions()` | Tested indirectly | Partial |
+| Splash damage | Splash in `ProcessAttackUnit` | `splash_damage_test.go` | OK |
+| Lazy top-up | `TopUpUnitIfNeeded()` | Tested via movement/attack tests | Implicit |
+| Action progression | `GetAllowedActionsForUnit()` | `action_progression_test.go`, `action_sequence_test.go` | OK |
+
+### 3.5 Presenter / UI Sync Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| SceneClicked dispatch | `gameview_presenter.go` | None | **Gap** |
+| applyIncrementalChanges | Presenter | `apply_changes_test.go` | OK |
+| refreshExhaustedHighlights | Presenter | Indirect in apply_changes | Partial |
+| refreshCapturingHighlights | Presenter | `capture_highlights_test.go` | OK |
+| ApplyRemoteChanges (sync) | Presenter | None | **Gap** |
+| Highlight clearing | clearHighlightsAndSelection | None | **Gap** |
+| Build modal trigger | Presenter | None | **Gap** |
+
+### 3.6 Multiplayer Sync Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| GameSyncManager connect | Frontend TS | None | **Gap** |
+| Move publishing | Sync service | None | **Gap** |
+| Remote change application | `ApplyRemoteChanges()` | None | **Gap** |
+| Sequence tracking | GameSyncManager | None | **Gap** |
+
+### 3.7 CLI Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| Position parsing | `position_parser.go` | Used implicitly in CLI tests | Partial |
+| ww status | `cmd/status.go` | None directly | **Gap** |
+| ww move/attack/build | Various cmd files | `worlds_test.go`, `assert_test.go` | Partial |
+| ww map rendering | `cmd/map.go` | None | **Gap** |
+| Dry run mode | --dryrun flag | None | **Gap** |
+| JSON output mode | --json flag | None | **Gap** |
+
+### 3.8 Storage / Persistence Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| FS backend (load/save) | `fsbe/games_service.go` | Used by all integration tests | Implicit |
+| GORM backend | `gormbe/games_service.go` | None | **Gap** |
+| Datastore backend (GAE) | `gaebe/` | None | **Gap** |
+| R2/S3 file store | `services/r2/` | `filestore_test.go`, `r2_integration_test.go` | OK but not in CI |
+| Cache behavior | `backend_games_service.go` | None | **Gap** |
+| History append | `SaveMoves()` | Implicit in integration tests | Partial |
+
+### 3.9 Deployment Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| CI build check | `ci.yml` | Runs on every push | OK |
+| Go test suite in CI | `ci.yml` | `tests/`, `cmd/cli/`, `services/r2/`, `web/assets/themes/` | OK |
+| Frontend build in CI | `ci.yml` | `pnpm run buildprod` | OK |
+| WASM compile check | `ci.yml` | `go build ./cmd/wasm` | OK |
+| Local replace guard | `ci.yml` | Checks go.mod and package.json | OK |
+| GAE deploy | `deploy.yml` | Deploy + verify | OK |
+| TS unit tests in CI | **Missing** | Not run | **Gap** |
+| Playwright e2e in CI | **Missing** | Not configured | **Gap** |
+
+### 3.10 Authorization Flow
+
+| Step | Implementation | Tests | Verdict |
+|------|---------------|-------|---------|
+| Authz rules | `services/authz/authz.go` | `authz_test.go` | OK but not in CI |
+| Game ownership checks | In-service checks | None | **Gap** |
+| World ownership checks | In-service checks | None | **Gap** |
+
+---
+
+## 4. Game/Move Logic — Variable Testing
+
+Areas where the game logic needs combinatorial testing across unit types, terrain types, player counts, and game states.
+
+### 4.1 Movement Across Terrain Types
+
+**Current**: `moves_test.go` tests basic movement on grass. `movement_test.go` tests a few terrain costs.
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Land unit on grass/plains/desert/mountain | High | Partial |
+| Land unit blocked by water | High | **Gap** |
+| Naval unit on shallow/regular/deep water | High | **Gap** |
+| Naval unit blocked by land | High | **Gap** |
+| Air unit ignoring terrain costs | Medium | **Gap** |
+| Amphibious unit (hovercraft) crossing land/water | High | **Gap** |
+| Road/bridge crossing modifiers | Medium | **Gap** |
+| Movement through occupied tiles (pass-through) | High | 1 test exists |
+| Movement blocked by enemy units | High | **Gap** |
+
+### 4.2 Combat Across Unit Matchups
+
+**Current**: `combat_formula_test.go` tests damage formula math. `attack_test.go` tests basic flow.
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Infantry vs Infantry (baseline) | High | Covered |
+| Tank vs Infantry (heavy vs light) | High | **Gap** |
+| Anti-Air vs Air unit (specialization) | High | **Gap** |
+| Air unit vs Naval unit | Medium | **Gap** |
+| Ranged unit attack at max range | High | **Gap** |
+| Ranged unit attack at min range (blocked) | High | **Gap** |
+| Counter-attack eligibility matrix | High | **Gap** |
+| Wound bonus accumulation (3+ attacks) | Medium | Partial |
+| Damage with terrain defense bonuses | High | **Gap** |
+| Unit killed and removed from world | High | Covered |
+| Both units killed simultaneously | Medium | **Gap** |
+
+### 4.3 Splash Damage Scenarios
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Splash hits adjacent enemy units | High | Covered |
+| Splash does NOT hit air units | High | Covered |
+| Splash friendly fire | Medium | **Gap** |
+| Splash kills adjacent unit | Medium | **Gap** |
+| Multiple units in splash radius | Medium | **Gap** |
+| Splash damage values by unit type | Medium | **Gap** |
+
+### 4.4 Build System Variations
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Build each unit type (cost varies) | High | **Gap** |
+| Build from landbase vs airport vs naval base | High | **Gap** |
+| Allowed units filter restricts build options | High | `allowed_units_test.go` |
+| Build at airport only allows air units | Medium | **Gap** |
+| Build at naval base only allows naval units | Medium | **Gap** |
+| One build per tile per turn | High | Covered |
+| Build cost matches rules JSON | Medium | **Gap** |
+| New unit has zero movement | High | Covered |
+
+### 4.5 Capture Mechanics
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Start capture on enemy building | High | Covered |
+| Capture completes next turn | High | Covered |
+| Capture interrupted by unit death | High | **Gap** |
+| Capture interrupted by unit moving away | Medium | **Gap** |
+| Only certain units can capture | High | **Gap** |
+| Capture neutral building | Medium | **Gap** |
+| Capture changes tile ownership | High | Covered |
+| Multiple captures in same turn | Medium | **Gap** |
+
+### 4.6 Action Progression Sequences
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Move then Attack sequence | High | Covered |
+| Move then Capture sequence | High | Covered |
+| Move then Fix sequence | High | **Broken** (4 failing tests) |
+| Attack exhausts turn | High | Covered |
+| Pipe-separated alternatives | Medium | Covered |
+| ChosenAlternative persistence | Medium | Covered |
+| Unit type-specific progression | Medium | Partial |
+
+### 4.7 End Turn / Turn Cycling
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| 2-player turn cycling | High | Covered |
+| 3+ player turn cycling | Medium | **Gap** |
+| Income calculation per player | High | `build_coins_test.go` |
+| Capture completion at turn start | High | Covered |
+| Lazy top-up reset at turn boundary | High | Implicit |
+| Victory condition: last player standing | High | **Gap** |
+| Victory condition: all bases captured | Medium | **Gap** |
+| Player elimination mid-game | Medium | **Gap** |
+
+### 4.8 Heal / Fix Mechanics
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Heal on city terrain | High | Covered |
+| Heal on non-healing terrain (blocked) | High | Covered |
+| Fix adjacent friendly unit | High | **Broken** |
+| Fix formula verification | Medium | **Gap** |
+| Fix from different support unit types | Medium | **Gap** |
+| Medic fix range vs Stratotanker range | Medium | **Gap** |
+| Fix cannot target enemy units | Medium | **Gap** |
+
+### 4.9 Pathfinding Edge Cases
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Path around impassable terrain | High | **Gap** |
+| Path through narrow corridor | Medium | **Gap** |
+| No valid path exists | High | **Gap** |
+| Multiple equal-cost paths | Low | **Gap** |
+| Pass-through occupied friendly tile | High | 1 test |
+| Blocked by enemy unit on path | High | **Gap** |
+| Movement exactly exhausting budget | Medium | **Gap** |
+
+### 4.10 World Transaction Layer
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Push/Pop preserves parent state | High | Covered |
+| Copy-on-write isolation | High | Covered |
+| Move unit across layers | Medium | Covered |
+| Concurrent reads on different layers | Medium | **Gap** |
+| Deep nesting (3+ layers) | Low | **Gap** |
+
+### 4.11 Seed / RNG Determinism
+
+| Test Scenario | Priority | Status |
+|---------------|----------|--------|
+| Same seed produces same combat outcomes | High | Covered |
+| Different seeds produce different outcomes | Medium | Covered |
+| Seed preserved across save/load | High | **Gap** |
+| Deterministic replay from history | Medium | **Gap** |
+
+---
+
+## 5. Priority Recommendations
+
+### P0 — Fix Now
+
+1. **Fix the 4 failing tests** in `lib/action_sequence_test.go` (fix adjacency setup)
+2. **Add `lib/` tests to CI** (blocked by item 1)
+3. **Add TS tests to CI** (`cd web && pnpm test`)
+4. **Add `services/authz/` and `web/server/` tests to CI**
+5. **Victory condition tests** — a game without verified win conditions is incomplete
+6. **Fix damage estimate** — hardcoded at 50 in `game.go`
+
+### P1 — High Priority (Production Quality)
+
+7. **Presenter SceneClicked tests** — main interaction path, zero coverage
+8. **Movement terrain matrix** — table-driven tests for unit/terrain cost combinations
+9. **Combat matchup matrix** — table-driven tests for attacker/defender/terrain damage
+10. **Build eligibility matrix** — which units can be built at which bases
+11. **Capture interruption** — capture broken by death or movement
+12. **3+ player turn cycling and elimination**
+13. **Pathfinding edge cases** — blocked paths, enemy blocking, narrow corridors
+
+### P2 — Important (Robustness)
+
+14. **Multiplayer sync integration test** — publish/receive/converge
+15. **GORM backend tests** — production database layer untested
+16. **Position parser unit tests** — all input formats
+17. **CLI subcommand tests** — status, map, options output
+18. **Splash damage variations** — friendly fire, multi-target, kill
+19. **Seed determinism across save/load**
+20. **Rate limiting verification**
+21. **Input validation framework**
+
+### P3 — Nice to Have
+
+22. **Playwright e2e tests** — game creation, move, end turn, verify
+23. **OAuth integration tests** with mocked providers
+24. **Cache behavior tests** for backend service
+25. **World editor e2e** — paint, save, reload
+26. **Fix formula verification** — probabilistic correctness testing
+27. **Session/password reset handler tests**
+28. **API documentation** for developers
+29. **FAQ/Help page** for users
+30. **Browser-based game tutorial**
+
+---
+
+## 6. Testing Infrastructure
+
+### 6.1 CI Coverage Gaps
+
+The current CI command:
+```
+go test ./tests/... ./cmd/cli/... ./services/r2/... ./web/assets/themes/...
+```
+
+**Misses**:
+- `./lib/...` (action sequence tests, rules loader)
+- `./services/authz/...`
+- `./web/server/...` (connect auth integration)
+- TypeScript unit tests (`web/tests/`)
+
+Proposed CI test command:
+```
+go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
+cd web && pnpm test
+```
+
+Note: Adding `./lib/...` will make CI fail until the 4 fix tests are repaired.
+
+### 6.2 Test Coverage Reporting
+
+```
+go test -coverprofile=coverage.out ./tests/... ./lib/... ./cmd/cli/...
+go tool cover -func=coverage.out | tail -1
+```
+
+### 6.3 GameBuilder Enhancements
+
+The `GameBuilder` in `tests/game_builder.go` is solid. Suggested additions:
+- `WithCrossing(fromQ, fromR, toQ, toR, terrainType)` for road/bridge tests
+- `WithAllowedUnits(unitTypes...)` for build restriction tests
+- `UnitDamaged(q, r, player, unitType, health)` shorthand for combat tests
+- `MultiPlayer(n)` with auto-generated bases for N-player tests
+
+### 6.4 Table-Driven Test Template
+
+For game logic variable testing:
+```go
+func TestMovementCosts(t *testing.T) {
+    cases := []struct {
+        name     string
+        unitType int32
+        terrain  int32
+        expected float64
+    }{
+        {"soldier on grass", UnitTypeSoldierBasic, lib.TileTypeGrass, 1.0},
+        {"soldier on mountain", UnitTypeSoldierBasic, lib.TileTypeMountain, 2.0},
+        {"tank on road", UnitTypeTank, TileTypeRoad, 0.5},
+    }
+    for _, tc := range cases {
+        t.Run(tc.name, func(t *testing.T) {
+            // ... verify movement cost
+        })
+    }
+}
+```
+
+### 6.5 Playwright E2E Setup
+
+Create `web/playwright.config.ts` and initial smoke tests:
+1. **Auth smoke**: Load login page, verify form renders
+2. **Game creation smoke**: Login, create game, verify redirect to viewer
+3. **Gameplay smoke**: Open game, click unit, see highlights, click to move
+4. **World editor smoke**: Open editor, paint tile, save, reload, verify
+
+---
+
+## 7. Documentation & Legal
+
+### Completed ✅
+- LICENSE file (MIT License)
+- About page (PR #66)
+- Contact/Support page (PR #66)
+- README.md with architecture diagram and CLI examples
+- CLI User Guide (404 lines)
+- Architecture docs (2000 lines)
+- Terms of Service and Privacy Policy (generic)
+- Profile page (account management)
+
+### Remaining
 
 | Priority | Task | Status |
 |----------|------|--------|
-| P0 | Implement automated backup strategy | 🟡 DEFERRED (using cloud storage) |
-| P0 | Document disaster recovery procedures | 🟡 DEFERRED (cloud provider handles) |
-| P1 | Enable encryption at rest (PostgreSQL, Datastore) | 🟡 TODO |
-| P1 | Implement user profile storage | ✅ DONE (#71) |
-| P2 | Add comprehensive schema validation | TODO |
-| P2 | Implement Redis for distributed caching | TODO |
+| P1 | API documentation (OpenAPI or README) | 🟡 TODO |
+| P1 | Customize Terms/Privacy for LilBattle practices | TODO |
+| P1 | Help/FAQ page | 🟡 TODO |
+| P2 | Browser game tutorial | TODO |
+| P2 | CONTRIBUTING.md | TODO |
+| P3 | CHANGELOG.md | TODO |
 
 ---
 
-### 4. Documentation & Legal
+## 8. Monetization
 
-#### Exists ✅
-- **README.md**: Clear structure, architecture diagram, CLI examples
-- **Developer Guide**: Quick start, architecture overview, testing
-- **CLI User Guide**: 404 lines, comprehensive gameplay tutorial
-- **Architecture Docs**: 2000 lines, extremely detailed
-- **Terms of Service**: Generic but exists
-- **Privacy Policy**: Generic but exists
-- **Profile Page**: Account management working
-
-#### Completed ✅
-
-1. **LICENSE file** - Added (MIT License)
-2. **About Page** - Created with project info, features, how to play (PR #66)
-3. **Contact/Support Page** - Created with GitHub links (PR #66)
-
-#### Still Missing 🟡
-
-**High Priority:**
-1. **API Documentation** - No REST/gRPC docs for developers
-2. **FAQ/Help Page** - No user support documentation
-3. **Game Tutorial** - No browser-based onboarding
-
-**Medium Priority:**
-4. **CONTRIBUTING.md** - No contribution guidelines
-5. **Customized Terms/Privacy** - Generic boilerplate needs LilBattle-specific practices
-6. **CHANGELOG.md** - No version tracking
-7. **CODE_OF_CONDUCT.md** - No community guidelines
-
-#### Documentation Recommendations
-
-| Priority | Task | Status |
-|----------|------|--------|
-| P0 | Add LICENSE file | ✅ DONE |
-| P0 | Create AboutPage.html | ✅ DONE |
-| P0 | Create ContactUsPage.html | ✅ DONE |
-| P1 | Create API documentation | 🟡 TODO |
-| P1 | Customize Terms/Privacy for LilBattle | TODO |
-| P1 | Create Help/FAQ page | 🟡 TODO |
-| P2 | Create browser game tutorial | TODO |
-| P2 | Add CONTRIBUTING.md | TODO |
-| P3 | Add CHANGELOG.md | TODO |
-
----
-
-### 5. Marketing & Landing Pages
-
-#### Exists ✅
-- **HomePage**: Recent games/worlds, stats, quick actions
-- **LoginPage**: Professional OAuth UI, multiple providers
-- **Favicons**: Multiple formats in /static/favicons/
-- **Dark Mode**: Full Tailwind CSS support
-- **Consistent Branding**: Lightning bolt icon, LilBattle name
-
-#### Gaps ⚠️
-- No marketing copy explaining value proposition
-- No feature showcase with screenshots/videos
-- No onboarding flow for new users
-- No "getting started" prompts
-- Header/Footer missing Help, Docs, About links
-
-#### Marketing Recommendations
-
-| Priority | Task | Effort |
-|----------|------|--------|
-| P1 | Add marketing copy to HomePage | 4 hours |
-| P1 | Update Header/Footer navigation | 2 hours |
-| P2 | Create feature showcase section | 1 day |
-| P2 | Add new user onboarding prompts | 1 day |
-| P3 | Create video tutorials | 3-5 days |
-
----
-
-## Launch Readiness Checklist
-
-### Phase 1: Critical Blockers - COMPLETE ✅
-
-- [x] **Security**
-  - [x] Implement API authentication (JWT or session-based) - PR #70
-  - [x] Add authorization checks on all game/world operations - PR #72
-  - [x] Remove hardcoded test credentials from user.go - PR #70
-  - [x] Implement rate limiting middleware - PR #70
-  - [x] Add security headers middleware - PR #72
-  - [x] Add authorization unit tests - PR #72
-
-- [x] **Legal**
-  - [x] Add LICENSE file (MIT License)
-  - [x] Create AboutPage.html template - PR #66
-  - [x] Create ContactUsPage.html template - PR #66
-
-- [x] **Persistence**
-  - [x] Backup strategy - DEFERRED (using cloud storage with built-in redundancy)
-  - [x] Disaster recovery - DEFERRED (cloud provider handles)
-  - [ ] Enable encryption at rest - Optional
-  - [x] Implement user profile storage - PR #71
-
-### Phase 2: High Priority - IN PROGRESS
-
-- [ ] **Security**
-  - [ ] Fix insecure gRPC connections (enable TLS)
-  - [ ] Implement input validation framework
-  - [ ] Add CSRF tokens to all forms
-
-- [ ] **Documentation**
-  - [ ] Create API documentation (OpenAPI or README)
-  - [ ] Customize Terms of Service for LilBattle practices
-  - [ ] Customize Privacy Policy for LilBattle data handling
-  - [ ] Create Help/FAQ page
-
-- [ ] **Gameplay**
-  - [ ] Fix damage estimate calculation
-  - [ ] Begin AI integration with web UI
-
-### Phase 3: Medium Priority
-
-- [ ] **Features**
-  - [ ] Complete AI integration
-  - [ ] Enhance victory conditions
-  - [ ] Add action limits enforcement
-
-- [ ] **User Experience**
-  - [ ] Create browser-based game tutorial
-  - [ ] Add marketing copy to HomePage
-  - [ ] Update navigation links
-
-- [ ] **Infrastructure**
-  - [x] Implement user profile storage - PR #71
-  - [ ] Add comprehensive schema validation
-  - [ ] Implement audit logging
-
-### Phase 4: Polish
-
-- [ ] Add CONTRIBUTING.md and CODE_OF_CONDUCT.md
-- [ ] Add CHANGELOG.md with version tracking
-- [ ] Create video tutorials
-- [ ] Add replay playback controls
-- [ ] Implement Redis for distributed caching
-
----
-
-## Risk Assessment
-
-### High Risk - ALL MITIGATED ✅
-1. ~~**Data Breach**: API has no auth~~ → ✅ API authentication implemented (#70)
-2. ~~**Authorization Bypass**: Users could access others' games~~ → ✅ Authorization checks implemented (#72)
-3. ~~**Data Loss**: No backups~~ → ✅ Using cloud storage with built-in redundancy
-4. ~~**Legal Liability**: No LICENSE~~ → ✅ MIT License added
-5. ~~**Denial of Service**: No rate limiting~~ → ✅ Rate limiting implemented (#70)
-6. ~~**Security Headers Missing**~~ → ✅ Security headers middleware implemented (#72)
-
-### Medium Risk
-1. **Poor Retention**: No tutorial, users may churn
-2. **Support Burden**: No FAQ/Help, increased support requests
-3. **Negative Reviews**: Damage estimates wrong, poor UX
-
-### Low Risk
-1. **Missing Features**: AI not integrated but game works
-2. **Limited Victory**: Simple win condition but functional
-3. **Input Validation**: Basic but functional
-
----
-
-## Conclusion
-
-LilBattle is **READY for public launch**. All critical security and legal blockers have been addressed.
-
-**Current Status**: 95% complete
-
-**Completed Critical Items**:
-1. ✅ API authentication implemented (PR #70)
-2. ✅ Rate limiting added (PR #70)
-3. ✅ Test credentials secured (PR #70)
-4. ✅ LICENSE file added (MIT)
-5. ✅ About and Contact pages created (PR #66)
-6. ✅ UsersService with multi-backend (PR #71)
-7. ✅ Authorization checks on game/world operations (PR #72)
-8. ✅ Security headers middleware (PR #72)
-9. ✅ Authorization unit tests (PR #72)
-
-**Optional Post-Launch Improvements**:
-1. 🟡 API documentation for developers
-2. 🟡 FAQ/Help page for users
-3. 🟡 AI integration with web UI
-4. 🟡 Browser-based game tutorial
-
-The core game mechanics are production-ready and well-tested. All critical security, legal, and infrastructure requirements have been met. The remaining items (tutorials, AI integration, API docs) can be addressed incrementally post-launch based on user feedback.
-
----
-
-## 6. Monetization Strategy
-
-**Reference Document**: See [MONETIZATION.md](./MONETIZATION.md) for full strategy.
-
-### Summary
-
-WeeWar will launch with ad-based monetization before implementing subscriptions. The turn-based nature of the game provides natural pause points for non-intrusive ad placement.
-
-### Competitive Position
-
-| Competitor | Model | WeeWar Opportunity |
-|------------|-------|-------------------|
-| Board Game Arena | Subscription ($5/mo) | Free + ads alternative |
-| BoardGameGeek | Heavy ads, no gameplay | Actual playable games |
-| Tabletopia | Freemium tiers | Simpler, cleaner UX |
-
-### Phased Implementation
+See [MONETIZATION.md](./MONETIZATION.md) for full strategy.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| Phase 1 | Footer banners, homepage ads | 🟡 Ready to implement |
-| Phase 2 | Game end screen, turn transitions | 📋 Planned |
-| Phase 3 | Rewarded video ads | 📋 Planned |
-| Phase 4 | Premium ad-free tier | 📋 Planned |
+| Phase 1 | Footer banners, homepage ads, feature flags | ✅ Implemented |
+| Phase 2 | Game end screen, turn transition ads | Planned |
+| Phase 3 | Rewarded video ads | Planned |
+| Phase 4 | Premium ad-free tier ($3-5/month) | Planned |
 
-### Launch Checklist (Phase 1)
+Phase 1 ad infrastructure (AdSlot component, AdScript loader, feature flags, CSP updates) is implemented. Google AdSense account setup still needed.
 
-- [ ] Create `AdSlot` component with size variants
-- [ ] Add footer ad container
-- [ ] Add homepage mid-section ad
-- [ ] Set up Google AdSense account
-- [ ] Update CSP headers for ad domains
-- [ ] Test dark mode compatibility
-- [ ] Test mobile responsiveness
+---
 
-### Revenue Projections
+## 9. Risk Assessment
 
-| DAU | Monthly Ad Revenue | With 2% Premium |
-|-----|-------------------|-----------------|
-| 1,000 | ~$420 | ~$520 |
-| 10,000 | ~$6,600 | ~$7,600 |
+### Mitigated ✅
+1. ~~Data Breach: API has no auth~~ → API authentication (#70)
+2. ~~Authorization Bypass~~ → Authorization checks (#72)
+3. ~~Data Loss: No backups~~ → Cloud storage with built-in redundancy
+4. ~~Legal Liability: No LICENSE~~ → MIT License added
+5. ~~Denial of Service~~ → Rate limiting (#70)
+6. ~~Security Headers Missing~~ → Security headers middleware (#72)
 
-### Recommendation
+### Medium Risk
+1. **Test gaps in game logic** — combat matchups, terrain movement, victory conditions untested
+2. **Fix/repair broken** — 4 failing tests, feature may be buggy in production
+3. **Multiplayer untested** — sync flow has zero coverage
+4. **Poor retention** — no tutorial, users may churn
+5. **Damage estimates wrong** — hardcoded at 50
 
-Launch with **Phase 1 only** (footer + homepage ads). Measure user impact for 2-4 weeks before expanding. This minimizes risk while establishing baseline revenue.
+### Low Risk
+1. AI not integrated but game works in hotseat mode
+2. Simple win condition but functional
+3. Missing API docs (internal-facing for now)
+
+---
+
+## 10. Summary Scorecard
+
+| Area | Coverage | Grade |
+|------|----------|-------|
+| Security (auth, authz, headers) | All critical items completed | **A** |
+| Game engine (lib/) | 368/372 passing, comprehensive | **A** |
+| Move processing | Well-tested, missing cross-type coverage | **B+** |
+| Combat formula | Formula math covered, matchups not | **B** |
+| Build/Capture/Heal | Happy paths covered | **B** |
+| Fix/Repair | 4 broken tests | **D** |
+| Action progression | Good coverage | **A-** |
+| Turn management | Basic coverage | **B** |
+| Victory conditions | No dedicated tests | **D** |
+| Presenter layer | Minimal | **D** |
+| Multiplayer sync | None | **F** |
+| Frontend (TS unit) | 2 test files, not in CI | **D** |
+| E2E tests | None | **F** |
+| CLI commands | Minimal | **C-** |
+| Storage backends | FS implicit, GORM/GAE untested | **C** |
+| CI pipeline | Good for Go, missing TS and several packages | **B-** |
+| Documentation & Legal | Core items done, API docs missing | **B** |
+| Monetization | Phase 1 infrastructure done | **B+** |
