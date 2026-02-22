@@ -632,11 +632,14 @@ const response = await client.gamesService.createGame(request);
 - **User Experience**: Faster, more intuitive CLI with hex neighbor shortcuts
 - **Clean Architecture**: Presenter drives all UI updates through well-defined methods
 
-**Last Updated**: 2026-02-20
-**Current Focus**: Production hardening and CLI tooling
-**Recent Milestone**: World migration to production, Resend email integration
+**Last Updated**: 2026-02-21
+**Current Focus**: Production hardening, auth correctness, and testing
+**Recent Milestone**: Connect auth fix and integration tests
 
 **Recent Achievements**:
+- Fixed Connect auth bug: `injectAuthMetadata()` used outgoing instead of incoming metadata, silently dropping user IDs
+- Connect auth integration tests covering the full HTTP auth pipeline (Bearer token through to gRPC service)
+- Unit tests for `injectAuthMetadata` context propagation
 - Resend email integration for password reset and email verification
 - Consistent world ID normalization (lowercase) across all three backends
 - PropertyLoadSaver support for Datastore entities with map fields

@@ -24,6 +24,10 @@
 - ✅ Resend email integration for transactional emails
   - ResendEmailSender implements oneauth.SendEmail interface
   - Conditional: uses Resend when RESEND_API_KEY is set, falls back to ConsoleEmailSender
+- ✅ Fixed Connect auth: `injectAuthMetadata()` was using `AppendToOutgoingContext` instead of `NewIncomingContext`, causing user IDs to never reach gRPC services through the Connect HTTP path
+- ✅ Connect auth integration tests (`web/server/connect_auth_integration_test.go`)
+  - Full HTTP pipeline: Bearer token -> oneauth middleware -> Connect adapter -> gRPC incoming metadata -> mock service
+  - 5 test cases covering auth propagation, no-auth, invalid token, multi-user isolation, all write endpoints
 
 ## TODO
 
