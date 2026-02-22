@@ -195,11 +195,11 @@ func newActionSequenceTestRunner(t *testing.T, tc ActionSequenceTestCase) *actio
 	}
 
 	// Add damaged friendly unit if needed (for fix tests)
-	// Place at (2, 0) so it's adjacent to (1, 0) where unit moves to in "move then fix" tests
-	// For tests without move, it's also adjacent to (0, 0) where unit starts
+	// Place at (1, -1) so it's adjacent to both (0, 0) where unit starts
+	// AND (1, 0) where unit moves to in "move then fix" tests
 	if setup.DamagedFriendly {
 		friendly := &v1.Unit{
-			Q: -1, R: 0, Player: 1, UnitType: testUnitTypeSoldier,
+			Q: 1, R: -1, Player: 1, UnitType: testUnitTypeSoldier,
 			Shortcut: "A2", AvailableHealth: setup.FriendlyHealth, DistanceLeft: 3,
 		}
 		game.World.AddUnit(friendly)
