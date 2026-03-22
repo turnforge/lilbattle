@@ -1,6 +1,6 @@
 module github.com/turnforge/lilbattle
 
-go 1.24.6
+go 1.25.0
 
 require (
 	cloud.google.com/go/datastore v1.21.0
@@ -12,7 +12,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0
 	github.com/chzyer/readline v1.5.1
 	github.com/fatih/color v1.18.0
-	github.com/felixge/httpsnoop v1.0.4
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3
 	github.com/joho/godotenv v1.5.1
 	github.com/panyam/goapplib v0.0.31
@@ -21,7 +20,7 @@ require (
 	github.com/panyam/oneauth v0.0.31
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
-	github.com/panyam/servicekit v0.0.4
+	github.com/panyam/servicekit v0.0.6
 	github.com/panyam/templar v0.0.29
 	github.com/resend/resend-go/v2 v2.28.0
 	github.com/spf13/cobra v1.10.2
@@ -58,6 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.1 // indirect
 	github.com/aws/smithy-go v1.23.2 // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -95,7 +95,7 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/api v0.259.0 // indirect
 	google.golang.org/genproto v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
