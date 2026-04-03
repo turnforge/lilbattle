@@ -359,3 +359,37 @@ OAUTH2_TWITTER_CALLBACK_URL=http://localhost:8080/auth/twitter/callback/
 - Uses golang.org/x/oauth2 built-in PKCE support
 - Twitter doesn't provide email in basic scope, uses `@twitter.local` suffix for identity
 
+
+<!-- stack-brain:start -->
+## Constraints
+
+Architectural rules — do not violate these.
+
+### No Defensive Error Handling
+Do not add try/catch blocks to log-and-continue, and do not null-check mandatory objects. Let exceptions propagate naturally. Use preconditions for invariants.
+*Why: We are in experimenting/revising phase. Defensive error handling covers up failure modes and makes root causes harder to find. Errors should be loud.*
+
+### No Workarounds Without Root Cause
+Always find the root cause of an issue before proposing a fix. Never create workarounds without asking.
+*Why: Workarounds accumulate and hide the real problem. Past sessions wasted time patching symptoms.*
+
+### Use copyUnit() for Unit Copies
+When creating unit copies (e.g., for history recording), always use `copyUnit()` in services/moves.go. Never manually construct a `&v1.Unit{}` copy.
+*Why: Manual copies miss fields when new proto fields are added to Unit (e.g., Shortcut was forgotten).*
+
+### Auth Through OneAuth Only
+All authentication must go through oneauth middleware. No direct JWT parsing, no custom auth headers, no manual token verification.
+*Why: Direct auth handling skips token rotation, session invalidation, and rate limiting provided by the stack.*
+
+### Rate Limiting Through GoAppLib Only
+Use goapplib rate limiting middleware. No hand-rolled rate limiters.
+*Why: Stack provides consistent rate limiting with auth-aware tiers. Custom implementations drift.*
+
+### No Manual Builds
+Do not run `npm build`, `npm run build`, or `buf generate` manually. The web module and proto files auto-rebuild on change. Do not rebuild the server — devloop runs it continuously.
+*Why: Manual builds conflict with the file-watching build pipeline and cause confusing stale state.*
+
+### Lazy Top-Up Pattern for Units
+Units must not have their movement points reset at turn start. Use `topUpUnitIfNeeded()` on-demand when a unit is accessed for actions or options.
+*Why: Eager reset at turn start causes state inconsistencies when units are accessed between turns or during replays. Lazy pattern ensures consistency.*
+<!-- stack-brain:end -->
