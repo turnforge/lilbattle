@@ -20,15 +20,15 @@ import (
 // - RNG/seed management (that's lib/)
 //
 // Architecture:
-// - Uses gocurrent.FanOut for efficient per-game message broadcasting
+// - Uses gocurrent.AsyncFanOut for efficient per-game message broadcasting
 // - GamesService calls Broadcast RPC after ProcessMoves succeeds
 // - Subscribers receive GameUpdates via streaming RPC
 type GameSyncService struct {
 	v1s.UnimplementedGameSyncServiceServer
 
-	// Per-game FanOut instances for broadcasting updates
-	// gameId -> FanOut
-	fanOuts map[string]*gocurrent.FanOut[*v1.GameUpdate]
+	// Per-game AsyncFanOut instances for broadcasting updates
+	// gameId -> AsyncFanOut
+	fanOuts map[string]*gocurrent.AsyncFanOut[*v1.GameUpdate]
 
 	// Per-game sequence numbers for ordering
 	sequences map[string]int64
@@ -39,13 +39,13 @@ type GameSyncService struct {
 // NewGameSyncService creates a new sync service
 func NewGameSyncService() *GameSyncService {
 	return &GameSyncService{
-		fanOuts:   make(map[string]*gocurrent.FanOut[*v1.GameUpdate]),
+		fanOuts:   make(map[string]*gocurrent.AsyncFanOut[*v1.GameUpdate]),
 		sequences: make(map[string]int64),
 	}
 }
 
-// getFanOut returns (or creates) the FanOut for a game
-func (s *GameSyncService) getFanOut(gameId string) *gocurrent.FanOut[*v1.GameUpdate] {
+// getFanOut returns (or creates) the AsyncFanOut for a game
+func (s *GameSyncService) getFanOut(gameId string) *gocurrent.AsyncFanOut[*v1.GameUpdate] {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -53,8 +53,8 @@ func (s *GameSyncService) getFanOut(gameId string) *gocurrent.FanOut[*v1.GameUpd
 		return fo
 	}
 
-	// Create new FanOut with buffered input to prevent blocking
-	fo := gocurrent.NewFanOut[*v1.GameUpdate](
+	// Create new AsyncFanOut with buffered input to prevent blocking
+	fo := gocurrent.NewAsyncFanOut[*v1.GameUpdate](
 		gocurrent.WithFanOutInputBuffer[*v1.GameUpdate](100),
 	)
 	s.fanOuts[gameId] = fo
