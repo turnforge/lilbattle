@@ -24,7 +24,7 @@ func (r *RootViewsHandler) handleWorldScreenshotLive(w http.ResponseWriter, req 
 	}
 
 	// Get world data from service
-	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInUserId(req)
+	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInSubject(req)
 	client := r.LilBattleApp.ClientMgr.GetWorldsSvcClient()
 	resp, err := client.GetWorld(GrpcAuthContext(loggedInUserId), &protos.GetWorldRequest{Id: worldId})
 	if err != nil {
@@ -57,7 +57,7 @@ func (r *RootViewsHandler) handleGameScreenshotLive(w http.ResponseWriter, req *
 	}
 
 	// Get game data from service
-	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInUserId(req)
+	loggedInUserId := r.LilBattleApp.AuthMiddleware.GetLoggedInSubject(req)
 	client := r.LilBattleApp.ClientMgr.GetGamesSvcClient()
 	resp, err := client.GetGame(GrpcAuthContext(loggedInUserId), &protos.GetGameRequest{Id: gameId})
 	if err != nil {

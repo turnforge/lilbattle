@@ -21,7 +21,7 @@ func (p *GameListView) Load(r *http.Request, w http.ResponseWriter, app *goal.Ap
 	p.WithFiltering.Load(r, w, nil)
 
 	ctx := app.Context
-	userId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	userId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	client := ctx.ClientMgr.GetGamesSvcClient()
 
 	req := protos.ListGamesRequest{

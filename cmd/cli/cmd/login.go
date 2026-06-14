@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -191,7 +192,11 @@ func runLogin(cmd *cobra.Command, args []string) error {
 		tempStore := &memCredStore{}
 		authClient := client.NewAuthClient(profile.Host, tempStore)
 
-		serverCred, err := authClient.Login(profile.Email, password, "read write profile offline")
+		serverCred, err := authClient.Login(context.Background(), &client.LoginRequest{
+			Username: profile.Email,
+			Password: password,
+			Scope:    "read write profile offline",
+		})
 		if err != nil {
 			return fmt.Errorf("authentication failed: %w", err)
 		}

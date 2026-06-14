@@ -77,7 +77,7 @@ func deleteWorldHandler(app *goal.App[*LilBattleApp], w http.ResponseWriter, req
 	}
 
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(req)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(req)
 	log.Printf("Delete world request: worldId=%s, userId=%s", worldId, loggedInUserId)
 
 	client := ctx.ClientMgr.GetWorldsSvcClient()

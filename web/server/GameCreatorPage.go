@@ -42,7 +42,7 @@ func (v *GameCreatorPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	v.Header.Load(r, w, app)
 	v.SetupDefaults()
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 
 	if loggedInUserId == "" {
 		// For now enforce login even on new
