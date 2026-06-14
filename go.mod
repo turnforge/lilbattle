@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	cloud.google.com/go/datastore v1.21.0
-	connectrpc.com/connect v1.19.1
+	connectrpc.com/connect v1.19.2
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/aws/aws-sdk-go-v2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.1
@@ -15,12 +15,12 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3
 	github.com/joho/godotenv v1.5.1
 	github.com/panyam/goapplib v0.0.31
-	github.com/panyam/gocurrent v0.0.10
+	github.com/panyam/gocurrent v0.1.1
 	github.com/panyam/goutils v0.1.13
 	github.com/panyam/oneauth v0.0.31
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
-	github.com/panyam/servicekit v0.0.6
+	github.com/panyam/servicekit v0.1.2
 	github.com/panyam/templar v0.0.29
 	github.com/resend/resend-go/v2 v2.28.0
 	github.com/spf13/cobra v1.10.2

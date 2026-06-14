@@ -175,11 +175,9 @@ func (a *ConnectGamesServiceAdapter) JoinGame(ctx context.Context, req *connect.
 
 /** If you had a streamer than you can use this to act as a bridge between websocket and grpc streams
 func (a *ConnectGameServiceAdapter) StreamSomeThing(ctx context.Context, req *connect.Request[v1.StreamSomeThingRequest], stream *connect.ServerStream[v1.StreamSomeThingResponse]) error {
-	// Create a custom stream implementation that bridges to Connect
-	bridgeStream := &ConnectStreamBridge[v1.StreamSomeThingResponse]{
-		connectStream: stream,
-		ctx:           ctx,
-	}
+	// Bridge Connect's server-streaming handle to the gRPC ServerStreamingServer
+	// interface our existing client implements. See servicekit/connectbridge.
+	bridgeStream := connectbridge.NewConnectStreamBridge[v1.StreamSomeThingResponse](ctx, stream)
 
 	// Call your existing gRPC streaming method
 	return a.client.StreamSomeThing(req.Msg, bridgeStream)
