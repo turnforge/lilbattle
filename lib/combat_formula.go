@@ -116,6 +116,28 @@ func (re *RulesEngine) SimulateCombatDamage(ctx *CombatContext, rng *rand.Rand) 
 	return int32(damage), nil
 }
 
+// EstimateCombatDamage returns the analytical expected damage for a combat context.
+//
+// Mathematically equivalent to the mean of SimulateCombatDamage's distribution:
+// each of AttackerHealth × 6 dice is Bernoulli(p), so mean hits = AttackerHealth × 6 × p,
+// and mean damage = mean hits / 6 = AttackerHealth × p. Rounded to int32 for the
+// AttackUnitAction.DamageEstimate field. Deterministic — no RNG, no allocation,
+// no simulation cost — suitable for preview previews on every options-call.
+//
+// Errors when the hit-probability calculation cannot resolve (e.g. attacker
+// cannot attack the defender's class). Callers should treat that as a
+// discoverable upstream bug rather than swallowing it with a default.
+func (re *RulesEngine) EstimateCombatDamage(ctx *CombatContext) (int32, error) {
+	p, err := re.CalculateHitProbability(ctx)
+	if err != nil {
+		return 0, err
+	}
+	mean := float64(ctx.AttackerHealth) * p
+	// SimulateCombatDamage caps damage at AttackerHealth; the analytical mean
+	// already respects that since p is clamped to [0, 1].
+	return int32(math.Round(mean)), nil
+}
+
 // GenerateDamageDistribution generates a damage distribution by running many simulations
 // This is useful for UI tooltips showing expected damage ranges
 func (re *RulesEngine) GenerateDamageDistribution(ctx *CombatContext, numSimulations int) (*v1.DamageDistribution, error) {

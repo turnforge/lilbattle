@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -263,4 +264,164 @@ func TestCalculateWoundBonus(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestEstimateCombatDamage_Analytical pins the analytical mean used by
+// AttackUnitAction.DamageEstimate: round(AttackerHealth × p), where p comes from
+// CalculateHitProbability. Cases mirror TestCalculateHitProbability so the math
+// can be traced end-to-end (p × H → expected).
+func TestEstimateCombatDamage_Analytical(t *testing.T) {
+	rulesEngine := DefaultRulesEngine()
+	if rulesEngine == nil {
+		t.Fatal("Failed to load default rules engine")
+	}
+
+	tests := []struct {
+		name           string
+		attackerType   int32
+		defenderType   int32
+		attackerTile   int32
+		defenderTile   int32
+		attackerHealth int32
+		woundBonus     int32
+		expected       int32
+	}{
+		{
+			// p = 0.50 (matches TestCalculateHitProbability "Soldier vs Soldier on grass"),
+			// expected damage = round(10 × 0.50) = 5
+			name:           "Soldier vs Soldier on grass, full health",
+			attackerType:   1, defenderType: 1, attackerTile: 5, defenderTile: 5,
+			attackerHealth: 10, woundBonus: 0, expected: 5,
+		},
+		{
+			// p = 0.60 (matches "Soldier vs Soldier with wound bonus"),
+			// expected damage = round(10 × 0.60) = 6
+			name:           "Soldier vs Soldier on grass, wound bonus 2",
+			attackerType:   1, defenderType: 1, attackerTile: 5, defenderTile: 5,
+			attackerHealth: 10, woundBonus: 2, expected: 6,
+		},
+		{
+			// Same matchup, half-strength attacker: round(5 × 0.50) = 3 (Go's
+			// math.Round rounds half away from zero, so 2.5 → 3).
+			name:           "Soldier vs Soldier on grass, half health",
+			attackerType:   1, defenderType: 1, attackerTile: 5, defenderTile: 5,
+			attackerHealth: 5, woundBonus: 0, expected: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &CombatContext{
+				Attacker:       &v1.Unit{UnitType: tt.attackerType, Player: 1},
+				AttackerTile:   &v1.Tile{TileType: tt.attackerTile},
+				AttackerHealth: tt.attackerHealth,
+				Defender:       &v1.Unit{UnitType: tt.defenderType, Player: 2},
+				DefenderTile:   &v1.Tile{TileType: tt.defenderTile},
+				DefenderHealth: 10,
+				WoundBonus:     tt.woundBonus,
+			}
+
+			got, err := rulesEngine.EstimateCombatDamage(ctx)
+			if err != nil {
+				t.Fatalf("EstimateCombatDamage failed: %v", err)
+			}
+			if got != tt.expected {
+				t.Errorf("Expected damage %d, got %d", tt.expected, got)
+			}
+		})
+	}
+}
+
+// TestEstimateCombatDamage_MatchesSimulationMean sweeps the equivalence between
+// the analytical estimate and GenerateDamageDistribution's empirical mean across
+// a representative matrix of attacker × defender × terrain × wound × health.
+// Any divergence > 1 from the simulated mean would mean the analytical formula
+// has drifted from what SimulateCombatDamage actually rolls — they must remain
+// mathematically tied. Also reports the largest observed delta across the whole
+// sweep so a slow drift (e.g. capping rules diverging) shows up as a t.Log line
+// even when no single case fails.
+func TestEstimateCombatDamage_MatchesSimulationMean(t *testing.T) {
+	rulesEngine := DefaultRulesEngine()
+	if rulesEngine == nil {
+		t.Fatal("Failed to load default rules engine")
+	}
+
+	// Representative axes — chosen to cover both attack-table directions
+	// (Light↔Heavy, range 1↔range 2-3), terrain bonus regimes (Grass = neutral,
+	// LandBase = defensive bonus, Desert = movement-cost outlier), and the
+	// wound-bonus / health regions that drive p toward 0 / 1 / saturation.
+	attackers := []int32{1, 5, 7} // Soldier, Tank, Artillery
+	defenders := []int32{1, 5, 7}
+	terrains := []int32{
+		int32(TileTypeGrass),    // 5 — neutral baseline
+		int32(TileTypeLandBase), // 1 — defensive bonus
+		4,                       // Desert — different attack/defense profile (not re-exported in tests/imports.go)
+	}
+	woundBonuses := []int32{0, 2, 4}
+	healths := []int32{3, 10}
+
+	var (
+		cases       int
+		worstDelta  int32
+		worstName   string
+		worstRawAna int32
+		worstRawEmp float64
+	)
+
+	for _, atk := range attackers {
+		for _, def := range defenders {
+			for _, terrain := range terrains {
+				for _, wb := range woundBonuses {
+					for _, h := range healths {
+						ctx := &CombatContext{
+							Attacker:       &v1.Unit{UnitType: atk, Player: 1},
+							AttackerTile:   &v1.Tile{TileType: terrain},
+							AttackerHealth: h,
+							Defender:       &v1.Unit{UnitType: def, Player: 2},
+							DefenderTile:   &v1.Tile{TileType: terrain},
+							DefenderHealth: 10,
+							WoundBonus:     wb,
+						}
+
+						name := fmt.Sprintf("atk=%d def=%d terr=%d wb=%d h=%d", atk, def, terrain, wb, h)
+						t.Run(name, func(t *testing.T) {
+							analytical, err := rulesEngine.EstimateCombatDamage(ctx)
+							if err != nil {
+								// Pairings with no attack-table entry skip rather than fail —
+								// the formula isn't applicable to combinations the rules engine
+								// rejects. Still counts as exercising the error path.
+								t.Skipf("EstimateCombatDamage rejected pairing: %v", err)
+							}
+
+							dist, err := rulesEngine.GenerateDamageDistribution(ctx, 10000)
+							if err != nil {
+								t.Fatalf("GenerateDamageDistribution failed: %v", err)
+							}
+							empirical := int32(dist.ExpectedDamage + 0.5) // round-half-up
+
+							delta := analytical - empirical
+							if delta < 0 {
+								delta = -delta
+							}
+							if delta > 1 {
+								t.Errorf("Analytical (%d) drifted from empirical mean (%d, raw=%.3f) by %d",
+									analytical, empirical, dist.ExpectedDamage, delta)
+							}
+
+							cases++
+							if delta > worstDelta {
+								worstDelta = delta
+								worstName = name
+								worstRawAna = analytical
+								worstRawEmp = dist.ExpectedDamage
+							}
+						})
+					}
+				}
+			}
+		}
+	}
+
+	t.Logf("swept %d cases; worst delta=%d at %s (analytical=%d, empirical=%.3f)",
+		cases, worstDelta, worstName, worstRawAna, worstRawEmp)
 }

@@ -385,8 +385,23 @@ func (s *BackendGamesService) invalidateCache(id string) {
 	delete(s.runtimeCache, id)
 }
 
-// InitializeScreenshotIndexer sets up the screenshot indexer with completion callback
+// InitializeScreenshotIndexer wires up the screenshot indexer's background
+// goroutine.
+//
+// Precondition: s.ClientMgr must be set before calling. When ClientMgr is nil
+// this is a deliberate "skip screenshots" signal (e.g. unit tests that pass
+// nil to NewFSGamesService) and the goroutine is not started — otherwise it
+// would eventually flush and dereference the nil ClientMgr in
+// renderScreenshot, killing the test binary on an unrecovered panic. Send
+// sites already guard on s.ScreenShotIndexer != nil so downstream code stays
+// correct when the indexer is skipped.
+//
+// If you set ClientMgr after this returns, call Initialize again — the
+// no-op early return won't retroactively start the goroutine.
 func (s *BackendGamesService) InitializeScreenshotIndexer() {
+	if s.ClientMgr == nil {
+		return
+	}
 	s.ScreenShotIndexer = NewScreenShotIndexer(s.ClientMgr)
 	s.ScreenShotIndexer.OnComplete = s.handleScreenshotCompletion
 }
