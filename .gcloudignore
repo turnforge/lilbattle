@@ -44,3 +44,6 @@ data/
 # Docker files
 docker-compose.yml
 db-docker-compose.yml
+
+# Local symlink to sibling discord-tracking repo; convenience only — not deployed.
+discord_tracking

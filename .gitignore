@@ -22,3 +22,6 @@ storage
 # Templar lock file (machine-specific)
 web/templates/templar.lock
 .wrangler/
+
+# Local symlink to sibling discord-tracking repo; convenience only — not deployed.
+discord_tracking
