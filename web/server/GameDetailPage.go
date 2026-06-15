@@ -26,7 +26,7 @@ func (p *GameDetailPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 	p.Header.Load(r, w, app)
 
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	client := ctx.ClientMgr.GetGamesSvcClient()
 	req := &protos.GetGameRequest{Id: p.GameId}
 

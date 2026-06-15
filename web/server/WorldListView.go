@@ -33,7 +33,7 @@ func (p *WorldListView) Load(r *http.Request, w http.ResponseWriter, app *goal.A
 	}
 
 	ctx := app.Context
-	userId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	userId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	client := ctx.ClientMgr.GetWorldsSvcClient()
 
 	req := protos.ListWorldsRequest{

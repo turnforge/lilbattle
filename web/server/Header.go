@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	goal "github.com/panyam/goapplib"
+	"github.com/panyam/oneauth/accounts"
 )
 
 type HeaderMenuItem struct {
@@ -77,16 +78,16 @@ func (h *Header) SetupDefaults() {
 func (v *Header) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	v.SetupDefaults()
 	ctx := app.Context
-	v.LoggedInUserId = ctx.AuthMiddleware.GetLoggedInUserId(r)
+	v.LoggedInUserId = ctx.AuthMiddleware.GetLoggedInSubject(r)
 	v.IsLoggedIn = v.LoggedInUserId != ""
 
 	// Load user profile if logged in
 	if v.IsLoggedIn && ctx.AuthService != nil {
-		user, userErr := ctx.AuthService.GetUserById(v.LoggedInUserId)
+		userResp, userErr := ctx.AuthService.GetUserById(r.Context(), &accounts.GetUserByIDRequest{UserID: v.LoggedInUserId})
 		if userErr != nil {
 			log.Printf("Header: Error loading user %s: %v", v.LoggedInUserId, userErr)
-		} else if user != nil {
-			profile := user.Profile()
+		} else if userResp != nil && userResp.User != nil {
+			profile := userResp.User.Profile()
 			if username, ok := profile["username"].(string); ok {
 				v.Username = username
 			}

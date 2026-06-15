@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"os"
 
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/accounts"
+	"github.com/panyam/oneauth/localauth"
 	svc "github.com/turnforge/lilbattle/services"
 	"golang.org/x/oauth2"
 )
@@ -26,18 +28,19 @@ func testUser() *svc.User {
 	}
 }
 
-func (n *LilBattleApp) GetUserByID(userId string) (oa.User, error) {
-	var err error
+func (n *LilBattleApp) GetUserByID(userId string) (accounts.User, error) {
 	// Test user bypass - only if ENABLE_TEST_AUTH is set
 	if testAuthEnabled() && userId == "test1" {
 		return testUser(), nil
 	}
-	u, err := n.ClientMgr.GetAuthService().GetUserById(userId)
-	return u.(*svc.User), err
+	resp, err := n.ClientMgr.GetAuthService().GetUserById(context.Background(), &accounts.GetUserByIDRequest{UserID: userId})
+	if err != nil {
+		return nil, err
+	}
+	return resp.User, nil
 }
 
-func (n *LilBattleApp) EnsureAuthUser(authtype string, provider string, token *oauth2.Token, userInfo map[string]any) (oa.User, error) {
-	var err error
+func (n *LilBattleApp) EnsureAuthUser(authtype string, provider string, token *oauth2.Token, userInfo map[string]any) (accounts.User, error) {
 	// Test user bypass - only if ENABLE_TEST_AUTH is set
 	if testAuthEnabled() {
 		if email, ok := userInfo["email"].(string); ok && email == "test@gmail.com" {
@@ -50,22 +53,15 @@ func (n *LilBattleApp) EnsureAuthUser(authtype string, provider string, token *o
 		userInfo["nickname"] = GenerateRandomNickname()
 	}
 
-	user, err := n.ClientMgr.GetAuthService().EnsureAuthUser(authtype, provider, token, userInfo)
-	return user.(*svc.User), err
+	return n.ClientMgr.GetAuthService().EnsureAuthUser(authtype, provider, token, userInfo)
 }
 
-func (n *LilBattleApp) ValidateUsernamePassword(username string, password string) (out oa.User, err error) {
+func (n *LilBattleApp) ValidateUsernamePassword(username string, password string) (accounts.User, error) {
 	// Test user bypass - only if ENABLE_TEST_AUTH is set
 	if testAuthEnabled() && username == "test@gmail.com" {
-		out = testUser()
-		return
+		return testUser(), nil
 	}
 	// For production, delegate to auth service
-	usernameType := oa.DetectUsernameType(username)
-	user, err := n.ClientMgr.GetAuthService().ValidateLocalCredentials(username, password, usernameType)
-	if err != nil {
-		return nil, err
-	}
-	out = user
-	return
+	usernameType := localauth.DetectUsernameType(username)
+	return n.ClientMgr.GetAuthService().ValidateLocalCredentials(username, password, usernameType)
 }

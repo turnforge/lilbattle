@@ -19,7 +19,7 @@ func GrpcAuthContext(userID string) context.Context {
 	if userID == "" {
 		return context.Background()
 	}
-	return metadata.AppendToOutgoingContext(context.Background(), oagrpc.DefaultMetadataKeyUserID, userID)
+	return metadata.AppendToOutgoingContext(context.Background(), oagrpc.DefaultMetadataKeySubject, userID)
 }
 
 // NotFoundPage is the view data for 404 pages

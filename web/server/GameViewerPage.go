@@ -52,7 +52,7 @@ func (p *GameViewerPage) Load(r *http.Request, w http.ResponseWriter, app *goal.
 
 	// Load the world (same as WorldEditorPage)
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	client := ctx.ClientMgr.GetGamesSvcClient()
 
 	req := &protos.GetGameRequest{Id: p.GameId}

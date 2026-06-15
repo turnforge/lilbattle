@@ -16,7 +16,7 @@ type SelectWorldPage struct {
 func (m *SelectWorldPage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	// Require login to select a world for game creation
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	if loggedInUserId == "" {
 		qs := r.URL.RawQuery
 		if len(qs) > 0 {

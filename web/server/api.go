@@ -9,8 +9,9 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	gfn "github.com/panyam/goutils/fn"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/core"
 	oagrpc "github.com/panyam/oneauth/grpc"
+	"github.com/panyam/oneauth/httpauth"
 	"github.com/panyam/servicekit/grpcws"
 	gohttp "github.com/panyam/servicekit/http"
 	models "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
@@ -27,7 +28,7 @@ import (
 
 type ApiHandler struct {
 	mux            *http.ServeMux
-	AuthMiddleware *oa.Middleware
+	AuthMiddleware *httpauth.Middleware
 	ClientMgr      *services.ClientMgr
 
 	// Here we can have to ways of accessing the services - either via clients or by actual service instead if you are not
@@ -77,13 +78,21 @@ func (a *ApiHandler) Init() error {
 }
 
 func (out *ApiHandler) setupConnectHandlers() error {
-	// wrapWithAuth wraps a Connect handler with auth middleware that extracts
-	// the user ID from session/cookie or Bearer token
+	// wrapWithAuth resolves the user ID from session/cookie or Bearer token
+	// via the httpauth middleware, then stashes it under core.SetSubjectInContext
+	// so the in-process Connect adapters can pick it up via
+	// core.GetSubjectFromContext when injecting gRPC metadata.
 	wrapWithAuth := func(handler http.Handler) http.Handler {
 		if out.AuthMiddleware == nil {
 			return handler
 		}
-		return out.AuthMiddleware.ExtractUser(handler)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			subject := out.AuthMiddleware.GetLoggedInSubject(r)
+			if subject != "" {
+				r = r.WithContext(core.SetSubjectInContext(r.Context(), subject))
+			}
+			handler.ServeHTTP(w, r)
+		})
 	}
 
 	// Add AppItems Connect handler
@@ -135,9 +144,9 @@ func (web *ApiHandler) createSvcMux(grpc_addr string) (*runtime.ServeMux, error)
 
 			// Inject authenticated user ID into gRPC metadata
 			if web.AuthMiddleware != nil {
-				userID := web.AuthMiddleware.GetLoggedInUserId(request)
+				userID := web.AuthMiddleware.GetLoggedInSubject(request)
 				if userID != "" {
-					md.Set(oagrpc.DefaultMetadataKeyUserID, userID)
+					md.Set(oagrpc.DefaultMetadataKeySubject, userID)
 				}
 			}
 

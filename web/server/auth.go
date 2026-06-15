@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,16 +11,20 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	goalservices "github.com/panyam/goapplib/services"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/accounts"
+	"github.com/panyam/oneauth/apiauth"
+	"github.com/panyam/oneauth/federatedauth"
+	"github.com/panyam/oneauth/httpauth"
+	"github.com/panyam/oneauth/localauth"
 	oa2 "github.com/panyam/oneauth/oauth2"
 	oafs "github.com/panyam/oneauth/stores/fs"
 )
 
-func newEmailSender() oa.SendEmail {
+func newEmailSender() localauth.SendEmail {
 	apiKey := os.Getenv("RESEND_API_KEY")
 	if apiKey == "" {
 		log.Println("RESEND_API_KEY not set, using console email sender")
-		return &oa.ConsoleEmailSender{}
+		return &localauth.ConsoleEmailSender{}
 	}
 	fromAddr := os.Getenv("RESEND_FROM_EMAIL")
 	if fromAddr == "" {
@@ -29,7 +34,7 @@ func newEmailSender() oa.SendEmail {
 	return NewResendEmailSender(apiKey, fromAddr)
 }
 
-func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, oa.UsernameStore, *oa.OneAuth) {
+func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, accounts.UsernameStore, *httpauth.OneAuth) {
 	// Initialize authentication
 	storagePath := os.Getenv("LILBATTLE_USER_STORAGE_PATH")
 	if storagePath == "" {
@@ -39,18 +44,23 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 
 	// Create UsernameStore for username → userID mapping
 	usernameStore := oafs.NewFSUsernameStore(storagePath)
+	authService.UsernameStore = usernameStore
 
-	oneauth := oa.New("lilbattle")
+	oneauth := httpauth.New("lilbattle")
 	oneauth.Session = session
 	oneauth.Middleware.SessionGetter = func(r *http.Request, key string) any {
 		return session.GetString(r.Context(), key)
 	}
-	oneauth.UserStore = authService
+
+	// OAuthBridge wires the OneAuth session/cookie machinery to AuthService's
+	// EnsureAuthUser orchestration. Use bridge.SaveUserAndRedirect as the
+	// post-callback handler for each provider and for LocalAuth.
+	bridge := federatedauth.NewOAuthBridge(oneauth, authService)
 
 	// OAuth providers - credentials loaded from environment
-	oneauth.AddAuth("/google", oa2.NewGoogleOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
-	oneauth.AddAuth("/github", oa2.NewGithubOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
-	oneauth.AddAuth("/twitter", NewTwitterOAuth2("", "", "", oneauth.SaveUserAndRedirect).Handler())
+	oneauth.AddAuth("/google", oa2.NewGoogleOAuth2("", "", "", bridge.SaveUserAndRedirect).Handler())
+	oneauth.AddAuth("/github", oa2.NewGithubOAuth2("", "", "", bridge.SaveUserAndRedirect).Handler())
+	oneauth.AddAuth("/twitter", NewTwitterOAuth2("", "", "", bridge.SaveUserAndRedirect).Handler())
 
 	// Get base URL for verification/reset links
 	baseURL := os.Getenv("LILBATTLE_BASE_URL")
@@ -61,7 +71,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 	// Create credentials validator that supports email OR username login
 	// - If input contains "@", treats as email
 	// - Otherwise, looks up username in UsernameStore to find userID
-	validateCredentials := oa.NewCredentialsValidatorWithUsername(
+	validateCredentials := localauth.NewCredentialsValidatorWithUsername(
 		authService.IdentityStore,
 		authService.ChannelStore,
 		authService.UserStore,
@@ -69,7 +79,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 	)
 
 	// Local authentication (username/password)
-	localAuth := &oa.LocalAuth{
+	localAuth := &localauth.LocalAuth{
 		ValidateCredentials:      validateCredentials,
 		CreateUser:               authService.CreateLocalUser,
 		ValidateSignup:           nil, // Policy handles validation now
@@ -78,13 +88,13 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		BaseURL:                  baseURL,
 		RequireEmailVerification: false,   // Optional verification
 		UsernameField:            "email", // Form field name (auto-detection happens after parsing)
-		HandleUser:               oneauth.SaveUserAndRedirect,
+		HandleUser:               bridge.SaveUserAndRedirect,
 		VerifyEmail:              authService.VerifyEmailByToken,
 		UpdatePassword:           authService.UpdatePassword,
 		UsernameStore:            usernameStore,
 
 		// Signup policy: email required, username NOT collected at signup
-		SignupPolicy: &oa.SignupPolicy{
+		SignupPolicy: &localauth.SignupPolicy{
 			RequireUsername:       false, // Username added later via profile
 			RequireEmail:          true,
 			RequirePassword:       true,
@@ -98,14 +108,14 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		SignupURL: "/login", // Same page, different tab
 
 		// Redirect-based error handling with flash messages
-		OnSignupError: func(err *oa.AuthError, w http.ResponseWriter, r *http.Request) bool {
+		OnSignupError: func(err *accounts.AuthError, w http.ResponseWriter, r *http.Request) bool {
 			session.Put(r.Context(), "auth_error", err.Message)
 			session.Put(r.Context(), "auth_error_field", err.Field)
 			session.Put(r.Context(), "auth_mode", "signup")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return true
 		},
-		OnLoginError: func(err *oa.AuthError, w http.ResponseWriter, r *http.Request) bool {
+		OnLoginError: func(err *accounts.AuthError, w http.ResponseWriter, r *http.Request) bool {
 			session.Put(r.Context(), "auth_error", err.Message)
 			session.Put(r.Context(), "auth_error_field", err.Field)
 			session.Put(r.Context(), "auth_mode", "login")
@@ -123,7 +133,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		jwtSecret = "lilbattle-dev-secret-change-in-production" // Dev fallback
 	}
 	refreshTokenStore := oafs.NewFSRefreshTokenStore(storagePath)
-	apiAuth := &oa.APIAuth{
+	apiAuth := &apiauth.APIAuth{
 		RefreshTokenStore:   refreshTokenStore,
 		JWTSecretKey:        jwtSecret,
 		JWTIssuer:           "lilbattle",
@@ -134,9 +144,17 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 	}
 	oneauth.AddAuth("/cli/token", apiAuth)
 
-	// Wire up APIAuth's JWT validation to the Middleware so that
-	// GetLoggedInUserId can validate Bearer tokens (for API/CLI clients)
-	oneauth.Middleware.VerifyToken = apiAuth.VerifyTokenFunc()
+	// Wire APIAuth's JWT validation into the HTTP middleware so Bearer tokens
+	// from API/CLI clients are accepted by GetLoggedInSubject. The legacy
+	// APIAuth.VerifyTokenFunc was removed in oneauth #218; callers go through
+	// APIAuth.Validator().ValidateToken instead.
+	oneauth.Middleware.VerifyToken = func(tokenString string) (string, any, error) {
+		resp, err := apiAuth.Validator().ValidateToken(context.Background(), &apiauth.ValidateTokenRequest{Token: tokenString})
+		if err != nil {
+			return "", nil, err
+		}
+		return resp.Info.Subject, resp.Info, nil
+	}
 
 	oneauth.AddAuth("/verify-email", http.HandlerFunc(localAuth.HandleVerifyEmail))
 	oneauth.AddAuth("/forgot-password", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -150,11 +168,15 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			http.Redirect(w, r, "/forgot-password", http.StatusSeeOther)
 			return
 		}
-		token, err := authService.TokenStore.CreateToken("", email, oa.TokenTypePasswordReset, oa.TokenExpiryPasswordReset)
+		createResp, err := authService.TokenStore.CreateToken(r.Context(), &localauth.CreateVerificationTokenRequest{
+			Email:          email,
+			Type:           localauth.VerificationTypePasswordReset,
+			ExpiryDuration: localauth.VerificationExpiryPasswordReset,
+		})
 		if err != nil {
 			log.Printf("Error creating reset token: %v", err)
 		} else {
-			resetLink := fmt.Sprintf("%s/auth/reset-password?token=%s", baseURL, token.Token)
+			resetLink := fmt.Sprintf("%s/auth/reset-password?token=%s", baseURL, createResp.Token.Token)
 			if err := localAuth.EmailSender.SendPasswordResetEmail(email, resetLink); err != nil {
 				log.Printf("Error sending reset email: %v", err)
 			}
@@ -178,8 +200,8 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			http.Redirect(w, r, "/reset-password?error=Token+and+password+required&token="+token, http.StatusSeeOther)
 			return
 		}
-		authToken, err := authService.TokenStore.GetToken(token)
-		if err != nil || authToken.Type != oa.TokenTypePasswordReset {
+		getResp, err := authService.TokenStore.GetToken(r.Context(), &localauth.GetVerificationTokenRequest{Token: token})
+		if err != nil || getResp.Token == nil || getResp.Token.Type != localauth.VerificationTypePasswordReset {
 			http.Redirect(w, r, "/reset-password?error=Invalid+or+expired+reset+link", http.StatusSeeOther)
 			return
 		}
@@ -187,12 +209,12 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			http.Redirect(w, r, "/reset-password?error=Password+must+be+at+least+8+characters&token="+token, http.StatusSeeOther)
 			return
 		}
-		if err := authService.UpdatePassword(authToken.Email, password); err != nil {
+		if err := authService.UpdatePassword(getResp.Token.Email, password); err != nil {
 			log.Printf("Error resetting password: %v", err)
 			http.Redirect(w, r, "/reset-password?error=Failed+to+reset+password&token="+token, http.StatusSeeOther)
 			return
 		}
-		_ = authService.TokenStore.DeleteToken(token)
+		_, _ = authService.TokenStore.DeleteToken(r.Context(), &localauth.DeleteVerificationTokenRequest{Token: token})
 		http.Redirect(w, r, "/reset-password?success=true", http.StatusSeeOther)
 	}))
 
@@ -210,20 +232,23 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		}
 
 		// Get the identity to find the user ID
-		identity, _, err := authService.IdentityStore.GetIdentity("email", email, false)
-		if err != nil || identity == nil {
+		identityResp, err := authService.IdentityStore.GetIdentity(r.Context(), &accounts.GetIdentityRequest{
+			IdentityType:  "email",
+			IdentityValue: email,
+		})
+		if err != nil || identityResp.Identity == nil {
 			// For security, don't reveal if email exists - just say success
 			http.Redirect(w, r, "/profile?verification_sent=true", http.StatusFound)
 			return
 		}
 
 		// Create verification token
-		token, err := authService.TokenStore.CreateToken(
-			identity.UserID,
-			email,
-			oa.TokenTypeEmailVerification,
-			oa.TokenExpiryEmailVerification,
-		)
+		createResp, err := authService.TokenStore.CreateToken(r.Context(), &localauth.CreateVerificationTokenRequest{
+			Subject:        identityResp.Identity.UserID,
+			Email:          email,
+			Type:           localauth.VerificationTypeEmail,
+			ExpiryDuration: localauth.VerificationExpiryEmail,
+		})
 		if err != nil {
 			log.Printf("Error creating verification token: %v", err)
 			http.Redirect(w, r, "/profile?verification_error=Failed to create verification token", http.StatusFound)
@@ -231,7 +256,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		}
 
 		// Send verification email
-		verificationLink := baseURL + "/auth/verify-email?token=" + token.Token
+		verificationLink := baseURL + "/auth/verify-email?token=" + createResp.Token.Token
 		if err := localAuth.EmailSender.SendVerificationEmail(email, verificationLink); err != nil {
 			log.Printf("Error sending verification email: %v", err)
 			http.Redirect(w, r, "/profile?verification_error=Failed to send verification email", http.StatusFound)
@@ -250,7 +275,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			return
 		}
 
-		userId := oneauth.Middleware.GetLoggedInUserId(r)
+		userId := oneauth.Middleware.GetLoggedInSubject(r)
 		if userId == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -258,15 +283,15 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			return
 		}
 
-		user, err := authService.GetUserById(userId)
-		if err != nil {
+		userResp, err := authService.UserStore.GetUserById(r.Context(), &accounts.GetUserByIDRequest{UserID: userId})
+		if err != nil || userResp.User == nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"error": "User not found"}`))
 			return
 		}
 
-		profile := user.Profile()
+		profile := userResp.User.Profile()
 		email, ok := profile["email"].(string)
 		if !ok || email == "" {
 			w.Header().Set("Content-Type", "application/json")
@@ -324,7 +349,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			return
 		}
 
-		userId := oneauth.Middleware.GetLoggedInUserId(r)
+		userId := oneauth.Middleware.GetLoggedInSubject(r)
 		if userId == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -332,15 +357,15 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 			return
 		}
 
-		user, err := authService.GetUserById(userId)
-		if err != nil {
+		userResp, err := authService.UserStore.GetUserById(r.Context(), &accounts.GetUserByIDRequest{UserID: userId})
+		if err != nil || userResp.User == nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(`{"error": "User not found"}`))
 			return
 		}
 
-		profile := user.Profile()
+		profile := userResp.User.Profile()
 		email, ok := profile["email"].(string)
 		if !ok || email == "" {
 			w.Header().Set("Content-Type", "application/json")
@@ -350,9 +375,12 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		}
 
 		// Check if user already has a password - should use change-password instead
-		identityKey := oa.IdentityKey("email", email)
-		existingChannel, _, _ := authService.GetChannel("local", identityKey, false)
-		if existingChannel != nil {
+		identityKey := accounts.IdentityKey("email", email)
+		channelResp, _ := authService.ChannelStore.GetChannel(r.Context(), &accounts.GetChannelRequest{
+			Provider:    "local",
+			IdentityKey: identityKey,
+		})
+		if channelResp != nil && channelResp.Channel != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"error": "Password already set. Use change-password endpoint instead."}`))
@@ -375,7 +403,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		}
 
 		// Create local channel with password
-		config := oa.EnsureAuthUserConfig{
+		config := localauth.LinkLocalCredentialsConfig{
 			UserStore:     authService.UserStore,
 			IdentityStore: authService.IdentityStore,
 			ChannelStore:  authService.ChannelStore,
@@ -385,7 +413,7 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, o
 		// Get username from profile if set
 		username, _ := profile["username"].(string)
 
-		if err := oa.LinkLocalCredentials(config, userId, username, newPassword, email); err != nil {
+		if err := localauth.LinkLocalCredentials(config, userId, username, newPassword, email); err != nil {
 			log.Printf("Error setting password for user %s: %v", userId, err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)

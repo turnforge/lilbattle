@@ -12,8 +12,9 @@ import (
 	"sync"
 	"testing"
 
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/core"
 	oagrpc "github.com/panyam/oneauth/grpc"
+	"github.com/panyam/oneauth/httpauth"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	v1s "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/services"
 	v1connect "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/services/lilbattlev1connect"
@@ -31,7 +32,7 @@ type recordingWorldsClient struct {
 func (r *recordingWorldsClient) recordUserID(ctx context.Context) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.userIDs = append(r.userIDs, oagrpc.UserIDFromContext(ctx))
+	r.userIDs = append(r.userIDs, oagrpc.SubjectFromContext(ctx))
 }
 
 func (r *recordingWorldsClient) lastUserID() string {
@@ -94,7 +95,7 @@ func setupAuthTestServer(t *testing.T) *authTestServer {
 	adapter := NewConnectWorldsServiceAdapter(recorder)
 	path, handler := v1connect.NewWorldsServiceHandler(adapter)
 
-	authMiddleware := &oa.Middleware{
+	authMiddleware := &httpauth.Middleware{
 		VerifyToken: func(tokenString string) (string, any, error) {
 			if userID, ok := strings.CutPrefix(tokenString, "valid-token-"); ok {
 				return userID, nil, nil
@@ -103,8 +104,19 @@ func setupAuthTestServer(t *testing.T) *authTestServer {
 		},
 	}
 
+	// Mirror api.go's wrapWithAuth: resolve subject via httpauth.Middleware and
+	// stash it in core.SetSubjectInContext so the Connect adapter picks it up.
+	authWrap := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			subject := authMiddleware.GetLoggedInSubject(r)
+			if subject != "" {
+				r = r.WithContext(core.SetSubjectInContext(r.Context(), subject))
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 	mux := http.NewServeMux()
-	mux.Handle(path, authMiddleware.ExtractUser(handler))
+	mux.Handle(path, authWrap(handler))
 
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)

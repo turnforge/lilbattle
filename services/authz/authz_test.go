@@ -7,15 +7,15 @@ import (
 	"context"
 	"testing"
 
+	oagrpc "github.com/panyam/oneauth/grpc"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	"google.golang.org/grpc/metadata"
 )
 
 // contextWithUserID creates a context with the user ID set in gRPC metadata.
 // This simulates what the auth interceptor does in production.
-// Uses "x-user-id" which is oagrpc.DefaultMetadataKeyUserID from oneauth.
 func contextWithUserID(userID string) context.Context {
-	md := metadata.Pairs("x-user-id", userID)
+	md := metadata.Pairs(oagrpc.DefaultMetadataKeySubject, userID)
 	return metadata.NewIncomingContext(context.Background(), md)
 }
 

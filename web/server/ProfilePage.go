@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	goal "github.com/panyam/goapplib"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/accounts"
 )
 
 // ProfilePage extends goapplib.SampleProfilePage with app-specific features.
@@ -16,7 +16,7 @@ type ProfilePage struct {
 	Header Header
 
 	// App-specific user information
-	User oa.User
+	User accounts.User
 
 	// Username fields - for login alias (stored in UsernameStore)
 	UsernameNeeded bool // True if user hasn't set a username yet
@@ -42,18 +42,19 @@ func (p *ProfilePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App
 	}
 
 	ctx := app.Context
-	p.UserID = ctx.AuthMiddleware.GetLoggedInUserId(r)
+	p.UserID = ctx.AuthMiddleware.GetLoggedInSubject(r)
 	if p.UserID == "" {
 		http.Redirect(w, r, "/login?callbackURL=/profile", http.StatusFound)
 		return nil, true
 	}
 
 	if ctx.AuthService != nil {
-		p.User, err = ctx.AuthService.GetUserById(p.UserID)
-		if err != nil || p.User == nil {
+		userResp, userErr := ctx.AuthService.GetUserById(r.Context(), &accounts.GetUserByIDRequest{UserID: p.UserID})
+		if userErr != nil || userResp == nil || userResp.User == nil {
 			http.Redirect(w, r, "/login?callbackURL=/profile", http.StatusFound)
 			return nil, true
 		}
+		p.User = userResp.User
 
 		p.Profile = p.User.Profile()
 
@@ -74,16 +75,22 @@ func (p *ProfilePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App
 		p.SuggestedNickname = GenerateRandomNickname()
 
 		if p.Email != "" {
-			identity, _, identityErr := ctx.AuthService.GetIdentity("email", p.Email, false)
-			if identityErr == nil && identity != nil {
-				p.EmailVerified = identity.Verified
+			identityResp, identityErr := ctx.AuthService.GetIdentity(r.Context(), &accounts.GetIdentityRequest{
+				IdentityType:  "email",
+				IdentityValue: p.Email,
+			})
+			if identityErr == nil && identityResp != nil && identityResp.Identity != nil {
+				p.EmailVerified = identityResp.Identity.Verified
 				// User has local auth capability if they have an email identity
 				p.HasLocalAuth = true
 
 				// Check if user has a local channel (password set)
-				identityKey := oa.IdentityKey("email", p.Email)
-				channel, _, _ := ctx.AuthService.GetChannel("local", identityKey, false)
-				p.HasPassword = channel != nil
+				identityKey := accounts.IdentityKey("email", p.Email)
+				channelResp, _ := ctx.AuthService.GetChannel(r.Context(), &accounts.GetChannelRequest{
+					Provider:    "local",
+					IdentityKey: identityKey,
+				})
+				p.HasPassword = channelResp != nil && channelResp.Channel != nil
 			}
 		}
 	}
@@ -94,7 +101,7 @@ func (p *ProfilePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App
 // handlePost handles POST requests for profile updates (nickname and username)
 func (p *ProfilePage) handlePost(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	ctx := app.Context
-	userID := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	userID := ctx.AuthMiddleware.GetLoggedInSubject(r)
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -122,26 +129,27 @@ func (p *ProfilePage) handlePost(r *http.Request, w http.ResponseWriter, app *go
 		return nil, true
 	}
 
-	user, err := ctx.AuthService.GetUserById(userID)
-	if err != nil || user == nil {
+	userResp, err := ctx.AuthService.GetUserById(r.Context(), &accounts.GetUserByIDRequest{UserID: userID})
+	if err != nil || userResp == nil || userResp.User == nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
 		return nil, true
 	}
+	user := userResp.User
 
 	profile := user.Profile()
 
 	// Handle username update
 	if req.Action == "username" {
-		return p.handleUsernameUpdate(ctx, userID, req.Username, user, profile, w)
+		return p.handleUsernameUpdate(r, ctx, userID, req.Username, user, profile, w)
 	}
 
 	// Default: handle nickname update
-	return p.handleNicknameUpdate(ctx, userID, req.Nickname, user, profile, w)
+	return p.handleNicknameUpdate(r, ctx, userID, req.Nickname, user, profile, w)
 }
 
 // handleNicknameUpdate updates the user's nickname (display name)
-func (p *ProfilePage) handleNicknameUpdate(ctx *LilBattleApp, userID, nickname string, user oa.User, profile map[string]any, w http.ResponseWriter) (error, bool) {
+func (p *ProfilePage) handleNicknameUpdate(r *http.Request, ctx *LilBattleApp, userID, nickname string, user accounts.User, profile map[string]any, w http.ResponseWriter) (error, bool) {
 	nickname = strings.TrimSpace(nickname)
 	if len(nickname) < 2 || len(nickname) > 30 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -151,7 +159,7 @@ func (p *ProfilePage) handleNicknameUpdate(ctx *LilBattleApp, userID, nickname s
 
 	profile["nickname"] = nickname
 
-	if err := ctx.AuthService.SaveUser(user); err != nil {
+	if _, err := ctx.AuthService.SaveUser(r.Context(), &accounts.SaveUserRequest{User: user}); err != nil {
 		log.Printf("Error updating nickname for user %s: %v", userID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to save nickname"})
@@ -165,7 +173,7 @@ func (p *ProfilePage) handleNicknameUpdate(ctx *LilBattleApp, userID, nickname s
 
 // handleUsernameUpdate updates the user's username (login alias)
 // Username is stored both in profile and UsernameStore for login lookup
-func (p *ProfilePage) handleUsernameUpdate(ctx *LilBattleApp, userID, newUsername string, user oa.User, profile map[string]any, w http.ResponseWriter) (error, bool) {
+func (p *ProfilePage) handleUsernameUpdate(r *http.Request, ctx *LilBattleApp, userID, newUsername string, user accounts.User, profile map[string]any, w http.ResponseWriter) (error, bool) {
 	newUsername = strings.TrimSpace(strings.ToLower(newUsername))
 
 	// Validate username format (alphanumeric, underscores, hyphens, 3-20 chars)
@@ -198,7 +206,11 @@ func (p *ProfilePage) handleUsernameUpdate(ctx *LilBattleApp, userID, newUsernam
 	if ctx.UsernameStore != nil {
 		if oldUsername != "" {
 			// Changing username: use ChangeUsername for atomic operation
-			if err := ctx.UsernameStore.ChangeUsername(oldUsername, newUsername, userID); err != nil {
+			if _, err := ctx.UsernameStore.ChangeUsername(r.Context(), &accounts.ChangeUsernameRequest{
+				OldUsername: oldUsername,
+				NewUsername: newUsername,
+				UserID:      userID,
+			}); err != nil {
 				log.Printf("Error changing username from %s to %s for user %s: %v", oldUsername, newUsername, userID, err)
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(map[string]string{"error": "Username is already taken"})
@@ -206,7 +218,10 @@ func (p *ProfilePage) handleUsernameUpdate(ctx *LilBattleApp, userID, newUsernam
 			}
 		} else {
 			// Setting username for first time
-			if err := ctx.UsernameStore.ReserveUsername(newUsername, userID); err != nil {
+			if _, err := ctx.UsernameStore.ReserveUsername(r.Context(), &accounts.ReserveUsernameRequest{
+				Username: newUsername,
+				UserID:   userID,
+			}); err != nil {
 				log.Printf("Error reserving username %s for user %s: %v", newUsername, userID, err)
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(map[string]string{"error": "Username is already taken"})
@@ -218,13 +233,17 @@ func (p *ProfilePage) handleUsernameUpdate(ctx *LilBattleApp, userID, newUsernam
 	// Update profile
 	profile["username"] = newUsername
 
-	if err := ctx.AuthService.SaveUser(user); err != nil {
+	if _, err := ctx.AuthService.SaveUser(r.Context(), &accounts.SaveUserRequest{User: user}); err != nil {
 		// Try to rollback UsernameStore change
 		if ctx.UsernameStore != nil {
 			if oldUsername != "" {
-				ctx.UsernameStore.ChangeUsername(newUsername, oldUsername, userID)
+				ctx.UsernameStore.ChangeUsername(r.Context(), &accounts.ChangeUsernameRequest{
+					OldUsername: newUsername,
+					NewUsername: oldUsername,
+					UserID:      userID,
+				})
 			} else {
-				ctx.UsernameStore.ReleaseUsername(newUsername)
+				ctx.UsernameStore.ReleaseUsername(r.Context(), &accounts.ReleaseUsernameRequest{Username: newUsername})
 			}
 		}
 		log.Printf("Error updating username for user %s: %v", userID, err)

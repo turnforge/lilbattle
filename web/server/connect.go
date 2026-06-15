@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/core"
 	oagrpc "github.com/panyam/oneauth/grpc"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	v1s "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/services"
@@ -20,9 +20,9 @@ import (
 // adapter calls the service in-process — there's no gRPC transport layer to convert
 // outgoing metadata to incoming.
 func injectAuthMetadata(ctx context.Context) context.Context {
-	userID := oa.GetUserIDFromContext(ctx)
+	userID := core.GetSubjectFromContext(ctx)
 	if userID != "" {
-		md := metadata.Pairs(oagrpc.DefaultMetadataKeyUserID, userID)
+		md := metadata.Pairs(oagrpc.DefaultMetadataKeySubject, userID)
 		ctx = metadata.NewIncomingContext(ctx, md)
 	}
 
