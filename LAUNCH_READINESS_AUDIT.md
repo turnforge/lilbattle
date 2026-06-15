@@ -251,6 +251,15 @@ model evolves:
 | Remote change application | `ApplyRemoteChanges()` | None | **Gap** |
 | Sequence tracking | GameSyncManager | None | **Gap** |
 
+Related open issues (bugs/architecture, not the test gap above):
+- [issue 41][i41]: Multiplayer Sync Architecture (Local-First with Server Sync)
+- [issue 44][i44]: Remote sync EndTurn notification doesn't update current player in Players panel
+- [issue 46][i46]: GameSync moveUnit path empty causing no animation and unit duplication
+
+[i41]: https://github.com/turnforge/lilbattle/issues/41
+[i44]: https://github.com/turnforge/lilbattle/issues/44
+[i46]: https://github.com/turnforge/lilbattle/issues/46
+
 ### 3.7 CLI Flow
 
 | Step | Implementation | Tests | Verdict |
