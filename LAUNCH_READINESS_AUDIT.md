@@ -1,9 +1,39 @@
 # LilBattle Launch Readiness Audit
 
 **Audit Date**: January 9, 2026
-**Last Updated**: February 22, 2026
+**Last Updated**: June 15, 2026
 **Overall Status**: READY for public launch (core), test gaps remain
 **Estimated Completion**: 95% (features), ~60% (test coverage)
+
+---
+
+## June 2026 Refresh — What Changed
+
+Targeted refresh after the stack-bump sweep landed today. Game-logic
+analysis (sections 3, 4) untouched — the gameplay code hasn't moved
+since February.
+
+- **`lib/` tests now pass — and were already passing in Feb.** PR 109
+  squash-merged three logical commits: the audit doc, a consolidation
+  pass, and the actual fix-adjacency repair (moved the damaged
+  friendly from `(-1, 0)` to `(1, -1)` so it's adjacent both before
+  and after the fixer moves). The audit text was drafted between the
+  first and third commits, so the "4 failing" line shipped stale. P0
+  "fix 4 failing tests" is dropped and adding `./lib/...` to CI is
+  risk-free.
+- **Stack drift mostly resolved.** Issue 111 ("6 of 8 stack components
+  behind") is closeable after PRs 116 and 118: `oneauth`, `goapplib`,
+  `templar`, `servicekit`, and (transitively) `gocurrent` are now
+  current. `protoc-gen-dal` v0.0.10 → v0.0.13 is the residual gap.
+- **New oneauth security capabilities now available.** oneauth v0.1.x
+  ships OAuth 2.1 alignment, `client_secret_jwt` token-endpoint client
+  auth, encrypted private PEMs at rest, and a `core` / `httpauth` /
+  `apiauth` / `localauth` / `federatedauth` split. Lilbattle uses only
+  the basic surface today; the threat model didn't move, but the room
+  to harden it did — see section 1 for what to consider.
+- **Issue 113 is more attractive now.** "Check if `alexedwards/scs`
+  is redundant with oneauth sessions" was filed before the v0.1.x
+  session/middleware surface was as rich as it now is. Worth re-reading.
 
 ---
 
@@ -11,20 +41,23 @@
 
 LilBattle has a solid technical foundation with production-ready core gameplay, multi-backend persistence, and clean architecture. All critical security and legal blockers have been addressed. The February 2026 audit adds a detailed analysis of test coverage across every flow and game logic path, identifying where combinatorial/variable testing is needed.
 
-### Test Inventory (Feb 2026)
+### Test Inventory (June 2026)
 
 | Package | Tests | Status |
 |---------|-------|--------|
 | `tests/` (game logic) | ~320 | All passing |
-| `lib/` (action sequences, rules) | ~40 | 4 failing (fix adjacency) |
+| `lib/` (action sequences, rules) | ~40 | All passing (Feb audit's "4 failing" line was stale — fix shipped in same PR 109) |
 | `cmd/cli/` | ~10 | All passing |
 | `services/r2/` | 2 files | Not in default CI |
 | `services/authz/` | 1 file | Not in CI |
-| `web/server/` | 2 files | Not in CI |
+| `web/server/` | 2 files | Not in CI (Connect-auth tests rewrote in PR 118 for oneauth Subject rename) |
 | `web/tests/` (TS) | 2 files | Not in CI |
 | Playwright e2e | 0 files | Configured but empty |
 
-**Total**: 379 test runs, 368 passing, 4 failing (all fix-adjacency in `lib/action_sequence_test.go`).
+**Total**: 417 test runs, 417 passing, 0 failing across
+`./tests/... ./cmd/cli/... ./lib/... ./services/authz/...
+./services/r2/... ./web/server/...`. CI today covers only the first
+two — see section 6.1 for the gap.
 
 ### Critical Blockers Status (Jan 2026 — all resolved)
 
@@ -48,11 +81,14 @@ LilBattle has a solid technical foundation with production-ready core gameplay, 
 
 ### Completed ✅
 
-**API Authentication** (PR #70)
+**API Authentication** (PR #70, refreshed PR 118)
 - gRPC/Connect endpoints have authentication via metadata
-- User ID passed from HTTP session to gRPC context
+- Subject (formerly UserID) passed from HTTP session to gRPC context
 - Auth interceptors enabled in grpcserver.go
-- Uses oneauth library for standardized auth handling
+- Uses oneauth v0.1.29 (split into core/httpauth/apiauth/localauth/
+  federatedauth sub-modules); gRPC metadata key migrated `x-user-id`
+  → `x-subject`, session cookie key migrated `loggedInUserId` →
+  `loggedInSubject`
 
 **Rate Limiting** (PR #70)
 - Auth endpoints: 10 requests per 15 minutes
@@ -75,7 +111,11 @@ LilBattle has a solid technical foundation with production-ready core gameplay, 
 
 **OAuth Providers**
 - Google, GitHub, Twitter/X (with PKCE)
-- Session management via SCS library
+- Session management via SCS library — see [issue 113][i113] for
+  the question of whether oneauth's session surface (now richer
+  in v0.1.x) makes SCS redundant
+
+[i113]: https://github.com/turnforge/lilbattle/issues/113
 
 ### Remaining Security Items
 
@@ -85,6 +125,27 @@ LilBattle has a solid technical foundation with production-ready core gameplay, 
 | P1 | Input validation framework | 🟡 TODO |
 | P2 | CSRF tokens on all forms | TODO |
 | P2 | Audit logging | TODO |
+| P2 | Decide on SCS vs oneauth session surface (#113) | 🟡 TODO (more attractive after oneauth v0.1.x) |
+
+### New oneauth Capabilities Available (June 2026)
+
+Unlocked by the v0.1.x bump in PR 118 but not yet adopted in lilbattle.
+None of these are launch blockers, but worth evaluating as the threat
+model evolves:
+
+- **OAuth 2.1 alignment** (audit/admin/apiauth) — stricter token
+  endpoint behaviour, deprecates implicit/ROPC patterns we're not
+  using. Reduces surface area for token-related vulns.
+- **`client_secret_jwt` client auth** at the token endpoint —
+  alternative to `client_secret_basic`/`_post` for CLI/confidential
+  clients (the lilbattle CLI uses `client_secret_basic` today).
+- **Encrypted private PEMs at rest** + Ed25519 SSH helper — relevant
+  if we ever issue per-user signing keys.
+- **`apiauth.OneAuth` composition root** — newer entry point that
+  funnels grants/middleware through gRPC-shape `Issuer()`/`Validator()`
+  accessors (oneauth issue 218). PR 118 already migrated lilbattle's
+  one consumer (the JWT-cookie verifier) to `Validator().ValidateToken`
+  since the legacy `APIAuth.VerifyTokenFunc` was removed.
 
 ---
 
@@ -384,12 +445,15 @@ Areas where the game logic needs combinatorial testing across unit types, terrai
 
 ### P0 — Fix Now
 
-1. **Fix the 4 failing tests** in `lib/action_sequence_test.go` (fix adjacency setup)
-2. **Add `lib/` tests to CI** (blocked by item 1)
+1. ~~**Fix the 4 failing tests** in `lib/action_sequence_test.go`~~ —
+   ✅ they were fixed in the same PR that added the audit (PR 109
+   squashed three commits; audit text drafted before the fix
+   commit). Permanent — re-verified June 2026.
+2. **Add `lib/` tests to CI** — unblocked; safe to land.
 3. **Add TS tests to CI** (`cd web && pnpm test`)
 4. **Add `services/authz/` and `web/server/` tests to CI**
 5. **Victory condition tests** — a game without verified win conditions is incomplete
-6. **Fix damage estimate** — hardcoded at 50 in `game.go`
+6. **Fix damage estimate** — still hardcoded at 50 in `lib/game.go:755` (audit said `game.go` — actual location is `lib/game.go`)
 
 ### P1 — High Priority (Production Quality)
 
@@ -447,7 +511,9 @@ go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/.
 cd web && pnpm test
 ```
 
-Note: Adding `./lib/...` will make CI fail until the 4 fix tests are repaired.
+Note: As of June 2026, the proposed command above passes locally
+(417 runs, all green). The Feb-era caveat that `./lib/...` would break
+CI no longer applies.
 
 ### 6.2 Test Coverage Reporting
 
@@ -549,10 +615,11 @@ Phase 1 ad infrastructure (AdSlot component, AdScript loader, feature flags, CSP
 
 ### Medium Risk
 1. **Test gaps in game logic** — combat matchups, terrain movement, victory conditions untested
-2. **Fix/repair broken** — 4 failing tests, feature may be buggy in production
+2. ~~**Fix/repair broken** — 4 failing tests~~ → fixed in PR 109
+   alongside the audit itself; permanent
 3. **Multiplayer untested** — sync flow has zero coverage
 4. **Poor retention** — no tutorial, users may churn
-5. **Damage estimates wrong** — hardcoded at 50
+5. **Damage estimates wrong** — hardcoded at 50 in `lib/game.go`
 
 ### Low Risk
 1. AI not integrated but game works in hotseat mode
@@ -565,12 +632,12 @@ Phase 1 ad infrastructure (AdSlot component, AdScript loader, feature flags, CSP
 
 | Area | Coverage | Grade |
 |------|----------|-------|
-| Security (auth, authz, headers) | All critical items completed | **A** |
-| Game engine (lib/) | 368/372 passing, comprehensive | **A** |
+| Security (auth, authz, headers) | All critical items completed; oneauth v0.1.x unlocks more (#113) | **A** |
+| Game engine (lib/) | All passing (June 2026), comprehensive | **A** |
 | Move processing | Well-tested, missing cross-type coverage | **B+** |
 | Combat formula | Formula math covered, matchups not | **B** |
 | Build/Capture/Heal | Happy paths covered | **B** |
-| Fix/Repair | 4 broken tests | **D** |
+| Fix/Repair | Previously D (4 broken tests); now passing | **B** |
 | Action progression | Good coverage | **A-** |
 | Turn management | Basic coverage | **B** |
 | Victory conditions | No dedicated tests | **D** |
