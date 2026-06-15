@@ -103,7 +103,6 @@ func (c *ClientMgr) GetWorldsSvcClient() (out v1s.WorldsServiceClient) {
 }
 
 func (c *ClientMgr) GetFileStoreSvcClient() (out v1s.FileStoreServiceClient) {
-	log.Println("C = ", c)
 	if c.filestoreSvcClient == nil {
 		filestoreSvcConn, err := grpc.NewClient(c.svcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
