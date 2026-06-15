@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.26'
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -36,7 +36,7 @@ jobs:
         run: go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
 
       - name: Go tests
-        run: go test ./tests/... ./cmd/cli/... ./services/r2/... ./web/assets/themes/...
+        run: go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
 
       - name: Frontend build
         run: cd web && pnpm install --frozen-lockfile && pnpm run buildprod
