@@ -30,7 +30,7 @@ type StartGamePage struct {
 func (p *StartGamePage) Load(r *http.Request, w http.ResponseWriter, app *goal.App[*LilBattleApp]) (err error, finished bool) {
 	// Require login to start a game
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 	if loggedInUserId == "" {
 		qs := r.URL.RawQuery
 		if len(qs) > 0 {

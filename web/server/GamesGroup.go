@@ -103,7 +103,7 @@ func deleteGameHandler(app *goal.App[*LilBattleApp], w http.ResponseWriter, req 
 	}
 
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(req)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(req)
 	log.Printf("Delete game request: gameId=%s, userId=%s", gameId, loggedInUserId)
 
 	client := ctx.ClientMgr.GetGamesSvcClient()

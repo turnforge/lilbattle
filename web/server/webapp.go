@@ -12,7 +12,8 @@ import (
 	goal "github.com/panyam/goapplib"
 	goalservices "github.com/panyam/goapplib/services"
 	gotl "github.com/panyam/goutils/template"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/accounts"
+	"github.com/panyam/oneauth/httpauth"
 	tmplr "github.com/panyam/templar"
 	"github.com/turnforge/lilbattle/services"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,10 +37,10 @@ func (p *BasePage) SetCanonicalFromRequest(app *goal.App[*LilBattleApp], r *http
 // Views access this via app.Context in goal.App[*LilBattleApp].
 type LilBattleApp struct {
 	// Auth
-	Auth           *oa.OneAuth
-	AuthMiddleware *oa.Middleware
+	Auth           *httpauth.OneAuth
+	AuthMiddleware *httpauth.Middleware
 	AuthService    *goalservices.AuthService
-	UsernameStore  oa.UsernameStore // Username → UserID mapping for login alias
+	UsernameStore  accounts.UsernameStore // Username → UserID mapping for login alias
 	Session        *scs.SessionManager
 
 	// Services
@@ -98,7 +99,7 @@ func NewLilBattleApp(clientMgr *services.ClientMgr) (lilbattleApp *LilBattleApp,
 	if err != nil {
 		log.Printf("Warning: Could not load templar.yaml: %v. Falling back to basic loader.", err)
 		// Fall back to basic file system loader
-		templates.Loader = tmplr.NewFileSystemLoader(TEMPLATES_FOLDER)
+		templates.Loader = tmplr.NewFileSystemLoader(tmplr.LocalFolder(TEMPLATES_FOLDER))
 	} else {
 		templates.Loader = sourceLoader
 	}

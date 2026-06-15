@@ -25,7 +25,7 @@ var (
 // GetUserIDFromContext extracts the authenticated user ID from gRPC context.
 // Returns empty string if no user is authenticated.
 func GetUserIDFromContext(ctx context.Context) string {
-	return oagrpc.UserIDFromContext(ctx)
+	return oagrpc.SubjectFromContext(ctx)
 }
 
 // RequireAuthenticated returns an error if no user is authenticated.

@@ -255,7 +255,7 @@ func (v *WorldEditorPage) Load(r *http.Request, w http.ResponseWriter, app *goal
 	v.WorldId = r.PathValue("worldId")
 	templateName := queryParams.Get("template")
 	ctx := app.Context
-	loggedInUserId := ctx.AuthMiddleware.GetLoggedInUserId(r)
+	loggedInUserId := ctx.AuthMiddleware.GetLoggedInSubject(r)
 
 	slog.Info("Loading composer for world with ID: ", "nid", v.WorldId)
 

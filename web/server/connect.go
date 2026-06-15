@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/core"
 	oagrpc "github.com/panyam/oneauth/grpc"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	v1s "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/services"
@@ -20,9 +20,9 @@ import (
 // adapter calls the service in-process — there's no gRPC transport layer to convert
 // outgoing metadata to incoming.
 func injectAuthMetadata(ctx context.Context) context.Context {
-	userID := oa.GetUserIDFromContext(ctx)
+	userID := core.GetSubjectFromContext(ctx)
 	if userID != "" {
-		md := metadata.Pairs(oagrpc.DefaultMetadataKeyUserID, userID)
+		md := metadata.Pairs(oagrpc.DefaultMetadataKeySubject, userID)
 		ctx = metadata.NewIncomingContext(ctx, md)
 	}
 
@@ -175,11 +175,9 @@ func (a *ConnectGamesServiceAdapter) JoinGame(ctx context.Context, req *connect.
 
 /** If you had a streamer than you can use this to act as a bridge between websocket and grpc streams
 func (a *ConnectGameServiceAdapter) StreamSomeThing(ctx context.Context, req *connect.Request[v1.StreamSomeThingRequest], stream *connect.ServerStream[v1.StreamSomeThingResponse]) error {
-	// Create a custom stream implementation that bridges to Connect
-	bridgeStream := &ConnectStreamBridge[v1.StreamSomeThingResponse]{
-		connectStream: stream,
-		ctx:           ctx,
-	}
+	// Bridge Connect's server-streaming handle to the gRPC ServerStreamingServer
+	// interface our existing client implements. See servicekit/connectbridge.
+	bridgeStream := connectbridge.NewConnectStreamBridge[v1.StreamSomeThingResponse](ctx, stream)
 
 	// Call your existing gRPC streaming method
 	return a.client.StreamSomeThing(req.Msg, bridgeStream)

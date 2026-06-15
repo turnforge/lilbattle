@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	oa "github.com/panyam/oneauth"
+	"github.com/panyam/oneauth/accounts"
 	"golang.org/x/oauth2"
 )
 
@@ -18,7 +18,7 @@ type TwitterOAuth2 struct {
 	ClientId       string
 	ClientSecret   string
 	CallbackURL    string
-	HandleUser     oa.HandleUserFunc
+	HandleUser     accounts.HandleUserFunc
 	AuthFailureUrl string
 	oauthConfig    oauth2.Config
 	mux            *http.ServeMux
@@ -26,7 +26,7 @@ type TwitterOAuth2 struct {
 
 // NewTwitterOAuth2 creates a new Twitter OAuth2 handler.
 // Empty parameters will be read from environment variables.
-func NewTwitterOAuth2(clientId, clientSecret, callbackUrl string, handleUser oa.HandleUserFunc) *TwitterOAuth2 {
+func NewTwitterOAuth2(clientId, clientSecret, callbackUrl string, handleUser accounts.HandleUserFunc) *TwitterOAuth2 {
 	if clientId == "" {
 		clientId = os.Getenv("OAUTH2_TWITTER_CLIENT_ID")
 	}
