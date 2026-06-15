@@ -459,10 +459,11 @@ Areas where the game logic needs combinatorial testing across unit types, terrai
    squashed three commits; audit text drafted before the fix
    commit). Permanent — re-verified June 2026.
 2. ~~**Add `lib/` tests to CI**~~ — landed in issue 119 (June 2026).
-3. **Add TS tests to CI** (`cd web && pnpm test`) — deferred from
-   issue 119 because the jest setup is broken at three layers (config
-   roots, test imports, pre-WASM-Phase-13 architecture). Tracked
-   separately at issue 149.
+3. ~~**Add TS tests to CI** (`cd web && pnpm test`)~~ — landed in
+   issue 149 (June 2026). The pre-WASM-Phase-13 tests (`rulesEngine`,
+   `wasmTestUtils`, `testMaps`) were deleted as unrepairable;
+   `wasmLoading.test.ts` survives and now runs on every CI build.
+   Coverage gap from the deletions tracked at issue 153.
 4. ~~**Add `services/authz/` and `web/server/` tests to CI**~~ —
    landed in issue 119 (June 2026).
 5. **Victory condition tests** — a game without verified win conditions is incomplete (tracked at issue 120)
@@ -507,21 +508,16 @@ Areas where the game logic needs combinatorial testing across unit types, terrai
 
 ### 6.1 CI Coverage Gaps
 
-As of issue 119 (June 2026), the CI command covers:
-```
-go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
-```
-
-**Remaining gap**:
-- TypeScript unit tests (`web/tests/`) — deferred because the jest
-  setup is broken at three layers (config roots, test imports,
-  pre-WASM-Phase-13 architecture); tracked at issue 149.
-
-Once issue 149 lands, the target CI command becomes:
+As of issues 119 + 149 (June 2026), the CI command covers:
 ```
 go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
 cd web && pnpm test
 ```
+
+The TS suite is currently minimal — only `wasmLoading.test.ts`
+survived issue 149 because the pre-Phase-13 tests targeted a
+`GameState` class the WASM-centric refactor eliminated. Real TS
+coverage for the current architecture tracked at issue 153.
 
 ### 6.2 Test Coverage Reporting
 

@@ -41,5 +41,13 @@ jobs:
       - name: Frontend build
         run: cd web && pnpm install --frozen-lockfile && pnpm run buildprod
 
-      - name: WASM compile check
-        run: GOOS=js GOARCH=wasm go build -o /dev/null ./cmd/wasm
+      - name: Build WASM
+        # wasmLoading.test.ts asserts the binary loads end-to-end, so build the
+        # real artifact here (replaces the /dev/null compile-only check).
+        run: |
+          mkdir -p web/static/wasm
+          GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o web/static/wasm/lilbattle-cli.wasm ./cmd/wasm
+          cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/static/wasm/wasm_exec.js
+
+      - name: Frontend tests
+        run: cd web && pnpm test
