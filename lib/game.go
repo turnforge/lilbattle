@@ -749,10 +749,27 @@ func (g *Game) GetUnitOptions(unit *v1.Unit) (options []*v1.GameOption, allPaths
 	if unit.AvailableHealth > 0 && attackAllowed {
 		attackCoords, err := g.GetAttackOptions(unit.Q, unit.R)
 		if err == nil {
+			attackerCoord := AxialCoord{Q: int(unit.Q), R: int(unit.R)}
+			attackerTile := g.World.TileAt(attackerCoord)
 			for _, coord := range attackCoords {
 				targetUnit := g.World.UnitAt(coord)
 				if targetUnit != nil {
-					damageEstimate := int32(50) // TODO: Use proper damage calculation
+					// Preview matches production combat math (lib/moves.go ProcessAttackUnit):
+					// build the same CombatContext and ask the rules engine for the
+					// analytical expected damage.
+					ctx := &CombatContext{
+						Attacker:       unit,
+						AttackerTile:   attackerTile,
+						AttackerHealth: unit.AvailableHealth,
+						Defender:       targetUnit,
+						DefenderTile:   g.World.TileAt(coord),
+						DefenderHealth: targetUnit.AvailableHealth,
+						WoundBonus:     g.RulesEngine.CalculateWoundBonus(targetUnit, attackerCoord),
+					}
+					damageEstimate, err := g.RulesEngine.EstimateCombatDamage(ctx)
+					if err != nil {
+						return nil, nil, fmt.Errorf("estimate damage for attack option at (%d,%d): %w", coord.Q, coord.R, err)
+					}
 
 					attackAction := &v1.AttackUnitAction{
 						Attacker:         &v1.Position{Label: unit.Shortcut, Q: unit.Q, R: unit.R},

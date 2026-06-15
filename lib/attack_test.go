@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"testing"
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
@@ -400,5 +401,52 @@ func TestProcessAttackUnit_AttackHistoryUpdated(t *testing.T) {
 	defender := game.World.UnitAt(AxialCoord{Q: 1, R: 0})
 	if defender != nil && len(defender.AttackHistory) == 0 {
 		t.Error("Attack should be recorded in defender's history")
+	}
+}
+
+// TestGetUnitOptions_DamageEstimateVariesByPairing pins the fix for issue 121.
+// Before the fix, GetUnitOptions returned DamageEstimate=50 for every attack
+// regardless of pairing, so two targets of different unit classes received
+// identical preview damage. After the fix, the estimate flows through the
+// rules engine and must differ between a Soldier defender and a Tank defender.
+func TestGetUnitOptions_DamageEstimateVariesByPairing(t *testing.T) {
+	game := newTestGameBuilder().
+		grassTiles(2).
+		unit(0, 0, 1, testUnitTypeSoldier). // attacker, P1
+		unit(1, 0, 2, testUnitTypeSoldier). // defender A: Soldier
+		unit(-1, 0, 2, testUnitTypeTank).   // defender B: Tank
+		currentPlayer(1).
+		seed(42).
+		build()
+
+	attacker := game.World.UnitAt(AxialCoord{Q: 0, R: 0})
+	if attacker == nil {
+		t.Fatal("Attacker not found")
+	}
+
+	options, _, err := game.GetUnitOptions(attacker)
+	if err != nil {
+		t.Fatalf("GetUnitOptions failed: %v", err)
+	}
+
+	estimates := map[string]int32{}
+	for _, opt := range options {
+		atk := opt.GetAttack()
+		if atk == nil {
+			continue
+		}
+		key := fmt.Sprintf("(%d,%d)", atk.Defender.Q, atk.Defender.R)
+		estimates[key] = atk.DamageEstimate
+	}
+
+	soldierEst, hasSoldier := estimates["(1,0)"]
+	tankEst, hasTank := estimates["(-1,0)"]
+	if !hasSoldier || !hasTank {
+		t.Fatalf("missing expected attack targets; estimates=%v", estimates)
+	}
+
+	if soldierEst == tankEst {
+		t.Errorf("DamageEstimate must differ by pairing: vs Soldier=%d, vs Tank=%d (matching values suggest a hardcoded constant)",
+			soldierEst, tankEst)
 	}
 }
