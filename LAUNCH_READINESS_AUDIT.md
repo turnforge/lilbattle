@@ -458,11 +458,15 @@ Areas where the game logic needs combinatorial testing across unit types, terrai
    ✅ they were fixed in the same PR that added the audit (PR 109
    squashed three commits; audit text drafted before the fix
    commit). Permanent — re-verified June 2026.
-2. **Add `lib/` tests to CI** — unblocked; safe to land.
-3. **Add TS tests to CI** (`cd web && pnpm test`)
-4. **Add `services/authz/` and `web/server/` tests to CI**
-5. **Victory condition tests** — a game without verified win conditions is incomplete
-6. **Fix damage estimate** — still hardcoded at 50 in `lib/game.go:755` (audit said `game.go` — actual location is `lib/game.go`)
+2. ~~**Add `lib/` tests to CI**~~ — landed in issue 119 (June 2026).
+3. **Add TS tests to CI** (`cd web && pnpm test`) — deferred from
+   issue 119 because the jest setup is broken at three layers (config
+   roots, test imports, pre-WASM-Phase-13 architecture). Tracked
+   separately at issue 149.
+4. ~~**Add `services/authz/` and `web/server/` tests to CI**~~ —
+   landed in issue 119 (June 2026).
+5. **Victory condition tests** — a game without verified win conditions is incomplete (tracked at issue 120)
+6. **Fix damage estimate** — still hardcoded at 50 in `lib/game.go:755` (tracked at issue 121)
 
 ### P1 — High Priority (Production Quality)
 
@@ -503,26 +507,21 @@ Areas where the game logic needs combinatorial testing across unit types, terrai
 
 ### 6.1 CI Coverage Gaps
 
-The current CI command:
+As of issue 119 (June 2026), the CI command covers:
 ```
-go test ./tests/... ./cmd/cli/... ./services/r2/... ./web/assets/themes/...
+go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
 ```
 
-**Misses**:
-- `./lib/...` (action sequence tests, rules loader)
-- `./services/authz/...`
-- `./web/server/...` (connect auth integration)
-- TypeScript unit tests (`web/tests/`)
+**Remaining gap**:
+- TypeScript unit tests (`web/tests/`) — deferred because the jest
+  setup is broken at three layers (config roots, test imports,
+  pre-WASM-Phase-13 architecture); tracked at issue 149.
 
-Proposed CI test command:
+Once issue 149 lands, the target CI command becomes:
 ```
 go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
 cd web && pnpm test
 ```
-
-Note: As of June 2026, the proposed command above passes locally
-(417 runs, all green). The Feb-era caveat that `./lib/...` would break
-CI no longer applies.
 
 ### 6.2 Test Coverage Reporting
 
