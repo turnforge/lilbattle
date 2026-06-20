@@ -52,14 +52,23 @@ func getOptionTypePriority(opt *v1.GameOption) int {
 }
 
 // MoveUnitActionLess compares two MoveUnitActions
-// First by movement cost, then by direction
+// First by movement cost, then by direction (for adjacent moves), then by
+// destination coordinate as a stable final tie-breaker.
+//
+// The destination tie-breaker matters because GetDirection returns -1 for
+// non-adjacent destinations (multi-step moves), so without it all
+// multi-step moves with equal cost compare equal — and sort.SliceStable
+// preserves whatever order the dijkstra map iteration produced, which is
+// randomized per Go's map iteration semantics. The seeded autoplay loop
+// and any other determinism-sensitive consumer needs a total order here.
 func MoveUnitActionLess(a, b *v1.MoveUnitAction) bool {
 	// Compare by cost first
 	if a.MovementCost != b.MovementCost {
 		return a.MovementCost < b.MovementCost
 	}
 
-	// Same cost, compare by direction
+	// Same cost, compare by direction (only meaningful for single-step
+	// adjacent moves; non-adjacent destinations both return -1 and tie).
 	fromA := CoordFromInt32(a.From.Q, a.From.R)
 	toA := CoordFromInt32(a.To.Q, a.To.R)
 	dirA := GetDirection(fromA, toA)
@@ -68,7 +77,16 @@ func MoveUnitActionLess(a, b *v1.MoveUnitAction) bool {
 	toB := CoordFromInt32(b.To.Q, b.To.R)
 	dirB := GetDirection(fromB, toB)
 
-	return dirA < dirB
+	if dirA != dirB {
+		return dirA < dirB
+	}
+
+	// Same direction (or both non-adjacent). Final tie-breaker by
+	// destination coordinate gives a total order across multi-step moves.
+	if a.To.Q != b.To.Q {
+		return a.To.Q < b.To.Q
+	}
+	return a.To.R < b.To.R
 }
 
 // AttackUnitActionLess compares two AttackUnitActions
