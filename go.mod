@@ -23,7 +23,7 @@ require (
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/servicekit v0.1.2
-	github.com/panyam/templar v0.1.0
+	github.com/panyam/templar v0.1.2
 	github.com/resend/resend-go/v2 v2.28.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0

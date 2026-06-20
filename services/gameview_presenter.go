@@ -3,9 +3,13 @@ package services
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"sort"
+	"time"
 
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 	lib "github.com/turnforge/lilbattle/lib"
+	"github.com/turnforge/lilbattle/lib/picker"
 	"github.com/turnforge/lilbattle/web/assets/themes"
 )
 
@@ -109,6 +113,12 @@ type BaseGameViewPresenter struct {
 
 type GameViewPresenter struct {
 	BaseGameViewPresenter
+
+	// picker decides which option NextMove returns from the actionable pool.
+	// Drivers (CLI, web) never see this field — swapping it (Random →
+	// Heuristic → AI) is how policies change without touching either driver.
+	picker picker.Picker
+	rng    *rand.Rand
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -121,8 +131,22 @@ func NewGameViewPresenter() *GameViewPresenter {
 			RulesEngine: re.RulesEngine,
 			Theme:       themes.NewDefaultTheme(re.GetCityTerrains()), // Start with default theme
 		},
+		picker: picker.NewRandomPicker(),
+		rng:    rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	return w
+}
+
+// SetPicker replaces the policy NextMove uses. Useful for swapping in
+// heuristic / AI implementations in tests or at runtime.
+func (s *GameViewPresenter) SetPicker(p picker.Picker) {
+	s.picker = p
+}
+
+// SetSeed reseeds the picker RNG. Use for determinism in tests or for the
+// CLI driver's --seed flag.
+func (s *GameViewPresenter) SetSeed(seed int64) {
+	s.rng = rand.New(rand.NewSource(seed))
 }
 
 // Our initial game loader
@@ -195,6 +219,106 @@ func (s *GameViewPresenter) GetGame(ctx context.Context, gameId string) (resp *v
 		panic(err)
 	}
 	return getGameResp, err
+}
+
+// GetAllOptions returns every actionable option available to the current
+// player in the supplied game, aggregated across every unit and tile they
+// own. "Actionable" excludes the global EndTurn option — drivers trigger
+// EndTurn explicitly when the actionable pool is empty.
+//
+// Options are returned in a deterministic order: positions sorted by (Q, R)
+// ascending, then options in the order GetOptionsAt returned them per
+// position. Determinism matters for seeded autoplay — same state + same
+// picker seed must produce the same pick.
+//
+// Returns an empty slice (not nil) when the player has nothing to do; the
+// game-finished case returns an empty slice as well.
+func (s *GameViewPresenter) GetAllOptions(ctx context.Context, gameId string) ([]*v1.GameOption, error) {
+	gameResp, err := s.GamesService.GetGame(ctx, &v1.GetGameRequest{Id: gameId})
+	if err != nil {
+		return nil, fmt.Errorf("GetAllOptions: get game: %w", err)
+	}
+	if gameResp.State == nil || gameResp.State.WorldData == nil {
+		return nil, fmt.Errorf("GetAllOptions: game %s has no state or world data", gameId)
+	}
+	if gameResp.State.Finished {
+		return []*v1.GameOption{}, nil
+	}
+
+	currentPlayer := gameResp.State.CurrentPlayer
+	world := gameResp.State.WorldData
+
+	type pos struct{ Q, R int32 }
+	positions := make([]pos, 0, len(world.UnitsMap)+len(world.TilesMap))
+	for _, unit := range world.UnitsMap {
+		if unit.Player == currentPlayer {
+			positions = append(positions, pos{unit.Q, unit.R})
+		}
+	}
+	for _, tile := range world.TilesMap {
+		if tile.Player == currentPlayer {
+			positions = append(positions, pos{tile.Q, tile.R})
+		}
+	}
+	sort.Slice(positions, func(i, j int) bool {
+		if positions[i].Q != positions[j].Q {
+			return positions[i].Q < positions[j].Q
+		}
+		return positions[i].R < positions[j].R
+	})
+
+	out := make([]*v1.GameOption, 0, 16)
+	for _, p := range positions {
+		optsResp, err := s.GamesService.GetOptionsAt(ctx, &v1.GetOptionsAtRequest{
+			GameId: gameId,
+			Pos:    &v1.Position{Q: p.Q, R: p.R},
+		})
+		if err != nil || optsResp == nil {
+			continue
+		}
+		for _, opt := range optsResp.Options {
+			if isActionable(opt) {
+				out = append(out, opt)
+			}
+		}
+	}
+
+	// Determinism: rules_engine.dijkstraMovement returns Edges as a Go map,
+	// so per-position Move options come back in randomized order across
+	// runs. Re-sort the pool by lib.GameOptionLess so the same world state
+	// always feeds picker.Pick the same slice in the same order. Without
+	// this the --seed flag and TestAutoplay_Determinism_SameSeedSameOutcome
+	// both fail by drift-in-iteration, not drift-in-logic.
+	sort.SliceStable(out, func(i, j int) bool {
+		return lib.GameOptionLess(out[i], out[j])
+	})
+	return out, nil
+}
+
+// NextMove returns one action the current player should take, or nil when
+// the player has no further actionable options this turn (autoplay drivers
+// interpret nil as the signal to call EndTurn).
+//
+// Internally: collect the actionable pool via GetAllOptions, then hand it
+// to the picker. The picker is internal to the presenter; drivers never see
+// it. Swap the picker via SetPicker to change policy (Random / Heuristic /
+// AI) without touching either driver. Deterministic under SetSeed.
+func (s *GameViewPresenter) NextMove(ctx context.Context, gameId string) (*v1.GameOption, error) {
+	options, err := s.GetAllOptions(ctx, gameId)
+	if err != nil {
+		return nil, err
+	}
+	return s.picker.Pick(options, s.rng), nil
+}
+
+// isActionable returns true for every GameOption except EndTurn. Drivers
+// trigger EndTurn explicitly when the actionable pool is empty.
+func isActionable(opt *v1.GameOption) bool {
+	if opt == nil || opt.OptionType == nil {
+		return false
+	}
+	_, isEndTurn := opt.OptionType.(*v1.GameOption_EndTurn)
+	return !isEndTurn
 }
 
 func (s *GameViewPresenter) SceneClicked(ctx context.Context, req *v1.SceneClickedRequest) (resp *v1.SceneClickedResponse, err error) {
