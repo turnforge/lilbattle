@@ -173,7 +173,17 @@ func (a *LilBattleApp) Handler() http.Handler {
 		a.ViewsRoot.Handler().ServeHTTP(w, r)
 	}))
 
-	sessionHandler := a.Session.LoadAndSave(r)
+	// Dev-mode fake login (?dev_user=<handle>) — only installed when
+	// ENABLE_DEV_FAKE_LOGIN=true. Production handlers don't even hold a
+	// reference to the wrapper. The wrapper must run inside
+	// Session.LoadAndSave so the session writes performed by
+	// oneauth.SetLoggedInSubject reach the SCS store. See dev_login.go.
+	var inner http.Handler = r
+	if DevLoginEnabled() {
+		log.Println("WARNING: ENABLE_DEV_FAKE_LOGIN=true — ?dev_user=<handle> can impersonate any subject. NEVER enable in production.")
+		inner = WrapDevLogin(a.Auth)(r)
+	}
+	sessionHandler := a.Session.LoadAndSave(inner)
 
 	// Wrap with security headers (outermost middleware)
 	return securityHeaders.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
