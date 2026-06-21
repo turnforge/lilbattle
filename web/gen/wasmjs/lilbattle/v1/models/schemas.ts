@@ -3036,6 +3036,21 @@ export const UpdateGameStatusRequestSchema: MessageSchema = {
       type: FieldType.NUMBER,
       id: 2,
     },
+    {
+      name: "finished",
+      type: FieldType.BOOLEAN,
+      id: 3,
+    },
+    {
+      name: "winningPlayer",
+      type: FieldType.NUMBER,
+      id: 4,
+    },
+    {
+      name: "status",
+      type: FieldType.STRING,
+      id: 5,
+    },
   ],
 };
 

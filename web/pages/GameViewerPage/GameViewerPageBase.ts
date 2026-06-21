@@ -35,6 +35,7 @@ import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { BuildOptionsModal } from './BuildOptionsModal';
+import { GameEndedModal } from './GameEndedModal';
 import { GameStatePanel } from './GameStatePanel';
 import { RulesTable, TerrainStats } from '../common/RulesTable';
 import { GameSyncManager, SyncState } from './GameSyncManager';
@@ -83,7 +84,14 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     protected gameLogPanel: GameLogPanel;
     protected turnOptionsPanel: TurnOptionsPanel;
     protected buildOptionsModal: BuildOptionsModal;
+    protected gameEndedModal: GameEndedModal;
     protected gameStatePanel: GameStatePanel;
+
+    // Tracks the backend's GameState.Finished flag. Set by setGameState (initial
+    // load / late joiner) and updateGameStatus (mid-session game-over). When
+    // true, the End Turn button stays disabled and PhaserGameScene swallows
+    // clicks — regardless of currentPlayer.
+    private gameFinished: boolean = false;
 
     // =========================================================================
     // Abstract Methods - Must be implemented by child classes
@@ -158,6 +166,9 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         // Create build options modal (always separate from layout)
         this.createBuildOptionsModal();
 
+        // Create game-ended modal (always separate from layout)
+        this.createGameEndedModal();
+
         // Create game scene early if required by layout
         if (this.shouldCreateGameSceneEarly()) {
             this.createGameScene();
@@ -174,6 +185,7 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
             this.gameScene,
             ...panels,
             this.buildOptionsModal,
+            this.gameEndedModal,
         ].filter(c => c != null);
     }
 
@@ -199,6 +211,9 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
             }
             if (this.buildOptionsModal) {
                 this.buildOptionsModal.setTheme(theme);
+            }
+            if (this.gameEndedModal) {
+                this.gameEndedModal.setTheme(theme);
             }
         }
 
@@ -325,6 +340,20 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     /**
+     * Create the GameEndedModal. Same separate-from-layout pattern as
+     * BuildOptionsModal — every layout template (Grid/Mobile/DockView) embeds
+     * the #game-ended-modal shell at top level so it can overlay the whole
+     * viewport without depending on layout-specific containers.
+     */
+    protected createGameEndedModal(): void {
+        const modalElement = document.getElementById('game-ended-modal');
+        if (!modalElement) {
+            throw new Error('GameViewerPageBase: game-ended-modal element not found');
+        }
+        this.gameEndedModal = new GameEndedModal(modalElement, this.eventBus, true);
+    }
+
+    /**
      * Create the Phaser game scene
      */
     protected createGameScene(): void {
@@ -388,6 +417,13 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         const endTurnBtn = document.getElementById('end-turn-btn');
         if (endTurnBtn) {
             endTurnBtn.addEventListener('click', () => {
+                // Defense in depth: the disabled attribute (set in
+                // updateEndTurnButtonState) already prevents the click, but
+                // programmatic .click() invocations would bypass it. Cheap
+                // guard for a terminal state.
+                if (this.gameFinished) {
+                    return;
+                }
                 this.gameViewPresenterClient.endTurnButtonClicked({
                     gameId: this.currentGameId || ""
                 });
@@ -488,10 +524,14 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
     }
 
     /**
-     * Update game UI from game state
+     * Update game UI from game state. Also surfaces the end-state triple on
+     * initial load and reconnects — so a late joiner who opens the page after
+     * the game already ended sees the modal immediately, not just after the
+     * next updateGameStatus call.
      */
     protected updateGameUIFromState(gameState: ProtoGameState): void {
         this.updateTurnCounter(gameState.turnCounter);
+        this.applyGameEndedState(!!gameState.finished, gameState.winningPlayer || 0);
     }
 
     /**
@@ -502,16 +542,34 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         if (endTurnBtn) {
             // TODO: Get the actual player ID from the game/user context
             const isOurTurn = currentPlayer === 1;
+            // gameFinished trumps turn — a finished game stays un-actionable
+            // for every player, even the one whose turn it nominally is.
+            const enabled = isOurTurn && !this.gameFinished;
 
-            endTurnBtn.disabled = !isOurTurn;
+            endTurnBtn.disabled = !enabled;
 
-            if (isOurTurn) {
+            if (enabled) {
                 endTurnBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 endTurnBtn.classList.add('hover:bg-green-700');
             } else {
                 endTurnBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 endTurnBtn.classList.remove('hover:bg-green-700');
             }
+        }
+    }
+
+    /**
+     * Apply the end-state triple to the page: track gameFinished, block scene
+     * input, show the modal. Idempotent — calling with the same args twice is
+     * cheap and the modal swallows the re-show.
+     */
+    protected applyGameEndedState(finished: boolean, winningPlayer: number): void {
+        this.gameFinished = finished;
+        if (this.gameScene) {
+            this.gameScene.setInputBlocked(finished);
+        }
+        if (finished && this.gameEndedModal) {
+            this.gameEndedModal.show(winningPlayer);
         }
     }
 
@@ -758,7 +816,10 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         return {};
     }
 
-    async updateGameStatus(request: { currentPlayer: number, turnCounter: number }) {
+    async updateGameStatus(request: { currentPlayer: number, turnCounter: number, finished?: boolean, winningPlayer?: number }) {
+        // Apply end-state FIRST so updateEndTurnButtonState below sees the
+        // updated gameFinished flag and disables the button correctly.
+        this.applyGameEndedState(!!request.finished, request.winningPlayer || 0);
         this.updateTurnCounter(request.turnCounter);
         this.updateEndTurnButtonState(request.currentPlayer);
         return {};

@@ -2085,7 +2085,11 @@ export class SetGameStateResponse implements SetGameStateResponseInterface {
 
 
 /**
- * Request to update game UI status (current player, turn counter)
+ * Request to update game UI status (current player, turn counter, and end-state).
+
+ The end-state triple (finished/winning_player/status) is populated from the
+ current GameState by every presenter call site, so the FE has one consistent
+ signal for "is the game over right now" — no rising-edge detection required.
  */
 export class UpdateGameStatusRequest implements UpdateGameStatusRequestInterface {
   /**
@@ -2096,6 +2100,9 @@ export class UpdateGameStatusRequest implements UpdateGameStatusRequestInterface
 
   currentPlayer: number = 0;
   turnCounter: number = 0;
+  finished: boolean = false;
+  winningPlayer: number = 0;
+  status: GameStatus = GameStatus.GAME_STATUS_UNSPECIFIED;
 
   
 }
