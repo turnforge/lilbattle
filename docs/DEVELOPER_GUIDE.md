@@ -124,6 +124,42 @@ Builds for frontend, WASM, and backend run continuously. Do NOT manually run:
 - `npm run build` (web module auto-builds)
 - `buf generate` (protos auto-regenerate)
 
+### Dev-mode fake login (`?dev_user=`)
+
+For multi-client testing without registering N real accounts, the server
+supports a fake-login query parameter — opt-in via env var. Disabled by
+default; the middleware isn't even installed unless the gate is on.
+
+```bash
+# Start the dev server with the gate on
+ENABLE_DEV_FAKE_LOGIN=true devloop
+```
+
+Then open multiple browser windows, each pointing at the same game with
+a different identity:
+
+```
+http://localhost:8080/?dev_user=alice
+http://localhost:8080/?dev_user=bob
+```
+
+Each window now acts as a different logged-in user. The middleware writes
+the standard session/cookie/JWT triple via `oneauth.SetLoggedInSubject`,
+so every downstream auth check (page handlers, gRPC auth, sync) sees the
+identity exactly as it would after a real login. Subject sticks via cookie
+until you swap with `?dev_user=<other>` or clear cookies.
+
+The handle goes through verbatim as the session subject — meaning a game
+created with players `UserId="alice"` and `UserId="bob"` pairs naturally
+with two windows opened as those handles.
+
+> **Never enable `ENABLE_DEV_FAKE_LOGIN=true` in production.** The server
+> logs a startup banner and a per-event `slog.Warn` line on every
+> fake-login request so an accidental prod enablement is impossible to
+> miss in logs. The middleware itself is only added to the handler chain
+> when the env var is set at server boot — production handlers never
+> hold a reference to it.
+
 ## Testing
 
 ```bash
