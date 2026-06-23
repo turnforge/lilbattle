@@ -50,10 +50,17 @@ message SetGameStateRequest {
 message SetGameStateResponse {
 }
 
-// Request to update game UI status (current player, turn counter)
+// Request to update game UI status (current player, turn counter, and end-state).
+//
+// The end-state triple (finished/winning_player/status) is populated from the
+// current GameState by every presenter call site, so the FE has one consistent
+// signal for "is the game over right now" — no rising-edge detection required.
 message UpdateGameStatusRequest {
     int32 current_player = 1;
     int32 turn_counter = 2;
+    bool finished = 3;
+    int32 winning_player = 4;
+    GameStatus status = 5;
 }
 
 message UpdateGameStatusResponse {

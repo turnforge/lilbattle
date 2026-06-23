@@ -350,10 +350,24 @@ export class PhaserGameScene extends PhaserWorldScene {
         }
     }
 
+    private inputBlocked: boolean = false;
+
+    /**
+     * When true, taps are swallowed before reaching the presenter. Used for
+     * terminal states (game over) so users can pan/zoom the final board
+     * without firing selection/move RPCs that would no-op anyway.
+     */
+    public setInputBlocked(blocked: boolean): void {
+        this.inputBlocked = blocked;
+    }
+
     /**
      * Override handleTap to call presenter directly instead of callback
      */
     protected handleTap(pointer: Phaser.Input.Pointer): void {
+        if (this.inputBlocked) {
+            return;
+        }
         // Use layer system for hit testing
         if (this.layerManager && this.gameViewPresenterClient) {
             const clickContext = this.layerManager.getClickContext(pointer);

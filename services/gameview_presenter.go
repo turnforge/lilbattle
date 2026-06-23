@@ -467,6 +467,21 @@ func extractBuildOptions(optionsResp *v1.GetOptionsAtResponse) []*v1.BuildUnitAc
 	return buildOptions
 }
 
+// buildGameStatusRequest snapshots the FE-visible status fields from
+// gameState. Used by every applyIncrementalChanges call site that updates
+// the status panel, so the FE sees a coherent (turn, player, end-state)
+// triple on every change — not a staged sequence where Finished arrives
+// later than the turn flip that produced it.
+func buildGameStatusRequest(gameState *v1.GameState) *v1.UpdateGameStatusRequest {
+	return &v1.UpdateGameStatusRequest{
+		CurrentPlayer: gameState.CurrentPlayer,
+		TurnCounter:   gameState.TurnCounter,
+		Finished:      gameState.Finished,
+		WinningPlayer: gameState.WinningPlayer,
+		Status:        gameState.Status,
+	}
+}
+
 // getPlayerCoins returns the current player's coin count from game state
 func getPlayerCoins(state *v1.GameState, playerID int32) int32 {
 	if state == nil || state.PlayerStates == nil {
@@ -870,19 +885,16 @@ func (s *GameViewPresenter) applyIncrementalChanges(ctx context.Context, game *v
 						})
 					}
 				}
-				// Update game UI status with new current player and turn counter
-				s.GameState.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
-					CurrentPlayer: gameState.CurrentPlayer,
-					TurnCounter:   gameState.TurnCounter,
-				})
+				// Update game UI status with current player, turn counter,
+				// and end-state. Game-over flips happen in ProcessEndTurn,
+				// which immediately emits PlayerChanged — so this path is
+				// the one that surfaces victory to the FE.
+				s.GameState.UpdateGameStatus(ctx, buildGameStatusRequest(gameState))
 
 			case *v1.WorldChange_CoinsChanged:
 				// Refresh game state panel to show updated coin balances
 				// The GameState panel automatically displays player coins from the game state
-				s.GameState.UpdateGameStatus(ctx, &v1.UpdateGameStatusRequest{
-					CurrentPlayer: gameState.CurrentPlayer,
-					TurnCounter:   gameState.TurnCounter,
-				})
+				s.GameState.UpdateGameStatus(ctx, buildGameStatusRequest(gameState))
 
 			case *v1.WorldChange_CaptureStarted:
 				// Show capture effect animation and capturing flag

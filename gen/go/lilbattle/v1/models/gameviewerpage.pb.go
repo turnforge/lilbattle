@@ -452,11 +452,18 @@ func (*SetGameStateResponse) Descriptor() ([]byte, []int) {
 	return file_lilbattle_v1_models_gameviewerpage_proto_rawDescGZIP(), []int{9}
 }
 
-// Request to update game UI status (current player, turn counter)
+// Request to update game UI status (current player, turn counter, and end-state).
+//
+// The end-state triple (finished/winning_player/status) is populated from the
+// current GameState by every presenter call site, so the FE has one consistent
+// signal for "is the game over right now" — no rising-edge detection required.
 type UpdateGameStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CurrentPlayer int32                  `protobuf:"varint,1,opt,name=current_player,json=currentPlayer,proto3" json:"current_player,omitempty"`
 	TurnCounter   int32                  `protobuf:"varint,2,opt,name=turn_counter,json=turnCounter,proto3" json:"turn_counter,omitempty"`
+	Finished      bool                   `protobuf:"varint,3,opt,name=finished,proto3" json:"finished,omitempty"`
+	WinningPlayer int32                  `protobuf:"varint,4,opt,name=winning_player,json=winningPlayer,proto3" json:"winning_player,omitempty"`
+	Status        GameStatus             `protobuf:"varint,5,opt,name=status,proto3,enum=lilbattle.v1.GameStatus" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -503,6 +510,27 @@ func (x *UpdateGameStatusRequest) GetTurnCounter() int32 {
 		return x.TurnCounter
 	}
 	return 0
+}
+
+func (x *UpdateGameStatusRequest) GetFinished() bool {
+	if x != nil {
+		return x.Finished
+	}
+	return false
+}
+
+func (x *UpdateGameStatusRequest) GetWinningPlayer() int32 {
+	if x != nil {
+		return x.WinningPlayer
+	}
+	return 0
+}
+
+func (x *UpdateGameStatusRequest) GetStatus() GameStatus {
+	if x != nil {
+		return x.Status
+	}
+	return GameStatus_GAME_STATUS_UNSPECIFIED
 }
 
 type UpdateGameStatusResponse struct {
@@ -2038,10 +2066,13 @@ const file_lilbattle_v1_models_gameviewerpage_proto_rawDesc = "" +
 	"\x13SetGameStateRequest\x12&\n" +
 	"\x04game\x18\x01 \x01(\v2\x12.lilbattle.v1.GameR\x04game\x12-\n" +
 	"\x05state\x18\x02 \x01(\v2\x17.lilbattle.v1.GameStateR\x05state\"\x16\n" +
-	"\x14SetGameStateResponse\"c\n" +
+	"\x14SetGameStateResponse\"\xd8\x01\n" +
 	"\x17UpdateGameStatusRequest\x12%\n" +
 	"\x0ecurrent_player\x18\x01 \x01(\x05R\rcurrentPlayer\x12!\n" +
-	"\fturn_counter\x18\x02 \x01(\x05R\vturnCounter\"\x1a\n" +
+	"\fturn_counter\x18\x02 \x01(\x05R\vturnCounter\x12\x1a\n" +
+	"\bfinished\x18\x03 \x01(\bR\bfinished\x12%\n" +
+	"\x0ewinning_player\x18\x04 \x01(\x05R\rwinningPlayer\x120\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x18.lilbattle.v1.GameStatusR\x06status\"\x1a\n" +
 	"\x18UpdateGameStatusResponse\"V\n" +
 	"\x10SetTileAtRequest\x12\f\n" +
 	"\x01q\x18\x01 \x01(\x05R\x01q\x12\f\n" +
@@ -2180,31 +2211,33 @@ var file_lilbattle_v1_models_gameviewerpage_proto_goTypes = []any{
 	(*SetAllowedPanelsResponse)(nil),  // 40: lilbattle.v1.SetAllowedPanelsResponse
 	(*Game)(nil),                      // 41: lilbattle.v1.Game
 	(*GameState)(nil),                 // 42: lilbattle.v1.GameState
-	(*Tile)(nil),                      // 43: lilbattle.v1.Tile
-	(*Unit)(nil),                      // 44: lilbattle.v1.Unit
-	(*MoveUnitAction)(nil),            // 45: lilbattle.v1.MoveUnitAction
-	(*AttackUnitAction)(nil),          // 46: lilbattle.v1.AttackUnitAction
-	(*BuildUnitAction)(nil),           // 47: lilbattle.v1.BuildUnitAction
-	(*CaptureBuildingAction)(nil),     // 48: lilbattle.v1.CaptureBuildingAction
+	(GameStatus)(0),                   // 43: lilbattle.v1.GameStatus
+	(*Tile)(nil),                      // 44: lilbattle.v1.Tile
+	(*Unit)(nil),                      // 45: lilbattle.v1.Unit
+	(*MoveUnitAction)(nil),            // 46: lilbattle.v1.MoveUnitAction
+	(*AttackUnitAction)(nil),          // 47: lilbattle.v1.AttackUnitAction
+	(*BuildUnitAction)(nil),           // 48: lilbattle.v1.BuildUnitAction
+	(*CaptureBuildingAction)(nil),     // 49: lilbattle.v1.CaptureBuildingAction
 }
 var file_lilbattle_v1_models_gameviewerpage_proto_depIdxs = []int32{
 	41, // 0: lilbattle.v1.SetGameStateRequest.game:type_name -> lilbattle.v1.Game
 	42, // 1: lilbattle.v1.SetGameStateRequest.state:type_name -> lilbattle.v1.GameState
-	43, // 2: lilbattle.v1.SetTileAtRequest.tile:type_name -> lilbattle.v1.Tile
-	44, // 3: lilbattle.v1.SetUnitAtRequest.unit:type_name -> lilbattle.v1.Unit
-	22, // 4: lilbattle.v1.ShowHighlightsRequest.highlights:type_name -> lilbattle.v1.HighlightSpec
-	45, // 5: lilbattle.v1.HighlightSpec.move:type_name -> lilbattle.v1.MoveUnitAction
-	46, // 6: lilbattle.v1.HighlightSpec.attack:type_name -> lilbattle.v1.AttackUnitAction
-	47, // 7: lilbattle.v1.HighlightSpec.build:type_name -> lilbattle.v1.BuildUnitAction
-	48, // 8: lilbattle.v1.HighlightSpec.capture:type_name -> lilbattle.v1.CaptureBuildingAction
-	44, // 9: lilbattle.v1.MoveUnitRequest.unit:type_name -> lilbattle.v1.Unit
-	31, // 10: lilbattle.v1.MoveUnitRequest.path:type_name -> lilbattle.v1.HexCoord
-	33, // 11: lilbattle.v1.ShowAttackEffectRequest.splash_targets:type_name -> lilbattle.v1.SplashTarget
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	43, // 2: lilbattle.v1.UpdateGameStatusRequest.status:type_name -> lilbattle.v1.GameStatus
+	44, // 3: lilbattle.v1.SetTileAtRequest.tile:type_name -> lilbattle.v1.Tile
+	45, // 4: lilbattle.v1.SetUnitAtRequest.unit:type_name -> lilbattle.v1.Unit
+	22, // 5: lilbattle.v1.ShowHighlightsRequest.highlights:type_name -> lilbattle.v1.HighlightSpec
+	46, // 6: lilbattle.v1.HighlightSpec.move:type_name -> lilbattle.v1.MoveUnitAction
+	47, // 7: lilbattle.v1.HighlightSpec.attack:type_name -> lilbattle.v1.AttackUnitAction
+	48, // 8: lilbattle.v1.HighlightSpec.build:type_name -> lilbattle.v1.BuildUnitAction
+	49, // 9: lilbattle.v1.HighlightSpec.capture:type_name -> lilbattle.v1.CaptureBuildingAction
+	45, // 10: lilbattle.v1.MoveUnitRequest.unit:type_name -> lilbattle.v1.Unit
+	31, // 11: lilbattle.v1.MoveUnitRequest.path:type_name -> lilbattle.v1.HexCoord
+	33, // 12: lilbattle.v1.ShowAttackEffectRequest.splash_targets:type_name -> lilbattle.v1.SplashTarget
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_lilbattle_v1_models_gameviewerpage_proto_init() }
