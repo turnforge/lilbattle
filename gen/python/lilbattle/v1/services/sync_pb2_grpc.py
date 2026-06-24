@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import sync_pb2 as lilbattle_dot_v1_dot_models_dot_sync__pb2
 
 
-class GameSyncServiceStub(object):
+class GameSyncServiceStub:
     """GameSyncService handles real-time synchronization of game state across
     multiple connected clients. It enables multiplayer gameplay by:
     1. Broadcasting moves/changes to all subscribed viewers
@@ -44,7 +44,7 @@ class GameSyncServiceStub(object):
                 _registered_method=True)
 
 
-class GameSyncServiceServicer(object):
+class GameSyncServiceServicer:
     """GameSyncService handles real-time synchronization of game state across
     multiple connected clients. It enables multiplayer gameplay by:
     1. Broadcasting moves/changes to all subscribed viewers
@@ -105,7 +105,7 @@ def add_GameSyncServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class GameSyncService(object):
+class GameSyncService:
     """GameSyncService handles real-time synchronization of game state across
     multiple connected clients. It enables multiplayer gameplay by:
     1. Broadcasting moves/changes to all subscribed viewers

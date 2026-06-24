@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import gameviewerpage_pb2 as lilbattle_dot_v1_dot_models_dot_gameviewerpage__pb2
 
 
-class GameViewerPageStub(object):
+class GameViewerPageStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -131,7 +131,7 @@ class GameViewerPageStub(object):
                 _registered_method=True)
 
 
-class GameViewerPageServicer(object):
+class GameViewerPageServicer:
     """Missing associated documentation comment in .proto file."""
 
     def SetTurnOptionsContent(self, request, context):
@@ -405,7 +405,7 @@ def add_GameViewerPageServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class GameViewerPage(object):
+class GameViewerPage:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

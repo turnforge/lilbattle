@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import world_service_pb2 as lilbattle_dot_v1_dot_models_dot_world__service__pb2
 
 
-class WorldsServiceStub(object):
+class WorldsServiceStub:
     """WorldsService manages the world examples catalog
     """
 
@@ -47,7 +47,7 @@ class WorldsServiceStub(object):
                 _registered_method=True)
 
 
-class WorldsServiceServicer(object):
+class WorldsServiceServicer:
     """WorldsService manages the world examples catalog
     """
 
@@ -137,7 +137,7 @@ def add_WorldsServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class WorldsService(object):
+class WorldsService:
     """WorldsService manages the world examples catalog
     """
 

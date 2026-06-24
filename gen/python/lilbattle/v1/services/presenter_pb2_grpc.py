@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import presenter_pb2 as lilbattle_dot_v1_dot_models_dot_presenter__pb2
 
 
-class SingletonInitializerServiceStub(object):
+class SingletonInitializerServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -21,7 +21,7 @@ class SingletonInitializerServiceStub(object):
                 _registered_method=True)
 
 
-class SingletonInitializerServiceServicer(object):
+class SingletonInitializerServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def InitializeSingleton(self, request, context):
@@ -46,7 +46,7 @@ def add_SingletonInitializerServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class SingletonInitializerService(object):
+class SingletonInitializerService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -77,7 +77,7 @@ class SingletonInitializerService(object):
             _registered_method=True)
 
 
-class GameViewPresenterStub(object):
+class GameViewPresenterStub:
     """Presenter service is the P in Model View Presenter
     We noticed that the front end was getting very bloated with not just views but also the 
     cycles of interactions across various components.   So a MVP is being adopted where
@@ -136,7 +136,7 @@ class GameViewPresenterStub(object):
                 _registered_method=True)
 
 
-class GameViewPresenterServicer(object):
+class GameViewPresenterServicer:
     """Presenter service is the P in Model View Presenter
     We noticed that the front end was getting very bloated with not just views but also the 
     cycles of interactions across various components.   So a MVP is being adopted where
@@ -261,7 +261,7 @@ def add_GameViewPresenterServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class GameViewPresenter(object):
+class GameViewPresenter:
     """Presenter service is the P in Model View Presenter
     We noticed that the front end was getting very bloated with not just views but also the 
     cycles of interactions across various components.   So a MVP is being adopted where
