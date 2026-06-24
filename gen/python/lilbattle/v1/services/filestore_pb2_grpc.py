@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import filestore_pb2 as lilbattle_dot_v1_dot_models_dot_filestore__pb2
 
 
-class FileStoreServiceStub(object):
+class FileStoreServiceStub:
     """An interface to a filestore across various environments
     """
 
@@ -37,7 +37,7 @@ class FileStoreServiceStub(object):
                 _registered_method=True)
 
 
-class FileStoreServiceServicer(object):
+class FileStoreServiceServicer:
     """An interface to a filestore across various environments
     """
 
@@ -104,7 +104,7 @@ def add_FileStoreServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class FileStoreService(object):
+class FileStoreService:
     """An interface to a filestore across various environments
     """
 

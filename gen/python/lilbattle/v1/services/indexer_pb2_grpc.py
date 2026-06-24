@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import indexer_pb2 as lilbattle_dot_v1_dot_models_dot_indexer__pb2
 
 
-class IndexerServiceStub(object):
+class IndexerServiceStub:
     """Manages indexing of entities
     """
 
@@ -37,7 +37,7 @@ class IndexerServiceStub(object):
                 _registered_method=True)
 
 
-class IndexerServiceServicer(object):
+class IndexerServiceServicer:
     """Manages indexing of entities
     """
 
@@ -102,7 +102,7 @@ def add_IndexerServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class IndexerService(object):
+class IndexerService:
     """Manages indexing of entities
     """
 

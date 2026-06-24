@@ -5,7 +5,7 @@ import grpc
 from lilbattle.v1.models import games_service_pb2 as lilbattle_dot_v1_dot_models_dot_games__service__pb2
 
 
-class GamesServiceStub(object):
+class GamesServiceStub:
     """GamesService manages the game examples catalog
     """
 
@@ -82,7 +82,7 @@ class GamesServiceStub(object):
                 _registered_method=True)
 
 
-class GamesServiceServicer(object):
+class GamesServiceServicer:
     """GamesService manages the game examples catalog
     """
 
@@ -260,7 +260,7 @@ def add_GamesServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class GamesService(object):
+class GamesService:
     """GamesService manages the game examples catalog
     """
 
