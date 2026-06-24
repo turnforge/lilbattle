@@ -14,14 +14,34 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// injectAuthMetadata reads the user ID from the HTTP context (set by auth middleware)
-// and adds it to the gRPC incoming metadata so the service can read it via
-// metadata.FromIncomingContext. We use incoming (not outgoing) because the Connect
-// adapter calls the service in-process — there's no gRPC transport layer to convert
-// outgoing metadata to incoming.
+// injectAuthMetadata reads the subject from the HTTP context (set by auth
+// middleware) and stamps it onto BOTH the outgoing and incoming gRPC
+// metadata.
+//
+// The dual-write covers two distinct delivery modes the adapter can sit in
+// front of:
+//
+//   - Production: ClientMgr.GetGamesSvcClient (services/ClientMgr.go) builds
+//     a real network gRPC client via grpc.NewClient(svcAddr). Real clients
+//     only honor OUTGOING metadata — the transport reads from outgoing,
+//     serializes over the wire, and rematerializes as incoming on the
+//     server. AppendToOutgoingContext is therefore the matching write side
+//     for the FromIncomingContext read at oneauth/grpc/interceptor.go:110.
+//
+//   - In-process: test fakes (recordingWorldsClient in
+//     connect_auth_integration_test.go) and any future in-process service
+//     registration receive ctx directly with no transport in between.
+//     Those callers read INCOMING via oagrpc.SubjectFromContext because
+//     that's the convention service handlers use. NewIncomingContext
+//     covers them.
+//
+// Setting both costs one extra map write per RPC. Setting only one mode
+// silently breaks the other; we lived with the production breakage long
+// enough.
 func injectAuthMetadata(ctx context.Context) context.Context {
 	userID := core.GetSubjectFromContext(ctx)
 	if userID != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx, oagrpc.DefaultMetadataKeySubject, userID)
 		md := metadata.Pairs(oagrpc.DefaultMetadataKeySubject, userID)
 		ctx = metadata.NewIncomingContext(ctx, md)
 	}

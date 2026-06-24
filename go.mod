@@ -17,9 +17,9 @@ require (
 	github.com/panyam/goapplib v0.1.1
 	github.com/panyam/gocurrent v0.1.1
 	github.com/panyam/goutils v0.1.13
-	github.com/panyam/oneauth v0.1.29
-	github.com/panyam/oneauth/grpc v0.1.29
-	github.com/panyam/oneauth/oauth2 v0.1.29
+	github.com/panyam/oneauth v0.1.31
+	github.com/panyam/oneauth/grpc v0.1.31
+	github.com/panyam/oneauth/oauth2 v0.1.31
 	github.com/panyam/protoc-gen-dal v0.0.10
 	github.com/panyam/protoc-gen-go-wasmjs v0.0.33
 	github.com/panyam/servicekit v0.1.2

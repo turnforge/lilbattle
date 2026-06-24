@@ -124,6 +124,32 @@ Builds for frontend, WASM, and backend run continuously. Do NOT manually run:
 - `npm run build` (web module auto-builds)
 - `buf generate` (protos auto-regenerate)
 
+### Pre-push hook
+
+A pre-push hook lives at `.githooks/pre-push` and mirrors the CI test
+job. Install it once per clone:
+
+```bash
+make setup-hooks
+```
+
+That runs `git config core.hooksPath .githooks`. From then on, every
+`git push` first runs:
+
+1. `go build` over the production package set (excludes `cmd/wasm`,
+   `cmd/repl`, `cmd/indexer`, and `tests/`).
+2. `go test` over the CI-covered Go packages.
+3. WASM build (`GOOS=js GOARCH=wasm`) — required because
+   `web/wasmLoading.test.ts` loads the real binary.
+4. `pnpm test` inside `web/`.
+
+Skipped: `pnpm install --frozen-lockfile` and `pnpm run buildprod`.
+Stale node_modules surfaces loudly via the jest run; the production
+webpack bundle isn't needed for jest's own transpilation.
+
+A failed step aborts the push. Bypass for a deliberate WIP push:
+`git push --no-verify`. Use sparingly — CI is the only other gate.
+
 ### Dev-mode fake login (`?dev_user=`)
 
 For multi-client testing without registering N real accounts, the server

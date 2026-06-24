@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Pre-push hook: mirrors what CI's test job at .github/workflows/ci.yml
+# runs, so a green local run is a strong signal CI will be green too.
+#
+# Covers:
+#   - Go build + go test (the steady-state failure surface)
+#   - WASM build (needed by web/wasmLoading.test.ts which loads the real
+#     binary end-to-end)
+#   - Frontend jest tests
+#
+# Skipped:
+#   - pnpm install --frozen-lockfile: assume deps are current; broken
+#     deps will fail the jest run loudly enough.
+#   - pnpm run buildprod: the production webpack bundle isn't needed
+#     for jest, which has its own transpilation.
+#
+# Bypass: git push --no-verify (use sparingly — CI is your only other gate)
+# Install: make setup-hooks (one-time, sets core.hooksPath = .githooks)
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "[pre-push] go build ..."
+go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
+
+echo "[pre-push] go test ..."
+go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
+
+echo "[pre-push] WASM build ..."
+mkdir -p web/static/wasm
+GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o web/static/wasm/lilbattle-cli.wasm ./cmd/wasm
+cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/static/wasm/wasm_exec.js
+
+echo "[pre-push] frontend tests ..."
+(cd web && pnpm test)
+
+echo "[pre-push] OK"
