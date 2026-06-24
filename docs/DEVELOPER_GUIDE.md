@@ -126,8 +126,8 @@ Builds for frontend, WASM, and backend run continuously. Do NOT manually run:
 
 ### Pre-push hook
 
-A pre-push hook lives at `.githooks/pre-push` and mirrors the CI Go
-build + test step verbatim. Install it once per clone:
+A pre-push hook lives at `.githooks/pre-push` and mirrors the CI test
+job. Install it once per clone:
 
 ```bash
 make setup-hooks
@@ -136,19 +136,19 @@ make setup-hooks
 That runs `git config core.hooksPath .githooks`. From then on, every
 `git push` first runs:
 
-```bash
-go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
-go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
-```
+1. `go build` over the production package set (excludes `cmd/wasm`,
+   `cmd/repl`, `cmd/indexer`, and `tests/`).
+2. `go test` over the CI-covered Go packages.
+3. WASM build (`GOOS=js GOARCH=wasm`) — required because
+   `web/wasmLoading.test.ts` loads the real binary.
+4. `pnpm test` inside `web/`.
 
-A failed build or test aborts the push. To bypass for a deliberate
-WIP push: `git push --no-verify`. Use sparingly — CI is the only
-other gate.
+Skipped: `pnpm install --frozen-lockfile` and `pnpm run buildprod`.
+Stale node_modules surfaces loudly via the jest run; the production
+webpack bundle isn't needed for jest's own transpilation.
 
-Frontend bits (pnpm build, WASM build, FE tests) are intentionally
-skipped here. Devloop builds them continuously and adding them would
-push the hook past the threshold where users start `--no-verify`-ing
-out of habit.
+A failed step aborts the push. Bypass for a deliberate WIP push:
+`git push --no-verify`. Use sparingly — CI is the only other gate.
 
 ### Dev-mode fake login (`?dev_user=`)
 
