@@ -124,6 +124,32 @@ Builds for frontend, WASM, and backend run continuously. Do NOT manually run:
 - `npm run build` (web module auto-builds)
 - `buf generate` (protos auto-regenerate)
 
+### Pre-push hook
+
+A pre-push hook lives at `.githooks/pre-push` and mirrors the CI Go
+build + test step verbatim. Install it once per clone:
+
+```bash
+make setup-hooks
+```
+
+That runs `git config core.hooksPath .githooks`. From then on, every
+`git push` first runs:
+
+```bash
+go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
+go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
+```
+
+A failed build or test aborts the push. To bypass for a deliberate
+WIP push: `git push --no-verify`. Use sparingly — CI is the only
+other gate.
+
+Frontend bits (pnpm build, WASM build, FE tests) are intentionally
+skipped here. Devloop builds them continuously and adding them would
+push the hook past the threshold where users start `--no-verify`-ing
+out of habit.
+
 ### Dev-mode fake login (`?dev_user=`)
 
 For multi-client testing without registering N real accounts, the server

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Pre-push hook: mirrors what CI's go-test step at .github/workflows/ci.yml
+# runs, so a green local run is a strong signal CI will be green too.
+#
+# Scope deliberately matches CI exactly (build + test commands copied
+# verbatim). Frontend bits (pnpm build, WASM build, FE tests) are skipped —
+# devloop handles those continuously and adding them here would push the
+# hook past ~30s, the threshold at which users start --no-verify-ing
+# routinely. The Go layer is where the recent regressions came from.
+#
+# Bypass: git push --no-verify (use sparingly — CI is your only other gate)
+# Install: make setup-hooks (one-time, sets core.hooksPath = .githooks)
+set -euo pipefail
+
+echo "[pre-push] go build ..."
+go build $(go list ./... | grep -v -E 'cmd/(wasm|repl|indexer)|tests/')
+
+echo "[pre-push] go test ..."
+go test ./tests/... ./cmd/cli/... ./lib/... ./services/authz/... ./services/r2/... ./web/server/... ./web/assets/themes/...
+
+echo "[pre-push] OK"

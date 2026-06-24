@@ -45,6 +45,11 @@ vars:
 	@echo "TINYGO_ROOT=$(TINYGO_ROOT)"
 	@echo "WASM_EXEC_PATH=$(WASM_EXEC_PATH)"
 
+setup-hooks:
+	@git config core.hooksPath .githooks
+	@echo "✓ git hooks installed (.githooks/). Pre-push will run go build + go test."
+	@echo "  Bypass with: git push --no-verify"
+
 test:
 	@echo "Running tests..."
 	go test -cover -coverprofile=coverage.out -coverpkg=./lib/...,./services/... ./tests/... ./cmd/cli/...
