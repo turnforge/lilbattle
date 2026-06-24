@@ -127,29 +127,33 @@ func setupAuthService(session *scs.SessionManager) (*goalservices.AuthService, a
 	oneauth.AddAuth("/login", localAuth)
 	oneauth.AddAuth("/signup", http.HandlerFunc(localAuth.HandleSignup))
 
-	// API/CLI token-based authentication
+	// API/CLI token-based authentication. The oneauth v0.1.31 migration
+	// replaced the &apiauth.APIAuth{...} god struct with apiauth.NewOneAuth
+	// (oneauth #298). Field name shifts: JWTSecretKey → SigningKey + SigningAlg,
+	// JWTIssuer → Issuer, JWTAudience → Audience, RefreshTokenStore → RefreshStore,
+	// AccessTokenExpiry → AccessExpiry. RefreshTokenExpiry is gone — refresh
+	// lifecycle now lives on the RefreshStore impl.
 	jwtSecret := os.Getenv("JWT_CLI_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "lilbattle-dev-secret-change-in-production" // Dev fallback
 	}
 	refreshTokenStore := oafs.NewFSRefreshTokenStore(storagePath)
-	apiAuth := &apiauth.APIAuth{
-		RefreshTokenStore:   refreshTokenStore,
-		JWTSecretKey:        jwtSecret,
-		JWTIssuer:           "lilbattle",
-		JWTAudience:         "cli",
-		AccessTokenExpiry:   30 * 24 * time.Hour, // 30 days for CLI tokens
-		RefreshTokenExpiry:  90 * 24 * time.Hour, // 90 days
+	apiOA := apiauth.NewOneAuth(apiauth.OneAuthConfig{
+		SigningKey:          []byte(jwtSecret),
+		SigningAlg:          "HS256",
+		Issuer:              "lilbattle",
+		Audience:            "cli",
+		AccessExpiry:        30 * 24 * time.Hour, // 30 days for CLI tokens
+		RefreshStore:        refreshTokenStore,
 		ValidateCredentials: authService.ValidateLocalCredentials,
-	}
-	oneauth.AddAuth("/cli/token", apiAuth)
+	})
+	oneauth.AddAuth("/cli/token", apiauth.NewTokenEndpointHandler(apiOA))
 
-	// Wire APIAuth's JWT validation into the HTTP middleware so Bearer tokens
-	// from API/CLI clients are accepted by GetLoggedInSubject. The legacy
-	// APIAuth.VerifyTokenFunc was removed in oneauth #218; callers go through
-	// APIAuth.Validator().ValidateToken instead.
+	// Wire OneAuth's JWT validation into the HTTP middleware so Bearer tokens
+	// from API/CLI clients are accepted by GetLoggedInSubject. Validator is now
+	// a struct field on *OneAuth (was a method on *APIAuth).
 	oneauth.Middleware.VerifyToken = func(tokenString string) (string, any, error) {
-		resp, err := apiAuth.Validator().ValidateToken(context.Background(), &apiauth.ValidateTokenRequest{Token: tokenString})
+		resp, err := apiOA.Validator.ValidateToken(context.Background(), &apiauth.ValidateTokenRequest{Token: tokenString})
 		if err != nil {
 			return "", nil, err
 		}

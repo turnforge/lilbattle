@@ -14,16 +14,24 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// injectAuthMetadata reads the user ID from the HTTP context (set by auth middleware)
-// and adds it to the gRPC incoming metadata so the service can read it via
-// metadata.FromIncomingContext. We use incoming (not outgoing) because the Connect
-// adapter calls the service in-process — there's no gRPC transport layer to convert
-// outgoing metadata to incoming.
+// injectAuthMetadata reads the subject from the HTTP context (set by auth
+// middleware) and adds it to the gRPC outgoing metadata so the in-cluster
+// GamesService / WorldsService gRPC clients carry it across the network.
+//
+// Earlier versions wrote to *incoming* metadata under the assumption that
+// the Connect adapter calls the gRPC service in-process. That assumption is
+// false: ClientMgr.GetGamesSvcClient (services/ClientMgr.go) builds a real
+// network client via grpc.NewClient(svcAddr). Real clients read outgoing
+// metadata only — incoming context writes are silently dropped at the
+// transport boundary, and the server's UnaryAuthInterceptor 401s every call
+// because md.Get("x-subject") returns empty on the receiving side.
+//
+// AppendToOutgoingContext is the matching write side for the
+// FromIncomingContext read at oneauth/grpc/interceptor.go:110.
 func injectAuthMetadata(ctx context.Context) context.Context {
 	userID := core.GetSubjectFromContext(ctx)
 	if userID != "" {
-		md := metadata.Pairs(oagrpc.DefaultMetadataKeySubject, userID)
-		ctx = metadata.NewIncomingContext(ctx, md)
+		ctx = metadata.AppendToOutgoingContext(ctx, oagrpc.DefaultMetadataKeySubject, userID)
 	}
 
 	return ctx
