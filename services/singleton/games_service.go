@@ -16,6 +16,11 @@ type SingletonGamesService struct {
 	SingletonGameMoveHistory *v1.GameMoveHistory
 
 	RuntimeGame *lib.Game
+
+	// Persister receives every SaveMoveGroup call. Defaults to NoopPersister
+	// (in-memory only, matches pre-issue-174 behavior). Browser wires a
+	// jsCallbackPersister at WASM init; tests wire a recorder.
+	Persister MovePersister
 }
 
 // NOTE - ONly API really needed here are "getters" and "move processors" so no Creations, Deletions, Listing or even
@@ -28,6 +33,7 @@ func NewSingletonGamesService() *SingletonGamesService {
 		SingletonGame:            &v1.Game{},
 		SingletonGameState:       &v1.GameState{},
 		SingletonGameMoveHistory: &v1.GameMoveHistory{},
+		Persister:                NoopPersister{},
 	}
 	w.Self = w
 	return w
@@ -38,8 +44,12 @@ func (w *SingletonGamesService) WorldData() *v1.WorldData {
 }
 
 func (w *SingletonGamesService) SaveMoveGroup(ctx context.Context, gameId string, state *v1.GameState, group *v1.GameMoveGroup) error {
-	// NOOP - Will have to do local first coordination etc
-	return nil
+	// Delegate to the wired persister. Default NoopPersister keeps the
+	// in-memory-only behavior tests and non-browser callers rely on; browser
+	// installs a jsCallbackPersister at WASM init that POSTs back to
+	// /api/lilbattle.v1.GamesService/ProcessMoves and returns the server's
+	// error verbatim (auth rejection propagates so the FE can surface it).
+	return w.Persister.Save(ctx, gameId, state, group)
 }
 
 func (w *SingletonGamesService) GetRuntimeGame(game *v1.Game, gameState *v1.GameState) (out *lib.Game, err error) {

@@ -33,6 +33,7 @@ import { TerrainStatsPanel } from './TerrainStatsPanel';
 import { UnitStatsPanel } from './UnitStatsPanel';
 import { DamageDistributionPanel } from './DamageDistributionPanel';
 import { GameLogPanel } from './GameLogPanel';
+import { ServerPersister } from './ServerPersister';
 import { TurnOptionsPanel } from './TurnOptionsPanel';
 import { BuildOptionsModal } from './BuildOptionsModal';
 import { GameEndedModal } from './GameEndedModal';
@@ -376,6 +377,35 @@ export abstract class GameViewerPageBase extends BasePage implements LCMComponen
         this.singletonInitializerClient = new SingletonInitializerClient(this.wasmBundle);
         await this.wasmBundle.loadWasm((document.getElementById("wasmBundlePathField") as HTMLInputElement).value);
         await this.wasmBundle.waitUntilReady();
+        this.registerMovePersister();
+    }
+
+    /**
+     * Wire the WASM SingletonGamesService's SaveMoveGroup to a ServerPersister
+     * that POSTs moves back to the server. Without this call, every
+     * browser-initiated move stays in the WASM heap and is lost on refresh
+     * (the pre-issue-174 bug). Persistence failures (401 anonymous,
+     * forbidden non-player, network errors) surface via the game-log panel.
+     */
+    private registerMovePersister(): void {
+        const lb = (window as any).lilbattle;
+        if (!lb || typeof lb.registerMovePersister !== 'function') {
+            throw new Error('lilbattle.registerMovePersister missing — WASM bridge out of date');
+        }
+        const persister = new ServerPersister();
+        lb.registerMovePersister(async (gameId: string, stateJson: string, groupJson: string) => {
+            try {
+                await persister.save(gameId, stateJson, groupJson);
+            } catch (err) {
+                // Surface to the game log so users see WHY their move
+                // didn't stick. Then rethrow so the WASM Go side turns it
+                // into a ProcessMoves error that BaseGamesService can
+                // propagate upstream.
+                const message = err instanceof Error ? err.message : String(err);
+                this.gameLogPanel?.logGameEvent(`Move not saved: ${message}`, 'system');
+                throw err;
+            }
+        });
     }
 
     /**
