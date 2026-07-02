@@ -16,6 +16,7 @@ gameId=$(echo $gameIdLine | sed -e "s/.*export.LILBATTLE_GAME_ID=//g")
 export LILBATTLE_GAME_ID=$gameId
 export LILBATTLE_CONFIRM=false
 echo Created game for testing: $LILBATTLE_GAME_ID
+if [ -n "$LILBATTLE_SERVER" ]; then echo "Game viewable at: ${LILBATTLE_SERVER%/api}/games/$LILBATTLE_GAME_ID/view"; fi
 
 # ============================================================
 # Round 1

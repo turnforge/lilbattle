@@ -29,13 +29,21 @@ type FSWorldsService struct {
 	storage *storage.FileStorage
 }
 
-// NewFSWorldsService creates a new FSWorldsService implementation
+// NewFSWorldsService creates a new FSWorldsService implementation.
+// Storage precedence: explicit storageDir arg > LILBATTLE_WORLDS_STORAGE_DIR
+// env var > cached WORLDS_STORAGE_DIR > DevDataPath default. See
+// NewFSGamesService for the parallel rationale — env var enables per-test
+// tempdir isolation in the e2e replay harness.
 func NewFSWorldsService(storageDir string, clientMgr *services.ClientMgr) *FSWorldsService {
 	if storageDir == "" {
-		if WORLDS_STORAGE_DIR == "" {
-			WORLDS_STORAGE_DIR = DevDataPath("storage/worlds")
+		if envDir := os.Getenv("LILBATTLE_WORLDS_STORAGE_DIR"); envDir != "" {
+			storageDir = envDir
+		} else {
+			if WORLDS_STORAGE_DIR == "" {
+				WORLDS_STORAGE_DIR = DevDataPath("storage/worlds")
+			}
+			storageDir = WORLDS_STORAGE_DIR
 		}
-		storageDir = WORLDS_STORAGE_DIR
 	}
 	service := &FSWorldsService{storage: storage.NewFileStorage(storageDir)}
 	service.ClientMgr = clientMgr

@@ -31,13 +31,21 @@ type FSGamesService struct {
 	storage *storage.FileStorage // Storage area for all files
 }
 
-// NewGamesService creates a new GamesService implementation for server mode
+// NewGamesService creates a new GamesService implementation for server mode.
+// Storage precedence: explicit storageDir arg > LILBATTLE_GAMES_STORAGE_DIR
+// env var > cached GAMES_STORAGE_DIR > DevDataPath default. Env var support
+// lets the e2e replay harness spin up an ephemeral server against a tempdir
+// without touching ~/dev-app-data.
 func NewFSGamesService(storageDir string, clientMgr *services.ClientMgr) *FSGamesService {
 	if storageDir == "" {
-		if GAMES_STORAGE_DIR == "" {
-			GAMES_STORAGE_DIR = DevDataPath("storage/games")
+		if envDir := os.Getenv("LILBATTLE_GAMES_STORAGE_DIR"); envDir != "" {
+			storageDir = envDir
+		} else {
+			if GAMES_STORAGE_DIR == "" {
+				GAMES_STORAGE_DIR = DevDataPath("storage/games")
+			}
+			storageDir = GAMES_STORAGE_DIR
 		}
-		storageDir = GAMES_STORAGE_DIR
 	}
 	service := &FSGamesService{
 		storage: storage.NewFileStorage(storageDir),

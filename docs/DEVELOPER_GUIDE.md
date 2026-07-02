@@ -150,6 +150,38 @@ webpack bundle isn't needed for jest's own transpilation.
 A failed step aborts the push. Bypass for a deliberate WIP push:
 `git push --no-verify`. Use sparingly — CI is the only other gate.
 
+### Recorded replay harness
+
+`tests/e2e/` runs the three committed `.sh` replay scripts under
+`tests/e2etests/` against an ephemeral server. Each subtest boots its
+own server on a random port with a per-test tempdir for game + world
+storage, seeds the fixture world under `tests/e2e/fixtures/worlds/`,
+then executes the script via `bash`. `t.Cleanup` tears everything down.
+
+Gated behind the `e2e` build tag while the recorded scripts drift from
+current game rules (tracked in issue 183). Default `go test ./...`
+compiles the doc.go stub and reports "no tests to run"; the harness
+only runs when requested:
+
+```bash
+make cli               # build ww into $GOBIN (harness requires it on PATH)
+go test -tags=e2e ./tests/e2e/
+```
+
+Overrides:
+
+- `LILBATTLE_WW_BIN=/path/to/ww` — override which ww binary the scripts
+  invoke. Defaults to the first `ww` on PATH.
+- `LILBATTLE_E2E_WATCH=true` — after `ww new` runs, invoke `open` (macOS)
+  or `xdg-open` (Linux) on the game's viewer URL so you can watch the
+  replay play out in a browser tab.
+
+The scripts themselves are generated in the sibling `weemaps` repo from
+upstream game dumps — see `weemaps/scripts/history.py`. To add a new
+replay, generate the `.sh` there, drop it into `tests/e2etests/`, and
+make sure the world it references has a fixture under
+`tests/e2e/fixtures/worlds/`.
+
 ### Dev-mode fake login (`?dev_user=`)
 
 For multi-client testing without registering N real accounts, the server

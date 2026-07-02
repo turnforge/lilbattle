@@ -8,10 +8,22 @@ package authz
 import (
 	"context"
 	"fmt"
+	"os"
 
 	oagrpc "github.com/panyam/oneauth/grpc"
 	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
 )
+
+// isDevBypass reports whether the current process is running with
+// DISABLE_API_AUTH=true. The gRPC interceptor already treats that env var
+// as "auth optional at the transport"; extending the same bypass to
+// handler-side RequireAuthenticated / CanSubmitMoves lets local-dev flows
+// (make servelocal without a login, e2e replay harness) exercise the full
+// move path without a real user. NEVER TRUE IN PRODUCTION — the env var
+// is documented dev-only in web/server/dev_login.go's neighborhood.
+func isDevBypass() bool {
+	return os.Getenv("DISABLE_API_AUTH") == "true"
+}
 
 // Common authorization errors
 var (
@@ -28,10 +40,16 @@ func GetUserIDFromContext(ctx context.Context) string {
 	return oagrpc.SubjectFromContext(ctx)
 }
 
-// RequireAuthenticated returns an error if no user is authenticated.
+// RequireAuthenticated returns an error if no user is authenticated. In
+// dev-bypass mode (DISABLE_API_AUTH=true) it returns "" with nil error so
+// downstream authz calls can proceed on anonymous sessions — matches the
+// interceptor's own "optional auth" behavior under the same env var.
 func RequireAuthenticated(ctx context.Context) (string, error) {
 	userID := GetUserIDFromContext(ctx)
 	if userID == "" {
+		if isDevBypass() {
+			return "", nil
+		}
 		return "", ErrUnauthenticated
 	}
 	return userID, nil
@@ -108,7 +126,16 @@ func RequireCurrentPlayer(ctx context.Context, game *v1.Game, currentPlayer int3
 
 // CanSubmitMoves checks if user can submit moves to a game.
 // User must be a player in the game AND it must be their turn.
+//
+// Dev-bypass: DISABLE_API_AUTH=true with no subject skips the check so the
+// replay harness (and local-dev anonymous sessions) can drive both players
+// from one connection. The bypass is transport-scoped by the interceptor
+// upstream — flipping it in prod would take an explicit env-var flip on
+// the deployed process, which is out-of-band from any request.
 func CanSubmitMoves(ctx context.Context, game *v1.Game, currentPlayer int32) error {
+	if isDevBypass() {
+		return nil
+	}
 	_, err := RequireCurrentPlayer(ctx, game, currentPlayer)
 	return err
 }
