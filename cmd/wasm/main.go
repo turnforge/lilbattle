@@ -156,6 +156,22 @@ func main() {
 		}
 	}))
 
+	// registerMovePersister lets JavaScript inject the callback the WASM-side
+	// SingletonGamesService delegates SaveMoveGroup to. Called once by the
+	// FE right after loadGameData; without this, moves stay in the WASM
+	// heap and are lost on refresh (the pre-issue-174 bug).
+	fmt.Println("Adding registerMovePersister function to existing lilbattle object")
+	lilbattleObj.Set("registerMovePersister", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 || args[0].Type() != js.TypeFunction {
+			return map[string]any{
+				"success": false,
+				"error":   "registerMovePersister requires a single function argument",
+			}
+		}
+		wasmGamesService.Persister = &jsCallbackPersister{callback: args[0]}
+		return map[string]any{"success": true}
+	}))
+
 	fmt.Println("LilBattle WASM module loaded successfully")
 
 	// Keep the WASM module running
