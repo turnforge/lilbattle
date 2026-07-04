@@ -2,50 +2,55 @@
 // +build e2e
 
 // Package e2e provides an integration-test harness for the recorded ww
-// replay scripts under tests/e2etests/. Each script drives real ww against
-// a real server; the harness spins up an ephemeral server + tempdir per
-// test so runs are hermetic.
+// replay scripts under tests/e2etests/. The harness runs the scripts
+// against an ALREADY-RUNNING server pointed at via LILBATTLE_E2E_SERVER
+// (with the /api suffix included) and uses the WorldsService.CreateWorld
+// RPC to seed fixtures — same code path against local dev, staging, or
+// any other target.
 //
-// Gated behind the `e2e` build tag because the recorded scripts have
-// drifted from current game rules — the harness itself is green, but the
-// assertions inside the .sh files fail against today's rules engine. Run
-// with `go test -tags=e2e ./tests/e2e/`. Drift fixes are tracked as
-// separate follow-up issues.
+// Gated behind the `e2e` build tag while the recorded scripts drift from
+// current game rules (tracked in issue 183). Run with:
+//
+//	LILBATTLE_E2E_SERVER=http://localhost:8090/api \
+//	  go test -tags=e2e ./tests/e2e/
+//
+// Or via the Makefile which sets sensible defaults:
+//
+//	make e2e            # requires a server up + LILBATTLE_E2E_SERVER set
+//	make e2e-run REPLAY=29146
+//	make e2e-full       # boots a local server, runs, tears down
 package e2e
 
 import (
-	"fmt"
+	"context"
 	"io"
-	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
-	"time"
+
+	v1 "github.com/turnforge/lilbattle/gen/go/lilbattle/v1/models"
+	"github.com/turnforge/lilbattle/services/connectclient"
+	pj "google.golang.org/protobuf/encoding/protojson"
 )
 
-// pickFreePort asks the kernel for an unused TCP port and returns it as a
-// string. Two random ports (one for HTTP, one for gRPC) per server; the
-// listener is closed immediately so main.go can rebind. Cheaper than
-// running the whole server bootstrap twice to detect port conflicts.
-func pickFreePort(t *testing.T) int {
+// serverURL resolves the target server URL from LILBATTLE_E2E_SERVER.
+// Every test call goes here first — a missing var is treated as an
+// actionable configuration error, not a silent skip, since the whole
+// suite depends on it and skipping would hide misconfiguration in CI.
+func serverURL(t *testing.T) string {
 	t.Helper()
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("pick free port: %v", err)
+	url := os.Getenv("LILBATTLE_E2E_SERVER")
+	if url == "" {
+		t.Fatalf("LILBATTLE_E2E_SERVER not set — point at a running server (e.g. http://localhost:8090/api) or run via `make e2e-full`")
 	}
-	port := lis.Addr().(*net.TCPAddr).Port
-	_ = lis.Close()
-	return port
+	return url
 }
 
 // wwBinaryPath resolves the ww binary the replay scripts will invoke.
 // Precedence: LILBATTLE_WW_BIN env var (explicit override for CI or
 // unusual layouts), then PATH lookup for a bare "ww" (the common dev
-// case — the CLI is installed to GOBIN by `make cli` and picked up
-// globally, per CLAUDE.md). No auto-build: if ww isn't findable the test
-// fails with an actionable message pointing at `make cli`.
+// case — `make cli` installs to GOBIN). No auto-build.
 func wwBinaryPath(t *testing.T) string {
 	t.Helper()
 	if override := os.Getenv("LILBATTLE_WW_BIN"); override != "" {
@@ -73,9 +78,9 @@ func wwPathDir(t *testing.T) string {
 	return dir
 }
 
-// repoRoot walks up from the current test binary's directory to find the
-// go.mod. Needed because `go test` sets CWD to the test package's dir,
-// but we need to `go build` from the module root.
+// repoRoot walks up from the current test's CWD to find the go.mod.
+// Fixture paths are anchored here rather than at CWD so the tests work
+// regardless of what dir `go test` is invoked from.
 func repoRoot(t *testing.T) string {
 	t.Helper()
 	dir, err := os.Getwd()
@@ -94,134 +99,72 @@ func repoRoot(t *testing.T) string {
 	}
 }
 
-// TestServer describes a running ephemeral lilbattle server.
-type TestServer struct {
-	URL           string // http://127.0.0.1:<port>
-	StorageDir    string // parent dir holding games/ + worlds/
-	GamesStorage  string // <StorageDir>/games
-	WorldsStorage string // <StorageDir>/worlds
-	cmd           *exec.Cmd
-}
-
-// startTestServer boots main.go with local backends, random ports, and a
-// per-test storage dir via LILBATTLE_{GAMES,WORLDS}_STORAGE_DIR. Waits for
-// the HTTP endpoint to answer before returning. t.Cleanup tears it down.
+// ensureFixtureWorld seeds a fixture world onto the target server via
+// the WorldsService RPC. Idempotent — checks GetWorld first, and only
+// calls CreateWorld if the target reports the world missing.
 //
-// Boot cost is dominated by `go run` compiling the server binary on first
-// call (~5s cold). If this proves too slow for CI, cache the binary with
-// t.TempDir shared across subtests — but Go's testing package makes a
-// per-test tempdir hard to share cleanly, and the current 3-script suite
-// wall-clock is dominated by the replays themselves, not boot.
-func startTestServer(t *testing.T) *TestServer {
+// Using CreateWorld (rather than dropping files into a specific storage
+// dir) keeps the harness backend-agnostic: works against FS, gorm, gae,
+// or a remote server we don't have shell access to.
+func ensureFixtureWorld(t *testing.T, serverBase, worldID string) {
 	t.Helper()
-	storageDir := t.TempDir()
-	gamesDir := filepath.Join(storageDir, "games")
-	worldsDir := filepath.Join(storageDir, "worlds")
-	if err := os.MkdirAll(gamesDir, 0o755); err != nil {
-		t.Fatalf("mkdir games: %v", err)
-	}
-	if err := os.MkdirAll(worldsDir, 0o755); err != nil {
-		t.Fatalf("mkdir worlds: %v", err)
-	}
+	ctx := context.Background()
+	client := connectclient.NewConnectWorldsClient(serverBase)
 
-	httpPort := pickFreePort(t)
-	grpcPort := pickFreePort(t)
-
-	cmd := exec.Command("go", "run", "main.go",
-		"-games_service_be=local",
-		"-worlds_service_be=local",
-	)
-	cmd.Dir = repoRoot(t)
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("LILBATTLE_WEB_PORT=:%d", httpPort),
-		fmt.Sprintf("LILBATTLE_GRPC_PORT=:%d", grpcPort),
-		"LILBATTLE_GAMES_STORAGE_DIR="+gamesDir,
-		"LILBATTLE_WORLDS_STORAGE_DIR="+worldsDir,
-		// Auth stays enabled; the CLI does its own auth via profile tokens.
-		// The replay scripts run ww in local mode (no profile), which
-		// hits the endpoint anonymously. `ww new` needs a server but no
-		// auth; ProcessMoves DOES need auth. Games created with no user_id
-		// (the default in `ww new` without profile) are playable by anyone
-		// under current authz rules — see services/authz.CanSubmitMoves.
-		"DISABLE_API_AUTH=true",
-	)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
-	if err := cmd.Start(); err != nil {
-		t.Fatalf("start server: %v", err)
+	// Probe: if the world already exists, we're done.
+	resp, err := client.GetWorld(ctx, &v1.GetWorldRequest{Id: worldID})
+	if err == nil && resp != nil && resp.World != nil {
+		return
 	}
 
-	url := fmt.Sprintf("http://127.0.0.1:%d", httpPort)
-	waitUntilReady(t, url, 30*time.Second)
+	// Load fixture protos from the repo.
+	fixtureDir := filepath.Join(repoRoot(t), "tests", "e2e", "fixtures", "worlds", worldID)
+	world := loadWorld(t, filepath.Join(fixtureDir, "metadata.json"))
+	worldData := loadWorldData(t, filepath.Join(fixtureDir, "data.json"))
 
-	server := &TestServer{
-		URL:           url,
-		StorageDir:    storageDir,
-		GamesStorage:  gamesDir,
-		WorldsStorage: worldsDir,
-		cmd:           cmd,
-	}
-	t.Cleanup(func() {
-		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
-			_, _ = cmd.Process.Wait()
-		}
+	_, err = client.CreateWorld(ctx, &v1.CreateWorldRequest{
+		World:     world,
+		WorldData: worldData,
 	})
-	return server
-}
-
-// waitUntilReady polls the server's root URL until it responds or the
-// timeout elapses. Any HTTP response (even 404) proves the listener is
-// bound; we don't need a specific status.
-func waitUntilReady(t *testing.T, url string, timeout time.Duration) {
-	t.Helper()
-	client := &http.Client{Timeout: 500 * time.Millisecond}
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		resp, err := client.Get(url + "/")
-		if err == nil {
-			_ = resp.Body.Close()
-			return
-		}
-		time.Sleep(200 * time.Millisecond)
-	}
-	t.Fatalf("server at %s never became ready within %v", url, timeout)
-}
-
-// copyFixtureWorld copies a fixture world into the server's worlds
-// storage so `ww new <worldID>` can find it. Fixtures live in
-// tests/e2e/fixtures/worlds/<id>/ (data.json + metadata.json).
-func copyFixtureWorld(t *testing.T, server *TestServer, worldID string) {
-	t.Helper()
-	src := filepath.Join(repoRoot(t), "tests", "e2e", "fixtures", "worlds", worldID)
-	dst := filepath.Join(server.WorldsStorage, worldID)
-	if err := copyDir(src, dst); err != nil {
-		t.Fatalf("copy fixture world %s: %v", worldID, err)
-	}
-}
-
-// copyDir does a shallow (single-level) recursive copy. Fixtures are
-// flat data.json + metadata.json — no need for the general-purpose
-// io/fs.WalkDir dance.
-func copyDir(src, dst string) error {
-	if err := os.MkdirAll(dst, 0o755); err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(src)
 	if err != nil {
-		return err
+		t.Fatalf("CreateWorld %s: %v", worldID, err)
 	}
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue // fixtures are file-only
-		}
-		data, err := os.ReadFile(filepath.Join(src, entry.Name()))
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(filepath.Join(dst, entry.Name()), data, 0o644); err != nil {
-			return err
-		}
-	}
-	return nil
 }
+
+// loadWorld parses a fixture metadata.json into a *v1.World via
+// protojson. The files were captured from a live server's storage layer
+// (protojson-formatted), so no schema translation is needed.
+func loadWorld(t *testing.T, path string) *v1.World {
+	t.Helper()
+	data := mustReadFile(t, path)
+	w := &v1.World{}
+	if err := pj.Unmarshal(data, w); err != nil {
+		t.Fatalf("unmarshal %s: %v", path, err)
+	}
+	return w
+}
+
+func loadWorldData(t *testing.T, path string) *v1.WorldData {
+	t.Helper()
+	data := mustReadFile(t, path)
+	wd := &v1.WorldData{}
+	if err := pj.Unmarshal(data, wd); err != nil {
+		t.Fatalf("unmarshal %s: %v", path, err)
+	}
+	return wd
+}
+
+func mustReadFile(t *testing.T, path string) []byte {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open %s: %v", path, err)
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	return data
+}
+

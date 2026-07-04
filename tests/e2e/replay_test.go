@@ -20,7 +20,7 @@ import (
 
 // worldIDPattern matches the `WORLD_ID="<id>"` line the recorded scripts
 // use to select which world `ww new` creates against. Harness parses this
-// to know which fixture world to seed into the test server's tempdir.
+// to know which fixture world to seed on the target server.
 var worldIDPattern = regexp.MustCompile(`^WORLD_ID="([^"]+)"`)
 
 // gameURLPattern matches the "Game viewable at: <url>" line the scripts
@@ -28,15 +28,19 @@ var worldIDPattern = regexp.MustCompile(`^WORLD_ID="([^"]+)"`)
 // URL in a browser tab so the user can watch the replay drive the game.
 var gameURLPattern = regexp.MustCompile(`^Game viewable at: (\S+)`)
 
-// TestReplayScripts runs every tests/e2etests/*.sh script against a fresh
-// ephemeral server, isolated per subtest. Each script must exit 0. The
-// scripts' own `set -e` and `trap 'echo FAILED at line …' ERR` bubble the
-// specific failing ww command into the test output.
+// TestReplayScripts runs every tests/e2etests/*.sh script against the
+// server pointed at by LILBATTLE_E2E_SERVER. Each subtest ensures its
+// fixture world exists on the target, then executes the script. The
+// scripts' own `set -e` and `trap 'echo FAILED at line …' ERR` bubble
+// the specific failing ww command into the test output.
 //
-// Watch mode: LILBATTLE_E2E_WATCH=true prints the game URL and (on macOS
-// / Linux) invokes `open` / `xdg-open` so the user watches the replay
-// live in a browser tab. Off by default — CI runs headless.
+// Watch mode: LILBATTLE_E2E_WATCH=true prints the game URL and (on
+// macOS / Linux) invokes `open` / `xdg-open` so the user watches the
+// replay live in a browser tab. Off by default.
 func TestReplayScripts(t *testing.T) {
+	server := serverURL(t)
+	wwDir := wwPathDir(t)
+
 	scriptsDir := filepath.Join(repoRoot(t), "tests", "e2etests")
 	entries, err := os.ReadDir(scriptsDir)
 	if err != nil {
@@ -53,8 +57,6 @@ func TestReplayScripts(t *testing.T) {
 		t.Fatal("no *.sh replay scripts found under tests/e2etests/")
 	}
 
-	wwDir := wwPathDir(t)
-
 	for _, scriptName := range scripts {
 		scriptName := scriptName // capture for parallel
 		t.Run(strings.TrimSuffix(scriptName, ".sh"), func(t *testing.T) {
@@ -64,9 +66,7 @@ func TestReplayScripts(t *testing.T) {
 				t.Fatalf("extract WORLD_ID from %s: %v", scriptName, err)
 			}
 
-			server := startTestServer(t)
-			copyFixtureWorld(t, server, worldID)
-
+			ensureFixtureWorld(t, server, worldID)
 			runReplayScript(t, scriptPath, server, wwDir)
 		})
 	}
@@ -98,7 +98,7 @@ func extractWorldID(path string) (string, error) {
 // game-URL line (used by watch mode). On failure, the captured output
 // is dumped so the exact `ww` command and its error message reach the
 // test log — matching the scripts' own `trap 'echo FAILED at line …'`.
-func runReplayScript(t *testing.T, scriptPath string, server *TestServer, wwDir string) {
+func runReplayScript(t *testing.T, scriptPath, serverBase, wwDir string) {
 	t.Helper()
 
 	// exec.Command("bash", scriptPath) runs the script as bash's argv[0],
@@ -107,13 +107,8 @@ func runReplayScript(t *testing.T, scriptPath string, server *TestServer, wwDir 
 	// itself is bounded to tests/e2etests/*.sh via os.ReadDir + suffix
 	// filter, not caller input.
 	cmd := exec.Command("bash", scriptPath)
-	// LILBATTLE_SERVER must include the /api prefix. `ww new` (and only
-	// `ww new` — cmd/cli/cmd/new.go passes bare serverURL to the Connect
-	// clients while every other command routes through GetAPIEndpoint()
-	// in utils.go which appends /api). Filed as a follow-up; workaround
-	// here so the harness works without a CLI bugfix landing first.
 	cmd.Env = append(os.Environ(),
-		"LILBATTLE_SERVER="+server.URL+"/api",
+		"LILBATTLE_SERVER="+serverBase,
 		"PATH="+wwDir+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"LILBATTLE_CONFIRM=false",
 	)
@@ -134,8 +129,6 @@ func runReplayScript(t *testing.T, scriptPath string, server *TestServer, wwDir 
 	go func() {
 		defer stdoutR.Close()
 		scanner := bufio.NewScanner(stdoutR)
-		// The 24280 replay is ~2300 lines; default token size is fine but
-		// bump the buffer for safety against long lines.
 		scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -150,8 +143,6 @@ func runReplayScript(t *testing.T, scriptPath string, server *TestServer, wwDir 
 
 	err := cmd.Wait()
 	_ = stdoutW.Close()
-	// Give the goroutine a moment to drain — the pipe is already closed
-	// but bufio.Scanner may still be finishing the last line.
 	time.Sleep(50 * time.Millisecond)
 
 	if err != nil {

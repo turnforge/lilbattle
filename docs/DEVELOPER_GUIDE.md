@@ -152,35 +152,55 @@ A failed step aborts the push. Bypass for a deliberate WIP push:
 
 ### Recorded replay harness
 
-`tests/e2e/` runs the three committed `.sh` replay scripts under
-`tests/e2etests/` against an ephemeral server. Each subtest boots its
-own server on a random port with a per-test tempdir for game + world
-storage, seeds the fixture world under `tests/e2e/fixtures/worlds/`,
-then executes the script via `bash`. `t.Cleanup` tears everything down.
+`tests/e2e/` runs the committed `.sh` replay scripts under
+`tests/e2etests/` against an **already-running server**. Each subtest
+ensures its fixture world exists on the target via the `WorldsService`
+CreateWorld RPC (idempotent — a second run reuses the seeded world),
+then executes the script under `bash` with `ww` on `PATH`.
+
+The harness targets a URL, never a filesystem — same code path against
+local dev, staging, or any other server the CI can reach.
 
 Gated behind the `e2e` build tag while the recorded scripts drift from
 current game rules (tracked in issue 183). Default `go test ./...`
-compiles the doc.go stub and reports "no tests to run"; the harness
-only runs when requested:
+compiles the `doc.go` stub and reports "no tests to run"; the harness
+only runs when requested.
+
+Quick paths:
 
 ```bash
-make cli               # build ww into $GOBIN (harness requires it on PATH)
-go test -tags=e2e ./tests/e2e/
+# One command — boots a local dev server, runs tests, tears down.
+make cli && make e2e-full
+
+# Target one replay:
+make cli && make e2e-full ARGS='-run TestReplayScripts/29146'
+
+# Against a server you already have running (faster iteration):
+export LILBATTLE_E2E_SERVER=http://localhost:8090/api
+make e2e
+make e2e-run REPLAY=29146
+make e2e-watch          # auto-opens the game URL in a browser
 ```
 
 Overrides:
 
+- `LILBATTLE_E2E_SERVER` (required for `make e2e*`) — target server URL,
+  including the `/api` suffix. Skipped by `make e2e-full`, which sets it
+  for you after starting a background server.
 - `LILBATTLE_WW_BIN=/path/to/ww` — override which ww binary the scripts
-  invoke. Defaults to the first `ww` on PATH.
-- `LILBATTLE_E2E_WATCH=true` — after `ww new` runs, invoke `open` (macOS)
-  or `xdg-open` (Linux) on the game's viewer URL so you can watch the
-  replay play out in a browser tab.
+  invoke. Defaults to the first `ww` on `PATH`.
+- `LILBATTLE_E2E_WATCH=true` — after `ww new`, invoke `open` (macOS) or
+  `xdg-open` (Linux) on the game's viewer URL so you can watch the replay
+  play out in a browser tab.
+- `LILBATTLE_E2E_HTTP_PORT` / `LILBATTLE_E2E_GRPC_PORT` (for `e2e-full`) —
+  override the server's ports if `:8090` / `:9091` conflict.
 
-The scripts themselves are generated in the sibling `weemaps` repo from
-upstream game dumps — see `weemaps/scripts/history.py`. To add a new
-replay, generate the `.sh` there, drop it into `tests/e2etests/`, and
-make sure the world it references has a fixture under
-`tests/e2e/fixtures/worlds/`.
+Fixture worlds live under `tests/e2e/fixtures/worlds/<worldID>/` as
+`data.json` + `metadata.json` (both protojson). The scripts themselves
+are generated in the sibling `weemaps` repo from upstream game dumps —
+see `weemaps/scripts/history.py`. To add a new replay, generate the
+`.sh` there, drop it into `tests/e2etests/`, and commit the world's
+fixture files under `tests/e2e/fixtures/worlds/`.
 
 ### Dev-mode fake login (`?dev_user=`)
 

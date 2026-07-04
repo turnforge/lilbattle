@@ -50,6 +50,33 @@ setup-hooks:
 	@echo "✓ git hooks installed (.githooks/). Pre-push will run go build + go test."
 	@echo "  Bypass with: git push --no-verify"
 
+# =============================================================================
+# E2E replay harness — targets a RUNNING server via LILBATTLE_E2E_SERVER.
+# See docs/DEVELOPER_GUIDE.md for the full flow. Requires `make cli` first.
+# =============================================================================
+
+# Run all replay scripts against an already-running server.
+# Assumes LILBATTLE_E2E_SERVER is set (e.g. http://localhost:8090/api).
+e2e:
+	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER=http://localhost:8090/api first, or use \`make e2e-full\`"; exit 1; }
+	go test -tags=e2e ./tests/e2e/ -v -count=1
+
+# Target one replay by name: `make e2e-run REPLAY=29146`.
+e2e-run:
+	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER first"; exit 1; }
+	@test -n "$(REPLAY)" || { echo "usage: make e2e-run REPLAY=<name-without-.sh>"; exit 1; }
+	go test -tags=e2e ./tests/e2e/ -run TestReplayScripts/$(REPLAY) -v -count=1
+
+# Watch mode: pop the game URL open in a browser tab per script.
+e2e-watch:
+	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER first"; exit 1; }
+	LILBATTLE_E2E_WATCH=true go test -tags=e2e ./tests/e2e/ -v -count=1
+
+# Full local flow — boots server, runs tests, tears down. Also the CI path.
+# Pass extra `go test` args after --: `make e2e-full ARGS='-run TestReplayScripts/29146'`.
+e2e-full:
+	./scripts/e2e-full.sh -- $(ARGS)
+
 test:
 	@echo "Running tests..."
 	go test -cover -coverprofile=coverage.out -coverpkg=./lib/...,./services/... ./tests/... ./cmd/cli/...
