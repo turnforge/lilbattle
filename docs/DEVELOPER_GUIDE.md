@@ -18,10 +18,17 @@ cd web && pnpm install && cd ..
 # Generate proto code
 cd protos && make && cd ..
 
+# First-time build. Compiles the ww CLI, the WASM binary, the server,
+# and runs the initial webpack build. Server templates include the
+# webpack output under web/templates/gen/ (gitignored) — starting the
+# server without these files causes "template not found: gen/…" errors
+# on every page.
+make all
+
 # Terminal 1: Backend (local FS, no env file needed)
 make servelocal
 
-# Terminal 2: Frontend build (watches for changes)
+# Terminal 2: Frontend rebuild-on-change (only for iterative dev)
 cd web && pnpm run watch
 ```
 
