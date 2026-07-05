@@ -228,6 +228,65 @@ tests will fail loudly if a required world is missing.
 The Go entry point (`lib.EnsureWorldExists`, `lib.HashWorldData`) is
 callable from any Go program that needs the same guarantees.
 
+#### Manually driving a replay for drift diagnosis
+
+When a recorded script fails, `make e2e-full` reports the line that
+failed but doesn't tell you WHY the state at that point diverged from
+the recording. This recipe drives one script by hand so you can inspect
+state between moves:
+
+```bash
+# 1. Server on 8090 with DISABLE_API_AUTH so no login is needed.
+LILBATTLE_WEB_PORT=:8090 LILBATTLE_GRPC_PORT=:9091 DISABLE_API_AUTH=true \
+    go run main.go -games_service_be=local -worlds_service_be=local
+
+# 2. In another shell — seed the world the script needs.
+export LILBATTLE_SERVER=http://localhost:8090/api
+ww worlds ensure 7e5016a4 --data-dir tests/e2e/fixtures/worlds/7e5016a4/
+# (or run scripts/seed-worlds.sh for all fixtures)
+
+# 3. Create a game, note the ID from the `export` line ww prints.
+ww new 7e5016a4
+
+# 4. Drive it manually, inspecting between moves.
+export LILBATTLE_GAME_ID=<id>
+export LILBATTLE_CONFIRM=false
+ww status                  # turn, current player, coins per player
+ww tiles                   # owned tiles per player
+ww units                   # units per player
+ww options t:0,3           # what can I do at this tile? (empty = not buildable / not owned)
+ww options A1              # what can unit A1 do? (moves, attacks, captures)
+ww map                     # visual snapshot (inline iTerm2 image or PNG)
+ww build t:2,1 1           # try a specific move
+ww move A1 R               # move unit A1 right
+```
+
+Inspect the raw state on disk any time:
+
+```bash
+jq '{current_player, turn_counter, finished}' \
+    ~/dev-app-data/lilbattle/storage/games/<id>/state.json
+
+# Tiles owned by player 1
+jq '.world_data.tiles_map | to_entries[] | select(.value.player == 1)' \
+    ~/dev-app-data/lilbattle/storage/games/<id>/state.json
+
+# All units, with their shortcuts and remaining movement
+jq '.world_data.units_map[] | {q, r, player, shortcut, health: .available_health, moves: .distance_left}' \
+    ~/dev-app-data/lilbattle/storage/games/<id>/state.json
+```
+
+Common drift signatures:
+
+- `ww build` rejected with "tile does not belong to player X" → the
+  recording assumed the tile was captured earlier in the run; walk
+  backwards through the `.sh` to find the capture that didn't fire.
+- `ww assert unit ... [health eq N]` off by a few HP → combat math has
+  changed since recording. Cross-check against `lib/combat.go` history.
+- `ww capture` fails silently or produces wrong ownership → capture
+  eligibility rules changed (which unit types can capture, or which
+  terrain is capturable).
+
 ### Dev-mode fake login (`?dev_user=`)
 
 For multi-client testing without registering N real accounts, the server
