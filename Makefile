@@ -160,7 +160,7 @@ cleanall: clean
 
 build: down copylinks dockerbuild resymlink
 dockerbuild:
-	BUILDKIT_PROGRESS=plain docker compose --env-file .env.dev build --no-cache
+	BUILDKIT_PROGRESS=plain docker compose --env-file configs/.env.dev build --no-cache
 
 copylinks:
 	rm -Rf locallinks/*
@@ -194,27 +194,27 @@ resymlink:
 ####  Docker related commands
 
 up: ensurenetworks
-	docker compose --env-file .env.dev -f docker-compose.yml down
-	BUILDKIT_PROGRESS=plain docker compose --env-file .env.dev -f docker-compose.yml up
+	docker compose --env-file configs/.env.dev -f docker-compose.yml down
+	BUILDKIT_PROGRESS=plain docker compose --env-file configs/.env.dev -f docker-compose.yml up
 
 prodlogs:
 	gcloud app logs tail -s default
 
 logs:
-	docker compose --env-file .env.dev -f docker-compose.yml logs -f
+	docker compose --env-file configs/.env.dev -f docker-compose.yml logs -f
 
 # Bring everything down
 down:
-	docker compose --env-file .env.dev -f docker-compose.yml down --remove-orphans
-	docker compose --env-file .env.dev -f db-docker-compose.yml down --remove-orphans
+	docker compose --env-file configs/.env.dev -f docker-compose.yml down --remove-orphans
+	docker compose --env-file configs/.env.dev -f db-docker-compose.yml down --remove-orphans
 
 # Bring up DB - only brings down DB containers from before - only when we sepearte DB out of docker compose
 updb: dbdirs ensurenetworks
-	BUILDKIT_PROGRESS=plain docker compose --env-file .env.dev -f db-docker-compose.yml down --remove-orphans
-	BUILDKIT_PROGRESS=plain docker compose --env-file .env.dev -f db-docker-compose.yml up -d
+	BUILDKIT_PROGRESS=plain docker compose --env-file configs/.env.dev -f db-docker-compose.yml down --remove-orphans
+	BUILDKIT_PROGRESS=plain docker compose --env-file configs/.env.dev -f db-docker-compose.yml up -d
 
 dblogs:
-	docker compose --env-file .env.dev -f db-docker-compose.yml logs -f
+	docker compose --env-file configs/.env.dev -f db-docker-compose.yml logs -f
 
 ensurenetworks:
 	-docker network create lilbattlenetwork
