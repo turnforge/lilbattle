@@ -54,6 +54,13 @@ until curl -s -o /dev/null "http://localhost:$HTTP_PORT/games/probe/view"; do
 done
 echo "[e2e-full] server ready"
 
+# Seed fixture worlds via `ww worlds ensure`. Idempotent — noop on
+# re-run. First invocation covers a fresh CI checkout / clean tempdir;
+# subsequent runs against the same server are cheap probes.
+echo "[e2e-full] seeding fixture worlds"
+LILBATTLE_SERVER="http://localhost:$HTTP_PORT/api" \
+    bash "$REPO_ROOT/scripts/seed-worlds.sh"
+
 # Run the e2e tests. Any extra args after `--` land here so a single
 # replay can be targeted from the command line.
 extra_args=()

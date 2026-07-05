@@ -153,10 +153,10 @@ A failed step aborts the push. Bypass for a deliberate WIP push:
 ### Recorded replay harness
 
 `tests/e2e/` runs the committed `.sh` replay scripts under
-`tests/e2etests/` against an **already-running server**. Each subtest
-ensures its fixture world exists on the target via the `WorldsService`
-CreateWorld RPC (idempotent — a second run reuses the seeded world),
-then executes the script under `bash` with `ww` on `PATH`.
+`tests/e2etests/` against an **already-running server**. The harness
+assumes the worlds each script references already exist on the target.
+Seeding is a separate step, handled by `scripts/seed-worlds.sh` (which
+drives `ww worlds ensure`) — see the "Seeding worlds" subsection below.
 
 The harness targets a URL, never a filesystem — same code path against
 local dev, staging, or any other server the CI can reach.
@@ -201,6 +201,32 @@ are generated in the sibling `weemaps` repo from upstream game dumps —
 see `weemaps/scripts/history.py`. To add a new replay, generate the
 `.sh` there, drop it into `tests/e2etests/`, and commit the world's
 fixture files under `tests/e2e/fixtures/worlds/`.
+
+#### Seeding worlds
+
+Worlds get onto the target server via `ww worlds ensure`, which:
+
+- Probes the target with `GetWorld`.
+- Missing world + fixture supplied → creates the world.
+- Existing world + fixture supplied → hash-compares content
+  (tiles + units). Mismatch is a **hard error**, never an overwrite —
+  operator picks the fix (update the target, update the fixture, or
+  use a fresh world ID).
+- Existing world + no fixture → success (basic presence probe).
+
+For the whole replay-fixture set:
+
+```bash
+export LILBATTLE_SERVER=http://localhost:8090/api
+bash scripts/seed-worlds.sh
+```
+
+`make e2e-full` calls this automatically after the server comes up.
+For staging / prod, seeding is the operator's responsibility — the
+tests will fail loudly if a required world is missing.
+
+The Go entry point (`lib.EnsureWorldExists`, `lib.HashWorldData`) is
+callable from any Go program that needs the same guarantees.
 
 ### Dev-mode fake login (`?dev_user=`)
 

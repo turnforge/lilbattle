@@ -66,7 +66,7 @@ func TestReplayScripts(t *testing.T) {
 				t.Fatalf("extract WORLD_ID from %s: %v", scriptName, err)
 			}
 
-			ensureFixtureWorld(t, server, worldID)
+			_ = worldID // parsed only to fail early if a script is malformed
 			runReplayScript(t, scriptPath, server, wwDir)
 		})
 	}
