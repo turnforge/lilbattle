@@ -2,7 +2,9 @@
 
 A guide for developing, testing, and running the LilBattle turn-based strategy game.
 
-## Quick Start
+## Quick Start (zero configuration)
+
+A fresh clone runs against local filesystem storage with username/password auth. No Postgres, no OAuth setup, no `.env` file required.
 
 ```bash
 # Clone and setup
@@ -11,23 +13,124 @@ cd lilbattle
 
 # Install dependencies
 go mod download
-cd web && npm install && cd ..
+cd web && pnpm install && cd ..
 
 # Generate proto code
-buf generate
+cd protos && make && cd ..
 
-# Start development (uses devloop for live reload)
-devloop
-
-# Or manually:
-# Terminal 1: Backend
-go run main.go serve
+# Terminal 1: Backend (local FS, no env file needed)
+make servelocal
 
 # Terminal 2: Frontend build (watches for changes)
-cd web && npm run watch
+cd web && pnpm run watch
 ```
 
-Open browser at `http://localhost:8080`
+Open browser at `http://localhost:8080`. Sign up with any email and password — email verification is off by default, so you're logged in immediately.
+
+**What you get:**
+
+- Games / worlds / users stored under `~/dev-app-data/lilbattle/storage/`.
+- Local username/password auth via `/login` and `/signup`.
+- Email flows (verification, password reset) print to the server console instead of sending real messages.
+- No OAuth buttons on the login page until you configure providers.
+- No database or cloud service needed.
+
+**Multi-user testing.** Signup is instant, so a second identity is one browser incognito window and a different signup away. You can also enable the `?dev_user=<handle>` shortcut for impersonation without going through signup at all — see "Dev-mode fake login" below.
+
+## Configuring beyond defaults
+
+Copy `configs/.env.example` to `configs/.env.dev` (dev) or `configs/.env` (production) and uncomment the variables you want to change. The example file has one comment block per concern (auth, backends, email, OAuth, filestore, feature flags). Every variable is optional in dev mode — omitting the whole file falls back to the same defaults you got from Quick Start.
+
+### Custom JWT secret
+
+For anything beyond throwaway experiments, override the CLI-token signing secret. The default is a shared dev value baked into the code, fine for local play but no good for real deployments.
+
+```bash
+# configs/.env.dev
+JWT_CLI_SECRET=$(openssl rand -base64 32)
+```
+
+### OAuth providers (optional)
+
+Google, GitHub, and X/Twitter logins each need a registered OAuth app with `http://localhost:8080/auth/<provider>/callback/` as an allowed redirect. Add the credentials to `configs/.env.dev`:
+
+```bash
+OAUTH2_GOOGLE_CLIENT_ID=...
+OAUTH2_GOOGLE_CLIENT_SECRET=...
+OAUTH2_GOOGLE_CALLBACK_URL=http://localhost:8080/auth/google/callback/
+```
+
+The login page conditionally shows a provider button only when its credentials are configured. Twitter requires PKCE; the built-in handler at `web/server/twitter_oauth2.go` covers it.
+
+### Postgres backend
+
+For gameplay against a real database instead of the filesystem, spin up a local Postgres and point the backends at it:
+
+```bash
+# 1. Start Postgres (docker-compose has a preconfigured service)
+make up
+
+# 2. Set backend + endpoint in configs/.env.dev
+GAMES_SERVICE_BE=pg
+WORLDS_SERVICE_BE=pg
+LILBATTLE_DB_ENDPOINT=postgres://postgres:password@localhost:5432/lilbattledb
+
+# 3. Restart the server
+make servepg
+```
+
+`make servepg` passes `-games_service_be=pg -worlds_service_be=pg` on the command line for you.
+
+### GAE / Datastore backend
+
+For running against Google Cloud Datastore (App Engine / Firestore-in-Datastore mode):
+
+```bash
+# configs/.env.dev
+GAMES_SERVICE_BE=gae
+WORLDS_SERVICE_BE=gae
+GAE_PROJECT=your-gcp-project
+GAE_NAMESPACE=your-namespace
+GOOGLE_APPLICATION_CREDENTIALS=./configs/service-account.json
+```
+
+Then `make servegae`. Requires a service account JSON with Datastore access.
+
+### R2 / S3 filestore
+
+For serving world screenshots / uploaded assets from Cloudflare R2 (or any S3-compatible bucket) instead of local disk:
+
+```bash
+# configs/.env.dev
+FILESTORE_BE=r2
+R2_ACCOUNT_ID=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+The `local` filestore backend (default) writes under `~/dev-app-data/lilbattle/storage/files/`.
+
+### Real email (Resend)
+
+Verification and password-reset emails print to the console by default. To send real email in dev, set:
+
+```bash
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=LilBattle <noreply@yourdomain.com>
+```
+
+Empty `RESEND_API_KEY` keeps the console sender.
+
+### Production deployment
+
+Production mode is opt-in via `LILBATTLE_ENV=production`. It:
+
+- Loads `configs/.env` instead of `configs/.env.dev`.
+- Defaults backends to `pg` (must be overridden if you want anything else).
+- Requires `configs/.env` to exist — missing it is fatal (dev mode logs a warning and continues).
+
+Deploy via `make deploy` (GAE) after populating `configs/.env` with production secrets.
 
 ## Architecture Overview
 
