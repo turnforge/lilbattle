@@ -1696,7 +1696,7 @@ for _, tileData := range storageData.Tiles {
 **Purpose**: Complete turn-based game state management with multiplayer support
 - **Game State Management**: CurrentPlayer, TurnCounter, Status (playing/paused/ended)
 - **Turn System**: NextTurn(), EndTurn(), CanEndTurn() with player cycling
-- **Victory Conditions**: checkVictoryConditions() with last-player-standing logic
+- **Victory Conditions**: checkVictoryConditions() — a player is eliminated when they have BOTH zero units AND zero owned bases (build-capable tiles); last non-eliminated player wins. See issue 156 for the spec discussion.
 - **Save/Load System**: JSON serialization with complete state persistence
 - **Event System**: EventManager with game state change notifications
 - **Deterministic Gameplay**: RNG with seed for reproducible game sessions

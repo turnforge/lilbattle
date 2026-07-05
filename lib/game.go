@@ -260,25 +260,60 @@ func (g *Game) calculateHealAmount(unit *v1.Unit, unitData *v1.UnitDefinition) i
 	return terrainProps.HealingBonus
 }
 
-// checkVictoryConditions checks if any player has won
+// checkVictoryConditions checks if any player has won.
+//
+// A player is eliminated when they have BOTH zero units AND zero bases
+// (build-capable tiles). Either resource keeps a player in the game:
+// units can capture bases; bases produce units when the player has
+// coins. Only total resource depletion is unrecoverable. The winner is
+// the last non-eliminated player.
+//
+// See issue 156 for the spec discussion. Future work — detecting "no
+// path to victory" (e.g. player has bases but zero income and zero
+// coins to ever build) is a separate feature; today those players stay
+// in the game until they lose their last resource.
 func (g *Game) checkVictoryConditions() (winner int32, hasWinner bool) {
-	// Simple victory condition: last player with units wins
-	playersWithUnits := 0
-	lastPlayerWithUnits := int32(-1)
+	livePlayers := 0
+	lastLivePlayer := int32(-1)
 
-	for playerID := int32(1); playerID <= g.World.PlayerCount(); playerID++ {
-		units := g.World.GetPlayerUnits(int(playerID))
-		if len(units) > 0 {
-			playersWithUnits++
-			lastPlayerWithUnits = playerID
+	// NumPlayers is the config source of truth. World.PlayerCount reflects
+	// only players that currently have units, so it would skip a base-only
+	// player and mis-declare their opponent the winner.
+	for playerID := int32(1); playerID <= g.NumPlayers(); playerID++ {
+		if playerHasResources(g, playerID) {
+			livePlayers++
+			lastLivePlayer = playerID
 		}
 	}
 
-	if playersWithUnits == 1 {
-		return lastPlayerWithUnits, true
+	if livePlayers == 1 {
+		return lastLivePlayer, true
 	}
-
 	return -1, false
+}
+
+// playerHasResources reports whether a player still has any way to
+// participate in the game — at least one unit, or at least one tile
+// they own that can build units. Non-build tiles (grass, desert, road)
+// don't count; owning terrain that can't produce a unit and having no
+// units means there's nothing to do.
+func playerHasResources(g *Game, playerID int32) bool {
+	if units := g.World.GetPlayerUnits(int(playerID)); len(units) > 0 {
+		return true
+	}
+	for _, tile := range g.World.WorldData().TilesMap {
+		if tile == nil || tile.Player != playerID {
+			continue
+		}
+		terrain, err := g.RulesEngine.GetTerrainData(tile.TileType)
+		if err != nil || terrain == nil {
+			continue
+		}
+		if len(terrain.BuildableUnitIds) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // validateGameState validates the current game state
