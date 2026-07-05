@@ -30,8 +30,8 @@ var (
 	grpcAddress       = flag.String("grpcAddress", DefaultServiceAddress(), "Address where the gRPC endpoint is running")
 	gatewayAddress    = flag.String("gatewayAddress", DefaultGatewayAddress(), "Address where the http grpc gateway endpoint is running")
 	db_endpoint       = flag.String("db_endpoint", "", fmt.Sprintf("Endpoint of DB where all data is persisted.  Default value: LILBATTLE_DB_ENDPOINT environment variable or %s", DEFAULT_DB_ENDPOINT))
-	worlds_service_be = flag.String("worlds_service_be", "", "Storage for worlds service - 'local', 'pg', 'gae'. Env: WORLDS_SERVICE_BE. Default: pg")
-	games_service_be  = flag.String("games_service_be", "", "Storage for games service - 'local', 'pg', 'gae'. Env: GAMES_SERVICE_BE. Default: pg")
+	worlds_service_be = flag.String("worlds_service_be", "", "Storage for worlds service - 'local', 'pg', 'gae'. Env: WORLDS_SERVICE_BE. Default: local (dev) / pg (LILBATTLE_ENV=production)")
+	games_service_be  = flag.String("games_service_be", "", "Storage for games service - 'local', 'pg', 'gae'. Env: GAMES_SERVICE_BE. Default: local (dev) / pg (LILBATTLE_ENV=production)")
 	filestore_be      = flag.String("filestore_be", "", "Storage for filestore - 'local', 'r2', 'gae'. Env: FILESTORE_BE. Default: local")
 	gae_project       = flag.String("gae_project", "", "Google Cloud project ID for GAE/Datastore. Env: GAE_PROJECT")
 	gae_namespace     = flag.String("gae_namespace", "", "Datastore namespace (optional, for multi-tenancy). Env: GAE_NAMESPACE")
@@ -85,7 +85,12 @@ func DefaultServiceAddress() string {
 }
 
 func parseFlags() {
-	// Default to dev mode, use LILBATTLE_ENV=production for production
+	// Default to dev mode, use LILBATTLE_ENV=production for production.
+	// Env file is optional in dev mode — a fresh clone runs against local
+	// filesystem storage and localauth (username/password signup) with zero
+	// external configuration. Missing .env.dev just means "use process env
+	// + code defaults." Production still requires configs/.env to exist
+	// because that's where deployed secrets live.
 	envfile := "configs/.env.dev"
 	lilbattleEnv := os.Getenv("LILBATTLE_ENV")
 	log.Println("Environment: ", lilbattleEnv)
@@ -101,9 +106,11 @@ func parseFlags() {
 		slog.SetDefault(logger)
 	}
 	log.Println("loading env file: ", envfile)
-	err := godotenv.Load(envfile)
-	if err != nil {
-		log.Fatal("Error loading .env file: ", envfile, err)
+	if err := godotenv.Load(envfile); err != nil {
+		if lilbattleEnv == "production" {
+			log.Fatal("Error loading .env file: ", envfile, err)
+		}
+		log.Printf("no %s found — running with process env + code defaults (fine for local dev)", envfile)
 	}
 	flag.Parse()
 }
@@ -143,9 +150,16 @@ func (b *Backend) SetupApp() *utils.App {
 		var worldsService v1s.WorldsServiceServer
 		var filestore v1s.FileStoreServiceServer
 
-		// Get backend configurations with priority: flag -> env var -> default
-		worldsBE := getBackendConfig(worlds_service_be, "WORLDS_SERVICE_BE", "pg")
-		gamesBE := getBackendConfig(games_service_be, "GAMES_SERVICE_BE", "pg")
+		// Get backend configurations with priority: flag -> env var -> default.
+		// In dev mode (LILBATTLE_ENV != production), default backends to
+		// "local" so a fresh clone runs without Postgres or GAE. Production
+		// keeps "pg" as the safe default.
+		defaultBE := "pg"
+		if os.Getenv("LILBATTLE_ENV") != "production" {
+			defaultBE = "local"
+		}
+		worldsBE := getBackendConfig(worlds_service_be, "WORLDS_SERVICE_BE", defaultBE)
+		gamesBE := getBackendConfig(games_service_be, "GAMES_SERVICE_BE", defaultBE)
 		filestoreBE := getBackendConfig(filestore_be, "FILESTORE_BE", "local")
 
 		log.Printf("Backend configuration: worlds=%s, games=%s, filestore=%s", worldsBE, gamesBE, filestoreBE)

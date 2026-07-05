@@ -10,17 +10,23 @@ services:
       context: .
       dockerfile: ./cmd/backend/Dockerfile
     volumes:
-      # - ./.air.toml:/app/.air.toml:ro
-      # - ./go.mod:/app/go.mod:ro
-      # - ./go.sum:/app/go.sum:ro
+      # Source mounted for iterate-without-rebuild dev flow.
       - ./cmd:/app/cmd
       - ./web:/app/web
       - ./protos:/app/protos
       - ./services:/app/services
       - ./utils:/app/utils
+      - ./lib:/app/lib
       - ./gen:/app/gen
-      - ./.env:/app/.env
-      - ./.env.dev:/app/.env.dev
+      - ./main.go:/app/main.go
+      # main.go loads configs/.env.dev (dev) or configs/.env (prod).
+      # Bind the whole configs/ dir so both are available in-container
+      # AND docker doesn't auto-create empty dirs for missing individual
+      # files (which fails the container-init step with "not a directory:
+      # trying to mount a directory onto a file").
+      - ./configs:/app/configs
+      # Persist local-FS games/worlds across container restarts.
+      - ~/dev-app-data/lilbattle:/root/dev-app-data/lilbattle
         # command: ["air", "-c", "cmd/backend/.air.toml"]
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
