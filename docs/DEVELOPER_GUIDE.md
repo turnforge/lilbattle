@@ -150,6 +150,84 @@ webpack bundle isn't needed for jest's own transpilation.
 A failed step aborts the push. Bypass for a deliberate WIP push:
 `git push --no-verify`. Use sparingly — CI is the only other gate.
 
+### Recorded replay harness
+
+`tests/e2e/` runs the committed `.sh` replay scripts under
+`tests/e2etests/` against an **already-running server**. The harness
+assumes the worlds each script references already exist on the target.
+Seeding is a separate step, handled by `scripts/seed-worlds.sh` (which
+drives `ww worlds ensure`) — see the "Seeding worlds" subsection below.
+
+The harness targets a URL, never a filesystem — same code path against
+local dev, staging, or any other server the CI can reach.
+
+Gated behind the `e2e` build tag while the recorded scripts drift from
+current game rules (tracked in issue 183). Default `go test ./...`
+compiles the `doc.go` stub and reports "no tests to run"; the harness
+only runs when requested.
+
+Quick paths:
+
+```bash
+# One command — boots a local dev server, runs tests, tears down.
+make cli && make e2e-full
+
+# Target one replay:
+make cli && make e2e-full ARGS='-run TestReplayScripts/29146'
+
+# Against a server you already have running (faster iteration):
+export LILBATTLE_E2E_SERVER=http://localhost:8090/api
+make e2e
+make e2e-run REPLAY=29146
+make e2e-watch          # auto-opens the game URL in a browser
+```
+
+Overrides:
+
+- `LILBATTLE_E2E_SERVER` (required for `make e2e*`) — target server URL,
+  including the `/api` suffix. Skipped by `make e2e-full`, which sets it
+  for you after starting a background server.
+- `LILBATTLE_WW_BIN=/path/to/ww` — override which ww binary the scripts
+  invoke. Defaults to the first `ww` on `PATH`.
+- `LILBATTLE_E2E_WATCH=true` — after `ww new`, invoke `open` (macOS) or
+  `xdg-open` (Linux) on the game's viewer URL so you can watch the replay
+  play out in a browser tab.
+- `LILBATTLE_E2E_HTTP_PORT` / `LILBATTLE_E2E_GRPC_PORT` (for `e2e-full`) —
+  override the server's ports if `:8090` / `:9091` conflict.
+
+Fixture worlds live under `tests/e2e/fixtures/worlds/<worldID>/` as
+`data.json` + `metadata.json` (both protojson). The scripts themselves
+are generated in the sibling `weemaps` repo from upstream game dumps —
+see `weemaps/scripts/history.py`. To add a new replay, generate the
+`.sh` there, drop it into `tests/e2etests/`, and commit the world's
+fixture files under `tests/e2e/fixtures/worlds/`.
+
+#### Seeding worlds
+
+Worlds get onto the target server via `ww worlds ensure`, which:
+
+- Probes the target with `GetWorld`.
+- Missing world + fixture supplied → creates the world.
+- Existing world + fixture supplied → hash-compares content
+  (tiles + units). Mismatch is a **hard error**, never an overwrite —
+  operator picks the fix (update the target, update the fixture, or
+  use a fresh world ID).
+- Existing world + no fixture → success (basic presence probe).
+
+For the whole replay-fixture set:
+
+```bash
+export LILBATTLE_SERVER=http://localhost:8090/api
+bash scripts/seed-worlds.sh
+```
+
+`make e2e-full` calls this automatically after the server comes up.
+For staging / prod, seeding is the operator's responsibility — the
+tests will fail loudly if a required world is missing.
+
+The Go entry point (`lib.EnsureWorldExists`, `lib.HashWorldData`) is
+callable from any Go program that needs the same guarantees.
+
 ### Dev-mode fake login (`?dev_user=`)
 
 For multi-client testing without registering N real accounts, the server
