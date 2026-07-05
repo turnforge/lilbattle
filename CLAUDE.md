@@ -10,11 +10,17 @@
 - When updating .md files and in commit messages use emojis and flowerly languages sparingly.  We dont want to be too grandios or overpromising.
 - Make sure the playwright tool is setup so you can inspect the browser when we are implementing and testing the Dashboard features.
 - Do not refer to claude or anthropic or gemini in your commit messages
-- Do not rebuild the server - it will be continuously rebuilt and run automatically.
 - Find the root cause of an issue before figuring out a solution.  Fix problems.
 - Do not create workarounds for issues without asking.  Always find the root cause of an issue and fix it.
-- The web module automatically builds when files are changed - DO NOT run npm build or npm run build commands.
 - Proto files are automatically regenerated when changed - DO NOT run buf generate commands.
+
+**Build automation — devloop may or may not be running.** When it's up, the server, WASM, and web bundle auto-rebuild on file change. When it's not (frequent lately), you must build the affected artifact yourself before iterating:
+- Server: `go run main.go ...` (or `make servelocal`). Kill + restart on Go changes.
+- CLI: `make cli` after touching anything under `cmd/cli/` or `lib/`.
+- WASM: `GOOS=js GOARCH=wasm go build -ldflags="-s -w" -trimpath -o web/static/wasm/lilbattle-cli.wasm ./cmd/wasm`. Required after Go changes visible to the browser.
+- Web bundle: `cd web && pnpm run build`. Required after TS changes to `web/pages/`, `web/gen/`, etc.
+
+The pre-push hook (`.githooks/pre-push`) runs all of these on every push, so a successful push is a strong smoke that everything builds together.
 - In general DONT be defensive by catching errors or null checking objects that when null would make the whole page fail anyway.    Dont just try/catch to log errors - let exceptions happen naturally so errors are NOT covered up and error locations are easier to identify.  We are still in experimenting/revising phase so we should harden as far as possible and identify failure modes rather than covering them up with try/catches (or even null checks when somethigns are really mandatory for the game to function).   Let us use preconditions more when possible.
 
 ## Workflow
@@ -71,6 +77,35 @@ cp *.json ../../assets/
 
 ## Session Workflow Memories
 - When you checkpoint update all relevant .md files with our latest understanding, statuses and progress in the current session and then commit.
+
+## Pre-push Hook
+
+`.githooks/pre-push` runs the CI test suite before every `git push`. Install per clone:
+
+```bash
+make setup-hooks
+```
+
+The hook covers: `go build` over the production package set, `go test` over the CI-covered Go packages, WASM build (`GOOS=js GOARCH=wasm`), and `pnpm test` in `web/`. A failed step aborts the push.
+
+Bypass: `git push --no-verify`. Use sparingly — CI is the only other gate.
+
+## E2E Replay Harness
+
+`tests/e2e/` runs recorded `.sh` replay scripts under `tests/e2etests/` against a running server (never a filesystem). Full docs: `docs/DEVELOPER_GUIDE.md` → "Recorded replay harness". Key bits:
+
+- Gated behind `-tags=e2e` because recorded scripts drift from current rules (tracked in issue 183).
+- One command boots server + seeds fixture worlds + runs tests + tears down: `make e2e-full`.
+- Watch mode auto-opens the game URL in a browser tab: `make e2e-watch`.
+- Manual debugging recipe for individual failing scripts: same doc, "Manually driving a replay for drift diagnosis".
+
+The `ww worlds ensure` subcommand is the seed primitive (idempotent, backend-agnostic, never overwrites on content mismatch). Programmatic entry points: `lib.EnsureWorldExists` + `lib.HashWorldData`.
+
+## Recent CLI Additions
+
+- `ww worlds ensure <worldId> [--data-dir | --data-json | --meta-json]` — seed / validate a world on the target. Never overwrites.
+- `ww autoplay [--seed] [--max-turns] [--moves]` — drive a game to completion (or a bounded run) using the presenter's `NextMove` + pluggable `Picker` policy.
+- `ww worlds list/get/show/update` — inventory + inspection (predates this year's changes; noted here for completeness).
 
 ## Debugging Guide
 
@@ -314,14 +349,40 @@ previousUnit := &v1.Unit{Q: unit.Q, R: unit.R, ...} // May forget Shortcut!
 ### Authentication and Rate Limiting
 
 **Shared Libraries**: Authentication and rate limiting use shared libraries:
-- `github.com/panyam/oneauth`: OAuth providers, HTTP auth middleware, gRPC auth context utilities
-- `github.com/panyam/goapplib`: Rate limiting middleware, template helpers
+- `github.com/panyam/oneauth`: OAuth providers, HTTP auth middleware, gRPC auth context utilities. **v0.1.31**: retired the god-struct `apiauth.APIAuth`. Wire up via `apiauth.NewOneAuth(apiauth.OneAuthConfig{...})` + `apiauth.NewTokenEndpointHandler(oa)`. `Validator` is a struct field, not a method (`oa.Validator.ValidateToken`).
+- `github.com/panyam/goapplib`: Rate limiting middleware, template helpers.
 
 **gRPC Auth Context** (from oneauth/grpc):
-- `oagrpc.UserIDFromContext(ctx)`: Extract user ID from gRPC metadata
-- `oagrpc.UnaryAuthInterceptor(config)`: gRPC unary interceptor for auth enforcement
-- `oagrpc.StreamAuthInterceptor(config)`: gRPC stream interceptor for auth enforcement
-- Environment: `DISABLE_API_AUTH=true` skips auth, `ENABLE_SWITCH_AUTH=true` allows X-Switch-User header
+- `oagrpc.SubjectFromContext(ctx)`: extract subject from incoming metadata. (Previously `UserIDFromContext` — renamed User → Subject in oneauth v0.1.4.)
+- `oagrpc.UnaryAuthInterceptor(config)`: gRPC unary interceptor for auth enforcement.
+- `oagrpc.StreamAuthInterceptor(config)`: gRPC stream interceptor.
+- `oagrpc.DefaultMetadataKeySubject`: `"x-subject"` — the metadata key both sides use.
+
+**Environment:**
+- `DISABLE_API_AUTH=true` — dev-only bypass. Note this now short-circuits BOTH the gRPC interceptor AND the handler-side `RequireAuthenticated` / `CanSubmitMoves` (see `services/authz/authz.go`). Anonymous e2e replay flows rely on this.
+- `ENABLE_SWITCH_AUTH=true` — allows `x-switch-user` header for impersonation testing.
+- `ENABLE_DEV_FAKE_LOGIN=true` — enables the `?dev_user=<handle>` query parameter for logging in as any subject without OAuth. Middleware installed only when this is set at boot. See `web/server/dev_login.go`.
+
+### Connect Adapter Metadata (Gotcha)
+
+`web/server/connect.go:injectAuthMetadata` stamps the subject onto BOTH outgoing and incoming gRPC metadata:
+
+- Production uses a REAL network gRPC client (`ClientMgr.GetGamesSvcClient` calls `grpc.NewClient(svcAddr)`). Real clients only honor OUTGOING metadata; the transport rematerializes it as incoming on the server side.
+- Test fakes (e.g. `recordingWorldsClient` in `web/server/connect_auth_integration_test.go`) receive ctx directly and read INCOMING via `oagrpc.SubjectFromContext`.
+
+Prior versions wrote INCOMING only — production silently 401'd for months. If you touch this function, keep both writes. The full handshake is pinned by `TestCLIAuthIntegration_*` in `web/server/cli_auth_integration_test.go`.
+
+### Move Persistence Architecture
+
+Browser moves persist by round-tripping to the server, not by writing to the WASM heap:
+
+- `services/singleton/games_service.go` — `SingletonGamesService.Persister` field (`MovePersister` interface, default `NoopPersister`). `SaveMoveGroup` delegates.
+- `cmd/wasm/move_persister.go` — `jsCallbackPersister` bridges Go to JS via protojson + Promise-await.
+- `cmd/wasm/main.go` — exposes `lilbattle.registerMovePersister(callback)` JS entrypoint.
+- `web/pages/GameViewerPage/ServerPersister.ts` — POSTs to `/api/lilbattle.v1.GamesService/ProcessMoves` with `credentials: 'include'`.
+- `web/pages/GameViewerPage/GameViewerPageBase.ts:registerMovePersister` — wires the callback right after WASM ready.
+
+Local WASM apply is optimistic — the FE state updates immediately, then the persister posts async. Server rejection (auth, non-player) diverges local state; page reload restores canonical state. Reconciliation is a follow-up if it becomes user-visible.
 
 **Rate Limiting** (from goapplib):
 - `goal.NewRateLimitMiddleware(config)`: Creates middleware with auth/API rate limiters
@@ -385,9 +446,13 @@ All authentication must go through oneauth middleware. No direct JWT parsing, no
 Use goapplib rate limiting middleware. No hand-rolled rate limiters.
 *Why: Stack provides consistent rate limiting with auth-aware tiers. Custom implementations drift.*
 
-### No Manual Builds
-Do not run `npm build`, `npm run build`, or `buf generate` manually. The web module and proto files auto-rebuild on change. Do not rebuild the server — devloop runs it continuously.
-*Why: Manual builds conflict with the file-watching build pipeline and cause confusing stale state.*
+### No Manual `buf generate`
+Do not run `buf generate` by hand. Proto files auto-regenerate when a `.proto` changes.
+*Why: Manual generate can bypass the file-watching pipeline and produce stale gen artifacts.*
+
+### Manual Builds Conditional on Devloop
+When devloop is running, do not manually build the server, WASM, or web bundle — devloop rebuilds them on change. When devloop is NOT running (frequent state currently), manual builds ARE required to iterate: `make servelocal` for the server, `GOOS=js GOARCH=wasm go build ... ./cmd/wasm` for WASM, `cd web && pnpm run build` for the FE bundle.
+*Why: A browser can execute stale WASM even when the source file is fresh (bit us during PR 181 smoke). Iteration REQUIRES the fresh artifact.*
 
 ### Lazy Top-Up Pattern for Units
 Units must not have their movement points reset at turn start. Use `topUpUnitIfNeeded()` on-demand when a unit is accessed for actions or options.

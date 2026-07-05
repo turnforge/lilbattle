@@ -37,10 +37,16 @@
 **Scope**: project-wide
 <!-- Candidate for promotion to goapplib/CONSTRAINTS.md if seen in other projects -->
 
-### No Manual Builds
-**Rule**: Do not run `npm build`, `npm run build`, or `buf generate` manually. The web module and proto files auto-rebuild on change. Do not rebuild the server — devloop runs it continuously.
-**Why**: Manual builds conflict with the file-watching build pipeline and cause confusing stale state.
+### No Manual `buf generate`
+**Rule**: Do not run `buf generate` by hand. Proto files auto-regenerate when a `.proto` changes.
+**Why**: Manual generate can bypass the file-watching pipeline and produce stale gen artifacts.
 **Verify**: manual
+**Scope**: project-wide
+
+### Manual Builds Conditional on Devloop
+**Rule**: When devloop is running, do not manually build the server, WASM, or web bundle — devloop rebuilds them on change. When devloop is NOT running (frequent state currently), you MUST manually build the affected artifact before iterating: `make servelocal` for the server, `GOOS=js GOARCH=wasm go build ... ./cmd/wasm` for WASM, `cd web && pnpm run build` for the FE bundle.
+**Why**: Stale artifacts silently ship — a browser can execute an old WASM even when the source file is fresh (bit us during PR 181 smoke). Iteration REQUIRES the fresh artifact; blindly refusing to build produces confusing "my change didn't take effect" states.
+**Verify**: check for a running `devloop` process; if absent, manual builds are required.
 **Scope**: project-wide
 
 ### Lazy Top-Up Pattern for Units
