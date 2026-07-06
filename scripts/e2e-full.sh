@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
-# e2e-full.sh: boot a dev server, run the e2e replay harness against it,
-# tear the server down cleanly on exit (including on failure or Ctrl-C).
+# e2e-full.sh: boot a lilbattle dev server, seed fixture worlds from
+# LILBATTLE_E2E_DATA_DIR, run the replay harness against it, tear the
+# server down cleanly on exit (including on failure or Ctrl-C).
+#
+# Requires:
+#   LILBATTLE_E2E_DATA_DIR — test-data root with replays/ and fixtures/worlds/
+#                            (e.g. ~/projects/weemaps/e2e)
 #
 # Config knobs (env overrides):
-#   LILBATTLE_E2E_HTTP_PORT   (default 8090)  — HTTP port for the dev server
-#   LILBATTLE_E2E_GRPC_PORT   (default 9091)  — gRPC port for the dev server
-#   LILBATTLE_E2E_STARTUP_TIMEOUT (default 30) — seconds to wait for /ready
+#   LILBATTLE_E2E_HTTP_PORT        (default 8090)
+#   LILBATTLE_E2E_GRPC_PORT        (default 9091)
+#   LILBATTLE_E2E_STARTUP_TIMEOUT  (default 30)
 #
 # Anything after `--` is passed to `go test`, so you can target a single
 # replay: `scripts/e2e-full.sh -- -run TestReplayScripts/29146`.
-#
-# CI: cheapest possible orchestration for the full suite. Local dev: use
-# `make e2e` against a server you already have running instead.
 set -euo pipefail
+
+if [[ -z "${LILBATTLE_E2E_DATA_DIR:-}" ]]; then
+    echo "[e2e-full] LILBATTLE_E2E_DATA_DIR not set (e.g. ~/projects/weemaps/e2e)" >&2
+    exit 1
+fi
 
 HTTP_PORT="${LILBATTLE_E2E_HTTP_PORT:-8090}"
 GRPC_PORT="${LILBATTLE_E2E_GRPC_PORT:-9091}"
@@ -38,9 +45,6 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Wait for the server to answer HTTP. `curl -sf` treats non-2xx as
-# failure; the game viewer route returns 200 or 404 depending on the
-# game ID, both of which prove the listener is bound.
 echo "[e2e-full] waiting for server to become ready..."
 deadline=$(( SECONDS + TIMEOUT ))
 until curl -s -o /dev/null "http://localhost:$HTTP_PORT/games/probe/view"; do
@@ -55,10 +59,11 @@ done
 echo "[e2e-full] server ready"
 
 # Seed fixture worlds via `ww worlds ensure`. Idempotent — noop on
-# re-run. First invocation covers a fresh CI checkout / clean tempdir;
-# subsequent runs against the same server are cheap probes.
-echo "[e2e-full] seeding fixture worlds"
+# re-run. First invocation covers a fresh CI checkout; subsequent runs
+# against the same server are cheap probes.
+echo "[e2e-full] seeding fixture worlds from $LILBATTLE_E2E_DATA_DIR"
 LILBATTLE_SERVER="http://localhost:$HTTP_PORT/api" \
+LILBATTLE_E2E_DATA_DIR="$LILBATTLE_E2E_DATA_DIR" \
     bash "$REPO_ROOT/scripts/seed-worlds.sh"
 
 # Run the e2e tests. Any extra args after `--` land here so a single
@@ -72,4 +77,5 @@ fi
 
 echo "[e2e-full] running tests (extra args: ${extra_args[*]:-<none>})"
 LILBATTLE_E2E_SERVER="http://localhost:$HTTP_PORT/api" \
+LILBATTLE_E2E_DATA_DIR="$LILBATTLE_E2E_DATA_DIR" \
 go test -tags=e2e ./tests/e2e/ -v -count=1 "${extra_args[@]}"

@@ -28,9 +28,10 @@ var worldIDPattern = regexp.MustCompile(`^WORLD_ID="([^"]+)"`)
 // URL in a browser tab so the user can watch the replay drive the game.
 var gameURLPattern = regexp.MustCompile(`^Game viewable at: (\S+)`)
 
-// TestReplayScripts runs every tests/e2etests/*.sh script against the
-// server pointed at by LILBATTLE_E2E_SERVER. Each subtest ensures its
-// fixture world exists on the target, then executes the script. The
+// TestReplayScripts runs every replays/*.sh script (under
+// LILBATTLE_E2E_DATA_DIR) against the server pointed at by
+// LILBATTLE_E2E_SERVER. Each subtest ensures its fixture world exists
+// on the target, then executes the script. The
 // scripts' own `set -e` and `trap 'echo FAILED at line …' ERR` bubble
 // the specific failing ww command into the test output.
 //
@@ -41,10 +42,10 @@ func TestReplayScripts(t *testing.T) {
 	server := serverURL(t)
 	wwDir := wwPathDir(t)
 
-	scriptsDir := filepath.Join(repoRoot(t), "tests", "e2etests")
+	scriptsDir := replaysDir(t)
 	entries, err := os.ReadDir(scriptsDir)
 	if err != nil {
-		t.Fatalf("read scripts dir: %v", err)
+		t.Fatalf("read scripts dir %s: %v", scriptsDir, err)
 	}
 
 	var scripts []string
@@ -54,7 +55,7 @@ func TestReplayScripts(t *testing.T) {
 		}
 	}
 	if len(scripts) == 0 {
-		t.Fatal("no *.sh replay scripts found under tests/e2etests/")
+		t.Fatalf("no *.sh replay scripts found under %s", scriptsDir)
 	}
 
 	for _, scriptName := range scripts {
@@ -104,8 +105,8 @@ func runReplayScript(t *testing.T, scriptPath, serverBase, wwDir string) {
 	// exec.Command("bash", scriptPath) runs the script as bash's argv[0],
 	// NOT as `bash -c "<string>"`. There's no shell-string interpolation
 	// of an outside value here; bash reads the file directly. The path
-	// itself is bounded to tests/e2etests/*.sh via os.ReadDir + suffix
-	// filter, not caller input.
+	// is bounded to <data-dir>/replays/*.sh via os.ReadDir + suffix
+	// filter, and LILBATTLE_E2E_DATA_DIR is operator-supplied.
 	cmd := exec.Command("bash", scriptPath)
 	cmd.Env = append(os.Environ(),
 		"LILBATTLE_SERVER="+serverBase,

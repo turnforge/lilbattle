@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # seed-worlds.sh: idempotently seed every fixture world under
-# tests/e2e/fixtures/worlds/ onto the target server via `ww worlds ensure`.
+# $LILBATTLE_E2E_DATA_DIR/fixtures/worlds/ onto the target server via
+# `ww worlds ensure`.
 #
 # Requires:
-#   LILBATTLE_SERVER    — target API endpoint (e.g. http://localhost:8090/api)
-#   ww                  — on PATH (`make cli` installs to $GOBIN)
+#   LILBATTLE_SERVER       — target API endpoint (e.g. http://localhost:8090/api)
+#   LILBATTLE_E2E_DATA_DIR — test-data root (contains fixtures/worlds/)
+#   ww                     — on PATH (`make cli` installs to $GOBIN)
 #
 # `ww worlds ensure` treats existing-and-matching as success and content
 # mismatch as a hard error — so this script never overwrites production
@@ -15,10 +17,12 @@ if [[ -z "${LILBATTLE_SERVER:-}" ]]; then
     echo "seed-worlds: LILBATTLE_SERVER not set" >&2
     exit 1
 fi
+if [[ -z "${LILBATTLE_E2E_DATA_DIR:-}" ]]; then
+    echo "seed-worlds: LILBATTLE_E2E_DATA_DIR not set (e.g. ~/projects/weemaps/e2e)" >&2
+    exit 1
+fi
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-FIXTURE_ROOT="$REPO_ROOT/tests/e2e/fixtures/worlds"
-
+FIXTURE_ROOT="$LILBATTLE_E2E_DATA_DIR/fixtures/worlds"
 if [[ ! -d "$FIXTURE_ROOT" ]]; then
     echo "seed-worlds: fixture root $FIXTURE_ROOT missing" >&2
     exit 1

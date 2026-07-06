@@ -51,31 +51,42 @@ setup-hooks:
 	@echo "  Bypass with: git push --no-verify"
 
 # =============================================================================
-# E2E replay harness — targets a RUNNING server via LILBATTLE_E2E_SERVER.
-# See docs/DEVELOPER_GUIDE.md for the full flow. Requires `make cli` first.
+# E2E replay harness — machinery lives here, test data lives outside the repo.
+# Pass DATA_DIR=<path> or set LILBATTLE_E2E_DATA_DIR. See docs/DEVELOPER_GUIDE.md
+# for the layout (<data-dir>/replays/*.sh + <data-dir>/fixtures/worlds/<id>/).
+# Requires `make cli` first.
 # =============================================================================
 
 # Run all replay scripts against an already-running server.
-# Assumes LILBATTLE_E2E_SERVER is set (e.g. http://localhost:8090/api).
+# make e2e DATA_DIR=~/projects/weemaps/e2e (assumes LILBATTLE_E2E_SERVER is set)
 e2e:
 	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER=http://localhost:8090/api first, or use \`make e2e-full\`"; exit 1; }
-	go test -tags=e2e ./tests/e2e/ -v -count=1
+	@test -n "$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" || { echo "usage: make e2e DATA_DIR=~/projects/weemaps/e2e"; exit 1; }
+	LILBATTLE_E2E_DATA_DIR="$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" \
+	    go test -tags=e2e ./tests/e2e/ -v -count=1
 
-# Target one replay by name: `make e2e-run REPLAY=29146`.
+# Target one replay by name: make e2e-run REPLAY=29146 DATA_DIR=<path>
 e2e-run:
 	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER first"; exit 1; }
-	@test -n "$(REPLAY)" || { echo "usage: make e2e-run REPLAY=<name-without-.sh>"; exit 1; }
-	go test -tags=e2e ./tests/e2e/ -run TestReplayScripts/$(REPLAY) -v -count=1
+	@test -n "$(REPLAY)" || { echo "usage: make e2e-run REPLAY=<name-without-.sh> DATA_DIR=<path>"; exit 1; }
+	@test -n "$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" || { echo "set DATA_DIR=<path> or LILBATTLE_E2E_DATA_DIR"; exit 1; }
+	LILBATTLE_E2E_DATA_DIR="$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" \
+	    go test -tags=e2e ./tests/e2e/ -run TestReplayScripts/$(REPLAY) -v -count=1
 
 # Watch mode: pop the game URL open in a browser tab per script.
 e2e-watch:
 	@test -n "$$LILBATTLE_E2E_SERVER" || { echo "set LILBATTLE_E2E_SERVER first"; exit 1; }
-	LILBATTLE_E2E_WATCH=true go test -tags=e2e ./tests/e2e/ -v -count=1
+	@test -n "$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" || { echo "set DATA_DIR=<path> or LILBATTLE_E2E_DATA_DIR"; exit 1; }
+	LILBATTLE_E2E_WATCH=true \
+	LILBATTLE_E2E_DATA_DIR="$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" \
+	    go test -tags=e2e ./tests/e2e/ -v -count=1
 
-# Full local flow — boots server, runs tests, tears down. Also the CI path.
-# Pass extra `go test` args after --: `make e2e-full ARGS='-run TestReplayScripts/29146'`.
+# Full local flow — boots server, seeds fixtures, runs tests, tears down.
+# make e2e-full DATA_DIR=~/projects/weemaps/e2e ARGS='-run TestReplayScripts/29146'
 e2e-full:
-	./scripts/e2e-full.sh -- $(ARGS)
+	@test -n "$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" || { echo "usage: make e2e-full DATA_DIR=<path> [ARGS='...']"; exit 1; }
+	LILBATTLE_E2E_DATA_DIR="$${DATA_DIR:-$$LILBATTLE_E2E_DATA_DIR}" \
+	    ./scripts/e2e-full.sh -- $(ARGS)
 
 test:
 	@echo "Running tests..."
