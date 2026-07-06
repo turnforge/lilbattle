@@ -262,11 +262,19 @@ A failed step aborts the push. Bypass for a deliberate WIP push:
 
 ### Recorded replay harness
 
-`tests/e2e/` runs the committed `.sh` replay scripts under
-`tests/e2etests/` against an **already-running server**. The harness
-assumes the worlds each script references already exist on the target.
-Seeding is a separate step, handled by `scripts/seed-worlds.sh` (which
-drives `ww worlds ensure`) — see the "Seeding worlds" subsection below.
+`tests/e2e/` holds the harness Go code + shell orchestration. The
+recorded `.sh` scripts and fixture world JSONs live OUTSIDE this repo
+so upstream-derived material stays out of lilbattle's git history.
+Point the harness at a data root via `LILBATTLE_E2E_DATA_DIR` (or
+`make e2e-* DATA_DIR=<path>`). Layout:
+
+```
+$LILBATTLE_E2E_DATA_DIR/
+├── replays/*.sh                 # what the harness runs
+└── fixtures/worlds/<worldID>/   # world data seeded via ww worlds ensure
+    ├── data.json
+    └── metadata.json
+```
 
 The harness targets a URL, never a filesystem — same code path against
 local dev, staging, or any other server the CI can reach.
@@ -279,16 +287,17 @@ only runs when requested.
 Quick paths:
 
 ```bash
-# One command — boots a local dev server, runs tests, tears down.
-make cli && make e2e-full
+# One command — boots a local dev server, seeds fixtures, runs tests, tears down.
+make cli && make e2e-full DATA_DIR=~/projects/weemaps/e2e
 
 # Target one replay:
-make cli && make e2e-full ARGS='-run TestReplayScripts/29146'
+make e2e-full DATA_DIR=~/projects/weemaps/e2e ARGS='-run TestReplayScripts/29146'
 
 # Against a server you already have running (faster iteration):
 export LILBATTLE_E2E_SERVER=http://localhost:8090/api
+export LILBATTLE_E2E_DATA_DIR=~/projects/weemaps/e2e
 make e2e
-make e2e-run REPLAY=29146
+make e2e-run REPLAY=29146 DATA_DIR=~/projects/weemaps/e2e
 make e2e-watch          # auto-opens the game URL in a browser
 ```
 
@@ -297,6 +306,8 @@ Overrides:
 - `LILBATTLE_E2E_SERVER` (required for `make e2e*`) — target server URL,
   including the `/api` suffix. Skipped by `make e2e-full`, which sets it
   for you after starting a background server.
+- `LILBATTLE_E2E_DATA_DIR` (required for every `make e2e*`, or pass
+  `DATA_DIR=<path>`) — root of the test-data tree described above.
 - `LILBATTLE_WW_BIN=/path/to/ww` — override which ww binary the scripts
   invoke. Defaults to the first `ww` on `PATH`.
 - `LILBATTLE_E2E_WATCH=true` — after `ww new`, invoke `open` (macOS) or
@@ -305,12 +316,10 @@ Overrides:
 - `LILBATTLE_E2E_HTTP_PORT` / `LILBATTLE_E2E_GRPC_PORT` (for `e2e-full`) —
   override the server's ports if `:8090` / `:9091` conflict.
 
-Fixture worlds live under `tests/e2e/fixtures/worlds/<worldID>/` as
-`data.json` + `metadata.json` (both protojson). The scripts themselves
-are generated in the sibling `weemaps` repo from upstream game dumps —
-see `weemaps/scripts/history.py`. To add a new replay, generate the
-`.sh` there, drop it into `tests/e2etests/`, and commit the world's
-fixture files under `tests/e2e/fixtures/worlds/`.
+To add a new replay, generate the `.sh` (via the JSON→script converter
+you own) and drop it under `<data-dir>/replays/`. If the world it
+references isn't already under `<data-dir>/fixtures/worlds/`, add a
+`<worldID>/metadata.json` + `<worldID>/data.json` pair.
 
 #### Seeding worlds
 
@@ -324,10 +333,11 @@ Worlds get onto the target server via `ww worlds ensure`, which:
   use a fresh world ID).
 - Existing world + no fixture → success (basic presence probe).
 
-For the whole replay-fixture set:
+For the whole fixture set:
 
 ```bash
 export LILBATTLE_SERVER=http://localhost:8090/api
+export LILBATTLE_E2E_DATA_DIR=~/projects/weemaps/e2e
 bash scripts/seed-worlds.sh
 ```
 
@@ -352,8 +362,9 @@ LILBATTLE_WEB_PORT=:8090 LILBATTLE_GRPC_PORT=:9091 DISABLE_API_AUTH=true \
 
 # 2. In another shell — seed the world the script needs.
 export LILBATTLE_SERVER=http://localhost:8090/api
-ww worlds ensure 7e5016a4 --data-dir tests/e2e/fixtures/worlds/7e5016a4/
-# (or run scripts/seed-worlds.sh for all fixtures)
+export DATA=~/projects/weemaps/e2e
+ww worlds ensure 7e5016a4 --data-dir $DATA/fixtures/worlds/7e5016a4/
+# (or run LILBATTLE_E2E_DATA_DIR=$DATA scripts/seed-worlds.sh for all fixtures)
 
 # 3. Create a game, note the ID from the `export` line ww prints.
 ww new 7e5016a4

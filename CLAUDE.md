@@ -92,11 +92,11 @@ Bypass: `git push --no-verify`. Use sparingly — CI is the only other gate.
 
 ## E2E Replay Harness
 
-`tests/e2e/` runs recorded `.sh` replay scripts under `tests/e2etests/` against a running server (never a filesystem). Full docs: `docs/DEVELOPER_GUIDE.md` → "Recorded replay harness". Key bits:
+`tests/e2e/` holds the harness (Go + shell orchestration); the recorded `.sh` scripts + fixture world JSONs live OUTSIDE this repo. Point via `LILBATTLE_E2E_DATA_DIR=<path>` or `make e2e-* DATA_DIR=<path>`. Full docs: `docs/DEVELOPER_GUIDE.md` → "Recorded replay harness". Key bits:
 
 - Gated behind `-tags=e2e` because recorded scripts drift from current rules (tracked in issue 183).
-- One command boots server + seeds fixture worlds + runs tests + tears down: `make e2e-full`.
-- Watch mode auto-opens the game URL in a browser tab: `make e2e-watch`.
+- One command boots server + seeds fixture worlds + runs tests + tears down: `make e2e-full DATA_DIR=<path>`.
+- Watch mode auto-opens the game URL in a browser tab: `make e2e-watch DATA_DIR=<path>`.
 - Manual debugging recipe for individual failing scripts: same doc, "Manually driving a replay for drift diagnosis".
 
 The `ww worlds ensure` subcommand is the seed primitive (idempotent, backend-agnostic, never overwrites on content mismatch). Programmatic entry points: `lib.EnsureWorldExists` + `lib.HashWorldData`.

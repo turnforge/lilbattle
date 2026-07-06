@@ -1,24 +1,33 @@
 //go:build e2e
 // +build e2e
 
-// Package e2e provides an integration-test harness for the recorded ww
-// replay scripts under tests/e2etests/. The harness runs the scripts
-// against an ALREADY-RUNNING server pointed at via LILBATTLE_E2E_SERVER
-// and assumes the referenced worlds already exist on that target. World
-// seeding is a separate step — for local dev flows, `make e2e-full`
-// invokes `scripts/seed-worlds.sh` which drives `ww worlds ensure`.
+// Package e2e provides an integration-test harness for recorded ww
+// replay scripts. The harness itself lives here (in lilbattle, where
+// ww + lib.EnsureWorldExists live), but the scripts + fixture world
+// data live outside this repo — the test data root is passed via
+// LILBATTLE_E2E_DATA_DIR:
 //
-// Gated behind the `e2e` build tag while the recorded scripts drift
-// from current game rules (tracked in issue 183). Run with:
+//	LILBATTLE_E2E_DATA_DIR/
+//	├── replays/*.sh                # what the harness runs
+//	└── fixtures/worlds/<id>/       # world data seeded via ww worlds ensure
+//	    ├── data.json
+//	    └── metadata.json
+//
+// Run with:
 //
 //	LILBATTLE_E2E_SERVER=http://localhost:8090/api \
+//	LILBATTLE_E2E_DATA_DIR=/path/to/weemaps/e2e \
 //	  go test -tags=e2e ./tests/e2e/
 //
 // Or via the Makefile:
 //
-//	make e2e            # requires a server up + worlds seeded
-//	make e2e-run REPLAY=29146
-//	make e2e-full       # boots a local server, seeds, runs, tears down
+//	make e2e DATA_DIR=~/projects/weemaps/e2e
+//	make e2e-run REPLAY=29146 DATA_DIR=~/projects/weemaps/e2e
+//	make e2e-full DATA_DIR=~/projects/weemaps/e2e
+//
+// Gated behind the `e2e` build tag while recorded scripts drift from
+// current game rules (issue 183). Default `go test ./...` compiles
+// doc.go and reports "no tests to run".
 package e2e
 
 import (
@@ -29,9 +38,8 @@ import (
 )
 
 // serverURL resolves the target server URL from LILBATTLE_E2E_SERVER.
-// Every test call goes here first — a missing var is treated as an
-// actionable configuration error, not a silent skip, since the whole
-// suite depends on it.
+// A missing var is treated as an actionable configuration error, not
+// a silent skip, since the whole suite depends on it.
 func serverURL(t *testing.T) string {
 	t.Helper()
 	url := os.Getenv("LILBATTLE_E2E_SERVER")
@@ -39,6 +47,25 @@ func serverURL(t *testing.T) string {
 		t.Fatalf("LILBATTLE_E2E_SERVER not set — point at a running server (e.g. http://localhost:8090/api) or run via `make e2e-full`")
 	}
 	return url
+}
+
+// dataDir resolves the test-data root from LILBATTLE_E2E_DATA_DIR. The
+// harness expects `<dir>/replays/*.sh` and (indirectly, via
+// scripts/seed-worlds.sh) `<dir>/fixtures/worlds/<id>/`. Kept out of
+// this repo so upstream-derived material (game IDs, world data) doesn't
+// live in lilbattle's git history.
+func dataDir(t *testing.T) string {
+	t.Helper()
+	dir := os.Getenv("LILBATTLE_E2E_DATA_DIR")
+	if dir == "" {
+		t.Fatalf("LILBATTLE_E2E_DATA_DIR not set — point at a test-data root containing replays/ and fixtures/worlds/ (e.g. ~/projects/weemaps/e2e)")
+	}
+	return dir
+}
+
+// replaysDir returns `<data-dir>/replays`.
+func replaysDir(t *testing.T) string {
+	return filepath.Join(dataDir(t), "replays")
 }
 
 // wwBinaryPath resolves the ww binary the replay scripts will invoke.
@@ -70,25 +97,4 @@ func wwPathDir(t *testing.T) string {
 		t.Fatalf("symlink ww: %v", err)
 	}
 	return dir
-}
-
-// repoRoot walks up from the current test's CWD to find the go.mod.
-// Script paths are anchored here rather than at CWD so the tests work
-// regardless of what dir `go test` is invoked from.
-func repoRoot(t *testing.T) string {
-	t.Helper()
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("getwd: %v", err)
-	}
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			t.Fatal("could not find go.mod (no repo root)")
-		}
-		dir = parent
-	}
 }
